@@ -15,6 +15,7 @@ jobs:
   validate-wrapper:
     name: Validate Gradle Wrapper
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - uses: gradle/actions/wrapper-validation@v4
@@ -23,6 +24,7 @@ jobs:
   build:
     name: Build & Detekt
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     needs: validate-wrapper
     steps:
       - uses: actions/checkout@v4
@@ -56,6 +58,7 @@ jobs:
   test-images:
     name: Test / images
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     needs: build
     steps:
       - uses: actions/checkout@v4
@@ -100,6 +103,7 @@ jobs:
   test-images-vips-api:
     name: Test / images-vips-api
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     needs: build
     steps:
       - uses: actions/checkout@v4
@@ -147,6 +151,7 @@ jobs:
   test-images-vips-java21:
     name: Test / images-vips-java21
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     needs: build
     steps:
       - uses: actions/checkout@v4
@@ -194,6 +199,7 @@ jobs:
   test-images-vips-java25:
     name: Test / images-vips-java25
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     needs: build
     steps:
       - uses: actions/checkout@v4
@@ -241,6 +247,7 @@ jobs:
   coverage-report:
     name: Coverage Report
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     needs:
       - test-images
       - test-images-vips-api
@@ -268,6 +275,7 @@ jobs:
   nightly-status:
     name: Nightly Status
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     needs:
       - build
       - test-images
