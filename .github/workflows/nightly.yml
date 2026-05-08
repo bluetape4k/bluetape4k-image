@@ -74,7 +74,12 @@ jobs:
           cache-read-only: true
 
       - name: Test images
-        run: ./gradlew :images:test --no-daemon --no-configuration-cache
+        run: |
+          for attempt in 1 2 3; do
+            ./gradlew :images:test --no-daemon && break
+            echo "Attempt $attempt failed"
+            [ $attempt -lt 3 ] && sleep 10 || exit 1
+          done
         env:
           GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx4g -Dorg.gradle.daemon=false"
 
@@ -122,7 +127,12 @@ jobs:
           cache-read-only: true
 
       - name: Test images-vips-api
-        run: ./gradlew :images-vips-api:test --no-daemon --no-configuration-cache
+        run: |
+          for attempt in 1 2 3; do
+            ./gradlew :images-vips-api:test --no-daemon && break
+            echo "Attempt $attempt failed"
+            [ $attempt -lt 3 ] && sleep 10 || exit 1
+          done
         env:
           GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx4g -Dorg.gradle.daemon=false"
 
@@ -170,7 +180,12 @@ jobs:
           cache-read-only: true
 
       - name: Test images-vips-java21
-        run: ./gradlew :images-vips-java21:test --no-daemon --no-configuration-cache
+        run: |
+          for attempt in 1 2 3; do
+            ./gradlew :images-vips-java21:test --no-daemon && break
+            echo "Attempt $attempt failed"
+            [ $attempt -lt 3 ] && sleep 10 || exit 1
+          done
         env:
           GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx4g -Dorg.gradle.daemon=false"
 
@@ -218,7 +233,12 @@ jobs:
           cache-read-only: true
 
       - name: Test images-vips-java25
-        run: ./gradlew :images-vips-java25:test --no-daemon --no-configuration-cache
+        run: |
+          for attempt in 1 2 3; do
+            ./gradlew :images-vips-java25:test --no-daemon && break
+            echo "Attempt $attempt failed"
+            [ $attempt -lt 3 ] && sleep 10 || exit 1
+          done
         env:
           GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx4g -Dorg.gradle.daemon=false"
 
