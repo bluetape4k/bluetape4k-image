@@ -4,18 +4,17 @@ import com.sksamuel.scrimage.ImmutableImage
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.utils.Resourcex
-import org.amshove.kluent.invoking
-import org.amshove.kluent.shouldBeEmpty
-import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldBeGreaterOrEqualTo
-import org.amshove.kluent.shouldBeGreaterThan
-import org.amshove.kluent.shouldBeLessOrEqualTo
-import org.amshove.kluent.shouldBeNull
-import org.amshove.kluent.shouldHaveSize
-import org.amshove.kluent.shouldMatch
-import org.amshove.kluent.shouldNotBeEmpty
-import org.amshove.kluent.shouldNotBeNull
-import org.amshove.kluent.shouldThrow
+import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.shouldBeEmpty
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeGreaterOrEqualTo
+import io.bluetape4k.assertions.shouldBeGreaterThan
+import io.bluetape4k.assertions.shouldBeLessOrEqualTo
+import io.bluetape4k.assertions.shouldBeNull
+import io.bluetape4k.assertions.shouldHaveSize
+import io.bluetape4k.assertions.shouldMatch
+import io.bluetape4k.assertions.shouldNotBeEmpty
+import io.bluetape4k.assertions.shouldNotBeNull
 import org.junit.jupiter.api.Test
 import java.awt.image.BufferedImage
 import java.io.ByteArrayOutputStream
@@ -156,21 +155,21 @@ class DominantColorExtractorTest {
 
     @Test
     fun `invalid quality throws`() {
-        invoking {
+        assertFailsWith<IllegalArgumentException> {
             DominantColorExtractor.MedianCut(quality = 0)
-        } shouldThrow IllegalArgumentException::class
+        }
 
-        invoking {
+        assertFailsWith<IllegalArgumentException> {
             DominantColorExtractor.MedianCut(quality = 31)
-        } shouldThrow IllegalArgumentException::class
+        }
     }
 
     @Test
     fun `invalid count throws`() {
         val image = loadImage(HOMER_JPG)
-        invoking {
+        assertFailsWith<IllegalArgumentException> {
             image.dominantColors(count = 0)
-        } shouldThrow IllegalArgumentException::class
+        }
     }
 
     @Test
@@ -207,10 +206,10 @@ class DominantColorExtractorTest {
 
     @Test
     fun `DominantColor init rejects out-of-range values`() {
-        invoking { DominantColor(-1, 0, 0, 1) } shouldThrow IllegalArgumentException::class
-        invoking { DominantColor(0, 256, 0, 1) } shouldThrow IllegalArgumentException::class
-        invoking { DominantColor(0, 0, 300, 1) } shouldThrow IllegalArgumentException::class
-        invoking { DominantColor(0, 0, 0, -1) } shouldThrow IllegalArgumentException::class
+        assertFailsWith<IllegalArgumentException> { DominantColor(-1, 0, 0, 1) }
+        assertFailsWith<IllegalArgumentException> { DominantColor(0, 256, 0, 1) }
+        assertFailsWith<IllegalArgumentException> { DominantColor(0, 0, 300, 1) }
+        assertFailsWith<IllegalArgumentException> { DominantColor(0, 0, 0, -1) }
     }
 
     @Test

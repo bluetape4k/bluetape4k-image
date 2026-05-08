@@ -5,8 +5,8 @@ import io.bluetape4k.images.filters.dsl.ColorSpaceConverter
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import java.awt.image.BufferedImage
 import kotlin.math.abs
+import io.bluetape4k.assertions.assertFailsWith
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 
 class SaturationFilterTest : AbstractFilterTest() {
 
@@ -72,7 +72,7 @@ class SaturationFilterTest : AbstractFilterTest() {
      */
     @Test
     fun `factor=-0_1 은 IllegalArgumentException 을 던진다`() {
-        assertThrows<IllegalArgumentException> {
+        assertFailsWith<IllegalArgumentException> {
             saturationFilterOf(-0.1f)
         }
     }

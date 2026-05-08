@@ -11,10 +11,10 @@ import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import kotlin.time.Duration.Companion.seconds
-import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldBeInstanceOf
-import org.amshove.kluent.shouldBeTrue
-import org.amshove.kluent.shouldThrow
+import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeInstanceOf
+import io.bluetape4k.assertions.shouldBeTrue
 import org.junit.jupiter.api.Test
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
@@ -66,11 +66,8 @@ class ThumbnailPipelineTest: AbstractImageTest() {
 
     @Test
     fun `thumbnail format rejects blank and path separator extension`() {
-        val blankExtension = { ThumbnailFormat(SuspendJpegWriter.Default, BLANK_EXTENSION) }
-        val pathExtension = { ThumbnailFormat(SuspendJpegWriter.Default, PATH_EXTENSION) }
-
-        blankExtension shouldThrow IllegalArgumentException::class
-        pathExtension shouldThrow IllegalArgumentException::class
+        assertFailsWith<IllegalArgumentException> { ThumbnailFormat(SuspendJpegWriter.Default, BLANK_EXTENSION) }
+        assertFailsWith<IllegalArgumentException> { ThumbnailFormat(SuspendJpegWriter.Default, PATH_EXTENSION) }
     }
 
     private fun TempFolder.copyResource(resourcePath: String, fileName: String) =

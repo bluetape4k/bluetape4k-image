@@ -2,8 +2,8 @@ package io.bluetape4k.images.filters
 
 import com.sksamuel.scrimage.ImmutableImage
 import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.assertions.assertFailsWith
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 
 /**
  * [AbstractFilterTest]에서 제공하는 픽셀 유사도 헬퍼 메서드의 단위 테스트입니다.
@@ -34,7 +34,7 @@ class AbstractFilterTestHelpersTest: AbstractFilterTest() {
     @Test
     fun `동일 이미지에 assertNotSimilarToImage를 호출하면 실패한다`() {
         val image = loadResourceImage("debop.jpg")
-        assertThrows<AssertionError> {
+        assertFailsWith<AssertionError> {
             assertNotSimilarToImage(image, image)
         }
     }
@@ -43,7 +43,7 @@ class AbstractFilterTestHelpersTest: AbstractFilterTest() {
     fun `크기가 다른 이미지는 assertSimilarToImage 호출 시 실패한다`() {
         val original = loadResourceImage("debop.jpg")
         val resized = ImmutableImage.create(original.width / 2, original.height / 2)
-        assertThrows<AssertionError> {
+        assertFailsWith<AssertionError> {
             assertSimilarToImage(original, resized)
         }
     }

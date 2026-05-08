@@ -6,10 +6,10 @@ import io.bluetape4k.images.immutableImageOf
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.utils.Resourcex
 import kotlinx.coroutines.test.runTest
-import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldBeGreaterThan
-import org.amshove.kluent.shouldBeInRange
-import org.amshove.kluent.shouldThrow
+import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeGreaterThan
+import io.bluetape4k.assertions.shouldBeInRange
 import org.junit.jupiter.api.Test
 import java.awt.Color
 import java.awt.image.BufferedImage
@@ -108,11 +108,8 @@ class SmartCropTest : AbstractImageTest() {
 
     @Test
     fun `invalid AspectRatio throws`() {
-        val throwOnZeroWidth = { AspectRatio(0, 1) }
-        val throwOnNegativeHeight = { AspectRatio(1, -1) }
-
-        throwOnZeroWidth shouldThrow IllegalArgumentException::class
-        throwOnNegativeHeight shouldThrow IllegalArgumentException::class
+        assertFailsWith<IllegalArgumentException> { AspectRatio(0, 1) }
+        assertFailsWith<IllegalArgumentException> { AspectRatio(1, -1) }
     }
 
     @Test

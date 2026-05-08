@@ -3,10 +3,10 @@ package io.bluetape4k.images.filters
 import com.sksamuel.scrimage.ImmutableImage
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import java.awt.image.BufferedImage
-import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldBeLessThan
+import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeLessThan
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 
 class RoundedCornerFilterTest : AbstractFilterTest() {
 
@@ -33,7 +33,7 @@ class RoundedCornerFilterTest : AbstractFilterTest() {
      */
     @Test
     fun `radius=-1 은 IllegalArgumentException 을 던진다`() {
-        assertThrows<IllegalArgumentException> {
+        assertFailsWith<IllegalArgumentException> {
             roundedCornerFilterOf(-1)
         }
     }

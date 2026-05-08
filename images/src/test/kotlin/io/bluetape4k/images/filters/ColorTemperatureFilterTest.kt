@@ -3,9 +3,9 @@ package io.bluetape4k.images.filters
 import com.sksamuel.scrimage.ImmutableImage
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import java.awt.image.BufferedImage
-import org.amshove.kluent.shouldBeGreaterOrEqualTo
+import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.shouldBeGreaterOrEqualTo
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 
 class ColorTemperatureFilterTest : AbstractFilterTest() {
 
@@ -42,7 +42,7 @@ class ColorTemperatureFilterTest : AbstractFilterTest() {
      */
     @Test
     fun `kelvin=999 은 IllegalArgumentException 을 던진다`() {
-        assertThrows<IllegalArgumentException> {
+        assertFailsWith<IllegalArgumentException> {
             colorTemperatureFilterOf(999)
         }
     }
@@ -52,7 +52,7 @@ class ColorTemperatureFilterTest : AbstractFilterTest() {
      */
     @Test
     fun `kelvin=40001 은 IllegalArgumentException 을 던진다`() {
-        assertThrows<IllegalArgumentException> {
+        assertFailsWith<IllegalArgumentException> {
             colorTemperatureFilterOf(40001)
         }
     }

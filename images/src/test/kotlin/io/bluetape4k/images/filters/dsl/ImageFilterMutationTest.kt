@@ -3,7 +3,7 @@ package io.bluetape4k.images.filters.dsl
 import com.sksamuel.scrimage.ImmutableImage
 import io.bluetape4k.images.filters.AbstractFilterTest
 import io.bluetape4k.logging.coroutines.KLoggingChannel
-import org.amshove.kluent.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeEqualTo
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.awt.image.BufferedImage

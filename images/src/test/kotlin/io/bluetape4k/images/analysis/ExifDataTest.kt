@@ -3,12 +3,11 @@ package io.bluetape4k.images.analysis
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.utils.Resourcex
-import org.amshove.kluent.invoking
-import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldBeFalse
-import org.amshove.kluent.shouldBeNull
-import org.amshove.kluent.shouldBeTrue
-import org.amshove.kluent.shouldThrow
+import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeNull
+import io.bluetape4k.assertions.shouldBeTrue
 import org.junit.jupiter.api.Test
 import java.awt.image.BufferedImage
 import java.io.ByteArrayInputStream
@@ -71,9 +70,9 @@ class ExifDataTest {
     @Test
     fun `readExif 50MB guard throws`() {
         val oversized = ByteArray(50 * 1024 * 1024 + 1)
-        invoking {
+        assertFailsWith<IllegalArgumentException> {
             readExif(oversized)
-        } shouldThrow IllegalArgumentException::class
+        }
     }
 
     @Test

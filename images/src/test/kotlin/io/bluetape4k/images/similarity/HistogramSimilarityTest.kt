@@ -6,11 +6,10 @@ import io.bluetape4k.images.immutableImageOf
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.utils.Resourcex
-import org.amshove.kluent.invoking
-import org.amshove.kluent.shouldBeGreaterThan
-import org.amshove.kluent.shouldBeInRange
-import org.amshove.kluent.shouldBeLessThan
-import org.amshove.kluent.shouldThrow
+import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.shouldBeGreaterThan
+import io.bluetape4k.assertions.shouldBeInRange
+import io.bluetape4k.assertions.shouldBeLessThan
 import org.junit.jupiter.api.Test
 
 class HistogramSimilarityTest: AbstractImageTest() {
@@ -123,17 +122,17 @@ class HistogramSimilarityTest: AbstractImageTest() {
         val a = loadImage(HOMER_JPG)
         val b = loadImage(HOMER_JPG)
 
-        invoking {
+        assertFailsWith<IllegalArgumentException> {
             HistogramSimilarity.chiSquare(bins = 1).measure(a, b)
-        } shouldThrow IllegalArgumentException::class
+        }
 
-        invoking {
+        assertFailsWith<IllegalArgumentException> {
             HistogramSimilarity.bhattacharyya(bins = 257).measure(a, b)
-        } shouldThrow IllegalArgumentException::class
+        }
 
-        invoking {
+        assertFailsWith<IllegalArgumentException> {
             HistogramSimilarity.earthMover(bins = 0).measure(a, b)
-        } shouldThrow IllegalArgumentException::class
+        }
     }
 
     @Test

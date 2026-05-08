@@ -5,9 +5,9 @@ import io.bluetape4k.images.AbstractImageTest
 import io.bluetape4k.images.immutableImageOf
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import kotlinx.coroutines.test.runTest
-import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldBeGreaterThan
-import org.amshove.kluent.shouldBeInRange
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeGreaterThan
+import io.bluetape4k.assertions.shouldBeInRange
 import org.junit.jupiter.api.Test
 import java.awt.Color
 

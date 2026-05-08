@@ -4,13 +4,12 @@ import com.sksamuel.scrimage.ImmutableImage
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.utils.Resourcex
-import org.amshove.kluent.invoking
-import org.amshove.kluent.shouldBeFalse
-import org.amshove.kluent.shouldBeGreaterOrEqualTo
-import org.amshove.kluent.shouldBeGreaterThan
-import org.amshove.kluent.shouldBeLessOrEqualTo
-import org.amshove.kluent.shouldBeTrue
-import org.amshove.kluent.shouldThrow
+import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeGreaterOrEqualTo
+import io.bluetape4k.assertions.shouldBeGreaterThan
+import io.bluetape4k.assertions.shouldBeLessOrEqualTo
+import io.bluetape4k.assertions.shouldBeTrue
 import org.junit.jupiter.api.Test
 import java.awt.image.BufferedImage
 import java.io.ByteArrayOutputStream
@@ -114,9 +113,9 @@ class BlurDetectorTest {
     @Test
     fun `image smaller than 3x3 throws`() {
         val tiny = ImmutableImage.create(2, 2)
-        invoking {
+        assertFailsWith<IllegalArgumentException> {
             tiny.blurScore()
-        } shouldThrow IllegalArgumentException::class
+        }
     }
 
     @Test

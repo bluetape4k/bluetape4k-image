@@ -3,9 +3,9 @@ package io.bluetape4k.images
 import io.bluetape4k.images.avif.AvifEncodeOptions
 import io.bluetape4k.images.heic.HeicReadOptions
 import io.bluetape4k.logging.coroutines.KLoggingChannel
-import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldBeFalse
-import org.amshove.kluent.shouldBeTrue
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeTrue
 import org.junit.jupiter.api.Test
 
 /**

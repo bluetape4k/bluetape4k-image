@@ -6,7 +6,7 @@ import io.bluetape4k.images.immutableImageOf
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.utils.Resourcex
 import kotlin.math.abs
-import org.amshove.kluent.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeEqualTo
 import org.junit.jupiter.api.Assertions.fail
 
 abstract class AbstractFilterTest: AbstractImageTest() {

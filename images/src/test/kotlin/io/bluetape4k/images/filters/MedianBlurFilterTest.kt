@@ -6,9 +6,9 @@ import java.awt.Color
 import java.awt.image.BufferedImage
 import java.util.Random
 import kotlin.math.abs
-import org.amshove.kluent.shouldBeLessThan
+import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.shouldBeLessThan
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 
 class MedianBlurFilterTest: AbstractFilterTest() {
 
@@ -82,7 +82,7 @@ class MedianBlurFilterTest: AbstractFilterTest() {
      */
     @Test
     fun `radius=-1 은 IllegalArgumentException 을 던진다`() {
-        assertThrows<IllegalArgumentException> {
+        assertFailsWith<IllegalArgumentException> {
             medianBlurFilterOf(-1)
         }
     }

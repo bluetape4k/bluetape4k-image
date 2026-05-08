@@ -1,7 +1,7 @@
 package io.bluetape4k.images.vips
 
-import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldThrow
+import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.shouldBeEqualTo
 import org.junit.jupiter.api.Test
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
@@ -14,26 +14,22 @@ class VipsEncodeOptionsTest {
 
     @Test
     fun `quality -1 throws IllegalArgumentException`() {
-        val action = { VipsEncodeOptions(quality = -1) }
-        action shouldThrow IllegalArgumentException::class
+        assertFailsWith<IllegalArgumentException> { VipsEncodeOptions(quality = -1) }
     }
 
     @Test
     fun `quality 101 throws IllegalArgumentException`() {
-        val action = { VipsEncodeOptions(quality = 101) }
-        action shouldThrow IllegalArgumentException::class
+        assertFailsWith<IllegalArgumentException> { VipsEncodeOptions(quality = 101) }
     }
 
     @Test
     fun `effort 0 throws IllegalArgumentException`() {
-        val action = { VipsEncodeOptions(effort = 0) }
-        action shouldThrow IllegalArgumentException::class
+        assertFailsWith<IllegalArgumentException> { VipsEncodeOptions(effort = 0) }
     }
 
     @Test
     fun `effort 10 throws IllegalArgumentException`() {
-        val action = { VipsEncodeOptions(effort = 10) }
-        action shouldThrow IllegalArgumentException::class
+        assertFailsWith<IllegalArgumentException> { VipsEncodeOptions(effort = 10) }
     }
 
     @Test
