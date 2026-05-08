@@ -126,7 +126,7 @@ jobs:
       - name: Test images
         run: |
           for attempt in 1 2 3; do
-            ./gradlew :images:test --no-daemon --no-configuration-cache && break
+            ./gradlew :images:test --no-daemon && break
             echo "Attempt $attempt failed"
             [ $attempt -lt 3 ] && sleep 10 || exit 1
           done
@@ -161,7 +161,7 @@ jobs:
       - name: Test images-vips-api
         run: |
           for attempt in 1 2 3; do
-            ./gradlew :images-vips-api:test --no-daemon --no-configuration-cache && break
+            ./gradlew :images-vips-api:test --no-daemon && break
             echo "Attempt $attempt failed"
             [ $attempt -lt 3 ] && sleep 10 || exit 1
           done
@@ -196,7 +196,7 @@ jobs:
       - name: Test images-vips-java21
         run: |
           for attempt in 1 2 3; do
-            ./gradlew :images-vips-java21:test --no-daemon --no-configuration-cache && break
+            ./gradlew :images-vips-java21:test --no-daemon && break
             echo "Attempt $attempt failed"
             [ $attempt -lt 3 ] && sleep 10 || exit 1
           done
@@ -231,7 +231,7 @@ jobs:
       - name: Test images-vips-java25
         run: |
           for attempt in 1 2 3; do
-            ./gradlew :images-vips-java25:test --no-daemon --no-configuration-cache && break
+            ./gradlew :images-vips-java25:test --no-daemon && break
             echo "Attempt $attempt failed"
             [ $attempt -lt 3 ] && sleep 10 || exit 1
           done
