@@ -18,3 +18,6 @@ include(
     "images-vips-java25",
     "images-benchmark",
 )
+
+include("bluetape4k-image-bom")
+project(":bluetape4k-image-bom").projectDir = file("bom")
