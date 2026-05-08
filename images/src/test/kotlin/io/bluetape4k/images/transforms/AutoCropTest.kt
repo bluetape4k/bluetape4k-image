@@ -5,11 +5,11 @@ import io.bluetape4k.images.AbstractImageTest
 import io.bluetape4k.images.immutableImageOf
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import kotlinx.coroutines.test.runTest
-import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldBeGreaterOrEqualTo
-import org.amshove.kluent.shouldBeLessThan
+import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeGreaterOrEqualTo
+import io.bluetape4k.assertions.shouldBeLessThan
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import java.awt.Color
 import java.awt.image.BufferedImage
 
@@ -133,7 +133,7 @@ class AutoCropTest : AbstractImageTest() {
     @Test
     fun `negative tolerance throws`() {
         val image = createWhitePaddedImage()
-        assertThrows<IllegalArgumentException> {
+        assertFailsWith<IllegalArgumentException> {
             image.autoCrop(tolerance = -1)
         }
     }
@@ -141,7 +141,7 @@ class AutoCropTest : AbstractImageTest() {
     @Test
     fun `negative padding throws`() {
         val image = createWhitePaddedImage()
-        assertThrows<IllegalArgumentException> {
+        assertFailsWith<IllegalArgumentException> {
             image.autoCrop(padding = -1)
         }
     }

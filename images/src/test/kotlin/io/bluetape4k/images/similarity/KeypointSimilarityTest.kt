@@ -6,11 +6,10 @@ import io.bluetape4k.images.AbstractImageTest
 import io.bluetape4k.images.immutableImageOf
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.utils.Resourcex
-import org.amshove.kluent.invoking
-import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldBeGreaterThan
-import org.amshove.kluent.shouldBeLessThan
-import org.amshove.kluent.shouldThrow
+import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeGreaterThan
+import io.bluetape4k.assertions.shouldBeLessThan
 import org.junit.jupiter.api.Test
 
 /**
@@ -83,13 +82,13 @@ class KeypointSimilarityTest : AbstractImageTest() {
     fun `gridRows less than 1 throws IllegalArgumentException`() {
         val homer = loadImage(HOMER_JPG)
 
-        invoking { homer.blockMeanDescriptor(gridRows = 0, gridCols = 8) } shouldThrow IllegalArgumentException::class
+        assertFailsWith<IllegalArgumentException> { homer.blockMeanDescriptor(gridRows = 0, gridCols = 8) }
     }
 
     @Test
     fun `gridCols less than 1 throws IllegalArgumentException`() {
         val homer = loadImage(HOMER_JPG)
 
-        invoking { homer.blockMeanDescriptor(gridRows = 8, gridCols = 0) } shouldThrow IllegalArgumentException::class
+        assertFailsWith<IllegalArgumentException> { homer.blockMeanDescriptor(gridRows = 8, gridCols = 0) }
     }
 }

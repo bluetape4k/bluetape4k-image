@@ -7,12 +7,12 @@ import io.bluetape4k.images.immutableImageOf
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.utils.Resourcex
-import org.amshove.kluent.shouldBeGreaterThan
-import org.amshove.kluent.shouldBeInRange
-import org.amshove.kluent.shouldBeLessThan
-import org.amshove.kluent.shouldNotBeEqualTo
+import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.shouldBeGreaterThan
+import io.bluetape4k.assertions.shouldBeInRange
+import io.bluetape4k.assertions.shouldBeLessThan
+import io.bluetape4k.assertions.shouldNotBeEqualTo
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import java.awt.Color
 
 /**
@@ -76,7 +76,7 @@ class MssimSimilarityTest: AbstractImageTest() {
         val a = loadImage(HOMER_JPG)
         val b = loadImage(HOMER_JPG)
 
-        assertThrows<IllegalArgumentException> {
+        assertFailsWith<IllegalArgumentException> {
             a.mssimTo(b, windowSize = 10)
         }
     }
@@ -86,7 +86,7 @@ class MssimSimilarityTest: AbstractImageTest() {
         val tiny = loadImage(HOMER_JPG).scaleTo(7, 7)
         val tinyOther = loadImage(HOMER_JPG).scaleTo(7, 7)
 
-        assertThrows<IllegalArgumentException> {
+        assertFailsWith<IllegalArgumentException> {
             tiny.mssimTo(tinyOther, windowSize = 11)
         }
     }

@@ -6,10 +6,10 @@ import io.bluetape4k.images.AbstractImageTest
 import io.bluetape4k.images.immutableImageOf
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.utils.Resourcex
-import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldBeGreaterThan
-import org.amshove.kluent.shouldBeLessOrEqualTo
-import org.amshove.kluent.shouldThrow
+import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeGreaterThan
+import io.bluetape4k.assertions.shouldBeLessOrEqualTo
 import org.junit.jupiter.api.Test
 
 class HashSimilarityTest: AbstractImageTest() {
@@ -100,10 +100,9 @@ class HashSimilarityTest: AbstractImageTest() {
 
     @Test
     fun `HashDistance hamming throws when array lengths differ`() {
-        val invocation = {
+        assertFailsWith<IllegalArgumentException> {
             HashDistance.hamming(LongArray(1), LongArray(4))
         }
-        invocation shouldThrow IllegalArgumentException::class
     }
 
     @Test

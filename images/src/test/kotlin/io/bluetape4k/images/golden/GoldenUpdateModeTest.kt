@@ -4,9 +4,9 @@ import com.sksamuel.scrimage.ImmutableImage
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import java.awt.Color
 import java.awt.image.BufferedImage
-import org.amshove.kluent.shouldBeEqualTo
+import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.shouldBeEqualTo
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import org.opentest4j.TestAbortedException
 
 /**
@@ -39,7 +39,7 @@ class GoldenUpdateModeTest {
     @Test
     fun `업데이트 모드 OFF에서 골든 없으면 TestAbortedException이 발생한다`() {
         val image = solidImage(16, 16, Color.RED)
-        assertThrows<TestAbortedException> {
+        assertFailsWith<TestAbortedException> {
             GoldenImageAssert.assertSimilarToGolden(image, "nonexistent-update-key-abc")
         }
     }
@@ -51,7 +51,7 @@ class GoldenUpdateModeTest {
     fun `ByteArray 오버로드에서 골든 없으면 TestAbortedException이 발생한다`() {
         val image = solidImage(16, 16, Color.BLUE)
         val bytes = image.forWriter(com.sksamuel.scrimage.nio.PngWriter.MaxCompression).bytes()
-        assertThrows<TestAbortedException> {
+        assertFailsWith<TestAbortedException> {
             GoldenImageAssert.assertSimilarToGolden(bytes, "nonexistent-bytes-key-def")
         }
     }

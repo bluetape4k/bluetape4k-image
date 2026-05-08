@@ -26,7 +26,6 @@ logback = "1.5.32"
 commons-io = "2.21.0"
 
 junit-jupiter = "6.0.3"
-kluent = "1.73"
 mockk = "1.14.9"
 awaitility = "4.3.0"
 testcontainers = "2.0.5"
@@ -115,7 +114,7 @@ junit-bom = { module = "org.junit:junit-bom", version.ref = "junit-jupiter" }
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter" }
 junit-jupiter-api = { module = "org.junit.jupiter:junit-jupiter-api" }
 junit-platform-engine = { module = "org.junit.platform:junit-platform-engine" }
-kluent = { module = "org.amshove.kluent:kluent", version.ref = "kluent" }
+bluetape4k-assertions = { module = "io.github.bluetape4k:bluetape4k-assertions", version.ref = "bluetape4k" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 awaitility-kotlin = { module = "org.awaitility:awaitility-kotlin", version.ref = "awaitility" }
 testcontainers-bom = { module = "org.testcontainers:testcontainers-bom", version.ref = "testcontainers" }

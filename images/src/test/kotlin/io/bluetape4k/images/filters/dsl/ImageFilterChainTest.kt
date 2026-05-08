@@ -3,8 +3,8 @@ package io.bluetape4k.images.filters.dsl
 import com.sksamuel.scrimage.filter.BrightnessFilter
 import io.bluetape4k.images.filters.AbstractFilterTest
 import io.bluetape4k.logging.coroutines.KLoggingChannel
-import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldBeTrue
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeTrue
 import org.junit.jupiter.api.Test
 
 class ImageFilterChainTest : AbstractFilterTest() {

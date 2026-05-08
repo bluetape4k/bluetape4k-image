@@ -5,12 +5,12 @@ import io.bluetape4k.images.vips.VipsImageFormat
 import io.bluetape4k.images.vips.coroutines.suspendToBytes
 import io.bluetape4k.images.vips.testfixtures.VipsTestFixtures
 import kotlinx.coroutines.test.runTest
-import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldBeGreaterThan
-import org.amshove.kluent.shouldBeLessOrEqualTo
-import org.amshove.kluent.shouldBeTrue
-import org.amshove.kluent.shouldNotBeNull
-import org.amshove.kluent.shouldThrow
+import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeGreaterThan
+import io.bluetape4k.assertions.shouldBeLessOrEqualTo
+import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldNotBeNull
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import java.io.ByteArrayOutputStream
@@ -127,8 +127,7 @@ class JVipsImageTest : AbstractJVipsTest() {
         val bytes = VipsTestFixtures.loadFixture(VipsTestFixtures.SAMPLE_JPEG)
         val img = vipsImageOf(bytes)
         img.close()
-        val action = { img.toBytes(VipsImageFormat.JPEG) }
-        action shouldThrow Exception::class
+        assertFailsWith<Exception> { img.toBytes(VipsImageFormat.JPEG) }
     }
 
     // ─── 10: crop exact dimensions ────────────────────────────────────────
@@ -178,8 +177,7 @@ class JVipsImageTest : AbstractJVipsTest() {
     fun `resize with zero width throws`() {
         val bytes = VipsTestFixtures.loadFixture(VipsTestFixtures.SAMPLE_JPEG)
         vipsImageOf(bytes).use { img ->
-            val action = { img.resize(0, 600) }
-            action shouldThrow Exception::class
+            assertFailsWith<Exception> { img.resize(0, 600) }
         }
     }
 
@@ -189,8 +187,7 @@ class JVipsImageTest : AbstractJVipsTest() {
     fun `crop beyond image bounds throws`() {
         val bytes = VipsTestFixtures.loadFixture(VipsTestFixtures.SAMPLE_JPEG)
         vipsImageOf(bytes).use { img ->
-            val action = { img.crop(0, 0, img.width + 1, img.height) }
-            action shouldThrow Exception::class
+            assertFailsWith<Exception> { img.crop(0, 0, img.width + 1, img.height) }
         }
     }
 
@@ -199,8 +196,7 @@ class JVipsImageTest : AbstractJVipsTest() {
     @Test
     fun `corrupt bytes throw VipsDecodeException on load`() {
         val corrupt = byteArrayOf(0xFF.toByte(), 0xD8.toByte(), 0xFF.toByte(), 0x00, 0x01, 0x02, 0x03)
-        val action = { vipsImageOf(corrupt) }
-        action shouldThrow Exception::class
+        assertFailsWith<Exception> { vipsImageOf(corrupt) }
     }
 
     // ─── helpers ──────────────────────────────────────────────────────────

@@ -5,9 +5,9 @@ import io.bluetape4k.images.vips.java21.AbstractJVipsTest
 import io.bluetape4k.images.vips.java21.vipsImageOf
 import io.bluetape4k.images.vips.testfixtures.VipsTestFixtures
 import io.bluetape4k.logging.KLogging
-import org.amshove.kluent.shouldBeGreaterThan
-import org.amshove.kluent.shouldBeLessOrEqualTo
-import org.amshove.kluent.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeGreaterThan
+import io.bluetape4k.assertions.shouldBeLessOrEqualTo
+import io.bluetape4k.assertions.shouldBeEqualTo
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.util.stream.Stream

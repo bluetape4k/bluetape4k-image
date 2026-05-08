@@ -5,11 +5,10 @@ import io.bluetape4k.logging.coroutines.KLoggingChannel
 import java.awt.Color
 import java.awt.image.BufferedImage
 import kotlinx.coroutines.test.runTest
-import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldBeGreaterThan
-import org.amshove.kluent.shouldThrow
+import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeGreaterThan
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 
 class HistogramEqualizationTest {
 
@@ -107,14 +106,14 @@ class HistogramEqualizationTest {
 
     @Test
     fun `tileSize 0 throws`() {
-        assertThrows<IllegalArgumentException> {
+        assertFailsWith<IllegalArgumentException> {
             createUniformImage(64, 64, 128, 128, 128).clahe(tileSize = 0)
         }
     }
 
     @Test
     fun `clipLimit 0 throws`() {
-        assertThrows<IllegalArgumentException> {
+        assertFailsWith<IllegalArgumentException> {
             createUniformImage(64, 64, 128, 128, 128).clahe(clipLimit = 0.0)
         }
     }

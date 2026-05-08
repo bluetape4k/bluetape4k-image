@@ -6,10 +6,10 @@ import io.bluetape4k.images.immutableImageOf
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.utils.Resourcex
 import kotlinx.coroutines.test.runTest
-import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldBeGreaterThan
-import org.amshove.kluent.shouldBeLessThan
-import org.amshove.kluent.shouldThrow
+import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeGreaterThan
+import io.bluetape4k.assertions.shouldBeLessThan
 import org.junit.jupiter.api.Test
 import java.awt.Color
 import java.awt.image.BufferedImage
@@ -105,8 +105,7 @@ class PerspectiveTransformTest : AbstractImageTest() {
         )
         val tooFew = listOf(ImagePoint(0.0, 0.0))
 
-        val block = { image.perspectiveTransform(tooFew, dst4, 100, 100) }
-        block shouldThrow IllegalArgumentException::class
+        assertFailsWith<IllegalArgumentException> { image.perspectiveTransform(tooFew, dst4, 100, 100) }
     }
 
     @Test
@@ -125,8 +124,7 @@ class PerspectiveTransformTest : AbstractImageTest() {
             ImagePoint(0.0, 100.0),
         )
 
-        val block = { image.perspectiveTransform(src4, dst4, 0, 100) }
-        block shouldThrow IllegalArgumentException::class
+        assertFailsWith<IllegalArgumentException> { image.perspectiveTransform(src4, dst4, 0, 100) }
     }
 
     @Test
@@ -146,8 +144,7 @@ class PerspectiveTransformTest : AbstractImageTest() {
         )
 
         // 10000×10000 = 100M > 64M 한계
-        val block = { image.perspectiveTransform(src4, dst4, 10000, 10000) }
-        block shouldThrow IllegalArgumentException::class
+        assertFailsWith<IllegalArgumentException> { image.perspectiveTransform(src4, dst4, 10000, 10000) }
     }
 
     @Test
@@ -168,8 +165,7 @@ class PerspectiveTransformTest : AbstractImageTest() {
             ImagePoint(0.0, 100.0),
         )
 
-        val block = { image.perspectiveTransform(collinearSrc, dst4, 100, 100) }
-        block shouldThrow IllegalArgumentException::class
+        assertFailsWith<IllegalArgumentException> { image.perspectiveTransform(collinearSrc, dst4, 100, 100) }
     }
 
     @Test

@@ -4,9 +4,9 @@ import com.sksamuel.scrimage.ImmutableImage
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import java.awt.Color
 import java.awt.image.BufferedImage
-import org.amshove.kluent.shouldBeLessOrEqualTo
+import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.shouldBeLessOrEqualTo
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import org.opentest4j.TestAbortedException
 
 /**
@@ -30,7 +30,7 @@ class GoldenImageAssertTest {
 
     @Test
     fun `존재하지 않는 골든 키는 TestAbortedException으로 skipped 처리된다`() {
-        assertThrows<TestAbortedException> {
+        assertFailsWith<TestAbortedException> {
             GoldenImageAssert.assertSimilarToGolden(solidImage(10, 10, Color.RED), "nonexistent-key-xyz")
         }
     }
@@ -40,7 +40,7 @@ class GoldenImageAssertTest {
         val image = solidImage(32, 32, Color.BLUE)
         // compareImages를 직접 호출할 수 없으므로 ByteArray 오버로드를 통해 간접 확인
         // 골든이 없으면 TestAbortedException → 정상
-        assertThrows<TestAbortedException> {
+        assertFailsWith<TestAbortedException> {
             GoldenImageAssert.assertSimilarToGolden(image, "no-golden-blue")
         }
     }
