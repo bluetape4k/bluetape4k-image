@@ -2,8 +2,18 @@ name: Nightly
 
 on:
   schedule:
-    - cron: '0 19 * * *'  # 매일 UTC 19:00 (KST 04:00)
+    - cron: '0 19 * * 1-6'  # Daily smoke, UTC 19:00 (KST 04:00) Mon-Sat
+    - cron: '0 19 * * 0'    # Weekly full, UTC 19:00 (KST 04:00) Sunday
   workflow_dispatch:
+    inputs:
+      scope:
+        description: 'Nightly scope to run'
+        required: true
+        type: choice
+        default: full
+        options:
+          - smoke
+          - full
 
 env:
   JAVA_VERSION: '21'
@@ -107,6 +117,8 @@ jobs:
   # ── 3. images-vips-api 모듈 ───────────────────────────────────────────────
   test-images-vips-api:
     name: Test / images-vips-api
+    if: ${{ (github.event_name == 'schedule' && github.event.schedule == '0 19 * * 0') || (github.event_name == 'workflow_dispatch' && inputs.scope == 'full') }}
+
     runs-on: ubuntu-latest
     timeout-minutes: 10
     needs: build
@@ -160,6 +172,8 @@ jobs:
   # ── 4. images-vips-java21 모듈 ────────────────────────────────────────────
   test-images-vips-java21:
     name: Test / images-vips-java21
+    if: ${{ (github.event_name == 'schedule' && github.event.schedule == '0 19 * * 0') || (github.event_name == 'workflow_dispatch' && inputs.scope == 'full') }}
+
     runs-on: ubuntu-latest
     timeout-minutes: 10
     needs: build
@@ -213,6 +227,8 @@ jobs:
   # ── 5. images-vips-java25 모듈 ────────────────────────────────────────────
   test-images-vips-java25:
     name: Test / images-vips-java25
+    if: ${{ (github.event_name == 'schedule' && github.event.schedule == '0 19 * * 0') || (github.event_name == 'workflow_dispatch' && inputs.scope == 'full') }}
+
     runs-on: ubuntu-latest
     timeout-minutes: 10
     needs: build
@@ -266,6 +282,7 @@ jobs:
   # ── 6. 커버리지 집계 ──────────────────────────────────────────────────────
   coverage-report:
     name: Coverage Report
+
     runs-on: ubuntu-latest
     timeout-minutes: 10
     needs:
@@ -273,7 +290,7 @@ jobs:
       - test-images-vips-api
       - test-images-vips-java21
       - test-images-vips-java25
-    if: always()
+    if: ${{ always() && ((github.event_name == 'schedule' && github.event.schedule == '0 19 * * 0') || (github.event_name == 'workflow_dispatch' && inputs.scope == 'full')) }}
     steps:
       - name: Download all coverage artifacts
         uses: actions/download-artifact@v4
