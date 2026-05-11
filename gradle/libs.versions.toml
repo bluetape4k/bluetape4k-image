@@ -14,7 +14,7 @@ scrimage = "4.5.1"  # https://mvnrepository.com/artifact/com.sksamuel.scrimage/s
 metadata-extractor = "2.20.0"  # https://mvnrepository.com/artifact/com.drewnoakes/metadata-extractor
 twelvemonkeys-imageio = "3.13.1"  # https://mvnrepository.com/artifact/com.twelvemonkeys.imageio/imageio-tiff
 batik = "1.19"  # https://mvnrepository.com/artifact/org.apache.xmlgraphics/batik-transcoder
-jvips = "8.12.2-f9dc8c9"  # https://mvnrepository.com/artifact/com.criteo/jvips
+jvips = "8.12.2-69bf715"  # https://mvnrepository.com/artifact/com.criteo/jvips
 vips-ffm = "1.9.8"  # https://mvnrepository.com/artifact/app.photofox.vips-ffm/vips-ffm-core
 
 # Benchmark
