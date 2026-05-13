@@ -241,4 +241,4 @@ JVipsImageSupport.jvipsImageOf(Path.of("photo.jpg")).use { image ->
 
 ## 라이선스
 
-[Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)
+[MIT License](LICENSE)
