@@ -15,6 +15,10 @@ libvips through JNI or FFM Panama.
 | `images-vips-java21` | JVips JNI backend; Java 21 toolchain; system libvips required |
 | `images-vips-java25` | vips-ffm FFM backend; Java 25 toolchain; native access required |
 | `images-benchmark` | JMH benchmarks for scrimage vs libvips |
+| `bom/` | Consumer BOM for aligned image artifacts |
+
+Root README visual assets live under `docs/assets/` and should be shared by
+`README.md` and `README.ko.md` through the same relative path.
 
 ## Commands
 

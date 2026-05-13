@@ -7,10 +7,25 @@
 
 [English](./README.md) | 한국어
 
+![bluetape4k 이미지 처리 작업대 일러스트](./docs/assets/image-workbench.png)
+
 Kotlin/JVM 이미지 처리 라이브러리 — [bluetape4k](https://github.com/bluetape4k) 생태계의 일부입니다.
 두 가지 백엔드를 제공합니다: 코루틴 비동기 I/O를 갖춘 순수 JVM [scrimage](https://github.com/sksamuel/scrimage)
 경로(Java2D)와, JNI(Java 21) 및 Panama 외부 함수 & 메모리 API(Java 25)를 통해 제공되는 고성능
 [libvips](https://www.libvips.org/) 경로입니다.
+
+## 프로젝트 목적
+
+`bluetape4k-image`는 Kotlin 서비스가 순수 JVM scrimage 처리로 시작하고, 처리량·메모리·
+native codec이 중요해질 때 libvips 백엔드로 확장할 수 있는 단일 이미지 처리 표면을 제공합니다.
+
+## 제공 기능
+
+- **순수 JVM 처리** — scrimage/Java2D 기반 로드, 리사이즈, 크롭, 필터, 분석, 배치, 인코딩
+- **Coroutine I/O** — 웹 이미지 워크플로우에 맞는 suspend reader/writer/byte encoder
+- **libvips 추상화** — binding-neutral `VipsImage`, `VipsRuntime` 계약
+- **두 native backend** — Java 21 JVips/JNI와 Java 25 FFM/Panama 선택지
+- **Benchmark lane** — scrimage와 libvips resize/encode 경로를 비교하는 JMH 벤치마크
 
 ## 모듈 구성
 
