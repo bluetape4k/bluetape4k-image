@@ -246,4 +246,4 @@ Each module contains its own detailed README with API reference, architecture di
 
 ## License
 
-[Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)
+[MIT License](LICENSE)
