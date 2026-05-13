@@ -7,10 +7,30 @@
 
 English | [한국어](./README.ko.md)
 
+![Bluetape4k image processing workbench](./docs/assets/image-workbench.png)
+
 Kotlin/JVM image processing library — part of the [bluetape4k](https://github.com/bluetape4k) ecosystem.
 Provides two backends: a pure-JVM [scrimage](https://github.com/sksamuel/scrimage) path (Java2D) for
 standard formats with coroutine async I/O, and a high-performance [libvips](https://www.libvips.org/)
 path available via both JNI (Java 21) and the Panama Foreign Function & Memory API (Java 25).
+
+## Project Purpose
+
+`bluetape4k-image` gives Kotlin services one image-processing surface that can
+start with pure-JVM scrimage operations and move to libvips when throughput,
+memory use, or native codecs matter.
+
+## What It Provides
+
+- **Pure JVM processing** — load, resize, crop, filter, analyze, batch, and
+  encode images through scrimage/Java2D.
+- **Coroutine I/O** — suspend-friendly readers, writers, and byte encoders for
+  common web image workflows.
+- **libvips abstraction** — binding-neutral `VipsImage` and `VipsRuntime`
+  contracts.
+- **Two native backends** — Java 21 JVips/JNI and Java 25 FFM/Panama options.
+- **Benchmark lane** — JMH comparisons for scrimage and libvips resize/encode
+  paths.
 
 ## Modules
 
