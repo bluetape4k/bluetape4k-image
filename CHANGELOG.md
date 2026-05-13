@@ -9,7 +9,7 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
-- Root README hero image plus refreshed project-purpose and feature entrypoint documentation.
+- Root README hero image plus refreshed project-purpose and feature entrypoint documentation ([PR #27](https://github.com/bluetape4k/bluetape4k-image/pull/27)).
 - `bluetape4k-image-bom` BOM module for image library consumers ([PR #12](https://github.com/bluetape4k/bluetape4k-image/pull/12)).
 - English and Korean README files for the image BOM module ([PR #13](https://github.com/bluetape4k/bluetape4k-image/pull/13)).
 - GitHub Actions workflows for CI, nightly, snapshot, release, and code-quality checks ([PR #7](https://github.com/bluetape4k/bluetape4k-image/pull/7)).
