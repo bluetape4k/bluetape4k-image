@@ -20,3 +20,4 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Updated image dependency catalog and related dependency bumps, including JVips and annotations ([PR #14](https://github.com/bluetape4k/bluetape4k-image/pull/14), [PR #20](https://github.com/bluetape4k/bluetape4k-image/pull/20), [PR #21](https://github.com/bluetape4k/bluetape4k-image/pull/21), [PR #23](https://github.com/bluetape4k/bluetape4k-image/pull/23)).
 - CI uses path filtering and retry configuration ([PR #10](https://github.com/bluetape4k/bluetape4k-image/pull/10)).
 - Test code migrated from Kluent to `bluetape4k-assertions` ([PR #11](https://github.com/bluetape4k/bluetape4k-image/pull/11)).
+- Aligned repository license text as MIT across all modules ([PR #28](https://github.com/bluetape4k/bluetape4k-image/pull/28)).
