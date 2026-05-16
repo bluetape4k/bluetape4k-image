@@ -143,6 +143,18 @@ data class ImageObjectKey private constructor(
     val name: String,
 ) : java.io.Serializable {
 
+    // init 블록에서 검증: copy()도 primary constructor를 거치므로 동일하게 검증된다.
+    init {
+        prefix.requireNotBlank("prefix")
+        name.requireNotBlank("name")
+        require(!prefix.contains("..") && !name.contains("..")) {
+            "prefix and name must not contain '..' segments"
+        }
+        require(VALID_SEGMENT.matches(prefix) && VALID_SEGMENT.matches(name)) {
+            "prefix and name must match [A-Za-z0-9._/-]+"
+        }
+    }
+
     val fullKey: String
         get() {
             val p = if (prefix.endsWith("/")) prefix else "$prefix/"
@@ -157,20 +169,12 @@ data class ImageObjectKey private constructor(
         /**
          * Creates a validated [ImageObjectKey].
          *
+         * Validation runs in the `init` block so `copy()` is also protected.
          * @throws IllegalArgumentException if prefix or name is blank, contains `..`, or
          *   contains characters outside `[A-Za-z0-9._/-]`.
          */
-        fun of(prefix: String, name: String): ImageObjectKey {
-            prefix.requireNotBlank("prefix")
-            name.requireNotBlank("name")
-            require(!prefix.contains("..") && !name.contains("..")) {
-                "prefix and name must not contain '..' segments"
-            }
-            require(VALID_SEGMENT.matches(prefix) && VALID_SEGMENT.matches(name)) {
-                "prefix and name must match [A-Za-z0-9._/-]+"
-            }
-            return ImageObjectKey(prefix, name)
-        }
+        fun of(prefix: String, name: String): ImageObjectKey =
+            ImageObjectKey(prefix, name)  // validation is in init
     }
 }
 ```
@@ -739,13 +743,21 @@ class ImagesCdnAutoConfiguration {
     )
     class S3PresignCdnConfiguration {
 
+        /**
+         * 단일 빈을 구체 타입(S3PreSignedUrlSigner)으로 등록.
+         * Spring은 CdnReadSigner + CdnWriteSigner 두 인터페이스 모두에 대한 타입 조회를 만족시킨다.
+         * @ConditionalOnMissingBean은 구체 타입으로 체크하여 중복 등록을 방지.
+         *
+         * 주의: 사용자가 CdnReadSigner 커스텀 빈만 제공하는 경우, S3PreSignedUrlSigner 자체는
+         * 등록되지 않아 CdnWriteSigner도 미등록 상태가 된다. 이 경우 CdnWriteSigner도 직접 등록해야 한다.
+         */
         @Bean
-        @ConditionalOnMissingBean(CdnReadSigner::class)
+        @ConditionalOnMissingBean(S3PreSignedUrlSigner::class)
         fun s3PreSignedUrlSigner(
             operations: S3Operations,
             storageProperties: ImageStorageProperties,
         ): S3PreSignedUrlSigner = S3PreSignedUrlSigner(operations, storageProperties)
-        // S3PreSignedUrlSigner는 CdnReadSigner + CdnWriteSigner 모두 구현
+        // 반환 타입은 구체 타입 S3PreSignedUrlSigner → CdnReadSigner + CdnWriteSigner 모두 자동 만족
     }
 
     @Configuration(proxyBeanMethods = false)
@@ -1244,5 +1256,17 @@ Round 2 HIGH: 3건 → 반영
 - H-1: `CloudFrontUrlSigner.init` domain 검증 술어 역전 → `!startsWith("http") && !contains("/")` 로 수정 (§4.3)
 - H-2: `properties.distributionDomain!!` CLAUDE.md `!!` 금지 위반 → `val domain = properties.distributionDomain ?: error(...)` local val 추출 (§4.3)
 - H-3: `list(prefix: String)` path traversal bypass → `list(prefix: ImageObjectKey)` 타입으로 변경 (§4.2)
+
+적용 commit: 490cfd8
+
+### Round 2 Codex 추가 발견 (2026-05-17)
+
+| Reviewer | P0 | P1 | Note |
+|----------|---|---|------|
+| Codex | 1(이미 반영) | 2 | @PostConstruct는 6-tier와 동일 발견 → 반영됨 |
+
+Codex P1 반영:
+- P1-1: `ImageObjectKey init` 블록으로 검증 이전 → `copy()` path traversal bypass 차단 (§4.1.1)
+- P1-2: `S3PresignCdnConfiguration` bean 타입을 구체 타입 `S3PreSignedUrlSigner`로 변경 + `@ConditionalOnMissingBean(S3PreSignedUrlSigner)` (§6.1)
 
 적용 commit: (다음 커밋에 기록)
