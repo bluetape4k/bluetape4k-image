@@ -63,7 +63,7 @@ Spring Security, 사내 정책 등으로 key 접근 권한을 검증해야 한�
 - **영향**: `S3ImageStorage`/`S3PreSignedUrlSigner`를 그냥 `@Bean`으로 등록하면 자동 구성 시점에
   `NoClassDefFoundError`가 발생한다.
 - **완화**:
-  - `@ConditionalOnClass(name = ["io.bluetape4k.aws.spring.boot.S3Operations"])` string FQCN 사용.
+  - `@ConditionalOnClass(name = ["io.bluetape4k.aws.spring.s3.S3Operations"])` string FQCN 사용.
   - `S3Operations`를 파라미터로 받는 `@Bean` 메서드는 반드시 nested `@Configuration` 안에만 배치
     (최상위 `@AutoConfiguration` 진입 클래스에 직접 `S3Operations` 타입 참조 금지).
   - S3 config가 조건 불충족 시 `LocalImageStorage`가 `@ConditionalOnMissingBean(ImageStorage)` 패턴으로
@@ -309,10 +309,10 @@ interface ImageStorage {
 
 #### 구현체
 
-**`LocalImageStorage(rootDir: Path)`**
+**`LocalImageStorage(rootDir: Path, maxSizeBytes: Long)`**
 
 ```kotlin
-class LocalImageStorage(private val rootDir: Path) : ImageStorage {
+class LocalImageStorage(private val rootDir: Path, private val maxSizeBytes: Long) : ImageStorage {
     companion object : KLogging()
 
     init {
@@ -407,7 +407,10 @@ class CloudFrontUrlSigner(properties: CdnProperties.CloudFront) : CdnReadSigner 
 
     // signGet: expiresIn > 0 검증, expiresIn ≤ properties.maxExpiry 검증
     // CloudFrontUtilities.getSignedUrlWithCannedPolicy 사용
-    // 이 메서드는 순수 CPU 작업이므로 Dispatchers.IO hop 없음
+    // 서명 로직 전체를 withContext(Dispatchers.IO) { ... } 블록으로 감싼다.
+    // 이유: CloudFrontUtilities.getSignedUrlWithCannedPolicy는 내부적으로
+    //       SecureRandom.nextBytes를 호출하며, 컨테이너 환경에서 엔트로피 고갈로
+    //       블록킹될 수 있다. 따라서 IO 디스패처로 hop이 필요하다.
     // CancellationException 먼저 rethrow
 }
 ```
@@ -657,7 +660,7 @@ class ImagesProcessingAutoConfiguration
 ```kotlin
 @AutoConfiguration(
     afterName = [
-        "io.bluetape4k.aws.spring.boot.autoconfigure.S3AutoConfiguration",
+        "io.bluetape4k.aws.spring.s3.S3AutoConfiguration",
         "io.bluetape4k.images.spring.autoconfigure.ImagesProcessingAutoConfiguration",
     ],
 )
@@ -675,7 +678,7 @@ class ImagesStorageAutoConfiguration {
      * S3Operations 타입이 compileOnly이므로 반드시 nested @Configuration으로 격리.
      */
     @Configuration(proxyBeanMethods = false)
-    @ConditionalOnClass(name = ["io.bluetape4k.aws.spring.boot.S3Operations"])
+    @ConditionalOnClass(name = ["io.bluetape4k.aws.spring.s3.S3Operations"])
     @ConditionalOnProperty(
         prefix = "bluetape4k.images.storage",
         name = ["backend"],
@@ -706,7 +709,7 @@ class ImagesStorageAutoConfiguration {
         @Bean
         @ConditionalOnMissingBean(ImageStorage::class)
         fun localImageStorage(properties: ImageStorageProperties): ImageStorage =
-            LocalImageStorage(Path.of(properties.local.rootDir))
+            LocalImageStorage(Path.of(properties.local.rootDir), properties.maxSizeBytes)
     }
 }
 ```
@@ -734,7 +737,7 @@ class ImagesCdnAutoConfiguration {
      * (P0-3: 최상위 @AutoConfiguration 클래스에 S3Operations 타입 직접 노출 금지)
      */
     @Configuration(proxyBeanMethods = false)
-    @ConditionalOnClass(name = ["io.bluetape4k.aws.spring.boot.S3Operations"])
+    @ConditionalOnClass(name = ["io.bluetape4k.aws.spring.s3.S3Operations"])
     @ConditionalOnProperty(
         prefix = "bluetape4k.images.cdn",
         name = ["provider"],
@@ -787,7 +790,7 @@ class ImagesCdnAutoConfiguration {
 @AutoConfiguration(
     afterName = ["io.bluetape4k.images.spring.autoconfigure.ImagesStorageAutoConfiguration"],
 )
-@ConditionalOnClass(name = ["org.springframework.boot.actuate.health.HealthIndicator"])
+@ConditionalOnClass(name = ["org.springframework.boot.actuate.health.ReactiveHealthIndicator"])
 @ConditionalOnProperty(
     prefix = "bluetape4k.images.health",
     name = ["enabled"],
@@ -798,13 +801,35 @@ class ImagesHealthAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean(name = ["imageStorageHealthIndicator"])
-    fun imageStorageHealthIndicator(storage: ImageStorage): HealthIndicator =
-        ImageStorageHealthIndicator(storage)
+    fun imageStorageHealthIndicator(
+        storage: ImageStorage,
+        properties: ImageStorageProperties,
+    ): ReactiveHealthIndicator =
+        ImageStorageHealthIndicator(storage, properties.healthProbeKey)
 }
 ```
 
 - `ImageStorageHealthIndicator`: `exists(sentinelKey)`를 통한 probe 또는 S3 headBucket.
 - probe key는 `ImageStorageProperties.healthProbeKey` 속성으로 커스터마이즈 가능 (기본: `.health-probe`).
+- **`ReactiveHealthIndicator` 구현** — `Mono<Health>` 반환. `kotlinx-coroutines-reactor`의 `mono { }` 빌더 사용:
+
+```kotlin
+class ImageStorageHealthIndicator(
+    private val storage: ImageStorage,
+    private val probeKey: String = ".health-probe",
+) : ReactiveHealthIndicator {
+    override fun health(): Mono<Health> = mono {
+        try {
+            storage.exists(ImageObjectKey.of("_health", probeKey))
+            Health.up().build()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Health.down(e).build()
+        }
+    }
+}
+```
 
 #### Phase 5 — `ImagesMetricsAutoConfiguration`
 

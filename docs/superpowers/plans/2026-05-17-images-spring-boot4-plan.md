@@ -56,9 +56,10 @@
 - **description**: 스펙 §7.3에 정의된 모든 항목을 추가한다.
   - `[versions]`: `aws2 = "2.44.5"`, `spring-boot = "4.0.6"`, `bluetape4k-aws = "0.1.0-SNAPSHOT"` (없는 경우만 추가).
   - `[libraries]`: `aws2-bom`, `aws2-s3`, `aws2-cloudfront`, `bluetape4k-aws`, `bluetape4k-aws-spring-boot`,
-    `bluetape4k-testcontainers`, `spring-boot-dependencies`, `spring-boot-autoconfigure`,
+    `bluetape4k-testcontainers`, `bluetape4k-junit5` (for `runSuspendIO` and base test infra),
+    `spring-boot-dependencies`, `spring-boot-autoconfigure`,
     `spring-boot-actuator`, `spring-boot-configuration-processor`, `spring-boot-starter-test`,
-    `micrometer-core` (없는 경우 한정).
+    `micrometer-core`, `kotlinx-coroutines-reactor` (for ReactiveHealthIndicator reactive support) (없는 경우 한정).
   - `[plugins]`: `kotlin-spring`, `spring-boot`.
 - **acceptance**: 기존 `./gradlew help` 명령이 회귀 없이 통과한다.
 
@@ -80,9 +81,12 @@
     - `implementation(project(":images"))` — **api가 아님** (스펙 §7.1 변경점).
     - `compileOnly`: `spring-boot-autoconfigure`, `micrometer-core`, `spring-boot-actuator`,
       `bluetape4k-aws-spring-boot`, `bluetape4k-aws`, `aws2-s3`, `aws2-cloudfront`.
+    - `implementation` (또는 `compileOnly` — reactor가 ReactiveHealthIndicator의 반환 타입에 등장):
+      `kotlinx-coroutines-reactor`.
     - `annotationProcessor`: `spring-boot-configuration-processor`.
     - `testImplementation`: `spring-boot-starter-test`, `bluetape4k-aws-spring-boot`, `bluetape4k-aws`,
-      `aws2-s3`, `aws2-cloudfront`, `bluetape4k-testcontainers`, `micrometer-core`, `spring-boot-actuator`.
+      `aws2-s3`, `aws2-cloudfront`, `bluetape4k-testcontainers`, `bluetape4k-junit5`,
+      `kotlinx-coroutines-reactor`, `micrometer-core`, `spring-boot-actuator`.
 - **acceptance**: `./gradlew :images-spring-boot4:tasks` 정상 출력.
 
 ### T0.4 — 테스트 리소스 파일 생성
@@ -92,6 +96,22 @@
   - `images-spring-boot4/src/test/resources/logback-test.xml`
 - **description**: 기존 모듈(`images`)의 동일 파일을 참고하여 동일 설정을 복사한다(`@TestInstance` 기본 PER_CLASS 설정 포함).
 - **acceptance**: `./gradlew :images-spring-boot4:compileTestKotlin -x test` 통과(빈 상태라도 OK).
+
+### T0.5 — `afterName` + `@ConditionalOnClass` FQCN 검증
+- **complexity**: low
+- **files**: (no file change — verification only)
+- **description**: 구현 시작 전, `afterName` 및 `@ConditionalOnClass(name=...)` 문자열이 실제 `bluetape4k-aws-spring-boot` JAR 클래스패스와 일치하는지 검증한다.
+  ```bash
+  # JAR에서 FQCN 확인
+  ./gradlew :images-spring-boot4:dependencies
+  # 또는 직접 확인 (실제 소스에서 검증됨):
+  # io.bluetape4k.aws.spring.s3.S3AutoConfiguration  ← AutoConfiguration.imports 확인됨
+  # io.bluetape4k.aws.spring.s3.S3Operations          ← 패키지 선언 확인됨
+  ```
+  검증된 FQCNs:
+  - `S3AutoConfiguration` FQCN: `io.bluetape4k.aws.spring.s3.S3AutoConfiguration`
+  - `S3Operations` FQCN: `io.bluetape4k.aws.spring.s3.S3Operations`
+- **acceptance**: 위 두 FQCN이 `bluetape4k-aws-spring-boot` JAR에서 확인됨 (3-R Architect + Codex CLI가 실제 소스 grep으로 검증 완료).
 
 ---
 
@@ -216,6 +236,15 @@
   - 모든 data class Serializable + serialVersionUID.
 - **acceptance**: `CdnProperties.CloudFront(privateKeyPem = "secret").toString()` 결과에 `[REDACTED]`만 포함되고 `"secret"` 미포함(T6.5 테스트).
 
+### T3.4 — S3 SDK timeout/retry/concurrency 설정 helper
+- **complexity**: medium
+- **files**: `images-spring-boot4/src/main/kotlin/io/bluetape4k/images/spring/storage/s3/S3OverrideConfigHelper.kt`
+- **description**: `ImageStorageProperties.S3`의 `callTimeout`, `attemptTimeout`, `maxRetries`, `maxInFlight`를 AWS SDK `AwsRequestOverrideConfiguration` 및 `RetryPolicy`로 변환하는 내부 helper를 작성한다.
+  - `fun ImageStorageProperties.S3.toRequestOverrideConfig(): AwsRequestOverrideConfiguration`
+  - `fun ImageStorageProperties.S3.toRetryPolicy(): RetryPolicy`
+  - `maxInFlight`는 `Semaphore`를 사용하거나 SDK `AsyncConfiguration.advancedOption`으로 적용.
+- **acceptance**: T4.2에서 `S3ImageStorage`가 이 helper를 사용하여 SDK 호출 시 override 설정 적용 확인 (단위 테스트에서 MockK로 캡처 검증).
+
 ---
 
 ## Phase 4 — 구현체 (Storage)
@@ -224,7 +253,8 @@
 - **complexity**: high
 - **files**: `images-spring-boot4/src/main/kotlin/io/bluetape4k/images/spring/storage/LocalImageStorage.kt`
 - **description**: 스펙 §4.2 구현체.
-  - `class LocalImageStorage(private val rootDir: Path) : ImageStorage`.
+  - `class LocalImageStorage(private val rootDir: Path, private val maxSizeBytes: Long) : ImageStorage`.
+  - `LocalImageStorage`는 `maxSizeBytes: Long`을 두 번째 생성자 파라미터로 받는다 (`LocalStorageConfiguration`에서 `properties.maxSizeBytes` 전달).
   - `companion object : KLogging()`.
   - 생성자 init 블록에서 `Files.createDirectories(rootDir)`.
   - 모든 suspend 메서드 본문은 `withContext(Dispatchers.IO)` 안.
@@ -263,15 +293,23 @@
   - `keyPrefix` 처리: `properties.keyPrefix`와 `key.fullKey`를 결합 — single-slash 정규화.
   - English KDoc + `## Behavior / Contract`.
 - **acceptance**: T6.7 `S3ImageStorageTest` 모든 케이스 통과. T1.4 `wrap()`을 statusCode 기반 분류로 확장(같은 Task 내).
+  - S3 호출 시 `properties.s3.callTimeout`, `properties.s3.attemptTimeout`, `properties.s3.maxRetries`를 `AwsRequestOverrideConfiguration`으로 전달하는 helper 또는 extension function 구현 (`T3.4` 참조). `maxInFlight`는 semaphore 또는 SDK concurrency config으로 적용.
 
-### T4.3 — `T1.4 ImageStorageException.wrap()` 확장 (T4.2 후속)
+### T4.3 — S3Exception isolation: 매핑은 `S3ImageStorage` 내부 extension으로 (T4.2 후속)
 - **complexity**: medium
-- **files**: `images-spring-boot4/src/main/kotlin/io/bluetape4k/images/spring/ImageStorageException.kt`
+- **files**:
+  - `images-spring-boot4/src/main/kotlin/io/bluetape4k/images/spring/ImageStorageException.kt` (유지, SDK import 없음)
+  - `images-spring-boot4/src/main/kotlin/io/bluetape4k/images/spring/storage/S3ImageStorage.kt` (private extension 추가)
 - **description**: T4.2와 동시 작업이 가능하나, 의존성상 T4.2가 완료 후 또는 함께 PR로 묶는다.
-  - S3 SDK `S3Exception.statusCode()` → `NotFoundException`/`AccessDeniedException`/`ConflictException`/`TransientException` 매핑 로직 추가.
-  - `S3Exception` 클래스는 `compileOnly` 의존성이므로 `Class.forName(...)` 또는 별도 어댑터로 isolation 가능. 다만 `S3ImageStorage` 클래스 자체가 nested config에서만 인스턴스화되므로, `S3Exception`을 직접 import해도 호출 시점에만 해석된다. 본 Task에서는 직접 import 채택.
-  - **SDK 오류 메시지에 키 값이 포함될 수 있으므로 wrap 시 메시지 sanitize** — `key.fullKey`만 사용, SDK 원문은 `cause`로만 전달.
-- **acceptance**: T4.2의 catch가 본 함수만 호출하도록 통합.
+  - **`ImageStorageException.kt`에 `S3Exception`을 import하지 않는다.** `ImageStorageException`은 generic하게 유지하고 어떤 SDK도 의존하지 않는다.
+  - S3-specific 매핑은 `S3ImageStorage.kt` 안의 private extension function으로 이동한다:
+    ```kotlin
+    private fun Throwable.toImageStorageException(key: ImageObjectKey): ImageStorageException
+    ```
+    - S3 SDK `S3Exception.statusCode()` → `NotFoundException`/`AccessDeniedException`/`ConflictException`/`TransientException` 매핑 로직을 본 extension에서 수행.
+    - `S3Exception`은 본 파일 한정 import이며, 해당 파일 자체가 nested config에서만 인스턴스화되므로 classpath가 보장된다.
+  - **SDK 오류 메시지에 키 값이 포함될 수 있으므로 변환 시 메시지 sanitize** — `key.fullKey`만 사용, SDK 원문은 `cause`로만 전달.
+- **acceptance**: `ImageStorageException.kt`에는 SDK import 없음(`rg "import software.amazon" ImageStorageException.kt` 결과 0). `S3ImageStorage`의 catch 블록은 본 extension만 호출.
 
 ---
 
@@ -297,7 +335,8 @@
     - 파싱 실패 시 PEM 본문 echo 금지 — 경로/SHA-256 지문만 메시지에 표시.
   - `signGet(key, expiresIn)`:
     - `require(expiresIn.isPositive())`, `require(expiresIn <= properties.maxExpiry)`.
-    - `CloudFrontUtilities.getSignedUrlWithCannedPolicy(...)` 호출. CPU 작업이므로 Dispatchers hop **불필요**.
+    - **서명 로직 전체를 `withContext(Dispatchers.IO) { }` 블록으로 감싼다.** 이유: `CloudFrontUtilities.getSignedUrlWithCannedPolicy`는 내부적으로 `SecureRandom`을 호출하며, 컨테이너 환경에서 엔트로피 고갈로 블록킹될 수 있음.
+    - `CloudFrontUtilities.getSignedUrlWithCannedPolicy(...)` 호출 (IO 디스패처 내부).
     - **`CancellationException` 가장 먼저 rethrow** (suspend 함수).
     - 반환 `URI`.
   - English KDoc.
@@ -308,12 +347,14 @@
 - **complexity**: medium
 - **files**: `images-spring-boot4/src/main/kotlin/io/bluetape4k/images/spring/cdn/S3PreSignedUrlSigner.kt`
 - **description**: 스펙 §4.3.
-  - `class S3PreSignedUrlSigner(private val operations: S3Operations, private val properties: ImageStorageProperties) : CdnReadSigner, CdnWriteSigner`.
+  - **생성자 형태**: `class S3PreSignedUrlSigner(private val operations: S3Operations, private val bucket: String, private val keyPrefix: String) : CdnReadSigner, CdnWriteSigner`.
+    - `ImageStorageProperties` 전체를 주입하지 않는다. AutoConfig 에서 `properties.bucket`, `properties.keyPrefix`를 전달.
   - `companion object : KLogging()`.
-  - init: `properties.bucket.requireNotBlank("bucket")`.
+  - init: `bucket.requireNotBlank("bucket")`.
   - `signGet`: `require(expiresIn.isPositive())`, `require(expiresIn <= Duration.ofDays(7))` (S3 SigV4 max).
     `operations.presignGet(...)` 위임.
   - `signPut`: 동일한 expiry 검증 + `operations.presignPut(...)` 위임 + `options`의 `contentType` 등을 메타데이터로 전달.
+  - **URL → URI 변환**: `S3Operations.presignGet/presignPut`은 `java.net.URL`을 반환. `CdnReadSigner.signGet`/`CdnWriteSigner.signPut`은 `URI`를 반환한다. 반드시 `url.toURI()`로 변환하며, `URISyntaxException`은 `ImageStorageException.TransientException`으로 wrap한다 (단, `CancellationException`은 먼저 rethrow).
   - **`CancellationException` 가장 먼저 rethrow**.
   - English KDoc.
 - **acceptance**: T6.8 `S3PreSignedUrlSignerTest` 통과 + `s3PreSignedUrlSigner is CdnReadSigner && s3PreSignedUrlSigner is CdnWriteSigner` 타입 검증.
@@ -365,6 +406,7 @@
   - 잘못된 PEM → 생성자에서 `ImageStorageException.ValidationException` (또는 `IllegalArgumentException`, 스펙에서는 ValidationException 명시).
   - `private-key-path` + `private-key-pem` 동시 지정 → `IllegalStateException`.
   - **Actuator 마스킹**: `CdnProperties.CloudFront(privateKeyPem = "secret").toString()`에 `secret` 미포함, `[REDACTED]` 포함.
+  - `privateKeyPath`(파일 기반 PEM) 변형: 파일로부터 PEM을 읽어 서명하는 시나리오 (spec §5.1.3 참조).
 - **acceptance**: 모든 케이스 통과.
 
 ### T6.5 — `CdnPropertiesRedactionTest`
@@ -405,6 +447,7 @@
   - `maxSizeBytes` 초과 upload → `ValidationException`.
   - 취소: `withTimeout(1.milliseconds) { largeUpload() }` → `TimeoutCancellationException` propagation.
 - **acceptance**: Floci 컨테이너 가용 환경에서 통과.
+  - S3 download 시 `maxSizeBytes` 초과 → `ValidationException` 테스트.
 
 ### T6.8 — `S3PreSignedUrlSignerTest` (MockK)
 - **complexity**: medium
@@ -435,12 +478,12 @@
 - **complexity**: high
 - **files**: `images-spring-boot4/src/main/kotlin/io/bluetape4k/images/spring/autoconfigure/ImagesStorageAutoConfiguration.kt`
 - **description**: 스펙 §6.1 Phase 2 + P0-2/P0-3 + Round 2 C-1.
-  - `@AutoConfiguration(afterName = ["io.bluetape4k.aws.spring.boot.autoconfigure.S3AutoConfiguration", "io.bluetape4k.images.spring.autoconfigure.ImagesProcessingAutoConfiguration"])` — **`afterName` (String[]) 사용**. `after` (KClass[]) 금지.
+  - `@AutoConfiguration(afterName = ["io.bluetape4k.aws.spring.s3.S3AutoConfiguration", "io.bluetape4k.images.spring.autoconfigure.ImagesProcessingAutoConfiguration"])` — **`afterName` (String[]) 사용** (FQCN: `io.bluetape4k.aws.spring.s3.S3AutoConfiguration` — T0.5 검증). `after` (KClass[]) 금지.
   - `@ConditionalOnProperty(prefix="bluetape4k.images.storage", name=["enabled"], havingValue="true", matchIfMissing=true)`.
   - `@EnableConfigurationProperties(ImageStorageProperties::class)`.
   - **Nested `S3StorageConfiguration`**:
     - `@Configuration(proxyBeanMethods = false)`.
-    - `@ConditionalOnClass(name = ["io.bluetape4k.aws.spring.boot.S3Operations"])`.
+    - `@ConditionalOnClass(name = ["io.bluetape4k.aws.spring.s3.S3Operations"])`.
     - `@ConditionalOnProperty(prefix="bluetape4k.images.storage", name=["backend"], havingValue="s3")`.
     - **생성자 주입**: `class S3StorageConfiguration(private val properties: ImageStorageProperties)`.
     - **`@PostConstruct fun validateBucket()`는 no-arg** (JSR-250 강제, C-1).
@@ -462,9 +505,10 @@
   - `@EnableConfigurationProperties(CdnProperties::class)`.
   - **Nested `S3PresignCdnConfiguration`** (P0-3):
     - `@Configuration(proxyBeanMethods = false)`.
-    - `@ConditionalOnClass(name = ["io.bluetape4k.aws.spring.boot.S3Operations"])`.
+    - `@ConditionalOnClass(name = ["io.bluetape4k.aws.spring.s3.S3Operations"])`.
     - `@ConditionalOnProperty(prefix="bluetape4k.images.cdn", name=["provider"], havingValue="s3_presign", matchIfMissing=true)`.
-    - **`@Bean @ConditionalOnMissingBean(S3PreSignedUrlSigner::class) fun s3PreSignedUrlSigner(...): S3PreSignedUrlSigner = ...`** — **반환 타입은 구체 타입 `S3PreSignedUrlSigner`** (P1-2). 인터페이스 타입(`CdnReadSigner`/`CdnWriteSigner`) 둘 다 자동 만족.
+    - **`@Bean @ConditionalOnMissingBean(S3PreSignedUrlSigner::class) fun s3PreSignedUrlSigner(operations: S3Operations, properties: ImageStorageProperties): S3PreSignedUrlSigner = S3PreSignedUrlSigner(operations, properties.bucket, properties.keyPrefix)`** — **반환 타입은 구체 타입 `S3PreSignedUrlSigner`** (P1-2). 인터페이스 타입(`CdnReadSigner`/`CdnWriteSigner`) 둘 다 자동 만족.
+      - 생성자에 `properties` 전체가 아닌 `properties.bucket`, `properties.keyPrefix`만 전달 (T5.2 생성자 단순화 반영).
   - **Nested `CloudFrontCdnConfiguration`**:
     - `@Configuration(proxyBeanMethods = false)`.
     - `@ConditionalOnClass(name = ["software.amazon.awssdk.services.cloudfront.CloudFrontUtilities"])`.
@@ -473,31 +517,35 @@
   - maintainer note 주석: `afterName=[String]` 변경 금지 사유 명시(NoClassDefFoundError).
 - **acceptance**: T8.3 시나리오 5종 통과.
 
-### T7.4 — `ImagesHealthAutoConfiguration` + `ImageStorageHealthIndicator`
+### T7.4 — `ImagesHealthAutoConfiguration` + `ImageStorageHealthIndicator` (ReactiveHealthIndicator)
 - **complexity**: medium
 - **files**:
   - `images-spring-boot4/src/main/kotlin/io/bluetape4k/images/spring/autoconfigure/ImagesHealthAutoConfiguration.kt`
   - `images-spring-boot4/src/main/kotlin/io/bluetape4k/images/spring/health/ImageStorageHealthIndicator.kt`
 - **description**: 스펙 §6.1 Phase 4.
   - `@AutoConfiguration(afterName=["...ImagesStorageAutoConfiguration"])`.
-  - `@ConditionalOnClass(name=["org.springframework.boot.actuate.health.HealthIndicator"])`.
+  - `@ConditionalOnClass(name=["org.springframework.boot.actuate.health.ReactiveHealthIndicator"])`.
   - `@ConditionalOnProperty(prefix="bluetape4k.images.health", name=["enabled"], havingValue="true", matchIfMissing=true)`.
-  - `@Bean @ConditionalOnMissingBean(name=["imageStorageHealthIndicator"]) fun imageStorageHealthIndicator(storage: ImageStorage, properties: ImageStorageProperties): HealthIndicator = ImageStorageHealthIndicator(storage, properties.healthProbeKey)`.
-  - `ImageStorageHealthIndicator`: probe key (기본 `.health-probe`)에 대해 `exists` suspend 호출(coroutine bridge `runBlocking`/`kotlinx-coroutines-reactor`). `Health.up()`/`down()`.
-    - **`runBlocking`은 health probe 한정으로 허용** (CLAUDE.md "tightly controlled lazy initialization" 예외).
+  - `@Bean @ConditionalOnMissingBean(name=["imageStorageHealthIndicator"]) fun imageStorageHealthIndicator(storage: ImageStorage, properties: ImageStorageProperties): ReactiveHealthIndicator = ImageStorageHealthIndicator(storage, properties.healthProbeKey)` — **반환 타입을 `ReactiveHealthIndicator`로 변경** (`HealthIndicator` 아님).
+  - **`ImageStorageHealthIndicator`는 `ReactiveHealthIndicator`를 구현하고 `Mono<Health>`를 반환한다.** `kotlinx-coroutines-reactor`의 `mono { }` 빌더를 사용하여 suspend 함수(`storage.exists`)를 reactive 흐름으로 노출한다.
+    - `runBlocking` 사용 금지 — `mono { }` 빌더로 대체.
+    - 의존성 노트: `kotlinx-coroutines-reactor`가 `testImplementation` 및 `implementation`/`compileOnly`로 필요 (T0.3).
+  - probe key (기본 `.health-probe`)에 대해 `storage.exists(ImageObjectKey.of("_health", probeKey))` 호출. 성공 → `Health.up()`. 예외 → `Health.down(e)` (단 `CancellationException`은 먼저 rethrow).
   - English KDoc.
-- **acceptance**: 컴파일 통과 + T6.9 `ImageStorageHealthIndicatorTest` 통과.
+- **acceptance**: 컴파일 통과 + T8.4 `ImageStorageHealthIndicatorTest` 통과.
 
-### T7.5 — `ImagesMetricsAutoConfiguration` (Micrometer optional decorator)
+### T7.5 — `ImagesMetricsAutoConfiguration` (Micrometer optional decorator via BeanPostProcessor)
 - **complexity**: medium
 - **files**: `images-spring-boot4/src/main/kotlin/io/bluetape4k/images/spring/autoconfigure/ImagesMetricsAutoConfiguration.kt`
 - **description**: 스펙 §6.1 Phase 5.
   - `@AutoConfiguration(afterName=["...ImagesStorageAutoConfiguration"])`.
   - `@ConditionalOnClass(name=["io.micrometer.core.instrument.MeterRegistry"])`.
-  - `ImageStorage` 빈을 Timer/Counter 데코레이터로 래핑(BeanPostProcessor 또는 `@Bean ImageStorage` 재정의 + `@ConditionalOnBean(MeterRegistry::class)`).
-  - 측정 메트릭: `images.storage.upload.duration`, `images.storage.upload.errors`, `images.storage.download.duration`, `images.cdn.sign.duration`.
+  - **`@ConditionalOnProperty(prefix = "bluetape4k.images.metrics", name = ["enabled"], havingValue = "true", matchIfMissing = true)` 추가** (CLAUDE.md: 모든 AutoConfig phase 클래스에 `@ConditionalOnProperty` 적용).
+  - **기존 `@Bean ImageStorage` 재선언 방식을 금지.** 대신 `BeanPostProcessor` 방식 사용: `ImageStorage` 빈을 `postProcessAfterInitialization` 단계에서 `MetricImageStorage(delegate: ImageStorage, registry: MeterRegistry)`로 교체한다. 이렇게 하면 `Storage`/`Cdn` AutoConfig가 등록한 빈을 안전하게 래핑할 수 있고, `ImageStorage` 자체에 대한 중복 빈 등록을 피한다.
+  - 측정 메트릭: `images.storage.upload.duration`, `images.storage.upload.errors`, `images.storage.download.duration`.
+  - **CDN 메트릭(`images.cdn.sign.duration`)은 `MetricImageStorage` 범위 밖이다.** `CdnReadSigner`/`CdnWriteSigner` 래핑은 본 task에서 제외하고 별도 task로 추후 다루거나 스코프에서 제거한다.
   - English KDoc.
-- **acceptance**: 컴파일 통과 + 메트릭 wrapper 단위 테스트 통과(간단 happy path).
+- **acceptance**: 컴파일 통과 + 메트릭 wrapper 단위 테스트 통과(간단 happy path). T8.6 시나리오 통과.
 
 ### T7.6 — `AutoConfiguration.imports` 등록
 - **complexity**: low
@@ -511,6 +559,17 @@
   io.bluetape4k.images.spring.autoconfigure.ImagesMetricsAutoConfiguration
   ```
 - **acceptance**: 5개 phase 모두 등록. `./gradlew :images-spring-boot4:compileJava` 통과.
+
+### T7.7 — `CdnPropertySanitizingFunction` 빈 등록
+- **complexity**: medium
+- **files**:
+  - `images-spring-boot4/src/main/kotlin/io/bluetape4k/images/spring/autoconfigure/CdnPropertySanitizingFunction.kt`
+  - `images-spring-boot4/src/main/kotlin/io/bluetape4k/images/spring/autoconfigure/ImagesCdnAutoConfiguration.kt` (수정)
+- **description**: Spring Boot Actuator의 `/actuator/configprops` 및 `/actuator/env` 엔드포인트에서 `CdnProperties.privateKeyPem` 값이 노출되지 않도록 `SanitizingFunction` 빈을 구현·등록한다.
+  - `CdnPropertySanitizingFunction : SanitizingFunction` 구현: `"cdn.cloudfront.private-key-pem"` 키에 대해 `SanitizableData`를 `[REDACTED]`로 치환.
+  - `@Bean @ConditionalOnClass(name=["org.springframework.boot.actuate.endpoint.SanitizingFunction"])` 으로 `ImagesCdnAutoConfiguration` 내부 nested `@Configuration`에 등록.
+  - `toString()` override(T3.3)와 별개의 방어층.
+- **acceptance**: T8.5 테스트 통과. `/actuator/configprops` 응답 JSON에서 `privateKeyPem` 값이 `[REDACTED]`인 것 확인.
 
 ---
 
@@ -531,7 +590,7 @@
 - **description**: 스펙 §8.6 — `ApplicationContextRunner` 6 시나리오.
   1. `backend=local` → `LocalImageStorage` 빈, `S3ImageStorage` 없음.
   2. `backend=s3` + 사용자 제공 `S3Operations` 빈 → `S3ImageStorage`.
-  3. `backend=s3` + `FilteredClassLoader(S3Operations 차단)` → `LocalImageStorage` fallback (P0-2 검증).
+  3. `backend=s3` + `FilteredClassLoader(S3Operations 차단)` → `LocalImageStorage` fallback (P0-2 검증). **S3 클래스패스 없음 + `bucket=null`일 때 `BeanCreationException` 발생하지 않음 (LocalImageStorage가 조용히 활성화됨을 확인)**.
   4. `enabled=false` → 어떤 ImageStorage도 없음.
   5. 사용자 직접 `@Bean ImageStorage` 등록 → 자동 구성 빈 미등록(`@ConditionalOnMissingBean`).
   6. `backend=s3` + `bucket` 미설정 → context fail (`BeanCreationException` 또는 `IllegalArgumentException`). **`@PostConstruct` no-arg 형식 검증의 핵심**.
@@ -557,6 +616,34 @@
   - MockK `ImageStorage.exists()` true → `Health.up()`.
   - MockK `ImageStorage.exists()` throws `ImageStorageException` → `Health.down()`.
 - **acceptance**: 통과.
+
+### T8.5 — `CdnPropertySanitizingFunction` Actuator 리다이렉션 통합 테스트
+- **complexity**: medium
+- **files**: `images-spring-boot4/src/test/kotlin/io/bluetape4k/images/spring/autoconfigure/CdnPropertySanitizingFunctionTest.kt`
+- **description**: `ApplicationContextRunner`를 사용하여 `/actuator/configprops` 응답에서 `cdn.cloudfront.private-key-pem` 값이 `[REDACTED]`임을 검증한다.
+  - `context.getBean<SanitizingFunction>()` — 빈이 등록되어 있는지 확인.
+  - `SanitizingFunction`을 직접 호출하여 `privateKeyPem` 키에 대해 redacted value 반환 확인.
+- **acceptance**: `SanitizingFunction` 빈 등록 확인 + redaction 동작 단위 검증 통과.
+
+### T8.6 — `ImagesMetricsAutoConfigurationTest`
+- **complexity**: medium
+- **files**: `images-spring-boot4/src/test/kotlin/io/bluetape4k/images/spring/autoconfigure/ImagesMetricsAutoConfigurationTest.kt`
+- **description**: `ApplicationContextRunner` 기반 3가지 시나리오 검증:
+  1. `MeterRegistry` 없음 → 데코레이터 없는 원본 `ImageStorage` 그대로 활성화.
+  2. `MeterRegistry` 있음 → `ImageStorage` 빈이 `MetricImageStorage`(BeanPostProcessor 래핑)로 활성화.
+  3. `FilteredClassLoader(MeterRegistry::class)` → 메트릭 Phase 전체 skip (컨텍스트 로드 성공, `ImageStorage` 원본 활성화).
+  추가: 실패 경로 — `TransientException` throw 시 `images.storage.upload.errors` 카운터가 1.0 증가하는지 확인.
+- **acceptance**: 3 시나리오 + 실패 경로 테스트 통과.
+
+### T8.7 — `ImagesHealthAutoConfigurationTest`
+- **complexity**: medium
+- **files**: `images-spring-boot4/src/test/kotlin/io/bluetape4k/images/spring/autoconfigure/ImagesHealthAutoConfigurationTest.kt`
+- **description**: `ApplicationContextRunner` 기반 시나리오:
+  1. `ImageStorage` 빈 있음 → `ReactiveHealthIndicator` 빈 활성화.
+  2. `bluetape4k.images.health.enabled=false` → `ReactiveHealthIndicator` 빈 생성 안 됨.
+  3. `ImageStorage` 빈 없음 → `ReactiveHealthIndicator` 생성 안 됨 (MissingBean 안전).
+  4. `probeKey` 커스터마이즈 → 주입된 key로 `storage.exists()` 호출 확인 (MockK).
+- **acceptance**: 4 시나리오 통과.
 
 ---
 
@@ -595,7 +682,7 @@
 - **acceptance**: 두 README에 해당 행 존재.
 
 ### T9.5 — KDoc 영문화 검수
-- **complexity**: low
+- **complexity**: medium
 - **files**: `images-spring-boot4/src/main/kotlin/**/*.kt`
 - **description**: 모든 public API에 영어 KDoc + `## Behavior / Contract`(필요 시) 완비 점검.
   CLAUDE.md "Document Language Policy" 준수.
@@ -610,6 +697,14 @@
   - Floci 가용 환경에서 `S3ImageStorageTest` 통과 보고.
   - 보고에는 pass count + 경과 시간 포함.
 - **acceptance**: 모든 명령이 0-exit.
+  - [ ] 모든 구현 클래스 `companion object : KLogging()` 확인.
+  - [ ] 모든 `data class` / config 클래스 `Serializable + serialVersionUID` 확인.
+  - [ ] suspend 함수 catch 블록 `CancellationException` 먼저 rethrow 확인.
+  - [ ] `runCatching {}` suspend 함수 내부 사용 없음 확인.
+  - [ ] `!!` 연산자 없음 확인.
+  - [ ] `@AutoConfiguration(afterName=...)` FQCN 정확성 확인 (T0.5 결과).
+  - [ ] `@ConditionalOnClass(name=...)` FQCN 정확성 확인.
+  - [ ] 모든 public API 영어 KDoc 완료 (T9.5).
 
 ---
 
@@ -620,6 +715,7 @@
 - **files**: `.github/workflows/ci.yml`, `.github/workflows/nightly-tests.yml` (영향 시)
 - **description**: CI workflow가 `images-spring-boot4` 모듈을 빌드/테스트하는지 확인. 누락 시 보정.
 - **acceptance**: CI에서 신규 모듈 빌드/테스트 단계 존재.
+  - `./gradlew :images-spring-boot4:test` 및 `:images-spring-boot4:detekt`가 `.github/workflows/ci.yml` 내 job에 명시적으로 존재하거나, 또는 `./gradlew build` 통합 job이 해당 모듈을 `settings.gradle.kts` 포함으로 커버함을 `--dry-run` 출력으로 검증.
 
 ### T10.2 — `oh-my-claudecode:code-reviewer` 실행
 - **complexity**: medium
