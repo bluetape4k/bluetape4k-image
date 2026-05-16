@@ -293,8 +293,13 @@ interface ImageStorage {
     /** 존재 여부. 인증 오류는 [ImageStorageException.AccessDeniedException] throw. */
     suspend fun exists(key: ImageObjectKey): Boolean
 
-    /** 주어진 prefix로 시작하는 키 목록. 페이지네이션 불필요 시 `Flow` 소비 후 `toList()`. */
-    fun list(prefix: String): Flow<ImageObjectKey>
+    /**
+     * 주어진 prefix로 시작하는 키 목록.
+     *
+     * prefix는 [ImageObjectKey.of] 규칙(allowlist, `..` 금지)과 동일하게 검증된다.
+     * `ImageObjectKey`를 인자로 받아 path traversal bypass를 방지한다.
+     */
+    fun list(prefix: ImageObjectKey): Flow<ImageObjectKey>
 }
 ```
 
@@ -387,9 +392,10 @@ class CloudFrontUrlSigner(properties: CdnProperties.CloudFront) : CdnReadSigner 
 
     init {
         properties.distributionDomain.requireNotBlank("distributionDomain")
-        require(properties.distributionDomain!!.startsWith("https://") ||
-                !properties.distributionDomain.contains("/")) {
-            "distributionDomain must be a bare hostname (e.g., d123.cloudfront.net), not a URL path"
+        val domain = properties.distributionDomain ?: error("distributionDomain required")
+        // !! 금지 (CLAUDE.md). requireNotBlank 이후 local val로 추출.
+        require(!domain.startsWith("http") && !domain.contains("/")) {
+            "distributionDomain must be a bare hostname (e.g., d123.cloudfront.net), not a full URL"
         }
         properties.keyPairId.requireNotBlank("keyPairId")
         require(properties.maxExpiry.isPositive()) { "maxExpiry must be positive" }
@@ -671,19 +677,19 @@ class ImagesStorageAutoConfiguration {
         name = ["backend"],
         havingValue = "s3",
     )
-    class S3StorageConfiguration {
-
-        @PostConstruct  // 또는 InitializingBean
-        fun validateBucket(properties: ImageStorageProperties) {
+    class S3StorageConfiguration(
+        // @PostConstruct은 no-arg 강제(JSR-250). 생성자 주입 후 @PostConstruct no-arg로 검증.
+        private val properties: ImageStorageProperties,
+    ) {
+        @PostConstruct
+        fun validateBucket() {
             properties.bucket.requireNotBlank("bluetape4k.images.storage.bucket (required when backend=s3)")
         }
 
         @Bean
         @ConditionalOnMissingBean(ImageStorage::class)
-        fun s3ImageStorage(
-            operations: S3Operations,
-            properties: ImageStorageProperties,
-        ): ImageStorage = S3ImageStorage(operations, properties)
+        fun s3ImageStorage(operations: S3Operations): ImageStorage =
+            S3ImageStorage(operations, properties)
     }
 
     /**
@@ -1222,4 +1228,21 @@ AutoConfig 초기화 순서:
 
 Round 1 P0: 3건 (Codex 발견) — 모두 §6.1에 반영 (afterName, LocalStorage fallback, CDN nested class)
 Round 1 P1: 14 unique → 모두 스펙 반영 (§4.1–§9)
+적용 commit: 9d26740
+
+### Round 2 (2026-05-17)
+
+| Reviewer | CRITICAL | HIGH | MEDIUM | LOW |
+|----------|---------|------|--------|-----|
+| 6-tier Advisor | 1 | 3 | 3 | 2 |
+| Codex CLI | 진행 중 | — | — | — |
+
+Round 2 CRITICAL: 1건 → 반영
+- C-1: `@PostConstruct fun validateBucket(properties)` — JSR-250 no-arg 위반 → `S3StorageConfiguration(properties)` 생성자 주입 + no-arg `@PostConstruct` 로 수정 (§6.1)
+
+Round 2 HIGH: 3건 → 반영
+- H-1: `CloudFrontUrlSigner.init` domain 검증 술어 역전 → `!startsWith("http") && !contains("/")` 로 수정 (§4.3)
+- H-2: `properties.distributionDomain!!` CLAUDE.md `!!` 금지 위반 → `val domain = properties.distributionDomain ?: error(...)` local val 추출 (§4.3)
+- H-3: `list(prefix: String)` path traversal bypass → `list(prefix: ImageObjectKey)` 타입으로 변경 (§4.2)
+
 적용 commit: (다음 커밋에 기록)
