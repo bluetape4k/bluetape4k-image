@@ -31,11 +31,12 @@ native codec이 중요해질 때 libvips 백엔드로 확장할 수 있는 단�
 
 | 모듈                   | Artifact ID                          | 설명                                                      |
 |-----------------------|--------------------------------------|----------------------------------------------------------|
-| `images`              | `bluetape4k-images`                  | Scrimage 기반 처리: 로드, 리사이즈, 필터, 변환, 분석, 배치 처리 |
-| `images-vips-api`     | `bluetape4k-images-vips-api`         | 공유 `VipsImage` / `VipsRuntime` 인터페이스 (바인딩 중립)     |
-| `images-vips-java21`  | `bluetape4k-images-vips-java21`      | JVips JNI 백엔드 — Java 21+, 시스템 libvips 필요           |
-| `images-vips-java25`  | `bluetape4k-images-vips-java25`      | vips-ffm FFM 백엔드 — Java 25+, `--enable-native-access` |
-| `images-benchmark`    | `bluetape4k-images-benchmark`        | JMH 벤치마크: scrimage vs libvips                         |
+| `images`              | `images`                             | Scrimage 기반 처리: 로드, 리사이즈, 필터, 변환, 분석, 배치 처리 |
+| `images-spring-boot`  | `images-spring-boot`                 | Spring Boot 4 자동 구성: 스토리지, CDN, 헬스, 메트릭          |
+| `images-vips-api`     | `images-vips-api`                    | 공유 `VipsImage` / `VipsRuntime` 인터페이스 (바인딩 중립)     |
+| `images-vips-java21`  | `images-vips-java21`                 | JVips JNI 백엔드 — Java 21+, 시스템 libvips 필요           |
+| `images-vips-java25`  | `images-vips-java25`                 | vips-ffm FFM 백엔드 — Java 25+, `--enable-native-access` |
+| `images-benchmark`    | `images-benchmark`                   | JMH 벤치마크: scrimage vs libvips                         |
 
 ## 아키텍처
 
@@ -44,6 +45,7 @@ flowchart TD
     subgraph API["공개 API"]
         IMG["images\n(Scrimage / Java2D)"]
         VAPI["images-vips-api\nVipsImage 인터페이스"]
+        SB["images-spring-boot\nSpring Boot 4 자동 구성"]
     end
 
     subgraph Backends["libvips 백엔드"]
@@ -57,6 +59,7 @@ flowchart TD
 
     VAPI --> J21
     VAPI --> J25
+    SB --> IMG
     BM --> IMG
     BM --> VAPI
 
@@ -64,7 +67,7 @@ flowchart TD
     classDef backendStyle fill:#E8F5E9,stroke:#A5D6A7,color:#2E7D32
     classDef benchStyle fill:#FFF3E0,stroke:#FFCC80,color:#E65100
 
-    class IMG,VAPI apiStyle
+    class IMG,VAPI,SB apiStyle
     class J21,J25 backendStyle
     class BM benchStyle
 ```
@@ -109,16 +112,19 @@ repositories {
 
 dependencies {
     // Scrimage 기반 이미지 처리 (Java 21+)
-    implementation("io.github.bluetape4k.image:bluetape4k-images:0.1.0-SNAPSHOT")
+    implementation("io.github.bluetape4k.image:images:0.1.0-SNAPSHOT")
+
+    // Spring Boot 4 자동 구성 (스토리지, CDN, 헬스, 메트릭)
+    implementation("io.github.bluetape4k.image:images-spring-boot:0.1.0-SNAPSHOT")
 
     // libvips — 공유 API (두 vips 구현체 모두에 필요)
-    implementation("io.github.bluetape4k.image:bluetape4k-images-vips-api:0.1.0-SNAPSHOT")
+    implementation("io.github.bluetape4k.image:images-vips-api:0.1.0-SNAPSHOT")
 
     // 아래 vips 백엔드 중 하나를 선택:
     // Java 21 JNI 백엔드
-    runtimeOnly("io.github.bluetape4k.image:bluetape4k-images-vips-java21:0.1.0-SNAPSHOT")
+    runtimeOnly("io.github.bluetape4k.image:images-vips-java21:0.1.0-SNAPSHOT")
     // 또는 Java 25 FFM 백엔드
-    runtimeOnly("io.github.bluetape4k.image:bluetape4k-images-vips-java25:0.1.0-SNAPSHOT")
+    runtimeOnly("io.github.bluetape4k.image:images-vips-java25:0.1.0-SNAPSHOT")
 }
 ```
 
@@ -234,6 +240,7 @@ JVipsImageSupport.jvipsImageOf(Path.of("photo.jpg")).use { image ->
 각 모듈에는 API 레퍼런스, 아키텍처 다이어그램, 사용 예시를 담은 상세 README가 있습니다.
 
 - [`images/README.md`](images/README.md) — Scrimage 기반 처리
+- [`images-spring-boot/README.md`](images-spring-boot/README.md) — Spring Boot 4 자동 구성
 - [`images-vips-api/README.md`](images-vips-api/README.md) — VipsImage 인터페이스 API
 - [`images-vips-java21/README.md`](images-vips-java21/README.md) — JVips JNI 백엔드
 - [`images-vips-java25/README.md`](images-vips-java25/README.md) — vips-ffm FFM 백엔드

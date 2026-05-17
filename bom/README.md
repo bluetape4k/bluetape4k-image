@@ -13,12 +13,14 @@ graph TB
     Consumer[Consumer Project]
     BOM[bluetape4k-image-bom<br/>java-platform]
     Images[images<br/>scrimage backend]
+    SpringBoot[images-spring-boot<br/>Spring Boot 4 AutoConfig]
     VipsApi[images-vips-api<br/>libvips API]
     Vips21[images-vips-java21<br/>JNI binding]
     Vips25[images-vips-java25<br/>FFM Panama]
 
     Consumer -->|platform import| BOM
     BOM -.->|version constraints| Images
+    BOM -.->|version constraints| SpringBoot
     BOM -.->|version constraints| VipsApi
     BOM -.->|version constraints| Vips21
     BOM -.->|version constraints| Vips25
@@ -36,10 +38,11 @@ The BOM is a Gradle `java-platform` that publishes only `<dependencyManagement>`
 
 | Module | Description |
 |--------|-------------|
-| `bluetape4k-images` | Image processing core with scrimage (Java2D) backend |
-| `bluetape4k-images-vips-api` | libvips API surface (backend-neutral) |
-| `bluetape4k-images-vips-java21` | libvips JNI binding for Java 21 |
-| `bluetape4k-images-vips-java25` | libvips FFM (Project Panama) binding for Java 25 |
+| `images` | Image processing core with scrimage (Java2D) backend |
+| `images-spring-boot` | Spring Boot 4 auto-configuration: storage, CDN, health, metrics |
+| `images-vips-api` | libvips API surface (backend-neutral) |
+| `images-vips-java21` | libvips JNI binding for Java 21 |
+| `images-vips-java25` | libvips FFM (Project Panama) binding for Java 25 |
 
 ## Usage Examples
 
@@ -57,8 +60,9 @@ dependencyManagement {
 }
 
 dependencies {
-    implementation("io.github.bluetape4k.image:bluetape4k-images")
-    implementation("io.github.bluetape4k.image:bluetape4k-images-vips-java25")
+    implementation("io.github.bluetape4k.image:images")
+    implementation("io.github.bluetape4k.image:images-spring-boot")
+    implementation("io.github.bluetape4k.image:images-vips-java25")
 }
 ```
 
@@ -67,7 +71,7 @@ dependencies {
 ```kotlin
 dependencies {
     implementation(platform("io.github.bluetape4k.image:bluetape4k-image-bom:<version>"))
-    implementation("io.github.bluetape4k.image:bluetape4k-images")
+    implementation("io.github.bluetape4k.image:images")
 }
 ```
 

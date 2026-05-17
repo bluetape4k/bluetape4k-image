@@ -1,4 +1,4 @@
-# images-spring-boot4
+# images-spring-boot
 
 `images` 모듈을 위한 Spring Boot 4 자동 구성 — S3/CDN 스토리지, 리액티브 헬스 인디케이터, Micrometer 메트릭.
 
@@ -36,7 +36,7 @@ graph TD
 ### 의존성
 
 ```kotlin
-implementation("io.github.bluetape4k.image:images-spring-boot4")
+implementation("io.github.bluetape4k.image:images-spring-boot")
 ```
 
 ### 설정

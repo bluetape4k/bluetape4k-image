@@ -36,11 +36,12 @@ memory use, or native codecs matter.
 
 | Module                | Artifact ID                          | Description                                              |
 |-----------------------|--------------------------------------|----------------------------------------------------------|
-| `images`              | `bluetape4k-images`                  | Scrimage-based processing: load, resize, filter, convert, analyze, batch |
-| `images-vips-api`     | `bluetape4k-images-vips-api`         | Shared `VipsImage` / `VipsRuntime` interfaces (binding-neutral) |
-| `images-vips-java21`  | `bluetape4k-images-vips-java21`      | JVips JNI backend — Java 21+, system libvips             |
-| `images-vips-java25`  | `bluetape4k-images-vips-java25`      | vips-ffm FFM backend — Java 25+, `--enable-native-access` |
-| `images-benchmark`    | `bluetape4k-images-benchmark`        | JMH benchmarks: scrimage vs libvips                      |
+| `images`              | `images`                             | Scrimage-based processing: load, resize, filter, convert, analyze, batch |
+| `images-spring-boot`  | `images-spring-boot`                 | Spring Boot 4 auto-configuration: storage, CDN, health, metrics |
+| `images-vips-api`     | `images-vips-api`                    | Shared `VipsImage` / `VipsRuntime` interfaces (binding-neutral) |
+| `images-vips-java21`  | `images-vips-java21`                 | JVips JNI backend — Java 21+, system libvips             |
+| `images-vips-java25`  | `images-vips-java25`                 | vips-ffm FFM backend — Java 25+, `--enable-native-access` |
+| `images-benchmark`    | `images-benchmark`                   | JMH benchmarks: scrimage vs libvips                      |
 
 ## Architecture
 
@@ -49,6 +50,7 @@ flowchart TD
     subgraph API["Public API"]
         IMG["images\n(Scrimage / Java2D)"]
         VAPI["images-vips-api\nVipsImage interface"]
+        SB["images-spring-boot\nSpring Boot 4 AutoConfig"]
     end
 
     subgraph Backends["libvips Backends"]
@@ -62,6 +64,7 @@ flowchart TD
 
     VAPI --> J21
     VAPI --> J25
+    SB --> IMG
     BM --> IMG
     BM --> VAPI
 
@@ -69,7 +72,7 @@ flowchart TD
     classDef backendStyle fill:#E8F5E9,stroke:#A5D6A7,color:#2E7D32
     classDef benchStyle fill:#FFF3E0,stroke:#FFCC80,color:#E65100
 
-    class IMG,VAPI apiStyle
+    class IMG,VAPI,SB apiStyle
     class J21,J25 backendStyle
     class BM benchStyle
 ```
@@ -114,16 +117,19 @@ repositories {
 
 dependencies {
     // Scrimage-based image processing (Java 21+)
-    implementation("io.github.bluetape4k.image:bluetape4k-images:0.1.0-SNAPSHOT")
+    implementation("io.github.bluetape4k.image:images:0.1.0-SNAPSHOT")
+
+    // Spring Boot 4 auto-configuration (storage, CDN, health, metrics)
+    implementation("io.github.bluetape4k.image:images-spring-boot:0.1.0-SNAPSHOT")
 
     // libvips — shared API (required by both vips implementations)
-    implementation("io.github.bluetape4k.image:bluetape4k-images-vips-api:0.1.0-SNAPSHOT")
+    implementation("io.github.bluetape4k.image:images-vips-api:0.1.0-SNAPSHOT")
 
     // Choose ONE vips backend:
     // Java 21 JNI backend
-    runtimeOnly("io.github.bluetape4k.image:bluetape4k-images-vips-java21:0.1.0-SNAPSHOT")
+    runtimeOnly("io.github.bluetape4k.image:images-vips-java21:0.1.0-SNAPSHOT")
     // OR Java 25 FFM backend
-    runtimeOnly("io.github.bluetape4k.image:bluetape4k-images-vips-java25:0.1.0-SNAPSHOT")
+    runtimeOnly("io.github.bluetape4k.image:images-vips-java25:0.1.0-SNAPSHOT")
 }
 ```
 
@@ -239,6 +245,7 @@ JVipsImageSupport.jvipsImageOf(Path.of("photo.jpg")).use { image ->
 Each module contains its own detailed README with API reference, architecture diagrams, and usage examples:
 
 - [`images/README.md`](images/README.md) — Scrimage-based processing
+- [`images-spring-boot/README.md`](images-spring-boot/README.md) — Spring Boot 4 auto-configuration
 - [`images-vips-api/README.md`](images-vips-api/README.md) — VipsImage interface API
 - [`images-vips-java21/README.md`](images-vips-java21/README.md) — JVips JNI backend
 - [`images-vips-java25/README.md`](images-vips-java25/README.md) — vips-ffm FFM backend

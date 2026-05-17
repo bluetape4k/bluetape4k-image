@@ -12,12 +12,14 @@ graph TB
     Consumer[소비 프로젝트]
     BOM[bluetape4k-image-bom<br/>java-platform]
     Images[images<br/>scrimage 백엔드]
+    SpringBoot[images-spring-boot<br/>Spring Boot 4 자동 구성]
     VipsApi[images-vips-api<br/>libvips API]
     Vips21[images-vips-java21<br/>JNI 바인딩]
     Vips25[images-vips-java25<br/>FFM Panama]
 
     Consumer -->|platform import| BOM
     BOM -.->|버전 constraint| Images
+    BOM -.->|버전 constraint| SpringBoot
     BOM -.->|버전 constraint| VipsApi
     BOM -.->|버전 constraint| Vips21
     BOM -.->|버전 constraint| Vips25
@@ -35,10 +37,11 @@ BOM은 Gradle `java-platform` 으로 `<dependencyManagement>` constraint 만 게
 
 | 모듈 | 설명 |
 |------|------|
-| `bluetape4k-images` | 이미지 처리 코어 (scrimage / Java2D 백엔드) |
-| `bluetape4k-images-vips-api` | libvips API 표면 (백엔드 중립) |
-| `bluetape4k-images-vips-java21` | libvips JNI 바인딩 (Java 21) |
-| `bluetape4k-images-vips-java25` | libvips FFM (Project Panama) 바인딩 (Java 25) |
+| `images` | 이미지 처리 코어 (scrimage / Java2D 백엔드) |
+| `images-spring-boot` | Spring Boot 4 자동 구성: 스토리지, CDN, 헬스, 메트릭 |
+| `images-vips-api` | libvips API 표면 (백엔드 중립) |
+| `images-vips-java21` | libvips JNI 바인딩 (Java 21) |
+| `images-vips-java25` | libvips FFM (Project Panama) 바인딩 (Java 25) |
 
 ## 사용 예제
 
@@ -56,8 +59,9 @@ dependencyManagement {
 }
 
 dependencies {
-    implementation("io.github.bluetape4k.image:bluetape4k-images")
-    implementation("io.github.bluetape4k.image:bluetape4k-images-vips-java25")
+    implementation("io.github.bluetape4k.image:images")
+    implementation("io.github.bluetape4k.image:images-spring-boot")
+    implementation("io.github.bluetape4k.image:images-vips-java25")
 }
 ```
 
@@ -66,7 +70,7 @@ dependencies {
 ```kotlin
 dependencies {
     implementation(platform("io.github.bluetape4k.image:bluetape4k-image-bom:<version>"))
-    implementation("io.github.bluetape4k.image:bluetape4k-images")
+    implementation("io.github.bluetape4k.image:images")
 }
 ```
 

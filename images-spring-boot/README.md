@@ -1,4 +1,4 @@
-# images-spring-boot4
+# images-spring-boot
 
 Spring Boot 4 auto-configuration for the `images` module — S3/CDN storage,
 reactive health indicators, and Micrometer metrics.
@@ -37,7 +37,7 @@ graph TD
 ### Dependency
 
 ```kotlin
-implementation("io.github.bluetape4k.image:images-spring-boot4")
+implementation("io.github.bluetape4k.image:images-spring-boot")
 ```
 
 ### Configuration
