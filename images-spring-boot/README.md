@@ -37,7 +37,7 @@ graph TD
 ### Dependency
 
 ```kotlin
-implementation("io.github.bluetape4k.image:images-spring-boot")
+implementation("io.github.bluetape4k.image:bluetape4k-images-spring-boot")
 ```
 
 ### Configuration
