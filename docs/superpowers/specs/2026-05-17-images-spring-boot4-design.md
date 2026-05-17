@@ -495,6 +495,7 @@ data class ImageStorageProperties(
     val bucket: String? = null,
     val keyPrefix: String = "",
     val maxSizeBytes: Long = 50 * 1024 * 1024L,  // 50 MB default
+    val healthProbeKey: String = ".health-probe",  // Phase 4 health indicator probe key
     val local: Local = Local(),
     val s3: S3 = S3(),
 ) : java.io.Serializable {
@@ -1298,5 +1299,65 @@ Round 2 HIGH: 3건 → 반영
 Codex P1 반영:
 - P1-1: `ImageObjectKey init` 블록으로 검증 이전 → `copy()` path traversal bypass 차단 (§4.1.1)
 - P1-2: `S3PresignCdnConfiguration` bean 타입을 구체 타입 `S3PreSignedUrlSigner`로 변경 + `@ConditionalOnMissingBean(S3PreSignedUrlSigner)` (§6.1)
+
+적용 commit: 29068bb
+
+---
+
+## Appendix B — 3-R Plan Review Iteration Log (2026-05-17)
+
+> 적용 gate: Step 3-R (Plan Review)
+
+### Round 1 (2026-05-17)
+
+| Reviewer | CRITICAL | HIGH | MEDIUM | LOW |
+|----------|---------|------|--------|-----|
+| Implementer | 0 | 6 | 0 | 0 |
+| Test Engineer | 0 | 6 | 0 | 0 |
+| Delivery | 0 | 2 | 0 | 0 |
+| Architect | 0 | 9 | 4 | 2 |
+| 6-tier Advisor | 0 | 3 | 2 | 1 |
+| Codex CLI | 0 | 2 | 6 | 0 |
+| **Critic 통합** | **0** | **13 (중복 제거)** | — | — |
+
+Round 1 HIGH 13건 → plan + spec 반영:
+- C-1: FQCN 수정 (`aws.spring.boot.*` → `aws.spring.s3.*`)
+- C-2: ReactiveHealthIndicator + Mono<Health> via mono { }
+- C-3: LocalImageStorage 2-param constructor
+- C-4: S3Exception 격리 (S3ImageStorage 내부)
+- C-5: BeanPostProcessor + @ConditionalOnProperty for metrics
+- C-6: URL→URI 변환 명시 (URISyntaxException → TransientException)
+- C-7: withContext(Dispatchers.IO) for CloudFront signing
+- C-8: SanitizingFunction bean (T7.7, T8.5)
+- C-9: S3 SDK timeout/retry wiring (T3.4, T4.2 확장)
+- C-10: 테스트 커버리지 gaps (T6.4, T6.7, T8.2, T8.6, T8.7)
+- C-11: 의존성 추가 (bluetape4k-junit5, kotlinx-coroutines-reactor)
+- C-12: CI acceptance 명세화 (T10.1)
+- C-13: S3PreSignedUrlSigner constructor 단순화 (plan 반영)
+
+적용 commit: 739b6a8
+
+### Round 2 (2026-05-17)
+
+| Reviewer | CRITICAL | HIGH | MEDIUM | LOW |
+|----------|---------|------|--------|-----|
+| Critic (targeted) | 0 | 2 | 2 | 0 |
+
+Round 2 HIGH 2건 → 반영:
+- H-1: Spec §4.3 S3PreSignedUrlSigner 구식 constructor → `(operations, bucket: String, keyPrefix: String)` 수정
+- H-2: Spec §6.1 Phase 3 bean factory — nullable `properties.bucket` → `requireNotBlank("bucket")` 검증 후 전달
+
+적용 commit: 2b78934
+
+### Round 3 (2026-05-17)
+
+| Reviewer | CRITICAL | HIGH | MEDIUM | LOW |
+|----------|---------|------|--------|-----|
+| 6-tier Advisor (전체) | 0 | 0 | 1 | 0 |
+
+Round 3 MEDIUM 1건 (polish):
+- M-1: spec §5.1.2에 `healthProbeKey` 필드 선언 누락 → 추가
+
+CRITICAL=0, HIGH=0 → **수렴 달성**
 
 적용 commit: (다음 커밋에 기록)
