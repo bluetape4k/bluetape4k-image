@@ -10,12 +10,12 @@ through JNI or FFM Panama.
 
 | Module | Description |
 |---|---|
-| `images` | Scrimage-based image processing, coroutine writers, filters, analysis, similarity, and batch utilities |
-| `images-spring-boot` | Spring Boot 4 auto-configuration: S3/local storage, CDN signing, health, metrics |
-| `images-vips-api` | Binding-neutral `VipsImage` and `VipsRuntime` contracts |
-| `images-vips-java21` | JVips JNI backend; Java 21 toolchain; system libvips required |
-| `images-vips-java25` | vips-ffm FFM backend; Java 25 toolchain; native access required |
-| `images-benchmark` | JMH benchmarks for scrimage vs libvips resize/encode/thumbnail paths |
+| `bluetape4k-images` | Scrimage-based image processing, coroutine writers, filters, analysis, similarity, and batch utilities |
+| `bluetape4k-images-spring-boot` | Spring Boot 4 auto-configuration: S3/local storage, CDN signing, health, metrics |
+| `bluetape4k-images-vips-api` | Binding-neutral `VipsImage` and `VipsRuntime` contracts |
+| `bluetape4k-images-vips-java21` | JVips JNI backend; Java 21 toolchain; system libvips required |
+| `bluetape4k-images-vips-java25` | vips-ffm FFM backend; Java 25 toolchain; native access required |
+| `bluetape4k-images-benchmark` | JMH benchmarks for scrimage vs libvips resize/encode/thumbnail paths |
 | `bom/` | `bluetape4k-image-bom` consumer BOM |
 
 ## Build Commands
@@ -23,10 +23,10 @@ through JNI or FFM Panama.
 ```bash
 ./gradlew clean build
 ./gradlew build -x test
-./gradlew :images:build
-./gradlew :images:test
-./gradlew :images-vips-java21:test
-./gradlew :images-vips-java25:test
+./gradlew :bluetape4k-images:build
+./gradlew :bluetape4k-images:test
+./gradlew :bluetape4k-images-vips-java21:test
+./gradlew :bluetape4k-images-vips-java25:test
 ./gradlew test --tests "io.bluetape4k.images.ImmutableImageSupportTest"
 ./gradlew detekt
 ./gradlew publishAggregationToCentralPortalSnapshots
@@ -45,16 +45,16 @@ when present. Outside Gradle, set it manually if needed.
 
 ## Image Rules
 
-- Use `immutableImageOf(bytes/file/path/stream)` factories in `images`.
+- Use `immutableImageOf(bytes/file/path/stream)` factories in `bluetape4k-images`.
 - Operations return new instances; never mutate the source image.
 - Use `withGraphics { }`; `useGraphics { }` is deprecated.
 - `VipsImage` implementations own native memory. Always use `use { }` or
   explicit `close()`.
 - Incubating AVIF/HEIC APIs require `@IncubatingImageApi`.
-- Keep `atomicfu transformJvm = false` for `images-vips-java25`.
-- Configure Java and Kotlin toolchains for Java 25 in `images-vips-java25`.
+- Keep `atomicfu transformJvm = false` for `bluetape4k-images-vips-java25`.
+- Configure Java and Kotlin toolchains for Java 25 in `bluetape4k-images-vips-java25`.
 - Add `--enable-native-access=ALL-UNNAMED` for FFM API usage.
-- `images-vips-java21` JNI tests run isolated with `forkEvery = 1` and
+- `bluetape4k-images-vips-java21` JNI tests run isolated with `forkEvery = 1` and
   `maxParallelForks = 1`.
 
 ## Documentation Rules

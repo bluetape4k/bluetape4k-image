@@ -86,7 +86,7 @@ jobs:
       - name: Test images
         run: |
           for attempt in 1 2 3; do
-            ./gradlew :images:test --no-daemon && break
+            ./gradlew :bluetape4k-images:test --no-daemon && break
             echo "Attempt $attempt failed"
             [ $attempt -lt 3 ] && sleep 10 || exit 1
           done
@@ -95,7 +95,7 @@ jobs:
 
       - name: Generate Kover XML report
         if: always()
-        run: ./gradlew :images:koverXmlReport --no-daemon
+        run: ./gradlew :bluetape4k-images:koverXmlReport --no-daemon
         continue-on-error: true
 
       - name: Upload test results
@@ -136,7 +136,7 @@ jobs:
       - name: Test images-spring-boot
         run: |
           for attempt in 1 2 3; do
-            ./gradlew :images-spring-boot:test --no-daemon && break
+            ./gradlew :bluetape4k-images-spring-boot:test --no-daemon && break
             echo "Attempt $attempt failed"
             [ $attempt -lt 3 ] && sleep 10 || exit 1
           done
@@ -145,7 +145,7 @@ jobs:
 
       - name: Generate Kover XML report
         if: always()
-        run: ./gradlew :images-spring-boot:koverXmlReport --no-daemon
+        run: ./gradlew :bluetape4k-images-spring-boot:koverXmlReport --no-daemon
         continue-on-error: true
 
       - name: Upload test results
@@ -191,7 +191,7 @@ jobs:
       - name: Test images-vips-api
         run: |
           for attempt in 1 2 3; do
-            ./gradlew :images-vips-api:test --no-daemon && break
+            ./gradlew :bluetape4k-images-vips-api:test --no-daemon && break
             echo "Attempt $attempt failed"
             [ $attempt -lt 3 ] && sleep 10 || exit 1
           done
@@ -200,7 +200,7 @@ jobs:
 
       - name: Generate Kover XML report
         if: always()
-        run: ./gradlew :images-vips-api:koverXmlReport --no-daemon
+        run: ./gradlew :bluetape4k-images-vips-api:koverXmlReport --no-daemon
         continue-on-error: true
 
       - name: Upload test results
@@ -246,7 +246,7 @@ jobs:
       - name: Test images-vips-java21
         run: |
           for attempt in 1 2 3; do
-            ./gradlew :images-vips-java21:test --no-daemon && break
+            ./gradlew :bluetape4k-images-vips-java21:test --no-daemon && break
             echo "Attempt $attempt failed"
             [ $attempt -lt 3 ] && sleep 10 || exit 1
           done
@@ -255,7 +255,7 @@ jobs:
 
       - name: Generate Kover XML report
         if: always()
-        run: ./gradlew :images-vips-java21:koverXmlReport --no-daemon
+        run: ./gradlew :bluetape4k-images-vips-java21:koverXmlReport --no-daemon
         continue-on-error: true
 
       - name: Upload test results
@@ -301,7 +301,7 @@ jobs:
       - name: Test images-vips-java25
         run: |
           for attempt in 1 2 3; do
-            ./gradlew :images-vips-java25:test --no-daemon && break
+            ./gradlew :bluetape4k-images-vips-java25:test --no-daemon && break
             echo "Attempt $attempt failed"
             [ $attempt -lt 3 ] && sleep 10 || exit 1
           done
@@ -310,7 +310,7 @@ jobs:
 
       - name: Generate Kover XML report
         if: always()
-        run: ./gradlew :images-vips-java25:koverXmlReport --no-daemon
+        run: ./gradlew :bluetape4k-images-vips-java25:koverXmlReport --no-daemon
         continue-on-error: true
 
       - name: Upload test results
