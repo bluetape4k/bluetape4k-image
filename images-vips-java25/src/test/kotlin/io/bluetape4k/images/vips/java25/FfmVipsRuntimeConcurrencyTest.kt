@@ -7,6 +7,7 @@ import io.bluetape4k.images.vips.VipsInitializationException
 import io.bluetape4k.images.vips.java25.internal.DefaultFfmVipsNativeRuntime
 import io.bluetape4k.images.vips.java25.internal.FfmVipsNativeRuntime
 import io.bluetape4k.junit5.concurrency.MultithreadingTester
+import io.bluetape4k.junit5.concurrency.StructuredTaskScopeTester
 import io.bluetape4k.logging.KLogging
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -47,10 +48,21 @@ class FfmVipsRuntimeConcurrencyTest {
     }
 
     @Test
-    fun `concurrent init calls native init exactly once`() {
+    fun `concurrent init calls native init exactly once with platform threads`() {
         MultithreadingTester()
             .workers(10)
             .rounds(1)
+            .add { FfmVipsRuntime.init() }
+            .run()
+
+        initCount.get() shouldBeEqualTo 1
+        FfmVipsRuntime.isInitialized.shouldBeTrue()
+    }
+
+    @Test
+    fun `concurrent init calls native init exactly once with virtual threads`() {
+        StructuredTaskScopeTester()
+            .rounds(10)
             .add { FfmVipsRuntime.init() }
             .run()
 
