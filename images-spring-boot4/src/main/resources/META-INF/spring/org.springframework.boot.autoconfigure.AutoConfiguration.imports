@@ -1,0 +1,5 @@
+io.bluetape4k.images.spring.autoconfigure.ImagesProcessingAutoConfiguration
+io.bluetape4k.images.spring.autoconfigure.ImagesStorageAutoConfiguration
+io.bluetape4k.images.spring.autoconfigure.ImagesCdnAutoConfiguration
+io.bluetape4k.images.spring.autoconfigure.ImagesHealthAutoConfiguration
+io.bluetape4k.images.spring.autoconfigure.ImagesMetricsAutoConfiguration

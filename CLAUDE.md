@@ -11,6 +11,7 @@ through JNI or FFM Panama.
 | Module | Description |
 |---|---|
 | `images` | Scrimage-based image processing, coroutine writers, filters, analysis, similarity, and batch utilities |
+| `images-spring-boot4` | Spring Boot 4 auto-configuration: S3/local storage, CDN signing, health, metrics |
 | `images-vips-api` | Binding-neutral `VipsImage` and `VipsRuntime` contracts |
 | `images-vips-java21` | JVips JNI backend; Java 21 toolchain; system libvips required |
 | `images-vips-java25` | vips-ffm FFM backend; Java 25 toolchain; native access required |

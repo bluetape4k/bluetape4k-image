@@ -3,6 +3,10 @@
 
 [versions]
 bluetape4k = "1.8.0-SNAPSHOT"  # https://mvnrepository.com/artifact/io.github.bluetape4k/bluetape4k-bom
+bluetape4k-aws = "0.1.0-SNAPSHOT"  # https://central.sonatype.com/artifact/io.github.bluetape4k.aws/bluetape4k-aws-bom
+
+spring-boot = "4.0.6"  # https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-dependencies
+aws2 = "2.44.5"  # https://mvnrepository.com/artifact/software.amazon.awssdk/bom
 
 kotlin = "2.3.21"  # https://mvnrepository.com/artifact/org.jetbrains.kotlin/kotlin-bom
 kotlinx-coroutines = "1.11.0"  # https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-bom
@@ -41,6 +45,8 @@ nmcp = "1.5.0"  # https://mvnrepository.com/artifact/com.gradleup.nmcp/nmcp
 # ────────────────────────────────────────────────────────────────────────────
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+kotlin-spring = { id = "org.jetbrains.kotlin.plugin.spring", version.ref = "kotlin" }
+spring-boot = { id = "org.springframework.boot", version.ref = "spring-boot" }
 kotlin-allopen = { id = "org.jetbrains.kotlin.plugin.allopen", version.ref = "kotlin" }
 kotlinx-atomicfu = { id = "org.jetbrains.kotlinx.atomicfu", version.ref = "kotlinx-atomicfu" }
 kotlinx-benchmark = { id = "org.jetbrains.kotlinx.benchmark", version.ref = "kotlinx-benchmark" }
@@ -108,6 +114,33 @@ commons-io = { module = "commons-io:commons-io", version.ref = "commons-io" }
 # Benchmark
 jmh-core = { module = "org.openjdk.jmh:jmh-core", version.ref = "jmh" }
 jmh-generator-annprocess = { module = "org.openjdk.jmh:jmh-generator-annprocess", version.ref = "jmh" }
+
+# Spring Boot
+spring-boot-dependencies = { module = "org.springframework.boot:spring-boot-dependencies", version.ref = "spring-boot" }
+spring-boot-autoconfigure = { module = "org.springframework.boot:spring-boot-autoconfigure" }
+spring-boot-actuator = { module = "org.springframework.boot:spring-boot-actuator" }
+spring-boot-health = { module = "org.springframework.boot:spring-boot-health" }
+jakarta-annotation-api = { module = "jakarta.annotation:jakarta.annotation-api" }
+spring-boot-configuration-processor = { module = "org.springframework.boot:spring-boot-configuration-processor" }
+spring-boot-starter-test = { module = "org.springframework.boot:spring-boot-starter-test" }
+
+# AWS SDK v2
+aws2-bom = { module = "software.amazon.awssdk:bom", version.ref = "aws2" }
+aws2-s3 = { module = "software.amazon.awssdk:s3", version.ref = "aws2" }
+aws2-cloudfront = { module = "software.amazon.awssdk:cloudfront", version.ref = "aws2" }
+
+# bluetape4k-aws
+bluetape4k-aws = { module = "io.github.bluetape4k.aws:aws", version.ref = "bluetape4k-aws" }
+bluetape4k-aws-spring-boot = { module = "io.github.bluetape4k.aws:aws-spring-boot", version.ref = "bluetape4k-aws" }
+
+# Micrometer (version managed by spring-boot-dependencies BOM)
+micrometer-core = { module = "io.micrometer:micrometer-core" }
+
+# Kotlinx Coroutines Reactor (version managed by kotlinx-coroutines BOM)
+kotlinx-coroutines-reactor = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-reactor" }
+
+# bluetape4k testcontainers (version managed by bluetape4k BOM)
+bluetape4k-testcontainers = { module = "io.github.bluetape4k:bluetape4k-testcontainers" }
 
 # Test
 junit-bom = { module = "org.junit:junit-bom", version.ref = "junit-jupiter" }
