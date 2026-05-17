@@ -119,6 +119,8 @@ jmh-generator-annprocess = { module = "org.openjdk.jmh:jmh-generator-annprocess"
 spring-boot-dependencies = { module = "org.springframework.boot:spring-boot-dependencies", version.ref = "spring-boot" }
 spring-boot-autoconfigure = { module = "org.springframework.boot:spring-boot-autoconfigure" }
 spring-boot-actuator = { module = "org.springframework.boot:spring-boot-actuator" }
+spring-boot-health = { module = "org.springframework.boot:spring-boot-health" }
+jakarta-annotation-api = { module = "jakarta.annotation:jakarta.annotation-api" }
 spring-boot-configuration-processor = { module = "org.springframework.boot:spring-boot-configuration-processor" }
 spring-boot-starter-test = { module = "org.springframework.boot:spring-boot-starter-test" }
 

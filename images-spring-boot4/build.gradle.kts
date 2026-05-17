@@ -38,6 +38,10 @@ dependencies {
     // Spring Boot AutoConfig (compileOnly — consumers bring their own Spring Boot)
     compileOnly(libs.spring.boot.autoconfigure)
     compileOnly(libs.spring.boot.actuator)
+    // Boot 4 split: ReactiveHealthIndicator / Health / Status moved to spring-boot-health
+    compileOnly(libs.spring.boot.health)
+    // @PostConstruct (JSR-250) — not transitively pulled by spring-boot-autoconfigure 4
+    compileOnly(libs.jakarta.annotation.api)
 
     // AWS SDK v2 (compileOnly — optional S3/CloudFront support)
     compileOnly(libs.aws2.s3)
@@ -67,6 +71,7 @@ dependencies {
     testImplementation(libs.aws2.cloudfront)
     testImplementation(libs.micrometer.core)
     testImplementation(libs.spring.boot.actuator)
+    testImplementation(libs.spring.boot.health)
     testImplementation(libs.kotlinx.coroutines.reactor)
     testImplementation(libs.bluetape4k.testcontainers)
     testImplementation(libs.kotlinx.coroutines.test)

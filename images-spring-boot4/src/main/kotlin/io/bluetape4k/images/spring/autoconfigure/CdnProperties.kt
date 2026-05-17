@@ -16,7 +16,7 @@ import java.time.Duration
 @ConfigurationProperties(prefix = "bluetape4k.images.cdn")
 data class CdnProperties(
     val enabled: Boolean = false,
-    val provider: String = "cloudfront",
+    val provider: String = "s3_presign",
     val cloudfront: CloudFront = CloudFront(),
 ) : Serializable {
 
