@@ -33,7 +33,7 @@ dependencyManagement {
 
 dependencies {
     // images module — non-transitive (consumers use :images directly)
-    implementation(project(":images"))
+    implementation(project(":bluetape4k-images"))
 
     // Spring Boot AutoConfig (compileOnly — consumers bring their own Spring Boot)
     compileOnly(libs.spring.boot.autoconfigure)

@@ -117,19 +117,19 @@ repositories {
 
 dependencies {
     // Scrimage-based image processing (Java 21+)
-    implementation("io.github.bluetape4k.image:images:0.1.0-SNAPSHOT")
+    implementation("io.github.bluetape4k.image:bluetape4k-images:0.1.0-SNAPSHOT")
 
     // Spring Boot 4 auto-configuration (storage, CDN, health, metrics)
-    implementation("io.github.bluetape4k.image:images-spring-boot:0.1.0-SNAPSHOT")
+    implementation("io.github.bluetape4k.image:bluetape4k-images-spring-boot:0.1.0-SNAPSHOT")
 
     // libvips — shared API (required by both vips implementations)
-    implementation("io.github.bluetape4k.image:images-vips-api:0.1.0-SNAPSHOT")
+    implementation("io.github.bluetape4k.image:bluetape4k-images-vips-api:0.1.0-SNAPSHOT")
 
     // Choose ONE vips backend:
     // Java 21 JNI backend
-    runtimeOnly("io.github.bluetape4k.image:images-vips-java21:0.1.0-SNAPSHOT")
+    runtimeOnly("io.github.bluetape4k.image:bluetape4k-images-vips-java21:0.1.0-SNAPSHOT")
     // OR Java 25 FFM backend
-    runtimeOnly("io.github.bluetape4k.image:images-vips-java25:0.1.0-SNAPSHOT")
+    runtimeOnly("io.github.bluetape4k.image:bluetape4k-images-vips-java25:0.1.0-SNAPSHOT")
 }
 ```
 

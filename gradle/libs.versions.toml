@@ -130,8 +130,8 @@ aws2-s3 = { module = "software.amazon.awssdk:s3", version.ref = "aws2" }
 aws2-cloudfront = { module = "software.amazon.awssdk:cloudfront", version.ref = "aws2" }
 
 # bluetape4k-aws
-bluetape4k-aws = { module = "io.github.bluetape4k.aws:aws", version.ref = "bluetape4k-aws" }
-bluetape4k-aws-spring-boot = { module = "io.github.bluetape4k.aws:aws-spring-boot", version.ref = "bluetape4k-aws" }
+bluetape4k-aws = { module = "io.github.bluetape4k.aws:bluetape4k-aws-java", version.ref = "bluetape4k-aws" }
+bluetape4k-aws-spring-boot = { module = "io.github.bluetape4k.aws:bluetape4k-aws-spring-boot", version.ref = "bluetape4k-aws" }
 
 # Micrometer (version managed by spring-boot-dependencies BOM)
 micrometer-core = { module = "io.micrometer:micrometer-core" }

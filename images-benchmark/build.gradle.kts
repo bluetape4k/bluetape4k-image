@@ -55,14 +55,14 @@ dependencies {
     testImplementation(libs.bluetape4k.junit5)
 
     // scrimage (images)
-    implementation(project(":images"))
+    implementation(project(":bluetape4k-images"))
 
     // vips — API 인터페이스는 컴파일 타임에 필요, 구현체는 런타임에만 필요
-    add("benchmarkImplementation", project(":images-vips-api"))
+    add("benchmarkImplementation", project(":bluetape4k-images-vips-api"))
     if (vipsImpl == "java21") {
-        add("benchmarkRuntimeOnly", project(":images-vips-java21"))
+        add("benchmarkRuntimeOnly", project(":bluetape4k-images-vips-java21"))
     } else {
-        add("benchmarkRuntimeOnly", project(":images-vips-java25"))
+        add("benchmarkRuntimeOnly", project(":bluetape4k-images-vips-java25"))
     }
 
     // Benchmark

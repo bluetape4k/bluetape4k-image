@@ -112,19 +112,19 @@ repositories {
 
 dependencies {
     // Scrimage 기반 이미지 처리 (Java 21+)
-    implementation("io.github.bluetape4k.image:images:0.1.0-SNAPSHOT")
+    implementation("io.github.bluetape4k.image:bluetape4k-images:0.1.0-SNAPSHOT")
 
     // Spring Boot 4 자동 구성 (스토리지, CDN, 헬스, 메트릭)
-    implementation("io.github.bluetape4k.image:images-spring-boot:0.1.0-SNAPSHOT")
+    implementation("io.github.bluetape4k.image:bluetape4k-images-spring-boot:0.1.0-SNAPSHOT")
 
     // libvips — 공유 API (두 vips 구현체 모두에 필요)
-    implementation("io.github.bluetape4k.image:images-vips-api:0.1.0-SNAPSHOT")
+    implementation("io.github.bluetape4k.image:bluetape4k-images-vips-api:0.1.0-SNAPSHOT")
 
     // 아래 vips 백엔드 중 하나를 선택:
     // Java 21 JNI 백엔드
-    runtimeOnly("io.github.bluetape4k.image:images-vips-java21:0.1.0-SNAPSHOT")
+    runtimeOnly("io.github.bluetape4k.image:bluetape4k-images-vips-java21:0.1.0-SNAPSHOT")
     // 또는 Java 25 FFM 백엔드
-    runtimeOnly("io.github.bluetape4k.image:images-vips-java25:0.1.0-SNAPSHOT")
+    runtimeOnly("io.github.bluetape4k.image:bluetape4k-images-vips-java25:0.1.0-SNAPSHOT")
 }
 ```
 

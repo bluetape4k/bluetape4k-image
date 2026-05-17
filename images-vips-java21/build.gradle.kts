@@ -29,9 +29,9 @@ tasks.withType<Test>().configureEach {
 }
 
 dependencies {
-    api(project(":images-vips-api"))
+    api(project(":bluetape4k-images-vips-api"))
     testImplementation(libs.bluetape4k.junit5)
-    testImplementation(testFixtures(project(":images-vips-api")))
+    testImplementation(testFixtures(project(":bluetape4k-images-vips-api")))
 
     // JVips JNI bindings (Java 8+; Linux: bundled native / macOS: system libvips required)
     // D8: binding types are internal — use api() only if consumers need VImage directly

@@ -59,9 +59,9 @@ dependencyManagement {
 }
 
 dependencies {
-    implementation("io.github.bluetape4k.image:images")
-    implementation("io.github.bluetape4k.image:images-spring-boot")
-    implementation("io.github.bluetape4k.image:images-vips-java25")
+    implementation("io.github.bluetape4k.image:bluetape4k-images")
+    implementation("io.github.bluetape4k.image:bluetape4k-images-spring-boot")
+    implementation("io.github.bluetape4k.image:bluetape4k-images-vips-java25")
 }
 ```
 
@@ -70,7 +70,7 @@ dependencies {
 ```kotlin
 dependencies {
     implementation(platform("io.github.bluetape4k.image:bluetape4k-image-bom:<version>"))
-    implementation("io.github.bluetape4k.image:images")
+    implementation("io.github.bluetape4k.image:bluetape4k-images")
 }
 ```
 
