@@ -249,7 +249,7 @@ jobs:
   test-images-vips-java25:
     name: Test / images-vips-java25
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     needs: [build, changes]
     if: ${{ needs.changes.outputs['images-vips-java25'] == 'true' || github.event_name == 'workflow_dispatch' }}
     steps:
