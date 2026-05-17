@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
+import kotlin.test.assertFailsWith
 import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.test.assertFailsWith
@@ -197,14 +197,14 @@ class LocalImageStorageTest {
     @Test
     fun `path traversal attempt is rejected by ImageObjectKey of`() {
         // ImageObjectKey.of validates before reaching storage — ".." in prefix is rejected
-        assertThrows<IllegalArgumentException> {
+        assertFailsWith<IllegalArgumentException> {
             ImageObjectKey.of("../etc", "passwd")
         }
     }
 
     @Test
     fun `path traversal in name is rejected by ImageObjectKey of`() {
-        assertThrows<IllegalArgumentException> {
+        assertFailsWith<IllegalArgumentException> {
             ImageObjectKey.of("uploads", "../secret.txt")
         }
     }

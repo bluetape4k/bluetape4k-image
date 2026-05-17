@@ -1,7 +1,7 @@
 package io.bluetape4k.images.spring
 
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertThrows
+import kotlin.test.assertFailsWith
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
@@ -63,28 +63,28 @@ class UploadOptionsTest {
 
     @Test
     fun `blank contentType throws IllegalArgumentException`() {
-        assertThrows(IllegalArgumentException::class.java) {
+        assertFailsWith<IllegalArgumentException> {
             UploadOptions(contentType = "")
         }
     }
 
     @Test
     fun `whitespace-only contentType throws IllegalArgumentException`() {
-        assertThrows(IllegalArgumentException::class.java) {
+        assertFailsWith<IllegalArgumentException> {
             UploadOptions(contentType = "   ")
         }
     }
 
     @Test
     fun `image svg xml throws IllegalArgumentException`() {
-        assertThrows(IllegalArgumentException::class.java) {
+        assertFailsWith<IllegalArgumentException> {
             UploadOptions(contentType = "image/svg+xml")
         }
     }
 
     @Test
     fun `text plain throws IllegalArgumentException`() {
-        assertThrows(IllegalArgumentException::class.java) {
+        assertFailsWith<IllegalArgumentException> {
             UploadOptions(contentType = "text/plain")
         }
     }

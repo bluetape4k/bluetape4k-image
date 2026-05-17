@@ -1,8 +1,8 @@
 package io.bluetape4k.images.spring
 
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
+import kotlin.test.assertFailsWith
 
 class ImageObjectKeyTest {
 
@@ -39,42 +39,42 @@ class ImageObjectKeyTest {
 
     @Test
     fun `of rejects blank prefix`() {
-        assertThrows(IllegalArgumentException::class.java) {
+        assertFailsWith<IllegalArgumentException> {
             ImageObjectKey.of("", "photo.jpg")
         }
     }
 
     @Test
     fun `of rejects blank name`() {
-        assertThrows(IllegalArgumentException::class.java) {
+        assertFailsWith<IllegalArgumentException> {
             ImageObjectKey.of("uploads", "")
         }
     }
 
     @Test
     fun `of rejects double-dot in prefix`() {
-        assertThrows(IllegalArgumentException::class.java) {
+        assertFailsWith<IllegalArgumentException> {
             ImageObjectKey.of("../etc", "photo.jpg")
         }
     }
 
     @Test
     fun `of rejects double-dot in name`() {
-        assertThrows(IllegalArgumentException::class.java) {
+        assertFailsWith<IllegalArgumentException> {
             ImageObjectKey.of("uploads", "../secret.txt")
         }
     }
 
     @Test
     fun `of rejects special characters in prefix`() {
-        assertThrows(IllegalArgumentException::class.java) {
+        assertFailsWith<IllegalArgumentException> {
             ImageObjectKey.of("uploads;drop", "photo.jpg")
         }
     }
 
     @Test
     fun `of rejects special characters in name`() {
-        assertThrows(IllegalArgumentException::class.java) {
+        assertFailsWith<IllegalArgumentException> {
             ImageObjectKey.of("uploads", "photo?.jpg")
         }
     }

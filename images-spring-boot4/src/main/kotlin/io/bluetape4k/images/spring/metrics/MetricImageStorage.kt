@@ -8,7 +8,6 @@ import io.bluetape4k.logging.KLogging
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Timer
 import kotlinx.coroutines.CancellationException
-import java.io.Serializable
 import java.nio.file.Path
 
 /**
@@ -36,10 +35,9 @@ import java.nio.file.Path
 class MetricImageStorage(
     private val delegate: ImageStorage,
     private val registry: MeterRegistry,
-) : ImageStorage by delegate, Serializable {
+) : ImageStorage by delegate {
 
     companion object : KLogging() {
-        private const val serialVersionUID: Long = 1L
 
         private const val UPLOAD_TIMER: String = "images.storage.upload.duration"
         private const val UPLOAD_ERRORS: String = "images.storage.upload.errors"

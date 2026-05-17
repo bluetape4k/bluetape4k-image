@@ -9,7 +9,6 @@ import kotlinx.coroutines.reactor.mono
 import org.springframework.boot.health.contributor.Health
 import org.springframework.boot.health.contributor.ReactiveHealthIndicator
 import reactor.core.publisher.Mono
-import java.io.Serializable
 
 /**
  * Reactive health indicator that probes the configured [ImageStorage].
@@ -28,10 +27,9 @@ import java.io.Serializable
 class ImageStorageHealthIndicator(
     private val storage: ImageStorage,
     private val probeKey: String,
-) : ReactiveHealthIndicator, Serializable {
+) : ReactiveHealthIndicator {
 
     companion object : KLogging() {
-        private const val serialVersionUID: Long = 1L
 
         /** Prefix segment used for the synthetic health-probe key. */
         private const val HEALTH_PREFIX: String = "_health"
