@@ -13,6 +13,7 @@ rootProject.name = "bluetape4k-image"
 
 include(
     "images",
+    "images-spring-boot4",
     "images-vips-api",
     "images-vips-java21",
     "images-vips-java25",
