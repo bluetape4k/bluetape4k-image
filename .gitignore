@@ -31,5 +31,6 @@ Thumbs.db
 local.properties
 .env
 .omx/
+.omc/
 
 **/.profileconfig.json
