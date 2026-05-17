@@ -415,21 +415,22 @@ class CloudFrontUrlSigner(properties: CdnProperties.CloudFront) : CdnReadSigner 
 }
 ```
 
-**`S3PreSignedUrlSigner(operations: S3Operations, properties: ImageStorageProperties)` — `CdnReadSigner` + `CdnWriteSigner` 구현**
+**`S3PreSignedUrlSigner(operations: S3Operations, bucket: String, keyPrefix: String)` — `CdnReadSigner` + `CdnWriteSigner` 구현**
 
 ```kotlin
 class S3PreSignedUrlSigner(
     private val operations: S3Operations,
-    private val properties: ImageStorageProperties,
+    private val bucket: String,
+    private val keyPrefix: String,
 ) : CdnReadSigner, CdnWriteSigner {
     companion object : KLogging()
 
     init {
-        properties.bucket.requireNotBlank("bucket")
+        bucket.requireNotBlank("bucket")
     }
     // signGet/signPut: expiresIn > 0 검증, S3 SigV4 max 7일 검증
-    // operations.presignGet/presignPut 위임
-    // CancellationException 먼저 rethrow
+    // operations.presignGet/presignPut 위임 → URL.toURI() 변환 필수
+    // URISyntaxException → TransientException, CancellationException 먼저 rethrow
 }
 ```
 
@@ -759,7 +760,11 @@ class ImagesCdnAutoConfiguration {
         fun s3PreSignedUrlSigner(
             operations: S3Operations,
             storageProperties: ImageStorageProperties,
-        ): S3PreSignedUrlSigner = S3PreSignedUrlSigner(operations, storageProperties)
+        ): S3PreSignedUrlSigner {
+            // bucket은 nullable이므로 null/blank 검증 후 비 nullable로 전달
+            val bucket = storageProperties.bucket.requireNotBlank("bucket")
+            return S3PreSignedUrlSigner(operations, bucket, storageProperties.keyPrefix)
+        }
         // 반환 타입은 구체 타입 S3PreSignedUrlSigner → CdnReadSigner + CdnWriteSigner 모두 자동 만족
     }
 

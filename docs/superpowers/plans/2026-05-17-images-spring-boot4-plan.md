@@ -507,8 +507,9 @@
     - `@Configuration(proxyBeanMethods = false)`.
     - `@ConditionalOnClass(name = ["io.bluetape4k.aws.spring.s3.S3Operations"])`.
     - `@ConditionalOnProperty(prefix="bluetape4k.images.cdn", name=["provider"], havingValue="s3_presign", matchIfMissing=true)`.
-    - **`@Bean @ConditionalOnMissingBean(S3PreSignedUrlSigner::class) fun s3PreSignedUrlSigner(operations: S3Operations, properties: ImageStorageProperties): S3PreSignedUrlSigner = S3PreSignedUrlSigner(operations, properties.bucket, properties.keyPrefix)`** — **반환 타입은 구체 타입 `S3PreSignedUrlSigner`** (P1-2). 인터페이스 타입(`CdnReadSigner`/`CdnWriteSigner`) 둘 다 자동 만족.
-      - 생성자에 `properties` 전체가 아닌 `properties.bucket`, `properties.keyPrefix`만 전달 (T5.2 생성자 단순화 반영).
+    - **`@Bean @ConditionalOnMissingBean(S3PreSignedUrlSigner::class) fun s3PreSignedUrlSigner(operations: S3Operations, properties: ImageStorageProperties): S3PreSignedUrlSigner`** — **반환 타입은 구체 타입 `S3PreSignedUrlSigner`** (P1-2). 인터페이스 타입(`CdnReadSigner`/`CdnWriteSigner`) 둘 다 자동 만족.
+      - `properties.bucket`은 `String?`이므로 bean factory 내부에서 `val bucket = properties.bucket.requireNotBlank("bucket")`으로 null/blank 검증 후 non-null 값을 생성자에 전달.
+      - `S3PreSignedUrlSigner(operations, bucket, properties.keyPrefix)` 호출.
   - **Nested `CloudFrontCdnConfiguration`**:
     - `@Configuration(proxyBeanMethods = false)`.
     - `@ConditionalOnClass(name = ["software.amazon.awssdk.services.cloudfront.CloudFrontUtilities"])`.
