@@ -9,7 +9,7 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
-- `images-spring-boot4` module: Spring Boot 4 auto-configuration for image storage, CDN signing, reactive health, and Micrometer metrics. Includes `LocalImageStorage`, `S3ImageStorage`, `S3PreSignedUrlSigner`, `CloudFrontUrlSigner`, and five auto-configuration phases ([PR #42](https://github.com/bluetape4k/bluetape4k-image/pull/42), closes [#5](https://github.com/bluetape4k/bluetape4k-image/issues/5)).
+- `images-spring-boot` module: Spring Boot 4 auto-configuration for image storage, CDN signing, reactive health, and Micrometer metrics. Includes `LocalImageStorage`, `S3ImageStorage`, `S3PreSignedUrlSigner`, `CloudFrontUrlSigner`, and five auto-configuration phases ([PR #42](https://github.com/bluetape4k/bluetape4k-image/pull/42), closes [#5](https://github.com/bluetape4k/bluetape4k-image/issues/5)).
 - Root README hero image plus refreshed project-purpose and feature entrypoint documentation ([PR #27](https://github.com/bluetape4k/bluetape4k-image/pull/27)).
 - `bluetape4k-image-bom` BOM module for image library consumers ([PR #12](https://github.com/bluetape4k/bluetape4k-image/pull/12)).
 - English and Korean README files for the image BOM module ([PR #13](https://github.com/bluetape4k/bluetape4k-image/pull/13)).
