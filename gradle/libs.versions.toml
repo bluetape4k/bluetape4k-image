@@ -6,7 +6,7 @@ bluetape4k-bom = "1.8.0"  # https://mvnrepository.com/artifact/io.github.bluetap
 bluetape4k-aws-bom = "0.1.0"  # https://central.sonatype.com/artifact/io.github.bluetape4k.aws/bluetape4k-aws-bom
 
 spring-boot = "4.0.6"  # https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-dependencies
-aws2 = "2.44.5"  # https://mvnrepository.com/artifact/software.amazon.awssdk/bom
+aws2 = "2.44.7"  # https://mvnrepository.com/artifact/software.amazon.awssdk/bom
 
 kotlin = "2.3.21"  # https://mvnrepository.com/artifact/org.jetbrains.kotlin/kotlin-bom
 kotlinx-coroutines = "1.11.0"  # https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-bom
