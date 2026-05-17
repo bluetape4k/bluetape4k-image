@@ -1,22 +1,22 @@
 package io.bluetape4k.images.vips.java21
 
-import io.bluetape4k.images.vips.java21.internal.DefaultJVipsNativeRuntime
-import io.bluetape4k.images.vips.java21.internal.JVipsNativeRuntime
-import io.bluetape4k.logging.KLogging
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.images.vips.java21.internal.DefaultJVipsNativeRuntime
+import io.bluetape4k.images.vips.java21.internal.JVipsNativeRuntime
+import io.bluetape4k.junit5.concurrency.MultithreadingTester
+import io.bluetape4k.junit5.concurrency.StructuredTaskScopeTester
+import io.bluetape4k.logging.KLogging
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
- * `JVipsRuntime.init()` 동시 호출이 정확히 1회만 native init을 실행하는지 검증합니다.
+ * Verifies that concurrent calls to [JVipsRuntime.init] execute native init exactly once,
+ * and that sequential repeated calls are idempotent.
  *
- * `JVipsNativeRuntime` 어댑터 심을 사용하여 실제 libvips 없이 테스트합니다.
+ * Uses a [JVipsNativeRuntime] adapter seam so no real libvips installation is required.
  */
 class JVipsRuntimeConcurrencyTest {
 
@@ -25,7 +25,10 @@ class JVipsRuntimeConcurrencyTest {
     private val initCount = AtomicInteger(0)
 
     private val testAdapter = object : JVipsNativeRuntime {
-        override fun nativeInit(concurrency: Int) { initCount.incrementAndGet() }
+        override fun nativeInit(concurrency: Int) {
+            Thread.sleep(20) // keep the INITIALIZING window open so contenders overlap
+            initCount.incrementAndGet()
+        }
         override fun nativeShutdown() {}
     }
 
@@ -43,14 +46,23 @@ class JVipsRuntimeConcurrencyTest {
     }
 
     @Test
-    fun `concurrent init calls native init exactly once`() {
-        val concurrency = 10
+    fun `concurrent init calls native init exactly once with platform threads`() {
+        MultithreadingTester()
+            .workers(10)
+            .rounds(1)
+            .add { JVipsRuntime.init() }
+            .run()
 
-        runBlocking(Dispatchers.Default) {
-            repeat(concurrency) {
-                launch { JVipsRuntime.init() }
-            }
-        }
+        initCount.get() shouldBeEqualTo 1
+        JVipsRuntime.isInitialized.shouldBeTrue()
+    }
+
+    @Test
+    fun `concurrent init calls native init exactly once with virtual threads`() {
+        StructuredTaskScopeTester()
+            .rounds(10)
+            .add { JVipsRuntime.init() }
+            .run()
 
         initCount.get() shouldBeEqualTo 1
         JVipsRuntime.isInitialized.shouldBeTrue()
