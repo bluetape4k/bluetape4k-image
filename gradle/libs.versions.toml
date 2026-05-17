@@ -2,8 +2,8 @@
 # Gradle Version Catalog for bluetape4k-image
 
 [versions]
-bluetape4k = "1.8.0-SNAPSHOT"  # https://mvnrepository.com/artifact/io.github.bluetape4k/bluetape4k-bom
-bluetape4k-aws = "0.1.0-SNAPSHOT"  # https://central.sonatype.com/artifact/io.github.bluetape4k.aws/bluetape4k-aws-bom
+bluetape4k-bom = "1.8.0"  # https://mvnrepository.com/artifact/io.github.bluetape4k/bluetape4k-bom
+bluetape4k-aws-bom = "0.1.0"  # https://central.sonatype.com/artifact/io.github.bluetape4k.aws/bluetape4k-aws-bom
 
 spring-boot = "4.0.6"  # https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-dependencies
 aws2 = "2.44.5"  # https://mvnrepository.com/artifact/software.amazon.awssdk/bom
@@ -81,7 +81,7 @@ kotlinx-benchmark-runtime = { module = "org.jetbrains.kotlinx:kotlinx-benchmark-
 kotlinx-benchmark-runtime-jvm = { module = "org.jetbrains.kotlinx:kotlinx-benchmark-runtime-jvm", version.ref = "kotlinx-benchmark" }
 
 # bluetape4k — consumed from Maven Central snapshots
-bluetape4k-bom = { module = "io.github.bluetape4k:bluetape4k-bom", version.ref = "bluetape4k" }
+bluetape4k-bom = { module = "io.github.bluetape4k:bluetape4k-bom", version.ref = "bluetape4k-bom" }
 bluetape4k-core = { module = "io.github.bluetape4k:bluetape4k-core" }
 bluetape4k-io = { module = "io.github.bluetape4k:bluetape4k-io" }
 bluetape4k-coroutines = { module = "io.github.bluetape4k:bluetape4k-coroutines" }
@@ -131,8 +131,8 @@ aws2-s3 = { module = "software.amazon.awssdk:s3", version.ref = "aws2" }
 aws2-cloudfront = { module = "software.amazon.awssdk:cloudfront", version.ref = "aws2" }
 
 # bluetape4k-aws
-bluetape4k-aws = { module = "io.github.bluetape4k.aws:bluetape4k-aws-java", version.ref = "bluetape4k-aws" }
-bluetape4k-aws-spring-boot = { module = "io.github.bluetape4k.aws:bluetape4k-aws-spring-boot", version.ref = "bluetape4k-aws" }
+bluetape4k-aws = { module = "io.github.bluetape4k.aws:bluetape4k-aws-java", version.ref = "bluetape4k-aws-bom" }
+bluetape4k-aws-spring-boot = { module = "io.github.bluetape4k.aws:bluetape4k-aws-spring-boot", version.ref = "bluetape4k-aws-bom" }
 
 # Micrometer (version managed by spring-boot-dependencies BOM)
 micrometer-core = { module = "io.micrometer:micrometer-core" }
