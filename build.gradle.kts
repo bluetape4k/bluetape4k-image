@@ -31,6 +31,20 @@ plugins {
 
 val rootLibs = libs
 
+fun Project.isNonPublishedModule(): Boolean {
+    val relativePath = rootProject.rootDir.toPath()
+        .relativize(projectDir.toPath())
+        .toString()
+        .replace(File.separatorChar, '/')
+
+    return relativePath == "examples" ||
+            relativePath.startsWith("examples/") ||
+            relativePath == "benchmark" ||
+            relativePath.startsWith("benchmark/") ||
+            name.contains("-demo") ||
+            name.endsWith("-benchmark")
+}
+
 val centralPublishing = resolveCentralPublishingConfig()
 val centralUser: String = centralPublishing.username
 val centralPassword: String = centralPublishing.password
@@ -61,7 +75,9 @@ allprojects {
 }
 
 subprojects {
-    apply(plugin = "com.gradleup.nmcp")
+    if (!isNonPublishedModule()) {
+        apply(plugin = "com.gradleup.nmcp")
+    }
 
     configurations.matching { it.name.startsWith("nmcp") }.configureEach {
         resolutionStrategy.eachDependency {
@@ -92,9 +108,11 @@ subprojects {
         plugin<JavaLibraryPlugin>()
         plugin("org.jetbrains.kotlin.jvm")
         plugin("org.jetbrains.kotlinx.atomicfu")
-        plugin("org.jetbrains.kotlinx.kover")
-        plugin("maven-publish")
-        plugin("signing")
+        if (!isNonPublishedModule()) {
+            plugin("org.jetbrains.kotlinx.kover")
+            plugin("maven-publish")
+            plugin("signing")
+        }
         plugin("io.spring.dependency-management")
         plugin("org.jetbrains.dokka")
         plugin("com.adarshr.test-logger")
@@ -223,7 +241,6 @@ subprojects {
 
     dependencyManagement {
         setApplyMavenExclusions(false)
-        generatedPomCustomization { setEnabled(false) }
         imports {
             mavenBom(rootLibs.bluetape4k.bom.get().toString())
             mavenBom(rootLibs.kotlinx.coroutines.bom.get().toString())
@@ -262,56 +279,58 @@ subprojects {
         testImplementation(rootLibs.mockk)
     }
 
-    publishing {
-        publications {
-            create<MavenPublication>("BluetapeImage") {
-                val sourcesJar by tasks.registering(Jar::class) {
-                    archiveClassifier.set("sources")
-                    from(sourceSets["main"].allSource)
-                }
-                val javadocJar by tasks.registering(Jar::class) {
-                    archiveClassifier.set("javadoc")
-                    from(layout.buildDirectory.asFile.get().resolve("javadoc"))
-                }
-                from(components["java"])
-                artifact(sourcesJar)
-                artifact(javadocJar)
+    if (!isNonPublishedModule()) {
+        publishing {
+            publications {
+                create<MavenPublication>("BluetapeImage") {
+                    val sourcesJar by tasks.registering(Jar::class) {
+                        archiveClassifier.set("sources")
+                        from(sourceSets["main"].allSource)
+                    }
+                    val javadocJar by tasks.registering(Jar::class) {
+                        archiveClassifier.set("javadoc")
+                        from(layout.buildDirectory.asFile.get().resolve("javadoc"))
+                    }
+                    from(components["java"])
+                    artifact(sourcesJar)
+                    artifact(javadocJar)
 
-                pom {
-                    name.set(project.name)
-                    description.set("Kotlin/JVM image processing library — scrimage, VipsImage, TwelveMonkeys — part of the bluetape4k ecosystem")
-                    url.set("https://github.com/bluetape4k/bluetape4k-image")
-                    licenses {
-                        license {
-                            name.set("MIT License")
-                            url.set("https://opensource.org/licenses/MIT")
-                        }
-                    }
-                    developers {
-                        developer {
-                            id.set("debop")
-                            name.set("Sunghyouk Bae")
-                            email.set("sunghyouk.bae@gmail.com")
-                        }
-                    }
-                    scm {
-                        connection.set("scm:git:git://github.com/bluetape4k/bluetape4k-image.git")
-                        developerConnection.set("scm:git:ssh://github.com/bluetape4k/bluetape4k-image.git")
+                    pom {
+                        name.set(project.name)
+                        description.set("Kotlin/JVM image processing library — scrimage, VipsImage, TwelveMonkeys — part of the bluetape4k ecosystem")
                         url.set("https://github.com/bluetape4k/bluetape4k-image")
+                        licenses {
+                            license {
+                                name.set("MIT License")
+                                url.set("https://opensource.org/licenses/MIT")
+                            }
+                        }
+                        developers {
+                            developer {
+                                id.set("debop")
+                                name.set("Sunghyouk Bae")
+                                email.set("sunghyouk.bae@gmail.com")
+                            }
+                        }
+                        scm {
+                            connection.set("scm:git:git://github.com/bluetape4k/bluetape4k-image.git")
+                            developerConnection.set("scm:git:ssh://github.com/bluetape4k/bluetape4k-image.git")
+                            url.set("https://github.com/bluetape4k/bluetape4k-image")
+                        }
                     }
                 }
             }
-        }
-        repositories {
-            mavenCentral()
-            maven {
-                name = "central-snapshots"
-                url = uri("https://central.sonatype.com/repository/maven-snapshots/")
+            repositories {
+                mavenCentral()
+                maven {
+                    name = "central-snapshots"
+                    url = uri("https://central.sonatype.com/repository/maven-snapshots/")
+                }
             }
         }
-    }
 
-    configurePublishingSigning("BluetapeImage")
+        configurePublishingSigning("BluetapeImage")
+    }
 }
 
 extensions.configure<NmcpAggregationExtension>("nmcpAggregation") {
@@ -324,12 +343,15 @@ extensions.configure<NmcpAggregationExtension>("nmcpAggregation") {
 }
 
 dependencies {
-    subprojects.forEach { add("nmcpAggregation", project(it.path)) }
+    subprojects
+        .filterNot { it.isNonPublishedModule() }
+        .forEach { add("nmcpAggregation", project(it.path)) }
 }
 
 dependencies {
     subprojects
         .filter { it.name != "bluetape4k-image-bom" }
+        .filterNot { it.isNonPublishedModule() }
         .forEach { sub -> kover(project(sub.path)) }
 }
 
