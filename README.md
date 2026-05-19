@@ -45,7 +45,7 @@ memory use, or native codecs matter.
 
 ## Architecture
 
-![Architecture diagram](docs/assets/readme-diagrams/bluetape4k-image-architecture-01.png)
+![image Architecture diagram](docs/assets/readme-diagrams/bluetape4k-image-architecture-01.png)
 
 ## Requirements
 

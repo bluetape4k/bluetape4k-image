@@ -40,7 +40,7 @@ native codec이 중요해질 때 libvips 백엔드로 확장할 수 있는 단�
 
 ## 아키텍처
 
-![Architecture diagram](docs/assets/readme-diagrams/bluetape4k-image-architecture-01.png)
+![image Architecture diagram](docs/assets/readme-diagrams/bluetape4k-image-architecture-01.png)
 
 ## 요구사항
 

@@ -8,11 +8,11 @@ libvips 기반 이미지 처리를 위한 바인딩 중립(binding-neutral) API�
 
 ### 클래스 다이어그램
 
-![images-vips-api diagram diagram](../docs/images/readme-diagrams/images-vips-api-class-01.png)
+![images vips api Class Structure diagram](../docs/images/readme-diagrams/images-vips-api-class-01.png)
 
 ### 처리 파이프라인
 
-![Processing diagram](../docs/images/readme-diagrams/images-vips-api-architecture-02.png)
+![images vips api Architecture 2 diagram](../docs/images/readme-diagrams/images-vips-api-architecture-02.png)
 
 ## 주요 기능
 

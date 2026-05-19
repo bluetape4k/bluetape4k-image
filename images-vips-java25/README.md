@@ -10,7 +10,7 @@ FFM (Foreign Function & Memory) API backend for libvips image processing on Java
 
 ### Class Diagram
 
-![Class Diagram diagram](../docs/images/readme-diagrams/images-vips-java25-class-01.png)
+![images vips java25 Class Structure diagram](../docs/images/readme-diagrams/images-vips-java25-class-01.png)
 
 ## Prerequisites
 

@@ -12,7 +12,7 @@ JVips (JNI) backend implementation for libvips image processing. Provides fast, 
 
 ### Class Diagram
 
-![Class Diagram diagram](../docs/images/readme-diagrams/images-vips-java21-class-02.png)
+![images vips java21 Class Structure 2 diagram](../docs/images/readme-diagrams/images-vips-java21-class-02.png)
 
 ## Setup
 

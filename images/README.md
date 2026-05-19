@@ -12,7 +12,7 @@ A library for loading, converting, resizing, splitting, and applying filters to 
 
 ### Class Diagram
 
-![Class Diagram diagram](../docs/images/readme-diagrams/images-class-02.png)
+![images Class Structure 2 diagram](../docs/images/readme-diagrams/images-class-02.png)
 
 ## Key Features
 
