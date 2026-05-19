@@ -10,69 +10,7 @@ FFM (Foreign Function & Memory) API backend for libvips image processing on Java
 
 ### Class Diagram
 
-```mermaid
-classDiagram
-    class VipsRuntime {
-        <<interface>>
-        +init(concurrency, maxPixels)
-        +shutdown()
-        +isInitialized: Boolean
-        +isShutdown: Boolean
-    }
-    
-    class FfmVipsRuntime {
-        +init(concurrency, maxPixels)
-        +shutdown()
-        +maxPixels: Long
-        -checkNativeAccessEnabled()
-    }
-    
-    class VipsImage {
-        <<interface>>
-        +width: Int
-        +height: Int
-        +bands: Int
-        +resize(width, height) VipsImage
-        +thumbnail(maxDimension) VipsImage
-        +crop(left, top, width, height) VipsImage
-        +toBytes(format, options) ByteArray
-        +writeTo(path, format, options)
-        +writeTo(stream, format, options)
-    }
-    
-    class FfmVipsImage {
-        -arena: Arena
-        -vipsImage: VImage
-        +width: Int
-        +height: Int
-        +bands: Int
-        +resize(width, height) VipsImage
-        +thumbnail(maxDimension) VipsImage
-        +crop(left, top, width, height) VipsImage
-        +toBytes(format, options) ByteArray
-    }
-    
-    class FfmVipsImageSupport {
-        +ffmVipsImageOf(bytes) VipsImage
-        +ffmVipsImageOf(file) VipsImage
-        +ffmVipsImageOf(path) VipsImage
-        +ffmVipsImageOf(stream) VipsImage
-        +suspendFfmVipsImageOf(bytes) VipsImage
-        +suspendFfmVipsImageOf(file) VipsImage
-        +suspendFfmVipsImageOf(path) VipsImage
-    }
-    
-    FfmVipsRuntime --|> VipsRuntime
-    FfmVipsImage --|> VipsImage
-    FfmVipsImageSupport --> FfmVipsImage : creates
-    FfmVipsImageSupport --> FfmVipsRuntime : uses
-    
-    style FfmVipsRuntime fill:#E3F2FD,stroke:#90CAF9,color:#1565C0
-    style FfmVipsImage fill:#E3F2FD,stroke:#90CAF9,color:#1565C0
-    style FfmVipsImageSupport fill:#FFF3E0,stroke:#FFCC80,color:#E65100
-    style VipsRuntime fill:#E8F5E9,stroke:#A5D6A7,color:#2E7D32
-    style VipsImage fill:#E8F5E9,stroke:#A5D6A7,color:#2E7D32
-```
+![Class Diagram 1](../docs/images/readme-diagrams/images-vips-java25-diagram-01.svg)
 
 ## Prerequisites
 
@@ -482,13 +420,7 @@ Both modules implement the same `VipsImage` interface and are interchangeable at
 
 ### Performance vs scrimage
 
-```mermaid
-xychart-beta horizontal
-    title "scrimage vs vips-ffm — Linux CI, java25 (ms/op, lower is better)"
-    x-axis ["scrimage resize FHD", "vips resize FHD", "scrimage JPEG", "vips JPEG", "scrimage PNG", "vips PNG"]
-    y-axis "ms/op" 0 --> 270
-    bar [187.29, 0.59, 171.16, 37.20, 249.01, 137.95]
-```
+![Performance vs scrimage 2](../docs/images/readme-diagrams/images-vips-java25-diagram-02.svg)
 
 **CI Linux (Ubuntu 24.04, GraalVM 25, libvips 8.15.1)**
 
