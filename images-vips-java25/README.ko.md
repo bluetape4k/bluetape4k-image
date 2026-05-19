@@ -10,7 +10,7 @@ Java 23+ 환경에서 libvips 이미지 처리를 위한 FFM(Foreign Function & 
 
 ### 클래스 다이어그램
 
-![images-vips-java25 diagram diagram](../docs/images/readme-diagrams/images-vips-java25-class-01.png)
+![images vips java25 Class Structure diagram](../docs/images/readme-diagrams/images-vips-java25-class-01.png)
 
 ## 사전요구사항
 

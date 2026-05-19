@@ -5,7 +5,7 @@ reactive health indicators, and Micrometer metrics.
 
 ## Architecture
 
-![Architecture diagram](../docs/images/readme-diagrams/images-spring-boot-architecture-01.png)
+![images spring boot Architecture diagram](../docs/images/readme-diagrams/images-spring-boot-architecture-01.png)
 
 ## Features
 

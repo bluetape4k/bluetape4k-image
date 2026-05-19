@@ -10,11 +10,11 @@ AVIF·HEIC는 incubating 인터페이스로 제공되며, 구현체는 `bluetape
 
 ### 처리 파이프라인
 
-![Processing diagram](../docs/images/readme-diagrams/images-architecture-01.png)
+![images Architecture diagram](../docs/images/readme-diagrams/images-architecture-01.png)
 
 ### 클래스 다이어그램
 
-![images diagram diagram](../docs/images/readme-diagrams/images-class-02.png)
+![images Class Structure 2 diagram](../docs/images/readme-diagrams/images-class-02.png)
 
 ## 주요 기능
 
@@ -755,7 +755,7 @@ val ycbcrArray = image.toYCbCrArray() // FloatArray [y0,cb0,cr0, ...]
 
 ### 변환 아키텍처
 
-![Architecture diagram](../docs/images/readme-diagrams/images-architecture-03.png)
+![images Architecture 3 diagram](../docs/images/readme-diagrams/images-architecture-03.png)
 
 ### AutoCrop — 자동 여백 제거
 

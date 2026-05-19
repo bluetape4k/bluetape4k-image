@@ -4,7 +4,7 @@
 
 ## 아키텍처
 
-![Architecture diagram](../docs/images/readme-diagrams/images-spring-boot-architecture-01.png)
+![images spring boot Architecture diagram](../docs/images/readme-diagrams/images-spring-boot-architecture-01.png)
 
 ## 주요 기능
 

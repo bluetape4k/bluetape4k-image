@@ -8,11 +8,11 @@ JVips(JNI) 백엔드로 libvips 이미지 처리 구현. Java 21+ 환경에서 �
 
 ### JVips 처리 파이프라인
 
-![JVips Processing diagram](../docs/images/readme-diagrams/images-vips-java21-architecture-01.png)
+![JVips diagram](../docs/images/readme-diagrams/images-vips-java21-architecture-01.png)
 
 ### 클래스 다이어그램
 
-![images-vips-java21 diagram diagram](../docs/images/readme-diagrams/images-vips-java21-class-02.png)
+![images vips java21 Class Structure 2 diagram](../docs/images/readme-diagrams/images-vips-java21-class-02.png)
 
 ## 설정
 

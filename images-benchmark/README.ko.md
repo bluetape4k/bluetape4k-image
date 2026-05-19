@@ -6,7 +6,7 @@
 
 ## 아키텍처
 
-![Architecture diagram](../docs/images/readme-diagrams/images-benchmark-architecture-01.png)
+![images benchmark Architecture diagram](../docs/images/readme-diagrams/images-benchmark-architecture-01.png)
 
 ## 벤치마크 결과
 

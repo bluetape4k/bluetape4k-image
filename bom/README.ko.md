@@ -7,7 +7,7 @@
 
 ## Architecture
 
-![Architecture diagram](../docs/images/readme-diagrams/bom-architecture-01.png)
+![bom Architecture diagram](../docs/images/readme-diagrams/bom-architecture-01.png)
 
 BOM은 Gradle `java-platform` 으로 `<dependencyManagement>` constraint 만 게시한다.
 

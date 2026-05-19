@@ -6,7 +6,7 @@ JMH benchmarks comparing [scrimage](https://sksamuel.github.io/scrimage/) and [l
 
 ## Architecture
 
-![Architecture diagram](../docs/images/readme-diagrams/images-benchmark-architecture-01.png)
+![images benchmark Architecture diagram](../docs/images/readme-diagrams/images-benchmark-architecture-01.png)
 
 ## Benchmark Results
 
