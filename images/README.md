@@ -8,161 +8,11 @@ A library for loading, converting, resizing, splitting, and applying filters to 
 
 ### Processing Pipeline
 
-```mermaid
-flowchart LR
-    subgraph Input["Input Sources"]
-        BA[ByteArray]
-        IS[InputStream]
-        FILE[File / Path]
-    end
-
-    subgraph Processing["Image Processing (Scrimage-based)"]
-        II["ImmutableImage<br/>(immutableImageOf)"]
-        BI["BufferedImage<br/>(bufferedImageOf)"]
-    end
-
-    subgraph Operations["Image Operations"]
-        SC["Resize<br/>(ImageScaler)"]
-        SP["Split<br/>(ImageSplitter)"]
-        WM["Watermark<br/>(WatermarkFilter)"]
-        CP["Caption<br/>(CaptionFilter)"]
-        PD["Padding<br/>(PaddingSupport)"]
-        TR["Transform<br/>(AutoCrop/SmartCrop/Rotate/Perspective/CLAHE)"]
-    end
-
-    subgraph Output["Async Output (Coroutines)"]
-        JPG["SuspendJpegWriter<br/>(lossy)"]
-        PNG["SuspendPngWriter<br/>(lossless)"]
-        WEBP["SuspendWebpWriter<br/>(best compression)"]
-        GIF["SuspendGifWriter<br/>(animated)"]
-        ANIM["SuspendGif2WebpWriter<br/>(GIF→WebP)"]
-        TIFF["SuspendTiffWriter<br/>(single-page)"]
-        TIFFM["SuspendTiffMultiPageWriter<br/>(multi-page)"]
-        SVG["BatikSvgRasterizer<br/>(SVG→raster)"]
-    end
-
-    Input --> Processing
-    Processing --> Operations
-    Operations --> Output
-
-    classDef coreStyle fill:#E8F5E9,stroke:#A5D6A7,color:#2E7D32,font-weight:bold
-    classDef serviceStyle fill:#E3F2FD,stroke:#90CAF9,color:#1565C0
-    classDef utilStyle fill:#FFF3E0,stroke:#FFCC80,color:#E65100
-    classDef asyncStyle fill:#F3E5F5,stroke:#CE93D8,color:#6A1B9A
-    classDef extStyle fill:#ECEFF1,stroke:#B0BEC5,color:#37474F
-    classDef dataStyle fill:#F57F17,stroke:#F57F17,color:#000000
-
-    class BA,IS,FILE dataStyle
-    class II,BI coreStyle
-    class SC,SP,WM,CP,PD utilStyle
-    class JPG,PNG,WEBP,GIF,ANIM,TIFF,TIFFM,SVG asyncStyle
-```
+![Processing Pipeline 1](../docs/images/readme-diagrams/images-diagram-01.svg)
 
 ### Class Diagram
 
-```mermaid
-classDiagram
-    class ImmutableImage {
-        +width: Int
-        +height: Int
-        +scale(width, height) ImmutableImage
-        +output(writer) ByteArray
-    }
-    class ImageScaler {
-        +scale(image, width, height) ImmutableImage
-    }
-    class ImageSplitter {
-        +split(image, rows, cols) List~ImmutableImage~
-    }
-    class WatermarkFilter {
-        +apply(image) ImmutableImage
-    }
-    class ImageFilterChain {
-        +brightness(factor)
-        +contrast(factor)
-        +saturation(factor)
-        +hue(deltaDegrees)
-        +colorTemperature(kelvin)
-        +gaussianBlur(radius)
-        +medianBlur(radius, boundary)
-        +sepia()
-        +vignette()
-        +roundedCorners(radius)
-        +raw(filter)
-        +pixel(block)
-    }
-    class ColorSpaceConverter {
-        +rgbToHsv(r, g, b) FloatArray
-        +hsvToRgb(h, s, v) IntArray
-        +kelvinToRgb(kelvin) IntArray
-    }
-    class SaturationAdjustFilter {
-        +factor: Float
-        +apply(image) ImmutableImage
-    }
-    class HueAdjustFilter {
-        +deltaDegrees: Float
-        +apply(image) ImmutableImage
-    }
-    class ColorTemperatureFilter {
-        +kelvin: Int
-        +apply(image) ImmutableImage
-    }
-    class MedianBlurFilter {
-        +radius: Int
-        +boundary: MedianBoundaryMode
-        +apply(image) ImmutableImage
-    }
-    class RoundedCornerFilter {
-        +radius: Int
-        +apply(image) ImmutableImage
-    }
-    class SuspendJpegWriter {
-        +writeImage(image) ByteArray
-    }
-    class SuspendPngWriter {
-        +writeImage(image) ByteArray
-    }
-    class SuspendWebpWriter {
-        +writeImage(image) ByteArray
-    }
-    class SuspendGif2WebpWriter {
-        +writeImage(image) ByteArray
-    }
-
-    ImmutableImage --> ImageScaler : uses
-    ImmutableImage --> ImageSplitter : uses
-    ImmutableImage --> WatermarkFilter : uses
-    ImmutableImage --> ImageFilterChain : applyFilters
-    ImmutableImage --> SuspendJpegWriter : output
-    ImmutableImage --> SuspendPngWriter : output
-    ImmutableImage --> SuspendWebpWriter : output
-    ImmutableImage --> SuspendGif2WebpWriter : output
-    ImageFilterChain --> SaturationAdjustFilter
-    ImageFilterChain --> HueAdjustFilter
-    ImageFilterChain --> ColorTemperatureFilter
-    ImageFilterChain --> MedianBlurFilter
-    ImageFilterChain --> RoundedCornerFilter
-    ColorSpaceConverter <-- SaturationAdjustFilter : uses
-    ColorSpaceConverter <-- HueAdjustFilter : uses
-    ColorSpaceConverter <-- ColorTemperatureFilter : uses
-
-    style ImmutableImage fill:#E3F2FD,stroke:#90CAF9,color:#1565C0
-    style ImageScaler fill:#FFF3E0,stroke:#FFCC80,color:#E65100
-    style ImageSplitter fill:#FFF3E0,stroke:#FFCC80,color:#E65100
-    style WatermarkFilter fill:#FFF3E0,stroke:#FFCC80,color:#E65100
-    style ImageFilterChain fill:#E8F5E9,stroke:#A5D6A7,color:#2E7D32
-    style ColorSpaceConverter fill:#E8F5E9,stroke:#A5D6A7,color:#2E7D32
-    style SaturationAdjustFilter fill:#FFF8E1,stroke:#FFD54F,color:#E65100
-    style HueAdjustFilter fill:#FFF8E1,stroke:#FFD54F,color:#E65100
-    style ColorTemperatureFilter fill:#FFF8E1,stroke:#FFD54F,color:#E65100
-    style MedianBlurFilter fill:#FFF8E1,stroke:#FFD54F,color:#E65100
-    style RoundedCornerFilter fill:#FFF8E1,stroke:#FFD54F,color:#E65100
-    style SuspendJpegWriter fill:#F3E5F5,stroke:#CE93D8,color:#6A1B9A
-    style SuspendPngWriter fill:#F3E5F5,stroke:#CE93D8,color:#6A1B9A
-    style SuspendWebpWriter fill:#F3E5F5,stroke:#CE93D8,color:#6A1B9A
-    style SuspendGif2WebpWriter fill:#F3E5F5,stroke:#CE93D8,color:#6A1B9A
-```
+![Class Diagram 2](../docs/images/readme-diagrams/images-diagram-02.svg)
 
 ## Key Features
 
@@ -879,29 +729,7 @@ Advanced image transformation operations backed by pure JVM (Java2D) with suspen
 
 ### Transform Architecture
 
-```mermaid
-flowchart TD
-    subgraph Transforms["transforms package"]
-        AC["AutoCrop\nautoCrop()"]
-        SC["SmartCrop\nsmartCrop(AspectRatio)"]
-        RT["Rotation\nrotateDegrees / flipH / flipV"]
-        PT["PerspectiveTransform\nperspectiveTransform(4pts)"]
-        HE["HistogramEqualization\nclahe / globalEqualize"]
-    end
-
-    subgraph DSL["applyFilters { } DSL"]
-        DO["ImageFilterChainTransformOps\nautoCrop / smartCrop / rotateDegrees\nrotateLeft / rotateRight\nflipH / flipV / perspective / clahe"]
-    end
-
-    ImmutableImage --> Transforms
-    Transforms --> ImmutableImage
-    DSL --> Transforms
-
-    classDef opStyle fill:#E3F2FD,stroke:#90CAF9,color:#1565C0
-    classDef dslStyle fill:#F3E5F5,stroke:#CE93D8,color:#6A1B9A
-    class AC,SC,RT,PT,HE opStyle
-    class DO dslStyle
-```
+![Transform Architecture 3](../docs/images/readme-diagrams/images-diagram-03.svg)
 
 ### AutoCrop
 
@@ -1013,49 +841,7 @@ val asyncResult = image.suspendApplyFilters {
 
 Dominant color extraction, blur detection, and EXIF metadata parsing — all pure JVM, no native dependencies.
 
-```mermaid
-classDiagram
-    class DominantColor {
-        +r: Int
-        +g: Int
-        +b: Int
-        +population: Int
-        +hex: String
-        +toAwtColor() Color
-        +fromRgb(rgb, population) DominantColor
-    }
-    class DominantColorExtractor {
-        <<sealed interface>>
-        +extract(image, count) List~DominantColor~
-    }
-    class MedianCut {
-        +quality: Int
-        +ignoreWhite: Boolean
-        +extract(image, count) List~DominantColor~
-    }
-    class BlurScore {
-        +score: Double
-        +threshold: Double
-        +isBlurry: Boolean
-    }
-    class ExifData {
-        +gpsLatitude: Double?
-        +gpsLongitude: Double?
-        +dateTimeOriginal: LocalDateTime?
-        +cameraMake: String?
-        +iso: Int?
-        +hasGps: Boolean
-        +withoutGps() ExifData
-    }
-
-    DominantColorExtractor <|.. MedianCut
-    DominantColor <-- MedianCut : produces
-    ImmutableImage --> DominantColor : dominantColors()
-    ImmutableImage --> BlurScore : blurScore()
-    ExifData <-- File : readExif()
-    ExifData <-- Path : readExif()
-    ExifData <-- InputStream : readExif()
-```
+![Image Analysis 4](../docs/images/readme-diagrams/images-diagram-04.svg)
 
 #### Dominant Color Extraction (Median Cut)
 

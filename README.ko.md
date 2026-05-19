@@ -40,37 +40,7 @@ native codec이 중요해질 때 libvips 백엔드로 확장할 수 있는 단�
 
 ## 아키텍처
 
-```mermaid
-flowchart TD
-    subgraph API["공개 API"]
-        IMG["images\n(Scrimage / Java2D)"]
-        VAPI["images-vips-api\nVipsImage 인터페이스"]
-        SB["images-spring-boot\nSpring Boot 4 자동 구성"]
-    end
-
-    subgraph Backends["libvips 백엔드"]
-        J21["images-vips-java21\nJVips (JNI)\nJava 21+"]
-        J25["images-vips-java25\nvips-ffm (FFM/Panama)\nJava 25+"]
-    end
-
-    subgraph Bench["벤치마크"]
-        BM["images-benchmark\nJMH: 리사이즈 / 인코딩 / 썸네일"]
-    end
-
-    VAPI --> J21
-    VAPI --> J25
-    SB --> IMG
-    BM --> IMG
-    BM --> VAPI
-
-    classDef apiStyle fill:#E3F2FD,stroke:#90CAF9,color:#1565C0,font-weight:bold
-    classDef backendStyle fill:#E8F5E9,stroke:#A5D6A7,color:#2E7D32
-    classDef benchStyle fill:#FFF3E0,stroke:#FFCC80,color:#E65100
-
-    class IMG,VAPI,SB apiStyle
-    class J21,J25 backendStyle
-    class BM benchStyle
-```
+![Architecture 1](docs/images/readme-diagrams/root-readme-ko-diagram-01.svg)
 
 ## 요구사항
 

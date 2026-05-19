@@ -4,23 +4,7 @@
 
 ## 아키텍처
 
-```mermaid
-graph TD
-    A[Spring Boot 앱] --> B[ImagesProcessingAutoConfiguration]
-    A --> C[ImagesStorageAutoConfiguration]
-    A --> D[ImagesCdnAutoConfiguration]
-    A --> E[ImagesHealthAutoConfiguration]
-    A --> F[ImagesMetricsAutoConfiguration]
-
-    C -->|backend=local| G[LocalImageStorage]
-    C -->|backend=s3| H[S3ImageStorage]
-
-    D -->|provider=s3_presign| I[S3PreSignedUrlSigner]
-    D -->|provider=cloudfront| J[CloudFrontUrlSigner]
-
-    E --> K[ImageStorageHealthIndicator]
-    F --> L[MetricImageStorage / BeanPostProcessor]
-```
+![Architecture 1](../docs/images/readme-diagrams/images-spring-boot-ko-diagram-01.svg)
 
 ## 주요 기능
 

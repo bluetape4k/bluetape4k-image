@@ -6,40 +6,7 @@
 
 ## 아키텍처
 
-```mermaid
-flowchart TD
-    subgraph Benchmarks["JMH 벤치마크 클래스"]
-        RESIZE["ImageResizeBenchmark\n(scrimage vs vips 리사이즈)"]
-        ENCODE["ImageEncodeBenchmark\n(scrimage vs vips JPEG/PNG)"]
-        FILTER["ImageFilterBenchmark\n(scrimage 필터 성능)"]
-    end
-
-    subgraph State["JMH 상태 객체"]
-        VSTATE["VipsBenchmarkState\n(런타임 초기화 + 샘플 이미지\nmacOS 라이브러리 경로 자동 설정)"]
-        IMGSETS["BenchmarkImageSets\n(합성 photo4k / document / thumbnail)"]
-    end
-
-    subgraph Impls["구현체"]
-        SCRIMAGE["bluetape4k-images\n(Scrimage / Java 2D)"]
-        JAVA21["bluetape4k-images-vips-java21\n(JVips / JNI — Linux 전용)"]
-        JAVA25["bluetape4k-images-vips-java25\n(vips-ffm / Panama FFM)"]
-    end
-
-    RESIZE --> VSTATE
-    ENCODE --> VSTATE
-    FILTER --> IMGSETS
-    VSTATE --> JAVA21
-    VSTATE --> JAVA25
-    IMGSETS --> SCRIMAGE
-
-    classDef benchStyle fill:#E3F2FD,stroke:#90CAF9,color:#1565C0
-    classDef stateStyle fill:#FFF3E0,stroke:#FFCC80,color:#E65100
-    classDef implStyle fill:#E8F5E9,stroke:#A5D6A7,color:#2E7D32
-
-    class RESIZE,ENCODE,FILTER benchStyle
-    class VSTATE,IMGSETS stateStyle
-    class SCRIMAGE,JAVA21,JAVA25 implStyle
-```
+![Architecture 1](../docs/images/readme-diagrams/images-benchmark-ko-diagram-01.svg)
 
 ## 벤치마크 결과
 
@@ -47,13 +14,7 @@ flowchart TD
 
 ### 리사이즈 (4K 3840×2160 → 1920×1080)
 
-```mermaid
-xychart-beta horizontal
-    title "Resize 1920×1080: scrimage vs vips (ms/op, 낮을수록 빠름)"
-    x-axis ["scrimage macOS", "vips macOS", "scrimage Linux java25", "vips Linux java25", "scrimage Linux java21", "vips Linux java21"]
-    y-axis "ms/op" 0 --> 210
-    bar [71.16, 0.20, 187.29, 0.59, 195.63, 0.50]
-```
+![Component (4K 3840×2160 → 1920×1080) 2](../docs/images/readme-diagrams/images-benchmark-ko-diagram-02.svg)
 
 | 환경 | scrimage (ms/op) | vips (ms/op) | 속도 향상 |
 |------|-----------------|--------------|----------|
@@ -63,13 +24,7 @@ xychart-beta horizontal
 
 ### 인코딩 (1240×1754 document 이미지)
 
-```mermaid
-xychart-beta horizontal
-    title "인코딩: scrimage vs vips (ms/op, 낮을수록 빠름)"
-    x-axis ["scrimage JPEG macOS", "vips JPEG macOS", "scrimage JPEG Linux", "vips JPEG Linux", "scrimage PNG macOS", "vips PNG macOS", "scrimage PNG Linux", "vips PNG Linux"]
-    y-axis "ms/op" 0 --> 270
-    bar [52.49, 15.67, 171.16, 37.20, 94.87, 49.88, 249.01, 137.95]
-```
+![Component (1240×1754 document Component) 3](../docs/images/readme-diagrams/images-benchmark-ko-diagram-03.svg)
 
 | 포맷 | 환경 | scrimage (ms/op) | vips (ms/op) | 속도 향상 |
 |------|------|-----------------|--------------|----------|
@@ -84,13 +39,7 @@ xychart-beta horizontal
 
 ### 필터 (scrimage 전용, 1240×1754)
 
-```mermaid
-xychart-beta horizontal
-    title "scrimage 필터: macOS vs Linux (ms/op, 낮을수록 빠름)"
-    x-axis ["Sepia macOS", "Sepia Linux", "Grayscale macOS", "Grayscale Linux", "Blur macOS", "Blur Linux"]
-    y-axis "ms/op" 0 --> 110
-    bar [13.19, 60.83, 22.51, 99.72, 29.80, 73.64]
-```
+![Component (scrimage Only, 1240×1754) 4](../docs/images/readme-diagrams/images-benchmark-ko-diagram-04.svg)
 
 | 필터      | macOS (ms/op) | CI Linux java25 (ms/op) |
 |-----------|--------------|------------------------|

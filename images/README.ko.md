@@ -10,161 +10,11 @@ AVIF·HEIC는 incubating 인터페이스로 제공되며, 구현체는 `bluetape
 
 ### 처리 파이프라인
 
-```mermaid
-flowchart LR
-    subgraph 입력["입력 소스"]
-        BA[ByteArray]
-        IS[InputStream]
-        FILE[File / Path]
-    end
-
-    subgraph 이미지처리["이미지 처리 (Scrimage 기반)"]
-        II["ImmutableImage<br/>(immutableImageOf)"]
-        BI["BufferedImage<br/>(bufferedImageOf)"]
-    end
-
-    subgraph 조작["이미지 조작"]
-        SC["크기 조절<br/>(ImageScaler)"]
-        SP["이미지 분할<br/>(ImageSplitter)"]
-        WM["워터마크<br/>(WatermarkFilter)"]
-        CP["캡션<br/>(CaptionFilter)"]
-        PD["패딩<br/>(PaddingSupport)"]
-        TR["변환<br/>(AutoCrop/SmartCrop/회전/원근/CLAHE)"]
-    end
-
-    subgraph 출력["비동기 저장 (Coroutines)"]
-        JPG["SuspendJpegWriter<br/>(손실 압축)"]
-        PNG["SuspendPngWriter<br/>(무손실)"]
-        WEBP["SuspendWebpWriter<br/>(최고 압축)"]
-        GIF["SuspendGifWriter<br/>(애니메이션)"]
-        ANIM["SuspendGif2WebpWriter<br/>(GIF→WebP 변환)"]
-        TIFF["SuspendTiffWriter<br/>(단일 페이지)"]
-        TIFFM["SuspendTiffMultiPageWriter<br/>(다중 페이지)"]
-        SVG["BatikSvgRasterizer<br/>(SVG→래스터)"]
-    end
-
-    입력 --> 이미지처리
-    이미지처리 --> 조작
-    조작 --> 출력
-
-    classDef coreStyle fill:#E8F5E9,stroke:#A5D6A7,color:#2E7D32,font-weight:bold
-    classDef serviceStyle fill:#E3F2FD,stroke:#90CAF9,color:#1565C0
-    classDef utilStyle fill:#FFF3E0,stroke:#FFCC80,color:#E65100
-    classDef asyncStyle fill:#F3E5F5,stroke:#CE93D8,color:#6A1B9A
-    classDef extStyle fill:#ECEFF1,stroke:#B0BEC5,color:#37474F
-    classDef dataStyle fill:#F57F17,stroke:#F57F17,color:#000000
-
-    class BA,IS,FILE dataStyle
-    class II,BI coreStyle
-    class SC,SP,WM,CP,PD utilStyle
-    class JPG,PNG,WEBP,GIF,ANIM,TIFF,TIFFM,SVG asyncStyle
-```
+![Component Component 1](../docs/images/readme-diagrams/images-ko-diagram-01.svg)
 
 ### 클래스 다이어그램
 
-```mermaid
-classDiagram
-    class ImmutableImage {
-        +width: Int
-        +height: Int
-        +scale(width, height) ImmutableImage
-        +output(writer) ByteArray
-    }
-    class ImageScaler {
-        +scale(image, width, height) ImmutableImage
-    }
-    class ImageSplitter {
-        +split(image, rows, cols) List~ImmutableImage~
-    }
-    class WatermarkFilter {
-        +apply(image) ImmutableImage
-    }
-    class ImageFilterChain {
-        +brightness(factor)
-        +contrast(factor)
-        +saturation(factor)
-        +hue(deltaDegrees)
-        +colorTemperature(kelvin)
-        +gaussianBlur(radius)
-        +medianBlur(radius, boundary)
-        +sepia()
-        +vignette()
-        +roundedCorners(radius)
-        +raw(filter)
-        +pixel(block)
-    }
-    class ColorSpaceConverter {
-        +rgbToHsv(r, g, b) FloatArray
-        +hsvToRgb(h, s, v) IntArray
-        +kelvinToRgb(kelvin) IntArray
-    }
-    class SaturationAdjustFilter {
-        +factor: Float
-        +apply(image) ImmutableImage
-    }
-    class HueAdjustFilter {
-        +deltaDegrees: Float
-        +apply(image) ImmutableImage
-    }
-    class ColorTemperatureFilter {
-        +kelvin: Int
-        +apply(image) ImmutableImage
-    }
-    class MedianBlurFilter {
-        +radius: Int
-        +boundary: MedianBoundaryMode
-        +apply(image) ImmutableImage
-    }
-    class RoundedCornerFilter {
-        +radius: Int
-        +apply(image) ImmutableImage
-    }
-    class SuspendJpegWriter {
-        +writeImage(image) ByteArray
-    }
-    class SuspendPngWriter {
-        +writeImage(image) ByteArray
-    }
-    class SuspendWebpWriter {
-        +writeImage(image) ByteArray
-    }
-    class SuspendGif2WebpWriter {
-        +writeImage(image) ByteArray
-    }
-
-    ImmutableImage --> ImageScaler : uses
-    ImmutableImage --> ImageSplitter : uses
-    ImmutableImage --> WatermarkFilter : uses
-    ImmutableImage --> ImageFilterChain : applyFilters
-    ImmutableImage --> SuspendJpegWriter : output
-    ImmutableImage --> SuspendPngWriter : output
-    ImmutableImage --> SuspendWebpWriter : output
-    ImmutableImage --> SuspendGif2WebpWriter : output
-    ImageFilterChain --> SaturationAdjustFilter
-    ImageFilterChain --> HueAdjustFilter
-    ImageFilterChain --> ColorTemperatureFilter
-    ImageFilterChain --> MedianBlurFilter
-    ImageFilterChain --> RoundedCornerFilter
-    ColorSpaceConverter <-- SaturationAdjustFilter : uses
-    ColorSpaceConverter <-- HueAdjustFilter : uses
-    ColorSpaceConverter <-- ColorTemperatureFilter : uses
-
-    style ImmutableImage fill:#E3F2FD,stroke:#90CAF9,color:#1565C0
-    style ImageScaler fill:#FFF3E0,stroke:#FFCC80,color:#E65100
-    style ImageSplitter fill:#FFF3E0,stroke:#FFCC80,color:#E65100
-    style WatermarkFilter fill:#FFF3E0,stroke:#FFCC80,color:#E65100
-    style ImageFilterChain fill:#E8F5E9,stroke:#A5D6A7,color:#2E7D32
-    style ColorSpaceConverter fill:#E8F5E9,stroke:#A5D6A7,color:#2E7D32
-    style SaturationAdjustFilter fill:#FFF8E1,stroke:#FFD54F,color:#E65100
-    style HueAdjustFilter fill:#FFF8E1,stroke:#FFD54F,color:#E65100
-    style ColorTemperatureFilter fill:#FFF8E1,stroke:#FFD54F,color:#E65100
-    style MedianBlurFilter fill:#FFF8E1,stroke:#FFD54F,color:#E65100
-    style RoundedCornerFilter fill:#FFF8E1,stroke:#FFD54F,color:#E65100
-    style SuspendJpegWriter fill:#F3E5F5,stroke:#CE93D8,color:#6A1B9A
-    style SuspendPngWriter fill:#F3E5F5,stroke:#CE93D8,color:#6A1B9A
-    style SuspendWebpWriter fill:#F3E5F5,stroke:#CE93D8,color:#6A1B9A
-    style SuspendGif2WebpWriter fill:#F3E5F5,stroke:#CE93D8,color:#6A1B9A
-```
+![Component Diagram 2](../docs/images/readme-diagrams/images-ko-diagram-02.svg)
 
 ## 주요 기능
 
@@ -905,29 +755,7 @@ val ycbcrArray = image.toYCbCrArray() // FloatArray [y0,cb0,cr0, ...]
 
 ### 변환 아키텍처
 
-```mermaid
-flowchart TD
-    subgraph Transforms["transforms 패키지"]
-        AC["AutoCrop\nautoCrop()"]
-        SC["SmartCrop\nsmartCrop(AspectRatio)"]
-        RT["Rotation\nrotateDegrees / flipH / flipV"]
-        PT["PerspectiveTransform\nperspectiveTransform(4pts)"]
-        HE["HistogramEqualization\nclahe / globalEqualize"]
-    end
-
-    subgraph DSL["applyFilters { } DSL"]
-        DO["ImageFilterChainTransformOps\nautoCrop / smartCrop / rotateDegrees\nrotateLeft / rotateRight\nflipH / flipV / perspective / clahe"]
-    end
-
-    ImmutableImage --> Transforms
-    Transforms --> ImmutableImage
-    DSL --> Transforms
-
-    classDef opStyle fill:#E3F2FD,stroke:#90CAF9,color:#1565C0
-    classDef dslStyle fill:#F3E5F5,stroke:#CE93D8,color:#6A1B9A
-    class AC,SC,RT,PT,HE opStyle
-    class DO dslStyle
-```
+![Component Architecture 3](../docs/images/readme-diagrams/images-ko-diagram-03.svg)
 
 ### AutoCrop — 자동 여백 제거
 

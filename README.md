@@ -45,37 +45,7 @@ memory use, or native codecs matter.
 
 ## Architecture
 
-```mermaid
-flowchart TD
-    subgraph API["Public API"]
-        IMG["images\n(Scrimage / Java2D)"]
-        VAPI["images-vips-api\nVipsImage interface"]
-        SB["images-spring-boot\nSpring Boot 4 AutoConfig"]
-    end
-
-    subgraph Backends["libvips Backends"]
-        J21["images-vips-java21\nJVips (JNI)\nJava 21+"]
-        J25["images-vips-java25\nvips-ffm (FFM/Panama)\nJava 25+"]
-    end
-
-    subgraph Bench["Benchmarks"]
-        BM["images-benchmark\nJMH: resize / encode / thumbnail"]
-    end
-
-    VAPI --> J21
-    VAPI --> J25
-    SB --> IMG
-    BM --> IMG
-    BM --> VAPI
-
-    classDef apiStyle fill:#E3F2FD,stroke:#90CAF9,color:#1565C0,font-weight:bold
-    classDef backendStyle fill:#E8F5E9,stroke:#A5D6A7,color:#2E7D32
-    classDef benchStyle fill:#FFF3E0,stroke:#FFCC80,color:#E65100
-
-    class IMG,VAPI,SB apiStyle
-    class J21,J25 backendStyle
-    class BM benchStyle
-```
+![Architecture 1](docs/images/readme-diagrams/root-readme-en-diagram-01.svg)
 
 ## Requirements
 
