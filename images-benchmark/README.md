@@ -6,40 +6,7 @@ JMH benchmarks comparing [scrimage](https://sksamuel.github.io/scrimage/) and [l
 
 ## Architecture
 
-```mermaid
-flowchart TD
-    subgraph Benchmarks["JMH Benchmark Classes"]
-        RESIZE["ImageResizeBenchmark\n(scrimage vs vips resize)"]
-        ENCODE["ImageEncodeBenchmark\n(scrimage vs vips JPEG/PNG)"]
-        FILTER["ImageFilterBenchmark\n(scrimage filter performance)"]
-    end
-
-    subgraph State["JMH State Objects"]
-        VSTATE["VipsBenchmarkState\n(runtime init + sample images\nmacOS library path auto-config)"]
-        IMGSETS["BenchmarkImageSets\n(synthetic photo4k / document / thumbnail)"]
-    end
-
-    subgraph Impls["Implementations"]
-        SCRIMAGE["bluetape4k-images\n(Scrimage / Java 2D)"]
-        JAVA21["bluetape4k-images-vips-java21\n(JVips / JNI — Linux only)"]
-        JAVA25["bluetape4k-images-vips-java25\n(vips-ffm / Panama FFM)"]
-    end
-
-    RESIZE --> VSTATE
-    ENCODE --> VSTATE
-    FILTER --> IMGSETS
-    VSTATE --> JAVA21
-    VSTATE --> JAVA25
-    IMGSETS --> SCRIMAGE
-
-    classDef benchStyle fill:#E3F2FD,stroke:#90CAF9,color:#1565C0
-    classDef stateStyle fill:#FFF3E0,stroke:#FFCC80,color:#E65100
-    classDef implStyle fill:#E8F5E9,stroke:#A5D6A7,color:#2E7D32
-
-    class RESIZE,ENCODE,FILTER benchStyle
-    class VSTATE,IMGSETS stateStyle
-    class SCRIMAGE,JAVA21,JAVA25 implStyle
-```
+![Architecture diagram](../docs/images/readme-diagrams/images-benchmark-architecture-01.png)
 
 ## Benchmark Results
 
@@ -47,13 +14,7 @@ flowchart TD
 
 ### Resize (4K 3840×2160 → 1920×1080)
 
-```mermaid
-xychart-beta horizontal
-    title "Resize 1920×1080: scrimage vs vips (ms/op, lower is better)"
-    x-axis ["scrimage macOS", "vips macOS", "scrimage Linux java25", "vips Linux java25", "scrimage Linux java21", "vips Linux java21"]
-    y-axis "ms/op" 0 --> 210
-    bar [71.16, 0.20, 187.29, 0.59, 195.63, 0.50]
-```
+![Resize (4K 3840×2160 → 1920×1080) diagram](../docs/images/readme-diagrams/images-benchmark-architecture-02.png)
 
 | Environment | scrimage (ms/op) | vips (ms/op) | Speedup |
 |-------------|-----------------|--------------|---------|
@@ -63,13 +24,7 @@ xychart-beta horizontal
 
 ### Encode (1240×1754 document image)
 
-```mermaid
-xychart-beta horizontal
-    title "Encode: scrimage vs vips (ms/op, lower is better)"
-    x-axis ["scrimage JPEG macOS", "vips JPEG macOS", "scrimage JPEG Linux", "vips JPEG Linux", "scrimage PNG macOS", "vips PNG macOS", "scrimage PNG Linux", "vips PNG Linux"]
-    y-axis "ms/op" 0 --> 270
-    bar [52.49, 15.67, 171.16, 37.20, 94.87, 49.88, 249.01, 137.95]
-```
+![Encode (1240×1754 document image) diagram](../docs/images/readme-diagrams/images-benchmark-architecture-03.png)
 
 | Format | Environment | scrimage (ms/op) | vips (ms/op) | Speedup |
 |--------|-------------|-----------------|--------------|---------|
@@ -84,13 +39,7 @@ xychart-beta horizontal
 
 ### Filter (scrimage only, 1240×1754)
 
-```mermaid
-xychart-beta horizontal
-    title "scrimage Filters: macOS vs Linux (ms/op, lower is better)"
-    x-axis ["Sepia macOS", "Sepia Linux", "Grayscale macOS", "Grayscale Linux", "Blur macOS", "Blur Linux"]
-    y-axis "ms/op" 0 --> 110
-    bar [13.19, 60.83, 22.51, 99.72, 29.80, 73.64]
-```
+![Filter (scrimage only, 1240×1754) diagram](../docs/images/readme-diagrams/images-benchmark-architecture-04.png)
 
 | Filter    | macOS (ms/op) | CI Linux java25 (ms/op) |
 |-----------|--------------|------------------------|

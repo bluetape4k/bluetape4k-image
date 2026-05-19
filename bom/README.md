@@ -8,23 +8,7 @@ individual versions.
 
 ## Architecture
 
-```mermaid
-graph TB
-    Consumer[Consumer Project]
-    BOM[bluetape4k-image-bom<br/>java-platform]
-    Images[images<br/>scrimage backend]
-    SpringBoot[images-spring-boot<br/>Spring Boot 4 AutoConfig]
-    VipsApi[images-vips-api<br/>libvips API]
-    Vips21[images-vips-java21<br/>JNI binding]
-    Vips25[images-vips-java25<br/>FFM Panama]
-
-    Consumer -->|platform import| BOM
-    BOM -.->|version constraints| Images
-    BOM -.->|version constraints| SpringBoot
-    BOM -.->|version constraints| VipsApi
-    BOM -.->|version constraints| Vips21
-    BOM -.->|version constraints| Vips25
-```
+![Architecture diagram](../docs/images/readme-diagrams/bom-architecture-01.png)
 
 The BOM is a Gradle `java-platform` that publishes only `<dependencyManagement>` constraints — no runtime classes.
 
