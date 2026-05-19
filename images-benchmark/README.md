@@ -6,7 +6,7 @@ JMH benchmarks comparing [scrimage](https://sksamuel.github.io/scrimage/) and [l
 
 ## Architecture
 
-![Architecture 1](../docs/images/readme-diagrams/images-benchmark-diagram-01.svg)
+![Architecture 1](../docs/images/readme-diagrams/images-benchmark-diagram-01.png)
 
 ## Benchmark Results
 
@@ -14,7 +14,7 @@ JMH benchmarks comparing [scrimage](https://sksamuel.github.io/scrimage/) and [l
 
 ### Resize (4K 3840×2160 → 1920×1080)
 
-![Resize (4K 3840×2160 → 1920×1080) 2](../docs/images/readme-diagrams/images-benchmark-diagram-02.svg)
+![Resize (4K 3840×2160 → 1920×1080) 2](../docs/images/readme-diagrams/images-benchmark-diagram-02.png)
 
 | Environment | scrimage (ms/op) | vips (ms/op) | Speedup |
 |-------------|-----------------|--------------|---------|
@@ -24,7 +24,7 @@ JMH benchmarks comparing [scrimage](https://sksamuel.github.io/scrimage/) and [l
 
 ### Encode (1240×1754 document image)
 
-![Encode (1240×1754 document image) 3](../docs/images/readme-diagrams/images-benchmark-diagram-03.svg)
+![Encode (1240×1754 document image) 3](../docs/images/readme-diagrams/images-benchmark-diagram-03.png)
 
 | Format | Environment | scrimage (ms/op) | vips (ms/op) | Speedup |
 |--------|-------------|-----------------|--------------|---------|
@@ -39,7 +39,7 @@ JMH benchmarks comparing [scrimage](https://sksamuel.github.io/scrimage/) and [l
 
 ### Filter (scrimage only, 1240×1754)
 
-![Filter (scrimage only, 1240×1754) 4](../docs/images/readme-diagrams/images-benchmark-diagram-04.svg)
+![Filter (scrimage only, 1240×1754) 4](../docs/images/readme-diagrams/images-benchmark-diagram-04.png)
 
 | Filter    | macOS (ms/op) | CI Linux java25 (ms/op) |
 |-----------|--------------|------------------------|

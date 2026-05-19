@@ -10,7 +10,7 @@ Java 23+ 환경에서 libvips 이미지 처리를 위한 FFM(Foreign Function & 
 
 ### 클래스 다이어그램
 
-![Component Diagram 1](../docs/images/readme-diagrams/images-vips-java25-ko-diagram-01.svg)
+![Component Diagram 1](../docs/images/readme-diagrams/images-vips-java25-ko-diagram-01.png)
 
 ## 사전요구사항
 
@@ -419,7 +419,7 @@ class ImageController(
 
 ### scrimage 대비 성능
 
-![scrimage Component Component 2](../docs/images/readme-diagrams/images-vips-java25-ko-diagram-02.svg)
+![scrimage Component Component 2](../docs/images/readme-diagrams/images-vips-java25-ko-diagram-02.png)
 
 **CI Linux (Ubuntu 24.04, GraalVM 25, libvips 8.15.1)**
 

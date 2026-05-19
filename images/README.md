@@ -8,11 +8,11 @@ A library for loading, converting, resizing, splitting, and applying filters to 
 
 ### Processing Pipeline
 
-![Processing Pipeline 1](../docs/images/readme-diagrams/images-diagram-01.svg)
+![Processing Pipeline 1](../docs/images/readme-diagrams/images-diagram-01.png)
 
 ### Class Diagram
 
-![Class Diagram 2](../docs/images/readme-diagrams/images-diagram-02.svg)
+![Class Diagram 2](../docs/images/readme-diagrams/images-diagram-02.png)
 
 ## Key Features
 
@@ -729,7 +729,7 @@ Advanced image transformation operations backed by pure JVM (Java2D) with suspen
 
 ### Transform Architecture
 
-![Transform Architecture 3](../docs/images/readme-diagrams/images-diagram-03.svg)
+![Transform Architecture 3](../docs/images/readme-diagrams/images-diagram-03.png)
 
 ### AutoCrop
 
@@ -841,7 +841,7 @@ val asyncResult = image.suspendApplyFilters {
 
 Dominant color extraction, blur detection, and EXIF metadata parsing — all pure JVM, no native dependencies.
 
-![Image Analysis 4](../docs/images/readme-diagrams/images-diagram-04.svg)
+![Image Analysis 4](../docs/images/readme-diagrams/images-diagram-04.png)
 
 #### Dominant Color Extraction (Median Cut)
 

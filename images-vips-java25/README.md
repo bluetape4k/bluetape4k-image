@@ -10,7 +10,7 @@ FFM (Foreign Function & Memory) API backend for libvips image processing on Java
 
 ### Class Diagram
 
-![Class Diagram 1](../docs/images/readme-diagrams/images-vips-java25-diagram-01.svg)
+![Class Diagram 1](../docs/images/readme-diagrams/images-vips-java25-diagram-01.png)
 
 ## Prerequisites
 
@@ -420,7 +420,7 @@ Both modules implement the same `VipsImage` interface and are interchangeable at
 
 ### Performance vs scrimage
 
-![Performance vs scrimage 2](../docs/images/readme-diagrams/images-vips-java25-diagram-02.svg)
+![Performance vs scrimage 2](../docs/images/readme-diagrams/images-vips-java25-diagram-02.png)
 
 **CI Linux (Ubuntu 24.04, GraalVM 25, libvips 8.15.1)**
 

@@ -8,11 +8,11 @@ Binding-neutral API for libvips-backed image processing. Defines shared interfac
 
 ### Class Diagram
 
-![Class Diagram 1](../docs/images/readme-diagrams/images-vips-api-diagram-01.svg)
+![Class Diagram 1](../docs/images/readme-diagrams/images-vips-api-diagram-01.png)
 
 ### Processing Pipeline
 
-![Processing Pipeline 2](../docs/images/readme-diagrams/images-vips-api-diagram-02.svg)
+![Processing Pipeline 2](../docs/images/readme-diagrams/images-vips-api-diagram-02.png)
 
 ## Key Features
 

@@ -6,7 +6,7 @@
 
 ## 아키텍처
 
-![Architecture 1](../docs/images/readme-diagrams/images-benchmark-ko-diagram-01.svg)
+![Architecture 1](../docs/images/readme-diagrams/images-benchmark-ko-diagram-01.png)
 
 ## 벤치마크 결과
 
@@ -14,7 +14,7 @@
 
 ### 리사이즈 (4K 3840×2160 → 1920×1080)
 
-![Component (4K 3840×2160 → 1920×1080) 2](../docs/images/readme-diagrams/images-benchmark-ko-diagram-02.svg)
+![Component (4K 3840×2160 → 1920×1080) 2](../docs/images/readme-diagrams/images-benchmark-ko-diagram-02.png)
 
 | 환경 | scrimage (ms/op) | vips (ms/op) | 속도 향상 |
 |------|-----------------|--------------|----------|
@@ -24,7 +24,7 @@
 
 ### 인코딩 (1240×1754 document 이미지)
 
-![Component (1240×1754 document Component) 3](../docs/images/readme-diagrams/images-benchmark-ko-diagram-03.svg)
+![Component (1240×1754 document Component) 3](../docs/images/readme-diagrams/images-benchmark-ko-diagram-03.png)
 
 | 포맷 | 환경 | scrimage (ms/op) | vips (ms/op) | 속도 향상 |
 |------|------|-----------------|--------------|----------|
@@ -39,7 +39,7 @@
 
 ### 필터 (scrimage 전용, 1240×1754)
 
-![Component (scrimage Only, 1240×1754) 4](../docs/images/readme-diagrams/images-benchmark-ko-diagram-04.svg)
+![Component (scrimage Only, 1240×1754) 4](../docs/images/readme-diagrams/images-benchmark-ko-diagram-04.png)
 
 | 필터      | macOS (ms/op) | CI Linux java25 (ms/op) |
 |-----------|--------------|------------------------|

@@ -8,11 +8,11 @@ JVips (JNI) backend implementation for libvips image processing. Provides fast, 
 
 ### JVips Processing Pipeline
 
-![JVips Processing Pipeline 1](../docs/images/readme-diagrams/images-vips-java21-diagram-01.svg)
+![JVips Processing Pipeline 1](../docs/images/readme-diagrams/images-vips-java21-diagram-01.png)
 
 ### Class Diagram
 
-![Class Diagram 2](../docs/images/readme-diagrams/images-vips-java21-diagram-02.svg)
+![Class Diagram 2](../docs/images/readme-diagrams/images-vips-java21-diagram-02.png)
 
 ## Setup
 
