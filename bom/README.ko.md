@@ -7,23 +7,7 @@
 
 ## Architecture
 
-```mermaid
-graph TB
-    Consumer[소비 프로젝트]
-    BOM[bluetape4k-image-bom<br/>java-platform]
-    Images[images<br/>scrimage 백엔드]
-    SpringBoot[images-spring-boot<br/>Spring Boot 4 자동 구성]
-    VipsApi[images-vips-api<br/>libvips API]
-    Vips21[images-vips-java21<br/>JNI 바인딩]
-    Vips25[images-vips-java25<br/>FFM Panama]
-
-    Consumer -->|platform import| BOM
-    BOM -.->|버전 constraint| Images
-    BOM -.->|버전 constraint| SpringBoot
-    BOM -.->|버전 constraint| VipsApi
-    BOM -.->|버전 constraint| Vips21
-    BOM -.->|버전 constraint| Vips25
-```
+![Architecture diagram](../docs/images/readme-diagrams/bom-architecture-01.png)
 
 BOM은 Gradle `java-platform` 으로 `<dependencyManagement>` constraint 만 게시한다.
 
