@@ -24,10 +24,11 @@
 <rect class="frame" x="32" y="28" width="980" height="470" rx="28"/>
 <text class="title" x="66" y="82">Encode (1240×1754 document image)</text>
 <text class="subtitle" x="70" y="118">Architecture nodes and edges from the original Mermaid source</text>
-<path class="line" d="M856 220 C856 303 355 303 355 386"/>
+<path class="line" d="M706 220 C706 303 505 303 505 386"/>
 <g transform="translate(48,170)">
   <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#E8F3FF" stroke="#5B8DEF"/>
-  <text class="smallLabel" x="140" y="45" text-anchor="middle">ms/op, lower is better</text>
+  <text class="smallLabel" x="140" y="33" text-anchor="middle">ms/op, lower is</text>
+<text class="smallLabel" x="140" y="59" text-anchor="middle">better</text>
 </g>
 <g transform="translate(382,170)">
   <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#EAF7EF" stroke="#58A978"/>
@@ -45,8 +46,8 @@
 </g>
 <g transform="translate(549,336)">
   <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#E9F7F6" stroke="#45A7A1"/>
-  <text class="smallLabel" x="140" y="21" text-anchor="middle">52.49, 15.67, 171.16,</text>
-<text class="smallLabel" x="140" y="47" text-anchor="middle">37.20, 94.87, 49.88,</text>
-<text class="smallLabel" x="140" y="73" text-anchor="middle">249.01, 137.95</text>
+  <text class="smallLabel" x="140" y="21" text-anchor="middle">52.49, 15.67,</text>
+<text class="smallLabel" x="140" y="47" text-anchor="middle">171.16, 37.20,</text>
+<text class="smallLabel" x="140" y="73" text-anchor="middle">94.87, 49.88,</text>
 </g>
 </svg>
