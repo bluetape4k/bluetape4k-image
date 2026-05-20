@@ -14,7 +14,7 @@ JMH benchmarks comparing [scrimage](https://sksamuel.github.io/scrimage/) and [l
 
 ### Resize (4K 3840×2160 → 1920×1080)
 
-![Resize (4K 3840×2160 → 1920×1080) diagram](../docs/images/readme-diagrams/images-benchmark-architecture-02.png)
+![Resize latency benchmark chart](../docs/images/readme-charts/images-benchmark-resize-latency-chart-01.png)
 
 | Environment | scrimage (ms/op) | vips (ms/op) | Speedup |
 |-------------|-----------------|--------------|---------|
@@ -22,9 +22,9 @@ JMH benchmarks comparing [scrimage](https://sksamuel.github.io/scrimage/) and [l
 | CI Linux, java25 | 187.29 ± 9.07 | 0.591 ± 0.046 | **317×** |
 | CI Linux, java21 | 195.63 ± 7.39 | 0.495 ± 0.062 | **395×** |
 
-### Encode (1240×1754 document image)
+### Encode (4K photo image)
 
-![Encode (1240×1754 document image) diagram](../docs/images/readme-diagrams/images-benchmark-architecture-03.png)
+![Encode latency benchmark chart](../docs/images/readme-charts/images-benchmark-encode-latency-chart-01.png)
 
 | Format | Environment | scrimage (ms/op) | vips (ms/op) | Speedup |
 |--------|-------------|-----------------|--------------|---------|
@@ -37,15 +37,15 @@ JMH benchmarks comparing [scrimage](https://sksamuel.github.io/scrimage/) and [l
 
 > ⚠️ **java21 (JNI) PNG**: JNI boundary overhead exceeds compression gain vs scrimage. Use java25 (FFM) for PNG encoding on Linux.
 
-### Filter (scrimage only, 1240×1754)
+### Filter (scrimage only, 1240×1754 document image)
 
-![Filter (scrimage only, 1240×1754) diagram](../docs/images/readme-diagrams/images-benchmark-architecture-04.png)
+![Filter latency benchmark chart](../docs/images/readme-charts/images-benchmark-filter-latency-chart-01.png)
 
-| Filter    | macOS (ms/op) | CI Linux java25 (ms/op) |
-|-----------|--------------|------------------------|
-| Sepia     | 13.19 ± 0.49 | 60.83 ± 0.42 |
-| Grayscale | 22.51 ± 9.19 | 99.72 ± 23.9 |
-| Blur      | 29.80 ± 1.23 | 73.64 ± 1.28 |
+| Filter    | macOS (ms/op) | CI Linux java25 (ms/op) | CI Linux java21 (ms/op) |
+|-----------|--------------|------------------------|------------------------|
+| Sepia     | 13.19 ± 0.49 | 60.83 ± 0.42 | 60.70 ± 0.59 |
+| Grayscale | 22.51 ± 9.19 | 99.72 ± 23.9 | 97.05 ± 12.6 |
+| Blur      | 29.80 ± 1.23 | 73.64 ± 1.28 | 84.81 ± 6.31 |
 
 ---
 
@@ -94,7 +94,7 @@ fun vips_resize(state: VipsBenchmarkState, bh: Blackhole) {
 
 ### `ImageEncodeBenchmark`
 
-Encodes a synthetic 1240×1754 document image to JPEG and PNG.
+Encodes a synthetic 4K photo image to JPEG and PNG.
 
 ```kotlin
 @Benchmark

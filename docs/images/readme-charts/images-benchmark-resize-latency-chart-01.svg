@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="700" viewBox="0 0 1280 700" role="img" aria-label="Resize Latency Benchmark">
+<defs>
+  <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="8" stdDeviation="9" flood-color="#1f2937" flood-opacity="0.10"/></filter>
+  <style>
+    .canvas{fill:#f7f9fc}.frame{fill:#fff;stroke:#d8e0ea;stroke-width:1.5}
+    .title{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:42px;font-weight:400;fill:#102033}
+    .subtitle{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:16px;font-weight:400;fill:#536273}
+    .axis{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:13px;font-weight:400;fill:#536273}
+    .label{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:15px;font-weight:400;fill:#102033}
+    .small{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:13px;font-weight:400;fill:#536273}
+    .value{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:13px;font-weight:700;fill:#102033}
+    .note{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:13px;font-weight:400;fill:#536273}
+    .panel{filter:url(#shadow)}
+  </style>
+</defs>
+<rect class="canvas" width="1280" height="700"/>
+<rect class="frame" x="32" y="28" width="1216" height="644" rx="28"/>
+<text class="title" x="66" y="82" >Resize Latency Benchmark</text>
+<text class="subtitle" x="70" y="116" >4K photo resize to 1920x1080 from JMH AverageTime results</text>
+<rect x="58" y="140" width="1164" height="430" rx="18" fill="#FFFFFF" stroke="#E2E8F0" class="panel"/><line x1="230" y1="152" x2="230" y2="516" stroke="#D8E0EA" stroke-width="1" /><text class="axis" x="230" y="540" text-anchor="middle">0.1</text><line x1="465.4367640271116" y1="152" x2="465.4367640271116" y2="516" stroke="#D8E0EA" stroke-width="1" /><text class="axis" x="465.4367640271116" y="540" text-anchor="middle">1</text><line x1="700.8735280542232" y1="152" x2="700.8735280542232" y2="516" stroke="#D8E0EA" stroke-width="1" /><text class="axis" x="700.8735280542232" y="540" text-anchor="middle">10</text><line x1="936.3102920813348" y1="152" x2="936.3102920813348" y2="516" stroke="#D8E0EA" stroke-width="1" /><text class="axis" x="936.3102920813348" y="540" text-anchor="middle">100</text><line x1="1030" y1="152" x2="1030" y2="516" stroke="#D8E0EA" stroke-width="1" /><text class="axis" x="1030" y="540" text-anchor="middle">250</text><text class="axis" x="630" y="570" text-anchor="middle">AverageTime ms/op, log scale, lower is better</text><text class="label" x="86" y="200" >macOS FFM</text><text class="small" x="86" y="226" >vips speedup 352x</text><rect x="230" y="182" width="671.5211998169634" height="22" rx="5" fill="#6CA6E8" stroke="none" /><rect x="230" y="216" width="71.8909383137601" height="22" rx="5" fill="#67C28A" stroke="none" /><text class="value" x="911.5211998169634" y="199" >71.16 ms</text><text class="value" x="311.8909383137601" y="233" >0.202 ms</text><text class="label" x="86" y="312" >Linux J25 FFM</text><text class="small" x="86" y="338" >vips speedup 317x</text><rect x="230" y="294" width="770.470245218931" height="22" rx="5" fill="#6CA6E8" stroke="none" /><rect x="230" y="328" width="181.66005966251362" height="22" rx="5" fill="#67C28A" stroke="none" /><text class="value" x="1010.470245218931" y="311" >187.29 ms</text><text class="value" x="421.6600596625136" y="345" >0.591 ms</text><text class="label" x="86" y="424" >Linux J21 JNI</text><text class="small" x="86" y="450" >vips speedup 395x</text><rect x="230" y="406" width="774.9249125121455" height="22" rx="5" fill="#6CA6E8" stroke="none" /><rect x="230" y="440" width="163.5356003133275" height="22" rx="5" fill="#67C28A" stroke="none" /><text class="value" x="1014.9249125121455" y="423" >195.63 ms</text><text class="value" x="403.5356003133275" y="457" >0.495 ms</text><rect x="1060" y="166" width="18" height="12" rx="3" fill="#6CA6E8" stroke="none" /><text class="small" x="1088" y="178" >scrimage scaleTo</text>
+<rect x="1060" y="190" width="18" height="12" rx="3" fill="#67C28A" stroke="none" /><text class="small" x="1088" y="202" >libvips resize</text><text class="note" x="86" y="610" >Result: libvips resize stays below 0.6 ms/op while scrimage needs 71-196 ms/op.</text>
+</svg>
