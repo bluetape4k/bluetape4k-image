@@ -32,6 +32,16 @@ memory use, or native codecs matter.
 - **Benchmark lane** — JMH comparisons for scrimage and libvips resize/encode
   paths.
 
+<!-- README_VISUAL_OVERVIEW:START -->
+## Overview Diagram
+
+![Bluetape4k Image overview diagram](docs/assets/readme-diagrams/root-readme-overview-01.png)
+
+## Module Composition Chart
+
+![Bluetape4k Image module composition chart](docs/assets/readme-charts/root-readme-module-chart-01.png)
+<!-- README_VISUAL_OVERVIEW:END -->
+
 ## Modules
 
 | Module                | Artifact ID                          | Description                                              |

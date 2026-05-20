@@ -29,3 +29,15 @@ Use PNG as the README-facing artifact and keep SVG sources beside the PNG files 
 ## Future Guidance
 
 Regenerate from the original Mermaid source when available, including git history for previously replaced blocks. Keep image size content-driven, avoid fake filler nodes, preserve SVG sources, and inspect a sample sheet before publishing.
+
+## 2026-05-20 Class Layout Follow-up
+
+`images-class-02` needed manual free placement because the generated class map
+had many long curves crossing the center of the diagram. The corrected image
+uses local relationship lanes: image operations depend on `ImmutableImage`,
+filter classes hang from a local `ImageFilterChain` bus, and coroutine writers
+share one implementation lane.
+
+Future class diagrams should reject routes that pass through class card
+interiors. Use orthogonal local buses or omit low-value dependencies before
+accepting an edge hairball.

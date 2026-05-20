@@ -27,6 +27,16 @@ native codec이 중요해질 때 libvips 백엔드로 확장할 수 있는 단�
 - **두 native backend** — Java 21 JVips/JNI와 Java 25 FFM/Panama 선택지
 - **Benchmark lane** — scrimage와 libvips resize/encode 경로를 비교하는 JMH 벤치마크
 
+<!-- README_VISUAL_OVERVIEW:START -->
+## Overview Diagram
+
+![Bluetape4k Image overview diagram](docs/assets/readme-diagrams/root-readme-overview-01.png)
+
+## Module Composition Chart
+
+![Bluetape4k Image module composition chart](docs/assets/readme-charts/root-readme-module-chart-01.png)
+<!-- README_VISUAL_OVERVIEW:END -->
+
 ## 모듈 구성
 
 | 모듈                   | Artifact ID                          | 설명                                                      |
