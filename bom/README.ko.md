@@ -5,7 +5,7 @@
 **bluetape4k-image** 생태계용 Maven BOM (Bill of Materials). 모든 `io.github.bluetape4k.image:*`
 모듈의 버전을 중앙 관리한다.
 
-## Architecture
+## 아키텍처
 
 ![bom Architecture diagram](../docs/images/readme-diagrams/bom-architecture-01.png)
 

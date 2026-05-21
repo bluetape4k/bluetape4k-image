@@ -41,12 +41,13 @@ native codec이 중요해질 때 libvips 백엔드로 확장할 수 있는 단�
 
 | 모듈                   | Artifact ID                          | 설명                                                      |
 |-----------------------|--------------------------------------|----------------------------------------------------------|
-| `images`              | `images`                             | Scrimage 기반 처리: 로드, 리사이즈, 필터, 변환, 분석, 배치 처리 |
-| `images-spring-boot`  | `images-spring-boot`                 | Spring Boot 4 자동 구성: 스토리지, CDN, 헬스, 메트릭          |
-| `images-vips-api`     | `images-vips-api`                    | 공유 `VipsImage` / `VipsRuntime` 인터페이스 (바인딩 중립)     |
-| `images-vips-java21`  | `images-vips-java21`                 | JVips JNI 백엔드 — Java 21+, 시스템 libvips 필요           |
-| `images-vips-java25`  | `images-vips-java25`                 | vips-ffm FFM 백엔드 — Java 25+, `--enable-native-access` |
-| `images-benchmark`    | `images-benchmark`                   | JMH 벤치마크: scrimage vs libvips                         |
+| `bom`                 | `bluetape4k-image-bom`               | 이미지 아티팩트 버전 정렬용 소비자 BOM                    |
+| `images`              | `bluetape4k-images`                  | Scrimage 기반 처리: 로드, 리사이즈, 필터, 변환, 분석, 배치 처리 |
+| `images-spring-boot`  | `bluetape4k-images-spring-boot`      | Spring Boot 4 자동 구성: 스토리지, CDN, 헬스, 메트릭          |
+| `images-vips-api`     | `bluetape4k-images-vips-api`         | 공유 `VipsImage` / `VipsRuntime` 인터페이스 (바인딩 중립)     |
+| `images-vips-java21`  | `bluetape4k-images-vips-java21`      | JVips JNI 백엔드 — Java 21+, 시스템 libvips 필요           |
+| `images-vips-java25`  | `bluetape4k-images-vips-java25`      | vips-ffm FFM 백엔드 — Java 25+, `--enable-native-access` |
+| `images-benchmark`    | `bluetape4k-images-benchmark`        | JMH 벤치마크: scrimage vs libvips                         |
 
 ## 아키텍처
 

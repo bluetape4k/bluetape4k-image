@@ -2,7 +2,7 @@
 
 English | [한국어](./README.ko.md)
 
-A library for loading, converting, resizing, splitting, and applying filters to images in formats such as JPG, PNG, GIF, WebP, and **TIFF/SVG** (Issue #134). Built on the [Scrimage](https://github.com/sksamuel/scrimage) library with asynchronous image processing via Coroutines. AVIF and HEIC are provided as incubating interfaces (implementations in `bluetape4k-images-vips`).
+A library for loading, converting, resizing, splitting, and applying filters to images in formats such as JPG, PNG, GIF, WebP, and **TIFF/SVG** (Issue #134). Built on the [Scrimage](https://github.com/sksamuel/scrimage) library with asynchronous image processing via Coroutines. AVIF and HEIC are incubating interfaces; libvips support is exposed by `images-vips-api` and runtime-backed by `images-vips-java21` or `images-vips-java25`.
 
 ## Architecture
 
@@ -26,8 +26,8 @@ A library for loading, converting, resizing, splitting, and applying filters to 
 | WEBP   | `SuspendWebpWriter`              | Best compression, modern                                      |
 | TIFF   | `SuspendTiffWriter` / `SuspendTiffMultiPageWriter` | Multi-page, multiple compression modes (DEFLATE/LZW/NONE/JPEG) |
 | SVG    | `BatikSvgRasterizer`             | Rasterize to PNG/JPEG; XXE/SSRF-safe by default               |
-| AVIF   | `AvifWriter` *(incubating)*      | Interface only; implementation in `bluetape4k-images-vips`    |
-| HEIC   | `HeicReader` *(incubating)*      | Interface only; implementation in `bluetape4k-images-vips`    |
+| AVIF   | `AvifWriter` *(incubating)*      | Interface only; use a libvips runtime backend when native support is available |
+| HEIC   | `HeicReader` *(incubating)*      | Interface only; use a libvips runtime backend when native support is available |
 
 - **Dynamic generation**: JPG is fastest (for real-time processing)
 - **Static files**: WebP is most efficient (saves storage)
@@ -962,6 +962,6 @@ Pixel-level regression testing via [`GoldenImageAssert`](src/test/kotlin/io/blue
 
 ```kotlin
 dependencies {
-    implementation("io.github.bluetape4k:bluetape4k-images:${version}")
+    implementation("io.github.bluetape4k.image:bluetape4k-images:${version}")
 }
 ```

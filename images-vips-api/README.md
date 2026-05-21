@@ -267,12 +267,12 @@ This module provides only the API layer. For actual image processing, depend on 
 
 ```kotlin
 dependencies {
-    api("io.github.bluetape4k:bluetape4k-images-vips-api:${version}")
+    api("io.github.bluetape4k.image:bluetape4k-images-vips-api:${version}")
     
     // Choose ONE implementation:
-    runtimeOnly("io.github.bluetape4k:bluetape4k-images-vips-java21:${version}")  // JVips (Java 21+)
+    runtimeOnly("io.github.bluetape4k.image:bluetape4k-images-vips-java21:${version}")  // JVips (Java 21+)
     // OR
-    runtimeOnly("io.github.bluetape4k:bluetape4k-images-vips-java25:${version}")  // vips-ffm (Java 25+)
+    runtimeOnly("io.github.bluetape4k.image:bluetape4k-images-vips-java25:${version}")  // vips-ffm (Java 25+)
 }
 ```
 
