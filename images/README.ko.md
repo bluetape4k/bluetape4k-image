@@ -4,7 +4,7 @@
 
 JPG, PNG, GIF, WebP, **TIFF/SVG** (Issue #134) 등의 이미지를 로드, 변환, 크기 조절, 분할, 필터 적용 등의 조작을 지원하는 라이브러리입니다.
 [Scrimage](https://github.com/sksamuel/scrimage) 라이브러리를 기반으로 하며, Coroutines를 활용한 비동기 이미지 처리를 제공합니다.
-AVIF·HEIC는 incubating 인터페이스로 제공되며, 구현체는 `bluetape4k-images-vips` 모듈에서 제공합니다.
+AVIF·HEIC는 incubating 인터페이스로 제공되며, libvips 지원은 `images-vips-api`에서 노출하고 런타임 백엔드는 `images-vips-java21` 또는 `images-vips-java25`가 제공합니다.
 
 ## 아키텍처
 
@@ -28,8 +28,8 @@ AVIF·HEIC는 incubating 인터페이스로 제공되며, 구현체는 `bluetape
 | WEBP | `SuspendWebpWriter`              | 최고 압축률, 최신 포맷                                                    |
 | TIFF | `SuspendTiffWriter` / `SuspendTiffMultiPageWriter` | 다중 페이지, 다양한 압축 방식 (DEFLATE/LZW/NONE/JPEG) |
 | SVG  | `BatikSvgRasterizer`             | 래스터 변환; XXE/SSRF 방어 기본 적용                                        |
-| AVIF | `AvifWriter` *(incubating)*      | 인터페이스만 제공, 구현체는 `bluetape4k-images-vips`                         |
-| HEIC | `HeicReader` *(incubating)*      | 인터페이스만 제공, 구현체는 `bluetape4k-images-vips`                         |
+| AVIF | `AvifWriter` *(incubating)*      | 인터페이스만 제공, native 지원이 있을 때 libvips 런타임 백엔드 사용             |
+| HEIC | `HeicReader` *(incubating)*      | 인터페이스만 제공, native 지원이 있을 때 libvips 런타임 백엔드 사용             |
 
 - **동적 생성**: JPG가 가장 빠름 (실시간 처리용)
 - **정적 파일**: WebP가 가장 효율적 (저장 공간 절약)
@@ -755,7 +755,7 @@ val ycbcrArray = image.toYCbCrArray() // FloatArray [y0,cb0,cr0, ...]
 
 ### 변환 아키텍처
 
-![images Architecture 3 diagram](../docs/images/readme-diagrams/images-architecture-03.png)
+![images Transform Architecture diagram](../docs/images/readme-diagrams/images-architecture-03.png)
 
 ### AutoCrop — 자동 여백 제거
 
@@ -986,6 +986,6 @@ val asyncExif: ExifData = File("photo.jpg").suspendReadExif()
 
 ```kotlin
 dependencies {
-    implementation("io.github.bluetape4k:bluetape4k-images:${version}")
+    implementation("io.github.bluetape4k.image:bluetape4k-images:${version}")
 }
 ```

@@ -46,12 +46,13 @@ memory use, or native codecs matter.
 
 | Module                | Artifact ID                          | Description                                              |
 |-----------------------|--------------------------------------|----------------------------------------------------------|
-| `images`              | `images`                             | Scrimage-based processing: load, resize, filter, convert, analyze, batch |
-| `images-spring-boot`  | `images-spring-boot`                 | Spring Boot 4 auto-configuration: storage, CDN, health, metrics |
-| `images-vips-api`     | `images-vips-api`                    | Shared `VipsImage` / `VipsRuntime` interfaces (binding-neutral) |
-| `images-vips-java21`  | `images-vips-java21`                 | JVips JNI backend — Java 21+, system libvips             |
-| `images-vips-java25`  | `images-vips-java25`                 | vips-ffm FFM backend — Java 25+, `--enable-native-access` |
-| `images-benchmark`    | `images-benchmark`                   | JMH benchmarks: scrimage vs libvips                      |
+| `bom`                 | `bluetape4k-image-bom`               | Consumer BOM for aligned image artifacts                 |
+| `images`              | `bluetape4k-images`                  | Scrimage-based processing: load, resize, filter, convert, analyze, batch |
+| `images-spring-boot`  | `bluetape4k-images-spring-boot`      | Spring Boot 4 auto-configuration: storage, CDN, health, metrics |
+| `images-vips-api`     | `bluetape4k-images-vips-api`         | Shared `VipsImage` / `VipsRuntime` interfaces (binding-neutral) |
+| `images-vips-java21`  | `bluetape4k-images-vips-java21`      | JVips JNI backend — Java 21+, system libvips             |
+| `images-vips-java25`  | `bluetape4k-images-vips-java25`      | vips-ffm FFM backend — Java 25+, `--enable-native-access` |
+| `images-benchmark`    | `bluetape4k-images-benchmark`        | JMH benchmarks: scrimage vs libvips                      |
 
 ## Architecture
 

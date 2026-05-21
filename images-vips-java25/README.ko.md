@@ -64,7 +64,7 @@ java -jar myapp.jar --enable-native-access=ALL-UNNAMED
 
 ```kotlin
 dependencies {
-    implementation("io.bluetape4k:bluetape4k-images-vips-java25:1.7.0")
+    implementation("io.github.bluetape4k.image:bluetape4k-images-vips-java25:1.7.0")
 }
 ```
 
@@ -419,7 +419,7 @@ class ImageController(
 
 ### scrimage 대비 성능
 
-![scrimage diagram](../docs/images/readme-diagrams/images-vips-java25-architecture-02.png)
+![Performance vs scrimage diagram](../docs/images/readme-diagrams/images-vips-java25-architecture-02.png)
 
 **CI Linux (Ubuntu 24.04, GraalVM 25, libvips 8.15.1)**
 

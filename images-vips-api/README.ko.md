@@ -267,12 +267,12 @@ image.writeTo(userPath, format)  // 경로 탐색 가능
 
 ```kotlin
 dependencies {
-    api("io.github.bluetape4k:bluetape4k-images-vips-api:${version}")
+    api("io.github.bluetape4k.image:bluetape4k-images-vips-api:${version}")
     
     // 다음 중 하나를 선택하세요:
-    runtimeOnly("io.github.bluetape4k:bluetape4k-images-vips-java21:${version}")  // JVips (Java 21+)
+    runtimeOnly("io.github.bluetape4k.image:bluetape4k-images-vips-java21:${version}")  // JVips (Java 21+)
     // 또는
-    runtimeOnly("io.github.bluetape4k:bluetape4k-images-vips-java25:${version}")  // vips-ffm (Java 25+)
+    runtimeOnly("io.github.bluetape4k.image:bluetape4k-images-vips-java25:${version}")  // vips-ffm (Java 25+)
 }
 ```
 
