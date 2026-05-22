@@ -25,6 +25,10 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - CI uses path filtering and retry configuration ([PR #10](https://github.com/bluetape4k/bluetape4k-image/pull/10)).
 - Test code migrated from Kluent to `bluetape4k-assertions` ([PR #11](https://github.com/bluetape4k/bluetape4k-image/pull/11)).
 
+### Removed
+
+- Pre-stabilization typo compatibility APIs from `images`: `usingSuspend(...)`, `SuspendPngWriter.NoComppression`, and the misspelled `ImageOuptputStreamSupportKt` Java facade. `ImmutableImage.useGraphics(...)` and `hammingDistance(...)` remain deprecated until removal in `0.2.0` ([#61](https://github.com/bluetape4k/bluetape4k-image/issues/61)).
+
 ### Fixed
 
 - Aligned POM license metadata from Apache 2.0 to MIT across all published modules ([PR #38](https://github.com/bluetape4k/bluetape4k-image/pull/38)).

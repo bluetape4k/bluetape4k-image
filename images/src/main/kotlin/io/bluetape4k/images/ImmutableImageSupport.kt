@@ -243,15 +243,16 @@ inline fun ImmutableImage.withGraphics(
 }
 
 /**
- * [ImmutableImage]에 그리기 작업 ([action])을 수행합니다.
+ * Runs a drawing [action] on this [ImmutableImage].
  *
- * **주의**: 이 함수는 `ImmutableImage`의 내부 backing buffer를 직접 수정합니다.
- * 불변 계약을 위반하므로 [withGraphics]를 사용하세요.
+ * **Warning**: this function mutates the backing buffer directly and violates
+ * the immutable image contract. Use [withGraphics] instead.
  *
- * @param action 그래픽 작업
+ * @param action graphics operation
+ * @deprecated Removed in 0.2.0. Use [withGraphics] to keep the immutable image contract.
  */
 @Deprecated(
-    message = "ImmutableImage.useGraphics()는 내부 backing buffer를 변경하여 불변 계약을 위반합니다. withGraphics()를 사용하세요.",
+    message = "ImmutableImage.useGraphics() mutates the backing buffer and violates the immutable image contract. Use withGraphics(). Removed in 0.2.0.",
     replaceWith = ReplaceWith("withGraphics(action)"),
 )
 inline fun ImmutableImage.useGraphics(

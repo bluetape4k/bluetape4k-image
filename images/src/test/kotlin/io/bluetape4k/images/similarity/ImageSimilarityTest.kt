@@ -85,7 +85,7 @@ class ImageSimilarityTest: AbstractImageTest() {
         val original = loadImage(HOMER_JPG)
         val halfSize = original.scaleTo(original.width / 2, original.height / 2)
 
-        val distance = hammingDistance(original.phash(), halfSize.phash())
+        val distance = HashDistance.hamming(original.phash(), halfSize.phash())
         log.debug("half-scale phash distance: $distance")
 
         distance shouldBeLessThan 10
@@ -110,12 +110,12 @@ class ImageSimilarityTest: AbstractImageTest() {
     }
 
     @Test
-    fun `hammingDistance returns correct bit difference`() {
-        hammingDistance(0L, 0L) shouldBeEqualTo 0
-        hammingDistance(0L, 1L) shouldBeEqualTo 1
-        hammingDistance(0L, 0xFFL) shouldBeEqualTo 8
-        hammingDistance(0b1010L, 0b0101L) shouldBeEqualTo 4
-        hammingDistance(-1L, 0L) shouldBeEqualTo 64
+    fun `HashDistance hamming returns correct bit difference`() {
+        HashDistance.hamming(0L, 0L) shouldBeEqualTo 0
+        HashDistance.hamming(0L, 1L) shouldBeEqualTo 1
+        HashDistance.hamming(0L, 0xFFL) shouldBeEqualTo 8
+        HashDistance.hamming(0b1010L, 0b0101L) shouldBeEqualTo 4
+        HashDistance.hamming(-1L, 0L) shouldBeEqualTo 64
     }
 
     @Test
