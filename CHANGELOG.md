@@ -7,6 +7,8 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-05-22
+
 ### Added
 
 - `images-spring-boot` module: Spring Boot 4 auto-configuration for image storage, CDN signing, reactive health, and Micrometer metrics. Includes `LocalImageStorage`, `S3ImageStorage`, `S3PreSignedUrlSigner`, `CloudFrontUrlSigner`, and five auto-configuration phases ([PR #42](https://github.com/bluetape4k/bluetape4k-image/pull/42), closes [#5](https://github.com/bluetape4k/bluetape4k-image/issues/5)).
@@ -20,6 +22,7 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Extended test coverage for `images` module: batch processing, animated writers, filter DSL, and utility functions ([PR #41](https://github.com/bluetape4k/bluetape4k-image/pull/41)).
 - Added unit tests for VipsImage writer classes in `images-vips-java21` and `images-vips-java25` ([PR #40](https://github.com/bluetape4k/bluetape4k-image/pull/40)).
 - Added `FfmVipsRuntime` concurrency test for `images-vips-java25` ([PR #39](https://github.com/bluetape4k/bluetape4k-image/pull/39)).
+- Prepared the 0.1.1 release line to consume `io.github.bluetape4k:bluetape4k-bom:1.9.0` and `io.github.bluetape4k.aws:bluetape4k-aws-bom:0.2.0`.
 - Split Nightly into smoke/full lanes and normalized lessons, Kover, Dependabot, NMCP, and compatibility-guard maintenance ([PR #15](https://github.com/bluetape4k/bluetape4k-image/pull/15), [PR #16](https://github.com/bluetape4k/bluetape4k-image/pull/16), [PR #17](https://github.com/bluetape4k/bluetape4k-image/pull/17), [PR #18](https://github.com/bluetape4k/bluetape4k-image/pull/18), [PR #22](https://github.com/bluetape4k/bluetape4k-image/pull/22), [PR #24](https://github.com/bluetape4k/bluetape4k-image/pull/24), [PR #25](https://github.com/bluetape4k/bluetape4k-image/pull/25), [PR #26](https://github.com/bluetape4k/bluetape4k-image/pull/26)).
 - Updated image dependency catalog and related dependency bumps, including JVips and annotations ([PR #14](https://github.com/bluetape4k/bluetape4k-image/pull/14), [PR #20](https://github.com/bluetape4k/bluetape4k-image/pull/20), [PR #21](https://github.com/bluetape4k/bluetape4k-image/pull/21), [PR #23](https://github.com/bluetape4k/bluetape4k-image/pull/23)).
 - CI uses path filtering and retry configuration ([PR #10](https://github.com/bluetape4k/bluetape4k-image/pull/10)).
