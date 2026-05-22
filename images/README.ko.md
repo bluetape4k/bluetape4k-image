@@ -74,7 +74,7 @@ AVIF·HEIC는 incubating 인터페이스로 제공되며, libvips 지원은 `ima
 | `filters/RoundedCornerFilter.kt`                     | 모서리 둥글게 알파 마스크 필터            |
 | `filters/ColorSpaceConverter.kt`                     | RGB/HSV/YCbCr/켈빈 색 공간 변환     |
 | `io/ImageInputStreamSupport.kt`                      | 이미지 입력 스트림                    |
-| `io/ImageOuptputStreamSupport.kt`                    | 이미지 출력 스트림                    |
+| `io/ImageOutputStreamSupport.kt`                     | 이미지 출력 스트림                    |
 | `coroutines/SuspendImageWriter.kt`                   | 비동기 이미지 Writer 인터페이스          |
 | `coroutines/SuspendMultiPageImageWriter.kt`          | 비동기 다중 페이지 Writer 인터페이스       |
 | `coroutines/SuspendJpegWriter.kt`                    | 비동기 JPEG Writer               |
@@ -482,7 +482,7 @@ image.useGraphics { graphics ->
 
 // ImmutableImage로 그래픽 작업
 val immutableImage = immutableImageOf(File("input.jpg"))
-immutableImage.useGraphics { graphics ->
+val annotated = immutableImage.withGraphics { graphics ->
     graphics.color = Color.BLUE
     graphics.drawRect(10, 10, 100, 100)
 }

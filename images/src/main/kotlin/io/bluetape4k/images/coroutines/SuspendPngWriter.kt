@@ -34,11 +34,6 @@ class SuspendPngWriter(
         /** 무압축(level=0) [SuspendPngWriter] 인스턴스 */
         @JvmStatic
         val NoCompression = SuspendPngWriter(0)
-
-        /** @suppress 오타 호환용. [NoCompression]을 사용하세요. */
-        @Deprecated("오타 수정: NoCompression을 사용하세요", replaceWith = ReplaceWith("NoCompression"))
-        @JvmStatic
-        val NoComppression = NoCompression
     }
 
     /**

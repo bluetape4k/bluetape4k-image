@@ -15,7 +15,7 @@ import kotlin.test.assertFailsWith
 class ImageStreamSupportTest {
 
     @Test
-    fun `image input stream usingSuspend should close`() = runTest {
+    fun `image input stream useSuspending should close`() = runTest {
         val stream = MemoryCacheImageInputStream(ByteArrayInputStream(byteArrayOf(1, 2, 3)))
 
         stream.useSuspending { input: ImageInputStream ->
@@ -28,7 +28,7 @@ class ImageStreamSupportTest {
     }
 
     @Test
-    fun `image output stream usingSuspend should close`() = runTest {
+    fun `image output stream useSuspending should close`() = runTest {
         val stream = MemoryCacheImageOutputStream(ByteArrayOutputStream())
 
         stream.useSuspending { output: ImageOutputStream ->

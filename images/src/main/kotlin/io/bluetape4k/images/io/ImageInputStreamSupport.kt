@@ -20,10 +20,3 @@ suspend inline fun <T> ImageInputStream.useSuspending(
 ): T = use {
     block(this@useSuspending)
 }
-
-@Deprecated("use useSuspending instead.", replaceWith = ReplaceWith("useSuspending(block)"))
-suspend inline fun <T> ImageInputStream.usingSuspend(
-    crossinline block: suspend (ImageInputStream) -> T,
-): T = use {
-    block(this@usingSuspend)
-}

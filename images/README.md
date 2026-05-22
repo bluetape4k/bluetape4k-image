@@ -472,7 +472,7 @@ image.useGraphics { graphics ->
 }
 
 val immutableImage = immutableImageOf(File("input.jpg"))
-immutableImage.useGraphics { graphics ->
+val annotated = immutableImage.withGraphics { graphics ->
     graphics.color = Color.BLUE
     graphics.drawRect(10, 10, 100, 100)
 }

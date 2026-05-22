@@ -214,30 +214,31 @@ fun ImmutableImage.phash(): Long {
 }
 
 /**
- * 두 이미지의 pHash [hammingDistance]를 계산합니다.
+ * Calculates the pHash [HashDistance.hamming] distance between two images.
  *
- * 값 가이드:
- * - 0 ~ 5: 거의 동일
- * - 6 ~ 10: 시각적으로 유사
- * - 11 ~ 20: 약간의 변형
- * - 20 이상: 다른 이미지
+ * Value guide:
+ * - 0 ~ 5: nearly identical
+ * - 6 ~ 10: visually similar
+ * - 11 ~ 20: minor variation
+ * - 20 or higher: different images
  *
- * @receiver 비교 기준 이미지
- * @param other 비교 대상 이미지
+ * @receiver baseline image
+ * @param other comparison image
  * @return Hamming distance (0 ~ 64)
  */
 fun ImmutableImage.phashDistanceTo(other: ImmutableImage): Int =
-    hammingDistance(phash(), other.phash())
+    HashDistance.hamming(phash(), other.phash())
 
 /**
- * 두 64bit 해시 사이의 Hamming distance를 계산합니다.
+ * Calculates the Hamming distance between two 64-bit hashes.
  *
- * @param a 첫 번째 해시
- * @param b 두 번째 해시
- * @return 서로 다른 비트 수 (0 ~ 64)
+ * @param a first hash
+ * @param b second hash
+ * @return number of different bits (0 ~ 64)
+ * @deprecated Removed in 0.2.0. Use [HashDistance.hamming].
  */
 @Deprecated(
-    message = "HashDistance.hamming(a, b) 사용",
+    message = "Use HashDistance.hamming(a, b). Removed in 0.2.0.",
     replaceWith = ReplaceWith("HashDistance.hamming(a, b)", "io.bluetape4k.images.similarity.HashDistance")
 )
-fun hammingDistance(a: Long, b: Long): Int = (a xor b).countOneBits()
+fun hammingDistance(a: Long, b: Long): Int = HashDistance.hamming(a, b)
