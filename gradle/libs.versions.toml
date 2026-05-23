@@ -2,7 +2,7 @@
 # Gradle Version Catalog for bluetape4k-image
 
 [versions]
-bluetape4k-bom = "1.9.0"  # https://mvnrepository.com/artifact/io.github.bluetape4k/bluetape4k-bom
+bluetape4k-bom = "1.9.1"  # https://mvnrepository.com/artifact/io.github.bluetape4k/bluetape4k-bom
 bluetape4k-aws-bom = "0.2.0"  # https://central.sonatype.com/artifact/io.github.bluetape4k.aws/bluetape4k-aws-bom
 
 spring-boot = "4.0.6"  # https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-dependencies
