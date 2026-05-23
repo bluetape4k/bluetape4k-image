@@ -27,7 +27,6 @@ jmh = "1.37"  # https://mvnrepository.com/artifact/org.openjdk.jmh/jmh-core
 slf4j = "2.0.18"  # https://mvnrepository.com/artifact/org.slf4j/slf4j-api
 logback = "1.5.32"  # https://mvnrepository.com/artifact/ch.qos.logback/logback-classic
 
-commons-io = "2.22.0"  # https://mvnrepository.com/artifact/commons-io/commons-io
 
 junit-jupiter = "6.0.3"  # https://mvnrepository.com/artifact/org.junit/junit-bom
 mockk = "1.14.9"  # https://mvnrepository.com/artifact/io.mockk/mockk
@@ -90,14 +89,14 @@ bluetape4k-junit5 = { module = "io.github.bluetape4k:bluetape4k-junit5" }
 bluetape4k-virtualthread-jdk25 = { module = "io.github.bluetape4k:bluetape4k-virtualthread-jdk25" }
 
 # Logging
-slf4j-api = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
+slf4j-api = { module = "org.slf4j:slf4j-api" }  # version from bt4k catalog
 jcl-over-slf4j = { module = "org.slf4j:jcl-over-slf4j", version.ref = "slf4j" }
 jul-to-slf4j = { module = "org.slf4j:jul-to-slf4j", version.ref = "slf4j" }
 log4j-over-slf4j = { module = "org.slf4j:log4j-over-slf4j", version.ref = "slf4j" }
 logback = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
 
 # Image processing
-scrimage-core = { module = "com.sksamuel.scrimage:scrimage-core", version.ref = "scrimage" }
+scrimage-core = { module = "com.sksamuel.scrimage:scrimage-core" }  # version from bt4k catalog
 scrimage-filters = { module = "com.sksamuel.scrimage:scrimage-filters", version.ref = "scrimage" }
 scrimage-webp = { module = "com.sksamuel.scrimage:scrimage-webp", version.ref = "scrimage" }
 metadata-extractor = { module = "com.drewnoakes:metadata-extractor", version.ref = "metadata-extractor" }
@@ -110,7 +109,7 @@ jvips = { module = "com.criteo:jvips", version.ref = "jvips" }
 vips-ffm = { module = "app.photofox.vips-ffm:vips-ffm-core", version.ref = "vips-ffm" }
 
 # Commons
-commons-io = { module = "commons-io:commons-io", version.ref = "commons-io" }
+commons-io = { module = "commons-io:commons-io" }  # version from bt4k catalog
 
 # Benchmark
 jmh-core = { module = "org.openjdk.jmh:jmh-core", version.ref = "jmh" }

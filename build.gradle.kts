@@ -30,6 +30,16 @@ plugins {
 }
 
 val rootLibs = libs
+val rootBt4k = bt4k
+
+val bt4kCatalog = extensions.getByType<org.gradle.api.artifacts.VersionCatalogsExtension>().named("bt4k")
+fun bt4kVersion(alias: String): String {
+    val version = bt4kCatalog.findVersion(alias).get()
+    return version.requiredVersion
+        .ifBlank { version.preferredVersion }
+        .ifBlank { version.strictVersion }
+}
+
 
 fun Project.isNonPublishedModule(): Boolean {
     val relativePath = rootProject.rootDir.toPath()
@@ -247,6 +257,12 @@ subprojects {
             mavenBom(rootLibs.kotlin.bom.get().toString())
             mavenBom(rootLibs.junit.bom.get().toString())
             mavenBom(rootLibs.testcontainers.bom.get().toString())
+        }
+    
+        dependencies {
+            dependency("commons-io:commons-io:${bt4kVersion("commons-io")}")
+            dependency("com.sksamuel.scrimage:scrimage-core:${bt4kVersion("scrimage")}")
+            dependency("org.slf4j:slf4j-api:${bt4kVersion("slf4j")}")
         }
     }
 
