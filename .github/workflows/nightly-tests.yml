@@ -114,7 +114,57 @@ jobs:
           path: '**/build/reports/kover/'
           retention-days: 14
 
-  # ── 3. images-spring-boot 모듈 (smoke + full) ─────────────────────────────
+  # ── 3. images-captcha 모듈 ────────────────────────────────────────────────
+  test-images-captcha:
+    name: Test / images-captcha
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: build
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-java@v5
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+
+      - uses: gradle/actions/setup-gradle@v6
+        with:
+          gradle-version: wrapper
+          cache-read-only: true
+
+      - name: Test images-captcha
+        run: |
+          for attempt in 1 2 3; do
+            ./gradlew :bluetape4k-images-captcha:test --no-daemon && break
+            echo "Attempt $attempt failed"
+            [ $attempt -lt 3 ] && sleep 10 || exit 1
+          done
+        env:
+          GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx4g -Dorg.gradle.daemon=false"
+
+      - name: Generate Kover XML report
+        if: always()
+        run: ./gradlew :bluetape4k-images-captcha:koverXmlReport --no-daemon
+        continue-on-error: true
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-results-images-captcha
+          path: '**/build/test-results/test/*.xml'
+          retention-days: 14
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage-images-captcha
+          path: '**/build/reports/kover/'
+          retention-days: 14
+
+  # ── 4. images-spring-boot 모듈 (smoke + full) ─────────────────────────────
   test-images-spring-boot:
     name: Test / images-spring-boot
     runs-on: ubuntu-latest
@@ -164,7 +214,7 @@ jobs:
           path: '**/build/reports/kover/'
           retention-days: 14
 
-  # ── 4. images-vips-api 모듈 (full only) ───────────────────────────────────
+  # ── 5. images-vips-api 모듈 (full only) ───────────────────────────────────
   test-images-vips-api:
     name: Test / images-vips-api
     if: ${{ (github.event_name == 'schedule' && github.event.schedule == '0 19 * * 0') || (github.event_name == 'workflow_dispatch' && inputs.scope == 'full') }}
@@ -219,7 +269,7 @@ jobs:
           path: '**/build/reports/kover/'
           retention-days: 14
 
-  # ── 4. images-vips-java21 모듈 ────────────────────────────────────────────
+  # ── 6. images-vips-java21 모듈 ────────────────────────────────────────────
   test-images-vips-java21:
     name: Test / images-vips-java21
     if: ${{ (github.event_name == 'schedule' && github.event.schedule == '0 19 * * 0') || (github.event_name == 'workflow_dispatch' && inputs.scope == 'full') }}
@@ -274,7 +324,7 @@ jobs:
           path: '**/build/reports/kover/'
           retention-days: 14
 
-  # ── 5. images-vips-java25 모듈 ────────────────────────────────────────────
+  # ── 7. images-vips-java25 모듈 ────────────────────────────────────────────
   test-images-vips-java25:
     name: Test / images-vips-java25
     if: ${{ (github.event_name == 'schedule' && github.event.schedule == '0 19 * * 0') || (github.event_name == 'workflow_dispatch' && inputs.scope == 'full') }}
@@ -329,7 +379,7 @@ jobs:
           path: '**/build/reports/kover/'
           retention-days: 14
 
-  # ── 7. 커버리지 집계 ──────────────────────────────────────────────────────
+  # ── 8. 커버리지 집계 ──────────────────────────────────────────────────────
   coverage-report:
     name: Coverage Report
 
@@ -337,6 +387,7 @@ jobs:
     timeout-minutes: 10
     needs:
       - test-images
+      - test-images-captcha
       - test-images-spring-boot
       - test-images-vips-api
       - test-images-vips-java21
@@ -359,7 +410,7 @@ jobs:
           path: coverage-artifacts/
           retention-days: 30
 
-  # ── 8. 결과 집계 ──────────────────────────────────────────────────────────
+  # ── 9. 결과 집계 ──────────────────────────────────────────────────────────
   nightly-status:
     name: Nightly Status
     runs-on: ubuntu-latest
@@ -367,6 +418,7 @@ jobs:
     needs:
       - build
       - test-images
+      - test-images-captcha
       - test-images-spring-boot
       - test-images-vips-api
       - test-images-vips-java21
