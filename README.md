@@ -26,6 +26,8 @@ memory use, or native codecs matter.
   encode images through scrimage/Java2D.
 - **Coroutine I/O** — suspend-friendly readers, writers, and byte encoders for
   common web image workflows.
+- **CAPTCHA generation** — Java2D image challenge generation with bounded
+  options, suspend-friendly entrypoint, and no native runtime dependency.
 - **libvips abstraction** — binding-neutral `VipsImage` and `VipsRuntime`
   contracts.
 - **Two native backends** — Java 21 JVips/JNI and Java 25 FFM/Panama options.
@@ -48,6 +50,7 @@ memory use, or native codecs matter.
 |-----------------------|--------------------------------------|----------------------------------------------------------|
 | `bom`                 | `bluetape4k-image-bom`               | Consumer BOM for aligned image artifacts                 |
 | `images`              | `bluetape4k-images`                  | Scrimage-based processing: load, resize, filter, convert, analyze, batch |
+| `images-captcha`      | `bluetape4k-images-captcha`          | Java2D CAPTCHA image challenge generation                |
 | `images-spring-boot`  | `bluetape4k-images-spring-boot`      | Spring Boot 4 auto-configuration: storage, CDN, health, metrics |
 | `images-vips-api`     | `bluetape4k-images-vips-api`         | Shared `VipsImage` / `VipsRuntime` interfaces (binding-neutral) |
 | `images-vips-java21`  | `bluetape4k-images-vips-java21`      | JVips JNI backend — Java 21+, system libvips             |
@@ -63,6 +66,7 @@ memory use, or native codecs matter.
 | Module                | JDK    | libvips | JVM flag                        |
 |-----------------------|--------|---------|----------------------------------|
 | `images`              | 21+    | —       | —                                |
+| `images-captcha`      | 21+    | —       | —                                |
 | `images-vips-api`     | 21+    | —       | —                                |
 | `images-vips-java21`  | 21+    | Yes     | —                                |
 | `images-vips-java25`  | 25+    | Yes     | `--enable-native-access=ALL-UNNAMED` |
@@ -125,6 +129,9 @@ dependencies {
     // Scrimage-based image processing (Java 21+)
     implementation("io.github.bluetape4k.image:bluetape4k-images:<version>")
 
+    // Java2D CAPTCHA generation (Java 21+)
+    implementation("io.github.bluetape4k.image:bluetape4k-images-captcha:<version>")
+
     // Spring Boot 4 auto-configuration (storage, CDN, health, metrics)
     implementation("io.github.bluetape4k.image:bluetape4k-images-spring-boot:<version>")
 
@@ -180,6 +187,27 @@ val result = image.suspendApplyFilters {
     sepia()
     vignette()
 }
+```
+
+### Generating CAPTCHA Challenges (`images-captcha`)
+
+```kotlin
+import io.bluetape4k.images.captcha.CaptchaDistortion
+import io.bluetape4k.images.captcha.CaptchaNoise
+import io.bluetape4k.images.captcha.captchaGenerator
+
+val generator = captchaGenerator {
+    length(6)
+    charSet("ABCDEFGHJKLMNPQRSTUVWXYZ23456789")
+    imageSize(width = 200, height = 80)
+    noise(CaptchaNoise.Medium)
+    distortion(CaptchaDistortion.Wave(0.2f))
+}
+
+val challenge = generator.generate()
+
+// Store challenge.text securely on the server side.
+// Encode challenge.image with a Scrimage writer when returning it to a client.
 ```
 
 ### High-Performance Processing with libvips (`images-vips-api`)
@@ -251,6 +279,7 @@ JVipsImageSupport.jvipsImageOf(Path.of("photo.jpg")).use { image ->
 Each module contains its own detailed README with API reference, architecture diagrams, and usage examples:
 
 - [`images/README.md`](images/README.md) — Scrimage-based processing
+- [`images-captcha/README.md`](images-captcha/README.md) — Java2D CAPTCHA generation
 - [`images-spring-boot/README.md`](images-spring-boot/README.md) — Spring Boot 4 auto-configuration
 - [`images-vips-api/README.md`](images-vips-api/README.md) — VipsImage interface API
 - [`images-vips-java21/README.md`](images-vips-java21/README.md) — JVips JNI backend

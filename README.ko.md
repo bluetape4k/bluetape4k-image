@@ -23,6 +23,7 @@ native codec이 중요해질 때 libvips 백엔드로 확장할 수 있는 단�
 
 - **순수 JVM 처리** — scrimage/Java2D 기반 로드, 리사이즈, 크롭, 필터, 분석, 배치, 인코딩
 - **Coroutine I/O** — 웹 이미지 워크플로우에 맞는 suspend reader/writer/byte encoder
+- **CAPTCHA 생성** — native runtime 없이 Java2D로 bounded option 기반 이미지 챌린지 생성
 - **libvips 추상화** — binding-neutral `VipsImage`, `VipsRuntime` 계약
 - **두 native backend** — Java 21 JVips/JNI와 Java 25 FFM/Panama 선택지
 - **Benchmark lane** — scrimage와 libvips resize/encode 경로를 비교하는 JMH 벤치마크
@@ -43,6 +44,7 @@ native codec이 중요해질 때 libvips 백엔드로 확장할 수 있는 단�
 |-----------------------|--------------------------------------|----------------------------------------------------------|
 | `bom`                 | `bluetape4k-image-bom`               | 이미지 아티팩트 버전 정렬용 소비자 BOM                    |
 | `images`              | `bluetape4k-images`                  | Scrimage 기반 처리: 로드, 리사이즈, 필터, 변환, 분석, 배치 처리 |
+| `images-captcha`      | `bluetape4k-images-captcha`          | Java2D CAPTCHA 이미지 챌린지 생성                         |
 | `images-spring-boot`  | `bluetape4k-images-spring-boot`      | Spring Boot 4 자동 구성: 스토리지, CDN, 헬스, 메트릭          |
 | `images-vips-api`     | `bluetape4k-images-vips-api`         | 공유 `VipsImage` / `VipsRuntime` 인터페이스 (바인딩 중립)     |
 | `images-vips-java21`  | `bluetape4k-images-vips-java21`      | JVips JNI 백엔드 — Java 21+, 시스템 libvips 필요           |
@@ -58,6 +60,7 @@ native codec이 중요해질 때 libvips 백엔드로 확장할 수 있는 단�
 | 모듈                   | JDK    | libvips | JVM 플래그                          |
 |-----------------------|--------|---------|-------------------------------------|
 | `images`              | 21+    | —       | —                                   |
+| `images-captcha`      | 21+    | —       | —                                   |
 | `images-vips-api`     | 21+    | —       | —                                   |
 | `images-vips-java21`  | 21+    | 필요    | —                                   |
 | `images-vips-java25`  | 25+    | 필요    | `--enable-native-access=ALL-UNNAMED` |
@@ -119,6 +122,9 @@ dependencies {
     // Scrimage 기반 이미지 처리 (Java 21+)
     implementation("io.github.bluetape4k.image:bluetape4k-images:<version>")
 
+    // Java2D CAPTCHA 생성 (Java 21+)
+    implementation("io.github.bluetape4k.image:bluetape4k-images-captcha:<version>")
+
     // Spring Boot 4 자동 구성 (스토리지, CDN, 헬스, 메트릭)
     implementation("io.github.bluetape4k.image:bluetape4k-images-spring-boot:<version>")
 
@@ -174,6 +180,27 @@ val result = image.suspendApplyFilters {
     sepia()
     vignette()
 }
+```
+
+### CAPTCHA 챌린지 생성 (`images-captcha`)
+
+```kotlin
+import io.bluetape4k.images.captcha.CaptchaDistortion
+import io.bluetape4k.images.captcha.CaptchaNoise
+import io.bluetape4k.images.captcha.captchaGenerator
+
+val generator = captchaGenerator {
+    length(6)
+    charSet("ABCDEFGHJKLMNPQRSTUVWXYZ23456789")
+    imageSize(width = 200, height = 80)
+    noise(CaptchaNoise.Medium)
+    distortion(CaptchaDistortion.Wave(0.2f))
+}
+
+val challenge = generator.generate()
+
+// challenge.text는 서버 측에서 안전하게 보관하세요.
+// challenge.image는 Scrimage writer로 인코딩해 클라이언트에 반환하세요.
 ```
 
 ### libvips를 사용한 고성능 처리 (`images-vips-api`)
@@ -245,6 +272,7 @@ JVipsImageSupport.jvipsImageOf(Path.of("photo.jpg")).use { image ->
 각 모듈에는 API 레퍼런스, 아키텍처 다이어그램, 사용 예시를 담은 상세 README가 있습니다.
 
 - [`images/README.md`](images/README.md) — Scrimage 기반 처리
+- [`images-captcha/README.md`](images-captcha/README.md) — Java2D CAPTCHA 생성
 - [`images-spring-boot/README.md`](images-spring-boot/README.md) — Spring Boot 4 자동 구성
 - [`images-vips-api/README.md`](images-vips-api/README.md) — VipsImage 인터페이스 API
 - [`images-vips-java21/README.md`](images-vips-java21/README.md) — JVips JNI 백엔드

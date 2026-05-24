@@ -11,6 +11,7 @@ libvips through JNI or FFM Panama.
 | Module | Purpose |
 |---|---|
 | `bluetape4k-images` | Scrimage-based image processing, coroutine writers, filters, analysis, similarity |
+| `bluetape4k-images-captcha` | Java2D CAPTCHA image challenge generation |
 | `bluetape4k-images-vips-api` | Binding-neutral `VipsImage` and `VipsRuntime` contracts |
 | `bluetape4k-images-vips-java21` | JVips JNI backend; Java 21 toolchain; system libvips required |
 | `bluetape4k-images-vips-java25` | vips-ffm FFM backend; Java 25 toolchain; native access required |
