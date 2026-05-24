@@ -69,19 +69,44 @@ memory use, or native codecs matter.
 
 ### Install libvips
 
+The pure JVM `images` module does not need native libraries. The `images-vips-*`
+modules load libvips through JNI or FFM and require the native package to be
+available on the host.
+
 ```bash
 # macOS
 brew install vips
 
 # Ubuntu / Debian
-sudo apt-get install libvips-dev
+sudo apt-get install libvips-tools libvips-dev
+
+# Verify the CLI and shared libraries are visible
+vips --version
 ```
 
-On macOS, consumer applications using `images-vips-java25` must also set:
+Gradle tests for `images-vips-java25` already add
+`--enable-native-access=ALL-UNNAMED` and, on Homebrew macOS, set
+`DYLD_LIBRARY_PATH=/opt/homebrew/lib` when that directory exists. Consumer
+applications must configure those settings themselves:
 
 ```bash
 export DYLD_LIBRARY_PATH=/opt/homebrew/lib
+java --enable-native-access=ALL-UNNAMED -jar my-image-app.jar
 ```
+
+The native-access flag is a JVM option, so it must appear before `-jar`, the
+main class, or the command that starts your application.
+
+### Troubleshooting libvips startup
+
+- `FFM API requires --enable-native-access` or `UnsupportedOperationException`:
+  start `images-vips-java25` with `--enable-native-access=ALL-UNNAMED`.
+- `libvips not found`, `Cannot find vips library`, or `UnsatisfiedLinkError`:
+  install libvips, run `vips --version`, and on Homebrew macOS export
+  `DYLD_LIBRARY_PATH=/opt/homebrew/lib` before starting the JVM.
+- Vips tests are skipped unexpectedly: pass `-Dvips.enabled=true` only when
+  libvips is installed and visible. Pass `-Dvips.enabled=false` to opt out
+  explicitly.
 
 ## Installation
 
@@ -205,7 +230,7 @@ FfmVipsImageSupport.ffmVipsImageOf(Path.of("photo.jpg")).use { image ->
 ```
 
 > **Note**: Add `--enable-native-access=ALL-UNNAMED` to your JVM startup flags when using
-> `images-vips-java25`.
+> `images-vips-java25`. For `java -jar`, place it before `-jar`.
 
 ### Java 21 JNI Backend (`images-vips-java21`)
 

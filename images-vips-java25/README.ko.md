@@ -36,25 +36,35 @@ tasks.withType<Test>().configureEach {
 }
 ```
 
-#### Spring Boot (application.yml)에서
+#### Spring Boot 또는 컨테이너 실행 환경에서
 
-```yaml
-spring:
-  jvm:
-    args: --enable-native-access=ALL-UNNAMED
+JVM 명령줄 또는 프로세스 매니저에 플래그를 설정하세요. 컨테이너 애플리케이션에서는
+`JAVA_TOOL_OPTIONS`가 가장 간단한 이식 가능한 선택지입니다.
+
+```bash
+export JAVA_TOOL_OPTIONS="--enable-native-access=ALL-UNNAMED"
+java -jar myapp.jar
+```
+
+Gradle `bootRun`에서는 다음처럼 설정합니다.
+
+```kotlin
+tasks.named<JavaExec>("bootRun") {
+    jvmArgs("--enable-native-access=ALL-UNNAMED")
+}
 ```
 
 #### Java 명령줄에서
 
 ```bash
-java -jar myapp.jar --enable-native-access=ALL-UNNAMED
+java --enable-native-access=ALL-UNNAMED -jar myapp.jar
 ```
 
 #### IDE (IntelliJ IDEA)에서
 
 1. Run → Edit Configurations
 2. 테스트 설정 찾기
-3. VM options 추가: `-XX:+UnlockDiagnosticVMOptions -XX:+LogCompilation --enable-native-access=ALL-UNNAMED`
+3. VM options 추가: `--enable-native-access=ALL-UNNAMED`
 
 이 플래그 없으면 `FfmVipsRuntime.init()`에서 경고가 기록되고 FFM 연산이 실패할 수 있습니다.
 
@@ -502,6 +512,9 @@ apt-get install libvips-tools libvips-dev
 # 설치 확인
 vips --version
 ```
+
+Homebrew macOS에서 JVM이 `libvips`를 찾지 못하면 소비자 애플리케이션 시작 전에
+`DYLD_LIBRARY_PATH=/opt/homebrew/lib`를 export하세요.
 
 ### "Unsupported image format" 오류
 
