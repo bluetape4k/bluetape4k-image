@@ -36,25 +36,35 @@ tasks.withType<Test>().configureEach {
 }
 ```
 
-#### In Spring Boot (application.yml)
+#### In Spring Boot or Container Launchers
 
-```yaml
-spring:
-  jvm:
-    args: --enable-native-access=ALL-UNNAMED
+Set the flag on the JVM command line or through your process manager. For
+containerized apps, `JAVA_TOOL_OPTIONS` is usually the simplest portable option:
+
+```bash
+export JAVA_TOOL_OPTIONS="--enable-native-access=ALL-UNNAMED"
+java -jar myapp.jar
+```
+
+For Gradle `bootRun`:
+
+```kotlin
+tasks.named<JavaExec>("bootRun") {
+    jvmArgs("--enable-native-access=ALL-UNNAMED")
+}
 ```
 
 #### In Java Command Line
 
 ```bash
-java -jar myapp.jar --enable-native-access=ALL-UNNAMED
+java --enable-native-access=ALL-UNNAMED -jar myapp.jar
 ```
 
 #### In IDE (IntelliJ IDEA)
 
 1. Run → Edit Configurations
 2. Find your test configuration
-3. Add VM options: `-XX:+UnlockDiagnosticVMOptions -XX:+LogCompilation --enable-native-access=ALL-UNNAMED`
+3. Add VM options: `--enable-native-access=ALL-UNNAMED`
 
 Without this flag, `FfmVipsRuntime.init()` will log a warning and FFM operations may fail.
 
@@ -503,6 +513,9 @@ apt-get install libvips-tools libvips-dev
 # Verify installation
 vips --version
 ```
+
+On Homebrew macOS, export `DYLD_LIBRARY_PATH=/opt/homebrew/lib` before starting
+consumer applications if the JVM cannot find `libvips`.
 
 ### "Unsupported image format"
 

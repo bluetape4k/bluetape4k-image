@@ -64,19 +64,43 @@ native codec이 중요해질 때 libvips 백엔드로 확장할 수 있는 단�
 
 ### libvips 설치
 
+순수 JVM `images` 모듈은 native library가 필요하지 않습니다. `images-vips-*`
+모듈은 JNI 또는 FFM으로 libvips를 로드하므로 호스트에 native package가 있어야 합니다.
+
 ```bash
 # macOS
 brew install vips
 
 # Ubuntu / Debian
-sudo apt-get install libvips-dev
+sudo apt-get install libvips-tools libvips-dev
+
+# CLI와 공유 라이브러리 확인
+vips --version
 ```
 
-macOS에서 `images-vips-java25`를 사용하는 애플리케이션은 다음 환경변수도 설정해야 합니다.
+`images-vips-java25` Gradle 테스트는 이미 `--enable-native-access=ALL-UNNAMED`를
+추가하고, Homebrew macOS에서 `/opt/homebrew/lib`가 있으면
+`DYLD_LIBRARY_PATH=/opt/homebrew/lib`도 설정합니다. 소비자 애플리케이션은 이 설정을
+직접 적용해야 합니다.
 
 ```bash
 export DYLD_LIBRARY_PATH=/opt/homebrew/lib
+java --enable-native-access=ALL-UNNAMED -jar my-image-app.jar
 ```
+
+native-access 플래그는 JVM 옵션이므로 `-jar`, main class, 또는 애플리케이션 시작
+명령보다 앞에 와야 합니다.
+
+### libvips 시작 문제 해결
+
+- `FFM API requires --enable-native-access` 또는 `UnsupportedOperationException`:
+  `images-vips-java25`를 `--enable-native-access=ALL-UNNAMED`와 함께 시작하세요.
+- `libvips not found`, `Cannot find vips library`, 또는 `UnsatisfiedLinkError`:
+  libvips를 설치하고 `vips --version`을 확인한 뒤, Homebrew macOS에서는 JVM 시작 전에
+  `DYLD_LIBRARY_PATH=/opt/homebrew/lib`를 export하세요.
+- vips 테스트가 예상과 다르게 skip됨: libvips가 설치되어 있고 로드 가능한 환경에서만
+  `-Dvips.enabled=true`를 전달하세요. 명시적으로 제외하려면 `-Dvips.enabled=false`를
+  전달하세요.
 
 ## 의존성 추가
 
@@ -200,7 +224,7 @@ FfmVipsImageSupport.ffmVipsImageOf(Path.of("photo.jpg")).use { image ->
 ```
 
 > **참고**: `images-vips-java25` 사용 시 JVM 시작 플래그에 `--enable-native-access=ALL-UNNAMED`를
-> 추가해야 합니다.
+> 추가해야 합니다. `java -jar`에서는 `-jar` 앞에 배치하세요.
 
 ### Java 21 JNI 백엔드 (`images-vips-java21`)
 
