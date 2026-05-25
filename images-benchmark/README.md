@@ -10,7 +10,7 @@ JMH benchmarks comparing [scrimage](https://sksamuel.github.io/scrimage/) and [l
 
 ## Benchmark Results
 
-> AverageTime ms/op. Full raw data: [`docs/benchmark-results-2026-04-29.md`](docs/benchmark-results-2026-04-29.md)
+> AverageTime ms/op. Current macOS Java 25 run: [`docs/benchmark-results-2026-05-25.md`](docs/benchmark-results-2026-05-25.md). Historical CI Linux rows remain from [`docs/benchmark-results-2026-04-29.md`](docs/benchmark-results-2026-04-29.md).
 
 ### Resize (4K 3840×2160 → 1920×1080)
 
@@ -18,7 +18,7 @@ JMH benchmarks comparing [scrimage](https://sksamuel.github.io/scrimage/) and [l
 
 | Environment | scrimage (ms/op) | vips (ms/op) | Speedup |
 |-------------|-----------------|--------------|---------|
-| macOS, vips-ffm  | 71.16 ± 2.02  | 0.202 ± 0.006 | **352×** |
+| macOS, java25 vips-ffm | 65.64 ± 0.76 | 0.170 ± 0.006 | **386×** |
 | CI Linux, java25 | 187.29 ± 9.07 | 0.591 ± 0.046 | **317×** |
 | CI Linux, java21 | 195.63 ± 7.39 | 0.495 ± 0.062 | **395×** |
 
@@ -28,10 +28,10 @@ JMH benchmarks comparing [scrimage](https://sksamuel.github.io/scrimage/) and [l
 
 | Format | Environment | scrimage (ms/op) | vips (ms/op) | Speedup |
 |--------|-------------|-----------------|--------------|---------|
-| JPEG | macOS, vips-ffm  | 52.49 ± 0.44   | 15.67 ± 0.27  | **3.3×** |
+| JPEG | macOS, java25 vips-ffm | 46.55 ± 0.75 | 15.18 ± 0.55 | **3.1×** |
 | JPEG | CI Linux, java25 | 171.16 ± 121.3 | 37.20 ± 0.99  | **4.6×** |
 | JPEG | CI Linux, java21 | 161.09 ± 38.9  | 37.22 ± 1.50  | **4.3×** |
-| PNG  | macOS, vips-ffm  | 94.87 ± 4.65   | 49.88 ± 1.02  | **1.9×** |
+| PNG  | macOS, java25 vips-ffm | 84.91 ± 4.21 | 46.91 ± 0.52 | **1.8×** |
 | PNG  | CI Linux, java25 | 249.01 ± 2.14  | 137.95 ± 2.93 | **1.8×** |
 | PNG  | CI Linux, java21 | 246.44 ± 2.14  | 255.90 ± 10.2 | −1.04× ⚠️ |
 
@@ -43,9 +43,9 @@ JMH benchmarks comparing [scrimage](https://sksamuel.github.io/scrimage/) and [l
 
 | Filter    | macOS (ms/op) | CI Linux java25 (ms/op) | CI Linux java21 (ms/op) |
 |-----------|--------------|------------------------|------------------------|
-| Sepia     | 13.19 ± 0.49 | 60.83 ± 0.42 | 60.70 ± 0.59 |
-| Grayscale | 22.51 ± 9.19 | 99.72 ± 23.9 | 97.05 ± 12.6 |
-| Blur      | 29.80 ± 1.23 | 73.64 ± 1.28 | 84.81 ± 6.31 |
+| Sepia     | 14.51 ± 8.45 | 60.83 ± 0.42 | 60.70 ± 0.59 |
+| Grayscale | 6.26 ± 0.12  | 99.72 ± 23.9 | 97.05 ± 12.6 |
+| Blur      | 27.76 ± 0.15 | 73.64 ± 1.28 | 84.81 ± 6.31 |
 
 ---
 
