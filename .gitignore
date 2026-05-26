@@ -34,3 +34,5 @@ local.properties
 .omc/
 
 **/.profileconfig.json
+
+.codegraph/
