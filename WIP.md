@@ -1,8 +1,65 @@
 # WIP - bluetape4k-image
 
-Snapshot: 2026-05-22 KST
+Snapshot: 2026-05-24 KST
 Scope: open GitHub issues assigned to `debop`.
 Open count: 4 issues.
+
+## 2026-05-24 Milestone Refresh
+
+Current evidence: latest tags `0.1.2`, `0.1.1`, `0.1.0`. GitHub has four open
+backlog feature issues and an empty `0.2.0` milestone.
+
+| Lane | Candidate milestone | Current candidates | Decision |
+|---|---|---|---|
+| Patch | `0.1.3` | none yet | Keep empty unless image-core, docs, dependency, or CI regressions appear. |
+| Minor | `0.2.0` | #4 first, then #1/#2/#3 after research | Use #4 CAPTCHA as the first self-contained feature. Keep native/model-heavy OCR/detection/classification isolated until dependency and model packaging are decided. |
+
+Recommended order: #4 `images-captcha`; then research/design gates before #1
+OCR, #2 face/object detection, or #3 classification implementation.
+
+## New Milestone Queue - 2026-05-24
+
+### New patch milestone `0.1.3`
+
+1. [#82](https://github.com/bluetape4k/bluetape4k-image/issues/82)
+   `docs: refresh libvips prerequisite and native-access troubleshooting`
+
+### New minor milestone `0.2.0`
+
+1. [#4](https://github.com/bluetape4k/bluetape4k-image/issues/4)
+   `feat: CAPTCHA 이미지 생성 모듈 추가 (images-captcha)`
+2. [#83](https://github.com/bluetape4k/bluetape4k-image/issues/83)
+   `research: OCR dependency and model packaging strategy`
+3. [#84](https://github.com/bluetape4k/bluetape4k-image/issues/84)
+   `research: face and object detection dependency and model packaging strategy`
+4. [#85](https://github.com/bluetape4k/bluetape4k-image/issues/85)
+   `research: image classification dependency and model packaging strategy`
+5. [#86](https://github.com/bluetape4k/bluetape4k-image/issues/86)
+   `perf: refresh scrimage vs libvips benchmark report and README charts`
+
+### Backlog reference
+
+- [#1](https://github.com/bluetape4k/bluetape4k-image/issues/1),
+  [#2](https://github.com/bluetape4k/bluetape4k-image/issues/2), and
+  [#3](https://github.com/bluetape4k/bluetape4k-image/issues/3) remain backlog
+  implementation ideas until the 0.2.0 research issues decide dependency and
+  model packaging.
+
+## Issue Discovery - 2026-05-24
+
+Patch candidates:
+
+- `docs: refresh libvips prerequisite and native-access troubleshooting`
+  - Candidate only if README user-facing setup has drifted from current
+    JNI/FFM/libvips operational rules.
+
+Minor candidates:
+
+- `feat: CAPTCHA image generation module` (#4)
+- `research: OCR dependency and model packaging strategy` (#1)
+- `research: face/object detection dependency and model packaging strategy` (#2)
+- `research: image classification dependency and model packaging strategy` (#3)
+- `perf: refresh scrimage vs libvips benchmark report and README charts`
 
 ## Refresh Notes
 
