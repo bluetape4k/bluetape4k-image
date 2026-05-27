@@ -73,3 +73,13 @@ when present. Outside Gradle, set it manually if needed.
 - Uses JVips JNI binding.
 - JNI tests run isolated: `forkEvery = 1`, `maxParallelForks = 1`.
 - Class names: `JVipsImage`, `JVipsRuntime`.
+
+## Cross-Repo Lesson Guards
+
+- Before issue, PR, workflow, release, or module-registration work, query GNO
+  for this repo in both `bluetape4k-github` and `bluetape4k-docs`.
+- For image module additions or artifact moves, update README locale sets,
+  repo-local module lists, CI/Nightly coverage, coverage artifacts, and
+  BOM/catalog constraints together.
+- Keep Kover XML/Codecov visible without hard gates unless explicitly decided.
+  Run libvips/native/JNI and Testcontainers-backed checks sequentially.
