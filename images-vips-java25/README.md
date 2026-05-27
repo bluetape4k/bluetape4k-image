@@ -99,9 +99,9 @@ Runtime.getRuntime().addShutdownHook(Thread {
 
 - **FFM-based (JDK 23+):** No JNI, pure Foreign Function & Memory API
 - **Thread-safe initialization:** CAS-based state machine prevents race conditions
-- **Image decoding:** JPEG, PNG, WebP (magic byte allowlist)
+- **Image decoding:** JPEG, PNG, WebP, capability-gated AVIF/HEIC (magic byte allowlist)
 - **Image operations:** Resize, thumbnail, crop
-- **Image encoding:** JPEG, PNG, WebP with configurable quality
+- **Image encoding:** JPEG, PNG, WebP, capability-gated AVIF/HEIC with configurable quality
 - **Coroutine support:** Suspend variants for async processing (`suspendFfmVipsImageOf`)
 - **Security:** Format allowlist, maxPixels limit, bounded input stream (50 MB)
 - **Memory safety:** Each operation uses isolated FFM Arena
@@ -222,16 +222,19 @@ image.use { img ->
 
 ### Image Format Allowlist
 
-Only JPEG, PNG, and WebP are permitted. Other formats throw `VipsDecodeException`:
+JPEG, PNG, WebP, AVIF, and HEIC are permitted. AVIF/HEIC require a libvips build with libheif and the relevant encoder:
 
 ```kotlin
 try {
     ffmVipsImageOf(unsafeBytes)
 } catch (e: VipsDecodeException) {
-    // Handle unsupported format
+    // Handle unsupported format or missing native codec support
     logger.error("Format not allowed: ${e.message}")
 }
 ```
+
+AVIF output uses HEIF compression `AV1`; HEIC output uses HEIF compression `HEVC`.
+If the native libvips build lacks `heifload_buffer` or `heifsave_buffer`, the API fails early with a sanitized `VipsDecodeException` or `VipsEncodeException`.
 
 ### Maximum Pixel Count
 
@@ -519,9 +522,9 @@ consumer applications if the JVM cannot find `libvips`.
 
 ### "Unsupported image format"
 
-**Error:** VipsDecodeException with "only JPEG, PNG, and WebP are allowed".
+**Error:** VipsDecodeException with "only JPEG, PNG, WebP, AVIF, and HEIC are allowed".
 
-**Solution:** Convert your image to a supported format:
+**Solution:** Convert your image to a supported format, or install libvips with libheif/libaom when using AVIF/HEIC:
 ```bash
 # Using ImageMagick
 convert input.gif output.jpg

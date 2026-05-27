@@ -70,10 +70,10 @@ dependencies {
 
 - **JNI 네이티브 바인딩**: JVips JNI를 통한 libvips C 라이브러리 직접 접근
 - **고속 & 메모리 효율**: 4000x3000 이미지를 100ms 이내로 처리
-- **기본 보안**: 포맷 허용 목록(JPEG/PNG/WebP), 50 MB 입력 제한, maxPixels 검증
+- **기본 보안**: 포맷 허용 목록(JPEG/PNG/WebP/AVIF/HEIC), 50 MB 입력 제한, maxPixels 검증
 - **불변 연산**: 모든 이미지 연산은 새 인스턴스 반환 (제자리 변이 없음)
 - **코루틴 지원**: 비동기 변형은 `Dispatchers.IO`로 블로킹 JNI 호출을 래핑
-- **다양한 출력 포맷**: JPEG(손실), PNG(무손실), WebP(최고 압축)
+- **다양한 출력 포맷**: JPEG(손실), PNG(무손실), WebP(고압축), capability-gated AVIF
 - **Virtual Thread 안전**: `@Synchronized` 블록 대신 `AtomicReference<State>` CAS 사용
 
 ## 사용 예제
@@ -215,16 +215,20 @@ fun cropAndExportBytes(imagePath: String): ByteArray {
 
 모든 공개 `vipsImageOf*` 함수는 순서대로 보안 검사를 적용합니다:
 
-1. **포맷 허용 목록**: JPEG, PNG, WebP 포맷만 수락
+1. **포맷 허용 목록**: JPEG, PNG, WebP, AVIF, HEIC 헤더 수락
    - JPEG: 매직 바이트 `FF D8 FF`
    - PNG: 매직 바이트 `89 50 4E 47`
    - WebP: RIFF 헤더 + 오프셋 8의 `WEBP` 마커
+   - AVIF/HEIC: ISO BMFF `ftyp` 브랜드(`avif`, `avis`, `heic`, `heix`, `hevc`, `hevx`, `mif1`, `msf1`)
 
 2. **입력 크기 제한**: 입력 스트림당 최대 50 MB
 
 3. **최대 픽셀 검증**: `너비 × 높이 × 채널`이 설정된 임계값(기본값: 1억 5천만 픽셀)을 초과하지 않아야 함
 
 지원되지 않는 포맷이나 위반은 설명적인 오류 메시지와 함께 `VipsDecodeException`을 발생시킵니다.
+
+AVIF 인코딩은 libheif와 libaom 같은 AV1 인코더가 포함된 libvips/JVips 빌드가 필요합니다.
+HEIC 인코딩은 JVips 바인딩에서 노출되지 않으므로 HEIC 출력이 필요하면 Java 25 FFM 백엔드를 사용하세요.
 
 ## 동시성 & 스레드 안전성
 
