@@ -70,10 +70,10 @@ dependencies {
 
 - **JNI Native Bindings**: Direct access to libvips C library via JVips JNI
 - **Fast & Memory-Efficient**: Scales 4000x3000 images in <100ms
-- **Security by Default**: Format allowlist (JPEG/PNG/WebP), 50 MB input limit, maxPixels validation
+- **Security by Default**: Format allowlist (JPEG/PNG/WebP/AVIF/HEIC), 50 MB input limit, maxPixels validation
 - **Immutable Operations**: All image operations return new instances (no in-place mutation)
 - **Coroutine Support**: Async variants wrap blocking JNI calls with `Dispatchers.IO`
-- **Multiple Output Formats**: JPEG (lossy), PNG (lossless), WebP (best compression)
+- **Multiple Output Formats**: JPEG (lossy), PNG (lossless), WebP (best compression), capability-gated AVIF
 - **Virtual Thread Safe**: Uses `AtomicReference<State>` CAS instead of `@Synchronized` blocks
 
 ## Usage Examples
@@ -215,16 +215,20 @@ fun cropAndExportBytes(imagePath: String): ByteArray {
 
 All public `vipsImageOf*` functions enforce security checks in order:
 
-1. **Format Allowlist**: Only JPEG, PNG, and WebP formats are accepted
+1. **Format Allowlist**: JPEG, PNG, WebP, AVIF, and HEIC headers are accepted
    - JPEG: magic bytes `FF D8 FF`
    - PNG: magic bytes `89 50 4E 47`
    - WebP: RIFF header with `WEBP` marker at offset 8
+   - AVIF/HEIC: ISO BMFF `ftyp` brand (`avif`, `avis`, `heic`, `heix`, `hevc`, `hevx`, `mif1`, `msf1`)
 
 2. **Input Size Limit**: Maximum 50 MB per input stream
 
 3. **Max Pixels Validation**: `width × height × bands` must not exceed the configured threshold (default: 150 million pixels)
 
 Unsupported formats or violations raise `VipsDecodeException` with descriptive error messages.
+
+AVIF encoding requires a libvips/JVips build with libheif and an AV1 encoder such as libaom.
+HEIC encoding is not exposed by the JVips binding; use the Java 25 FFM backend when HEIC output is required.
 
 ## Concurrency & Thread Safety
 

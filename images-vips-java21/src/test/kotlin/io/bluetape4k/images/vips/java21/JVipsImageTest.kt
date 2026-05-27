@@ -1,21 +1,25 @@
 package io.bluetape4k.images.vips.java21
 
+import io.bluetape4k.images.IncubatingImageApi
+import io.bluetape4k.images.vips.VipsEncodeException
 import io.bluetape4k.images.vips.VipsEncodeOptions
 import io.bluetape4k.images.vips.VipsImageFormat
 import io.bluetape4k.images.vips.coroutines.suspendToBytes
 import io.bluetape4k.images.vips.testfixtures.VipsTestFixtures
-import kotlinx.coroutines.test.runTest
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeGreaterThan
 import io.bluetape4k.assertions.shouldBeLessOrEqualTo
+import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldNotBeNull
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import java.io.ByteArrayOutputStream
 import java.nio.file.Path
 
+@OptIn(IncubatingImageApi::class)
 class JVipsImageTest : AbstractJVipsTest() {
 
     companion object {
@@ -23,6 +27,7 @@ class JVipsImageTest : AbstractJVipsTest() {
         private val PNG_MAGIC = byteArrayOf(0x89.toByte(), 0x50.toByte(), 0x4E.toByte(), 0x47.toByte())
         private val WEBP_RIFF = byteArrayOf(0x52.toByte(), 0x49.toByte(), 0x46.toByte(), 0x46.toByte())
         private val WEBP_MARKER = byteArrayOf(0x57.toByte(), 0x45.toByte(), 0x42.toByte(), 0x50.toByte())
+        private val FTYP_MARKER = byteArrayOf(0x66, 0x74, 0x79, 0x70)
     }
 
     // ─── 1: load + dimensions ─────────────────────────────────────────────
@@ -98,6 +103,23 @@ class JVipsImageTest : AbstractJVipsTest() {
         }
     }
 
+    @Test
+    fun `toBytes AVIF is capability gated`() {
+        val bytes = VipsTestFixtures.loadFixture(VipsTestFixtures.SAMPLE_JPEG)
+        vipsImageOf(bytes).use { img ->
+            assertOptionalHeifFamilyEncoding(runCatching { img.toBytes(VipsImageFormat.AVIF) }, VipsImageFormat.AVIF)
+        }
+    }
+
+    @Test
+    fun `toBytes HEIC reports JVips backend unsupported`() {
+        val bytes = VipsTestFixtures.loadFixture(VipsTestFixtures.SAMPLE_JPEG)
+        vipsImageOf(bytes).use { img ->
+            val error = assertFailsWith<VipsEncodeException> { img.toBytes(VipsImageFormat.HEIC) }
+            error.message.orEmpty() shouldContain "HEIC encoding is not supported by the JVips backend"
+        }
+    }
+
     // ─── 7: suspendToBytes ────────────────────────────────────────────────
 
     @Test
@@ -123,11 +145,19 @@ class JVipsImageTest : AbstractJVipsTest() {
     // ─── 9: use-after-close throws ────────────────────────────────────────
 
     @Test
-    fun `operation after close throws`() {
+    fun `operations after close throw IllegalStateException`(@TempDir tmpDir: Path) {
         val bytes = VipsTestFixtures.loadFixture(VipsTestFixtures.SAMPLE_JPEG)
         val img = vipsImageOf(bytes)
         img.close()
-        assertFailsWith<Exception> { img.toBytes(VipsImageFormat.JPEG) }
+
+        assertFailsWith<IllegalStateException> { img.resize(100, 100) }
+        assertFailsWith<IllegalStateException> { img.thumbnail(100) }
+        assertFailsWith<IllegalStateException> { img.crop(0, 0, 100, 100) }
+        assertFailsWith<IllegalStateException> { img.toBytes(VipsImageFormat.JPEG) }
+        assertFailsWith<IllegalStateException> { img.writeTo(tmpDir.resolve("closed.jpg"), VipsImageFormat.JPEG) }
+        assertFailsWith<IllegalStateException> {
+            img.writeTo(ByteArrayOutputStream(), VipsImageFormat.JPEG)
+        }
     }
 
     // ─── 10: crop exact dimensions ────────────────────────────────────────
@@ -191,6 +221,17 @@ class JVipsImageTest : AbstractJVipsTest() {
         }
     }
 
+    @Test
+    fun `close remains idempotent after failed operation`() {
+        val bytes = VipsTestFixtures.loadFixture(VipsTestFixtures.SAMPLE_JPEG)
+        val img = vipsImageOf(bytes)
+
+        assertFailsWith<Exception> { img.resize(0, 600) }
+
+        img.close()
+        img.close()
+    }
+
     // ─── 15: corrupt data throws VipsDecodeException ──────────────────────
 
     @Test
@@ -211,5 +252,22 @@ class JVipsImageTest : AbstractJVipsTest() {
         if (size < offset + other.size) return false
         for (i in other.indices) if (this[offset + i] != other[i]) return false
         return true
+    }
+
+    private fun assertOptionalHeifFamilyEncoding(result: Result<ByteArray>, format: VipsImageFormat) {
+        result.onSuccess { output ->
+            output.size shouldBeGreaterThan 0
+            output.regionMatches(4, FTYP_MARKER).shouldBeTrue()
+            when (format) {
+                VipsImageFormat.AVIF -> {
+                    val brand = String(output, 8, 4, Charsets.US_ASCII)
+                    (brand == "avif" || brand == "avis").shouldBeTrue()
+                }
+                else -> error("Unexpected optional HEIF-family format: $format")
+            }
+        }.onFailure { error ->
+            (error is VipsEncodeException).shouldBeTrue()
+            error.message.orEmpty() shouldContain format.name
+        }
     }
 }

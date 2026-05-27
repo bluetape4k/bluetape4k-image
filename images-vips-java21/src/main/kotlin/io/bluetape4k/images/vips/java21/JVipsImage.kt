@@ -1,17 +1,20 @@
 package io.bluetape4k.images.vips.java21
 
+import com.criteo.vips.VipsException
+import io.bluetape4k.images.IncubatingImageApi
 import io.bluetape4k.images.vips.VipsEncodeException
 import io.bluetape4k.images.vips.VipsEncodeOptions
 import io.bluetape4k.images.vips.VipsImage
 import io.bluetape4k.images.vips.VipsImageFormat
 import io.bluetape4k.images.vips.VipsOperationException
+import io.bluetape4k.images.vips.java21.internal.JVipsFormatSupport
 import io.bluetape4k.images.vips.java21.internal.NativeHandle
 import io.bluetape4k.images.vips.java21.ops.resizeWithJVips
 import io.bluetape4k.images.vips.java21.ops.thumbnailWithJVips
+import io.bluetape4k.images.vips.java21.writer.JVipsAvifWriter
 import io.bluetape4k.images.vips.java21.writer.JVipsJpegWriter
 import io.bluetape4k.images.vips.java21.writer.JVipsPngWriter
 import io.bluetape4k.images.vips.java21.writer.JVipsWebpWriter
-import com.criteo.vips.VipsException
 import kotlinx.coroutines.CancellationException
 import java.awt.Rectangle
 import java.io.OutputStream
@@ -26,6 +29,7 @@ import java.util.concurrent.atomic.AtomicBoolean
  *
  * `use {}` 블록 또는 `close()`로 반드시 리소스를 해제하십시오.
  */
+@OptIn(IncubatingImageApi::class)
 internal class JVipsImage(private val handle: NativeHandle) : VipsImage {
 
     private val closed = AtomicBoolean(false)
@@ -96,11 +100,13 @@ internal class JVipsImage(private val handle: NativeHandle) : VipsImage {
     override fun toBytes(format: VipsImageFormat, options: VipsEncodeOptions): ByteArray {
         checkOpen()
         return try {
+            JVipsFormatSupport.requireEncoding(format)
             when (format) {
                 VipsImageFormat.JPEG -> JVipsJpegWriter.writeToBytes(handle.vipsImage, options)
                 VipsImageFormat.PNG  -> JVipsPngWriter.writeToBytes(handle.vipsImage, options)
                 VipsImageFormat.WEBP -> JVipsWebpWriter.writeToBytes(handle.vipsImage, options)
-                else                 -> throw VipsEncodeException("Unsupported format for encoding: $format")
+                VipsImageFormat.AVIF -> JVipsAvifWriter.writeToBytes(handle.vipsImage, options)
+                VipsImageFormat.HEIC -> throw VipsEncodeException("Unsupported format for encoding: $format")
             }
         } catch (e: VipsEncodeException) {
             throw e

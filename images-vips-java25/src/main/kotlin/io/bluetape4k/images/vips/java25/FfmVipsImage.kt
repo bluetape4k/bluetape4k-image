@@ -2,12 +2,15 @@ package io.bluetape4k.images.vips.java25
 
 import app.photofox.vipsffm.VImage
 import app.photofox.vipsffm.VipsError
+import io.bluetape4k.images.IncubatingImageApi
 import io.bluetape4k.images.vips.VipsDecodeException
 import io.bluetape4k.images.vips.VipsEncodeException
 import io.bluetape4k.images.vips.VipsEncodeOptions
 import io.bluetape4k.images.vips.VipsImage
 import io.bluetape4k.images.vips.VipsImageFormat
 import io.bluetape4k.images.vips.VipsOperationException
+import io.bluetape4k.images.vips.java25.internal.FfmVipsFormatSupport
+import io.bluetape4k.images.vips.java25.writer.FfmVipsHeifWriter
 import io.bluetape4k.images.vips.java25.ops.resizeWithFfm
 import io.bluetape4k.images.vips.java25.ops.thumbnailWithFfm
 import io.bluetape4k.images.vips.java25.writer.FfmVipsJpegWriter
@@ -32,6 +35,7 @@ import java.util.concurrent.atomic.AtomicBoolean
  * @param vipsImage 래핑할 vips-ffm VImage
  * @param ownsArena true(기본값)이면 close() 시 arena를 해제합니다. 연산 결과 이미지는 false.
  */
+@OptIn(IncubatingImageApi::class)
 internal class FfmVipsImage(
     private val arena: Arena,
     private val vipsImage: VImage,
@@ -108,11 +112,13 @@ internal class FfmVipsImage(
     override fun toBytes(format: VipsImageFormat, options: VipsEncodeOptions): ByteArray {
         checkOpen()
         return try {
+            FfmVipsFormatSupport.requireEncoding(format)
             when (format) {
                 VipsImageFormat.JPEG -> FfmVipsJpegWriter.writeToBytes(vipsImage, options)
                 VipsImageFormat.PNG  -> FfmVipsPngWriter.writeToBytes(vipsImage, options)
                 VipsImageFormat.WEBP -> FfmVipsWebpWriter.writeToBytes(vipsImage, options)
-                else                 -> throw VipsEncodeException("Unsupported format for encoding: $format")
+                VipsImageFormat.AVIF,
+                VipsImageFormat.HEIC -> FfmVipsHeifWriter.writeToBytes(vipsImage, format, options)
             }
         } catch (e: VipsEncodeException) {
             throw e

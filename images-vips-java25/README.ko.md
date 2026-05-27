@@ -99,9 +99,9 @@ Runtime.getRuntime().addShutdownHook(Thread {
 
 - **FFM 기반 (JDK 23+):** JNI 없이 순수 Foreign Function & Memory API
 - **스레드 안전 초기화:** CAS 기반 상태 머신으로 경쟁 조건 방지
-- **이미지 디코딩:** JPEG, PNG, WebP (매직 바이트 허용 목록)
+- **이미지 디코딩:** JPEG, PNG, WebP, capability-gated AVIF/HEIC (매직 바이트 허용 목록)
 - **이미지 연산:** 리사이즈, 썸네일, 자르기
-- **이미지 인코딩:** JPEG, PNG, WebP (품질 설정 가능)
+- **이미지 인코딩:** JPEG, PNG, WebP, capability-gated AVIF/HEIC (품질 설정 가능)
 - **코루틴 지원:** 비동기 처리용 suspend 변형 (`suspendFfmVipsImageOf`)
 - **보안:** 포맷 허용 목록, maxPixels 제한, 입력 스트림 제한 (50 MB)
 - **메모리 안전성:** 각 연산마다 격리된 FFM Arena 사용
@@ -222,16 +222,19 @@ image.use { img ->
 
 ### 이미지 포맷 허용 목록
 
-JPEG, PNG, WebP만 허용됩니다. 다른 포맷은 `VipsDecodeException` 발생:
+JPEG, PNG, WebP, AVIF, HEIC를 허용합니다. AVIF/HEIC는 libheif와 관련 인코더가 포함된 libvips 빌드가 필요합니다:
 
 ```kotlin
 try {
     ffmVipsImageOf(unsafeBytes)
 } catch (e: VipsDecodeException) {
-    // 지원하지 않는 포맷 처리
+    // 지원하지 않는 포맷 또는 누락된 네이티브 코덱 처리
     logger.error("포맷 허용되지 않음: ${e.message}")
 }
 ```
+
+AVIF 출력은 HEIF compression `AV1`을 사용하고, HEIC 출력은 HEIF compression `HEVC`를 사용합니다.
+네이티브 libvips 빌드에 `heifload_buffer` 또는 `heifsave_buffer`가 없으면 sanitized `VipsDecodeException` 또는 `VipsEncodeException`으로 조기에 실패합니다.
 
 ### 최대 픽셀 수
 
@@ -518,9 +521,9 @@ Homebrew macOS에서 JVM이 `libvips`를 찾지 못하면 소비자 애플리케
 
 ### "Unsupported image format" 오류
 
-**증상:** VipsDecodeException with "only JPEG, PNG, and WebP are allowed".
+**증상:** VipsDecodeException with "only JPEG, PNG, WebP, AVIF, and HEIC are allowed".
 
-**해결법:** 이미지를 지원하는 포맷으로 변환:
+**해결법:** 이미지를 지원하는 포맷으로 변환하거나, AVIF/HEIC 사용 시 libheif/libaom이 포함된 libvips를 설치:
 ```bash
 # ImageMagick 사용
 convert input.gif output.jpg

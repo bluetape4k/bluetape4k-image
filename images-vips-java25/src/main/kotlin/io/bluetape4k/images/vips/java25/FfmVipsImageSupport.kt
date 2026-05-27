@@ -2,9 +2,12 @@ package io.bluetape4k.images.vips.java25
 
 import app.photofox.vipsffm.VImage
 import app.photofox.vipsffm.VipsError
+import io.bluetape4k.images.IncubatingImageApi
 import io.bluetape4k.images.vips.VipsDecodeException
 import io.bluetape4k.images.vips.VipsImage
+import io.bluetape4k.images.vips.VipsImageFormat
 import io.bluetape4k.images.vips.VipsLimits
+import io.bluetape4k.images.vips.java25.internal.FfmVipsFormatSupport
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -21,6 +24,9 @@ private val JPEG_MAGIC = byteArrayOf(0xFF.toByte(), 0xD8.toByte(), 0xFF.toByte()
 private val PNG_MAGIC = byteArrayOf(0x89.toByte(), 0x50.toByte(), 0x4E.toByte(), 0x47.toByte())
 private val WEBP_RIFF = byteArrayOf(0x52.toByte(), 0x49.toByte(), 0x46.toByte(), 0x46.toByte())
 private val WEBP_MARKER = byteArrayOf(0x57.toByte(), 0x45.toByte(), 0x42.toByte(), 0x50.toByte())
+private val FTYP_MARKER = byteArrayOf(0x66, 0x74, 0x79, 0x70)
+private val AVIF_BRANDS = setOf("avif", "avis")
+private val HEIF_BRANDS = setOf("heic", "heix", "hevc", "hevx", "mif1", "msf1")
 
 /**
  * 바이트 배열에서 [VipsImage]를 생성합니다.
@@ -113,11 +119,26 @@ private fun readBounded(stream: InputStream): ByteArray {
     return bounded.readBytes()
 }
 
+@OptIn(IncubatingImageApi::class)
 private fun checkFormatAllowlist(bytes: ByteArray) {
-    if (bytes.startsWith(JPEG_MAGIC)) return
-    if (bytes.startsWith(PNG_MAGIC)) return
-    if (bytes.startsWith(WEBP_RIFF) && bytes.size >= 12 && bytes.regionMatches(8, WEBP_MARKER)) return
-    throw VipsDecodeException("Unsupported image format — only JPEG, PNG, and WebP are allowed")
+    val format = bytes.detectAllowedFormat()
+        ?: throw VipsDecodeException("Unsupported image format — only JPEG, PNG, WebP, AVIF, and HEIC are allowed")
+    FfmVipsFormatSupport.requireDecoding(format)
+}
+
+@OptIn(IncubatingImageApi::class)
+private fun ByteArray.detectAllowedFormat(): VipsImageFormat? {
+    if (startsWith(JPEG_MAGIC)) return VipsImageFormat.JPEG
+    if (startsWith(PNG_MAGIC)) return VipsImageFormat.PNG
+    if (startsWith(WEBP_RIFF) && size >= 12 && regionMatches(8, WEBP_MARKER)) return VipsImageFormat.WEBP
+    if (size >= 12 && regionMatches(4, FTYP_MARKER)) {
+        return when (String(this, 8, 4, Charsets.US_ASCII)) {
+            in AVIF_BRANDS -> VipsImageFormat.AVIF
+            in HEIF_BRANDS -> VipsImageFormat.HEIC
+            else -> null
+        }
+    }
+    return null
 }
 
 private fun decodeAndCheckPixels(bytes: ByteArray): VipsImage {
