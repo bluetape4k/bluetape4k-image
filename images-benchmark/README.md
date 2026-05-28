@@ -43,6 +43,8 @@ JMH benchmarks comparing [scrimage](https://sksamuel.github.io/scrimage/) and [l
 JVips JNI backend and the Java 25 FFM backend with stable benchmark names
 across both runs.
 
+![Vips backend comparison benchmark chart](../docs/images/readme-charts/images-benchmark-vips-backend-comparison-chart-01.png)
+
 | Benchmark | Workload |
 |-----------|----------|
 | `vips_resize` | 4K JPEG resize to `1920x1080` and `1280x720` |

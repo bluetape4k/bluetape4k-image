@@ -19,6 +19,27 @@ and parameter:
 
 Lower `ms/op` is better.
 
+## Current Comparable Results
+
+These values are the existing CI Linux full-run rows from
+[`benchmark-results-2026-04-29.md`](benchmark-results-2026-04-29.md). They are
+the current source of truth for backend-to-backend rows that already existed
+before #104.
+
+![Vips backend comparison benchmark chart](../../docs/images/readme-charts/images-benchmark-vips-backend-comparison-chart-01.png)
+
+| Operation | Parameter | Java 21 JNI (ms/op) | Java 25 FFM (ms/op) | Faster backend |
+|-----------|-----------|---------------------|---------------------|----------------|
+| resize | 1920x1080 | 0.495 ± 0.062 | 0.591 ± 0.046 | Java 21 JNI |
+| resize | 1280x720 | 0.522 ± 0.024 | 0.626 ± 0.083 | Java 21 JNI |
+| encode JPEG | original | 37.22 ± 1.50 | 37.20 ± 0.99 | Tie |
+| encode PNG | original | 255.90 ± 10.19 | 137.95 ± 2.93 | Java 25 FFM |
+
+The new #104 `thumbnail` and `crop` rows need a fresh full backend run on a
+Linux or architecture-compatible Java 21/JNI host. This macOS arm64 host can
+compile Java 21/JNI benchmarks, but cannot produce JNI native measurements
+because the bundled JVips dylib is x86_64.
+
 ## Full Run
 
 Run the two backends sequentially. Do not run them in parallel on the same host;

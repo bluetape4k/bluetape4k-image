@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="760" viewBox="0 0 1280 760" role="img" aria-label="Vips Backend Comparison Benchmark">
+<defs>
+  <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%">
+    <feDropShadow dx="0" dy="8" stdDeviation="9" flood-color="#1f2937" flood-opacity="0.10"/>
+  </filter>
+  <style>
+    .canvas{fill:#f7f9fc}.frame{fill:#fff;stroke:#d8e0ea;stroke-width:1.5}
+    .title{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:40px;font-weight:400;fill:#102033}
+    .subtitle{font-family:"Comic Mono","Comic Sans MS","Comic Sans",Arial,sans-serif;font-size:16px;font-weight:400;fill:#536273}
+    .axis{font-family:"Comic Mono","Comic Sans MS","Comic Sans",Arial,sans-serif;font-size:13px;font-weight:400;fill:#536273}
+    .label{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:20px;font-weight:400;fill:#102033}
+    .small{font-family:"Comic Mono","Comic Sans MS","Comic Sans",Arial,sans-serif;font-size:13px;font-weight:400;fill:#536273}
+    .value{font-family:"Comic Mono","Comic Sans MS","Comic Sans",Arial,sans-serif;font-size:13px;font-weight:700;fill:#102033}
+    .note{font-family:"Comic Mono","Comic Sans MS","Comic Sans",Arial,sans-serif;font-size:13px;font-weight:400;fill:#536273}
+    .panel{filter:url(#shadow)}
+  </style>
+</defs>
+<rect class="canvas" width="1280" height="760"/>
+<rect class="frame" x="32" y="28" width="1216" height="704" rx="28"/>
+<text class="title" x="66" y="82">Vips Backend Comparison Benchmark</text>
+<text class="subtitle" x="70" y="116">JMH AverageTime results from CI Linux full runs, lower is better, log scale</text>
+
+<rect x="58" y="140" width="1164" height="500" rx="18" fill="#FFFFFF" stroke="#E2E8F0" class="panel"/>
+<line x1="250" y1="164" x2="250" y2="570" stroke="#D8E0EA" stroke-width="1"/>
+<text class="axis" x="250" y="596" text-anchor="middle">0.1</text>
+<line x1="468" y1="164" x2="468" y2="570" stroke="#D8E0EA" stroke-width="1"/>
+<text class="axis" x="468" y="596" text-anchor="middle">1</text>
+<line x1="686" y1="164" x2="686" y2="570" stroke="#D8E0EA" stroke-width="1"/>
+<text class="axis" x="686" y="596" text-anchor="middle">10</text>
+<line x1="904" y1="164" x2="904" y2="570" stroke="#D8E0EA" stroke-width="1"/>
+<text class="axis" x="904" y="596" text-anchor="middle">100</text>
+<line x1="1122" y1="164" x2="1122" y2="570" stroke="#D8E0EA" stroke-width="1"/>
+<text class="axis" x="1122" y="596" text-anchor="middle">1000</text>
+<text class="axis" x="686" y="626" text-anchor="middle">AverageTime ms/op, log scale, lower is better</text>
+
+<text class="label" x="86" y="206">Resize 1920x1080</text>
+<rect x="250" y="184" width="151" height="20" rx="5" fill="#F6B86E"/>
+<rect x="250" y="214" width="168" height="20" rx="5" fill="#74B9E8"/>
+<text class="value" x="411" y="200">0.495 ms</text>
+<text class="value" x="428" y="230">0.591 ms</text>
+
+<text class="label" x="86" y="304">Resize 1280x720</text>
+<rect x="250" y="282" width="156" height="20" rx="5" fill="#F6B86E"/>
+<rect x="250" y="312" width="174" height="20" rx="5" fill="#74B9E8"/>
+<text class="value" x="416" y="298">0.522 ms</text>
+<text class="value" x="434" y="328">0.626 ms</text>
+
+<text class="label" x="86" y="402">JPEG encode</text>
+<rect x="250" y="380" width="561" height="20" rx="5" fill="#F6B86E"/>
+<rect x="250" y="410" width="561" height="20" rx="5" fill="#74B9E8"/>
+<text class="value" x="821" y="396">37.22 ms</text>
+<text class="value" x="821" y="426">37.20 ms</text>
+
+<text class="label" x="86" y="500">PNG encode</text>
+<rect x="250" y="478" width="742" height="20" rx="5" fill="#F6B86E"/>
+<rect x="250" y="508" width="684" height="20" rx="5" fill="#74B9E8"/>
+<text class="value" x="1002" y="494">255.90 ms</text>
+<text class="value" x="944" y="524">137.95 ms</text>
+
+<rect x="1000" y="182" width="18" height="12" rx="5" fill="#F6B86E"/>
+<text class="small" x="1028" y="194">Java 21 JNI</text>
+<rect x="1000" y="208" width="18" height="12" rx="5" fill="#74B9E8"/>
+<text class="small" x="1028" y="220">Java 25 FFM</text>
+
+<text class="note" x="86" y="672">Source: benchmark-results-2026-04-29.md CI Linux rows. New crop/thumbnail rows require a full backend run on an architecture-compatible runner.</text>
+<text class="note" x="86" y="700">The #104 harness adds stable benchmark names for resize, thumbnail, crop, and JPEG encode so future JSON files can be joined by backend.</text>
+</svg>
