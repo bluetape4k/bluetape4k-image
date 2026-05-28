@@ -3,9 +3,9 @@ package io.bluetape4k.images.captcha
 /**
  * Generates CAPTCHA image challenges.
  *
- * This API only creates lightweight image challenges. Applications still own
- * answer comparison, storage, expiration enforcement, replay protection, and
- * rate limiting.
+ * Use [CaptchaVerificationService] when applications need a reusable one-shot
+ * verification contract for generated challenges. Applications still own the
+ * durable storage backend and rate limiting policy.
  */
 interface CaptchaGenerator {
 
