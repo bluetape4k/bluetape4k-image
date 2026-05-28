@@ -66,6 +66,19 @@ notes.
 | Grayscale | 6.26 ± 0.12  | 99.72 ± 23.9 | 97.05 ± 12.6 |
 | Blur      | 27.76 ± 0.15 | 73.64 ± 1.28 | 84.81 ± 6.31 |
 
+### Pipeline Allocation (scrimage chained operations)
+
+![Image pipeline allocation benchmark chart](../docs/images/readme-charts/images-benchmark-pipeline-allocation-chart-01.png)
+
+| Benchmark | Pipeline | AverageTime | Allocation |
+|-----------|----------|-------------|------------|
+| `scrimage_photoPreviewJpeg` | resize 4K photo to `1280x720`, grayscale, JPEG encode | 61.86 ms/op | 50.75 MB/op |
+| `scrimage_documentPreviewPng` | resize document to `640x905`, blur, sepia, PNG encode | 48.04 ms/op | 60.89 MB/op |
+
+See [`docs/pipeline-allocation-2026-05-28.md`](docs/pipeline-allocation-2026-05-28.md)
+and the raw JMH JSON
+[`docs/raw/benchmark-pipeline-allocation-2026-05-28-macos-java25.json`](docs/raw/benchmark-pipeline-allocation-2026-05-28-macos-java25.json).
+
 ---
 
 ## Running Benchmarks
@@ -198,6 +211,15 @@ Applies scrimage filters to a 1240×1754 document image.
 | `scrimage_blur`    | `BlurFilter`    |
 | `scrimage_grayscale` | `GrayscaleFilter` |
 | `scrimage_sepia`   | `SepiaFilter`   |
+
+### `ImagePipelineBenchmark`
+
+Measures chained high-level scrimage operation paths with the JMH GC profiler.
+
+| Benchmark | Workload |
+|-----------|----------|
+| `scrimage_photoPreviewJpeg` | 4K photo resize -> grayscale -> JPEG encode |
+| `scrimage_documentPreviewPng` | document resize -> blur -> sepia -> PNG encode |
 
 ### `VipsBenchmarkState`
 

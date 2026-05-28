@@ -65,6 +65,20 @@
 | Grayscale | 6.26 ± 0.12  | 99.72 ± 23.9 | 97.05 ± 12.6 |
 | Blur      | 27.76 ± 0.15 | 73.64 ± 1.28 | 84.81 ± 6.31 |
 
+### Pipeline Allocation (scrimage chained operations)
+
+![Image pipeline allocation benchmark chart](../docs/images/readme-charts/images-benchmark-pipeline-allocation-chart-01.png)
+
+| 벤치마크 | 파이프라인 | AverageTime | Allocation |
+|----------|------------|-------------|------------|
+| `scrimage_photoPreviewJpeg` | 4K photo를 `1280x720`으로 resize, grayscale, JPEG encode | 61.86 ms/op | 50.75 MB/op |
+| `scrimage_documentPreviewPng` | document를 `640x905`로 resize, blur, sepia, PNG encode | 48.04 ms/op | 60.89 MB/op |
+
+자세한 조건은 [`docs/pipeline-allocation-2026-05-28.md`](docs/pipeline-allocation-2026-05-28.md),
+raw JMH JSON은
+[`docs/raw/benchmark-pipeline-allocation-2026-05-28-macos-java25.json`](docs/raw/benchmark-pipeline-allocation-2026-05-28-macos-java25.json)을
+참고하세요.
+
 ---
 
 ## 벤치마크 실행
@@ -197,6 +211,16 @@ fun vips_encodeJpeg(state: VipsBenchmarkState, bh: Blackhole) {
 | `scrimage_blur`      | `BlurFilter`    |
 | `scrimage_grayscale` | `GrayscaleFilter` |
 | `scrimage_sepia`     | `SepiaFilter`   |
+
+### `ImagePipelineBenchmark`
+
+JMH GC profiler로 high-level scrimage operation chain의 allocation baseline을
+측정합니다.
+
+| 벤치마크 | 작업 |
+|----------|------|
+| `scrimage_photoPreviewJpeg` | 4K photo resize -> grayscale -> JPEG encode |
+| `scrimage_documentPreviewPng` | document resize -> blur -> sepia -> PNG encode |
 
 ### `VipsBenchmarkState`
 
