@@ -10,7 +10,7 @@ Java2D CAPTCHA image challenge generation for Kotlin/JVM services.
 - Bounded challenge length, image size, noise, and distortion options
 - Logical JVM fonts only; no bundled font files or native runtime dependency
 - Synchronous and suspend-friendly generation entrypoints
-- Advisory expiration timestamp for application-owned storage
+- One-shot verification service contract with pluggable challenge storage
 
 ## Dependency
 
@@ -39,10 +39,31 @@ val challenge = generator.generate()
 val pngBytes = challenge.image.forWriter(PngWriter.MaxCompression).bytes()
 ```
 
-Applications own answer comparison, storage, expiration enforcement, replay
-protection, and rate limiting. Persist encoded image bytes and application
-metadata, not `CaptchaChallenge`, because `ImmutableImage` is not treated as a
-stable Java serialization payload.
+Use `CaptchaVerificationService` to persist answer metadata and consume each
+challenge on the first verification attempt:
+
+```kotlin
+import io.bluetape4k.images.captcha.CaptchaChallengeId
+import io.bluetape4k.images.captcha.CaptchaVerificationResult
+import io.bluetape4k.images.captcha.CaptchaVerificationService
+
+val verifier = CaptchaVerificationService()
+val issued = verifier.issue(CaptchaChallengeId("login-form:request-123"), challenge)
+
+when (val result = verifier.verify(issued.id, userAnswer)) {
+    is CaptchaVerificationResult.Success -> Unit
+    is CaptchaVerificationResult.WrongAnswer -> Unit
+    is CaptchaVerificationResult.Expired -> Unit
+    is CaptchaVerificationResult.NotFound -> Unit
+}
+```
+
+`InMemoryCaptchaChallengeStore` is useful for tests, demos, and single-node
+applications. Implement `CaptchaChallengeStore` for Redis, database, or session
+storage when challenge metadata must be shared across application instances.
+Persist encoded image bytes and `IssuedCaptchaChallenge`-style metadata, not
+`CaptchaChallenge`, because `ImmutableImage` is not treated as a stable Java
+serialization payload. Applications still own rate limiting policy.
 
 ## Options
 

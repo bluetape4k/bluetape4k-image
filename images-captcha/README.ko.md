@@ -10,7 +10,7 @@ Kotlin/JVM 서비스용 Java2D CAPTCHA 이미지 챌린지 생성 모듈입니�
 - 챌린지 길이, 이미지 크기, 노이즈, 왜곡 옵션의 bounded validation
 - JVM logical font만 사용하며 font 파일이나 native runtime 의존성 없음
 - 동기 및 suspend-friendly 생성 entrypoint
-- 애플리케이션 저장소에서 사용할 advisory expiration timestamp 제공
+- pluggable challenge storage 를 지원하는 one-shot verification service contract 제공
 
 ## 의존성
 
@@ -39,10 +39,31 @@ val challenge = generator.generate()
 val pngBytes = challenge.image.forWriter(PngWriter.MaxCompression).bytes()
 ```
 
-정답 비교, 저장, 만료 처리, replay 방지, rate limiting은 애플리케이션 책임입니다.
-`ImmutableImage`를 안정적인 Java serialization payload로 취급하지 않으므로,
-`CaptchaChallenge` 자체가 아니라 인코딩된 이미지 바이트와 애플리케이션 메타데이터를
-저장하세요.
+`CaptchaVerificationService`로 정답 메타데이터를 저장하고 첫 검증 시도에서 challenge를
+소비할 수 있습니다.
+
+```kotlin
+import io.bluetape4k.images.captcha.CaptchaChallengeId
+import io.bluetape4k.images.captcha.CaptchaVerificationResult
+import io.bluetape4k.images.captcha.CaptchaVerificationService
+
+val verifier = CaptchaVerificationService()
+val issued = verifier.issue(CaptchaChallengeId("login-form:request-123"), challenge)
+
+when (val result = verifier.verify(issued.id, userAnswer)) {
+    is CaptchaVerificationResult.Success -> Unit
+    is CaptchaVerificationResult.WrongAnswer -> Unit
+    is CaptchaVerificationResult.Expired -> Unit
+    is CaptchaVerificationResult.NotFound -> Unit
+}
+```
+
+`InMemoryCaptchaChallengeStore`는 테스트, 데모, single-node 애플리케이션에 적합합니다.
+여러 애플리케이션 인스턴스가 challenge 메타데이터를 공유해야 한다면 Redis, database,
+session storage 용 `CaptchaChallengeStore` 구현을 제공하세요. `ImmutableImage`를 안정적인
+Java serialization payload로 취급하지 않으므로 `CaptchaChallenge` 자체가 아니라 인코딩된
+이미지 바이트와 `IssuedCaptchaChallenge` 형태의 메타데이터를 저장하세요. Rate limiting
+정책은 여전히 애플리케이션 책임입니다.
 
 ## 옵션
 
