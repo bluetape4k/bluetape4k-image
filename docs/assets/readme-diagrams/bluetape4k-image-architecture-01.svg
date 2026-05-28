@@ -28,27 +28,32 @@
   <rect x="0" y="0" width="350" height="590" rx="18" fill="#ffffff" stroke="#d8e0ea" stroke-width="1.5"/>
   <text class="smallLabel" x="175" y="44" text-anchor="middle">Public API</text>
 </g>
-<g transform="translate(105,236)">
-  <rect class="card" x="0" y="0" width="260" height="104" rx="14" fill="#E8F3FF" stroke="#5B8DEF"/>
-  <text class="smallLabel" x="130" y="48" text-anchor="middle">images (Scrimage /</text>
-<text class="smallLabel" x="130" y="69" text-anchor="middle">Java2D)</text>
+<g transform="translate(105,220)">
+  <rect class="card" x="0" y="0" width="260" height="88" rx="14" fill="#E8F3FF" stroke="#5B8DEF"/>
+  <text class="smallLabel" x="130" y="36" text-anchor="middle">images</text>
+<text class="smallLabel" x="130" y="57" text-anchor="middle">Scrimage / Java2D</text>
 </g>
-<g transform="translate(105,360)">
-  <rect class="card" x="0" y="0" width="260" height="104" rx="14" fill="#FFF0E6" stroke="#E28A5D"/>
-  <text class="smallLabel" x="130" y="38" text-anchor="middle">images-captcha</text>
-<text class="smallLabel" x="130" y="59" text-anchor="middle">Java2D CAPTCHA</text>
-<text class="smallLabel" x="130" y="80" text-anchor="middle">challenges</text>
+<g transform="translate(105,330)">
+  <rect class="card" x="0" y="0" width="260" height="88" rx="14" fill="#FFF0E6" stroke="#E28A5D"/>
+  <text class="smallLabel" x="130" y="27" text-anchor="middle">images-captcha</text>
+<text class="smallLabel" x="130" y="48" text-anchor="middle">Java2D CAPTCHA</text>
+<text class="smallLabel" x="130" y="69" text-anchor="middle">challenges</text>
 </g>
-<g transform="translate(105,484)">
-  <rect class="card" x="0" y="0" width="260" height="104" rx="14" fill="#EAF7EF" stroke="#58A978"/>
-  <text class="smallLabel" x="130" y="48" text-anchor="middle">images-vips-api</text>
-<text class="smallLabel" x="130" y="69" text-anchor="middle">VipsImage interface</text>
+<g transform="translate(105,440)">
+  <rect class="card" x="0" y="0" width="260" height="88" rx="14" fill="#EAF2FF" stroke="#6D9CE8"/>
+  <text class="smallLabel" x="130" y="36" text-anchor="middle">images-ktor</text>
+<text class="smallLabel" x="130" y="57" text-anchor="middle">Ktor route helpers</text>
 </g>
-<g transform="translate(105,608)">
-  <rect class="card" x="0" y="0" width="260" height="104" rx="14" fill="#FFF3D9" stroke="#D6A441"/>
-  <text class="smallLabel" x="130" y="38" text-anchor="middle">images-spring-boot</text>
-<text class="smallLabel" x="130" y="59" text-anchor="middle">Spring Boot 4</text>
-<text class="smallLabel" x="130" y="80" text-anchor="middle">AutoConfig</text>
+<g transform="translate(105,550)">
+  <rect class="card" x="0" y="0" width="260" height="88" rx="14" fill="#EAF7EF" stroke="#58A978"/>
+  <text class="smallLabel" x="130" y="36" text-anchor="middle">images-vips-api</text>
+<text class="smallLabel" x="130" y="57" text-anchor="middle">VipsImage interface</text>
+</g>
+<g transform="translate(105,660)">
+  <rect class="card" x="0" y="0" width="260" height="88" rx="14" fill="#FFF3D9" stroke="#D6A441"/>
+  <text class="smallLabel" x="130" y="27" text-anchor="middle">images-spring-boot</text>
+<text class="smallLabel" x="130" y="48" text-anchor="middle">Spring Boot 4</text>
+<text class="smallLabel" x="130" y="69" text-anchor="middle">AutoConfig</text>
 </g>
 <g transform="translate(480,160)">
   <rect x="0" y="0" width="350" height="364" rx="18" fill="#ffffff" stroke="#d8e0ea" stroke-width="1.5"/>
@@ -73,7 +78,7 @@
 <g transform="translate(945,236)">
   <rect class="card" x="0" y="0" width="260" height="112" rx="14" fill="#FFF3D9" stroke="#D6A441"/>
   <text class="smallLabel" x="130" y="42" text-anchor="middle">images-benchmark</text>
-<text class="smallLabel" x="130" y="63" text-anchor="middle">JMH: resize / encode</text>
-<text class="smallLabel" x="130" y="84" text-anchor="middle">/ thumbnail</text>
+<text class="smallLabel" x="130" y="63" text-anchor="middle">kotlinx-benchmark</text>
+<text class="smallLabel" x="130" y="84" text-anchor="middle">resize / encode</text>
 </g>
 </svg>

@@ -24,6 +24,7 @@ native codec이 중요해질 때 libvips 백엔드로 확장할 수 있는 단�
 - **순수 JVM 처리** — scrimage/Java2D 기반 로드, 리사이즈, 크롭, 필터, 분석, 배치, 인코딩
 - **Coroutine I/O** — 웹 이미지 워크플로우에 맞는 suspend reader/writer/byte encoder
 - **CAPTCHA 생성** — native runtime 없이 Java2D로 bounded option 기반 이미지 챌린지 생성
+- **Ktor 통합** — Ktor 서비스에서 CAPTCHA 이미지 발급과 one-shot 답변 검증을 처리하는 route helper
 - **libvips 추상화** — binding-neutral `VipsImage`, `VipsRuntime` 계약
 - **두 native backend** — Java 21 JVips/JNI와 Java 25 FFM/Panama 선택지
 - **Benchmark lane** — scrimage와 libvips resize/encode 경로를 비교하는 JMH 벤치마크
@@ -45,6 +46,7 @@ native codec이 중요해질 때 libvips 백엔드로 확장할 수 있는 단�
 | `bom`                 | `bluetape4k-image-bom`               | 이미지 아티팩트 버전 정렬용 소비자 BOM                    |
 | `images`              | `bluetape4k-images`                  | Scrimage 기반 처리: 로드, 리사이즈, 필터, 변환, 분석, 배치 처리 |
 | `images-captcha`      | `bluetape4k-images-captcha`          | Java2D CAPTCHA 이미지 챌린지 생성                         |
+| `images-ktor`         | `bluetape4k-images-ktor`             | CAPTCHA 발급과 검증을 위한 Ktor route helper              |
 | `images-spring-boot`  | `bluetape4k-images-spring-boot`      | Spring Boot 4 자동 구성: 스토리지, CDN, 헬스, 메트릭          |
 | `images-vips-api`     | `bluetape4k-images-vips-api`         | 공유 `VipsImage` / `VipsRuntime` 인터페이스 (바인딩 중립)     |
 | `images-vips-java21`  | `bluetape4k-images-vips-java21`      | JVips JNI 백엔드 — Java 21+, 시스템 libvips 필요           |
@@ -61,6 +63,7 @@ native codec이 중요해질 때 libvips 백엔드로 확장할 수 있는 단�
 |-----------------------|--------|---------|-------------------------------------|
 | `images`              | 21+    | —       | —                                   |
 | `images-captcha`      | 21+    | —       | —                                   |
+| `images-ktor`         | 21+    | —       | —                                   |
 | `images-vips-api`     | 21+    | —       | —                                   |
 | `images-vips-java21`  | 21+    | 필요    | —                                   |
 | `images-vips-java25`  | 25+    | 필요    | `--enable-native-access=ALL-UNNAMED` |
@@ -143,6 +146,9 @@ dependencies {
     // Java2D CAPTCHA 생성 (Java 21+)
     implementation("io.github.bluetape4k.image:bluetape4k-images-captcha:<version>")
 
+    // CAPTCHA 발급과 검증을 위한 Ktor route helper (Java 21+)
+    implementation("io.github.bluetape4k.image:bluetape4k-images-ktor:<version>")
+
     // Spring Boot 4 자동 구성 (스토리지, CDN, 헬스, 메트릭)
     implementation("io.github.bluetape4k.image:bluetape4k-images-spring-boot:<version>")
 
@@ -221,6 +227,26 @@ val challenge = generator.generate()
 // challenge.image는 Scrimage writer로 인코딩해 클라이언트에 반환하세요.
 ```
 
+### Ktor CAPTCHA 라우트 (`images-ktor`)
+
+```kotlin
+import io.bluetape4k.images.ktor.bluetape4kCaptchaRoutes
+import io.ktor.server.application.Application
+import io.ktor.server.routing.routing
+
+fun Application.module() {
+    routing {
+        bluetape4kCaptchaRoutes()
+    }
+}
+```
+
+`GET /captcha`는 base64 PNG 챌린지 payload를 반환합니다.
+`POST /captcha/{id}/verify`는 챌린지를 소비하고 `SUCCESS`, `WRONG_ANSWER`,
+`EXPIRED`, `NOT_FOUND` 중 하나를 반환합니다. 애플리케이션은 자체 Ktor JSON/error
+plugin을 설치하면 됩니다. 이 helper는 `bluetape4k-projects`의 공용 Ktor core 모듈이
+선택한 release train에 올라오면 함께 사용 가능한 형태로 맞춰 두었습니다.
+
 ### libvips를 사용한 고성능 처리 (`images-vips-api`)
 
 `images-vips-java21`(JNI)과 `images-vips-java25`(FFM) 모두 `VipsImage` 인터페이스를 구현합니다.
@@ -291,6 +317,7 @@ JVipsImageSupport.jvipsImageOf(Path.of("photo.jpg")).use { image ->
 
 - [`images/README.md`](images/README.md) — Scrimage 기반 처리
 - [`images-captcha/README.md`](images-captcha/README.md) — Java2D CAPTCHA 생성
+- [`images-ktor/README.md`](images-ktor/README.md) — Ktor CAPTCHA route helper
 - [`images-spring-boot/README.md`](images-spring-boot/README.md) — Spring Boot 4 자동 구성
 - [`images-vips-api/README.md`](images-vips-api/README.md) — VipsImage 인터페이스 API
 - [`images-vips-java21/README.md`](images-vips-java21/README.md) — JVips JNI 백엔드
