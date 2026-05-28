@@ -83,6 +83,65 @@ notes.
 `VipsBenchmarkState` auto-detects macOS and sets Homebrew library paths
 (`vipsffm.libpath.*.override`) so libvips is found even with SIP stripping `DYLD_LIBRARY_PATH`.
 
+### Regenerating Reports and Charts
+
+Use the Gradle `kotlinx-benchmark` tasks as the primary execution surface. The
+benchmark target is named `benchmark`, so Gradle exposes these tasks:
+
+| Task | Purpose |
+|------|---------|
+| `benchmarkBenchmark` | Run the full benchmark target and write JMH reports |
+| `benchmarkBenchmarkJar` | Build the JMH jar for focused/debug runs |
+| `benchmarkBenchmarkGenerate` | Generate JMH sources |
+| `benchmarkBenchmarkCompile` | Compile generated JMH sources |
+
+Fresh report workflow:
+
+1. Install native prerequisites for vips rows.
+   - macOS: `brew install vips`
+   - Linux: install `libvips-tools` and `libvips-dev`
+2. Run one backend at a time. Do not run Java 21 and Java 25 benchmark
+   processes in parallel on the same host.
+3. Copy the generated JMH JSON from
+   `images-benchmark/build/reports/benchmarks/<target>/<timestamp>/benchmark.json`
+   to `images-benchmark/docs/raw/` with an environment-specific filename such
+   as `benchmark-results-YYYY-MM-DD-macos-java25.json`.
+4. Update the matching Markdown report under `images-benchmark/docs/` with the
+   measured command, host/JVM/libvips conditions, raw JSON link, and result
+   tables. Every latency table uses `AverageTime ms/op`; lower is better.
+5. Update the benchmark chart SVG sources under `docs/images/readme-charts/`,
+   then render the matching PNG files. README files embed PNGs only; keep SVG
+   sources beside them for review and regeneration.
+
+Chart assets currently referenced by this module:
+
+| Chart | SVG source | README PNG |
+|-------|------------|------------|
+| Resize latency | `../docs/images/readme-charts/images-benchmark-resize-latency-chart-01.svg` | `../docs/images/readme-charts/images-benchmark-resize-latency-chart-01.png` |
+| Encode latency | `../docs/images/readme-charts/images-benchmark-encode-latency-chart-01.svg` | `../docs/images/readme-charts/images-benchmark-encode-latency-chart-01.png` |
+| Filter latency | `../docs/images/readme-charts/images-benchmark-filter-latency-chart-01.svg` | `../docs/images/readme-charts/images-benchmark-filter-latency-chart-01.png` |
+| Vips backend comparison | `../docs/images/readme-charts/images-benchmark-vips-backend-comparison-chart-01.svg` | `../docs/images/readme-charts/images-benchmark-vips-backend-comparison-chart-01.png` |
+
+Render and validate chart updates:
+
+```bash
+# Render touched chart SVG files to PNG
+rsvg-convert docs/images/readme-charts/images-benchmark-resize-latency-chart-01.svg \
+  -o docs/images/readme-charts/images-benchmark-resize-latency-chart-01.png
+
+# Validate SVG syntax and PNG readability
+xmllint --noout docs/images/readme-charts/*.svg
+identify docs/images/readme-charts/*.png
+
+# Validate the documented benchmark task path without running a full benchmark
+./gradlew :bluetape4k-images-benchmark:benchmarkBenchmark \
+  -Pvips.impl=java25 --dry-run --console=plain
+```
+
+When only one environment row was rerun, label the refreshed row explicitly and
+preserve older CI rows as historical data. Do not imply Linux CI or Java 21 JNI
+numbers are current unless those rows were rerun on a compatible host.
+
 ---
 
 ## Benchmark Classes
