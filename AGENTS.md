@@ -12,10 +12,11 @@ libvips through JNI or FFM Panama.
 |---|---|
 | `bluetape4k-images` | Scrimage-based image processing, coroutine writers, filters, analysis, similarity |
 | `bluetape4k-images-captcha` | Java2D CAPTCHA image challenge generation |
+| `bluetape4k-images-ktor` | Ktor route helpers for CAPTCHA issue and verification |
 | `bluetape4k-images-vips-api` | Binding-neutral `VipsImage` and `VipsRuntime` contracts |
 | `bluetape4k-images-vips-java21` | JVips JNI backend; Java 21 toolchain; system libvips required |
 | `bluetape4k-images-vips-java25` | vips-ffm FFM backend; Java 25 toolchain; native access required |
-| `bluetape4k-images-benchmark` | JMH benchmarks for scrimage vs libvips |
+| `bluetape4k-images-benchmark` | kotlinx-benchmark results for scrimage vs libvips |
 | `bom/` | Consumer BOM for aligned image artifacts |
 
 Root README visual assets live under `docs/assets/` and should be shared by

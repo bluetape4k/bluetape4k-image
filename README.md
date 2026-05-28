@@ -28,6 +28,8 @@ memory use, or native codecs matter.
   common web image workflows.
 - **CAPTCHA generation** — Java2D image challenge generation with bounded
   options, suspend-friendly entrypoint, and no native runtime dependency.
+- **Ktor integration** — route helpers for issuing CAPTCHA images and verifying
+  one-shot answers in Ktor services.
 - **libvips abstraction** — binding-neutral `VipsImage` and `VipsRuntime`
   contracts.
 - **Two native backends** — Java 21 JVips/JNI and Java 25 FFM/Panama options.
@@ -51,6 +53,7 @@ memory use, or native codecs matter.
 | `bom`                 | `bluetape4k-image-bom`               | Consumer BOM for aligned image artifacts                 |
 | `images`              | `bluetape4k-images`                  | Scrimage-based processing: load, resize, filter, convert, analyze, batch |
 | `images-captcha`      | `bluetape4k-images-captcha`          | Java2D CAPTCHA image challenge generation                |
+| `images-ktor`         | `bluetape4k-images-ktor`             | Ktor route helpers for CAPTCHA issue and verification    |
 | `images-spring-boot`  | `bluetape4k-images-spring-boot`      | Spring Boot 4 auto-configuration: storage, CDN, health, metrics |
 | `images-vips-api`     | `bluetape4k-images-vips-api`         | Shared `VipsImage` / `VipsRuntime` interfaces (binding-neutral) |
 | `images-vips-java21`  | `bluetape4k-images-vips-java21`      | JVips JNI backend — Java 21+, system libvips             |
@@ -67,6 +70,7 @@ memory use, or native codecs matter.
 |-----------------------|--------|---------|----------------------------------|
 | `images`              | 21+    | —       | —                                |
 | `images-captcha`      | 21+    | —       | —                                |
+| `images-ktor`         | 21+    | —       | —                                |
 | `images-vips-api`     | 21+    | —       | —                                |
 | `images-vips-java21`  | 21+    | Yes     | —                                |
 | `images-vips-java25`  | 25+    | Yes     | `--enable-native-access=ALL-UNNAMED` |
@@ -151,6 +155,9 @@ dependencies {
     // Java2D CAPTCHA generation (Java 21+)
     implementation("io.github.bluetape4k.image:bluetape4k-images-captcha:<version>")
 
+    // Ktor route helpers for CAPTCHA issue and verification (Java 21+)
+    implementation("io.github.bluetape4k.image:bluetape4k-images-ktor:<version>")
+
     // Spring Boot 4 auto-configuration (storage, CDN, health, metrics)
     implementation("io.github.bluetape4k.image:bluetape4k-images-spring-boot:<version>")
 
@@ -229,6 +236,26 @@ val challenge = generator.generate()
 // Encode challenge.image with a Scrimage writer when returning it to a client.
 ```
 
+### Ktor CAPTCHA Routes (`images-ktor`)
+
+```kotlin
+import io.bluetape4k.images.ktor.bluetape4kCaptchaRoutes
+import io.ktor.server.application.Application
+import io.ktor.server.routing.routing
+
+fun Application.module() {
+    routing {
+        bluetape4kCaptchaRoutes()
+    }
+}
+```
+
+`GET /captcha` returns a base64 PNG challenge payload. `POST /captcha/{id}/verify`
+consumes the challenge and returns `SUCCESS`, `WRONG_ANSWER`, `EXPIRED`, or
+`NOT_FOUND`. Install your preferred Ktor JSON and error plugins in the
+application; the helper is compatible with the shared bluetape4k Ktor core
+module from `bluetape4k-projects` once that artifact is on the selected release train.
+
 ### High-Performance Processing with libvips (`images-vips-api`)
 
 Both `images-vips-java21` (JNI) and `images-vips-java25` (FFM) implement `VipsImage`.
@@ -299,6 +326,7 @@ Each module contains its own detailed README with API reference, architecture di
 
 - [`images/README.md`](images/README.md) — Scrimage-based processing
 - [`images-captcha/README.md`](images-captcha/README.md) — Java2D CAPTCHA generation
+- [`images-ktor/README.md`](images-ktor/README.md) — Ktor CAPTCHA route helpers
 - [`images-spring-boot/README.md`](images-spring-boot/README.md) — Spring Boot 4 auto-configuration
 - [`images-vips-api/README.md`](images-vips-api/README.md) — VipsImage interface API
 - [`images-vips-java21/README.md`](images-vips-java21/README.md) — JVips JNI backend

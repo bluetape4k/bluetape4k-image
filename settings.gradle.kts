@@ -62,6 +62,7 @@ rootProject.name = "bluetape4k-image"
 include(
     "bluetape4k-images",
     "bluetape4k-images-captcha",
+    "bluetape4k-images-ktor",
     "bluetape4k-images-spring-boot",
     "bluetape4k-images-vips-api",
     "bluetape4k-images-vips-java21",
@@ -70,6 +71,7 @@ include(
 )
 project(":bluetape4k-images").projectDir = file("images")
 project(":bluetape4k-images-captcha").projectDir = file("images-captcha")
+project(":bluetape4k-images-ktor").projectDir = file("images-ktor")
 project(":bluetape4k-images-spring-boot").projectDir = file("images-spring-boot")
 project(":bluetape4k-images-vips-api").projectDir = file("images-vips-api")
 project(":bluetape4k-images-vips-java21").projectDir = file("images-vips-java21")
