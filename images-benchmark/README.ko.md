@@ -43,6 +43,8 @@
 백엔드와 Java 25 FFM 백엔드를 같은 벤치마크 이름으로 반복 실행해 나란히
 비교할 수 있게 합니다.
 
+![Vips backend comparison benchmark chart](../docs/images/readme-charts/images-benchmark-vips-backend-comparison-chart-01.png)
+
 | 벤치마크 | 작업 |
 |----------|------|
 | `vips_resize` | 4K JPEG를 `1920x1080`, `1280x720`로 리사이즈 |
