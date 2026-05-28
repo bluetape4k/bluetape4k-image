@@ -4,19 +4,19 @@ import com.sksamuel.scrimage.ImmutableImage
 import com.sksamuel.scrimage.nio.ImmutableImageLoader
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
-import io.bluetape4k.logging.warn
 import java.awt.Color
 import java.awt.image.BufferedImage
 
 /**
- * JMH 벤치마크용 공용 이미지 세트 로더.
+ * Shared image set loader for JMH benchmarks.
  *
- * `src/main/resources/bench/` 경로에서 이미지를 로드합니다.
- * 이미지가 없으면 합성 이미지를 생성합니다.
+ * Loads images from `src/main/resources/bench/`.
+ * Natural photo benchmarks use real fixture resources. Synthetic fallback is
+ * kept only for optional resources that are not committed yet.
  *
- * 사용 예:
+ * Example:
  * ```kotlin
- * val image = BenchmarkImageSets.photo4k
+ * val image = BenchmarkImageSets.naturalPhoto("cafe")
  * val doc = BenchmarkImageSets.document
  * val thumb = BenchmarkImageSets.thumbnail
  * ```
@@ -24,20 +24,19 @@ import java.awt.image.BufferedImage
 object BenchmarkImageSets : KLogging() {
 
     /**
-     * 리소스 경로에서 이미지를 로드하거나, 파일이 없으면 합성 이미지를 반환합니다.
+     * Loads an image from a classpath resource or returns a synthetic image when absent.
      *
-     * @param resourcePath 클래스패스 기준 리소스 경로 (예: `/bench/photo-4k.jpg`)
-     * @param width 합성 이미지의 너비 (픽셀)
-     * @param height 합성 이미지의 높이 (픽셀)
-     * @return 로드 또는 합성된 [ImmutableImage]
+     * @param resourcePath classpath resource path, for example `/bench/cafe.jpg`
+     * @param width synthetic fallback width in pixels
+     * @param height synthetic fallback height in pixels
+     * @return loaded or synthetic [ImmutableImage]
      */
     private fun loadOrSynthesize(resourcePath: String, width: Int, height: Int): ImmutableImage {
         val stream = BenchmarkImageSets::class.java.getResourceAsStream(resourcePath)
         return if (stream != null) {
-            log.debug { "벤치마크 이미지 로드: $resourcePath" }
-            ImmutableImageLoader.create().fromStream(stream)
+            log.debug { "Loading benchmark image: $resourcePath" }
+            stream.use { ImmutableImageLoader.create().fromStream(it) }
         } else {
-            log.warn { "벤치마크 이미지를 찾을 수 없습니다: $resourcePath — 합성 이미지를 사용합니다 (${width}×${height})" }
             val buffered = BufferedImage(width, height, BufferedImage.TYPE_INT_RGB)
             val g = buffered.createGraphics()
             g.color = Color(100, 150, 200)
@@ -47,12 +46,22 @@ object BenchmarkImageSets : KLogging() {
         }
     }
 
-    /** 4K 사진 이미지 (3840×2160). 리소스가 없으면 합성 이미지를 반환합니다. */
-    val photo4k: ImmutableImage by lazy { loadOrSynthesize("/bench/photo-4k.jpg", 3840, 2160) }
+    /** Natural photo image used by resize and encode benchmarks. */
+    fun naturalPhoto(name: String): ImmutableImage = when (name) {
+        "cafe"      -> cafe
+        "landscape" -> landscape
+        else        -> error("Unknown natural photo benchmark image: $name")
+    }
 
-    /** 문서 스캔 이미지 (1240×1754, A4). 리소스가 없으면 합성 이미지를 반환합니다. */
+    /** Natural cafe photo (4032×3024). */
+    val cafe: ImmutableImage by lazy { loadOrSynthesize("/bench/cafe.jpg", 4032, 3024) }
+
+    /** Natural landscape photo (4032×3024). */
+    val landscape: ImmutableImage by lazy { loadOrSynthesize("/bench/landscape.jpg", 4032, 3024) }
+
+    /** Document-like image (1240×1754, A4). Returns a synthetic image until a fixture is added. */
     val document: ImmutableImage by lazy { loadOrSynthesize("/bench/document.png", 1240, 1754) }
 
-    /** 썸네일 이미지 (256×256). 리소스가 없으면 합성 이미지를 반환합니다. */
+    /** Thumbnail image (256×256). Returns a synthetic image until a fixture is added. */
     val thumbnail: ImmutableImage by lazy { loadOrSynthesize("/bench/thumbnail.jpg", 256, 256) }
 }

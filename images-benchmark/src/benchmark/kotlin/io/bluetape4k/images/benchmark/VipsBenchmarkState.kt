@@ -8,6 +8,7 @@ import io.bluetape4k.logging.debug
 import io.bluetape4k.logging.info
 import io.bluetape4k.logging.warn
 import org.openjdk.jmh.annotations.Level
+import org.openjdk.jmh.annotations.Param
 import org.openjdk.jmh.annotations.Scope
 import org.openjdk.jmh.annotations.Setup
 import org.openjdk.jmh.annotations.State
@@ -15,12 +16,13 @@ import org.openjdk.jmh.annotations.TearDown
 import java.nio.file.Paths
 
 /**
- * JMH 벤치마크에서 vips 런타임 생명주기와 이미지 바이트를 관리하는 Thread-scope State.
+ * Thread-scoped state that manages the vips runtime lifecycle and image bytes for JMH benchmarks.
  *
- * vips 구현체는 런타임에만 클래스패스에 존재하므로 리플렉션으로 초기화합니다.
- * 초기화 실패 시 [vipsAvailable] = false 로 설정하며, 벤치마크 메서드는 이를 확인해야 합니다.
+ * The vips implementation is present only on the runtime classpath, so this state initializes it
+ * by reflection. When initialization fails, [vipsAvailable] is set to false and benchmark methods
+ * must check it before invoking native operations.
  *
- * 사용 예:
+ * Example:
  * ```kotlin
  * @Benchmark
  * fun myBenchmark(state: VipsBenchmarkState, bh: Blackhole) {
@@ -38,22 +40,25 @@ class VipsBenchmarkState {
         private const val FFM_IMAGE_SUPPORT_CLASS = "io.bluetape4k.images.vips.java25.FfmVipsImageSupportKt"
         private const val JNI_IMAGE_SUPPORT_CLASS = "io.bluetape4k.images.vips.java21.JVipsImageSupportKt"
 
-        // vips-ffm이 사용하는 라이브러리 경로 override 프로퍼티 (VipsLibLookup.java 참고)
+        // Library path override properties consumed by vips-ffm. See VipsLibLookup.java.
         private const val PROP_VIPS_PATH = "vipsffm.libpath.vips.override"
         private const val PROP_GLIB_PATH = "vipsffm.libpath.glib.override"
         private const val PROP_GOBJECT_PATH = "vipsffm.libpath.gobject.override"
 
-        // Homebrew 기본 설치 경로
+        // Default Homebrew install path.
         private const val HOMEBREW_LIB = "/opt/homebrew/lib"
     }
 
-    /** vips 런타임이 성공적으로 초기화되었는지 여부. false 이면 vips 벤치마크를 skip해야 합니다. */
+    /** Whether the vips runtime initialized successfully. vips benchmarks skip when false. */
     var vipsAvailable: Boolean = false
 
-    /** vips 이미지 생성에 사용할 JPEG 바이트 (4K 사진) */
+    @Param("cafe", "landscape")
+    var imageName: String = "cafe"
+
+    /** JPEG bytes used to create vips images from the selected natural photo fixture. */
     var photo4kJpegBytes: ByteArray = ByteArray(0)
 
-    /** vips 이미지 생성에 사용할 JPEG 바이트 (썸네일) */
+    /** JPEG bytes used to create vips images for thumbnail workloads. */
     var thumbnailJpegBytes: ByteArray = ByteArray(0)
 
     private var runtime: VipsRuntime? = null
@@ -61,50 +66,47 @@ class VipsBenchmarkState {
 
     @Setup(Level.Trial)
     fun setup() {
-        // 이미지 바이트 사전 준비
+        // Prepare image bytes before each benchmark iteration.
         val jpegWriter = JpegWriter(80, false)
-        photo4kJpegBytes = BenchmarkImageSets.photo4k.bytes(jpegWriter)
+        photo4kJpegBytes = BenchmarkImageSets.naturalPhoto(imageName).bytes(jpegWriter)
         thumbnailJpegBytes = BenchmarkImageSets.thumbnail.bytes(jpegWriter)
 
-        // macOS에서는 SIP가 DYLD_LIBRARY_PATH를 제거하므로 절대 경로를 시스템 프로퍼티로 설정
+        // macOS SIP strips DYLD_LIBRARY_PATH, so provide absolute Homebrew paths.
         applyMacOsVipsLibraryPaths()
 
-        // vips 런타임 초기화 (리플렉션으로 구현체 탐색)
+        // Initialize the vips runtime by locating the selected implementation through reflection.
         vipsAvailable = tryInitVipsRuntime()
         if (vipsAvailable) {
-            log.debug { "VipsBenchmarkState: vips 런타임 초기화 성공" }
+            log.debug { "VipsBenchmarkState: vips runtime initialized" }
         } else {
-            log.warn { "VipsBenchmarkState: vips 런타임 초기화 실패 — vips 벤치마크를 skip합니다" }
+            log.warn { "VipsBenchmarkState: vips runtime initialization failed; vips benchmarks will skip" }
         }
     }
 
     @TearDown(Level.Trial)
     fun tearDown() {
-        // VipsRuntime.shutdown()은 되돌릴 수 없으므로 벤치마크에서는 호출하지 않습니다.
-        // 프로세스 종료 시 JVM이 정리합니다.
+        // VipsRuntime.shutdown() is irreversible, so benchmark trials leave shutdown to JVM exit.
         runtime = null
         createImageFn = null
     }
 
     /**
-     * vips 이미지를 생성합니다.
+     * Creates a vips image from encoded image bytes.
      *
-     * @param bytes 이미지 바이트 배열
-     * @return [VipsImage] 인스턴스. 호출자가 [AutoCloseable.close]를 호출해야 합니다.
-     * @throws IllegalStateException [vipsAvailable]이 false인 경우
+     * @param bytes encoded image bytes
+     * @return [VipsImage] instance; callers must close it
+     * @throws IllegalStateException when [vipsAvailable] is false
      */
     fun createVipsImage(bytes: ByteArray): VipsImage {
-        val fn = requireNotNull(createImageFn) { "vips를 사용할 수 없습니다 — vipsAvailable을 먼저 확인하세요" }
+        val fn = requireNotNull(createImageFn) { "vips is unavailable; check vipsAvailable before calling" }
         return fn(bytes)
     }
 
     /**
-     * macOS(Apple Silicon/x86)에서 vips-ffm이 libvips를 찾을 수 있도록
-     * Homebrew 설치 경로를 시스템 프로퍼티로 등록합니다.
+     * Registers Homebrew library paths so vips-ffm can locate libvips on macOS.
      *
-     * macOS SIP는 서명된 JVM에서 DYLD_LIBRARY_PATH를 제거하므로,
-     * [SymbolLookup.libraryLookup] 호출 시 절대 경로가 필요합니다.
-     * VipsLibLookup.java의 `vipsffm.libpath.*.override` 프로퍼티로 경로를 주입합니다.
+     * macOS SIP removes DYLD_LIBRARY_PATH from signed JVMs, so SymbolLookup.libraryLookup
+     * needs absolute paths injected through the `vipsffm.libpath.*.override` properties.
      */
     private fun applyMacOsVipsLibraryPaths() {
         val os = System.getProperty("os.name", "").lowercase()
@@ -117,13 +119,13 @@ class VipsBenchmarkState {
         ).forEach { (prop, path) ->
             if (System.getProperty(prop) == null && Paths.get(path).toFile().exists()) {
                 System.setProperty(prop, path)
-                log.info { "macOS vips 경로 설정: $prop=$path" }
+                log.info { "Configured macOS vips path: $prop=$path" }
             }
         }
     }
 
     private fun tryInitVipsRuntime(): Boolean {
-        // java25 (FFM) 먼저 시도 → 실패하면 java21 (JNI) 시도
+        // Prefer Java 25 FFM, then fall back to Java 21 JNI when available.
         return tryInitWithClass(FFM_RUNTIME_CLASS, FFM_IMAGE_SUPPORT_CLASS, "ffmVipsImageOf")
             || tryInitWithClass(JNI_RUNTIME_CLASS, JNI_IMAGE_SUPPORT_CLASS, "vipsImageOf")
     }
@@ -135,7 +137,7 @@ class VipsBenchmarkState {
     ): Boolean {
         return try {
             val runtimeKClass = Class.forName(runtimeClass)
-            // Kotlin object 싱글턴의 INSTANCE 필드 접근
+            // Access the INSTANCE field generated for the Kotlin object singleton.
             val instance = runtimeKClass.getField("INSTANCE").get(null) as VipsRuntime
             instance.init()
             runtime = instance
@@ -145,8 +147,8 @@ class VipsBenchmarkState {
             createImageFn = { bytes -> method.invoke(null, bytes) as VipsImage }
             true
         } catch (t: Throwable) {
-            // UnsatisfiedLinkError, ClassNotFoundException, VipsInitializationException 등
-            log.warn(t) { "vips 런타임 초기화 실패 ($runtimeClass): ${t::class.simpleName}: ${t.message}" }
+            // Includes UnsatisfiedLinkError, ClassNotFoundException, and VipsInitializationException.
+            log.warn(t) { "vips runtime initialization failed ($runtimeClass): ${t::class.simpleName}: ${t.message}" }
             false
         }
     }

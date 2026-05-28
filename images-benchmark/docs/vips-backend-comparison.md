@@ -21,26 +21,27 @@ Lower `ms/op` is better.
 
 ## Current Comparable Results
 
-These values use the Java 25 FFM full run captured for #104 on 2026-05-28 and
-the existing macOS Java 25 scrimage baseline from
-[`benchmark-results-2026-05-25.md`](benchmark-results-2026-05-25.md). Java 21
-JNI is reported as `N/A` on this macOS arm64 host because the bundled JVips
-dylib is x86_64 and cannot produce native measurements here.
+These values use the Java 25 FFM full run captured on 2026-05-28 with committed
+natural photo fixtures, summarized in
+[`benchmark-results-2026-05-28-natural-photos.md`](benchmark-results-2026-05-28-natural-photos.md).
+Java 21 JNI is reported as `N/A` on this macOS arm64 host because the bundled
+JVips dylib is x86_64 and cannot produce native measurements here.
 
 ![Vips backend comparison benchmark chart](../../docs/images/readme-charts/images-benchmark-vips-backend-comparison-chart-01.png)
 
-| Operation | Parameter | scrimage baseline (ms/op) | Java 21 JNI (ms/op) | Java 25 FFM measured (ms/op) |
-|-----------|-----------|---------------------------|---------------------|------------------------------|
-| resize | 1920x1080 | 65.64 ± 0.76 | N/A | 0.200 ± 0.011 |
-| resize | 1280x720 | 44.59 ± 0.50 | N/A | 0.203 ± 0.004 |
-| thumbnail | 1920 | N/A | N/A | 0.230 ± 0.002 |
-| thumbnail | 1280 | N/A | N/A | 0.240 ± 0.016 |
-| crop | 1920x1080 | N/A | N/A | 0.060 ± 0.005 |
-| crop | 1280x720 | N/A | N/A | 0.059 ± 0.006 |
-| encode JPEG | original | 46.55 ± 0.75 | N/A | 15.55 ± 0.63 |
+| Operation | Image | Parameter | scrimage baseline (ms/op) | Java 21 JNI (ms/op) | Java 25 FFM measured (ms/op) |
+|-----------|-------|-----------|---------------------------|---------------------|------------------------------|
+| resize | cafe | 1920x1080 | 114.89 ± 3.21 | N/A | 0.247 ± 0.050 |
+| resize | landscape | 1920x1080 | 115.64 ± 2.24 | N/A | 0.231 ± 0.025 |
+| thumbnail | cafe | 1920 | N/A | N/A | 0.256 ± 0.012 |
+| thumbnail | landscape | 1920 | N/A | N/A | 0.262 ± 0.014 |
+| crop | cafe | 1920x1080 | N/A | N/A | 0.084 ± 0.003 |
+| crop | landscape | 1920x1080 | N/A | N/A | 0.089 ± 0.013 |
+| encode JPEG | cafe | original | 137.95 ± 2.42 | N/A | 41.71 ± 0.50 |
+| encode JPEG | landscape | original | 144.96 ± 5.51 | N/A | 43.88 ± 1.81 |
 
 Raw Java 25 FFM result:
-[`raw/benchmark-vips-backend-2026-05-28-macos-java25.json`](raw/benchmark-vips-backend-2026-05-28-macos-java25.json).
+[`raw/benchmark-results-2026-05-28-macos-java25-natural-photos.json`](raw/benchmark-results-2026-05-28-macos-java25-natural-photos.json).
 
 Historical Linux CI rows from
 [`benchmark-results-2026-04-29.md`](benchmark-results-2026-04-29.md) remain
@@ -96,10 +97,10 @@ full-run values in this shape:
 
 ## Local Validation Notes
 
-On 2026-05-28, `VipsBackendBenchmark` was smoke-tested on macOS arm64:
+On 2026-05-28, `VipsBackendBenchmark` was tested on macOS arm64:
 
-- Java 25 / FFM ran the focused JMH class successfully with synthetic images and
-  Homebrew libvips paths auto-detected.
+- Java 25 / FFM ran the JMH class successfully with `cafe` and `landscape`
+  natural photo fixtures and Homebrew libvips paths auto-detected.
 - Java 21 / JVips compiled and the JMH class launched, but native JNI execution
   skipped on this host because the bundled JVips dylib is x86_64 while the JVM is
   arm64. Use Linux CI or an architecture-compatible Java 21 host for real JNI
