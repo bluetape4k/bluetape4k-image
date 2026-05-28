@@ -79,6 +79,24 @@ raw `kotlinx-benchmark` JSON은
 [`docs/raw/benchmark-pipeline-allocation-2026-05-29-macos-java25.json`](docs/raw/benchmark-pipeline-allocation-2026-05-29-macos-java25.json)을
 참고하세요.
 
+### IO 경계 Baseline (Path, Okio, Suspended File Channel)
+
+![Image IO boundary benchmark chart](../docs/images/readme-charts/images-benchmark-io-boundary-chart-01.png)
+
+| 작업 | 가장 빠른 baseline | Okio 경계 | Suspended file channel |
+|------|-------------------|-----------|------------------------|
+| `homer.jpg` 로드 | `ByteArray` 7.70 ms/op | `Source` 8.23 ms/op | `SuspendedSource` 10.81 ms/op |
+| `landscape.jpg` 로드 | `Path` 152.22 ms/op | N/A | `SuspendedSource` 216.62 ms/op |
+| `homer.jpg` JPEG 쓰기 | `ByteArray` 6.90 ms/op | `Sink` 7.40 ms/op | `SuspendedSink` 14.03 ms/op |
+
+Suspended file-channel overload는 coroutine 파일 IO 경계로는 적합하지만,
+Scrimage 로드/쓰기에서는 내부적으로 blocking stream 브리지를 사용하므로 latency
+개선으로 보기는 어렵습니다. 자세한 조건은
+[`docs/io-boundary-baseline-2026-05-29.md`](docs/io-boundary-baseline-2026-05-29.md),
+raw `kotlinx-benchmark` JSON은
+[`docs/raw/benchmark-io-boundary-2026-05-29-macos-java25.json`](docs/raw/benchmark-io-boundary-2026-05-29-macos-java25.json)을
+참고하세요.
+
 ### Memory Profile (kotlinx-benchmark + GC addendum)
 
 ![Image workload memory profile chart](../docs/images/readme-charts/images-benchmark-memory-profile-chart-01.png)
@@ -110,6 +128,7 @@ raw `kotlinx-benchmark` JSON은
 
 # 2026-05-29 리포트에 사용한 focused evidence
 JAVA_HOME=$(/usr/libexec/java_home -v 25) ./gradlew :bluetape4k-images-benchmark:benchmarkPipelineAllocationBenchmark --console=plain
+JAVA_HOME=$(/usr/libexec/java_home -v 25) ./gradlew :bluetape4k-images-benchmark:benchmarkIoBoundaryBenchmark --console=plain
 JAVA_HOME=$(/usr/libexec/java_home -v 25) ./gradlew :bluetape4k-images-benchmark:benchmarkMemoryProfileBenchmark --console=plain
 ```
 
@@ -244,6 +263,17 @@ fun vips_encodeJpeg(state: VipsBenchmarkState, bh: Blackhole) {
 |----------|------|
 | `scrimage_photoPreviewJpeg` | 4K photo resize -> grayscale -> JPEG encode |
 | `scrimage_documentPreviewPng` | document resize -> blur -> sepia -> PNG encode |
+
+### `ImageIoBoundaryBenchmark`
+
+기본 로드/쓰기 진입점과 Okio, `bluetape4k-okio` suspended file-channel 경계를
+비교합니다.
+
+| 벤치마크 그룹 | 경계 |
+|----------------|------|
+| `load_homer_*` | `ByteArray`, `InputStream`, `Path`, Okio `Source`, `SuspendedSource` |
+| `load_landscape_*` | `Path`, `SuspendedSource` |
+| `write_homer_*` | `ByteArray`, `OutputStream`, `Path`, Okio `Sink`, `SuspendedSink` |
 
 ### `VipsBenchmarkState`
 

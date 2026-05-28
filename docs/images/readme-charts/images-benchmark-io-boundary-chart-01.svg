@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="760" viewBox="0 0 1280 760" role="img" aria-label="Image IO Boundary Benchmark">
+<defs>
+  <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%">
+    <feDropShadow dx="0" dy="8" stdDeviation="9" flood-color="#1f2937" flood-opacity="0.10"/>
+  </filter>
+  <style>
+    .canvas{fill:#f7f9fc}.frame{fill:#fff;stroke:#d8e0ea;stroke-width:1.5}
+    .title{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:38px;font-weight:400;fill:#102033}
+    .subtitle{font-family:"Comic Mono","Comic Sans MS","Comic Sans",Arial,sans-serif;font-size:16px;font-weight:400;fill:#536273}
+    .panel{filter:url(#shadow)}.panel-title{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:25px;font-weight:400;fill:#102033}
+    .label{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:19px;font-weight:400;fill:#102033}
+    .axis{font-family:"Comic Mono","Comic Sans MS","Comic Sans",Arial,sans-serif;font-size:12px;font-weight:400;fill:#536273}
+    .value{font-family:"Comic Mono","Comic Sans MS","Comic Sans",Arial,sans-serif;font-size:13px;font-weight:700;fill:#102033}
+    .note{font-family:"Comic Mono","Comic Sans MS","Comic Sans",Arial,sans-serif;font-size:13px;font-weight:400;fill:#536273}
+  </style>
+</defs>
+<rect class="canvas" width="1280" height="760"/>
+<rect class="frame" x="32" y="28" width="1216" height="720" rx="28"/>
+<text class="title" x="66" y="82">Image IO Boundary Benchmark</text>
+<text class="subtitle" x="70" y="116">kotlinx-benchmark AverageTime on macOS arm64, GraalVM Java 25; lower ms/op is better</text>
+
+<rect x="62" y="146" width="1156" height="180" rx="18" fill="#FFFFFF" stroke="#E2E8F0" class="panel"/>
+<text class="panel-title" x="92" y="188">Load homer.jpg (small image)</text>
+<line x1="420" y1="206" x2="420" y2="286" stroke="#D8E0EA" stroke-width="1"/>
+<line x1="600" y1="206" x2="600" y2="286" stroke="#D8E0EA" stroke-width="1"/>
+<line x1="780" y1="206" x2="780" y2="286" stroke="#D8E0EA" stroke-width="1"/>
+<line x1="960" y1="206" x2="960" y2="286" stroke="#D8E0EA" stroke-width="1"/>
+<text class="axis" x="420" y="310" text-anchor="middle">0</text>
+<text class="axis" x="600" y="310" text-anchor="middle">4</text>
+<text class="axis" x="780" y="310" text-anchor="middle">8</text>
+<text class="axis" x="960" y="310" text-anchor="middle">12 ms/op</text>
+
+<text class="label" x="92" y="226">ByteArray baseline</text>
+<rect x="420" y="211" width="347" height="18" rx="6" fill="#8FC5F3"/>
+<text class="value" x="782" y="226">7.70</text>
+<text class="label" x="92" y="250">Path baseline</text>
+<rect x="420" y="235" width="350" height="18" rx="6" fill="#7CC7A2"/>
+<text class="value" x="785" y="250">7.78</text>
+<text class="label" x="92" y="274">Okio Source</text>
+<rect x="420" y="259" width="370" height="18" rx="6" fill="#F2C879"/>
+<text class="value" x="805" y="274">8.23</text>
+<text class="label" x="92" y="298">Suspended File Source</text>
+<rect x="420" y="283" width="486" height="18" rx="6" fill="#D8B4F8"/>
+<text class="value" x="921" y="298">10.81</text>
+
+<rect x="62" y="354" width="1156" height="132" rx="18" fill="#FFFFFF" stroke="#E2E8F0" class="panel"/>
+<text class="panel-title" x="92" y="396">Load landscape.jpg (natural 4K photo)</text>
+<line x1="420" y1="414" x2="420" y2="462" stroke="#D8E0EA" stroke-width="1"/>
+<line x1="600" y1="414" x2="600" y2="462" stroke="#D8E0EA" stroke-width="1"/>
+<line x1="780" y1="414" x2="780" y2="462" stroke="#D8E0EA" stroke-width="1"/>
+<line x1="960" y1="414" x2="960" y2="462" stroke="#D8E0EA" stroke-width="1"/>
+<text class="axis" x="420" y="474" text-anchor="middle">0</text>
+<text class="axis" x="600" y="474" text-anchor="middle">80</text>
+<text class="axis" x="780" y="474" text-anchor="middle">160</text>
+<text class="axis" x="960" y="474" text-anchor="middle">240 ms/op</text>
+
+<text class="label" x="92" y="434">Path baseline</text>
+<rect x="420" y="419" width="342" height="20" rx="6" fill="#7CC7A2"/>
+<text class="value" x="778" y="434">152.22</text>
+<text class="label" x="92" y="460">Suspended File Source</text>
+<rect x="420" y="445" width="487" height="20" rx="6" fill="#D8B4F8"/>
+<text class="value" x="923" y="460">216.62</text>
+
+<rect x="62" y="514" width="1156" height="184" rx="18" fill="#FFFFFF" stroke="#E2E8F0" class="panel"/>
+<text class="panel-title" x="92" y="556">Write homer.jpg as JPEG</text>
+<line x1="420" y1="574" x2="420" y2="642" stroke="#D8E0EA" stroke-width="1"/>
+<line x1="600" y1="574" x2="600" y2="642" stroke="#D8E0EA" stroke-width="1"/>
+<line x1="780" y1="574" x2="780" y2="642" stroke="#D8E0EA" stroke-width="1"/>
+<line x1="960" y1="574" x2="960" y2="642" stroke="#D8E0EA" stroke-width="1"/>
+<text class="axis" x="420" y="690" text-anchor="middle">0</text>
+<text class="axis" x="600" y="690" text-anchor="middle">5</text>
+<text class="axis" x="780" y="690" text-anchor="middle">10</text>
+<text class="axis" x="960" y="690" text-anchor="middle">15 ms/op</text>
+
+<text class="label" x="92" y="594">ByteArray baseline</text>
+<rect x="420" y="579" width="248" height="18" rx="6" fill="#8FC5F3"/>
+<text class="value" x="684" y="594">6.90</text>
+<text class="label" x="92" y="618">Path baseline</text>
+<rect x="420" y="603" width="265" height="18" rx="6" fill="#7CC7A2"/>
+<text class="value" x="701" y="618">7.35</text>
+<text class="label" x="92" y="642">Okio Sink</text>
+<rect x="420" y="627" width="266" height="18" rx="6" fill="#F2C879"/>
+<text class="value" x="702" y="642">7.40</text>
+<text class="label" x="92" y="666">Suspended File Sink</text>
+<rect x="420" y="651" width="505" height="18" rx="6" fill="#D8B4F8"/>
+<text class="value" x="941" y="666">14.03</text>
+
+<text class="note" x="86" y="718">Source: kotlinx-benchmark ioBoundary report, 2026-05-29 local run.</text>
+<text class="note" x="86" y="738">Suspended file channels are useful coroutine IO boundaries, but the Scrimage bridge remains blocking here.</text>
+</svg>

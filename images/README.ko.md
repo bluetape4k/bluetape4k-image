@@ -104,6 +104,9 @@ AVIF·HEIC는 incubating 인터페이스로 제공되며, libvips 지원은 `ima
 import io.bluetape4k.images.*
 import io.bluetape4k.okio.asSource
 import io.bluetape4k.okio.buffered
+import io.bluetape4k.okio.coroutines.asSuspendedSource
+import java.nio.channels.AsynchronousFileChannel
+import java.nio.file.StandardOpenOption.READ
 
 // ByteArray에서 로드
 val image = immutableImageOf(byteArray)
@@ -125,6 +128,10 @@ val image = suspendLoadImage(Paths.get("image.jpg"))
 val image = File("image.jpg").inputStream().asSource().buffered().use { source ->
     immutableImageOf(source)
 }
+
+// bluetape4k-okio suspended file source에서 로드
+val channel = AsynchronousFileChannel.open(Paths.get("image.jpg"), READ)
+val image = suspendLoadImage(channel.asSuspendedSource())
 ```
 
 ### BufferedImage 로드/저장
@@ -153,7 +160,12 @@ val bytes = image.toByteArray("png")
 ```kotlin
 import io.bluetape4k.images.*
 import io.bluetape4k.images.coroutines.*
+import io.bluetape4k.okio.coroutines.asSuspendedSink
 import okio.Buffer
+import java.nio.channels.AsynchronousFileChannel
+import java.nio.file.StandardOpenOption.CREATE
+import java.nio.file.StandardOpenOption.TRUNCATE_EXISTING
+import java.nio.file.StandardOpenOption.WRITE
 
 val image = immutableImageOf(File("input.png"))
 
@@ -169,6 +181,10 @@ image.suspendWrite(SuspendWebpWriter.Default, Paths.get("output.webp"))
 // 중간 ByteArray 생성 없이 Okio sink로 저장
 val buffer = Buffer()
 image.suspendWrite(SuspendJpegWriter.Default, buffer)
+
+// bluetape4k-okio suspended file sink로 저장
+val channel = AsynchronousFileChannel.open(Paths.get("output.jpg"), WRITE, CREATE, TRUNCATE_EXISTING)
+image.suspendWrite(SuspendJpegWriter.Default, channel.asSuspendedSink())
 
 // ByteArray로 변환
 val jpegBytes = image.suspendBytes(SuspendJpegWriter.Default)

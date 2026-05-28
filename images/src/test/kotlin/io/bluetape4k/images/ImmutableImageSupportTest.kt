@@ -2,22 +2,32 @@ package io.bluetape4k.images
 
 import io.bluetape4k.images.coroutines.SuspendJpegWriter
 import io.bluetape4k.images.coroutines.SuspendPngWriter
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.junit5.tempfolder.TempFolder
 import io.bluetape4k.junit5.tempfolder.TempFolderTest
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.okio.asSource
 import io.bluetape4k.okio.buffered
+import io.bluetape4k.okio.coroutines.asSuspendedSink
+import io.bluetape4k.okio.coroutines.asSuspendedSource
+import io.bluetape4k.okio.coroutines.buffered as bufferedSuspended
 import kotlinx.coroutines.test.runTest
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeGreaterThan
 import io.bluetape4k.assertions.shouldNotBeEqualTo
 import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.assertions.shouldBeTrue
 import okio.Buffer
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.awt.Color
+import java.nio.channels.AsynchronousFileChannel
 import java.nio.file.Path
+import java.nio.file.StandardOpenOption.CREATE
+import java.nio.file.StandardOpenOption.READ
+import java.nio.file.StandardOpenOption.TRUNCATE_EXISTING
+import java.nio.file.StandardOpenOption.WRITE
 import kotlin.test.assertFailsWith
 
 @TempFolderTest
@@ -117,6 +127,31 @@ class ImmutableImageSupportTest: AbstractImageTest() {
     }
 
     @Test
+    fun `suspend load image from suspended file source`() = runSuspendIO {
+        val sourcePath = Path.of("$BASE_PATH/homer.jpg")
+        val channel = AsynchronousFileChannel.open(sourcePath, READ)
+
+        val image = suspendLoadImage(channel.asSuspendedSource())
+
+        image.width shouldBeGreaterThan 0
+        image.height shouldBeGreaterThan 0
+    }
+
+    @Test
+    fun `suspend load image from buffered suspended source keeps caller ownership`() = runSuspendIO {
+        val sourcePath = Path.of("$BASE_PATH/homer.jpg")
+        val channel = AsynchronousFileChannel.open(sourcePath, READ)
+        val source = channel.asSuspendedSource().bufferedSuspended()
+
+        val image = suspendLoadImage(source)
+
+        image.width shouldBeGreaterThan 0
+        image.height shouldBeGreaterThan 0
+        channel.isOpen.shouldBeTrue()
+        source.close()
+    }
+
+    @Test
     fun `suspendWrite writes to Okio BufferedSink`() = runTest {
         val image = immutableImageOf(Path.of("$BASE_PATH/homer.jpg"))
         val buffer = Buffer()
@@ -124,6 +159,17 @@ class ImmutableImageSupportTest: AbstractImageTest() {
         image.suspendWrite(SuspendJpegWriter.Default, buffer)
 
         buffer.size shouldBeGreaterThan 0L
+    }
+
+    @Test
+    fun `suspendWrite writes to suspended file sink`(tempFolder: TempFolder) = runSuspendIO {
+        val image = immutableImageOf(Path.of("$BASE_PATH/homer.jpg"))
+        val output = tempFolder.createFile("suspended-output.jpg").toPath()
+        val channel = AsynchronousFileChannel.open(output, WRITE, CREATE, TRUNCATE_EXISTING)
+
+        image.suspendWrite(SuspendJpegWriter.Default, channel.asSuspendedSink())
+
+        output.toFile().length() shouldBeGreaterThan 0L
     }
 
     private fun whiteTestImage(w: Int, h: Int): ByteArray {

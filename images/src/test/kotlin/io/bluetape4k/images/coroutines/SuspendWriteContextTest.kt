@@ -9,10 +9,16 @@ import io.bluetape4k.images.immutableImageOf
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.junit5.tempfolder.TempFolder
 import io.bluetape4k.junit5.tempfolder.TempFolderTest
+import io.bluetape4k.okio.coroutines.asSuspendedSink
+import io.bluetape4k.okio.coroutines.buffered as bufferedSuspended
 import okio.Buffer
 import org.junit.jupiter.api.Test
 import java.io.ByteArrayOutputStream
+import java.nio.channels.AsynchronousFileChannel
 import java.nio.file.Path
+import java.nio.file.StandardOpenOption.CREATE
+import java.nio.file.StandardOpenOption.TRUNCATE_EXISTING
+import java.nio.file.StandardOpenOption.WRITE
 
 @TempFolderTest
 class SuspendWriteContextTest : AbstractImageTest() {
@@ -85,6 +91,33 @@ class SuspendWriteContextTest : AbstractImageTest() {
         ctx.write(buffer)
 
         buffer.size shouldBeGreaterThan 0L
+    }
+
+    @Test
+    fun `write to suspended file sink writes data`(tempFolder: TempFolder) = runSuspendIO {
+        val image = immutableImageOf(Path.of("$BASE_PATH/homer.jpg"))
+        val ctx = image.forSuspendWriter(writer)
+        val output = tempFolder.createFile("suspended-out.jpg").toPath()
+        val channel = AsynchronousFileChannel.open(output, WRITE, CREATE, TRUNCATE_EXISTING)
+
+        ctx.write(channel.asSuspendedSink())
+
+        output.toFile().length() shouldBeGreaterThan 0L
+    }
+
+    @Test
+    fun `write to buffered suspended file sink keeps caller ownership`(tempFolder: TempFolder) = runSuspendIO {
+        val image = immutableImageOf(Path.of("$BASE_PATH/homer.jpg"))
+        val ctx = image.forSuspendWriter(writer)
+        val output = tempFolder.createFile("buffered-suspended-out.jpg").toPath()
+        val channel = AsynchronousFileChannel.open(output, WRITE, CREATE, TRUNCATE_EXISTING)
+        val sink = channel.asSuspendedSink().bufferedSuspended()
+
+        ctx.write(sink)
+
+        output.toFile().length() shouldBeGreaterThan 0L
+        channel.isOpen.shouldBeTrue()
+        sink.close()
     }
 
     @Test

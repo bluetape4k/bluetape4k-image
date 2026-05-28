@@ -4,6 +4,10 @@ import com.sksamuel.scrimage.AwtImage
 import com.sksamuel.scrimage.metadata.ImageMetadata
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.okio.buffered
+import io.bluetape4k.okio.coroutines.BufferedSuspendedSink
+import io.bluetape4k.okio.coroutines.SuspendedSink
+import io.bluetape4k.okio.coroutines.asBlocking
+import io.bluetape4k.okio.coroutines.buffered as bufferedSuspended
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okio.BufferedSink
@@ -183,6 +187,39 @@ class SuspendWriteContext(
     suspend fun write(sink: Sink) {
         sink.buffered().use { bufferedSink ->
             write(bufferedSink)
+        }
+    }
+
+    /**
+     * Writes the encoded image to a caller-owned [BufferedSuspendedSink].
+     *
+     * Scrimage encoders are blocking, so this overload bridges the suspended
+     * sink to a blocking Okio sink while preserving the caller-owned sink
+     * lifecycle.
+     *
+     * @param sink output sink. This function flushes but does not close it.
+     */
+    suspend fun write(sink: BufferedSuspendedSink) {
+        val blockingSink = sink.asBlocking().buffered()
+        writer.suspendWrite(image, metadata, blockingSink.outputStream())
+        blockingSink.flush()
+    }
+
+    /**
+     * Writes the encoded image to a [SuspendedSink].
+     *
+     * This overload buffers and closes [sink]. Use [write] with
+     * [BufferedSuspendedSink] when the caller must keep ownership of the sink
+     * lifecycle.
+     *
+     * @param sink output sink
+     */
+    suspend fun write(sink: SuspendedSink) {
+        val bufferedSink = sink.bufferedSuspended()
+        try {
+            write(bufferedSink)
+        } finally {
+            bufferedSink.close()
         }
     }
 }
