@@ -21,24 +21,32 @@ Lower `ms/op` is better.
 
 ## Current Comparable Results
 
-These values are the existing CI Linux full-run rows from
-[`benchmark-results-2026-04-29.md`](benchmark-results-2026-04-29.md). They are
-the current source of truth for backend-to-backend rows that already existed
-before #104.
+These values use the Java 25 FFM full run captured for #104 on 2026-05-28 and
+the existing macOS Java 25 scrimage baseline from
+[`benchmark-results-2026-05-25.md`](benchmark-results-2026-05-25.md). Java 21
+JNI is reported as `N/A` on this macOS arm64 host because the bundled JVips
+dylib is x86_64 and cannot produce native measurements here.
 
 ![Vips backend comparison benchmark chart](../../docs/images/readme-charts/images-benchmark-vips-backend-comparison-chart-01.png)
 
-| Operation | Parameter | Java 21 JNI (ms/op) | Java 25 FFM (ms/op) | Faster backend |
-|-----------|-----------|---------------------|---------------------|----------------|
-| resize | 1920x1080 | 0.495 ± 0.062 | 0.591 ± 0.046 | Java 21 JNI |
-| resize | 1280x720 | 0.522 ± 0.024 | 0.626 ± 0.083 | Java 21 JNI |
-| encode JPEG | original | 37.22 ± 1.50 | 37.20 ± 0.99 | Tie |
-| encode PNG | original | 255.90 ± 10.19 | 137.95 ± 2.93 | Java 25 FFM |
+| Operation | Parameter | scrimage baseline (ms/op) | Java 21 JNI (ms/op) | Java 25 FFM measured (ms/op) |
+|-----------|-----------|---------------------------|---------------------|------------------------------|
+| resize | 1920x1080 | 65.64 ± 0.76 | N/A | 0.200 ± 0.011 |
+| resize | 1280x720 | 44.59 ± 0.50 | N/A | 0.203 ± 0.004 |
+| thumbnail | 1920 | N/A | N/A | 0.230 ± 0.002 |
+| thumbnail | 1280 | N/A | N/A | 0.240 ± 0.016 |
+| crop | 1920x1080 | N/A | N/A | 0.060 ± 0.005 |
+| crop | 1280x720 | N/A | N/A | 0.059 ± 0.006 |
+| encode JPEG | original | 46.55 ± 0.75 | N/A | 15.55 ± 0.63 |
 
-The new #104 `thumbnail` and `crop` rows need a fresh full backend run on a
-Linux or architecture-compatible Java 21/JNI host. This macOS arm64 host can
-compile Java 21/JNI benchmarks, but cannot produce JNI native measurements
-because the bundled JVips dylib is x86_64.
+Raw Java 25 FFM result:
+[`raw/benchmark-vips-backend-2026-05-28-macos-java25.json`](raw/benchmark-vips-backend-2026-05-28-macos-java25.json).
+
+Historical Linux CI rows from
+[`benchmark-results-2026-04-29.md`](benchmark-results-2026-04-29.md) remain
+useful for release archaeology, but the #104 chart intentionally marks Java 21
+JNI as `N/A` for the current measured host instead of mixing old Linux numbers
+with current macOS values.
 
 ## Full Run
 
