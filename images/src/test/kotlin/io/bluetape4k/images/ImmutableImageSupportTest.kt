@@ -5,11 +5,14 @@ import io.bluetape4k.images.coroutines.SuspendPngWriter
 import io.bluetape4k.junit5.tempfolder.TempFolder
 import io.bluetape4k.junit5.tempfolder.TempFolderTest
 import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.okio.asSource
+import io.bluetape4k.okio.buffered
 import kotlinx.coroutines.test.runTest
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeGreaterThan
 import io.bluetape4k.assertions.shouldNotBeEqualTo
 import io.bluetape4k.assertions.shouldNotBeNull
+import okio.Buffer
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
@@ -91,6 +94,36 @@ class ImmutableImageSupportTest: AbstractImageTest() {
         // 예외 발생 후에도 원본 이미지가 정상 사용 가능 (Graphics2D dispose됨)
         original.width shouldBeGreaterThan 0
         original.awt().getRGB(0, 0).let { /* 픽셀 읽기 성공 */ }
+    }
+
+    @Test
+    fun `load image from Okio BufferedSource`() {
+        Path.of("$BASE_PATH/homer.jpg").toFile().inputStream().asSource().buffered().use { source ->
+            val image = immutableImageOf(source)
+
+            image.width shouldBeGreaterThan 0
+            image.height shouldBeGreaterThan 0
+        }
+    }
+
+    @Test
+    fun `suspend load image from Okio Source`() = runTest {
+        val image = Path.of("$BASE_PATH/homer.jpg").toFile().inputStream().asSource().use { source ->
+            suspendLoadImage(source)
+        }
+
+        image.width shouldBeGreaterThan 0
+        image.height shouldBeGreaterThan 0
+    }
+
+    @Test
+    fun `suspendWrite writes to Okio BufferedSink`() = runTest {
+        val image = immutableImageOf(Path.of("$BASE_PATH/homer.jpg"))
+        val buffer = Buffer()
+
+        image.suspendWrite(SuspendJpegWriter.Default, buffer)
+
+        buffer.size shouldBeGreaterThan 0L
     }
 
     private fun whiteTestImage(w: Int, h: Int): ByteArray {

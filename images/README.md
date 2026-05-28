@@ -95,6 +95,8 @@ A library for loading, converting, resizing, splitting, and applying filters to 
 
 ```kotlin
 import io.bluetape4k.images.*
+import io.bluetape4k.okio.asSource
+import io.bluetape4k.okio.buffered
 
 // Load from ByteArray
 val image = immutableImageOf(byteArray)
@@ -111,6 +113,11 @@ val image = immutableImageOf(Paths.get("image.jpg"))
 // Async load in a coroutine context
 val image = suspendImmutableImageOf(File("image.jpg"))
 val image = suspendLoadImage(Paths.get("image.jpg"))
+
+// Load from an Okio source
+val image = File("image.jpg").inputStream().asSource().buffered().use { source ->
+    immutableImageOf(source)
+}
 ```
 
 ### Loading and Saving BufferedImage
@@ -139,6 +146,7 @@ val bytes = image.toByteArray("png")
 ```kotlin
 import io.bluetape4k.images.*
 import io.bluetape4k.images.coroutines.*
+import okio.Buffer
 
 val image = immutableImageOf(File("input.png"))
 
@@ -150,6 +158,10 @@ image.suspendWrite(SuspendPngWriter.MaxCompression, Paths.get("output.png"))
 
 // Save as WebP
 image.suspendWrite(SuspendWebpWriter.Default, Paths.get("output.webp"))
+
+// Save to an Okio sink without creating an intermediate ByteArray
+val buffer = Buffer()
+image.suspendWrite(SuspendJpegWriter.Default, buffer)
 
 // Convert to ByteArray
 val jpegBytes = image.suspendBytes(SuspendJpegWriter.Default)

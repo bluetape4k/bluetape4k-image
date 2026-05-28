@@ -3,8 +3,13 @@ package io.bluetape4k.images
 import com.sksamuel.scrimage.ImmutableImage
 import io.bluetape4k.images.coroutines.SuspendImageWriter
 import io.bluetape4k.images.coroutines.SuspendWriteContext
+import io.bluetape4k.okio.buffered
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import okio.BufferedSink
+import okio.BufferedSource
+import okio.Sink
+import okio.Source
 import java.awt.Graphics2D
 import java.io.ByteArrayOutputStream
 import java.io.File
@@ -50,6 +55,41 @@ fun immutableImageOf(bytes: ByteArray): ImmutableImage =
  */
 fun immutableImageOf(inputStream: InputStream): ImmutableImage =
     ImmutableImage.loader().fromStream(inputStream.buffered())
+
+/**
+ * Loads an [ImmutableImage] from a caller-owned [BufferedSource].
+ *
+ * ## Contract
+ * - The source is adapted to Scrimage through [BufferedSource.inputStream].
+ * - The caller owns source closing.
+ *
+ * ```kotlin
+ * File("image.jpg").inputStream().asSource().buffered().use { source ->
+ *     val image = immutableImageOf(source)
+ * }
+ * ```
+ *
+ * @param source buffered image source
+ * @return decoded [ImmutableImage]
+ */
+fun immutableImageOf(source: BufferedSource): ImmutableImage =
+    ImmutableImage.loader().fromStream(source.inputStream())
+
+/**
+ * Loads an [ImmutableImage] from an Okio [Source].
+ *
+ * ## Contract
+ * - This function buffers and closes [source].
+ * - Use [immutableImageOf] with [BufferedSource] when the caller must keep
+ *   ownership of the source lifecycle.
+ *
+ * @param source image source
+ * @return decoded [ImmutableImage]
+ */
+fun immutableImageOf(source: Source): ImmutableImage =
+    source.buffered().use { bufferedSource ->
+        immutableImageOf(bufferedSource)
+    }
 
 /**
  * [File]을 읽어 [ImmutableImage]로 변환합니다.
@@ -121,6 +161,30 @@ suspend fun suspendImmutableImageOf(path: Path): ImmutableImage =
         immutableImageOf(path)
     }
 
+/**
+ * Loads an [ImmutableImage] from a caller-owned [BufferedSource] on
+ * [Dispatchers.IO].
+ *
+ * @param source buffered image source
+ * @return decoded [ImmutableImage]
+ */
+suspend fun suspendImmutableImageOf(source: BufferedSource): ImmutableImage =
+    withContext(Dispatchers.IO) {
+        immutableImageOf(source)
+    }
+
+/**
+ * Loads an [ImmutableImage] from an Okio [Source] on [Dispatchers.IO].
+ *
+ * This overload buffers and closes [source].
+ *
+ * @param source image source
+ * @return decoded [ImmutableImage]
+ */
+suspend fun suspendImmutableImageOf(source: Source): ImmutableImage =
+    withContext(Dispatchers.IO) {
+        immutableImageOf(source)
+    }
 
 /**
  * Coroutines 환경에서 [File]을 읽어 [ImmutableImage]로 변환합니다.
@@ -143,7 +207,7 @@ suspend fun suspendLoadImage(file: File): ImmutableImage =
  * Coroutines 환경에서 [Path]의 파일을 읽어 [ImmutableImage]로 변환합니다.
  *
  * ## 동작/계약
- * - `path.readAllBytesSuspending()` 결과를 디코딩합니다.
+ * - [Path]를 Scrimage loader에 직접 전달해 압축 파일 전체를 [ByteArray]로 복사하지 않습니다.
  *
  * ```kotlin
  * val image = suspendLoadImage(path)
@@ -157,6 +221,27 @@ suspend fun suspendLoadImage(path: Path): ImmutableImage =
     withContext(Dispatchers.IO) {
         immutableImageOf(path)
     }
+
+/**
+ * Loads an [ImmutableImage] from a caller-owned [BufferedSource] on
+ * [Dispatchers.IO].
+ *
+ * @param source buffered image source
+ * @return decoded [ImmutableImage]
+ */
+suspend fun suspendLoadImage(source: BufferedSource): ImmutableImage =
+    suspendImmutableImageOf(source)
+
+/**
+ * Loads an [ImmutableImage] from an Okio [Source] on [Dispatchers.IO].
+ *
+ * This overload buffers and closes [source].
+ *
+ * @param source image source
+ * @return decoded [ImmutableImage]
+ */
+suspend fun suspendLoadImage(source: Source): ImmutableImage =
+    suspendImmutableImageOf(source)
 
 /**
  * Coroutines 환경에서 [ImmutableImage] 정보를 [writer]를 통해 [ByteArray]로 변환합니다.
@@ -202,6 +287,36 @@ suspend fun ImmutableImage.suspendWrite(writer: SuspendImageWriter, destPath: Pa
         }
     }
     return Files.size(destPath)
+}
+
+/**
+ * Writes this [ImmutableImage] to a caller-owned [BufferedSink].
+ *
+ * ## Contract
+ * - The sink is adapted to [java.io.OutputStream] for the underlying writer.
+ * - The sink is flushed, but not closed.
+ *
+ * @param writer image writer
+ * @param sink buffered output sink
+ */
+suspend fun ImmutableImage.suspendWrite(writer: SuspendImageWriter, sink: BufferedSink) {
+    writer.suspendWrite(this, this.metadata, sink.outputStream())
+    sink.flush()
+}
+
+/**
+ * Writes this [ImmutableImage] to an Okio [Sink].
+ *
+ * This overload buffers and closes [sink]. Use the [BufferedSink] overload when
+ * the caller must keep ownership of the sink lifecycle.
+ *
+ * @param writer image writer
+ * @param sink output sink
+ */
+suspend fun ImmutableImage.suspendWrite(writer: SuspendImageWriter, sink: Sink) {
+    sink.buffered().use { bufferedSink ->
+        suspendWrite(writer, bufferedSink)
+    }
 }
 
 /**

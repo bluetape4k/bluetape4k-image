@@ -3,8 +3,11 @@ package io.bluetape4k.images.coroutines
 import com.sksamuel.scrimage.AwtImage
 import com.sksamuel.scrimage.metadata.ImageMetadata
 import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.okio.buffered
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import okio.BufferedSink
+import okio.Sink
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.File
@@ -148,5 +151,38 @@ class SuspendWriteContext(
      */
     suspend fun write(out: OutputStream) {
         writer.suspendWrite(image, metadata, out)
+    }
+
+    /**
+     * Writes the encoded image to a caller-owned [BufferedSink].
+     *
+     * ```
+     * val writer = SuspendPngWriter.NoCompression
+     * val image = immutableImageOf(File("photo.png"))
+     * val context = SuspendWriteContext(writer, image, image.metadata)
+     * val buffer = Buffer()
+     * context.write(buffer)
+     * // buffer.size > 0
+     * ```
+     *
+     * @param sink output sink. This function flushes but does not close it.
+     */
+    suspend fun write(sink: BufferedSink) {
+        writer.suspendWrite(image, metadata, sink.outputStream())
+        sink.flush()
+    }
+
+    /**
+     * Writes the encoded image to an Okio [Sink].
+     *
+     * This overload buffers and closes [sink]. Use [write] with [BufferedSink]
+     * when the caller must keep ownership of the sink lifecycle.
+     *
+     * @param sink output sink
+     */
+    suspend fun write(sink: Sink) {
+        sink.buffered().use { bufferedSink ->
+            write(bufferedSink)
+        }
     }
 }

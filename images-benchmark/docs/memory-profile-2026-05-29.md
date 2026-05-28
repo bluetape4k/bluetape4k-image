@@ -60,5 +60,5 @@ AverageTime is lower-is-better. Allocation is `gc.alloc.rate.norm`.
   in addition to this managed allocation profile.
 - The coroutine `Path` load/write helpers now stream directly through Scrimage
   instead of materializing whole compressed files as intermediate `ByteArray`
-  values. Shared `bluetape4k-okio` streaming helpers remain a follow-up once
-  the image repo can depend on the BOM line that publishes that module.
+  values. `bluetape4k-okio` `BufferedSource`/`BufferedSink` overloads now cover
+  caller-owned Okio streaming boundaries.
