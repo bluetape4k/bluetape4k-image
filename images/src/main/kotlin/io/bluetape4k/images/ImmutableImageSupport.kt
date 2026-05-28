@@ -3,12 +3,13 @@ package io.bluetape4k.images
 import com.sksamuel.scrimage.ImmutableImage
 import io.bluetape4k.images.coroutines.SuspendImageWriter
 import io.bluetape4k.images.coroutines.SuspendWriteContext
-import io.bluetape4k.io.readAllBytesSuspending
-import io.bluetape4k.io.writeSuspending
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.awt.Graphics2D
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.InputStream
+import java.nio.file.Files
 import java.nio.file.Path
 
 @PublishedApi
@@ -105,7 +106,7 @@ suspend fun suspendImmutableImageOf(file: File): ImmutableImage =
  * Coroutines 환경에서 [Path]의 파일을 읽어 [ImmutableImage]로 변환합니다.
  *
  * ## 동작/계약
- * - 비동기로 파일 바이트를 읽은 뒤 [immutableImageOf]로 디코딩합니다.
+ * - [Path]를 Scrimage loader에 직접 전달해 압축 파일 전체를 [ByteArray]로 복사하지 않습니다.
  *
  * ```kotlin
  * val image = suspendImmutableImageOf(path)
@@ -116,7 +117,9 @@ suspend fun suspendImmutableImageOf(file: File): ImmutableImage =
  * @return 이미지 정보를 담은 [ImmutableImage]
  */
 suspend fun suspendImmutableImageOf(path: Path): ImmutableImage =
-    immutableImageOf(path.readAllBytesSuspending())
+    withContext(Dispatchers.IO) {
+        immutableImageOf(path)
+    }
 
 
 /**
@@ -151,7 +154,9 @@ suspend fun suspendLoadImage(file: File): ImmutableImage =
  * @return 이미지 정보를 담은 [ImmutableImage]
  */
 suspend fun suspendLoadImage(path: Path): ImmutableImage =
-    immutableImageOf(path.readAllBytesSuspending())
+    withContext(Dispatchers.IO) {
+        immutableImageOf(path)
+    }
 
 /**
  * Coroutines 환경에서 [ImmutableImage] 정보를 [writer]를 통해 [ByteArray]로 변환합니다.
@@ -178,7 +183,7 @@ suspend inline fun ImmutableImage.suspendBytes(writer: SuspendImageWriter): Byte
  * Coroutines 환경에서 [ImmutableImage] 정보를 [writer]를 통해 [destPath]에 저장합니다.
  *
  * ## 동작/계약
- * - 먼저 [suspendBytes]로 인코딩한 뒤 파일에 비동기 기록합니다.
+ * - 대상 파일 [OutputStream]에 직접 인코딩해 중간 [ByteArray] 복사를 피합니다.
  * - 반환값은 기록된 바이트 수입니다.
  *
  * ```kotlin
@@ -191,8 +196,12 @@ suspend inline fun ImmutableImage.suspendBytes(writer: SuspendImageWriter): Byte
  * @return 저장된 파일의 크기
  */
 suspend fun ImmutableImage.suspendWrite(writer: SuspendImageWriter, destPath: Path): Long {
-    val bytes = suspendBytes(writer)
-    return destPath.writeSuspending(bytes)
+    withContext(Dispatchers.IO) {
+        Files.newOutputStream(destPath).use { out ->
+            writer.suspendWrite(this@suspendWrite, this@suspendWrite.metadata, out)
+        }
+    }
+    return Files.size(destPath)
 }
 
 /**

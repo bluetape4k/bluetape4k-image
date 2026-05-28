@@ -49,15 +49,15 @@
 
 <text class="label" x="88" y="446">vips crop 1920</text>
 <rect x="342" y="426" width="30" height="22" rx="7" fill="#A7D8DE"/>
-<text class="value" x="388" y="443">4.67 KB/op</text>
+<text class="value" x="388" y="443">4.63 KB/op</text>
 
 <text class="label" x="88" y="504">vips resize 1920</text>
 <rect x="342" y="484" width="27" height="22" rx="7" fill="#A7D8DE"/>
-<text class="value" x="386" y="501">4.15 KB/op</text>
+<text class="value" x="386" y="501">4.14 KB/op</text>
 
 <text class="label" x="88" y="562">vips thumbnail 1920</text>
 <rect x="342" y="542" width="26" height="22" rx="7" fill="#A7D8DE"/>
-<text class="value" x="386" y="559">3.96 KB/op</text>
+<text class="value" x="386" y="559">3.95 KB/op</text>
 
 <rect x="86" y="654" width="18" height="12" rx="5" fill="#8FC5F3"/>
 <text class="note" x="112" y="666">scrimage encode</text>
@@ -67,5 +67,5 @@
 <text class="note" x="496" y="666">vips encode</text>
 <rect x="620" y="654" width="18" height="12" rx="5" fill="#A7D8DE"/>
 <text class="note" x="646" y="666">vips native transform</text>
-<text class="note" x="86" y="704">Source: benchmark-memory-profile-jmh-gc-2026-05-28-macos-java25.json. Synthetic fallback images were used.</text>
+<text class="note" x="86" y="704">Source: benchmark-memory-profile-jmh-gc-2026-05-29-macos-java25.json. Fixtures: landscape.jpg and homer.jpg.</text>
 </svg>

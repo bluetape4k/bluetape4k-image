@@ -27,18 +27,18 @@
 <line x1="840" y1="216" x2="840" y2="308" stroke="#D8E0EA" stroke-width="1"/>
 <line x1="1010" y1="216" x2="1010" y2="308" stroke="#D8E0EA" stroke-width="1"/>
 <text class="axis" x="330" y="335" text-anchor="middle">0</text>
-<text class="axis" x="500" y="335" text-anchor="middle">20</text>
-<text class="axis" x="670" y="335" text-anchor="middle">40</text>
-<text class="axis" x="840" y="335" text-anchor="middle">60</text>
-<text class="axis" x="1010" y="335" text-anchor="middle">80 ms/op</text>
+<text class="axis" x="500" y="335" text-anchor="middle">30</text>
+<text class="axis" x="670" y="335" text-anchor="middle">60</text>
+<text class="axis" x="840" y="335" text-anchor="middle">90</text>
+<text class="axis" x="1010" y="335" text-anchor="middle">120 ms/op</text>
 
 <text class="label" x="92" y="244">Photo preview JPEG</text>
-<rect x="330" y="224" width="534" height="26" rx="8" fill="#8FC5F3"/>
-<text class="value" x="880" y="243">62.86 ms/op</text>
+<rect x="330" y="224" width="645" height="26" rx="8" fill="#8FC5F3"/>
+<text class="value" x="991" y="243">113.82 ms/op</text>
 
 <text class="label" x="92" y="298">Document preview PNG</text>
-<rect x="330" y="278" width="437" height="26" rx="8" fill="#F2C879"/>
-<text class="value" x="783" y="297">51.47 ms/op</text>
+<rect x="330" y="278" width="328" height="26" rx="8" fill="#F2C879"/>
+<text class="value" x="674" y="297">57.86 ms/op</text>
 
 <rect x="62" y="398" width="1156" height="220" rx="18" fill="#FFFFFF" stroke="#E2E8F0" class="panel"/>
 <text class="panel-title" x="92" y="442">Allocation per operation</text>
@@ -61,6 +61,6 @@
 <rect x="330" y="530" width="518" height="26" rx="8" fill="#D8B4F8"/>
 <text class="value" x="864" y="549">60.89 MB/op</text>
 
-<text class="note" x="86" y="650">Source: kotlinx-benchmark latency report plus JVM GC-profiler allocation addendum, 2026-05-28 local run.</text>
-<text class="note" x="86" y="674">Synthetic fallback images were used because bench/photo-4k.jpg and bench/document.png are not committed.</text>
+<text class="note" x="86" y="650">Source: kotlinx-benchmark latency report plus JVM GC-profiler allocation addendum, 2026-05-29 local run.</text>
+<text class="note" x="86" y="674">Fixtures: landscape.jpg photo path and homer.png illustration path from images/src/test/resources/images.</text>
 </svg>
