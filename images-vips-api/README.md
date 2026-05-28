@@ -57,8 +57,24 @@ VipsEncodeOptions(quality = 80, effort = 5, lossless = false, stripMetadata = tr
 | JPEG | Stable | Lossy, fast for real-time processing |
 | PNG | Stable | Lossless, preserves transparency |
 | WebP | Stable | Modern format, best compression |
-| AVIF | Incubating | Requires libaom in libvips build |
-| HEIC | Incubating | Requires libheif in libvips build |
+| AVIF | Incubating | Backend and native libvips capability required |
+| HEIC | Incubating | Backend and native libvips capability required |
+
+#### AVIF / HEIC Capability Matrix
+
+`VipsImageFormat.AVIF` and `VipsImageFormat.HEIC` are shared API constants, not a
+guarantee that every backend can decode or encode those formats on every host.
+
+| Backend | AVIF decode | AVIF encode | HEIC decode | HEIC encode | Notes |
+|---------|-------------|-------------|-------------|-------------|-------|
+| Java 21 JVips/JNI | Capability-gated | Capability-gated | Capability-gated | N/A | JVips does not expose HEIC encoding; use Java 25 when HEIC output is required |
+| Java 25 FFM | Capability-gated | Capability-gated | Capability-gated | Capability-gated | AVIF uses HEIF AV1 compression; HEIC uses HEIF HEVC compression |
+
+Native AVIF/HEIC support requires libvips built with libheif. AVIF output also
+requires an AV1 encoder such as libaom; HEIC output requires an HEVC-capable
+libheif build. Unsupported input signatures raise `VipsDecodeException`. Missing
+native HEIF-family loader or saver support raises sanitized `VipsDecodeException`
+or `VipsEncodeException`.
 
 ## Usage Examples
 

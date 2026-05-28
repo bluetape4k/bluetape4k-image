@@ -236,6 +236,17 @@ try {
 AVIF output uses HEIF compression `AV1`; HEIC output uses HEIF compression `HEVC`.
 If the native libvips build lacks `heifload_buffer` or `heifsave_buffer`, the API fails early with a sanitized `VipsDecodeException` or `VipsEncodeException`.
 
+#### AVIF / HEIC Capability Matrix
+
+| Format | Decode | Encode | Native dependency |
+|--------|--------|--------|-------------------|
+| AVIF | Capability-gated | Capability-gated | libvips with libheif and an AV1 encoder such as libaom |
+| HEIC | Capability-gated | Capability-gated | libvips with libheif and HEVC encoder support |
+
+The Java 25 backend maps AVIF output to HEIF `AV1` compression and HEIC output
+to HEIF `HEVC` compression. Both paths require the matching native libvips
+loader/saver support on the deployment host.
+
 ### Maximum Pixel Count
 
 Image dimensions are validated against `FfmVipsRuntime.maxPixels`. Exceeding this limit throws `VipsDecodeException`:

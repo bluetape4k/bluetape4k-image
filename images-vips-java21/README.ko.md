@@ -230,6 +230,18 @@ fun cropAndExportBytes(imagePath: String): ByteArray {
 AVIF 인코딩은 libheif와 libaom 같은 AV1 인코더가 포함된 libvips/JVips 빌드가 필요합니다.
 HEIC 인코딩은 JVips 바인딩에서 노출되지 않으므로 HEIC 출력이 필요하면 Java 25 FFM 백엔드를 사용하세요.
 
+### AVIF / HEIC Capability Matrix
+
+| 포맷 | Decode | Encode | Native dependency |
+|------|--------|--------|-------------------|
+| AVIF | Capability-gated | Capability-gated | libheif와 libaom 같은 AV1 인코더가 포함된 libvips |
+| HEIC | Capability-gated | N/A | Decode는 libheif 포함 libvips 필요. JVips는 HEIC encode 미노출 |
+
+Java 21 백엔드는 decode 전에 AVIF/HEIC ISO BMFF brand를 allowlist로 검사합니다.
+지원하지 않는 바이트는 libvips 호출 전에 실패합니다. 유효한 AVIF/HEIC 컨테이너라도 실제
+처리는 호스트 libvips codec set에 의존하며, native 지원이 없으면 sanitized
+`VipsDecodeException` 또는 `VipsEncodeException`으로 보고됩니다.
+
 ## 동시성 & 스레드 안전성
 
 - **JVipsRuntime 싱글턴**: `AtomicReference<State>` CAS를 통한 스레드 안전성 보장

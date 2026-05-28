@@ -94,6 +94,24 @@ java --enable-native-access=ALL-UNNAMED -jar my-image-app.jar
 native-access 플래그는 JVM 옵션이므로 `-jar`, main class, 또는 애플리케이션 시작
 명령보다 앞에 와야 합니다.
 
+### AVIF / HEIC native codec 지원
+
+AVIF와 HEIC는 공유 `VipsImageFormat` API에 노출되어 있지만, 실제 지원 여부는 선택한
+백엔드와 native libvips 빌드에 따라 달라집니다.
+
+| 백엔드 | AVIF decode | AVIF encode | HEIC decode | HEIC encode | Native dependency |
+|--------|-------------|-------------|-------------|-------------|-------------------|
+| `images` | N/A | N/A | N/A | N/A | 순수 JVM scrimage 경로. 이 포맷은 `images-vips-*` 사용 |
+| `images-vips-java21` | Capability-gated | Capability-gated | Capability-gated | N/A | libheif 포함 libvips. AVIF 출력은 libaom 같은 AV1 인코더도 필요 |
+| `images-vips-java25` | Capability-gated | Capability-gated | Capability-gated | Capability-gated | libheif와 AV1/HEVC 인코더 포함 libvips |
+
+Capability-gated는 API가 AVIF/HEIC 헤더나 출력 포맷을 허용한 뒤, 실제 decode/encode 가능
+여부를 native libvips 설치 상태가 결정한다는 뜻입니다. 허용되지 않은 magic byte는
+`VipsDecodeException`으로 실패하고, 누락되었거나 비활성화된 native HEIF 계열 코덱은
+sanitized `VipsDecodeException` 또는 `VipsEncodeException`으로 실패합니다. 운영 호스트에서는
+`vips --version`과 작은 AVIF/HEIC decode 또는 encode smoke test로 같은 JVM 실행 환경의
+capability를 확인하세요.
+
 ### libvips 시작 문제 해결
 
 - `FFM API requires --enable-native-access` 또는 `UnsupportedOperationException`:

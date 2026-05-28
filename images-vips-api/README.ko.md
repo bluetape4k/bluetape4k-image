@@ -57,8 +57,24 @@ VipsEncodeOptions(quality = 80, effort = 5, lossless = false, stripMetadata = tr
 | JPEG | 안정화 | 손실 압축, 실시간 처리에 빠름 |
 | PNG | 안정화 | 무손실, 투명도 보존 |
 | WebP | 안정화 | 최신 포맷, 최고 압축률 |
-| AVIF | Incubating | libvips 빌드에 libaom 필요 |
-| HEIC | Incubating | libvips 빌드에 libheif 필요 |
+| AVIF | Incubating | 백엔드와 native libvips capability 필요 |
+| HEIC | Incubating | 백엔드와 native libvips capability 필요 |
+
+#### AVIF / HEIC Capability Matrix
+
+`VipsImageFormat.AVIF`와 `VipsImageFormat.HEIC`는 공유 API 상수이며, 모든 백엔드가 모든
+호스트에서 해당 포맷을 decode/encode할 수 있다는 보장은 아닙니다.
+
+| 백엔드 | AVIF decode | AVIF encode | HEIC decode | HEIC encode | 비고 |
+|--------|-------------|-------------|-------------|-------------|------|
+| Java 21 JVips/JNI | Capability-gated | Capability-gated | Capability-gated | N/A | JVips는 HEIC 인코딩을 노출하지 않음. HEIC 출력은 Java 25 사용 |
+| Java 25 FFM | Capability-gated | Capability-gated | Capability-gated | Capability-gated | AVIF는 HEIF AV1 compression, HEIC는 HEIF HEVC compression 사용 |
+
+Native AVIF/HEIC 지원은 libheif가 포함된 libvips 빌드가 필요합니다. AVIF 출력은 libaom
+같은 AV1 인코더가 추가로 필요하고, HEIC 출력은 HEVC-capable libheif 빌드가 필요합니다.
+지원하지 않는 입력 signature는 `VipsDecodeException`을 발생시킵니다. Native HEIF 계열
+loader 또는 saver가 없으면 sanitized `VipsDecodeException` 또는 `VipsEncodeException`으로
+실패합니다.
 
 ## 사용 예시
 
