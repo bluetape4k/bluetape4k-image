@@ -82,6 +82,65 @@
 `VipsBenchmarkState`가 macOS를 자동 감지하고 Homebrew 라이브러리 경로를 등록합니다
 (`vipsffm.libpath.*.override`). macOS SIP가 `DYLD_LIBRARY_PATH`를 제거하므로 필수.
 
+### 리포트와 차트 재생성
+
+Gradle `kotlinx-benchmark` task를 기본 실행 경로로 사용하세요. benchmark target 이름은
+`benchmark`이므로 Gradle은 다음 task를 제공합니다.
+
+| Task | 용도 |
+|------|------|
+| `benchmarkBenchmark` | 전체 benchmark target 실행 및 JMH report 생성 |
+| `benchmarkBenchmarkJar` | focused/debug 실행용 JMH jar 생성 |
+| `benchmarkBenchmarkGenerate` | JMH source 생성 |
+| `benchmarkBenchmarkCompile` | 생성된 JMH source 컴파일 |
+
+새 리포트 작성 절차:
+
+1. vips 행 측정을 위한 native prerequisite을 설치합니다.
+   - macOS: `brew install vips`
+   - Linux: `libvips-tools`, `libvips-dev` 설치
+2. 백엔드는 한 번에 하나씩 실행합니다. 같은 호스트에서 Java 21과 Java 25 benchmark
+   프로세스를 병렬 실행하지 마세요.
+3. 생성된 JMH JSON을
+   `images-benchmark/build/reports/benchmarks/<target>/<timestamp>/benchmark.json`에서
+   `images-benchmark/docs/raw/`로 복사하고,
+   `benchmark-results-YYYY-MM-DD-macos-java25.json`처럼 환경이 드러나는 이름을 사용합니다.
+4. `images-benchmark/docs/`의 해당 Markdown report에 실행 명령, host/JVM/libvips 조건,
+   raw JSON 링크, 결과 표를 기록합니다. 모든 latency 표는 `AverageTime ms/op`이며
+   낮을수록 좋습니다.
+5. `docs/images/readme-charts/` 아래 benchmark chart SVG source를 갱신한 뒤 matching PNG를
+   렌더링합니다. README에는 PNG만 embed하고, SVG source는 검토와 재생성을 위해 같은 위치에
+   보관합니다.
+
+현재 이 모듈에서 참조하는 chart asset:
+
+| Chart | SVG source | README PNG |
+|-------|------------|------------|
+| Resize latency | `../docs/images/readme-charts/images-benchmark-resize-latency-chart-01.svg` | `../docs/images/readme-charts/images-benchmark-resize-latency-chart-01.png` |
+| Encode latency | `../docs/images/readme-charts/images-benchmark-encode-latency-chart-01.svg` | `../docs/images/readme-charts/images-benchmark-encode-latency-chart-01.png` |
+| Filter latency | `../docs/images/readme-charts/images-benchmark-filter-latency-chart-01.svg` | `../docs/images/readme-charts/images-benchmark-filter-latency-chart-01.png` |
+| Vips backend comparison | `../docs/images/readme-charts/images-benchmark-vips-backend-comparison-chart-01.svg` | `../docs/images/readme-charts/images-benchmark-vips-backend-comparison-chart-01.png` |
+
+차트 갱신 후 렌더링과 검증:
+
+```bash
+# 변경한 chart SVG를 PNG로 렌더링
+rsvg-convert docs/images/readme-charts/images-benchmark-resize-latency-chart-01.svg \
+  -o docs/images/readme-charts/images-benchmark-resize-latency-chart-01.png
+
+# SVG 문법과 PNG 가독성 확인
+xmllint --noout docs/images/readme-charts/*.svg
+identify docs/images/readme-charts/*.png
+
+# 전체 benchmark 실행 없이 문서화된 task 경로 검증
+./gradlew :bluetape4k-images-benchmark:benchmarkBenchmark \
+  -Pvips.impl=java25 --dry-run --console=plain
+```
+
+특정 환경 행만 다시 측정했다면 갱신된 행을 명확히 표시하고, 이전 CI 행은 historical data로
+유지하세요. Linux CI나 Java 21 JNI 행을 호환 호스트에서 다시 실행하지 않았다면 최신값처럼
+표현하지 마세요.
+
 ---
 
 ## 벤치마크 클래스
