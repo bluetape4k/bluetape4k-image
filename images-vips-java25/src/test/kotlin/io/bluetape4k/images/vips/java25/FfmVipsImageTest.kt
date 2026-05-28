@@ -1,6 +1,8 @@
 package io.bluetape4k.images.vips.java25
 
+import app.photofox.vipsffm.VImage
 import io.bluetape4k.images.IncubatingImageApi
+import io.bluetape4k.images.vips.VipsDecodeException
 import io.bluetape4k.images.vips.VipsEncodeException
 import io.bluetape4k.images.vips.VipsEncodeOptions
 import io.bluetape4k.images.vips.VipsImageFormat
@@ -12,10 +14,12 @@ import io.bluetape4k.assertions.shouldBeGreaterThan
 import io.bluetape4k.assertions.shouldBeLessOrEqualTo
 import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldNotBeNull
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import java.io.ByteArrayOutputStream
+import java.lang.foreign.Arena
 import java.nio.file.Path
 
 @OptIn(IncubatingImageApi::class)
@@ -230,7 +234,56 @@ class FfmVipsImageTest : AbstractFfmVipsTest() {
         img.close()
     }
 
-    // ─── 15: corrupt data ─────────────────────────────────────────────────
+    @Test
+    fun `failed derived operations leave source image usable`() {
+        val bytes = VipsTestFixtures.loadFixture(VipsTestFixtures.SAMPLE_JPEG)
+        ffmVipsImageOf(bytes).use { img ->
+            assertFailsWith<Exception> { img.resize(0, 600) }
+            assertFailsWith<Exception> { img.thumbnail(0) }
+            assertFailsWith<Exception> { img.crop(0, 0, img.width + 1, img.height) }
+
+            val output = img.toBytes(VipsImageFormat.JPEG)
+            output.size shouldBeGreaterThan 0
+            output.startsWith(JPEG_MAGIC).shouldBeTrue()
+        }
+    }
+
+    // ─── 15: owned arena failure cleanup ──────────────────────────────────
+
+    @Test
+    fun `owned arena closes when native load fails`() {
+        var capturedArena: Arena? = null
+
+        assertFailsWith<Exception> {
+            withOwnedArena { arena ->
+                capturedArena = arena
+                VImage.newFromBytes(arena, byteArrayOf(0x01, 0x02, 0x03))
+            }
+        }
+
+        assertFailsWith<IllegalStateException> {
+            capturedArena.shouldNotBeNull().allocate(1)
+        }
+    }
+
+    @Test
+    fun `owned arena closes when wrapper creation fails after native allocation`() {
+        var capturedArena: Arena? = null
+
+        assertFailsWith<VipsDecodeException> {
+            withOwnedArena { arena ->
+                capturedArena = arena
+                VImage.newImage(arena)
+                throw VipsDecodeException("simulated wrapper creation failure")
+            }
+        }
+
+        assertFailsWith<IllegalStateException> {
+            capturedArena.shouldNotBeNull().allocate(1)
+        }
+    }
+
+    // ─── 16: corrupt data ─────────────────────────────────────────────────
 
     @Test
     fun `corrupt bytes throw VipsDecodeException on load`() {
