@@ -37,6 +37,22 @@
 
 > ⚠️ **java21 (JNI) PNG**: JNI 경계 오버헤드가 압축 이득을 상쇄합니다. Linux PNG 인코딩은 java25 (FFM) 사용을 권장합니다.
 
+### Vips 백엔드 비교
+
+`VipsBackendBenchmark`와 `VipsBackendEncodeBenchmark`는 Java 21 JVips JNI
+백엔드와 Java 25 FFM 백엔드를 같은 벤치마크 이름으로 반복 실행해 나란히
+비교할 수 있게 합니다.
+
+| 벤치마크 | 작업 |
+|----------|------|
+| `vips_resize` | 4K JPEG를 `1920x1080`, `1280x720`로 리사이즈 |
+| `vips_thumbnail` | 4K JPEG 썸네일 생성 |
+| `vips_crop` | 4K JPEG 좌상단 영역 크롭 |
+| `vips_encodeJpeg` | 4K JPEG 디코드 후 JPEG 인코딩 |
+
+양쪽 백엔드 실행 명령, raw JSON 리포팅 형식, 로컬 검증 노트는
+[`docs/vips-backend-comparison.md`](docs/vips-backend-comparison.md)를 참고하세요.
+
 ### 필터 (scrimage 전용, 1240×1754)
 
 ![Filter latency benchmark chart](../docs/images/readme-charts/images-benchmark-filter-latency-chart-01.png)
@@ -52,10 +68,10 @@
 ## 벤치마크 실행
 
 ```bash
-# Java 25 — scrimage + vips-ffm (Panama FFM, macOS/Linux)
+# Java 25 - scrimage + vips-ffm (Panama FFM, macOS/Linux)
 ./gradlew :bluetape4k-images-benchmark:benchmarkBenchmark -Pvips.impl=java25
 
-# Java 21 — scrimage + JVips JNI (Linux 전용)
+# Java 21 - scrimage + JVips JNI (Linux 전용)
 ./gradlew :bluetape4k-images-benchmark:benchmarkBenchmark -Pvips.impl=java21
 ```
 
