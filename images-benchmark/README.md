@@ -79,6 +79,23 @@ See [`docs/pipeline-allocation-2026-05-29.md`](docs/pipeline-allocation-2026-05-
 and the raw `kotlinx-benchmark` JSON
 [`docs/raw/benchmark-pipeline-allocation-2026-05-29-macos-java25.json`](docs/raw/benchmark-pipeline-allocation-2026-05-29-macos-java25.json).
 
+### IO Boundary Baseline (Path, Okio, Suspended File Channel)
+
+![Image IO boundary benchmark chart](../docs/images/readme-charts/images-benchmark-io-boundary-chart-01.png)
+
+| Workload | Fastest baseline | Okio boundary | Suspended file channel |
+|----------|------------------|---------------|------------------------|
+| `homer.jpg` load | `ByteArray` 7.70 ms/op | `Source` 8.23 ms/op | `SuspendedSource` 10.81 ms/op |
+| `landscape.jpg` load | `Path` 152.22 ms/op | N/A | `SuspendedSource` 216.62 ms/op |
+| `homer.jpg` JPEG write | `ByteArray` 6.90 ms/op | `Sink` 7.40 ms/op | `SuspendedSink` 14.03 ms/op |
+
+The suspended file-channel overloads are useful coroutine IO boundaries, but
+they are not a latency win for Scrimage load/write because Scrimage still
+bridges through blocking streams. See
+[`docs/io-boundary-baseline-2026-05-29.md`](docs/io-boundary-baseline-2026-05-29.md)
+and the raw `kotlinx-benchmark` JSON
+[`docs/raw/benchmark-io-boundary-2026-05-29-macos-java25.json`](docs/raw/benchmark-io-boundary-2026-05-29-macos-java25.json).
+
 ### Memory Profile (kotlinx-benchmark + GC addendum)
 
 ![Image workload memory profile chart](../docs/images/readme-charts/images-benchmark-memory-profile-chart-01.png)
@@ -109,6 +126,7 @@ and the raw `kotlinx-benchmark` JSON
 
 # Focused evidence used by the 2026-05-29 reports
 JAVA_HOME=$(/usr/libexec/java_home -v 25) ./gradlew :bluetape4k-images-benchmark:benchmarkPipelineAllocationBenchmark --console=plain
+JAVA_HOME=$(/usr/libexec/java_home -v 25) ./gradlew :bluetape4k-images-benchmark:benchmarkIoBoundaryBenchmark --console=plain
 JAVA_HOME=$(/usr/libexec/java_home -v 25) ./gradlew :bluetape4k-images-benchmark:benchmarkMemoryProfileBenchmark --console=plain
 ```
 
@@ -243,6 +261,17 @@ the `kotlinx-benchmark` Gradle DSL does not expose profiler arguments.
 |-----------|----------|
 | `scrimage_photoPreviewJpeg` | 4K photo resize -> grayscale -> JPEG encode |
 | `scrimage_documentPreviewPng` | document resize -> blur -> sepia -> PNG encode |
+
+### `ImageIoBoundaryBenchmark`
+
+Compares baseline load/write entry points with Okio and
+`bluetape4k-okio` suspended file-channel boundaries.
+
+| Benchmark group | Boundaries |
+|-----------------|------------|
+| `load_homer_*` | `ByteArray`, `InputStream`, `Path`, Okio `Source`, `SuspendedSource` |
+| `load_landscape_*` | `Path`, `SuspendedSource` |
+| `write_homer_*` | `ByteArray`, `OutputStream`, `Path`, Okio `Sink`, `SuspendedSink` |
 
 ### `VipsBenchmarkState`
 

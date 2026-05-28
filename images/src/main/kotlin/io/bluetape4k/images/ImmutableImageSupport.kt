@@ -4,6 +4,12 @@ import com.sksamuel.scrimage.ImmutableImage
 import io.bluetape4k.images.coroutines.SuspendImageWriter
 import io.bluetape4k.images.coroutines.SuspendWriteContext
 import io.bluetape4k.okio.buffered
+import io.bluetape4k.okio.coroutines.BufferedSuspendedSink
+import io.bluetape4k.okio.coroutines.BufferedSuspendedSource
+import io.bluetape4k.okio.coroutines.SuspendedSink
+import io.bluetape4k.okio.coroutines.SuspendedSource
+import io.bluetape4k.okio.coroutines.asBlocking
+import io.bluetape4k.okio.coroutines.buffered as bufferedSuspended
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okio.BufferedSink
@@ -187,6 +193,39 @@ suspend fun suspendImmutableImageOf(source: Source): ImmutableImage =
     }
 
 /**
+ * Loads an [ImmutableImage] from a caller-owned [BufferedSuspendedSource] on
+ * [Dispatchers.IO].
+ *
+ * Scrimage decoders are blocking, so this overload bridges the suspended source
+ * to a blocking Okio source while preserving the caller-owned source lifecycle.
+ *
+ * @param source buffered suspended image source
+ * @return decoded [ImmutableImage]
+ */
+suspend fun suspendImmutableImageOf(source: BufferedSuspendedSource): ImmutableImage =
+    withContext(Dispatchers.IO) {
+        val blockingSource = source.asBlocking().buffered()
+        ImmutableImage.loader().fromStream(blockingSource.inputStream())
+    }
+
+/**
+ * Loads an [ImmutableImage] from a [SuspendedSource] on [Dispatchers.IO].
+ *
+ * This overload buffers and closes [source].
+ *
+ * @param source suspended image source
+ * @return decoded [ImmutableImage]
+ */
+suspend fun suspendImmutableImageOf(source: SuspendedSource): ImmutableImage {
+    val bufferedSource = source.bufferedSuspended()
+    return try {
+        suspendImmutableImageOf(bufferedSource)
+    } finally {
+        bufferedSource.close()
+    }
+}
+
+/**
  * Coroutines 환경에서 [File]을 읽어 [ImmutableImage]로 변환합니다.
  *
  * ## 동작/계약
@@ -241,6 +280,27 @@ suspend fun suspendLoadImage(source: BufferedSource): ImmutableImage =
  * @return decoded [ImmutableImage]
  */
 suspend fun suspendLoadImage(source: Source): ImmutableImage =
+    suspendImmutableImageOf(source)
+
+/**
+ * Loads an [ImmutableImage] from a caller-owned [BufferedSuspendedSource] on
+ * [Dispatchers.IO].
+ *
+ * @param source buffered suspended image source
+ * @return decoded [ImmutableImage]
+ */
+suspend fun suspendLoadImage(source: BufferedSuspendedSource): ImmutableImage =
+    suspendImmutableImageOf(source)
+
+/**
+ * Loads an [ImmutableImage] from a [SuspendedSource] on [Dispatchers.IO].
+ *
+ * This overload buffers and closes [source].
+ *
+ * @param source suspended image source
+ * @return decoded [ImmutableImage]
+ */
+suspend fun suspendLoadImage(source: SuspendedSource): ImmutableImage =
     suspendImmutableImageOf(source)
 
 /**
@@ -316,6 +376,39 @@ suspend fun ImmutableImage.suspendWrite(writer: SuspendImageWriter, sink: Buffer
 suspend fun ImmutableImage.suspendWrite(writer: SuspendImageWriter, sink: Sink) {
     sink.buffered().use { bufferedSink ->
         suspendWrite(writer, bufferedSink)
+    }
+}
+
+/**
+ * Writes this [ImmutableImage] to a caller-owned [BufferedSuspendedSink].
+ *
+ * Scrimage encoders are blocking, so this overload bridges the suspended sink to
+ * a blocking Okio sink while preserving the caller-owned sink lifecycle.
+ *
+ * @param writer image writer
+ * @param sink buffered suspended output sink
+ */
+suspend fun ImmutableImage.suspendWrite(writer: SuspendImageWriter, sink: BufferedSuspendedSink) {
+    val blockingSink = sink.asBlocking().buffered()
+    writer.suspendWrite(this, this.metadata, blockingSink.outputStream())
+    blockingSink.flush()
+}
+
+/**
+ * Writes this [ImmutableImage] to a [SuspendedSink].
+ *
+ * This overload buffers and closes [sink]. Use the [BufferedSuspendedSink]
+ * overload when the caller must keep ownership of the sink lifecycle.
+ *
+ * @param writer image writer
+ * @param sink suspended output sink
+ */
+suspend fun ImmutableImage.suspendWrite(writer: SuspendImageWriter, sink: SuspendedSink) {
+    val bufferedSink = sink.bufferedSuspended()
+    try {
+        suspendWrite(writer, bufferedSink)
+    } finally {
+        bufferedSink.close()
     }
 }
 

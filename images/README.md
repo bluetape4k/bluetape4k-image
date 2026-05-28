@@ -97,6 +97,9 @@ A library for loading, converting, resizing, splitting, and applying filters to 
 import io.bluetape4k.images.*
 import io.bluetape4k.okio.asSource
 import io.bluetape4k.okio.buffered
+import io.bluetape4k.okio.coroutines.asSuspendedSource
+import java.nio.channels.AsynchronousFileChannel
+import java.nio.file.StandardOpenOption.READ
 
 // Load from ByteArray
 val image = immutableImageOf(byteArray)
@@ -118,6 +121,10 @@ val image = suspendLoadImage(Paths.get("image.jpg"))
 val image = File("image.jpg").inputStream().asSource().buffered().use { source ->
     immutableImageOf(source)
 }
+
+// Load from a bluetape4k-okio suspended file source
+val channel = AsynchronousFileChannel.open(Paths.get("image.jpg"), READ)
+val image = suspendLoadImage(channel.asSuspendedSource())
 ```
 
 ### Loading and Saving BufferedImage
@@ -146,7 +153,12 @@ val bytes = image.toByteArray("png")
 ```kotlin
 import io.bluetape4k.images.*
 import io.bluetape4k.images.coroutines.*
+import io.bluetape4k.okio.coroutines.asSuspendedSink
 import okio.Buffer
+import java.nio.channels.AsynchronousFileChannel
+import java.nio.file.StandardOpenOption.CREATE
+import java.nio.file.StandardOpenOption.TRUNCATE_EXISTING
+import java.nio.file.StandardOpenOption.WRITE
 
 val image = immutableImageOf(File("input.png"))
 
@@ -162,6 +174,10 @@ image.suspendWrite(SuspendWebpWriter.Default, Paths.get("output.webp"))
 // Save to an Okio sink without creating an intermediate ByteArray
 val buffer = Buffer()
 image.suspendWrite(SuspendJpegWriter.Default, buffer)
+
+// Save to a bluetape4k-okio suspended file sink
+val channel = AsynchronousFileChannel.open(Paths.get("output.jpg"), WRITE, CREATE, TRUNCATE_EXISTING)
+image.suspendWrite(SuspendJpegWriter.Default, channel.asSuspendedSink())
 
 // Convert to ByteArray
 val jpegBytes = image.suspendBytes(SuspendJpegWriter.Default)

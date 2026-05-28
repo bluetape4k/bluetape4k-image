@@ -48,3 +48,10 @@ copies from coroutine `Path` load/write helpers and exposes `bluetape4k-okio`
 `BufferedSource`/`BufferedSink` overloads for caller-owned streaming
 boundaries. Scrimage decode/encode itself still owns the dominant intermediate
 image allocation measured here.
+
+The separate [`io-boundary-baseline-2026-05-29.md`](io-boundary-baseline-2026-05-29.md)
+report adds baseline comparisons for `Path`, Okio, and
+`SuspendedSource`/`SuspendedSink` file-channel boundaries. In that Scrimage
+bridge benchmark the suspended file-channel path is semantically useful for
+coroutine file IO, but it is not a latency optimization because Scrimage still
+decodes and encodes through blocking streams.
