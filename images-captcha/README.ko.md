@@ -58,12 +58,32 @@ when (val result = verifier.verify(issued.id, userAnswer)) {
 }
 ```
 
+## Verification Lifecycle
+
+CAPTCHA 검증은 생성된 이미지 바이트와 애플리케이션 소유 메타데이터를 분리해서 다룹니다.
+
+1. 요청 단위로 `CaptchaChallenge`를 생성합니다.
+2. 이미지 바이트를 인코딩해서 클라이언트에 반환합니다.
+3. 애플리케이션에서 볼 수 있는 `CaptchaChallengeId` 아래에 `IssuedCaptchaChallenge`
+   메타데이터를 저장합니다.
+4. 사용자가 제출한 답을 `CaptchaVerificationService.verify`로 검증합니다.
+5. 어떤 검증 결과가 나오더라도 해당 challenge id는 종료된 것으로 취급합니다.
+
+`CaptchaVerificationService.verify`는 만료 여부나 정답 비교 전에
+`CaptchaChallengeStore.consume`을 호출합니다. Store 구현은 `consume`을 atomic 하게 만들어야
+하며, 성공, 오답, 만료 결과 모두 저장된 메타데이터를 제거해야 합니다. 이 one-shot contract는
+같은 challenge id에 대한 replay와 반복 추측을 막기 위한 경계입니다.
+
 `InMemoryCaptchaChallengeStore`는 테스트, 데모, single-node 애플리케이션에 적합합니다.
 여러 애플리케이션 인스턴스가 challenge 메타데이터를 공유해야 한다면 Redis, database,
-session storage 용 `CaptchaChallengeStore` 구현을 제공하세요. `ImmutableImage`를 안정적인
-Java serialization payload로 취급하지 않으므로 `CaptchaChallenge` 자체가 아니라 인코딩된
-이미지 바이트와 `IssuedCaptchaChallenge` 형태의 메타데이터를 저장하세요. Rate limiting
-정책은 여전히 애플리케이션 책임입니다.
+session storage 용 `CaptchaChallengeStore` 구현을 제공하세요. 운영 store는
+`IssuedCaptchaChallenge`의 `expiresAt` 값을 보존하고, 그 시점 이상 유지되는 backend TTL을
+적용하며, 사용자가 답을 제출하지 않아도 오래된 레코드를 정리해야 합니다.
+
+`ImmutableImage`를 안정적인 Java serialization payload로 취급하지 않으므로
+`CaptchaChallenge` 자체가 아니라 인코딩된 이미지 바이트와 `IssuedCaptchaChallenge` 형태의
+메타데이터를 저장하세요. Rate limiting 정책, id 생성, tenant scoping, issue/verify route의
+abuse control은 여전히 애플리케이션 책임입니다.
 
 ## 옵션
 
