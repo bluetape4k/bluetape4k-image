@@ -17,20 +17,20 @@ import org.openjdk.jmh.infra.Blackhole
 import java.util.concurrent.TimeUnit
 
 /**
- * scrimage vs vips 이미지 인코딩(JPEG/PNG) 성능 비교 벤치마크.
+ * Compares scrimage and vips encode throughput for JPEG and PNG.
  *
- * 4K 사진(3840×2160)을 JPEG와 PNG로 인코딩하는 시간을 비교합니다.
+ * Natural photo fixtures are encoded to JPEG and PNG.
  *
- * ## 실행 방법
+ * ## Run
  * ```bash
  * ./gradlew :bluetape4k-images-benchmark:benchmark
  * ```
  *
- * ## 측정 지표
- * - scrimage_encodeJpeg: [JpegWriter]로 JPEG 인코딩 평균 시간
- * - scrimage_encodePng: [PngWriter]로 PNG 인코딩 평균 시간
- * - vips_encodeJpeg: vips JPEG 인코딩 평균 시간 (vips 미가용 시 skip)
- * - vips_encodePng: vips PNG 인코딩 평균 시간 (vips 미가용 시 skip)
+ * ## Metrics
+ * - scrimage_encodeJpeg: average JPEG encode time with [JpegWriter]
+ * - scrimage_encodePng: average PNG encode time with [PngWriter]
+ * - vips_encodeJpeg: average vips JPEG encode time, skipped when vips is unavailable
+ * - vips_encodePng: average vips PNG encode time, skipped when vips is unavailable
  */
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
@@ -46,31 +46,27 @@ class ImageEncodeBenchmark {
     }
 
     /**
-     * scrimage JPEG 인코딩 성능 측정.
-     *
-     * 4K 사진(3840×2160)을 quality=80으로 JPEG 인코딩합니다.
+     * Measures scrimage JPEG encode throughput for a natural photo fixture at quality=80.
      */
     @Benchmark
-    fun scrimage_encodeJpeg(bh: Blackhole) {
-        val bytes = BenchmarkImageSets.photo4k.bytes(JPEG_WRITER)
+    fun scrimage_encodeJpeg(state: VipsBenchmarkState, bh: Blackhole) {
+        val bytes = BenchmarkImageSets.naturalPhoto(state.imageName).bytes(JPEG_WRITER)
         bh.consume(bytes)
     }
 
     /**
-     * scrimage PNG 인코딩 성능 측정.
-     *
-     * 4K 사진(3840×2160)을 compression=6으로 PNG 인코딩합니다.
+     * Measures scrimage PNG encode throughput for a natural photo fixture at compression=6.
      */
     @Benchmark
-    fun scrimage_encodePng(bh: Blackhole) {
-        val bytes = BenchmarkImageSets.photo4k.bytes(PNG_WRITER)
+    fun scrimage_encodePng(state: VipsBenchmarkState, bh: Blackhole) {
+        val bytes = BenchmarkImageSets.naturalPhoto(state.imageName).bytes(PNG_WRITER)
         bh.consume(bytes)
     }
 
     /**
-     * vips JPEG 인코딩 성능 측정.
+     * Measures vips JPEG encode throughput.
      *
-     * vips가 가용하지 않은 환경(CI 등)에서는 즉시 반환합니다.
+     * Returns immediately when vips is unavailable on the current host.
      */
     @Benchmark
     fun vips_encodeJpeg(state: VipsBenchmarkState, bh: Blackhole) {
@@ -85,9 +81,9 @@ class ImageEncodeBenchmark {
     }
 
     /**
-     * vips PNG 인코딩 성능 측정.
+     * Measures vips PNG encode throughput.
      *
-     * vips가 가용하지 않은 환경(CI 등)에서는 즉시 반환합니다.
+     * Returns immediately when vips is unavailable on the current host.
      */
     @Benchmark
     fun vips_encodePng(state: VipsBenchmarkState, bh: Blackhole) {

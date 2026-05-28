@@ -16,16 +16,16 @@ import org.openjdk.jmh.infra.Blackhole
 import java.util.concurrent.TimeUnit
 
 /**
- * scrimage vs vips 이미지 리사이즈 성능 비교 벤치마크.
+ * Compares scrimage and vips resize throughput.
  *
- * ## 실행 방법
+ * ## Run
  * ```bash
  * ./gradlew :bluetape4k-images-benchmark:benchmark
  * ```
  *
- * ## 측정 지표
- * - scrimage: [ImmutableImage.scaleTo] 호출 평균 시간
- * - vips: [VipsImage.resize] 호출 평균 시간 (vips 미가용 시 skip)
+ * ## Metrics
+ * - scrimage: average [ImmutableImage.scaleTo] call time
+ * - vips: average [VipsImage.resize] call time, skipped when vips is unavailable
  */
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
@@ -38,9 +38,9 @@ class ImageResizeBenchmark {
     companion object : KLogging()
 
     /**
-     * 리사이즈 대상 해상도 (WxH 형식, 16:9 비율만 포함).
+     * Target resize resolution in WxH form.
      *
-     * 크로스곱 방지를 위해 단일 파라미터로 WxH 쌍을 표현합니다.
+     * A single parameter keeps width and height paired instead of creating a cross product.
      */
     @Param("1920x1080", "1280x720")
     var resolution: String = "1920x1080"
@@ -56,20 +56,18 @@ class ImageResizeBenchmark {
     }
 
     /**
-     * scrimage ImmutableImage.scaleTo() 리사이즈 성능 측정.
-     *
-     * 4K 사진(3840×2160)을 [targetWidth]×[targetHeight]로 리사이즈합니다.
+     * Measures scrimage [ImmutableImage.scaleTo] resize throughput for a natural photo fixture.
      */
     @Benchmark
-    fun scrimage_scaleTo(bh: Blackhole) {
-        val resized = BenchmarkImageSets.photo4k.scaleTo(targetWidth, targetHeight)
+    fun scrimage_scaleTo(state: VipsBenchmarkState, bh: Blackhole) {
+        val resized = BenchmarkImageSets.naturalPhoto(state.imageName).scaleTo(targetWidth, targetHeight)
         bh.consume(resized)
     }
 
     /**
-     * vips VipsImage.resize() 리사이즈 성능 측정.
+     * Measures vips [VipsImage.resize] throughput.
      *
-     * vips가 가용하지 않은 환경(CI 등)에서는 즉시 반환합니다.
+     * Returns immediately when vips is unavailable on the current host.
      */
     @Benchmark
     fun vips_resize(state: VipsBenchmarkState, bh: Blackhole) {
