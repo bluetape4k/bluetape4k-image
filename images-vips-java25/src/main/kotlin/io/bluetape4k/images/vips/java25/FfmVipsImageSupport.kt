@@ -8,7 +8,6 @@ import io.bluetape4k.images.vips.VipsImage
 import io.bluetape4k.images.vips.VipsImageFormat
 import io.bluetape4k.images.vips.VipsLimits
 import io.bluetape4k.images.vips.java25.internal.FfmVipsFormatSupport
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.apache.commons.io.input.BoundedInputStream
@@ -65,19 +64,13 @@ fun ffmVipsImageOf(path: Path): VipsImage {
     }
     val header = path.toFile().inputStream().use { it.readNBytes(12) }
     checkFormatAllowlist(header)
-    val arena = Arena.ofShared()
     return try {
-        val vImage = VImage.newFromFile(arena, path.toAbsolutePath().toString())
-        checkPixelCount(vImage)
-        FfmVipsImage(arena, vImage)
-    } catch (e: CancellationException) {
-        arena.close()
-        throw e
-    } catch (e: VipsDecodeException) {
-        arena.close()
-        throw e
+        withOwnedArena { arena ->
+            val vImage = VImage.newFromFile(arena, path.toAbsolutePath().toString())
+            checkPixelCount(vImage)
+            FfmVipsImage(arena, vImage)
+        }
     } catch (e: VipsError) {
-        arena.close()
         throw VipsDecodeException("Image decode failed", e)
     }
 }
@@ -142,20 +135,32 @@ private fun ByteArray.detectAllowedFormat(): VipsImageFormat? {
 }
 
 private fun decodeAndCheckPixels(bytes: ByteArray): VipsImage {
-    val arena = Arena.ofShared()
     return try {
-        val vImage = VImage.newFromBytes(arena, bytes)
-        checkPixelCount(vImage)
-        FfmVipsImage(arena, vImage)
-    } catch (e: CancellationException) {
-        arena.close()
-        throw e
-    } catch (e: VipsDecodeException) {
-        arena.close()
-        throw e
+        withOwnedArena { arena ->
+            val vImage = VImage.newFromBytes(arena, bytes)
+            checkPixelCount(vImage)
+            FfmVipsImage(arena, vImage)
+        }
     } catch (e: VipsError) {
-        arena.close()
         throw VipsDecodeException("Image decode failed: unsupported format or corrupted input", e)
+    }
+}
+
+internal fun <T> withOwnedArena(block: (Arena) -> T): T {
+    val arena = Arena.ofShared()
+    try {
+        return block(arena)
+    } catch (failure: Throwable) {
+        closeArenaAfterFailure(arena, failure)
+        throw failure
+    }
+}
+
+private fun closeArenaAfterFailure(arena: Arena, failure: Throwable) {
+    try {
+        arena.close()
+    } catch (closeFailure: Throwable) {
+        failure.addSuppressed(closeFailure)
     }
 }
 
