@@ -37,6 +37,23 @@ JMH benchmarks comparing [scrimage](https://sksamuel.github.io/scrimage/) and [l
 
 > ⚠️ **java21 (JNI) PNG**: JNI boundary overhead exceeds compression gain vs scrimage. Use java25 (FFM) for PNG encoding on Linux.
 
+### Vips Backend Comparison
+
+`VipsBackendBenchmark` and `VipsBackendEncodeBenchmark` compare the Java 21
+JVips JNI backend and the Java 25 FFM backend with stable benchmark names
+across both runs.
+
+| Benchmark | Workload |
+|-----------|----------|
+| `vips_resize` | 4K JPEG resize to `1920x1080` and `1280x720` |
+| `vips_thumbnail` | 4K JPEG thumbnail at matching max dimensions |
+| `vips_crop` | 4K JPEG top-left crop to matching dimensions |
+| `vips_encodeJpeg` | 4K JPEG decode and JPEG encode |
+
+See [`docs/vips-backend-comparison.md`](docs/vips-backend-comparison.md) for
+the side-by-side run commands, raw JSON reporting shape, and local validation
+notes.
+
 ### Filter (scrimage only, 1240×1754 document image)
 
 ![Filter latency benchmark chart](../docs/images/readme-charts/images-benchmark-filter-latency-chart-01.png)
@@ -52,10 +69,10 @@ JMH benchmarks comparing [scrimage](https://sksamuel.github.io/scrimage/) and [l
 ## Running Benchmarks
 
 ```bash
-# Java 25 — scrimage + vips-ffm (Panama FFM, macOS/Linux)
+# Java 25 - scrimage + vips-ffm (Panama FFM, macOS/Linux)
 ./gradlew :bluetape4k-images-benchmark:benchmarkBenchmark -Pvips.impl=java25
 
-# Java 21 — scrimage + JVips JNI (Linux only)
+# Java 21 - scrimage + JVips JNI (Linux only)
 ./gradlew :bluetape4k-images-benchmark:benchmarkBenchmark -Pvips.impl=java21
 ```
 
