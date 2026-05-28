@@ -1,11 +1,14 @@
 package io.bluetape4k.images.spring.autoconfigure
 
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeInstanceOf
+import io.bluetape4k.assertions.shouldBeSameInstanceAs
+import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.aws.spring.s3.S3Operations
 import io.bluetape4k.images.spring.storage.ImageStorage
 import io.bluetape4k.images.spring.storage.LocalImageStorage
 import io.bluetape4k.images.spring.storage.s3.S3ImageStorage
 import io.mockk.mockk
-import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.boot.autoconfigure.AutoConfigurations
 import org.springframework.boot.test.context.runner.ApplicationContextRunner
@@ -23,19 +26,19 @@ class ImagesStorageAutoConfigurationTest {
     @Test
     fun `registers LocalImageStorage by default`() {
         contextRunner.run { ctx ->
-            assertThat(ctx).hasSingleBean(ImageStorage::class.java)
-            assertThat(ctx.getBean(ImageStorage::class.java)).isInstanceOf(LocalImageStorage::class.java)
+            ctx.getBeanNamesForType(ImageStorage::class.java).size shouldBeEqualTo 1
+            ctx.getBean(ImageStorage::class.java) shouldBeInstanceOf LocalImageStorage::class
         }
     }
 
     @Test
     fun `registers ImageStorageProperties with defaults`() {
         contextRunner.run { ctx ->
-            assertThat(ctx).hasSingleBean(ImageStorageProperties::class.java)
+            ctx.getBeanNamesForType(ImageStorageProperties::class.java).size shouldBeEqualTo 1
             val props = ctx.getBean(ImageStorageProperties::class.java)
-            assertThat(props.enabled).isTrue()
-            assertThat(props.backend).isEqualTo(ImageStorageProperties.Backend.LOCAL)
-            assertThat(props.maxSizeBytes).isEqualTo(50 * 1024 * 1024L)
+            props.enabled.shouldBeTrue()
+            props.backend shouldBeEqualTo ImageStorageProperties.Backend.LOCAL
+            props.maxSizeBytes shouldBeEqualTo 50 * 1024 * 1024L
         }
     }
 
@@ -44,8 +47,8 @@ class ImagesStorageAutoConfigurationTest {
         contextRunner
             .withPropertyValues("bluetape4k.images.storage.enabled=false")
             .run { ctx ->
-                assertThat(ctx).doesNotHaveBean(ImageStorage::class.java)
-                assertThat(ctx).doesNotHaveBean(ImageStorageProperties::class.java)
+                ctx.getBeanNamesForType(ImageStorage::class.java).isEmpty().shouldBeTrue()
+                ctx.getBeanNamesForType(ImageStorageProperties::class.java).isEmpty().shouldBeTrue()
             }
     }
 
@@ -55,8 +58,8 @@ class ImagesStorageAutoConfigurationTest {
         contextRunner
             .withBean(ImageStorage::class.java, { customStorage })
             .run { ctx ->
-                assertThat(ctx).hasSingleBean(ImageStorage::class.java)
-                assertThat(ctx.getBean(ImageStorage::class.java)).isSameAs(customStorage)
+                ctx.getBeanNamesForType(ImageStorage::class.java).size shouldBeEqualTo 1
+                ctx.getBean(ImageStorage::class.java) shouldBeSameInstanceAs customStorage
             }
     }
 
@@ -68,8 +71,8 @@ class ImagesStorageAutoConfigurationTest {
                 "bluetape4k.images.storage.bucket=images",
             )
             .run { ctx ->
-                assertThat(ctx).hasSingleBean(ImageStorage::class.java)
-                assertThat(ctx.getBean(ImageStorage::class.java)).isInstanceOf(LocalImageStorage::class.java)
+                ctx.getBeanNamesForType(ImageStorage::class.java).size shouldBeEqualTo 1
+                ctx.getBean(ImageStorage::class.java) shouldBeInstanceOf LocalImageStorage::class
             }
     }
 
@@ -84,8 +87,8 @@ class ImagesStorageAutoConfigurationTest {
                 "bluetape4k.images.storage.bucket=images",
             )
             .run { ctx ->
-                assertThat(ctx).hasSingleBean(ImageStorage::class.java)
-                assertThat(ctx.getBean(ImageStorage::class.java)).isInstanceOf(S3ImageStorage::class.java)
+                ctx.getBeanNamesForType(ImageStorage::class.java).size shouldBeEqualTo 1
+                ctx.getBean(ImageStorage::class.java) shouldBeInstanceOf S3ImageStorage::class
             }
     }
 
@@ -97,8 +100,8 @@ class ImagesStorageAutoConfigurationTest {
             .withBean(ImageStorage::class.java, { customStorage })
             .withPropertyValues("bluetape4k.images.storage.backend=s3")
             .run { ctx ->
-                assertThat(ctx).hasSingleBean(ImageStorage::class.java)
-                assertThat(ctx.getBean(ImageStorage::class.java)).isSameAs(customStorage)
+                ctx.getBeanNamesForType(ImageStorage::class.java).size shouldBeEqualTo 1
+                ctx.getBean(ImageStorage::class.java) shouldBeSameInstanceAs customStorage
             }
     }
 
@@ -108,7 +111,7 @@ class ImagesStorageAutoConfigurationTest {
             .withPropertyValues("bluetape4k.images.storage.local.root-dir=/tmp/custom-images")
             .run { ctx ->
                 val props = ctx.getBean(ImageStorageProperties::class.java)
-                assertThat(props.local.rootDir).isEqualTo("/tmp/custom-images")
+                props.local.rootDir shouldBeEqualTo "/tmp/custom-images"
             }
     }
 
@@ -118,7 +121,7 @@ class ImagesStorageAutoConfigurationTest {
             .withPropertyValues("bluetape4k.images.storage.max-size-bytes=1048576")
             .run { ctx ->
                 val props = ctx.getBean(ImageStorageProperties::class.java)
-                assertThat(props.maxSizeBytes).isEqualTo(1_048_576L)
+                props.maxSizeBytes shouldBeEqualTo 1_048_576L
             }
     }
 }

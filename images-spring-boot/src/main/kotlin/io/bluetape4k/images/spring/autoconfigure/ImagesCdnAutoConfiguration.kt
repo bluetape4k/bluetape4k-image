@@ -65,7 +65,7 @@ class ImagesCdnAutoConfiguration {
         name = ["provider"],
         havingValue = "s3_presign",
         matchIfMissing = true,
-        )
+    )
     class S3PresignCdnConfiguration {
 
         @Bean
