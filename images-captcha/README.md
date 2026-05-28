@@ -58,12 +58,35 @@ when (val result = verifier.verify(issued.id, userAnswer)) {
 }
 ```
 
+## Verification Lifecycle
+
+CAPTCHA verification is intentionally split between generated image bytes and
+application-owned metadata:
+
+1. Generate a `CaptchaChallenge` for the request.
+2. Encode and return the image bytes to the client.
+3. Store `IssuedCaptchaChallenge` metadata under an application-visible
+   `CaptchaChallengeId`.
+4. Verify the user answer with `CaptchaVerificationService.verify`.
+5. Treat every verification result as terminal for that challenge id.
+
+`CaptchaVerificationService.verify` calls `CaptchaChallengeStore.consume` before
+checking expiration or comparing the answer. Store implementations must make
+`consume` atomic so a successful answer, wrong answer, or expired challenge all
+remove the stored metadata. This one-shot contract prevents replay and repeated
+guessing against the same challenge id.
+
 `InMemoryCaptchaChallengeStore` is useful for tests, demos, and single-node
 applications. Implement `CaptchaChallengeStore` for Redis, database, or session
 storage when challenge metadata must be shared across application instances.
+Production stores should preserve the `expiresAt` value from
+`IssuedCaptchaChallenge`, apply a backend TTL at least as long as that instant,
+and clean up stale records even if the user never submits an answer.
+
 Persist encoded image bytes and `IssuedCaptchaChallenge`-style metadata, not
 `CaptchaChallenge`, because `ImmutableImage` is not treated as a stable Java
-serialization payload. Applications still own rate limiting policy.
+serialization payload. Applications still own rate limiting policy, id
+generation, tenant scoping, and abuse controls around issue and verify routes.
 
 ## Options
 
