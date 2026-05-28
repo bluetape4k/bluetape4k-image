@@ -5,8 +5,8 @@ import io.bluetape4k.images.spring.storage.ImageStorage
 import io.bluetape4k.images.spring.storage.LocalImageStorage
 import io.bluetape4k.images.spring.storage.s3.S3ImageStorage
 import io.bluetape4k.support.requireNotBlank
-import jakarta.annotation.PostConstruct
 import org.springframework.boot.autoconfigure.AutoConfiguration
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -25,9 +25,10 @@ import java.nio.file.Path
  *   `S3AutoConfiguration` is an optional/compileOnly dependency.
  * - Toggled by `bluetape4k.images.storage.enabled` (default `true`).
  * - Nested [S3StorageConfiguration] is activated only when [S3Operations] is on the classpath and
- *   `backend=s3`. The bucket is validated via `@PostConstruct` (no-arg, JSR-250 compliant).
- * - Nested [LocalStorageConfiguration] is gated by `@ConditionalOnMissingBean(ImageStorage)` only —
- *   it acts as a guaranteed fallback even when `backend=s3` but [S3Operations] is absent.
+ *   `backend=s3`. The S3 storage bean is created only when an [S3Operations] bean exists.
+ * - Nested [LocalStorageConfiguration] handles the default/local backend.
+ * - Nested [S3FallbackLocalStorageConfiguration] provides a local fallback when `backend=s3` but
+ *   no [S3Operations] bean is available.
  *
  * ### Maintainer note
  * Do not change `afterName` to `after`. `S3AutoConfiguration` is `compileOnly` here; the `KClass`
@@ -51,7 +52,7 @@ class ImagesStorageAutoConfiguration {
 
     /**
      * S3-backed storage. Activated only when [S3Operations] is on the classpath and
-     * `bluetape4k.images.storage.backend=s3`. The bucket is validated post-construction.
+     * `bluetape4k.images.storage.backend=s3`.
      *
      * Reference to [S3Operations] is confined to this nested class so that the outer
      * `@AutoConfiguration` class never directly references the `compileOnly` SDK type at
@@ -64,34 +65,59 @@ class ImagesStorageAutoConfiguration {
         name = ["backend"],
         havingValue = "s3",
     )
-    class S3StorageConfiguration(
-        private val properties: ImageStorageProperties,
-    ) {
-
-        @PostConstruct
-        fun validateBucket() {
-            properties.bucket.requireNotBlank("bluetape4k.images.storage.bucket")
-        }
+    class S3StorageConfiguration {
 
         @Bean
+        @ConditionalOnBean(type = ["io.bluetape4k.aws.spring.s3.S3Operations"])
         @ConditionalOnMissingBean(ImageStorage::class)
-        fun s3ImageStorage(operations: S3Operations): ImageStorage =
-            S3ImageStorage(operations, properties)
+        fun s3ImageStorage(
+            operations: S3Operations,
+            properties: ImageStorageProperties,
+        ): ImageStorage {
+            properties.bucket.requireNotBlank("bluetape4k.images.storage.bucket")
+            return S3ImageStorage(operations, properties)
+        }
     }
 
     /**
-     * Local filesystem fallback. Always registered when no other [ImageStorage] bean is present.
-     *
-     * No `backend=local` predicate here — if `backend=s3` is configured but [S3Operations] is not
-     * on the classpath, the S3 nested configuration is skipped and this fallback still provides a
-     * working storage bean.
+     * Local filesystem storage for the default/local backend.
      */
     @Configuration(proxyBeanMethods = false)
+    @ConditionalOnProperty(
+        prefix = "bluetape4k.images.storage",
+        name = ["backend"],
+        havingValue = "local",
+        matchIfMissing = true,
+    )
     class LocalStorageConfiguration {
 
         @Bean
         @ConditionalOnMissingBean(ImageStorage::class)
         fun localImageStorage(properties: ImageStorageProperties): ImageStorage =
+            localImageStorageOf(properties)
+    }
+
+    /**
+     * Local filesystem fallback for `backend=s3` when the optional S3 integration did not provide
+     * an [S3Operations] bean.
+     */
+    @Configuration(proxyBeanMethods = false)
+    @ConditionalOnProperty(
+        prefix = "bluetape4k.images.storage",
+        name = ["backend"],
+        havingValue = "s3",
+    )
+    @ConditionalOnMissingBean(type = ["io.bluetape4k.aws.spring.s3.S3Operations"])
+    class S3FallbackLocalStorageConfiguration {
+
+        @Bean
+        @ConditionalOnMissingBean(ImageStorage::class)
+        fun s3FallbackLocalImageStorage(properties: ImageStorageProperties): ImageStorage =
+            localImageStorageOf(properties)
+    }
+
+    companion object {
+        private fun localImageStorageOf(properties: ImageStorageProperties): ImageStorage =
             LocalImageStorage(
                 rootDir = Path.of(properties.local.rootDir),
                 maxSizeBytes = properties.maxSizeBytes,

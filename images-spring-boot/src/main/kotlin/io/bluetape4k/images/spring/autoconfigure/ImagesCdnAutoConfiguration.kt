@@ -2,10 +2,12 @@ package io.bluetape4k.images.spring.autoconfigure
 
 import io.bluetape4k.aws.spring.s3.S3Operations
 import io.bluetape4k.images.spring.cdn.CdnReadSigner
+import io.bluetape4k.images.spring.cdn.CdnWriteSigner
 import io.bluetape4k.images.spring.cdn.CloudFrontUrlSigner
 import io.bluetape4k.images.spring.cdn.S3PreSignedUrlSigner
 import io.bluetape4k.support.requireNotBlank
 import org.springframework.boot.autoconfigure.AutoConfiguration
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -21,7 +23,8 @@ import org.springframework.context.annotation.Configuration
  * - Disabled by default — must be explicitly turned on via `bluetape4k.images.cdn.enabled=true`.
  * - Ordered after [ImagesStorageAutoConfiguration] via `afterName` (string FQCN).
  * - Nested [S3PresignCdnConfiguration] activates when [S3Operations] is on the classpath and the
- *   provider is `s3_presign` (default).
+ *   provider is `s3_presign` (default); its signer bean is created only when an [S3Operations] bean
+ *   exists.
  * - Nested [CloudFrontCdnConfiguration] activates when `software.amazon.awssdk.services.cloudfront.CloudFrontUtilities`
  *   is on the classpath and the provider is `cloudfront`.
  * - Nested [CdnSanitizingConfiguration] registers a [CdnPropertySanitizingFunction] bean to redact
@@ -62,11 +65,12 @@ class ImagesCdnAutoConfiguration {
         name = ["provider"],
         havingValue = "s3_presign",
         matchIfMissing = true,
-    )
+        )
     class S3PresignCdnConfiguration {
 
         @Bean
-        @ConditionalOnMissingBean(S3PreSignedUrlSigner::class)
+        @ConditionalOnBean(type = ["io.bluetape4k.aws.spring.s3.S3Operations"])
+        @ConditionalOnMissingBean(value = [CdnReadSigner::class, CdnWriteSigner::class])
         fun s3PreSignedUrlSigner(
             operations: S3Operations,
             storageProperties: ImageStorageProperties,
