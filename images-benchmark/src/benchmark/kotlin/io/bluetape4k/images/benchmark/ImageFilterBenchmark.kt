@@ -4,16 +4,16 @@ import com.sksamuel.scrimage.filter.BlurFilter
 import com.sksamuel.scrimage.filter.GrayscaleFilter
 import com.sksamuel.scrimage.filter.SepiaFilter
 import io.bluetape4k.logging.KLogging
-import org.openjdk.jmh.annotations.Benchmark
-import org.openjdk.jmh.annotations.BenchmarkMode
+import kotlinx.benchmark.Benchmark
+import kotlinx.benchmark.BenchmarkMode
 import org.openjdk.jmh.annotations.Fork
-import org.openjdk.jmh.annotations.Measurement
-import org.openjdk.jmh.annotations.Mode
-import org.openjdk.jmh.annotations.OutputTimeUnit
-import org.openjdk.jmh.annotations.Scope
-import org.openjdk.jmh.annotations.State
-import org.openjdk.jmh.annotations.Warmup
-import org.openjdk.jmh.infra.Blackhole
+import kotlinx.benchmark.Measurement
+import kotlinx.benchmark.Mode
+import kotlinx.benchmark.OutputTimeUnit
+import kotlinx.benchmark.Scope
+import kotlinx.benchmark.State
+import kotlinx.benchmark.Warmup
+import kotlinx.benchmark.Blackhole
 import java.util.concurrent.TimeUnit
 
 /**

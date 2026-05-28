@@ -7,12 +7,12 @@ import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.logging.info
 import io.bluetape4k.logging.warn
+import kotlinx.benchmark.Param
+import kotlinx.benchmark.Scope
+import kotlinx.benchmark.Setup
+import kotlinx.benchmark.State
+import kotlinx.benchmark.TearDown
 import org.openjdk.jmh.annotations.Level
-import org.openjdk.jmh.annotations.Param
-import org.openjdk.jmh.annotations.Scope
-import org.openjdk.jmh.annotations.Setup
-import org.openjdk.jmh.annotations.State
-import org.openjdk.jmh.annotations.TearDown
 import java.nio.file.Paths
 
 /**

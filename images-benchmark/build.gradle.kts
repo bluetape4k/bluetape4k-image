@@ -40,6 +40,38 @@ configurations {
 }
 
 benchmark {
+    configurations {
+        register("pipelineAllocation") {
+            include(".*ImagePipelineBenchmark.*")
+            warmups = 1
+            iterations = 3
+            iterationTime = 1
+            iterationTimeUnit = "s"
+            mode = "avgt"
+            outputTimeUnit = "ms"
+            reportFormat = "json"
+            advanced("jvmForks", "definedByJmh")
+        }
+
+        register("memoryProfile") {
+            include(".*ImageResizeBenchmark.scrimage_scaleTo.*")
+            include(".*ImageEncodeBenchmark.scrimage_encodeJpeg.*")
+            include(".*ImageEncodeBenchmark.scrimage_encodePng.*")
+            include(".*VipsBackendBenchmark.vips_resize.*")
+            include(".*VipsBackendBenchmark.vips_thumbnail.*")
+            include(".*VipsBackendBenchmark.vips_crop.*")
+            include(".*VipsBackendEncodeBenchmark.vips_encodeJpeg.*")
+            warmups = 1
+            iterations = 3
+            iterationTime = 1
+            iterationTimeUnit = "s"
+            mode = "avgt"
+            outputTimeUnit = "ms"
+            reportFormat = "json"
+            advanced("jvmForks", "definedByJmh")
+        }
+    }
+
     targets {
         register("benchmark") {
             this as kotlinx.benchmark.gradle.JvmBenchmarkTarget

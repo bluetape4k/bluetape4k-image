@@ -2,7 +2,7 @@
 
 # Module bluetape4k-images-benchmark
 
-JMH benchmarks comparing [scrimage](https://sksamuel.github.io/scrimage/) and [libvips](https://www.libvips.org/) image processing performance.
+`kotlinx-benchmark` benchmarks comparing [scrimage](https://sksamuel.github.io/scrimage/) and [libvips](https://www.libvips.org/) image processing performance on the JVM JMH backend.
 
 ## Architecture
 
@@ -72,12 +72,29 @@ notes.
 
 | Benchmark | Pipeline | AverageTime | Allocation |
 |-----------|----------|-------------|------------|
-| `scrimage_photoPreviewJpeg` | resize 4K photo to `1280x720`, grayscale, JPEG encode | 61.86 ms/op | 50.75 MB/op |
-| `scrimage_documentPreviewPng` | resize document to `640x905`, blur, sepia, PNG encode | 48.04 ms/op | 60.89 MB/op |
+| `scrimage_photoPreviewJpeg` | resize 4K photo to `1280x720`, grayscale, JPEG encode | 62.86 ms/op | 50.75 MB/op |
+| `scrimage_documentPreviewPng` | resize document to `640x905`, blur, sepia, PNG encode | 51.47 ms/op | 60.89 MB/op |
 
 See [`docs/pipeline-allocation-2026-05-28.md`](docs/pipeline-allocation-2026-05-28.md)
-and the raw JMH JSON
+and the raw `kotlinx-benchmark` JSON
 [`docs/raw/benchmark-pipeline-allocation-2026-05-28-macos-java25.json`](docs/raw/benchmark-pipeline-allocation-2026-05-28-macos-java25.json).
+
+### Memory Profile (kotlinx-benchmark + GC addendum)
+
+![Image workload memory profile chart](../docs/images/readme-charts/images-benchmark-memory-profile-chart-01.png)
+
+| Workload | AverageTime | Allocation |
+|----------|-------------|------------|
+| `scrimage_encodeJpeg` | 53.74 ms/op | 96.34 MB/op |
+| `scrimage_scaleTo` 1920x1080 | 71.56 ms/op | 24.04 MB/op |
+| `vips_encodeJpeg` | 16.03 ms/op | 0.26 MB/op |
+| `vips_resize` 1920x1080 | 0.213 ms/op | 4.15 KB/op |
+| `vips_crop` 1920x1080 | 0.060 ms/op | 4.67 KB/op |
+| `vips_thumbnail` 1920x1080 | 0.243 ms/op | 3.96 KB/op |
+
+See [`docs/memory-profile-2026-05-28.md`](docs/memory-profile-2026-05-28.md)
+and the raw `kotlinx-benchmark` JSON
+[`docs/raw/benchmark-memory-profile-2026-05-28-macos-java25.json`](docs/raw/benchmark-memory-profile-2026-05-28-macos-java25.json).
 
 ---
 
@@ -89,6 +106,10 @@ and the raw JMH JSON
 
 # Java 21 - scrimage + JVips JNI (Linux only)
 ./gradlew :bluetape4k-images-benchmark:benchmarkBenchmark -Pvips.impl=java21
+
+# Focused evidence used by the 2026-05-28 reports
+JAVA_HOME=$(/usr/libexec/java_home -v 25) ./gradlew :bluetape4k-images-benchmark:benchmarkPipelineAllocationBenchmark --console=plain
+JAVA_HOME=$(/usr/libexec/java_home -v 25) ./gradlew :bluetape4k-images-benchmark:benchmarkMemoryProfileBenchmark --console=plain
 ```
 
 **macOS prerequisites**: `brew install vips`
@@ -214,7 +235,9 @@ Applies scrimage filters to a 1240×1754 document image.
 
 ### `ImagePipelineBenchmark`
 
-Measures chained high-level scrimage operation paths with the JMH GC profiler.
+Measures chained high-level scrimage operation paths through `kotlinx-benchmark`.
+Allocation rows in the report use a separate JVM GC-profiler addendum because
+the `kotlinx-benchmark` Gradle DSL does not expose profiler arguments.
 
 | Benchmark | Workload |
 |-----------|----------|

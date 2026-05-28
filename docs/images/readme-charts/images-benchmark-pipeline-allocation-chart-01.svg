@@ -17,7 +17,7 @@
 <rect class="canvas" width="1280" height="720"/>
 <rect class="frame" x="32" y="28" width="1216" height="664" rx="28"/>
 <text class="title" x="66" y="82">Image Pipeline Allocation Benchmark</text>
-<text class="subtitle" x="70" y="116">scrimage chained operations, macOS arm64, GraalVM Java 25, JMH GC profiler; lower is better</text>
+<text class="subtitle" x="70" y="116">scrimage chained operations, macOS arm64, GraalVM Java 25; lower is better</text>
 
 <rect x="62" y="146" width="1156" height="220" rx="18" fill="#FFFFFF" stroke="#E2E8F0" class="panel"/>
 <text class="panel-title" x="92" y="190">Latency</text>
@@ -33,12 +33,12 @@
 <text class="axis" x="1010" y="335" text-anchor="middle">80 ms/op</text>
 
 <text class="label" x="92" y="244">Photo preview JPEG</text>
-<rect x="330" y="224" width="526" height="26" rx="8" fill="#8FC5F3"/>
-<text class="value" x="872" y="243">61.86 ms/op</text>
+<rect x="330" y="224" width="534" height="26" rx="8" fill="#8FC5F3"/>
+<text class="value" x="880" y="243">62.86 ms/op</text>
 
 <text class="label" x="92" y="298">Document preview PNG</text>
-<rect x="330" y="278" width="408" height="26" rx="8" fill="#F2C879"/>
-<text class="value" x="754" y="297">48.04 ms/op</text>
+<rect x="330" y="278" width="437" height="26" rx="8" fill="#F2C879"/>
+<text class="value" x="783" y="297">51.47 ms/op</text>
 
 <rect x="62" y="398" width="1156" height="220" rx="18" fill="#FFFFFF" stroke="#E2E8F0" class="panel"/>
 <text class="panel-title" x="92" y="442">Allocation per operation</text>
@@ -61,6 +61,6 @@
 <rect x="330" y="530" width="518" height="26" rx="8" fill="#D8B4F8"/>
 <text class="value" x="864" y="549">60.89 MB/op</text>
 
-<text class="note" x="86" y="650">Source: ImagePipelineBenchmark, 1 warmup iteration, 3 measurement iterations, -prof gc, 2026-05-28 local run.</text>
+<text class="note" x="86" y="650">Source: kotlinx-benchmark latency report plus JVM GC-profiler allocation addendum, 2026-05-28 local run.</text>
 <text class="note" x="86" y="674">Synthetic fallback images were used because bench/photo-4k.jpg and bench/document.png are not committed.</text>
 </svg>
