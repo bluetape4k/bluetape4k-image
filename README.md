@@ -101,6 +101,25 @@ java --enable-native-access=ALL-UNNAMED -jar my-image-app.jar
 The native-access flag is a JVM option, so it must appear before `-jar`, the
 main class, or the command that starts your application.
 
+### AVIF / HEIC native codec support
+
+AVIF and HEIC are visible in the shared `VipsImageFormat` API, but actual
+support depends on both the selected backend and the native libvips build.
+
+| Backend | AVIF decode | AVIF encode | HEIC decode | HEIC encode | Native dependency |
+|---------|-------------|-------------|-------------|-------------|-------------------|
+| `images` | N/A | N/A | N/A | N/A | Pure JVM scrimage path; use `images-vips-*` for these formats |
+| `images-vips-java21` | Capability-gated | Capability-gated | Capability-gated | N/A | libvips with libheif; AVIF output also needs an AV1 encoder such as libaom |
+| `images-vips-java25` | Capability-gated | Capability-gated | Capability-gated | Capability-gated | libvips with libheif plus AV1/HEVC encoders |
+
+Capability-gated means the API accepts the AVIF/HEIC header or output format,
+then the native libvips installation decides whether decode or encode can run.
+Unsupported magic bytes fail as `VipsDecodeException`; missing or disabled
+native HEIF-family codecs fail as sanitized `VipsDecodeException` or
+`VipsEncodeException`. Verify host capability with `vips --version` plus a
+small AVIF/HEIC decode or encode smoke test on the same machine that runs the
+JVM.
+
 ### Troubleshooting libvips startup
 
 - `FFM API requires --enable-native-access` or `UnsupportedOperationException`:

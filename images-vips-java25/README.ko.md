@@ -236,6 +236,17 @@ try {
 AVIF 출력은 HEIF compression `AV1`을 사용하고, HEIC 출력은 HEIF compression `HEVC`를 사용합니다.
 네이티브 libvips 빌드에 `heifload_buffer` 또는 `heifsave_buffer`가 없으면 sanitized `VipsDecodeException` 또는 `VipsEncodeException`으로 조기에 실패합니다.
 
+#### AVIF / HEIC Capability Matrix
+
+| 포맷 | Decode | Encode | Native dependency |
+|------|--------|--------|-------------------|
+| AVIF | Capability-gated | Capability-gated | libheif와 libaom 같은 AV1 인코더가 포함된 libvips |
+| HEIC | Capability-gated | Capability-gated | libheif와 HEVC encoder 지원이 포함된 libvips |
+
+Java 25 백엔드는 AVIF 출력을 HEIF `AV1` compression으로, HEIC 출력을 HEIF `HEVC`
+compression으로 매핑합니다. 두 경로 모두 배포 호스트의 native libvips loader/saver 지원이
+필요합니다.
+
 ### 최대 픽셀 수
 
 이미지 크기는 `FfmVipsRuntime.maxPixels`에 대해 검증됩니다. 초과 시 `VipsDecodeException` 발생:

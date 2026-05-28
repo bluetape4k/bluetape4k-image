@@ -230,6 +230,18 @@ Unsupported formats or violations raise `VipsDecodeException` with descriptive e
 AVIF encoding requires a libvips/JVips build with libheif and an AV1 encoder such as libaom.
 HEIC encoding is not exposed by the JVips binding; use the Java 25 FFM backend when HEIC output is required.
 
+### AVIF / HEIC Capability Matrix
+
+| Format | Decode | Encode | Native dependency |
+|--------|--------|--------|-------------------|
+| AVIF | Capability-gated | Capability-gated | libvips with libheif and an AV1 encoder such as libaom |
+| HEIC | Capability-gated | N/A | libvips with libheif for decode; JVips does not expose HEIC encode |
+
+The Java 21 backend allowlists AVIF/HEIC ISO BMFF brands before decoding.
+Unsupported bytes fail before libvips is called. Valid AVIF/HEIC containers still
+depend on the host libvips codec set; missing native support is reported as a
+sanitized `VipsDecodeException` or `VipsEncodeException`.
+
 ## Concurrency & Thread Safety
 
 - **JVipsRuntime singleton**: Thread-safe via `AtomicReference<State>` compare-and-swap
