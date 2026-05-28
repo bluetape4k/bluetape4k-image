@@ -1,41 +1,69 @@
 # WIP - bluetape4k-image
 
-Snapshot: 2026-05-24 KST
+Snapshot: 2026-05-29 KST
 Scope: open GitHub issues assigned to `debop`.
-Open count: 4 issues.
+Open count: 15 issues.
 
-## 2026-05-24 Milestone Refresh
+## 2026-05-29 Roadmap Refresh
 
-Current evidence: latest tags `0.1.2`, `0.1.1`, `0.1.0`. GitHub has four open
-backlog feature issues and an empty `0.2.0` milestone.
+Current evidence: milestone `0.2.0` now contains the active feature,
+performance, bug-hardening, documentation, and research work for the next image
+line. The previous starter items are no longer the next work queue:
+
+- [#4](https://github.com/bluetape4k/bluetape4k-image/issues/4)
+  `images-captcha` shipped.
+- [#82](https://github.com/bluetape4k/bluetape4k-image/issues/82)
+  libvips prerequisite and native-access README guidance shipped.
+- [#86](https://github.com/bluetape4k/bluetape4k-image/issues/86)
+  benchmark report and README chart refresh shipped.
+- [#83](https://github.com/bluetape4k/bluetape4k-image/issues/83),
+  [#84](https://github.com/bluetape4k/bluetape4k-image/issues/84), and
+  [#85](https://github.com/bluetape4k/bluetape4k-image/issues/85) remain active
+  0.2.0 research gates before OCR, face/object detection, or classification
+  implementation work.
 
 | Lane | Candidate milestone | Current candidates | Decision |
 |---|---|---|---|
 | Patch | `0.1.3` | none yet | Keep empty unless image-core, docs, dependency, or CI regressions appear. |
-| Minor | `0.2.0` | #4 first, then #1/#2/#3 after research | Use #4 CAPTCHA as the first self-contained feature. Keep native/model-heavy OCR/detection/classification isolated until dependency and model packaging are decided. |
+| Minor | `0.2.0` | #118, #109, #103/#105, #114/#111, then #83/#84/#85 | Keep the Ktor module draft blocked until `bluetape4k-bom 1.10.0` is available. Continue unblocked docs and benchmark hardening on the draft branch, then run research gates before model-heavy features. |
 
-Recommended order: #4 `images-captcha`; then research/design gates before #1
-OCR, #2 face/object detection, or #3 classification implementation.
+Recommended order: finish the draft PR branch for the Ktor/CAPTCHA integration
+lane, keep #118 unmerged until the BOM blocker is gone, then execute #83/#84/#85
+as dependency and packaging research before starting #1/#2/#3 implementation.
 
-## New Milestone Queue - 2026-05-24
+## Milestone Queue - 2026-05-29
 
-### New patch milestone `0.1.3`
-
-1. [#82](https://github.com/bluetape4k/bluetape4k-image/issues/82)
-   `docs: refresh libvips prerequisite and native-access troubleshooting`
-
-### New minor milestone `0.2.0`
+### Completed since the previous snapshot
 
 1. [#4](https://github.com/bluetape4k/bluetape4k-image/issues/4)
    `feat: CAPTCHA 이미지 생성 모듈 추가 (images-captcha)`
-2. [#83](https://github.com/bluetape4k/bluetape4k-image/issues/83)
-   `research: OCR dependency and model packaging strategy`
-3. [#84](https://github.com/bluetape4k/bluetape4k-image/issues/84)
-   `research: face and object detection dependency and model packaging strategy`
-4. [#85](https://github.com/bluetape4k/bluetape4k-image/issues/85)
-   `research: image classification dependency and model packaging strategy`
-5. [#86](https://github.com/bluetape4k/bluetape4k-image/issues/86)
+2. [#82](https://github.com/bluetape4k/bluetape4k-image/issues/82)
+   `docs: refresh libvips prerequisite and native-access troubleshooting`
+3. [#86](https://github.com/bluetape4k/bluetape4k-image/issues/86)
    `perf: refresh scrimage vs libvips benchmark report and README charts`
+
+### Active minor milestone `0.2.0`
+
+1. [#118](https://github.com/bluetape4k/bluetape4k-image/issues/118)
+   `feat(ktor): add image Ktor integration module` — implemented in draft
+   [PR #119](https://github.com/bluetape4k/bluetape4k-image/pull/119), blocked
+   until `bluetape4k-bom 1.10.0`.
+2. [#109](https://github.com/bluetape4k/bluetape4k-image/issues/109)
+   `fix(spring-boot): verify optional S3/CDN auto-configuration backoff paths`
+   — carried by draft PR #119.
+3. [#103](https://github.com/bluetape4k/bluetape4k-image/issues/103) and
+   [#105](https://github.com/bluetape4k/bluetape4k-image/issues/105)
+   — allocation and memory profiling benchmark evidence carried by draft PR
+   #119.
+4. [#111](https://github.com/bluetape4k/bluetape4k-image/issues/111) and
+   [#114](https://github.com/bluetape4k/bluetape4k-image/issues/114)
+   — documentation refresh items for roadmap and CAPTCHA lifecycle guidance.
+5. [#83](https://github.com/bluetape4k/bluetape4k-image/issues/83)
+   `research: OCR dependency and model packaging strategy`
+6. [#84](https://github.com/bluetape4k/bluetape4k-image/issues/84)
+   `research: face and object detection dependency and model packaging strategy`
+7. [#85](https://github.com/bluetape4k/bluetape4k-image/issues/85)
+   `research: image classification dependency and model packaging strategy`
 
 ### Backlog reference
 
@@ -45,33 +73,38 @@ OCR, #2 face/object detection, or #3 classification implementation.
   implementation ideas until the 0.2.0 research issues decide dependency and
   model packaging.
 
-## Issue Discovery - 2026-05-24
+## Issue Discovery - 2026-05-29
 
 Patch candidates:
 
-- `docs: refresh libvips prerequisite and native-access troubleshooting`
-  - Candidate only if README user-facing setup has drifted from current
-    JNI/FFM/libvips operational rules.
+- none currently selected.
+  - Reopen this lane only if image-core, docs, dependency, or CI regressions
+    appear outside the 0.2.0 milestone.
 
 Minor candidates:
 
-- `feat: CAPTCHA image generation module` (#4)
-- `research: OCR dependency and model packaging strategy` (#1)
-- `research: face/object detection dependency and model packaging strategy` (#2)
-- `research: image classification dependency and model packaging strategy` (#3)
-- `perf: refresh scrimage vs libvips benchmark report and README charts`
+- `feat(ktor): add image Ktor integration module` (#118)
+- `fix(spring-boot): verify optional S3/CDN auto-configuration backoff paths` (#109)
+- `docs(captcha): add challenge storage and verification lifecycle guidance` (#114)
+- `docs(roadmap): refresh WIP and README status for completed 0.2.0 work` (#111)
+- `research: OCR dependency and model packaging strategy` (#83)
+- `research: face and object detection dependency and model packaging strategy` (#84)
+- `research: image classification dependency and model packaging strategy` (#85)
 
 ## Refresh Notes
 
-Verified with `gh` on 2026-05-22 KST.
+Verified with `gh` on 2026-05-29 KST.
 
-- qmd was queried first for prior image/vips plans, specs, and follow-ups.
 - All current open issues remain assigned to `debop`.
-- Milestone `0.1.1` has zero open issues and is ready for release.
+- GNO was queried first for prior image/captcha roadmap and documentation
+  context.
 
 ## Recently Completed
 
 - **images-spring-boot** module (Spring Boot 4 auto-configuration — S3/CDN/health/metrics) merged via [PR #42](https://github.com/bluetape4k/bluetape4k-image/pull/42), closes [#5](https://github.com/bluetape4k/bluetape4k-image/issues/5).
+- **images-captcha** module merged via [PR #88](https://github.com/bluetape4k/bluetape4k-image/pull/88), closes [#4](https://github.com/bluetape4k/bluetape4k-image/issues/4).
+- libvips prerequisite and native-access README guidance completed via [#82](https://github.com/bluetape4k/bluetape4k-image/issues/82).
+- scrimage vs libvips benchmark report and chart refresh completed via [#86](https://github.com/bluetape4k/bluetape4k-image/issues/86).
 - Pre-stabilization typo compatibility APIs were removed via [#61](https://github.com/bluetape4k/bluetape4k-image/issues/61).
 - Extended test coverage for `images`, `images-vips-java21`, `images-vips-java25` via [PR #39](https://github.com/bluetape4k/bluetape4k-image/pull/39), [PR #40](https://github.com/bluetape4k/bluetape4k-image/pull/40), [PR #41](https://github.com/bluetape4k/bluetape4k-image/pull/41).
 - POM license metadata corrected (Apache 2.0 → MIT) via [PR #38](https://github.com/bluetape4k/bluetape4k-image/pull/38).
@@ -81,29 +114,33 @@ Verified with `gh` on 2026-05-22 KST.
 
 ## Current Direction
 
-All active feature issues (#1–#4) are in the **Backlog** milestone with no fixed release target.
-The 0.1.1 release gate is clear; next implementation work should start with the backlog priority queue.
+Active 0.2.0 work is grouped under feature, performance, bug-hardening, and
+documentation Epics. `images-captcha` is no longer the next feature; the current
+feature lane is `images-ktor` in draft PR #119, with merge blocked until
+`bluetape4k-bom 1.10.0` is available.
 
 Native/model-heavy work (#1 OCR, #2 face/object detection, #3 classification) remains isolated
-from the core `images` module. No CI or packaging changes should touch core modules for these.
+from the core `images` module. Do not start implementation for these until
+#83/#84/#85 settle dependency, packaging, and CI strategy.
 
-## Priority Queue (Backlog)
+## Priority Queue
 
 | Priority | Issue | Difficulty | Notes |
 |---|---|---:|---|
-| P1 | [#4](https://github.com/bluetape4k/bluetape4k-image/issues/4) images-captcha | M | Most self-contained; can migrate legacy CAPTCHA code without native model risk. |
-| P2 | [#1](https://github.com/bluetape4k/bluetape4k-image/issues/1) OCR | L | Tesseract/PaddleOCR packaging and CI strategy must be isolated. |
-| P2 | [#2](https://github.com/bluetape4k/bluetape4k-image/issues/2) face/object detection | L | OpenCV/ONNX/model bundling risk; keep as a separate optional module. |
-| P4 | [#3](https://github.com/bluetape4k/bluetape4k-image/issues/3) image classification | L | Defer until model packaging is proven by #1/#2. |
+| P1 | [#118](https://github.com/bluetape4k/bluetape4k-image/issues/118) images-ktor | M | Architecture/API work is implemented in draft PR #119; do not merge until BOM 1.10.0. |
+| P2 | [#111](https://github.com/bluetape4k/bluetape4k-image/issues/111), [#114](https://github.com/bluetape4k/bluetape4k-image/issues/114) docs | S | Keep README/WIP and CAPTCHA lifecycle guidance aligned with completed 0.2.0 work. |
+| P3 | [#83](https://github.com/bluetape4k/bluetape4k-image/issues/83) OCR research | M | Select dependency/model packaging before implementing #1. |
+| P3 | [#84](https://github.com/bluetape4k/bluetape4k-image/issues/84) face/object detection research | M | Resolve OpenCV/ONNX/model bundling risk before implementing #2. |
+| P4 | [#85](https://github.com/bluetape4k/bluetape4k-image/issues/85) classification research | M | Defer classification implementation until model packaging is proven. |
 
 ## Dependency Map
 
 ```text
-#4 CAPTCHA
-  -> independent quick feature
+#118 Ktor integration
+  -> merge after bluetape4k-bom 1.10.0
 
-#1 OCR
-#2 face/object detection
+#83 OCR research -> #1 OCR
+#84 face/object detection research -> #2 face/object detection
   -> #3 classification, if model/runtime packaging is settled
 ```
 
@@ -111,6 +148,6 @@ from the core `images` module. No CI or packaging changes should touch core modu
 
 | Lane | Limit | Current next |
 |---|---:|---|
-| Self-contained feature | 1 | `#4` (when ready) |
-| Native/model feature | 1 | `#1` or `#2`, not both |
-| Cross-repo integration | 0 | resolved — `#5` shipped |
+| Self-contained feature | 1 | `#118` draft PR, blocked from merge |
+| Native/model feature | 1 | research first: `#83` or `#84`, not both |
+| Cross-repo integration | 1 | wait for `bluetape4k-bom 1.10.0` before merging Ktor support |

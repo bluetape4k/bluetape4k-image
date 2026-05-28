@@ -27,7 +27,8 @@ native codec이 중요해질 때 libvips 백엔드로 확장할 수 있는 단�
 - **Ktor 통합** — Ktor 서비스에서 CAPTCHA 이미지 발급과 one-shot 답변 검증을 처리하는 route helper
 - **libvips 추상화** — binding-neutral `VipsImage`, `VipsRuntime` 계약
 - **두 native backend** — Java 21 JVips/JNI와 Java 25 FFM/Panama 선택지
-- **Benchmark lane** — scrimage와 libvips resize/encode 경로를 비교하는 JMH 벤치마크
+- **Benchmark lane** — scrimage와 libvips resize/encode 경로를 비교하는
+  `kotlinx-benchmark` 벤치마크
 
 <!-- README_VISUAL_OVERVIEW:START -->
 ## Overview Diagram
@@ -51,7 +52,7 @@ native codec이 중요해질 때 libvips 백엔드로 확장할 수 있는 단�
 | `images-vips-api`     | `bluetape4k-images-vips-api`         | 공유 `VipsImage` / `VipsRuntime` 인터페이스 (바인딩 중립)     |
 | `images-vips-java21`  | `bluetape4k-images-vips-java21`      | JVips JNI 백엔드 — Java 21+, 시스템 libvips 필요           |
 | `images-vips-java25`  | `bluetape4k-images-vips-java25`      | vips-ffm FFM 백엔드 — Java 25+, `--enable-native-access` |
-| `images-benchmark`    | `bluetape4k-images-benchmark`        | JMH 벤치마크: scrimage vs libvips                         |
+| `images-benchmark`    | `bluetape4k-images-benchmark`        | `kotlinx-benchmark`: scrimage vs libvips                  |
 
 ## 아키텍처
 
@@ -322,7 +323,7 @@ JVipsImageSupport.jvipsImageOf(Path.of("photo.jpg")).use { image ->
 - [`images-vips-api/README.md`](images-vips-api/README.md) — VipsImage 인터페이스 API
 - [`images-vips-java21/README.md`](images-vips-java21/README.md) — JVips JNI 백엔드
 - [`images-vips-java25/README.md`](images-vips-java25/README.md) — vips-ffm FFM 백엔드
-- [`images-benchmark/README.md`](images-benchmark/README.md) — JMH 벤치마크 결과
+- [`images-benchmark/README.md`](images-benchmark/README.md) — `kotlinx-benchmark` 결과
 
 ## 라이선스
 

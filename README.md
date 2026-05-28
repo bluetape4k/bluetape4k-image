@@ -33,8 +33,8 @@ memory use, or native codecs matter.
 - **libvips abstraction** — binding-neutral `VipsImage` and `VipsRuntime`
   contracts.
 - **Two native backends** — Java 21 JVips/JNI and Java 25 FFM/Panama options.
-- **Benchmark lane** — JMH comparisons for scrimage and libvips resize/encode
-  paths.
+- **Benchmark lane** — `kotlinx-benchmark` comparisons for scrimage and
+  libvips resize/encode paths.
 
 <!-- README_VISUAL_OVERVIEW:START -->
 ## Overview Diagram
@@ -58,7 +58,7 @@ memory use, or native codecs matter.
 | `images-vips-api`     | `bluetape4k-images-vips-api`         | Shared `VipsImage` / `VipsRuntime` interfaces (binding-neutral) |
 | `images-vips-java21`  | `bluetape4k-images-vips-java21`      | JVips JNI backend — Java 21+, system libvips             |
 | `images-vips-java25`  | `bluetape4k-images-vips-java25`      | vips-ffm FFM backend — Java 25+, `--enable-native-access` |
-| `images-benchmark`    | `bluetape4k-images-benchmark`        | JMH benchmarks: scrimage vs libvips                      |
+| `images-benchmark`    | `bluetape4k-images-benchmark`        | `kotlinx-benchmark`: scrimage vs libvips                 |
 
 ## Architecture
 
@@ -331,7 +331,7 @@ Each module contains its own detailed README with API reference, architecture di
 - [`images-vips-api/README.md`](images-vips-api/README.md) — VipsImage interface API
 - [`images-vips-java21/README.md`](images-vips-java21/README.md) — JVips JNI backend
 - [`images-vips-java25/README.md`](images-vips-java25/README.md) — vips-ffm FFM backend
-- [`images-benchmark/README.md`](images-benchmark/README.md) — JMH benchmark results
+- [`images-benchmark/README.md`](images-benchmark/README.md) — `kotlinx-benchmark` results
 
 ## License
 
