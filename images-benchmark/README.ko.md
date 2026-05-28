@@ -2,7 +2,7 @@
 
 # Module bluetape4k-images-benchmark
 
-[scrimage](https://sksamuel.github.io/scrimage/)와 [libvips](https://www.libvips.org/) 이미지 처리 성능을 비교하는 JMH 벤치마크 모듈.
+[scrimage](https://sksamuel.github.io/scrimage/)와 [libvips](https://www.libvips.org/) 이미지 처리 성능을 JVM JMH backend 위의 `kotlinx-benchmark`로 비교하는 벤치마크 모듈.
 
 ## 아키텍처
 
@@ -71,12 +71,30 @@
 
 | 벤치마크 | 파이프라인 | AverageTime | Allocation |
 |----------|------------|-------------|------------|
-| `scrimage_photoPreviewJpeg` | 4K photo를 `1280x720`으로 resize, grayscale, JPEG encode | 61.86 ms/op | 50.75 MB/op |
-| `scrimage_documentPreviewPng` | document를 `640x905`로 resize, blur, sepia, PNG encode | 48.04 ms/op | 60.89 MB/op |
+| `scrimage_photoPreviewJpeg` | 4K photo를 `1280x720`으로 resize, grayscale, JPEG encode | 62.86 ms/op | 50.75 MB/op |
+| `scrimage_documentPreviewPng` | document를 `640x905`로 resize, blur, sepia, PNG encode | 51.47 ms/op | 60.89 MB/op |
 
 자세한 조건은 [`docs/pipeline-allocation-2026-05-28.md`](docs/pipeline-allocation-2026-05-28.md),
-raw JMH JSON은
+raw `kotlinx-benchmark` JSON은
 [`docs/raw/benchmark-pipeline-allocation-2026-05-28-macos-java25.json`](docs/raw/benchmark-pipeline-allocation-2026-05-28-macos-java25.json)을
+참고하세요.
+
+### Memory Profile (kotlinx-benchmark + GC addendum)
+
+![Image workload memory profile chart](../docs/images/readme-charts/images-benchmark-memory-profile-chart-01.png)
+
+| 워크로드 | AverageTime | Allocation |
+|----------|-------------|------------|
+| `scrimage_encodeJpeg` | 53.74 ms/op | 96.34 MB/op |
+| `scrimage_scaleTo` 1920x1080 | 71.56 ms/op | 24.04 MB/op |
+| `vips_encodeJpeg` | 16.03 ms/op | 0.26 MB/op |
+| `vips_resize` 1920x1080 | 0.213 ms/op | 4.15 KB/op |
+| `vips_crop` 1920x1080 | 0.060 ms/op | 4.67 KB/op |
+| `vips_thumbnail` 1920x1080 | 0.243 ms/op | 3.96 KB/op |
+
+자세한 조건은 [`docs/memory-profile-2026-05-28.md`](docs/memory-profile-2026-05-28.md),
+raw `kotlinx-benchmark` JSON은
+[`docs/raw/benchmark-memory-profile-2026-05-28-macos-java25.json`](docs/raw/benchmark-memory-profile-2026-05-28-macos-java25.json)을
 참고하세요.
 
 ---
@@ -89,6 +107,10 @@ raw JMH JSON은
 
 # Java 21 - scrimage + JVips JNI (Linux 전용)
 ./gradlew :bluetape4k-images-benchmark:benchmarkBenchmark -Pvips.impl=java21
+
+# 2026-05-28 리포트에 사용한 focused evidence
+JAVA_HOME=$(/usr/libexec/java_home -v 25) ./gradlew :bluetape4k-images-benchmark:benchmarkPipelineAllocationBenchmark --console=plain
+JAVA_HOME=$(/usr/libexec/java_home -v 25) ./gradlew :bluetape4k-images-benchmark:benchmarkMemoryProfileBenchmark --console=plain
 ```
 
 **macOS 사전 요구사항**: `brew install vips`
@@ -214,8 +236,9 @@ fun vips_encodeJpeg(state: VipsBenchmarkState, bh: Blackhole) {
 
 ### `ImagePipelineBenchmark`
 
-JMH GC profiler로 high-level scrimage operation chain의 allocation baseline을
-측정합니다.
+`kotlinx-benchmark`로 high-level scrimage operation chain을 측정합니다.
+리포트의 allocation 행은 `kotlinx-benchmark` Gradle DSL이 profiler 인자를
+노출하지 않기 때문에 별도 JVM GC-profiler addendum으로 기록합니다.
 
 | 벤치마크 | 작업 |
 |----------|------|
