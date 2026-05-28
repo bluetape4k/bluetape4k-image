@@ -102,6 +102,8 @@ AVIF·HEIC는 incubating 인터페이스로 제공되며, libvips 지원은 `ima
 
 ```kotlin
 import io.bluetape4k.images.*
+import io.bluetape4k.okio.asSource
+import io.bluetape4k.okio.buffered
 
 // ByteArray에서 로드
 val image = immutableImageOf(byteArray)
@@ -118,6 +120,11 @@ val image = immutableImageOf(Paths.get("image.jpg"))
 // Coroutines 환경에서 비동기 로드
 val image = suspendImmutableImageOf(File("image.jpg"))
 val image = suspendLoadImage(Paths.get("image.jpg"))
+
+// Okio source에서 로드
+val image = File("image.jpg").inputStream().asSource().buffered().use { source ->
+    immutableImageOf(source)
+}
 ```
 
 ### BufferedImage 로드/저장
@@ -146,6 +153,7 @@ val bytes = image.toByteArray("png")
 ```kotlin
 import io.bluetape4k.images.*
 import io.bluetape4k.images.coroutines.*
+import okio.Buffer
 
 val image = immutableImageOf(File("input.png"))
 
@@ -157,6 +165,10 @@ image.suspendWrite(SuspendPngWriter.MaxCompression, Paths.get("output.png"))
 
 // WebP로 저장
 image.suspendWrite(SuspendWebpWriter.Default, Paths.get("output.webp"))
+
+// 중간 ByteArray 생성 없이 Okio sink로 저장
+val buffer = Buffer()
+image.suspendWrite(SuspendJpegWriter.Default, buffer)
 
 // ByteArray로 변환
 val jpegBytes = image.suspendBytes(SuspendJpegWriter.Default)

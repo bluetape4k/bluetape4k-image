@@ -9,6 +9,7 @@ import io.bluetape4k.images.immutableImageOf
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.junit5.tempfolder.TempFolder
 import io.bluetape4k.junit5.tempfolder.TempFolderTest
+import okio.Buffer
 import org.junit.jupiter.api.Test
 import java.io.ByteArrayOutputStream
 import java.nio.file.Path
@@ -73,6 +74,17 @@ class SuspendWriteContextTest : AbstractImageTest() {
         ctx.write(bos)
 
         bos.size() shouldBeGreaterThan 0
+    }
+
+    @Test
+    fun `write to Okio BufferedSink writes data`() = runSuspendIO {
+        val image = immutableImageOf(Path.of("$BASE_PATH/homer.jpg"))
+        val ctx = image.forSuspendWriter(writer)
+        val buffer = Buffer()
+
+        ctx.write(buffer)
+
+        buffer.size shouldBeGreaterThan 0L
     }
 
     @Test

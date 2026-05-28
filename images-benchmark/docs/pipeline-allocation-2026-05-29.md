@@ -44,7 +44,7 @@ high-level scrimage transforms a useful regression target before considering
 pipeline fusion or API guidance.
 
 The adjacent production change also removes avoidable whole-file `ByteArray`
-copies from coroutine `Path` load/write helpers. `bluetape4k-okio` can further
-improve streaming boundaries once the image repo moves to the BOM version that
-publishes the shared Okio module, but Scrimage decode/encode itself still owns
-the dominant intermediate image allocation measured here.
+copies from coroutine `Path` load/write helpers and exposes `bluetape4k-okio`
+`BufferedSource`/`BufferedSink` overloads for caller-owned streaming
+boundaries. Scrimage decode/encode itself still owns the dominant intermediate
+image allocation measured here.

@@ -5,6 +5,7 @@ configurations {
 dependencies {
     api(libs.bluetape4k.core)
     api(libs.bluetape4k.io)
+    api(libs.bluetape4k.okio)
     testImplementation(libs.bluetape4k.junit5)
 
     // Images
