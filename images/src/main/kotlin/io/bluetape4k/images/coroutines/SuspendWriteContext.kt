@@ -2,12 +2,14 @@ package io.bluetape4k.images.coroutines
 
 import com.sksamuel.scrimage.AwtImage
 import com.sksamuel.scrimage.metadata.ImageMetadata
-import io.bluetape4k.io.writeSuspending
 import io.bluetape4k.logging.coroutines.KLoggingChannel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.OutputStream
+import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 
@@ -122,7 +124,11 @@ class SuspendWriteContext(
      * @return 저장된 파일의 [Path]
      */
     suspend fun write(path: Path): Path {
-        path.writeSuspending(bytes())
+        withContext(Dispatchers.IO) {
+            Files.newOutputStream(path).use { out ->
+                writer.suspendWrite(image, metadata, out)
+            }
+        }
         return path
     }
 

@@ -72,12 +72,12 @@ notes.
 
 | Benchmark | Pipeline | AverageTime | Allocation |
 |-----------|----------|-------------|------------|
-| `scrimage_photoPreviewJpeg` | resize 4K photo to `1280x720`, grayscale, JPEG encode | 62.86 ms/op | 50.75 MB/op |
-| `scrimage_documentPreviewPng` | resize document to `640x905`, blur, sepia, PNG encode | 51.47 ms/op | 60.89 MB/op |
+| `scrimage_photoPreviewJpeg` | resize `landscape.jpg` to `1280x720`, grayscale, JPEG encode | 113.82 ms/op | 50.75 MB/op |
+| `scrimage_documentPreviewPng` | resize `homer.png` to `640x905`, blur, sepia, PNG encode | 57.86 ms/op | 60.89 MB/op |
 
-See [`docs/pipeline-allocation-2026-05-28.md`](docs/pipeline-allocation-2026-05-28.md)
+See [`docs/pipeline-allocation-2026-05-29.md`](docs/pipeline-allocation-2026-05-29.md)
 and the raw `kotlinx-benchmark` JSON
-[`docs/raw/benchmark-pipeline-allocation-2026-05-28-macos-java25.json`](docs/raw/benchmark-pipeline-allocation-2026-05-28-macos-java25.json).
+[`docs/raw/benchmark-pipeline-allocation-2026-05-29-macos-java25.json`](docs/raw/benchmark-pipeline-allocation-2026-05-29-macos-java25.json).
 
 ### Memory Profile (kotlinx-benchmark + GC addendum)
 
@@ -85,16 +85,16 @@ and the raw `kotlinx-benchmark` JSON
 
 | Workload | AverageTime | Allocation |
 |----------|-------------|------------|
-| `scrimage_encodeJpeg` | 53.74 ms/op | 96.34 MB/op |
-| `scrimage_scaleTo` 1920x1080 | 71.56 ms/op | 24.04 MB/op |
-| `vips_encodeJpeg` | 16.03 ms/op | 0.26 MB/op |
-| `vips_resize` 1920x1080 | 0.213 ms/op | 4.15 KB/op |
-| `vips_crop` 1920x1080 | 0.060 ms/op | 4.67 KB/op |
-| `vips_thumbnail` 1920x1080 | 0.243 ms/op | 3.96 KB/op |
+| `scrimage_encodeJpeg` | 146.09 ms/op | 96.34 MB/op |
+| `scrimage_scaleTo` 1920x1080 | 115.34 ms/op | 24.04 MB/op |
+| `vips_encodeJpeg` | 44.16 ms/op | 0.26 MB/op |
+| `vips_resize` 1920x1080 | 0.246 ms/op | 4.14 KB/op |
+| `vips_crop` 1920x1080 | 0.085 ms/op | 4.63 KB/op |
+| `vips_thumbnail` 1920x1080 | 0.266 ms/op | 3.95 KB/op |
 
-See [`docs/memory-profile-2026-05-28.md`](docs/memory-profile-2026-05-28.md)
+See [`docs/memory-profile-2026-05-29.md`](docs/memory-profile-2026-05-29.md)
 and the raw `kotlinx-benchmark` JSON
-[`docs/raw/benchmark-memory-profile-2026-05-28-macos-java25.json`](docs/raw/benchmark-memory-profile-2026-05-28-macos-java25.json).
+[`docs/raw/benchmark-memory-profile-2026-05-29-macos-java25.json`](docs/raw/benchmark-memory-profile-2026-05-29-macos-java25.json).
 
 ---
 
@@ -107,7 +107,7 @@ and the raw `kotlinx-benchmark` JSON
 # Java 21 - scrimage + JVips JNI (Linux only)
 ./gradlew :bluetape4k-images-benchmark:benchmarkBenchmark -Pvips.impl=java21
 
-# Focused evidence used by the 2026-05-28 reports
+# Focused evidence used by the 2026-05-29 reports
 JAVA_HOME=$(/usr/libexec/java_home -v 25) ./gradlew :bluetape4k-images-benchmark:benchmarkPipelineAllocationBenchmark --console=plain
 JAVA_HOME=$(/usr/libexec/java_home -v 25) ./gradlew :bluetape4k-images-benchmark:benchmarkMemoryProfileBenchmark --console=plain
 ```
@@ -182,7 +182,7 @@ numbers are current unless those rows were rerun on a compatible host.
 
 ### `ImageResizeBenchmark`
 
-Resizes a synthetic 4K (3840×2160) photo to multiple target resolutions.
+Resizes the natural `landscape.jpg` fixture (4032×3024) to multiple target resolutions.
 
 | Parameter    | Values |
 |--------------|--------|
@@ -206,7 +206,7 @@ fun vips_resize(state: VipsBenchmarkState, bh: Blackhole) {
 
 ### `ImageEncodeBenchmark`
 
-Encodes a synthetic 4K photo image to JPEG and PNG.
+Encodes the natural `landscape.jpg` fixture to JPEG and PNG.
 
 ```kotlin
 @Benchmark

@@ -71,12 +71,12 @@
 
 | 벤치마크 | 파이프라인 | AverageTime | Allocation |
 |----------|------------|-------------|------------|
-| `scrimage_photoPreviewJpeg` | 4K photo를 `1280x720`으로 resize, grayscale, JPEG encode | 62.86 ms/op | 50.75 MB/op |
-| `scrimage_documentPreviewPng` | document를 `640x905`로 resize, blur, sepia, PNG encode | 51.47 ms/op | 60.89 MB/op |
+| `scrimage_photoPreviewJpeg` | `landscape.jpg`를 `1280x720`으로 resize, grayscale, JPEG encode | 113.82 ms/op | 50.75 MB/op |
+| `scrimage_documentPreviewPng` | `homer.png`를 `640x905`로 resize, blur, sepia, PNG encode | 57.86 ms/op | 60.89 MB/op |
 
-자세한 조건은 [`docs/pipeline-allocation-2026-05-28.md`](docs/pipeline-allocation-2026-05-28.md),
+자세한 조건은 [`docs/pipeline-allocation-2026-05-29.md`](docs/pipeline-allocation-2026-05-29.md),
 raw `kotlinx-benchmark` JSON은
-[`docs/raw/benchmark-pipeline-allocation-2026-05-28-macos-java25.json`](docs/raw/benchmark-pipeline-allocation-2026-05-28-macos-java25.json)을
+[`docs/raw/benchmark-pipeline-allocation-2026-05-29-macos-java25.json`](docs/raw/benchmark-pipeline-allocation-2026-05-29-macos-java25.json)을
 참고하세요.
 
 ### Memory Profile (kotlinx-benchmark + GC addendum)
@@ -85,16 +85,16 @@ raw `kotlinx-benchmark` JSON은
 
 | 워크로드 | AverageTime | Allocation |
 |----------|-------------|------------|
-| `scrimage_encodeJpeg` | 53.74 ms/op | 96.34 MB/op |
-| `scrimage_scaleTo` 1920x1080 | 71.56 ms/op | 24.04 MB/op |
-| `vips_encodeJpeg` | 16.03 ms/op | 0.26 MB/op |
-| `vips_resize` 1920x1080 | 0.213 ms/op | 4.15 KB/op |
-| `vips_crop` 1920x1080 | 0.060 ms/op | 4.67 KB/op |
-| `vips_thumbnail` 1920x1080 | 0.243 ms/op | 3.96 KB/op |
+| `scrimage_encodeJpeg` | 146.09 ms/op | 96.34 MB/op |
+| `scrimage_scaleTo` 1920x1080 | 115.34 ms/op | 24.04 MB/op |
+| `vips_encodeJpeg` | 44.16 ms/op | 0.26 MB/op |
+| `vips_resize` 1920x1080 | 0.246 ms/op | 4.14 KB/op |
+| `vips_crop` 1920x1080 | 0.085 ms/op | 4.63 KB/op |
+| `vips_thumbnail` 1920x1080 | 0.266 ms/op | 3.95 KB/op |
 
-자세한 조건은 [`docs/memory-profile-2026-05-28.md`](docs/memory-profile-2026-05-28.md),
+자세한 조건은 [`docs/memory-profile-2026-05-29.md`](docs/memory-profile-2026-05-29.md),
 raw `kotlinx-benchmark` JSON은
-[`docs/raw/benchmark-memory-profile-2026-05-28-macos-java25.json`](docs/raw/benchmark-memory-profile-2026-05-28-macos-java25.json)을
+[`docs/raw/benchmark-memory-profile-2026-05-29-macos-java25.json`](docs/raw/benchmark-memory-profile-2026-05-29-macos-java25.json)을
 참고하세요.
 
 ---
@@ -108,7 +108,7 @@ raw `kotlinx-benchmark` JSON은
 # Java 21 - scrimage + JVips JNI (Linux 전용)
 ./gradlew :bluetape4k-images-benchmark:benchmarkBenchmark -Pvips.impl=java21
 
-# 2026-05-28 리포트에 사용한 focused evidence
+# 2026-05-29 리포트에 사용한 focused evidence
 JAVA_HOME=$(/usr/libexec/java_home -v 25) ./gradlew :bluetape4k-images-benchmark:benchmarkPipelineAllocationBenchmark --console=plain
 JAVA_HOME=$(/usr/libexec/java_home -v 25) ./gradlew :bluetape4k-images-benchmark:benchmarkMemoryProfileBenchmark --console=plain
 ```
@@ -183,7 +183,7 @@ identify docs/images/readme-charts/*.png
 
 ### `ImageResizeBenchmark`
 
-합성 4K 사진(3840×2160)을 여러 해상도로 리사이즈합니다.
+자연 사진 fixture `landscape.jpg`(4032×3024)를 여러 해상도로 리사이즈합니다.
 
 | 파라미터     | 값 |
 |-------------|-----|
@@ -207,7 +207,7 @@ fun vips_resize(state: VipsBenchmarkState, bh: Blackhole) {
 
 ### `ImageEncodeBenchmark`
 
-합성 4K photo 이미지를 JPEG/PNG로 인코딩합니다.
+자연 사진 fixture `landscape.jpg`를 JPEG/PNG로 인코딩합니다.
 
 ```kotlin
 @Benchmark
