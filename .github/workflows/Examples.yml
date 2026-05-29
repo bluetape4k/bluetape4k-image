@@ -1,0 +1,117 @@
+name: Examples
+
+on:
+  schedule:
+    - cron: '0 21 * * *'  # Daily example coverage, UTC 21:00 (KST 06:00)
+  push:
+    branches: [develop, main]
+    paths:
+      - 'examples/**'
+      - 'images/**'
+      - 'images-captcha/**'
+      - 'images-ktor/**'
+      - 'images-spring-boot/**'
+      - 'buildSrc/**'
+      - 'gradle/**'
+      - '*.gradle.kts'
+      - 'settings.gradle.kts'
+      - 'gradle.properties'
+      - '.github/workflows/Examples.yml'
+  pull_request:
+    branches: [develop, main]
+    paths:
+      - 'examples/**'
+      - 'images/**'
+      - 'images-captcha/**'
+      - 'images-ktor/**'
+      - 'images-spring-boot/**'
+      - 'buildSrc/**'
+      - 'gradle/**'
+      - '*.gradle.kts'
+      - 'settings.gradle.kts'
+      - 'gradle.properties'
+      - '.github/workflows/Examples.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  JAVA_VERSION: '21'
+  JAVA_DISTRIBUTION: 'temurin'
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
+jobs:
+  validate-wrapper:
+    name: Validate Gradle Wrapper
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+      - uses: gradle/actions/wrapper-validation@v6
+
+  test-examples:
+    name: Test / ${{ matrix.example }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: validate-wrapper
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - example: basic-processing
+            gradle_tasks: :basic-processing:test
+          - example: ktor-image-api
+            gradle_tasks: :ktor-image-api:test
+          - example: spring-boot-image-api
+            gradle_tasks: :spring-boot-image-api:test
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-java@v5
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+      - uses: gradle/actions/setup-gradle@v6
+        with:
+          gradle-version: wrapper
+          cache-read-only: ${{ github.event_name == 'pull_request' }}
+      - name: Test ${{ matrix.example }}
+        run: |
+          for attempt in 1 2 3; do
+            ./gradlew ${{ matrix.gradle_tasks }} --no-daemon && break
+            echo "Attempt $attempt failed"
+            [ $attempt -lt 3 ] && sleep 10 || exit 1
+          done
+        env:
+          GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx4g -Dorg.gradle.daemon=false"
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-results-${{ matrix.example }}
+          path: '**/build/test-results/test/*.xml'
+          retention-days: 14
+
+  examples-status:
+    name: Examples Status
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs:
+      - validate-wrapper
+      - test-examples
+    if: always()
+    steps:
+      - name: Check all jobs
+        env:
+          RESULTS: ${{ join(needs.*.result, ',') }}
+        run: |
+          echo "Examples results: $RESULTS"
+          if echo "$RESULTS" | grep -qE "failure|cancelled"; then
+            echo "Examples failed"
+            exit 1
+          fi
+          echo "Examples passed"

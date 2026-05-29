@@ -349,6 +349,11 @@ for a compact Spring Boot 4 local-storage API. It accepts multipart uploads,
 stores the original image through `LocalImageStorage`, creates a PNG thumbnail,
 and returns storage keys plus local read URLs without S3 or CDN setup.
 
+Use [`examples/ktor-image-api`](examples/ktor-image-api/README.md) for a
+compact Ktor quickstart. It wires the `images-ktor` CAPTCHA and thumbnail route
+helpers into one local-only API, with curl examples for challenge issuance and
+multipart thumbnail generation.
+
 ## License
 
 [MIT License](LICENSE)
