@@ -132,6 +132,8 @@ spring-boot-dependencies = { module = "org.springframework.boot:spring-boot-depe
 spring-boot-autoconfigure = { module = "org.springframework.boot:spring-boot-autoconfigure" }
 spring-boot-actuator = { module = "org.springframework.boot:spring-boot-actuator" }
 spring-boot-health = { module = "org.springframework.boot:spring-boot-health" }
+spring-boot-starter-web = { module = "org.springframework.boot:spring-boot-starter-web" }
+spring-boot-webmvc-test = { module = "org.springframework.boot:spring-boot-webmvc-test" }
 jakarta-annotation-api = { module = "jakarta.annotation:jakarta.annotation-api" }
 spring-boot-configuration-processor = { module = "org.springframework.boot:spring-boot-configuration-processor" }
 spring-boot-starter-test = { module = "org.springframework.boot:spring-boot-starter-test" }

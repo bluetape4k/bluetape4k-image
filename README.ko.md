@@ -335,6 +335,11 @@ JVipsImageSupport.jvipsImageOf(Path.of("photo.jpg")).use { image ->
 썸네일, smart crop, PNG 변환, 워터마크가 들어간 JPEG, README visual preview를 생성하고
 결과는 `build/tmp/basic-processing` 아래에 둡니다.
 
+Spring Boot 4 local-storage API 예제는
+[`examples/spring-boot-image-api`](examples/spring-boot-image-api/README.ko.md)를
+사용하세요. Multipart upload를 받고, `LocalImageStorage`로 원본을 저장하고, PNG
+thumbnail을 만든 뒤 S3/CDN 설정 없이 storage key와 local read URL을 반환합니다.
+
 ## 라이선스
 
 [MIT License](LICENSE)
