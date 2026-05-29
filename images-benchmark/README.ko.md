@@ -103,11 +103,15 @@ raw `kotlinx-benchmark` JSON은
 
 | 작업 | Path | Okio | Suspended file channel |
 |------|------|------|------------------------|
-| 64-file concurrent read | 83,394 files/s | 69,907 files/s | 8,713 files/s |
-| 64-file concurrent write | 1,434 files/s | 1,377 files/s | 1,341 files/s |
+| `cafe.jpg` 6,400-path concurrent read | 16,904 files/s | 2,513 files/s | 74 files/s |
+| `landscape.jpg` 6,400-path concurrent read | 15,981 files/s | 2,072 files/s | 70 files/s |
+| `cafe.jpg` 256-file concurrent write | 1,507 files/s | 767 files/s | 147 files/s |
+| `landscape.jpg` 256-file concurrent write | 1,280 files/s | 778 files/s | 154 files/s |
 
 이 benchmark는 Scrimage decode/encode를 제외하고 compressed file IO 경계만
-분리해 측정합니다. 이번 Java 25 로컬 결과는 suspended file channel을 throughput
+분리해 측정합니다. `cafe.jpg`와 `landscape.jpg`를 사용하고, 고정 buffer로
+streaming하며, read 입력은 큰 setup 복사를 피하려고 6,400개 hard link 경로를
+사용합니다. 이번 Java 25 로컬 결과는 suspended file channel을 throughput
 최적화로 보기 어렵다는 쪽입니다. 자세한 조건은
 [`docs/file-io-throughput-2026-05-29.md`](docs/file-io-throughput-2026-05-29.md),
 raw `kotlinx-benchmark` JSON은
@@ -295,8 +299,10 @@ fun vips_encodeJpeg(state: VipsBenchmarkState, bh: Blackhole) {
 
 ### `ImageFileIoThroughputBenchmark`
 
-벤치마크 invocation당 64개 concurrent task로 compressed image file IO throughput을
-측정합니다. 파일 경계만 분리하기 위해 Scrimage decode/encode는 제외합니다.
+`cafe.jpg`와 `landscape.jpg`로 compressed image file IO throughput을 측정합니다.
+Read는 scenario당 6,400개 hard-linked path를 사용하고, write는 scenario당 256개
+실제 출력 파일을 씁니다. 파일 경계만 분리하기 위해 Scrimage decode/encode는
+제외합니다.
 
 | 벤치마크 그룹 | 경계 |
 |----------------|------|
