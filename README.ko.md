@@ -340,6 +340,10 @@ Spring Boot 4 local-storage API 예제는
 사용하세요. Multipart upload를 받고, `LocalImageStorage`로 원본을 저장하고, PNG
 thumbnail을 만든 뒤 S3/CDN 설정 없이 storage key와 local read URL을 반환합니다.
 
+Ktor quickstart는 [`examples/ktor-image-api`](examples/ktor-image-api/README.ko.md)를
+사용하세요. `images-ktor`의 CAPTCHA와 thumbnail route helper를 하나의 local-only
+API로 묶고, challenge 발급과 multipart thumbnail 생성 curl 예제를 제공합니다.
+
 ## 라이선스
 
 [MIT License](LICENSE)

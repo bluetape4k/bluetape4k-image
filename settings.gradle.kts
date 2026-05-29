@@ -86,3 +86,6 @@ project(":basic-processing").projectDir = file("examples/basic-processing")
 
 include("spring-boot-image-api")
 project(":spring-boot-image-api").projectDir = file("examples/spring-boot-image-api")
+
+include("ktor-image-api")
+project(":ktor-image-api").projectDir = file("examples/ktor-image-api")
