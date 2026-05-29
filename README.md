@@ -344,6 +344,11 @@ a runnable pure JVM quickstart. It uses the bundled `cafe.jpg` and
 thumbnails, smart crops, PNG conversion, a watermarked JPEG, and a README visual
 preview under `build/tmp/basic-processing`.
 
+Use [`examples/spring-boot-image-api`](examples/spring-boot-image-api/README.md)
+for a compact Spring Boot 4 local-storage API. It accepts multipart uploads,
+stores the original image through `LocalImageStorage`, creates a PNG thumbnail,
+and returns storage keys plus local read URLs without S3 or CDN setup.
+
 ## License
 
 [MIT License](LICENSE)

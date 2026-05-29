@@ -1,0 +1,16 @@
+server:
+  port: 8080
+
+bluetape4k:
+  images:
+    storage:
+      backend: local
+      max-size-bytes: 10485760
+      local:
+        root-dir: build/tmp/spring-boot-image-api/storage
+
+spring:
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
