@@ -60,3 +60,8 @@ file IO ergonomics and lifecycle consistency, but not to market them as a
 latency optimization for Scrimage-backed load/write paths. For pure streaming
 pipelines where the caller already owns a `SuspendedSource` or `SuspendedSink`,
 the overloads avoid forcing callers back through ad hoc byte-array staging.
+
+The separate [`file-io-throughput-2026-05-29.md`](file-io-throughput-2026-05-29.md)
+report checks the many-file concurrent throughput hypothesis directly. On this
+macOS Java 25 run, suspended file channels were not faster for compressed image
+file IO throughput either.

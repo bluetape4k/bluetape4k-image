@@ -82,6 +82,18 @@ benchmark {
             reportFormat = "json"
             advanced("jvmForks", "definedByJmh")
         }
+
+        register("ioThroughput") {
+            include(".*ImageFileIoThroughputBenchmark.*")
+            warmups = 1
+            iterations = 3
+            iterationTime = 1
+            iterationTimeUnit = "s"
+            mode = "thrpt"
+            outputTimeUnit = "s"
+            reportFormat = "json"
+            advanced("jvmForks", "definedByJmh")
+        }
     }
 
     targets {
