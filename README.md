@@ -336,6 +336,14 @@ Each module contains its own detailed README with API reference, architecture di
 - [`images-vips-java25/README.md`](images-vips-java25/README.md) — vips-ffm FFM backend
 - [`images-benchmark/README.md`](images-benchmark/README.md) — `kotlinx-benchmark` results
 
+## Examples
+
+Start with [`examples/basic-processing`](examples/basic-processing/README.md) for
+a runnable pure JVM quickstart. It uses the bundled `cafe.jpg` and
+`landscape.jpg` fixtures plus the root README representative image to generate
+thumbnails, smart crops, PNG conversion, a watermarked JPEG, and a README visual
+preview under `build/tmp/basic-processing`.
+
 ## License
 
 [MIT License](LICENSE)
