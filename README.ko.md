@@ -328,6 +328,13 @@ JVipsImageSupport.jvipsImageOf(Path.of("photo.jpg")).use { image ->
 - [`images-vips-java25/README.md`](images-vips-java25/README.md) — vips-ffm FFM 백엔드
 - [`images-benchmark/README.md`](images-benchmark/README.md) — `kotlinx-benchmark` 결과
 
+## 예제
+
+순수 JVM quickstart는 [`examples/basic-processing`](examples/basic-processing/README.ko.md)부터
+보면 됩니다. 번들된 `cafe.jpg`, `landscape.jpg` fixture와 루트 README 대표 이미지로
+썸네일, smart crop, PNG 변환, 워터마크가 들어간 JPEG, README visual preview를 생성하고
+결과는 `build/tmp/basic-processing` 아래에 둡니다.
+
 ## 라이선스
 
 [MIT License](LICENSE)

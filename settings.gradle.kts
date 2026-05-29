@@ -80,3 +80,6 @@ project(":bluetape4k-images-benchmark").projectDir = file("images-benchmark")
 
 include("bluetape4k-image-bom")
 project(":bluetape4k-image-bom").projectDir = file("bom")
+
+include("basic-processing")
+project(":basic-processing").projectDir = file("examples/basic-processing")
