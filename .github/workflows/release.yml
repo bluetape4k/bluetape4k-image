@@ -31,10 +31,14 @@ env:
   JAVA_DISTRIBUTION: 'temurin'
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
 
+permissions:
+  contents: read
+
 jobs:
   resolve-version:
     name: Resolve release version
     runs-on: ubuntu-latest
+    permissions: {}
     outputs:
       version: ${{ steps.resolve.outputs.version }}
       ref: ${{ steps.resolve.outputs.ref }}

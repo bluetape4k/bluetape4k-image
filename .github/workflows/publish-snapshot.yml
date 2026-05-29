@@ -16,6 +16,9 @@ env:
   JAVA_DISTRIBUTION: 'temurin'
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
 
+permissions:
+  contents: read
+
 jobs:
   publish:
     name: Publish SNAPSHOT to Maven Central
