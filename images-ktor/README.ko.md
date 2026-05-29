@@ -6,6 +6,7 @@ bluetape4k 이미지 워크플로우를 위한 Ktor server helper 모듈입니�
 
 ## 기능
 
+- multipart 이미지 업로드를 받아 썸네일 bytes를 반환하는 `Route.bluetape4kImageThumbnailRoutes()`
 - base64 PNG CAPTCHA 챌린지를 발급하는 `Route.bluetape4kCaptchaRoutes()`
 - `CaptchaVerificationService` 기반 one-shot CAPTCHA 답변 검증
 - 발급, 검증, bad-request 응답을 위한 안정적인 JSON 모델
@@ -32,6 +33,7 @@ dependencies {
 
 ```kotlin
 import io.bluetape4k.images.ktor.bluetape4kCaptchaRoutes
+import io.bluetape4k.images.ktor.bluetape4kImageThumbnailRoutes
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
@@ -44,6 +46,7 @@ fun Application.module() {
     }
 
     routing {
+        bluetape4kImageThumbnailRoutes()
         bluetape4kCaptchaRoutes()
     }
 }
@@ -53,8 +56,17 @@ fun Application.module() {
 
 | Method | Path | 설명 |
 | --- | --- | --- |
+| `POST` | `/images/thumbnail?maxSide=320` | multipart field `file`을 읽어 PNG 썸네일 bytes 반환 |
 | `GET` | `/captcha?length=6` | 챌린지를 발급하고 base64 PNG bytes를 반환 |
 | `POST` | `/captcha/{id}/verify` | 챌린지를 소비하고 제출된 답변을 검증 |
+
+썸네일 업로드 예시:
+
+```bash
+curl -F "file=@photo.jpg;type=image/jpeg" \
+  "http://localhost:8080/images/thumbnail?maxSide=320" \
+  --output thumbnail.png
+```
 
 검증 결과는 `SUCCESS`, `WRONG_ANSWER`, `EXPIRED`, `NOT_FOUND` 중 하나입니다.
 `CaptchaVerificationService`는 storage boundary로 유지됩니다. 여러 애플리케이션
@@ -67,12 +79,24 @@ import io.bluetape4k.images.captcha.CaptchaChallengeId
 import io.bluetape4k.images.captcha.CaptchaVerificationService
 import io.bluetape4k.images.captcha.captchaGenerator
 import io.bluetape4k.images.ktor.CaptchaKtorRoutesConfig
+import io.bluetape4k.images.ktor.ImageThumbnailKtorRoutesConfig
 import io.bluetape4k.images.ktor.bluetape4kCaptchaRoutes
+import io.bluetape4k.images.ktor.bluetape4kImageThumbnailRoutes
 import io.bluetape4k.codec.Base58
 
 val verifier = CaptchaVerificationService()
 
 routing {
+    bluetape4kImageThumbnailRoutes(
+        ImageThumbnailKtorRoutesConfig(
+            routePath = "/media",
+            multipartFieldName = "upload",
+            maxInputBytes = 5 * 1024 * 1024,
+            defaultMaxSide = 256,
+            maxAllowedSide = 1024,
+        )
+    )
+
     bluetape4kCaptchaRoutes(
         CaptchaKtorRoutesConfig(
             routePath = "/security/captcha",
@@ -83,6 +107,9 @@ routing {
     )
 }
 ```
+
+썸네일 helper는 순수 JVM 기반의 로컬 처리 경계만 제공합니다. persistence, S3/CDN URL,
+authorization, native libvips 가속이 필요하면 애플리케이션 레이어에서 조합하세요.
 
 ## 호환성
 

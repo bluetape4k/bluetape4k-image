@@ -47,7 +47,7 @@ native codec이 중요해질 때 libvips 백엔드로 확장할 수 있는 단�
 | `bom`                 | `bluetape4k-image-bom`               | 이미지 아티팩트 버전 정렬용 소비자 BOM                    |
 | `images`              | `bluetape4k-images`                  | Scrimage 기반 처리: 로드, 리사이즈, 필터, 변환, 분석, 배치 처리 |
 | `images-captcha`      | `bluetape4k-images-captcha`          | Java2D CAPTCHA 이미지 챌린지 생성                         |
-| `images-ktor`         | `bluetape4k-images-ktor`             | CAPTCHA 발급과 검증을 위한 Ktor route helper              |
+| `images-ktor`         | `bluetape4k-images-ktor`             | 썸네일 생성과 CAPTCHA 검증을 위한 Ktor route helper        |
 | `images-spring-boot`  | `bluetape4k-images-spring-boot`      | Spring Boot 4 자동 구성: 스토리지, CDN, 헬스, 메트릭          |
 | `images-vips-api`     | `bluetape4k-images-vips-api`         | 공유 `VipsImage` / `VipsRuntime` 인터페이스 (바인딩 중립)     |
 | `images-vips-java21`  | `bluetape4k-images-vips-java21`      | JVips JNI 백엔드 — Java 21+, 시스템 libvips 필요           |
@@ -228,21 +228,24 @@ val challenge = generator.generate()
 // challenge.image는 Scrimage writer로 인코딩해 클라이언트에 반환하세요.
 ```
 
-### Ktor CAPTCHA 라우트 (`images-ktor`)
+### Ktor 이미지와 CAPTCHA 라우트 (`images-ktor`)
 
 ```kotlin
 import io.bluetape4k.images.ktor.bluetape4kCaptchaRoutes
+import io.bluetape4k.images.ktor.bluetape4kImageThumbnailRoutes
 import io.ktor.server.application.Application
 import io.ktor.server.routing.routing
 
 fun Application.module() {
     routing {
+        bluetape4kImageThumbnailRoutes()
         bluetape4kCaptchaRoutes()
     }
 }
 ```
 
-`GET /captcha`는 base64 PNG 챌린지 payload를 반환합니다.
+`POST /images/thumbnail?maxSide=320`는 multipart field `file`을 읽어 PNG
+썸네일 bytes를 반환합니다. `GET /captcha`는 base64 PNG 챌린지 payload를 반환합니다.
 `POST /captcha/{id}/verify`는 챌린지를 소비하고 `SUCCESS`, `WRONG_ANSWER`,
 `EXPIRED`, `NOT_FOUND` 중 하나를 반환합니다. 애플리케이션은 자체 Ktor JSON/error
 plugin을 설치하면 됩니다. 이 helper는 `bluetape4k-projects`의 공용 Ktor core 모듈이
@@ -318,7 +321,7 @@ JVipsImageSupport.jvipsImageOf(Path.of("photo.jpg")).use { image ->
 
 - [`images/README.md`](images/README.md) — Scrimage 기반 처리
 - [`images-captcha/README.md`](images-captcha/README.md) — Java2D CAPTCHA 생성
-- [`images-ktor/README.md`](images-ktor/README.md) — Ktor CAPTCHA route helper
+- [`images-ktor/README.md`](images-ktor/README.md) — Ktor 썸네일 및 CAPTCHA route helper
 - [`images-spring-boot/README.md`](images-spring-boot/README.md) — Spring Boot 4 자동 구성
 - [`images-vips-api/README.md`](images-vips-api/README.md) — VipsImage 인터페이스 API
 - [`images-vips-java21/README.md`](images-vips-java21/README.md) — JVips JNI 백엔드

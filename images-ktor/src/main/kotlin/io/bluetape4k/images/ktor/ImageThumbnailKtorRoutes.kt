@@ -1,0 +1,176 @@
+package io.bluetape4k.images.ktor
+
+import com.sksamuel.scrimage.nio.ImageWriter
+import com.sksamuel.scrimage.nio.PngWriter
+import io.bluetape4k.images.immutableImageOf
+import io.bluetape4k.images.toByteArray
+import io.bluetape4k.support.requireNotBlank
+import io.bluetape4k.support.requirePositiveNumber
+import io.ktor.http.ContentType
+import io.ktor.http.HttpStatusCode
+import io.ktor.http.content.PartData
+import io.ktor.server.application.ApplicationCall
+import io.ktor.server.request.receiveMultipart
+import io.ktor.server.response.respond
+import io.ktor.server.response.respondBytes
+import io.ktor.server.routing.Route
+import io.ktor.server.routing.post
+import io.ktor.server.routing.route
+import io.ktor.utils.io.ByteReadChannel
+import io.ktor.utils.io.readRemaining
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import kotlinx.io.readByteArray
+import kotlinx.serialization.Serializable
+import java.io.IOException
+
+private const val DEFAULT_IMAGE_ROUTE = "/images"
+private const val DEFAULT_IMAGE_FIELD = "file"
+private const val DEFAULT_MAX_INPUT_BYTES = 10 * 1024 * 1024
+private const val DEFAULT_THUMBNAIL_SIDE = 320
+private const val DEFAULT_MAX_THUMBNAIL_SIDE = 2_048
+
+/**
+ * Ktor route configuration for a compact image thumbnail endpoint.
+ *
+ * The helper is intentionally small: it decodes one multipart image part,
+ * creates a thumbnail through `bluetape4k-images`, and writes encoded bytes
+ * back to the caller. Applications that need persistence, S3, CDN URLs, or
+ * native libvips should compose those concerns outside this route.
+ */
+class ImageThumbnailKtorRoutesConfig(
+    val routePath: String = DEFAULT_IMAGE_ROUTE,
+    val multipartFieldName: String = DEFAULT_IMAGE_FIELD,
+    val maxInputBytes: Long = DEFAULT_MAX_INPUT_BYTES.toLong(),
+    val defaultMaxSide: Int = DEFAULT_THUMBNAIL_SIDE,
+    val maxAllowedSide: Int = DEFAULT_MAX_THUMBNAIL_SIDE,
+    val writer: ImageWriter = PngWriter.MaxCompression,
+    val responseContentType: ContentType = ContentType.Image.PNG,
+) {
+
+    init {
+        routePath.requireNotBlank("routePath")
+        multipartFieldName.requireNotBlank("multipartFieldName")
+        maxInputBytes.requirePositiveNumber("maxInputBytes")
+        defaultMaxSide.requirePositiveNumber("defaultMaxSide")
+        maxAllowedSide.requirePositiveNumber("maxAllowedSide")
+        require(defaultMaxSide <= maxAllowedSide) {
+            "defaultMaxSide must be less than or equal to maxAllowedSide."
+        }
+    }
+}
+
+/**
+ * Registers a multipart thumbnail endpoint.
+ *
+ * Routes:
+ * - `POST {routePath}/thumbnail?maxSide=320` reads multipart field `file` and
+ *   returns encoded thumbnail bytes.
+ */
+fun Route.bluetape4kImageThumbnailRoutes(
+    config: ImageThumbnailKtorRoutesConfig = ImageThumbnailKtorRoutesConfig(),
+) {
+    route(config.routePath) {
+        post("/thumbnail") {
+            call.respondImageRoute {
+                val maxSide = call.thumbnailMaxSide(config)
+                val uploadBytes = call.receiveImageUpload(config)
+                val thumbnailBytes = withContext(Dispatchers.IO) {
+                    immutableImageOf(uploadBytes)
+                        .max(maxSide, maxSide)
+                        .forWriter(config.writer)
+                        .toByteArray()
+                }
+
+                call.respondBytes(thumbnailBytes, config.responseContentType, HttpStatusCode.OK)
+            }
+        }
+    }
+}
+
+@Serializable
+data class ImageRouteErrorResponse(
+    val error: String,
+    val message: String,
+    val status: Int,
+)
+
+private suspend fun ApplicationCall.receiveImageUpload(config: ImageThumbnailKtorRoutesConfig): ByteArray {
+    val multipart = receiveMultipart()
+    var foundWrongField = false
+
+    while (true) {
+        val part = multipart.readPart() ?: break
+        try {
+            if (part.name == config.multipartFieldName) {
+                val bytes = when (part) {
+                    is PartData.FileItem -> part.provider().readImageBytes(config)
+                    is PartData.BinaryChannelItem -> part.provider().readImageBytes(config)
+                    is PartData.BinaryItem -> throw IllegalArgumentException(
+                        "Multipart field '${config.multipartFieldName}' must be a streamed file upload."
+                    )
+                    is PartData.FormItem -> throw IllegalArgumentException(
+                        "Multipart field '${config.multipartFieldName}' must be a file."
+                    )
+                }
+                require(bytes.size <= config.maxInputBytes) {
+                    "Image upload exceeds maxInputBytes=${config.maxInputBytes}."
+                }
+                require(bytes.isNotEmpty()) {
+                    "Image upload must not be empty."
+                }
+                return bytes
+            }
+            if (part is PartData.FileItem || part is PartData.BinaryItem || part is PartData.BinaryChannelItem) {
+                foundWrongField = true
+            }
+        } finally {
+            part.release()
+        }
+    }
+
+    val detail = if (foundWrongField) {
+        "Expected multipart file field '${config.multipartFieldName}'."
+    } else {
+        "Multipart file field '${config.multipartFieldName}' is required."
+    }
+    throw IllegalArgumentException(detail)
+}
+
+private suspend fun ByteReadChannel.readImageBytes(config: ImageThumbnailKtorRoutesConfig): ByteArray =
+    readRemaining(config.maxInputBytes + 1).readByteArray()
+
+private fun ApplicationCall.thumbnailMaxSide(config: ImageThumbnailKtorRoutesConfig): Int {
+    val rawValue = request.queryParameters["maxSide"] ?: return config.defaultMaxSide
+    val maxSide = rawValue.toIntOrNull()
+        ?: throw IllegalArgumentException("Query parameter 'maxSide' must be an integer.")
+    maxSide.requirePositiveNumber("maxSide")
+    require(maxSide <= config.maxAllowedSide) {
+        "maxSide must be less than or equal to ${config.maxAllowedSide}."
+    }
+    return maxSide
+}
+
+private suspend fun ApplicationCall.respondImageRoute(block: suspend () -> Unit) {
+    try {
+        block()
+    } catch (e: IllegalArgumentException) {
+        respond(
+            HttpStatusCode.BadRequest,
+            ImageRouteErrorResponse(
+                error = "bad_request",
+                message = e.message ?: "Invalid image request.",
+                status = HttpStatusCode.BadRequest.value,
+            )
+        )
+    } catch (e: IOException) {
+        respond(
+            HttpStatusCode.BadRequest,
+            ImageRouteErrorResponse(
+                error = "bad_request",
+                message = e.message ?: "Invalid image payload.",
+                status = HttpStatusCode.BadRequest.value,
+            )
+        )
+    }
+}
