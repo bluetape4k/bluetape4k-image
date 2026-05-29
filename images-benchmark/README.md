@@ -96,6 +96,22 @@ bridges through blocking streams. See
 and the raw `kotlinx-benchmark` JSON
 [`docs/raw/benchmark-io-boundary-2026-05-29-macos-java25.json`](docs/raw/benchmark-io-boundary-2026-05-29-macos-java25.json).
 
+### Concurrent File IO Throughput
+
+![Concurrent image file IO throughput chart](../docs/images/readme-charts/images-benchmark-file-io-throughput-chart-01.png)
+
+| Workload | Path | Okio | Suspended file channel |
+|----------|------|------|------------------------|
+| 64-file concurrent read | 83,394 files/s | 69,907 files/s | 8,713 files/s |
+| 64-file concurrent write | 1,434 files/s | 1,377 files/s | 1,341 files/s |
+
+This compressed-file IO benchmark intentionally excludes Scrimage decode/encode.
+The local Java 25 result does not support treating suspended file channels as a
+throughput optimization. See
+[`docs/file-io-throughput-2026-05-29.md`](docs/file-io-throughput-2026-05-29.md)
+and the raw `kotlinx-benchmark` JSON
+[`docs/raw/benchmark-file-io-throughput-2026-05-29-macos-java25.json`](docs/raw/benchmark-file-io-throughput-2026-05-29-macos-java25.json).
+
 ### Memory Profile (kotlinx-benchmark + GC addendum)
 
 ![Image workload memory profile chart](../docs/images/readme-charts/images-benchmark-memory-profile-chart-01.png)
@@ -127,6 +143,7 @@ and the raw `kotlinx-benchmark` JSON
 # Focused evidence used by the 2026-05-29 reports
 JAVA_HOME=$(/usr/libexec/java_home -v 25) ./gradlew :bluetape4k-images-benchmark:benchmarkPipelineAllocationBenchmark --console=plain
 JAVA_HOME=$(/usr/libexec/java_home -v 25) ./gradlew :bluetape4k-images-benchmark:benchmarkIoBoundaryBenchmark --console=plain
+JAVA_HOME=$(/usr/libexec/java_home -v 25) ./gradlew :bluetape4k-images-benchmark:benchmarkIoThroughputBenchmark --console=plain
 JAVA_HOME=$(/usr/libexec/java_home -v 25) ./gradlew :bluetape4k-images-benchmark:benchmarkMemoryProfileBenchmark --console=plain
 ```
 
@@ -272,6 +289,17 @@ Compares baseline load/write entry points with Okio and
 | `load_homer_*` | `ByteArray`, `InputStream`, `Path`, Okio `Source`, `SuspendedSource` |
 | `load_landscape_*` | `Path`, `SuspendedSource` |
 | `write_homer_*` | `ByteArray`, `OutputStream`, `Path`, Okio `Sink`, `SuspendedSink` |
+
+### `ImageFileIoThroughputBenchmark`
+
+Measures compressed image file IO throughput under 64 concurrent tasks per
+benchmark invocation. It excludes Scrimage decode/encode to isolate the file
+boundary.
+
+| Benchmark group | Boundaries |
+|-----------------|------------|
+| `read_*_concurrent` | `Path`, Okio `Source`, `SuspendedSource` |
+| `write_*_concurrent` | `Path`, Okio `Sink`, `SuspendedSink` |
 
 ### `VipsBenchmarkState`
 

@@ -97,6 +97,23 @@ raw `kotlinx-benchmark` JSON은
 [`docs/raw/benchmark-io-boundary-2026-05-29-macos-java25.json`](docs/raw/benchmark-io-boundary-2026-05-29-macos-java25.json)을
 참고하세요.
 
+### 동시 파일 IO Throughput
+
+![Concurrent image file IO throughput chart](../docs/images/readme-charts/images-benchmark-file-io-throughput-chart-01.png)
+
+| 작업 | Path | Okio | Suspended file channel |
+|------|------|------|------------------------|
+| 64-file concurrent read | 83,394 files/s | 69,907 files/s | 8,713 files/s |
+| 64-file concurrent write | 1,434 files/s | 1,377 files/s | 1,341 files/s |
+
+이 benchmark는 Scrimage decode/encode를 제외하고 compressed file IO 경계만
+분리해 측정합니다. 이번 Java 25 로컬 결과는 suspended file channel을 throughput
+최적화로 보기 어렵다는 쪽입니다. 자세한 조건은
+[`docs/file-io-throughput-2026-05-29.md`](docs/file-io-throughput-2026-05-29.md),
+raw `kotlinx-benchmark` JSON은
+[`docs/raw/benchmark-file-io-throughput-2026-05-29-macos-java25.json`](docs/raw/benchmark-file-io-throughput-2026-05-29-macos-java25.json)을
+참고하세요.
+
 ### Memory Profile (kotlinx-benchmark + GC addendum)
 
 ![Image workload memory profile chart](../docs/images/readme-charts/images-benchmark-memory-profile-chart-01.png)
@@ -129,6 +146,7 @@ raw `kotlinx-benchmark` JSON은
 # 2026-05-29 리포트에 사용한 focused evidence
 JAVA_HOME=$(/usr/libexec/java_home -v 25) ./gradlew :bluetape4k-images-benchmark:benchmarkPipelineAllocationBenchmark --console=plain
 JAVA_HOME=$(/usr/libexec/java_home -v 25) ./gradlew :bluetape4k-images-benchmark:benchmarkIoBoundaryBenchmark --console=plain
+JAVA_HOME=$(/usr/libexec/java_home -v 25) ./gradlew :bluetape4k-images-benchmark:benchmarkIoThroughputBenchmark --console=plain
 JAVA_HOME=$(/usr/libexec/java_home -v 25) ./gradlew :bluetape4k-images-benchmark:benchmarkMemoryProfileBenchmark --console=plain
 ```
 
@@ -274,6 +292,16 @@ fun vips_encodeJpeg(state: VipsBenchmarkState, bh: Blackhole) {
 | `load_homer_*` | `ByteArray`, `InputStream`, `Path`, Okio `Source`, `SuspendedSource` |
 | `load_landscape_*` | `Path`, `SuspendedSource` |
 | `write_homer_*` | `ByteArray`, `OutputStream`, `Path`, Okio `Sink`, `SuspendedSink` |
+
+### `ImageFileIoThroughputBenchmark`
+
+벤치마크 invocation당 64개 concurrent task로 compressed image file IO throughput을
+측정합니다. 파일 경계만 분리하기 위해 Scrimage decode/encode는 제외합니다.
+
+| 벤치마크 그룹 | 경계 |
+|----------------|------|
+| `read_*_concurrent` | `Path`, Okio `Source`, `SuspendedSource` |
+| `write_*_concurrent` | `Path`, Okio `Sink`, `SuspendedSink` |
 
 ### `VipsBenchmarkState`
 
