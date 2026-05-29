@@ -102,11 +102,15 @@ and the raw `kotlinx-benchmark` JSON
 
 | Workload | Path | Okio | Suspended file channel |
 |----------|------|------|------------------------|
-| 64-file concurrent read | 83,394 files/s | 69,907 files/s | 8,713 files/s |
-| 64-file concurrent write | 1,434 files/s | 1,377 files/s | 1,341 files/s |
+| `cafe.jpg` 6,400-path concurrent read | 16,904 files/s | 2,513 files/s | 74 files/s |
+| `landscape.jpg` 6,400-path concurrent read | 15,981 files/s | 2,072 files/s | 70 files/s |
+| `cafe.jpg` 256-file concurrent write | 1,507 files/s | 767 files/s | 147 files/s |
+| `landscape.jpg` 256-file concurrent write | 1,280 files/s | 778 files/s | 154 files/s |
 
 This compressed-file IO benchmark intentionally excludes Scrimage decode/encode.
-The local Java 25 result does not support treating suspended file channels as a
+It uses `cafe.jpg` and `landscape.jpg`, streams bytes through a fixed buffer,
+and creates 6,400 read paths with hard links to avoid huge setup copies. The
+local Java 25 result does not support treating suspended file channels as a
 throughput optimization. See
 [`docs/file-io-throughput-2026-05-29.md`](docs/file-io-throughput-2026-05-29.md)
 and the raw `kotlinx-benchmark` JSON
@@ -292,9 +296,10 @@ Compares baseline load/write entry points with Okio and
 
 ### `ImageFileIoThroughputBenchmark`
 
-Measures compressed image file IO throughput under 64 concurrent tasks per
-benchmark invocation. It excludes Scrimage decode/encode to isolate the file
-boundary.
+Measures compressed image file IO throughput with `cafe.jpg` and
+`landscape.jpg`. Reads use 6,400 hard-linked paths per scenario. Writes use 256
+real output files per scenario. It excludes Scrimage decode/encode to isolate
+the file boundary.
 
 | Benchmark group | Boundaries |
 |-----------------|------------|
