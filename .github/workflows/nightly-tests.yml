@@ -20,6 +20,9 @@ env:
   JAVA_DISTRIBUTION: 'temurin'
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
 
+permissions:
+  contents: read
+
 jobs:
   # ── 0. Gradle Wrapper 검증 ────────────────────────────────────────────────
   validate-wrapper:
@@ -435,6 +438,7 @@ jobs:
 
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    permissions: {}
     needs:
       - test-images
       - test-images-captcha
@@ -466,6 +470,7 @@ jobs:
     name: Nightly Status
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    permissions: {}
     needs:
       - build
       - test-images
