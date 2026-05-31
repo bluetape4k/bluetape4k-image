@@ -228,17 +228,3 @@ fun ImmutableImage.phash(): Long {
  */
 fun ImmutableImage.phashDistanceTo(other: ImmutableImage): Int =
     HashDistance.hamming(phash(), other.phash())
-
-/**
- * Calculates the Hamming distance between two 64-bit hashes.
- *
- * @param a first hash
- * @param b second hash
- * @return number of different bits (0 ~ 64)
- * @deprecated Removed in 0.2.0. Use [HashDistance.hamming].
- */
-@Deprecated(
-    message = "Use HashDistance.hamming(a, b). Removed in 0.2.0.",
-    replaceWith = ReplaceWith("HashDistance.hamming(a, b)", "io.bluetape4k.images.similarity.HashDistance")
-)
-fun hammingDistance(a: Long, b: Long): Int = HashDistance.hamming(a, b)
