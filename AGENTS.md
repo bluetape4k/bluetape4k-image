@@ -4,7 +4,7 @@ Image processing library with two backend families: scrimage/Java2D and
 libvips through JNI or FFM Panama.
 
 - Group: `io.github.bluetape4k.image`
-- Base version: `0.1.0-SNAPSHOT`
+- Base version: `0.2.0`
 
 ## Modules
 
@@ -57,7 +57,7 @@ when present. Outside Gradle, set it manually if needed.
 
 - Use `immutableImageOf(bytes/file/path/stream)` factories.
 - Operations return new instances; never mutate the source image.
-- Use `withGraphics { }`; `useGraphics { }` is deprecated.
+- Use `withGraphics { }` for `ImmutableImage` drawing. `BufferedImage.useGraphics { }` remains available for mutable `BufferedImage` operations.
 
 ### `images-vips-*`
 

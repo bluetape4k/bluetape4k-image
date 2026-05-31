@@ -1,8 +1,21 @@
 # WIP - bluetape4k-image
 
-Snapshot: 2026-05-29 KST
+Snapshot: 2026-06-01 KST
 Scope: open GitHub issues assigned to `debop`.
-Open count: 15 issues.
+Open count: 3 issues.
+
+## Current Release State - 2026-06-01
+
+The `0.2.0` milestone has no open issues and is ready for release-prep
+validation. Remaining assigned issues are backlog model-heavy features:
+
+- [#1](https://github.com/bluetape4k/bluetape4k-image/issues/1) OCR
+- [#2](https://github.com/bluetape4k/bluetape4k-image/issues/2) face/object detection
+- [#3](https://github.com/bluetape4k/bluetape4k-image/issues/3) image classification
+
+Release prep must verify the `CHANGELOG.md` sections, remove any internal
+`*-SNAPSHOT` bluetape4k dependencies, and rerun CI/Nightly on the release-prep
+commit before tagging.
 
 ## 2026-05-29 Roadmap Refresh
 
@@ -115,10 +128,9 @@ Verified with `gh` on 2026-05-29 KST.
 
 ## Current Direction
 
-Active 0.2.0 work is grouped under feature, performance, bug-hardening, and
-documentation Epics. `images-captcha` is no longer the next feature; the current
-feature lane is `images-ktor` in draft PR #119, with merge blocked until
-`bluetape4k-bom 1.10.0` is available.
+Active 0.2.0 work is complete. `images-captcha`, `images-ktor`, examples,
+benchmark evidence, native lifecycle hardening, and documentation refreshes are
+merged. The next step is release-prep validation, not new feature work.
 
 Native/model-heavy work (#1 OCR, #2 face/object detection, #3 classification) remains isolated
 from the core `images` module. Do not start implementation for these until
@@ -128,11 +140,10 @@ from the core `images` module. Do not start implementation for these until
 
 | Priority | Issue | Difficulty | Notes |
 |---|---|---:|---|
-| P1 | [#118](https://github.com/bluetape4k/bluetape4k-image/issues/118) images-ktor | M | Architecture/API work is implemented in draft PR #119; do not merge until BOM 1.10.0. |
-| P2 | [#111](https://github.com/bluetape4k/bluetape4k-image/issues/111), [#114](https://github.com/bluetape4k/bluetape4k-image/issues/114) docs | S | Keep README/WIP and CAPTCHA lifecycle guidance aligned with completed 0.2.0 work. |
-| P3 | [#83](https://github.com/bluetape4k/bluetape4k-image/issues/83) OCR research | M | Select dependency/model packaging before implementing #1. |
-| P3 | [#84](https://github.com/bluetape4k/bluetape4k-image/issues/84) face/object detection research | M | Resolve OpenCV/ONNX/model bundling risk before implementing #2. |
-| P4 | [#85](https://github.com/bluetape4k/bluetape4k-image/issues/85) classification research | M | Defer classification implementation until model packaging is proven. |
+| P1 | 0.2.0 release prep | S | Validate release metadata, dependency stability, CHANGELOG, CI, and Nightly before tagging. |
+| P2 | [#1](https://github.com/bluetape4k/bluetape4k-image/issues/1) OCR | L | Start only after release prep; reuse the completed dependency research. |
+| P2 | [#2](https://github.com/bluetape4k/bluetape4k-image/issues/2) face/object detection | L | Start only after release prep; reuse the completed dependency research. |
+| P3 | [#3](https://github.com/bluetape4k/bluetape4k-image/issues/3) classification | L | Defer until model/runtime packaging is proven by the earlier model-heavy lanes. |
 
 ## Dependency Map
 
@@ -149,6 +160,6 @@ from the core `images` module. Do not start implementation for these until
 
 | Lane | Limit | Current next |
 |---|---:|---|
-| Self-contained feature | 1 | `#118` draft PR, blocked from merge |
-| Native/model feature | 1 | research first: `#83` or `#84`, not both |
-| Cross-repo integration | 1 | wait for `bluetape4k-bom 1.10.0` before merging Ktor support |
+| Release prep | 1 | 0.2.0 validation and tag readiness |
+| Native/model feature | 1 | #1 or #2 after release prep, not both |
+| Cross-repo integration | 1 | keep stable releases free of internal `*-SNAPSHOT` dependencies |

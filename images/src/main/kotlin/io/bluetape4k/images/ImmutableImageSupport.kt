@@ -458,22 +458,3 @@ inline fun ImmutableImage.withGraphics(
     }
     return copy
 }
-
-/**
- * Runs a drawing [action] on this [ImmutableImage].
- *
- * **Warning**: this function mutates the backing buffer directly and violates
- * the immutable image contract. Use [withGraphics] instead.
- *
- * @param action graphics operation
- * @deprecated Removed in 0.2.0. Use [withGraphics] to keep the immutable image contract.
- */
-@Deprecated(
-    message = "ImmutableImage.useGraphics() mutates the backing buffer and violates the immutable image contract. Use withGraphics(). Removed in 0.2.0.",
-    replaceWith = ReplaceWith("withGraphics(action)"),
-)
-inline fun ImmutableImage.useGraphics(
-    action: (graphics: Graphics2D) -> Unit,
-) {
-    withGraphics(action)
-}
