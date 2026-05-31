@@ -4,7 +4,7 @@ Image processing library with two backend families: scrimage/Java2D and libvips
 through JNI or FFM Panama.
 
 - **Group**: `io.github.bluetape4k.image`
-- **Base version**: `0.2.1`
+- **Base version**: `0.3.0`
 
 ## Repository Layout
 

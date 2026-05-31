@@ -31,5 +31,6 @@ artifacts.
 Do not prepare a stable image tag while any internal bluetape4k dependency still
 uses a `*-SNAPSHOT` version.
 
-After each stable release, reopen `develop` on the next patch line so snapshot
-publishing does not reuse the released version.
+After each feature release, reopen `develop` on the next minor line so snapshot
+publishing does not reuse the released version. Reserve patch versions for bug
+fixes only.
