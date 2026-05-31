@@ -95,6 +95,7 @@ Minor candidates:
 
 Verified with `gh` on 2026-05-29 KST.
 
+- GNO was queried first for prior image/vips plans, specs, and follow-ups.
 - All current open issues remain assigned to `debop`.
 - GNO was queried first for prior image/captcha roadmap and documentation
   context.
