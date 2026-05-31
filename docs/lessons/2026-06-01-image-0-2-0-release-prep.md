@@ -16,14 +16,20 @@ artifact before any stable tag is created.
 
 Release metadata and changelog coverage now match the completed milestone. The
 `0.2.0` API cleanup also removes compatibility shims that were explicitly
-deprecated for this minor release.
+deprecated for this minor release. GitHub Release `0.2.0` and all published
+artifacts were available from Maven Central after the release workflow completed.
 
 ## Verification
 
-Run dependency resolution, targeted image module tests, CI, and a fresh Nightly
-on the release-prep commit before dispatching the stable release workflow.
+Verified dependency resolution, targeted image module tests, release-prep PR CI,
+fresh Nightly, the tag-triggered `Publish Release` workflow, GitHub Release
+creation, and Maven Central HTTP 200 responses for all eight published
+artifacts.
 
 ## Future Notes
 
 Do not prepare a stable image tag while any internal bluetape4k dependency still
 uses a `*-SNAPSHOT` version.
+
+After each stable release, reopen `develop` on the next patch line so snapshot
+publishing does not reuse the released version.

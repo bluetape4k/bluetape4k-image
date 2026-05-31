@@ -4,18 +4,20 @@ Snapshot: 2026-06-01 KST
 Scope: open GitHub issues assigned to `debop`.
 Open count: 3 issues.
 
-## Current Release State - 2026-06-01
+## Current Development State - 2026-06-01
 
-The `0.2.0` milestone has no open issues and is ready for release-prep
-validation. Remaining assigned issues are backlog model-heavy features:
+`0.2.0` is released and available from GitHub Releases and Maven Central. The
+`develop` branch is reopened on `baseVersion=0.2.1` for the next patch line.
+Remaining assigned issues are backlog model-heavy features:
 
 - [#1](https://github.com/bluetape4k/bluetape4k-image/issues/1) OCR
 - [#2](https://github.com/bluetape4k/bluetape4k-image/issues/2) face/object detection
 - [#3](https://github.com/bluetape4k/bluetape4k-image/issues/3) image classification
 
-Release prep must verify the `CHANGELOG.md` sections, remove any internal
-`*-SNAPSHOT` bluetape4k dependencies, and rerun CI/Nightly on the release-prep
-commit before tagging.
+Release prep for future stable tags must verify the `CHANGELOG.md` sections,
+remove any internal `*-SNAPSHOT` bluetape4k dependencies, rerun CI/Nightly on
+the release-prep commit, and reopen `develop` on the next patch line after the
+tag is published.
 
 ## 2026-05-29 Roadmap Refresh
 
@@ -37,8 +39,8 @@ line. The previous starter items are no longer the next work queue:
 
 | Lane | Candidate milestone | Current candidates | Decision |
 |---|---|---|---|
-| Patch | `0.1.3` | none yet | Keep empty unless image-core, docs, dependency, or CI regressions appear. |
-| Minor | `0.2.0` | #118, #109, #103/#105, #114/#111, then #83/#84/#85 | Keep the Ktor module draft blocked until `bluetape4k-bom 1.10.0` is available. Continue unblocked docs and benchmark hardening on the draft branch, then run research gates before model-heavy features. |
+| Patch | `0.2.1` | none yet | Keep empty unless image-core, docs, dependency, or CI regressions appear. |
+| Minor | future milestone | #1/#2/#3 after dependency/model packaging is proven | Keep native/model-heavy work isolated from the core `images` module. |
 
 Recommended order: finish the draft PR branch for the Ktor/CAPTCHA integration
 lane, keep #118 unmerged until the BOM blocker is gone, then execute #83/#84/#85
