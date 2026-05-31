@@ -10,9 +10,9 @@ S3, CDN, 외부 서비스, Docker, native libvips가 필요하지 않습니다.
 
 - `/api/captcha`에 `bluetape4kCaptchaRoutes` 연결
 - `/api/images`에 `bluetape4kImageThumbnailRoutes` 연결
-- Ktor `ContentNegotiation` 기반 JSON serialization
+- `bluetape4k-ktor-core` 기반 JSON serialization과 error payload 기본값
 - `bluetape4k-images`를 통한 multipart thumbnail 생성
-- Ktor test host 기반 route test
+- Ktor test host와 `bluetape4k-ktor-testing` 기반 route test
 
 이 quickstart는 local-only 흐름을 의도합니다. Persistence, public URL, S3/CDN,
 운영 정책 결정이 필요하면 더 큰 workshop 또는 서비스 예제를 사용하세요.

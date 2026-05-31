@@ -4,6 +4,9 @@ import com.sksamuel.scrimage.nio.ImageWriter
 import com.sksamuel.scrimage.nio.PngWriter
 import io.bluetape4k.images.immutableImageOf
 import io.bluetape4k.images.toByteArray
+import io.bluetape4k.ktor.core.ApiErrorResponse
+import io.bluetape4k.ktor.core.intQueryParameter
+import io.bluetape4k.ktor.core.respondApiError
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.requirePositiveNumber
 import io.ktor.http.ContentType
@@ -11,7 +14,6 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.content.PartData
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.request.receiveMultipart
-import io.ktor.server.response.respond
 import io.ktor.server.response.respondBytes
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.post
@@ -21,7 +23,6 @@ import io.ktor.utils.io.readRemaining
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.io.readByteArray
-import kotlinx.serialization.Serializable
 import java.io.IOException
 
 private const val DEFAULT_IMAGE_ROUTE = "/images"
@@ -88,12 +89,14 @@ fun Route.bluetape4kImageThumbnailRoutes(
     }
 }
 
-@Serializable
-data class ImageRouteErrorResponse(
-    val error: String,
-    val message: String,
-    val status: Int,
+/**
+ * Source-compatible alias for the shared bluetape4k Ktor error payload.
+ */
+@Deprecated(
+    message = "Use io.bluetape4k.ktor.core.ApiErrorResponse.",
+    replaceWith = ReplaceWith("ApiErrorResponse", "io.bluetape4k.ktor.core.ApiErrorResponse")
 )
+typealias ImageRouteErrorResponse = ApiErrorResponse
 
 private suspend fun ApplicationCall.receiveImageUpload(config: ImageThumbnailKtorRoutesConfig): ByteArray {
     val multipart = receiveMultipart()
@@ -141,36 +144,28 @@ private suspend fun ByteReadChannel.readImageBytes(config: ImageThumbnailKtorRou
     readRemaining(config.maxInputBytes + 1).readByteArray()
 
 private fun ApplicationCall.thumbnailMaxSide(config: ImageThumbnailKtorRoutesConfig): Int {
-    val rawValue = request.queryParameters["maxSide"] ?: return config.defaultMaxSide
-    val maxSide = rawValue.toIntOrNull()
-        ?: throw IllegalArgumentException("Query parameter 'maxSide' must be an integer.")
-    maxSide.requirePositiveNumber("maxSide")
-    require(maxSide <= config.maxAllowedSide) {
-        "maxSide must be less than or equal to ${config.maxAllowedSide}."
-    }
-    return maxSide
+    val maxSide = intQueryParameter(
+        name = "maxSide",
+        defaultValue = config.defaultMaxSide,
+        range = 1..config.maxAllowedSide
+    )
+    return requireNotNull(maxSide) { "maxSide must be resolved from the default or query parameter." }
 }
 
 private suspend fun ApplicationCall.respondImageRoute(block: suspend () -> Unit) {
     try {
         block()
     } catch (e: IllegalArgumentException) {
-        respond(
-            HttpStatusCode.BadRequest,
-            ImageRouteErrorResponse(
-                error = "bad_request",
-                message = e.message ?: "Invalid image request.",
-                status = HttpStatusCode.BadRequest.value,
-            )
+        respondApiError(
+            status = HttpStatusCode.BadRequest,
+            error = "bad_request",
+            message = e.message ?: "Invalid image request."
         )
     } catch (e: IOException) {
-        respond(
-            HttpStatusCode.BadRequest,
-            ImageRouteErrorResponse(
-                error = "bad_request",
-                message = e.message ?: "Invalid image payload.",
-                status = HttpStatusCode.BadRequest.value,
-            )
+        respondApiError(
+            status = HttpStatusCode.BadRequest,
+            error = "bad_request",
+            message = e.message ?: "Invalid image payload."
         )
     }
 }

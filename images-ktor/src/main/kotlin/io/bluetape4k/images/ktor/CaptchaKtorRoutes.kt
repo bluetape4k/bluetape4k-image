@@ -7,6 +7,10 @@ import io.bluetape4k.images.captcha.CaptchaGenerator
 import io.bluetape4k.images.captcha.CaptchaVerificationResult
 import io.bluetape4k.images.captcha.CaptchaVerificationService
 import io.bluetape4k.images.captcha.captchaGenerator
+import io.bluetape4k.ktor.core.ApiErrorResponse
+import io.bluetape4k.ktor.core.intQueryParameter
+import io.bluetape4k.ktor.core.requiredPathParameter
+import io.bluetape4k.ktor.core.respondApiError
 import io.bluetape4k.support.requireNotBlank
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
@@ -29,9 +33,8 @@ private const val DEFAULT_ID_LENGTH = 16
 /**
  * Ktor route configuration for issuing and verifying bluetape4k CAPTCHA challenges.
  *
- * The route helper intentionally depends only on Ktor server core. Applications can
- * install their preferred JSON and error handling plugins, including the shared
- * bluetape4k Ktor core module when it is available on the selected release train.
+ * The route helper reuses bluetape4k Ktor core request-parameter and error
+ * response helpers while leaving JSON plugin installation to the application.
  *
  * ```kotlin
  * routing {
@@ -81,12 +84,14 @@ enum class CaptchaVerificationStatus {
     NOT_FOUND,
 }
 
-@Serializable
-data class CaptchaRouteErrorResponse(
-    val error: String,
-    val message: String,
-    val status: Int,
+/**
+ * Source-compatible alias for the shared bluetape4k Ktor error payload.
+ */
+@Deprecated(
+    message = "Use io.bluetape4k.ktor.core.ApiErrorResponse.",
+    replaceWith = ReplaceWith("ApiErrorResponse", "io.bluetape4k.ktor.core.ApiErrorResponse")
 )
+typealias CaptchaRouteErrorResponse = ApiErrorResponse
 
 /**
  * Registers CAPTCHA issue and one-shot verification endpoints.
@@ -141,29 +146,24 @@ private suspend fun ApplicationCall.respondOrBadRequest(block: suspend () -> Uni
     try {
         block()
     } catch (e: IllegalArgumentException) {
-        respond(
-            HttpStatusCode.BadRequest,
-            CaptchaRouteErrorResponse(
-                error = "bad_request",
-                message = e.message ?: "Invalid CAPTCHA request.",
-                status = HttpStatusCode.BadRequest.value,
-            )
+        respondApiError(
+            status = HttpStatusCode.BadRequest,
+            error = "bad_request",
+            message = e.message ?: "Invalid CAPTCHA request."
         )
     }
 }
 
-private fun ApplicationCall.requiredPathParameter(name: String): String {
-    name.requireNotBlank("name")
-    return parameters[name]
-        ?.takeIf { it.isNotBlank() }
-        ?: throw IllegalArgumentException("Required path parameter '$name' is missing.")
+private fun ApplicationCall.optionalLengthQueryParameter(): Int? {
+    val length = intQueryParameter("length") ?: return null
+    length.requirePositiveCaptchaLength()
+    return length
 }
 
-private fun ApplicationCall.optionalLengthQueryParameter(): Int? {
-    val rawValue = request.queryParameters["length"] ?: return null
-    return rawValue.toIntOrNull()
-        ?: throw IllegalArgumentException("Query parameter 'length' must be an integer.")
-}
+private fun Int.requirePositiveCaptchaLength(): Int =
+    apply {
+        require(this > 0) { "Query parameter 'length' must be positive." }
+    }
 
 private fun CaptchaVerificationResult.toHttpResponse(): Pair<HttpStatusCode, CaptchaVerifyResponse> =
     when (this) {
