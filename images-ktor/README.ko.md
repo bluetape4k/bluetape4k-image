@@ -9,18 +9,21 @@ bluetape4k 이미지 워크플로우를 위한 Ktor server helper 모듈입니�
 - multipart 이미지 업로드를 받아 썸네일 bytes를 반환하는 `Route.bluetape4kImageThumbnailRoutes()`
 - base64 PNG CAPTCHA 챌린지를 발급하는 `Route.bluetape4kCaptchaRoutes()`
 - `CaptchaVerificationService` 기반 one-shot CAPTCHA 답변 검증
-- 발급, 검증, bad-request 응답을 위한 안정적인 JSON 모델
-- 아직 배포되지 않은 bluetape4k 공용 Ktor 모듈에 hard dependency 없음
+- 발급과 검증을 위한 안정적인 JSON 모델
+- bad-request 응답에는 공용 `bluetape4k-ktor-core`의 request parameter helper와
+  `ApiErrorResponse` 사용
 
 ## 의존성
 
 ```kotlin
 dependencies {
     implementation("io.github.bluetape4k.image:bluetape4k-images-ktor:<version>")
+    implementation("io.github.bluetape4k:bluetape4k-ktor-core")
 }
 ```
 
-애플리케이션에는 Ktor JSON 지원을 설치하세요.
+공용 bluetape4k Ktor core baseline을 설치하거나, 호환되는 Ktor JSON 지원을 직접
+설치하세요.
 
 ```kotlin
 dependencies {
@@ -34,16 +37,15 @@ dependencies {
 ```kotlin
 import io.bluetape4k.images.ktor.bluetape4kCaptchaRoutes
 import io.bluetape4k.images.ktor.bluetape4kImageThumbnailRoutes
-import io.ktor.serialization.kotlinx.json.json
+import io.bluetape4k.ktor.core.Bluetape4kKtorCoreConfig
+import io.bluetape4k.ktor.core.installBluetape4kKtorCore
 import io.ktor.server.application.Application
-import io.ktor.server.application.install
-import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.routing.routing
 
 fun Application.module() {
-    install(ContentNegotiation) {
-        json()
-    }
+    installBluetape4kKtorCore(
+        Bluetape4kKtorCoreConfig(installHealthRoutes = false)
+    )
 
     routing {
         bluetape4kImageThumbnailRoutes()
@@ -110,11 +112,5 @@ routing {
 
 썸네일 helper는 순수 JVM 기반의 로컬 처리 경계만 제공합니다. persistence, S3/CDN URL,
 authorization, native libvips 가속이 필요하면 애플리케이션 레이어에서 조합하세요.
-
-## 호환성
-
-`bluetape4k-projects` develop에는 이미 공용 Ktor core/testing 모듈이 있습니다.
-하지만 해당 artifact는 현재 stable `1.9.2` catalog에 없으므로 이 모듈은 직접 Ktor API를
-사용하고, route 계약은 공용 core helper와 함께 쓰기 쉬운 형태로 유지합니다. 공용 Ktor
-artifact가 선택한 release train에 배포되면 애플리케이션에서 `bluetape4k-images-ktor`와
-함께 설치할 수 있습니다.
+일반 JSON 기본값, error payload, path/query parameter parsing, test-client helper는
+공용 `bluetape4k-ktor-*` 모듈을 사용합니다.

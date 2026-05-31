@@ -6,9 +6,10 @@ import io.bluetape4k.assertions.shouldBeLessOrEqualTo
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.images.immutableImageOf
 import io.bluetape4k.images.ktor.CaptchaIssueResponse
-import io.bluetape4k.images.ktor.ImageRouteErrorResponse
+import io.bluetape4k.ktor.core.ApiErrorResponse
+import io.bluetape4k.ktor.testing.bluetape4kJsonClient
+import io.bluetape4k.ktor.testing.shouldHaveStatus
 import io.ktor.client.call.body
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.forms.MultiPartFormDataContent
 import io.ktor.client.request.forms.append
 import io.ktor.client.request.forms.formData
@@ -19,10 +20,7 @@ import io.ktor.client.statement.bodyAsBytes
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
-import io.ktor.serialization.kotlinx.json.json
-import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
-import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Test
 import java.awt.Color
 import java.awt.image.BufferedImage
@@ -32,11 +30,6 @@ import javax.imageio.ImageIO
 
 class KtorImageApiApplicationTest {
 
-    private val json = Json {
-        ignoreUnknownKeys = true
-        encodeDefaults = true
-    }
-
     @Test
     fun `ready endpoint responds with plain text`() = testApplication {
         application {
@@ -45,7 +38,7 @@ class KtorImageApiApplicationTest {
 
         val response = client.get("/ready")
 
-        response.status shouldBeEqualTo HttpStatusCode.OK
+        response shouldHaveStatus HttpStatusCode.OK
     }
 
     @Test
@@ -53,11 +46,11 @@ class KtorImageApiApplicationTest {
         application {
             configureKtorImageApi()
         }
-        val client = createJsonClient()
+        val client = bluetape4kJsonClient()
 
         val response = client.get("/api/captcha?length=4")
 
-        response.status shouldBeEqualTo HttpStatusCode.OK
+        response shouldHaveStatus HttpStatusCode.OK
         val body = response.body<CaptchaIssueResponse>()
         body.id.length shouldBeGreaterThan 0
         body.contentType shouldBeEqualTo ContentType.Image.PNG.toString()
@@ -72,13 +65,13 @@ class KtorImageApiApplicationTest {
         application {
             configureKtorImageApi()
         }
-        val client = createJsonClient()
+        val client = bluetape4kJsonClient()
 
         val response = client.post("/api/images/thumbnail?maxSide=40") {
             setBody(imageMultipart(pngBytes(width = 120, height = 80)))
         }
 
-        response.status shouldBeEqualTo HttpStatusCode.OK
+        response shouldHaveStatus HttpStatusCode.OK
         response.contentType()?.withoutParameters() shouldBeEqualTo ContentType.Image.PNG
         val thumbnail = immutableImageOf(response.bodyAsBytes())
         thumbnail.width shouldBeLessOrEqualTo 40
@@ -90,7 +83,7 @@ class KtorImageApiApplicationTest {
         application {
             configureKtorImageApi()
         }
-        val client = createJsonClient()
+        val client = bluetape4kJsonClient()
 
         val response = client.post("/api/images/thumbnail") {
             setBody(
@@ -102,18 +95,11 @@ class KtorImageApiApplicationTest {
             )
         }
 
-        response.status shouldBeEqualTo HttpStatusCode.BadRequest
-        val body = response.body<ImageRouteErrorResponse>()
+        response shouldHaveStatus HttpStatusCode.BadRequest
+        val body = response.body<ApiErrorResponse>()
         body.error shouldBeEqualTo "bad_request"
         body.status shouldBeEqualTo HttpStatusCode.BadRequest.value
     }
-
-    private fun ApplicationTestBuilder.createJsonClient() =
-        createClient {
-            install(ContentNegotiation) {
-                json(json)
-            }
-        }
 
     private fun imageMultipart(bytes: ByteArray): MultiPartFormDataContent =
         MultiPartFormDataContent(

@@ -10,9 +10,9 @@ thumbnail route without S3, CDN, external services, Docker, or native libvips.
 
 - `bluetape4kCaptchaRoutes` mounted at `/api/captcha`
 - `bluetape4kImageThumbnailRoutes` mounted at `/api/images`
-- JSON serialization with Ktor `ContentNegotiation`
+- JSON serialization and error payload defaults from `bluetape4k-ktor-core`
 - Multipart thumbnail generation through `bluetape4k-images`
-- Route tests with Ktor test host
+- Route tests with Ktor test host and `bluetape4k-ktor-testing`
 
 This quickstart is intentionally local-only. Use a larger workshop or service
 example when persistence, public URLs, S3/CDN, or operational policy decisions

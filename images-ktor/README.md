@@ -9,19 +9,21 @@ Ktor server helpers for bluetape4k image workflows.
 - `Route.bluetape4kImageThumbnailRoutes()` for multipart image upload and thumbnail bytes
 - `Route.bluetape4kCaptchaRoutes()` for issuing base64 PNG CAPTCHA challenges
 - One-shot CAPTCHA answer verification backed by `CaptchaVerificationService`
-- Stable JSON response models for issue, verify, and bad-request responses
-- No hard dependency on the unreleased shared bluetape4k Ktor modules; applications
-  can still install those modules when their release train provides them
+- Stable JSON response models for issue and verify responses
+- Shared `bluetape4k-ktor-core` request-parameter and `ApiErrorResponse`
+  helpers for bad-request responses
 
 ## Dependency
 
 ```kotlin
 dependencies {
     implementation("io.github.bluetape4k.image:bluetape4k-images-ktor:<version>")
+    implementation("io.github.bluetape4k:bluetape4k-ktor-core")
 }
 ```
 
-Install Ktor JSON support in the application:
+Install the shared bluetape4k Ktor core baseline, or install compatible Ktor
+JSON support yourself:
 
 ```kotlin
 dependencies {
@@ -35,16 +37,15 @@ dependencies {
 ```kotlin
 import io.bluetape4k.images.ktor.bluetape4kCaptchaRoutes
 import io.bluetape4k.images.ktor.bluetape4kImageThumbnailRoutes
-import io.ktor.serialization.kotlinx.json.json
+import io.bluetape4k.ktor.core.Bluetape4kKtorCoreConfig
+import io.bluetape4k.ktor.core.installBluetape4kKtorCore
 import io.ktor.server.application.Application
-import io.ktor.server.application.install
-import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.routing.routing
 
 fun Application.module() {
-    install(ContentNegotiation) {
-        json()
-    }
+    installBluetape4kKtorCore(
+        Bluetape4kKtorCoreConfig(installHealthRoutes = false)
+    )
 
     routing {
         bluetape4kImageThumbnailRoutes()
@@ -112,12 +113,6 @@ routing {
 
 The thumbnail helper is pure JVM and local-only. Compose persistence, S3/CDN
 URLs, authorization, and native libvips acceleration outside this route when an
-application needs them.
-
-## Compatibility
-
-`bluetape4k-projects` develop already contains shared Ktor core/testing modules.
-Those artifacts are not present in the current stable `1.9.2` catalog, so this
-module uses direct Ktor APIs and keeps the route contract compatible with the
-shared core helpers. Once the shared Ktor artifacts are published on the selected
-release train, applications may install them alongside `bluetape4k-images-ktor`.
+application needs them. Generic JSON defaults, error payloads, path/query
+parameter parsing, and test-client helpers come from the shared
+`bluetape4k-ktor-*` modules.
