@@ -7,6 +7,12 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+
+- Aligned the local shared catalog with the public stable
+  `io.github.bluetape4k.aws:bluetape4k-aws-bom:0.3.1` line for the
+  dependencies 1.2.0 release train.
+
 ## [0.2.0] - 2026-06-01
 
 ### Added
