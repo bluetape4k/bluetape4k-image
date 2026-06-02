@@ -1,6 +1,6 @@
 # WIP - bluetape4k-image
 
-Snapshot: 2026-06-01 KST
+Snapshot: 2026-06-02 KST
 Scope: open GitHub issues assigned to `debop`.
 Open count: 3 issues.
 
@@ -78,7 +78,7 @@ Minor candidates:
 
 ## Refresh Notes
 
-Verified with `gh` on 2026-06-01 KST.
+Verified with `gh` on 2026-06-02 KST.
 
 - `0.2.0` GitHub Release and Maven Central publication are complete.
 - All current open issues remain assigned to `debop`.
@@ -91,6 +91,8 @@ Verified with `gh` on 2026-06-01 KST.
 - libvips prerequisite and native-access README guidance completed via [#82](https://github.com/bluetape4k/bluetape4k-image/issues/82).
 - scrimage vs libvips benchmark report and chart refresh completed via [#86](https://github.com/bluetape4k/bluetape4k-image/issues/86).
 - Pre-stabilization typo compatibility APIs were removed via [#61](https://github.com/bluetape4k/bluetape4k-image/issues/61).
+- Adopted shared Ktor helpers for image routes via [#136](https://github.com/bluetape4k/bluetape4k-image/issues/136).
+- Consumed `bluetape4k-projects` `1.10.0` BOM; local catalog aligned with `aws-bom:0.3.1`.
 - Extended test coverage for `images`, `images-vips-java21`, `images-vips-java25` via [PR #39](https://github.com/bluetape4k/bluetape4k-image/pull/39), [PR #40](https://github.com/bluetape4k/bluetape4k-image/pull/40), [PR #41](https://github.com/bluetape4k/bluetape4k-image/pull/41).
 - POM license metadata corrected (Apache 2.0 → MIT) via [PR #38](https://github.com/bluetape4k/bluetape4k-image/pull/38).
 - BOM module and localized BOM README files merged via [PR #12](https://github.com/bluetape4k/bluetape4k-image/pull/12) and [PR #13](https://github.com/bluetape4k/bluetape4k-image/pull/13).
