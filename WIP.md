@@ -8,7 +8,9 @@ Open count: 3 issues.
 
 `0.2.0` is released and available from GitHub Releases and Maven Central. The
 `develop` branch is reopened on `baseVersion=0.3.0` for the next feature line.
-Patch versions are reserved for bug fixes only.
+Patch versions are reserved for bug fixes only. The local catalog consumes
+`bluetape4k-bom:1.11.0-SNAPSHOT` and `bluetape4k-aws-bom:0.4.0-SNAPSHOT`
+for next-train validation.
 Remaining assigned issues are backlog model-heavy features:
 
 - [#1](https://github.com/bluetape4k/bluetape4k-image/issues/1) OCR
