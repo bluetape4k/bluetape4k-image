@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="720" viewBox="0 0 1500 720" role="img" aria-label="Spring Boot Image API Architecture">
+<defs>
+  <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%">
+    <feDropShadow dx="0" dy="7" stdDeviation="8" flood-color="#203040" flood-opacity="0.10"/>
+  </filter>
+  <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
+    <path d="M 1 1 L 7 4 L 1 7 Z" fill="#758297"/>
+  </marker>
+  <style>
+    .canvas{fill:#F6F9FC}
+    .frame{fill:#FFFFFF;stroke:#D7E2EC;stroke-width:2}
+    .title{font-family:"Architects Daughter";font-size:42px;fill:#203040;font-weight:400}
+    .subtitle{font-family:"Comic Mono";font-size:16px;fill:#536476;font-weight:400}
+    .node-title{font-family:"Architects Daughter";font-size:22px;fill:#203040;font-weight:400}
+    .node-detail{font-family:"Comic Mono";font-size:13px;fill:#4D5F70;font-weight:400}
+    .panel-title{font-family:"Architects Daughter";font-size:24px;fill:#203040;font-weight:400}
+    .layer{fill:#F3F7FB;stroke:#D7E2EC;stroke-width:2}
+    .layer-title{font-family:"Architects Daughter";font-size:26px;fill:#22344A;font-weight:400}
+    .label{font-family:"Comic Mono";font-size:12px;fill:#405366;font-weight:400}
+    .footer{font-family:"Comic Mono";font-size:13px;fill:#627184;font-weight:400}
+    .footer-pill{fill:#FFFFFF;stroke:#D7E2EC;stroke-width:1}
+    .card{filter:url(#shadow);stroke-width:2}
+    .edge{stroke:#758297;stroke-width:2.3;fill:none;marker-end:url(#arrow);stroke-linecap:round;stroke-linejoin:round}
+    .edge-dashed{stroke:#758297;stroke-width:2.2;fill:none;marker-end:url(#arrow);stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:7 6}
+    .lifeline{stroke:#9AA8B8;stroke-width:1.7;stroke-dasharray:7 7}
+  </style>
+</defs>
+<rect class="canvas" width="1500" height="720"/>
+<rect class="frame" x="34" y="28" width="1432" height="662" rx="26"/>
+<text class="title" x="70" y="82">Spring Boot Image API Architecture</text>
+<text class="subtitle" x="74" y="116">Spring Boot auto-configuration provides local ImageStorage for the quickstart service.</text>
+<g id="edges">
+<path class="edge" d="M 330 352 L 390 352" stroke="#758297"/>
+<rect x="302.0" y="332.0" width="116" height="22" rx="8" fill="#FFFFFF" stroke="#D7E2EC" opacity="0.94"/>
+<text class="label" x="360.0" y="344.0" text-anchor="middle" dominant-baseline="middle">scan</text>
+<path class="edge" d="M 650 532 L 690 532 L 690 352 L 720 352" stroke="#758297"/>
+<rect x="629.5" y="422.0" width="116" height="22" rx="8" fill="#FFFFFF" stroke="#D7E2EC" opacity="0.94"/>
+<text class="label" x="687.5" y="434.0" text-anchor="middle" dominant-baseline="middle">bean</text>
+<path class="edge" d="M 650 352 L 720 352" stroke="#758297"/>
+<rect x="627.0" y="332.0" width="116" height="22" rx="8" fill="#FFFFFF" stroke="#D7E2EC" opacity="0.94"/>
+<text class="label" x="685.0" y="344.0" text-anchor="middle" dominant-baseline="middle">delegate</text>
+<path class="edge" d="M 980 352 L 1055 352" stroke="#758297"/>
+<rect x="959.5" y="332.0" width="116" height="22" rx="8" fill="#FFFFFF" stroke="#D7E2EC" opacity="0.94"/>
+<text class="label" x="1017.5" y="344.0" text-anchor="middle" dominant-baseline="middle">upload/download</text>
+<path class="edge" d="M 1185 404 L 1185 480" stroke="#758297"/>
+<rect x="1127.0" y="422.0" width="116" height="22" rx="8" fill="#FFFFFF" stroke="#D7E2EC" opacity="0.94"/>
+<text class="label" x="1185.0" y="434.0" text-anchor="middle" dominant-baseline="middle">persist</text>
+</g>
+<g id="nodes">
+<g id="boot">
+  <rect class="card" x="70" y="300" width="260" height="104" rx="14" fill="#E8F3FF" stroke="#5B8DEF"/>
+  <text class="node-title" x="200" y="342.0" text-anchor="middle" dominant-baseline="middle">Spring Boot 4 app</text>
+  <text class="node-detail" x="200" y="362.0" text-anchor="middle" dominant-baseline="middle">SpringBootImageApiApplication</text>
+</g>
+<g id="controller">
+  <rect class="card" x="390" y="300" width="260" height="104" rx="14" fill="#EAF7EF" stroke="#58A978"/>
+  <text class="node-title" x="520" y="342.0" text-anchor="middle" dominant-baseline="middle">ImageApiController</text>
+  <text class="node-detail" x="520" y="362.0" text-anchor="middle" dominant-baseline="middle">upload and download endpoints</text>
+</g>
+<g id="config">
+  <rect class="card" x="390" y="480" width="260" height="104" rx="14" fill="#FFF3D9" stroke="#D6A441"/>
+  <text class="node-title" x="520" y="522.0" text-anchor="middle" dominant-baseline="middle">LocalImageApiConfiguration</text>
+  <text class="node-detail" x="520" y="542.0" text-anchor="middle" dominant-baseline="middle">wires ImageStorage bean</text>
+</g>
+<g id="service">
+  <rect class="card" x="720" y="300" width="260" height="104" rx="14" fill="#FDECEF" stroke="#DC6B82"/>
+  <text class="node-title" x="850" y="332.0" text-anchor="middle" dominant-baseline="middle">LocalImageApiService</text>
+  <text class="node-detail" x="850" y="352.0" text-anchor="middle" dominant-baseline="middle">UploadOptions allowlist</text>
+  <text class="node-detail" x="850" y="372.0" text-anchor="middle" dominant-baseline="middle">thumbnail generation</text>
+</g>
+<g id="storage">
+  <rect class="card" x="1055" y="300" width="260" height="104" rx="14" fill="#E9F7F6" stroke="#45A7A1"/>
+  <text class="node-title" x="1185" y="342.0" text-anchor="middle" dominant-baseline="middle">ImageStorage</text>
+  <text class="node-detail" x="1185" y="362.0" text-anchor="middle" dominant-baseline="middle">LocalImageStorage backend</text>
+</g>
+<g id="files">
+  <rect class="card" x="1055" y="480" width="260" height="104" rx="14" fill="#F1ECFF" stroke="#8A72D6"/>
+  <text class="node-title" x="1185" y="522.0" text-anchor="middle" dominant-baseline="middle">Filesystem root</text>
+  <text class="node-detail" x="1185" y="542.0" text-anchor="middle" dominant-baseline="middle">originals/ and thumbnails/</text>
+</g>
+</g>
+<text class="footer" x="750.0" y="670" text-anchor="middle">S3/CDN policy is intentionally left to the advanced workshop, not this local quickstart.</text>
+</svg>

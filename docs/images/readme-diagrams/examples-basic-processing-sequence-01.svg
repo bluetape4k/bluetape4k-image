@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1380" height="760" viewBox="0 0 1380 760" role="img" aria-label="Basic Processing Sequence">
+<defs>
+  <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%">
+    <feDropShadow dx="0" dy="7" stdDeviation="8" flood-color="#203040" flood-opacity="0.10"/>
+  </filter>
+  <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
+    <path d="M 1 1 L 7 4 L 1 7 Z" fill="#758297"/>
+  </marker>
+  <style>
+    .canvas{fill:#F6F9FC}
+    .frame{fill:#FFFFFF;stroke:#D7E2EC;stroke-width:2}
+    .title{font-family:"Architects Daughter";font-size:42px;fill:#203040;font-weight:400}
+    .subtitle{font-family:"Comic Mono";font-size:16px;fill:#536476;font-weight:400}
+    .node-title{font-family:"Architects Daughter";font-size:22px;fill:#203040;font-weight:400}
+    .node-detail{font-family:"Comic Mono";font-size:13px;fill:#4D5F70;font-weight:400}
+    .panel-title{font-family:"Architects Daughter";font-size:24px;fill:#203040;font-weight:400}
+    .layer{fill:#F3F7FB;stroke:#D7E2EC;stroke-width:2}
+    .layer-title{font-family:"Architects Daughter";font-size:26px;fill:#22344A;font-weight:400}
+    .label{font-family:"Comic Mono";font-size:12px;fill:#405366;font-weight:400}
+    .footer{font-family:"Comic Mono";font-size:13px;fill:#627184;font-weight:400}
+    .footer-pill{fill:#FFFFFF;stroke:#D7E2EC;stroke-width:1}
+    .card{filter:url(#shadow);stroke-width:2}
+    .edge{stroke:#758297;stroke-width:2.3;fill:none;marker-end:url(#arrow);stroke-linecap:round;stroke-linejoin:round}
+    .edge-dashed{stroke:#758297;stroke-width:2.2;fill:none;marker-end:url(#arrow);stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:7 6}
+    .lifeline{stroke:#9AA8B8;stroke-width:1.7;stroke-dasharray:7 7}
+  </style>
+</defs>
+<rect class="canvas" width="1380" height="760"/>
+<rect class="frame" x="34" y="28" width="1312" height="702" rx="26"/>
+<text class="title" x="70" y="82">Basic Processing Sequence</text>
+<text class="subtitle" x="74" y="116">The smoke test and run task share one deterministic generator.</text>
+<g id="participants">
+<rect class="card" x="57" y="150" width="186" height="68" rx="10" fill="#E8F3FF" stroke="#5B8DEF"/>
+<text class="node-title" x="150" y="177" text-anchor="middle" dominant-baseline="middle">User</text>
+<text class="node-detail" x="150" y="199" text-anchor="middle" dominant-baseline="middle">Gradle CLI</text>
+<line class="lifeline" x1="150" y1="218" x2="150" y2="665"/>
+<rect class="card" x="297" y="150" width="186" height="68" rx="10" fill="#EAF7EF" stroke="#58A978"/>
+<text class="node-title" x="390" y="177" text-anchor="middle" dominant-baseline="middle">main</text>
+<text class="node-detail" x="390" y="199" text-anchor="middle" dominant-baseline="middle">runBlocking</text>
+<line class="lifeline" x1="390" y1="218" x2="390" y2="665"/>
+<rect class="card" x="547" y="150" width="186" height="68" rx="10" fill="#FFF3D9" stroke="#D6A441"/>
+<text class="node-title" x="640" y="177" text-anchor="middle" dominant-baseline="middle">Generator</text>
+<text class="node-detail" x="640" y="199" text-anchor="middle" dominant-baseline="middle">generate</text>
+<line class="lifeline" x1="640" y1="218" x2="640" y2="665"/>
+<rect class="card" x="797" y="150" width="186" height="68" rx="10" fill="#FDECEF" stroke="#DC6B82"/>
+<text class="node-title" x="890" y="177" text-anchor="middle" dominant-baseline="middle">Resources</text>
+<text class="node-detail" x="890" y="199" text-anchor="middle" dominant-baseline="middle">fixtures</text>
+<line class="lifeline" x1="890" y1="218" x2="890" y2="665"/>
+<rect class="card" x="1037" y="150" width="186" height="68" rx="10" fill="#E9F7F6" stroke="#45A7A1"/>
+<text class="node-title" x="1130" y="177" text-anchor="middle" dominant-baseline="middle">Outputs</text>
+<text class="node-detail" x="1130" y="199" text-anchor="middle" dominant-baseline="middle">files</text>
+<line class="lifeline" x1="1130" y1="218" x2="1130" y2="665"/>
+</g>
+<g id="messages">
+<path class="edge" d="M 150 285 L 390 285"/>
+<rect x="156.0" y="239" width="228.0" height="28" rx="9" fill="#FFFFFF" stroke="#D7E2EC"/>
+<text class="label" x="270.0" y="253" text-anchor="middle" dominant-baseline="middle">1. Run :basic-processing:run</text>
+<circle cx="150" cy="285" r="4" fill="#FFFFFF" stroke="#758297" stroke-width="1.8"/>
+<circle cx="390" cy="285" r="4" fill="#FFFFFF" stroke="#758297" stroke-width="1.8"/>
+<path class="edge" d="M 390 355 L 640 355"/>
+<rect x="408.0" y="309" width="214.0" height="28" rx="9" fill="#FFFFFF" stroke="#D7E2EC"/>
+<text class="label" x="515.0" y="323" text-anchor="middle" dominant-baseline="middle">2. Create output directory</text>
+<circle cx="390" cy="355" r="4" fill="#FFFFFF" stroke="#758297" stroke-width="1.8"/>
+<circle cx="640" cy="355" r="4" fill="#FFFFFF" stroke="#758297" stroke-width="1.8"/>
+<path class="edge" d="M 640 425 L 890 425"/>
+<rect x="630.0" y="379" width="270.0" height="28" rx="9" fill="#FFFFFF" stroke="#D7E2EC"/>
+<text class="label" x="765.0" y="393" text-anchor="middle" dominant-baseline="middle">3. Load cafe, landscape, workbench</text>
+<circle cx="640" cy="425" r="4" fill="#FFFFFF" stroke="#758297" stroke-width="1.8"/>
+<circle cx="890" cy="425" r="4" fill="#FFFFFF" stroke="#758297" stroke-width="1.8"/>
+<path class="edge" d="M 640 505 L 1130 505"/>
+<rect x="705.0" y="459" width="360.0" height="28" rx="9" fill="#FFFFFF" stroke="#D7E2EC"/>
+<text class="label" x="885.0" y="473" text-anchor="middle" dominant-baseline="middle">4. Write thumbnail, crop, PNG, watermark, preview</text>
+<circle cx="640" cy="505" r="4" fill="#FFFFFF" stroke="#758297" stroke-width="1.8"/>
+<circle cx="1130" cy="505" r="4" fill="#FFFFFF" stroke="#758297" stroke-width="1.8"/>
+<path class="edge-dashed" d="M 1130 585 L 640 585"/>
+<rect x="753.5" y="539" width="263.0" height="28" rx="9" fill="#FFFFFF" stroke="#D7E2EC"/>
+<text class="label" x="885.0" y="553" text-anchor="middle" dominant-baseline="middle">5. Return GeneratedImage metadata</text>
+<circle cx="640" cy="585" r="4" fill="#FFFFFF" stroke="#758297" stroke-width="1.8"/>
+<circle cx="1130" cy="585" r="4" fill="#FFFFFF" stroke="#758297" stroke-width="1.8"/>
+<path class="edge-dashed" d="M 640 655 L 150 655"/>
+<rect x="260.0" y="609" width="270.0" height="28" rx="9" fill="#FFFFFF" stroke="#D7E2EC"/>
+<text class="label" x="395.0" y="623" text-anchor="middle" dominant-baseline="middle">6. Print file names and dimensions</text>
+<circle cx="150" cy="655" r="4" fill="#FFFFFF" stroke="#758297" stroke-width="1.8"/>
+<circle cx="640" cy="655" r="4" fill="#FFFFFF" stroke="#758297" stroke-width="1.8"/>
+</g>
+<text class="footer" x="690.0" y="710" text-anchor="middle">Tests decode every output and assert the expected image dimensions.</text>
+</svg>

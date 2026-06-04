@@ -17,6 +17,20 @@ S3, CDN, 외부 서비스, Docker, native libvips가 필요하지 않습니다.
 이 quickstart는 local-only 흐름을 의도합니다. Persistence, public URL, S3/CDN,
 운영 정책 결정이 필요하면 더 큰 workshop 또는 서비스 예제를 사용하세요.
 
+## 다이어그램
+
+### 예제 시나리오
+
+![Ktor Image API Scenario](../../docs/images/readme-diagrams/examples-ktor-image-api-scenario-01.png)
+
+### Architecture
+
+![Ktor Image API Architecture](../../docs/images/readme-diagrams/examples-ktor-image-api-architecture-01.png)
+
+### Sequence
+
+![Ktor Image API Sequence](../../docs/images/readme-diagrams/examples-ktor-image-api-sequence-01.png)
+
 ## 실행
 
 ```bash

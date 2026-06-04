@@ -17,6 +17,20 @@ generated files under `build/tmp/basic-processing` by default.
 - Reuse the root README representative image as a 16:9 preview output
 - Write encoded images through suspend-aware `bluetape4k-images` writers
 
+## Diagrams
+
+### Example Scenario
+
+![Basic Processing Scenario](../../docs/images/readme-diagrams/examples-basic-processing-scenario-01.png)
+
+### Architecture
+
+![Basic Processing Architecture](../../docs/images/readme-diagrams/examples-basic-processing-architecture-01.png)
+
+### Sequence
+
+![Basic Processing Sequence](../../docs/images/readme-diagrams/examples-basic-processing-sequence-01.png)
+
 ## Run
 
 ```bash

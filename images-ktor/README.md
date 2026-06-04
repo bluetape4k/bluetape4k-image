@@ -4,6 +4,10 @@ English | [한국어](./README.ko.md)
 
 Ktor server helpers for bluetape4k image workflows.
 
+## Architecture
+
+![Images Ktor Architecture diagram](../docs/images/readme-diagrams/images-ktor-architecture-01.png)
+
 ## Features
 
 - `Route.bluetape4kImageThumbnailRoutes()` for multipart image upload and thumbnail bytes
