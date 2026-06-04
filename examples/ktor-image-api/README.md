@@ -18,6 +18,20 @@ This quickstart is intentionally local-only. Use a larger workshop or service
 example when persistence, public URLs, S3/CDN, or operational policy decisions
 are required.
 
+## Diagrams
+
+### Example Scenario
+
+![Ktor Image API Scenario](../../docs/images/readme-diagrams/examples-ktor-image-api-scenario-01.png)
+
+### Architecture
+
+![Ktor Image API Architecture](../../docs/images/readme-diagrams/examples-ktor-image-api-architecture-01.png)
+
+### Sequence
+
+![Ktor Image API Sequence](../../docs/images/readme-diagrams/examples-ktor-image-api-sequence-01.png)
+
 ## Run
 
 ```bash

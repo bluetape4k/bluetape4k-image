@@ -18,6 +18,20 @@ filesystem-backed storage를 실행해 보는 작은 Spring Boot 4 예제입니�
 운영 정책까지 포함한 큰 서비스 흐름은
 `bluetape4k-workshop/image-processing/advanced-workflow`를 사용하세요.
 
+## 다이어그램
+
+### 예제 시나리오
+
+![Spring Boot Image API Scenario](../../docs/images/readme-diagrams/examples-spring-boot-image-api-scenario-01.png)
+
+### Architecture
+
+![Spring Boot Image API Architecture](../../docs/images/readme-diagrams/examples-spring-boot-image-api-architecture-01.png)
+
+### Sequence
+
+![Spring Boot Image API Sequence](../../docs/images/readme-diagrams/examples-spring-boot-image-api-sequence-01.png)
+
 ## 실행
 
 ```bash

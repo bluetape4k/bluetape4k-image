@@ -18,6 +18,20 @@ This is the small repo-owned quickstart. For an advanced workflow with public
 URLs, S3/CDN concerns, and a larger service shape, use
 `bluetape4k-workshop/image-processing/advanced-workflow`.
 
+## Diagrams
+
+### Example Scenario
+
+![Spring Boot Image API Scenario](../../docs/images/readme-diagrams/examples-spring-boot-image-api-scenario-01.png)
+
+### Architecture
+
+![Spring Boot Image API Architecture](../../docs/images/readme-diagrams/examples-spring-boot-image-api-architecture-01.png)
+
+### Sequence
+
+![Spring Boot Image API Sequence](../../docs/images/readme-diagrams/examples-spring-boot-image-api-sequence-01.png)
+
 ## Run
 
 ```bash

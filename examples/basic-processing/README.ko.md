@@ -17,6 +17,20 @@
 - 루트 README 대표 이미지를 16:9 preview 출력으로 재사용
 - suspend-aware `bluetape4k-images` writer로 인코딩 결과 저장
 
+## 다이어그램
+
+### 예제 시나리오
+
+![Basic Processing Scenario](../../docs/images/readme-diagrams/examples-basic-processing-scenario-01.png)
+
+### Architecture
+
+![Basic Processing Architecture](../../docs/images/readme-diagrams/examples-basic-processing-architecture-01.png)
+
+### Sequence
+
+![Basic Processing Sequence](../../docs/images/readme-diagrams/examples-basic-processing-sequence-01.png)
+
 ## 실행
 
 ```bash

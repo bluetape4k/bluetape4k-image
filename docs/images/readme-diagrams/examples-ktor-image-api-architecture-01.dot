@@ -1,0 +1,20 @@
+digraph G {
+  graph [rankdir=LR, bgcolor="#F6F9FC", margin=0.18, nodesep=0.55, ranksep=0.75];
+  node [shape=box, style="rounded,filled", fillcolor="#FFFFFF", color="#9AA8B8", fontname="Comic Mono", fontsize=11];
+  edge [color="#758297", fontname="Comic Mono", fontsize=9];
+  label="Ktor Image API Architecture";
+  labelloc="t";
+  "app" [label="Application module"];
+  "core" [label="Ktor core plugin"];
+  "routing" [label="Routing DSL"];
+  "captcha" [label="bluetape4kCaptchaRoutes"];
+  "thumbnail" [label="bluetape4kImageThumbnailRoutes"];
+  "captchaLib" [label="images-captcha"];
+  "images" [label="bluetape4k-images"];
+  "app" -> "core" [label="install"];
+  "app" -> "routing" [label="routing"];
+  "routing" -> "captcha" [label="mount"];
+  "routing" -> "thumbnail" [label="mount"];
+  "captcha" -> "captchaLib" [label="generate"];
+  "thumbnail" -> "images" [label="resize"];
+}

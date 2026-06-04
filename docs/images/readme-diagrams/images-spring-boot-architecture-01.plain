@@ -1,0 +1,29 @@
+graph 1 10.778 5.5903
+node app 0.73611 3.4167 1.4722 0.5 "Spring Boot app" rounded,filled box #9AA8B8 #FFFFFF
+node props 3.0417 2.3611 1.6389 0.5 "Images properties" rounded,filled box #9AA8B8 #FFFFFF
+node autoProcessing 3.0417 3.4167 1.6389 0.5 "Processing Config" rounded,filled box #9AA8B8 #FFFFFF
+node autoStorage 5.3056 2.8889 1.3889 0.5 "Storage Config" rounded,filled box #9AA8B8 #FFFFFF
+node autoCdn 7.5278 4.4722 1.0556 0.5 "CDN Config" rounded,filled box #9AA8B8 #FFFFFF
+node autoHealth 0.73611 4.4722 1.3056 0.5 "Health Config" rounded,filled box #9AA8B8 #FFFFFF
+node autoMetrics 7.5278 0.25 1.3889 0.5 "Metrics Config" rounded,filled box #9AA8B8 #FFFFFF
+node local 7.5278 3.4167 1.3056 0.5 "Local storage" rounded,filled box #9AA8B8 #FFFFFF
+node s3 7.5278 2.3611 1.0556 0.5 "S3 storage" rounded,filled box #9AA8B8 #FFFFFF
+node signers 9.9167 5 1.5556 0.5 "Read URL signers" rounded,filled box #9AA8B8 #FFFFFF
+node storageSpi 7.5278 1.3056 1.5556 0.5 "ImageStorage SPI" rounded,filled box #9AA8B8 #FFFFFF
+node health 3.0417 4.4722 1.3889 0.5 "Storage health" rounded,filled box #9AA8B8 #FFFFFF
+node metrics 9.9167 2.3611 1.4722 0.5 "Metrics wrapper" rounded,filled box #9AA8B8 #FFFFFF
+node actuator 9.9167 3.9444 1.7222 0.5 "Actuator sanitizer" rounded,filled box #9AA8B8 #FFFFFF
+edge app autoProcessing 4 1.477 3.4167 1.6629 3.4167 1.8658 3.4167 2.0617 3.4167 solid #758297
+edge props autoStorage 4 3.8628 2.5517 4.0553 2.5971 4.2612 2.6457 4.4549 2.6914 solid #758297
+edge autoProcessing autoStorage 4 3.8628 3.2261 4.0553 3.1807 4.2612 3.1321 4.4549 3.0864 solid #758297
+edge autoStorage autoCdn 7 5.6583 3.1435 5.9468 3.3592 6.3732 3.6754 6.75 3.9444 6.8346 4.0049 6.9251 4.0683 7.0131 4.1295 solid #758297
+edge autoStorage local 4 6.0018 3.053 6.2288 3.1076 6.4837 3.1689 6.7185 3.2254 solid #758297
+edge autoStorage s3 4 6.0018 2.7248 6.2699 2.6603 6.5769 2.5865 6.8439 2.5222 solid #758297
+edge autoStorage storageSpi 7 5.6583 2.6342 5.9468 2.4185 6.3732 2.1024 6.75 1.8333 6.8346 1.7729 6.9251 1.7094 7.0131 1.6483 solid #758297
+edge autoCdn signers 4 8.0598 4.588 8.3292 4.6483 8.6667 4.7237 8.979 4.7935 solid #758297
+edge autoCdn actuator 4 8.0598 4.3564 8.3061 4.3014 8.6092 4.2336 8.8979 4.1691 solid #758297
+edge autoHealth health 4 1.3905 4.4722 1.6357 4.4722 1.9193 4.4722 2.1808 4.4722 solid #758297
+edge autoMetrics metrics 7 7.94 0.50566 8.0607 0.58826 8.1914 0.68306 8.3056 0.77778 8.7685 1.162 9.2527 1.6573 9.565 1.9908 solid #758297
+edge local metrics 4 8.1132 3.1611 8.4357 3.017 8.8416 2.8355 9.1852 2.6819 solid #758297
+edge s3 metrics 4 8.0598 2.3611 8.341 2.3611 8.6962 2.3611 9.0196 2.3611 solid #758297
+stop

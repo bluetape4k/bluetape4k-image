@@ -1,0 +1,18 @@
+digraph G {
+  graph [rankdir=LR, bgcolor="#F6F9FC", margin=0.18, nodesep=0.55, ranksep=0.75];
+  node [shape=box, style="rounded,filled", fillcolor="#FFFFFF", color="#9AA8B8", fontname="Comic Mono", fontsize=11];
+  edge [color="#758297", fontname="Comic Mono", fontsize=9];
+  label="Spring Boot Image API Architecture";
+  labelloc="t";
+  "boot" [label="Spring Boot 4 app"];
+  "controller" [label="ImageApiController"];
+  "config" [label="LocalImageApiConfiguration"];
+  "service" [label="LocalImageApiService"];
+  "storage" [label="ImageStorage"];
+  "files" [label="Filesystem root"];
+  "boot" -> "controller" [label="scan"];
+  "config" -> "service" [label="bean"];
+  "controller" -> "service" [label="delegate"];
+  "service" -> "storage" [label="upload/download"];
+  "storage" -> "files" [label="persist"];
+}

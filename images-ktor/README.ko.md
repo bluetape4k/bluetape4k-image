@@ -4,6 +4,10 @@
 
 bluetape4k 이미지 워크플로우를 위한 Ktor server helper 모듈입니다.
 
+## 아키텍처
+
+![Images Ktor Architecture diagram](../docs/images/readme-diagrams/images-ktor-architecture-01.png)
+
 ## 기능
 
 - multipart 이미지 업로드를 받아 썸네일 bytes를 반환하는 `Route.bluetape4kImageThumbnailRoutes()`
