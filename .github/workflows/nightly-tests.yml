@@ -54,20 +54,20 @@ jobs:
 
       - name: Build (compile only)
         run: |
-          for attempt in 1 2 3; do
+          for attempt in 1 2 3 4 5; do
             ./gradlew --refresh-dependencies build -x test --parallel --no-configuration-cache && break
             echo "Attempt $attempt failed"
-            [ $attempt -lt 3 ] && sleep 10 || exit 1
+            [ $attempt -lt 5 ] && sleep 30 || exit 1
           done
         env:
           GRADLE_OPTS: "-Dorg.gradle.daemon=false"
 
       - name: Detekt static analysis
         run: |
-          for attempt in 1 2 3; do
+          for attempt in 1 2 3 4 5; do
             ./gradlew --refresh-dependencies detekt --parallel --no-configuration-cache && break
             echo "Attempt $attempt failed"
-            [ $attempt -lt 3 ] && sleep 10 || exit 1
+            [ $attempt -lt 5 ] && sleep 30 || exit 1
           done
 
       - name: Upload detekt report
@@ -100,10 +100,10 @@ jobs:
 
       - name: Test images
         run: |
-          for attempt in 1 2 3; do
+          for attempt in 1 2 3 4 5; do
             ./gradlew --refresh-dependencies :bluetape4k-images:test --no-configuration-cache --no-daemon && break
             echo "Attempt $attempt failed"
-            [ $attempt -lt 3 ] && sleep 10 || exit 1
+            [ $attempt -lt 5 ] && sleep 30 || exit 1
           done
         env:
           GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx4g -Dorg.gradle.daemon=false"
@@ -151,10 +151,10 @@ jobs:
 
       - name: Test images-captcha
         run: |
-          for attempt in 1 2 3; do
+          for attempt in 1 2 3 4 5; do
             ./gradlew --refresh-dependencies :bluetape4k-images-captcha:test --no-configuration-cache --no-daemon && break
             echo "Attempt $attempt failed"
-            [ $attempt -lt 3 ] && sleep 10 || exit 1
+            [ $attempt -lt 5 ] && sleep 30 || exit 1
           done
         env:
           GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx4g -Dorg.gradle.daemon=false"
@@ -202,10 +202,10 @@ jobs:
 
       - name: Test images-ktor
         run: |
-          for attempt in 1 2 3; do
+          for attempt in 1 2 3 4 5; do
             ./gradlew --refresh-dependencies :bluetape4k-images-ktor:test --no-configuration-cache --no-daemon && break
             echo "Attempt $attempt failed"
-            [ $attempt -lt 3 ] && sleep 10 || exit 1
+            [ $attempt -lt 5 ] && sleep 30 || exit 1
           done
         env:
           GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx4g -Dorg.gradle.daemon=false"
@@ -253,10 +253,10 @@ jobs:
 
       - name: Test images-spring-boot
         run: |
-          for attempt in 1 2 3; do
+          for attempt in 1 2 3 4 5; do
             ./gradlew --refresh-dependencies :bluetape4k-images-spring-boot:test --no-configuration-cache --no-daemon && break
             echo "Attempt $attempt failed"
-            [ $attempt -lt 3 ] && sleep 10 || exit 1
+            [ $attempt -lt 5 ] && sleep 30 || exit 1
           done
         env:
           GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx4g -Dorg.gradle.daemon=false"
@@ -309,10 +309,10 @@ jobs:
 
       - name: Test images-vips-api
         run: |
-          for attempt in 1 2 3; do
+          for attempt in 1 2 3 4 5; do
             ./gradlew --refresh-dependencies :bluetape4k-images-vips-api:test --no-configuration-cache --no-daemon && break
             echo "Attempt $attempt failed"
-            [ $attempt -lt 3 ] && sleep 10 || exit 1
+            [ $attempt -lt 5 ] && sleep 30 || exit 1
           done
         env:
           GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx4g -Dorg.gradle.daemon=false"
@@ -365,10 +365,10 @@ jobs:
 
       - name: Test images-vips-java21
         run: |
-          for attempt in 1 2 3; do
+          for attempt in 1 2 3 4 5; do
             ./gradlew --refresh-dependencies :bluetape4k-images-vips-java21:test --no-configuration-cache --no-daemon && break
             echo "Attempt $attempt failed"
-            [ $attempt -lt 3 ] && sleep 10 || exit 1
+            [ $attempt -lt 5 ] && sleep 30 || exit 1
           done
         env:
           GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx4g -Dorg.gradle.daemon=false"
@@ -421,10 +421,10 @@ jobs:
 
       - name: Test images-vips-java25
         run: |
-          for attempt in 1 2 3; do
+          for attempt in 1 2 3 4 5; do
             ./gradlew --refresh-dependencies :bluetape4k-images-vips-java25:test --no-configuration-cache --no-daemon && break
             echo "Attempt $attempt failed"
-            [ $attempt -lt 3 ] && sleep 10 || exit 1
+            [ $attempt -lt 5 ] && sleep 30 || exit 1
           done
         env:
           GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx4g -Dorg.gradle.daemon=false"
