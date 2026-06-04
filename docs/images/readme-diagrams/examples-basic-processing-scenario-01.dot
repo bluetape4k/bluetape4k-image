@@ -12,11 +12,11 @@ digraph G {
   "convert" [label="PNG conversion"];
   "watermark" [label="Watermark"];
   "preview" [label="Workbench preview"];
-  "run" -> "generator" [label="run"];
-  "fixtures" -> "generator" [label="load"];
-  "generator" -> "thumb" [label="fit"];
-  "generator" -> "crop" [label="crop"];
-  "generator" -> "convert" [label="png"];
-  "generator" -> "watermark" [label="draw"];
-  "generator" -> "preview" [label="reuse"];
+  "run" -> "generator" [label=""];
+  "fixtures" -> "generator" [label=""];
+  "generator" -> "thumb" [label=""];
+  "generator" -> "crop" [label=""];
+  "generator" -> "convert" [label=""];
+  "crop" -> "watermark" [label=""];
+  "convert" -> "preview" [label=""];
 }

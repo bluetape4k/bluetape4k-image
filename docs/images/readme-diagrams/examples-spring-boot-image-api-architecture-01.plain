@@ -1,13 +1,14 @@
-graph 1 14.09 1.8958
-node boot 0.81944 1.3056 1.6389 0.5 "Spring Boot 4 app" rounded,filled box #9AA8B8 #FFFFFF
-node controller 3.875 1.3056 1.7222 0.5 ImageApiController rounded,filled box #9AA8B8 #FFFFFF
-node config 3.875 0.25 2.3889 0.5 LocalImageApiConfiguration rounded,filled box #9AA8B8 #FFFFFF
-node service 7.3472 0.63889 1.8889 0.5 LocalImageApiService rounded,filled box #9AA8B8 #FFFFFF
-node storage 10.747 0.63889 1.2222 0.5 ImageStorage rounded,filled box #9AA8B8 #FFFFFF
-node files 13.354 0.63889 1.4722 0.5 "Filesystem root" rounded,filled box #9AA8B8 #FFFFFF
-edge boot controller 4 1.6447 1.3056 2.0158 1.3056 2.4591 1.3056 2.8515 1.3056 scan 2.1597 1.3785 solid #758297
-edge controller service 4 4.7403 1.1408 5.1951 1.0527 5.7599 0.94343 6.2461 0.84932 delegate 5.7361 1.0651 solid #758297
-edge config service 7 5.0748 0.2503 5.3859 0.26185 5.7204 0.28453 6.0278 0.32639 6.0972 0.33584 6.1683 0.34738 6.2398 0.36039 bean 5.7361 0.39931 solid #758297
-edge service storage 4 8.2958 0.63889 8.8251 0.63889 9.4786 0.63889 9.9755 0.63889 "upload/download" 9.2135 0.71181 solid #758297
-edge storage files 4 11.359 0.63889 11.684 0.63889 12.093 0.63889 12.455 0.63889 persist 11.988 0.71181 solid #758297
+graph 1 11.611 1.8958
+node boot 0.81944 0.77778 1.6389 0.5 "Spring Boot 4 app" rounded,filled box #9AA8B8 #FFFFFF
+node controller 3.5833 1.3056 1.7222 0.5 ImageApiController rounded,filled box #9AA8B8 #FFFFFF
+node config 3.5833 0.25 2.3889 0.5 LocalImageApiConfiguration rounded,filled box #9AA8B8 #FFFFFF
+node service 6.4722 0.77778 1.8889 0.5 LocalImageApiService rounded,filled box #9AA8B8 #FFFFFF
+node storage 8.7778 0.77778 1.2222 0.5 ImageStorage rounded,filled box #9AA8B8 #FFFFFF
+node files 10.875 0.77778 1.4722 0.5 "Filesystem root" rounded,filled box #9AA8B8 #FFFFFF
+edge boot controller 4 1.6432 0.93399 1.9317 0.98964 2.2601 1.053 2.5631 1.1114 solid #758297
+edge boot config 4 1.6432 0.62157 1.829 0.58572 2.0314 0.54667 2.233 0.5078 solid #758297
+edge controller service 4 4.4479 1.1486 4.7355 1.0956 5.0606 1.0356 5.3644 0.97958 solid #758297
+edge config service 4 4.7816 0.46848 4.9769 0.5045 5.1785 0.54169 5.3713 0.57725 solid #758297
+edge service storage 4 7.4191 0.77778 7.613 0.77778 7.8151 0.77778 8.0019 0.77778 solid #758297
+edge storage files 4 9.3958 0.77778 9.5784 0.77778 9.7828 0.77778 9.9797 0.77778 solid #758297
 stop

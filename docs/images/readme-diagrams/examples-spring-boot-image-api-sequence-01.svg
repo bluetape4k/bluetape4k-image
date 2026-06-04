@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="820" viewBox="0 0 1500 820" role="img" aria-label="Spring Boot Image API Sequence">
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="900" viewBox="0 0 1500 900" role="img" aria-label="Spring Boot Image API Sequence">
 <defs>
   <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%">
     <feDropShadow dx="0" dy="7" stdDeviation="8" flood-color="#203040" flood-opacity="0.10"/>
@@ -25,68 +25,68 @@
     .lifeline{stroke:#9AA8B8;stroke-width:1.7;stroke-dasharray:7 7}
   </style>
 </defs>
-<rect class="canvas" width="1500" height="820"/>
-<rect class="frame" x="34" y="28" width="1432" height="762" rx="26"/>
+<rect class="canvas" width="1500" height="900"/>
+<rect class="frame" x="34" y="28" width="1432" height="842" rx="26"/>
 <text class="title" x="70" y="82">Spring Boot Image API Sequence</text>
 <text class="subtitle" x="74" y="116">Upload validation, thumbnail generation, local storage, and download.</text>
 <g id="participants">
-<rect class="card" x="47" y="150" width="186" height="68" rx="10" fill="#E8F3FF" stroke="#5B8DEF"/>
-<text class="node-title" x="140" y="177" text-anchor="middle" dominant-baseline="middle">Client</text>
-<text class="node-detail" x="140" y="199" text-anchor="middle" dominant-baseline="middle">curl/MockMvc</text>
-<line class="lifeline" x1="140" y1="218" x2="140" y2="725"/>
-<rect class="card" x="302" y="150" width="186" height="68" rx="10" fill="#EAF7EF" stroke="#58A978"/>
-<text class="node-title" x="395" y="177" text-anchor="middle" dominant-baseline="middle">Controller</text>
-<text class="node-detail" x="395" y="199" text-anchor="middle" dominant-baseline="middle">REST API</text>
-<line class="lifeline" x1="395" y1="218" x2="395" y2="725"/>
-<rect class="card" x="562" y="150" width="186" height="68" rx="10" fill="#FFF3D9" stroke="#D6A441"/>
-<text class="node-title" x="655" y="177" text-anchor="middle" dominant-baseline="middle">Service</text>
-<text class="node-detail" x="655" y="199" text-anchor="middle" dominant-baseline="middle">local workflow</text>
-<line class="lifeline" x1="655" y1="218" x2="655" y2="725"/>
-<rect class="card" x="822" y="150" width="186" height="68" rx="10" fill="#FDECEF" stroke="#DC6B82"/>
-<text class="node-title" x="915" y="177" text-anchor="middle" dominant-baseline="middle">ImageStorage</text>
-<text class="node-detail" x="915" y="199" text-anchor="middle" dominant-baseline="middle">local backend</text>
-<line class="lifeline" x1="915" y1="218" x2="915" y2="725"/>
-<rect class="card" x="1087" y="150" width="186" height="68" rx="10" fill="#E9F7F6" stroke="#45A7A1"/>
-<text class="node-title" x="1180" y="177" text-anchor="middle" dominant-baseline="middle">Filesystem</text>
-<text class="node-detail" x="1180" y="199" text-anchor="middle" dominant-baseline="middle">objects</text>
-<line class="lifeline" x1="1180" y1="218" x2="1180" y2="725"/>
+<rect class="card" x="70" y="185" width="230" height="72" rx="10" fill="#E8F3FF" stroke="#5B8DEF"/>
+<text class="node-title" x="185" y="214" text-anchor="middle" dominant-baseline="middle">Client</text>
+<text class="node-detail" x="185" y="238" text-anchor="middle" dominant-baseline="middle">curl/MockMvc</text>
+<line class="lifeline" x1="185" y1="257" x2="185" y2="805"/>
+<rect class="card" x="353" y="185" width="230" height="72" rx="10" fill="#EAF7EF" stroke="#58A978"/>
+<text class="node-title" x="468" y="214" text-anchor="middle" dominant-baseline="middle">Controller</text>
+<text class="node-detail" x="468" y="238" text-anchor="middle" dominant-baseline="middle">REST API</text>
+<line class="lifeline" x1="468" y1="257" x2="468" y2="805"/>
+<rect class="card" x="635" y="185" width="230" height="72" rx="10" fill="#FFF3D9" stroke="#D6A441"/>
+<text class="node-title" x="750" y="214" text-anchor="middle" dominant-baseline="middle">Service</text>
+<text class="node-detail" x="750" y="238" text-anchor="middle" dominant-baseline="middle">local workflow</text>
+<line class="lifeline" x1="750" y1="257" x2="750" y2="805"/>
+<rect class="card" x="917" y="185" width="230" height="72" rx="10" fill="#FDECEF" stroke="#DC6B82"/>
+<text class="node-title" x="1032" y="214" text-anchor="middle" dominant-baseline="middle">ImageStorage</text>
+<text class="node-detail" x="1032" y="238" text-anchor="middle" dominant-baseline="middle">local backend</text>
+<line class="lifeline" x1="1032" y1="257" x2="1032" y2="805"/>
+<rect class="card" x="1200" y="185" width="230" height="72" rx="10" fill="#E9F7F6" stroke="#45A7A1"/>
+<text class="node-title" x="1315" y="214" text-anchor="middle" dominant-baseline="middle">Filesystem</text>
+<text class="node-detail" x="1315" y="238" text-anchor="middle" dominant-baseline="middle">objects</text>
+<line class="lifeline" x1="1315" y1="257" x2="1315" y2="805"/>
 </g>
 <g id="messages">
-<path class="edge" d="M 140 285 L 395 285"/>
-<rect x="125.5" y="239" width="284.0" height="28" rx="9" fill="#FFFFFF" stroke="#D7E2EC"/>
-<text class="label" x="267.5" y="253" text-anchor="middle" dominant-baseline="middle">1. POST multipart image with maxSide</text>
-<circle cx="140" cy="285" r="4" fill="#FFFFFF" stroke="#758297" stroke-width="1.8"/>
-<circle cx="395" cy="285" r="4" fill="#FFFFFF" stroke="#758297" stroke-width="1.8"/>
-<path class="edge" d="M 395 355 L 655 355"/>
-<rect x="411.0" y="309" width="228.0" height="28" rx="9" fill="#FFFFFF" stroke="#D7E2EC"/>
-<text class="label" x="525.0" y="323" text-anchor="middle" dominant-baseline="middle">2. Validate file and maxSide</text>
-<circle cx="395" cy="355" r="4" fill="#FFFFFF" stroke="#758297" stroke-width="1.8"/>
-<circle cx="655" cy="355" r="4" fill="#FFFFFF" stroke="#758297" stroke-width="1.8"/>
-<path class="edge" d="M 655 435 L 915 435"/>
-<rect x="685.0" y="389" width="200.0" height="28" rx="9" fill="#FFFFFF" stroke="#D7E2EC"/>
-<text class="label" x="785.0" y="403" text-anchor="middle" dominant-baseline="middle">3. Upload original bytes</text>
-<circle cx="655" cy="435" r="4" fill="#FFFFFF" stroke="#758297" stroke-width="1.8"/>
-<circle cx="915" cy="435" r="4" fill="#FFFFFF" stroke="#758297" stroke-width="1.8"/>
-<path class="edge" d="M 915 505 L 1180 505"/>
-<rect x="937.0" y="459" width="221.0" height="28" rx="9" fill="#FFFFFF" stroke="#D7E2EC"/>
-<text class="label" x="1047.5" y="473" text-anchor="middle" dominant-baseline="middle">4. Write originals/{id}.ext</text>
-<circle cx="915" cy="505" r="4" fill="#FFFFFF" stroke="#758297" stroke-width="1.8"/>
-<circle cx="1180" cy="505" r="4" fill="#FFFFFF" stroke="#758297" stroke-width="1.8"/>
-<path class="edge" d="M 655 575 L 915 575"/>
-<rect x="688.5" y="529" width="193.0" height="28" rx="9" fill="#FFFFFF" stroke="#D7E2EC"/>
-<text class="label" x="785.0" y="543" text-anchor="middle" dominant-baseline="middle">5. Upload PNG thumbnail</text>
-<circle cx="655" cy="575" r="4" fill="#FFFFFF" stroke="#758297" stroke-width="1.8"/>
-<circle cx="915" cy="575" r="4" fill="#FFFFFF" stroke="#758297" stroke-width="1.8"/>
-<path class="edge" d="M 915 645 L 1180 645"/>
-<rect x="933.5" y="599" width="228.0" height="28" rx="9" fill="#FFFFFF" stroke="#D7E2EC"/>
-<text class="label" x="1047.5" y="613" text-anchor="middle" dominant-baseline="middle">6. Write thumbnails/{id}.png</text>
-<circle cx="915" cy="645" r="4" fill="#FFFFFF" stroke="#758297" stroke-width="1.8"/>
-<circle cx="1180" cy="645" r="4" fill="#FFFFFF" stroke="#758297" stroke-width="1.8"/>
-<path class="edge-dashed" d="M 655 725 L 140 725"/>
-<rect x="255.5" y="679" width="284.0" height="28" rx="9" fill="#FFFFFF" stroke="#D7E2EC"/>
-<text class="label" x="397.5" y="693" text-anchor="middle" dominant-baseline="middle">7. Return object keys and local URLs</text>
-<circle cx="140" cy="725" r="4" fill="#FFFFFF" stroke="#758297" stroke-width="1.8"/>
-<circle cx="655" cy="725" r="4" fill="#FFFFFF" stroke="#758297" stroke-width="1.8"/>
+<path class="edge" d="M 185 325 L 468 325"/>
+<rect x="184.5" y="279" width="284.0" height="28" rx="9" fill="#FFFFFF" stroke="#D7E2EC"/>
+<text class="label" x="326.5" y="293" text-anchor="middle" dominant-baseline="middle">1. POST multipart image with maxSide</text>
+<circle cx="185" cy="325" r="4" fill="#FFFFFF" stroke="#758297" stroke-width="1.8"/>
+<circle cx="468" cy="325" r="4" fill="#FFFFFF" stroke="#758297" stroke-width="1.8"/>
+<path class="edge" d="M 468 395 L 750 395"/>
+<rect x="495.0" y="349" width="228.0" height="28" rx="9" fill="#FFFFFF" stroke="#D7E2EC"/>
+<text class="label" x="609.0" y="363" text-anchor="middle" dominant-baseline="middle">2. Validate file and maxSide</text>
+<circle cx="468" cy="395" r="4" fill="#FFFFFF" stroke="#758297" stroke-width="1.8"/>
+<circle cx="750" cy="395" r="4" fill="#FFFFFF" stroke="#758297" stroke-width="1.8"/>
+<path class="edge" d="M 750 475 L 1032 475"/>
+<rect x="791.0" y="429" width="200.0" height="28" rx="9" fill="#FFFFFF" stroke="#D7E2EC"/>
+<text class="label" x="891.0" y="443" text-anchor="middle" dominant-baseline="middle">3. Upload original bytes</text>
+<circle cx="750" cy="475" r="4" fill="#FFFFFF" stroke="#758297" stroke-width="1.8"/>
+<circle cx="1032" cy="475" r="4" fill="#FFFFFF" stroke="#758297" stroke-width="1.8"/>
+<path class="edge" d="M 1032 545 L 1315 545"/>
+<rect x="1063.0" y="499" width="221.0" height="28" rx="9" fill="#FFFFFF" stroke="#D7E2EC"/>
+<text class="label" x="1173.5" y="513" text-anchor="middle" dominant-baseline="middle">4. Write originals/{id}.ext</text>
+<circle cx="1032" cy="545" r="4" fill="#FFFFFF" stroke="#758297" stroke-width="1.8"/>
+<circle cx="1315" cy="545" r="4" fill="#FFFFFF" stroke="#758297" stroke-width="1.8"/>
+<path class="edge" d="M 750 615 L 1032 615"/>
+<rect x="794.5" y="569" width="193.0" height="28" rx="9" fill="#FFFFFF" stroke="#D7E2EC"/>
+<text class="label" x="891.0" y="583" text-anchor="middle" dominant-baseline="middle">5. Upload PNG thumbnail</text>
+<circle cx="750" cy="615" r="4" fill="#FFFFFF" stroke="#758297" stroke-width="1.8"/>
+<circle cx="1032" cy="615" r="4" fill="#FFFFFF" stroke="#758297" stroke-width="1.8"/>
+<path class="edge" d="M 1032 685 L 1315 685"/>
+<rect x="1059.5" y="639" width="228.0" height="28" rx="9" fill="#FFFFFF" stroke="#D7E2EC"/>
+<text class="label" x="1173.5" y="653" text-anchor="middle" dominant-baseline="middle">6. Write thumbnails/{id}.png</text>
+<circle cx="1032" cy="685" r="4" fill="#FFFFFF" stroke="#758297" stroke-width="1.8"/>
+<circle cx="1315" cy="685" r="4" fill="#FFFFFF" stroke="#758297" stroke-width="1.8"/>
+<path class="edge-dashed" d="M 750 765 L 185 765"/>
+<rect x="325.5" y="719" width="284.0" height="28" rx="9" fill="#FFFFFF" stroke="#D7E2EC"/>
+<text class="label" x="467.5" y="733" text-anchor="middle" dominant-baseline="middle">7. Return object keys and local URLs</text>
+<circle cx="185" cy="765" r="4" fill="#FFFFFF" stroke="#758297" stroke-width="1.8"/>
+<circle cx="750" cy="765" r="4" fill="#FFFFFF" stroke="#758297" stroke-width="1.8"/>
 </g>
-<text class="footer" x="750.0" y="770" text-anchor="middle">Unsupported content types are mapped to a bad_request JSON response.</text>
+<text class="footer" x="750.0" y="850" text-anchor="middle">Unsupported content types are mapped to a bad_request JSON response.</text>
 </svg>

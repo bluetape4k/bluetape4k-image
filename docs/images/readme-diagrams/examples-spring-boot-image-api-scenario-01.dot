@@ -9,9 +9,9 @@ digraph G {
   "service" [label="LocalImageApiService"];
   "original" [label="Original object"];
   "thumbnail" [label="Thumbnail object"];
-  "client" -> "controller" [label="multipart"];
-  "controller" -> "service" [label="suspend"];
-  "service" -> "original" [label="upload"];
-  "service" -> "thumbnail" [label="fit+png"];
-  "controller" -> "client" [label="local urls"];
+  "client" -> "controller" [label=""];
+  "controller" -> "service" [label=""];
+  "service" -> "original" [label=""];
+  "service" -> "thumbnail" [label=""];
+  "controller" -> "client" [label=""];
 }

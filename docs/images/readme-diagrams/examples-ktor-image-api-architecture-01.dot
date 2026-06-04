@@ -11,10 +11,10 @@ digraph G {
   "thumbnail" [label="bluetape4kImageThumbnailRoutes"];
   "captchaLib" [label="images-captcha"];
   "images" [label="bluetape4k-images"];
-  "app" -> "core" [label="install"];
-  "app" -> "routing" [label="routing"];
-  "routing" -> "captcha" [label="mount"];
-  "routing" -> "thumbnail" [label="mount"];
-  "captcha" -> "captchaLib" [label="generate"];
-  "thumbnail" -> "images" [label="resize"];
+  "app" -> "core" [label=""];
+  "app" -> "routing" [label=""];
+  "routing" -> "captcha" [label=""];
+  "routing" -> "thumbnail" [label=""];
+  "captcha" -> "captchaLib" [label=""];
+  "thumbnail" -> "images" [label=""];
 }
