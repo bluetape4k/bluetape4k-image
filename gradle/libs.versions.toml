@@ -93,15 +93,15 @@ kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serializa
 
 # bluetape4k — consumed from Maven Central snapshots
 bluetape4k-bom = { module = "io.github.bluetape4k:bluetape4k-bom", version.ref = "bluetape4k-bom" }
-bluetape4k-core = { module = "io.github.bluetape4k:bluetape4k-core" }
-bluetape4k-io = { module = "io.github.bluetape4k:bluetape4k-io" }
-bluetape4k-okio = { module = "io.github.bluetape4k:bluetape4k-okio" }
-bluetape4k-coroutines = { module = "io.github.bluetape4k:bluetape4k-coroutines" }
-bluetape4k-logging = { module = "io.github.bluetape4k:bluetape4k-logging" }
-bluetape4k-junit5 = { module = "io.github.bluetape4k:bluetape4k-junit5" }
-bluetape4k-ktor-core = { module = "io.github.bluetape4k:bluetape4k-ktor-core" }
-bluetape4k-ktor-testing = { module = "io.github.bluetape4k:bluetape4k-ktor-testing" }
-bluetape4k-virtualthread-jdk25 = { module = "io.github.bluetape4k:bluetape4k-virtualthread-jdk25" }
+bluetape4k-core = { module = "io.github.bluetape4k:bluetape4k-core", version.ref = "bluetape4k-bom" }
+bluetape4k-io = { module = "io.github.bluetape4k:bluetape4k-io", version.ref = "bluetape4k-bom" }
+bluetape4k-okio = { module = "io.github.bluetape4k:bluetape4k-okio", version.ref = "bluetape4k-bom" }
+bluetape4k-coroutines = { module = "io.github.bluetape4k:bluetape4k-coroutines", version.ref = "bluetape4k-bom" }
+bluetape4k-logging = { module = "io.github.bluetape4k:bluetape4k-logging", version.ref = "bluetape4k-bom" }
+bluetape4k-junit5 = { module = "io.github.bluetape4k:bluetape4k-junit5", version.ref = "bluetape4k-bom" }
+bluetape4k-ktor-core = { module = "io.github.bluetape4k:bluetape4k-ktor-core", version.ref = "bluetape4k-bom" }
+bluetape4k-ktor-testing = { module = "io.github.bluetape4k:bluetape4k-ktor-testing", version.ref = "bluetape4k-bom" }
+bluetape4k-virtualthread-jdk25 = { module = "io.github.bluetape4k:bluetape4k-virtualthread-jdk25", version.ref = "bluetape4k-bom" }
 
 # Logging
 slf4j-api = { module = "org.slf4j:slf4j-api" }  # version from bt4k catalog
@@ -157,7 +157,7 @@ micrometer-core = { module = "io.micrometer:micrometer-core" }
 kotlinx-coroutines-reactor = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-reactor" }
 
 # bluetape4k testcontainers (version managed by bluetape4k BOM)
-bluetape4k-testcontainers = { module = "io.github.bluetape4k:bluetape4k-testcontainers" }
+bluetape4k-testcontainers = { module = "io.github.bluetape4k:bluetape4k-testcontainers", version.ref = "bluetape4k-bom" }
 
 # Test
 junit-bom = { module = "org.junit:junit-bom", version.ref = "junit-jupiter" }
