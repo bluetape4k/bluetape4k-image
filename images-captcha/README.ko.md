@@ -12,6 +12,10 @@ Kotlin/JVM 서비스용 Java2D CAPTCHA 이미지 챌린지 생성 모듈입니�
 - 동기 및 suspend-friendly 생성 entrypoint
 - pluggable challenge storage 를 지원하는 one-shot verification service contract 제공
 
+## 예제 이미지
+
+![CAPTCHA challenge preview](../docs/images/readme-diagrams/images-captcha-example-01.png)
+
 ## 의존성
 
 ```kotlin

@@ -12,6 +12,10 @@ Java2D CAPTCHA image challenge generation for Kotlin/JVM services.
 - Synchronous and suspend-friendly generation entrypoints
 - One-shot verification service contract with pluggable challenge storage
 
+## Example Image
+
+![CAPTCHA challenge preview](../docs/images/readme-diagrams/images-captcha-example-01.png)
+
 ## Dependency
 
 ```kotlin
