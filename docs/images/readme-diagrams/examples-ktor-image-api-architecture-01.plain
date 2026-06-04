@@ -1,15 +1,15 @@
-graph 1 11.347 2.4236
+graph 1 9.8889 2.4236
 node app 0.86111 1.3056 1.7222 0.5 "Application module" rounded,filled box #9AA8B8 #FFFFFF
-node core 3.7604 1.8333 1.5556 0.5 "Ktor core plugin" rounded,filled box #9AA8B8 #FFFFFF
-node routing 3.7604 0.77778 1.1389 0.5 "Routing DSL" rounded,filled box #9AA8B8 #FFFFFF
-node captcha 7.0139 1.3056 2.1389 0.5 bluetape4kCaptchaRoutes rounded,filled box #9AA8B8 #FFFFFF
-node thumbnail 7.0139 0.25 2.7222 0.5 bluetape4kImageThumbnailRoutes rounded,filled box #9AA8B8 #FFFFFF
-node captchaLib 10.528 1.3056 1.3889 0.5 "images-captcha" rounded,filled box #9AA8B8 #FFFFFF
-node images 10.528 0.25 1.6389 0.5 "bluetape4k-images" rounded,filled box #9AA8B8 #FFFFFF
-edge app core 4 1.7288 1.4625 2.0744 1.526 2.4742 1.5995 2.8263 1.6642 install 2.3524 1.6896 solid #758297
-edge app routing 4 1.7288 1.1486 2.1429 1.0725 2.6348 0.98212 3.0292 0.90962 routing 2.3524 1.1462 solid #758297
-edge routing captcha 4 4.3362 0.86971 4.737 0.93528 5.2911 1.0259 5.7902 1.1076 mount 5.0955 1.083 solid #758297
-edge routing thumbnail 4 4.3362 0.68585 4.6579 0.63321 5.0784 0.5644 5.49 0.49706 mount 5.0955 0.6496 solid #758297
-edge captcha captchaLib 4 8.0879 1.3056 8.5955 1.3056 9.1947 1.3056 9.6707 1.3056 generate 9.0417 1.3785 solid #758297
-edge thumbnail images 4 8.3806 0.25 8.7707 0.25 9.1883 0.25 9.5497 0.25 resize 9.0417 0.32292 solid #758297
+node core 3.25 1.8333 1.5556 0.5 "Ktor core plugin" rounded,filled box #9AA8B8 #FFFFFF
+node routing 3.25 0.77778 1.1389 0.5 "Routing DSL" rounded,filled box #9AA8B8 #FFFFFF
+node captcha 6.1389 1.3056 2.1389 0.5 bluetape4kCaptchaRoutes rounded,filled box #9AA8B8 #FFFFFF
+node thumbnail 6.1389 0.25 2.7222 0.5 bluetape4kImageThumbnailRoutes rounded,filled box #9AA8B8 #FFFFFF
+node captchaLib 9.0694 1.3056 1.3889 0.5 "images-captcha" rounded,filled box #9AA8B8 #FFFFFF
+node images 9.0694 0.25 1.6389 0.5 "bluetape4k-images" rounded,filled box #9AA8B8 #FFFFFF
+edge app core 4 1.7274 1.4961 1.9182 1.5387 2.1213 1.5841 2.3147 1.6274 solid #758297
+edge app routing 4 1.7274 1.115 1.9876 1.0569 2.2709 0.99352 2.521 0.93762 solid #758297
+edge routing captcha 4 3.8223 0.88079 4.1325 0.93801 4.5311 1.0115 4.9092 1.0813 solid #758297
+edge routing thumbnail 4 3.8223 0.67476 4.0539 0.63204 4.3348 0.58023 4.6197 0.52768 solid #758297
+edge captcha captchaLib 4 7.2131 1.3056 7.5413 1.3056 7.8984 1.3056 8.21 1.3056 solid #758297
+edge thumbnail images 4 7.5064 0.25 7.7039 0.25 7.9038 0.25 8.0914 0.25 solid #758297
 stop

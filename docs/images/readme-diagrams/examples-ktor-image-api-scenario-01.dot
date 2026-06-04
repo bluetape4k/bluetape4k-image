@@ -10,10 +10,10 @@ digraph G {
   "captcha" [label="CAPTCHA routes"];
   "thumb" [label="Thumbnail route"];
   "response" [label="Local responses"];
-  "client" -> "server" [label="HTTP"];
-  "server" -> "ready" [label="health"];
-  "server" -> "captcha" [label="mount"];
-  "server" -> "thumb" [label="mount"];
-  "captcha" -> "response" [label="json/png"];
-  "thumb" -> "response" [label="png"];
+  "client" -> "server" [label=""];
+  "server" -> "ready" [label=""];
+  "server" -> "captcha" [label=""];
+  "server" -> "thumb" [label=""];
+  "captcha" -> "response" [label=""];
+  "thumb" -> "response" [label=""];
 }

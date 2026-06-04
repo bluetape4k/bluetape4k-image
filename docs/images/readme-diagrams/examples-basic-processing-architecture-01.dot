@@ -10,9 +10,9 @@ digraph G {
   "transforms" [label="ImmutableImage transforms"];
   "writers" [label="Suspend writers"];
   "outputs" [label="Output directory"];
-  "cli" -> "quickstart" [label="invoke"];
-  "quickstart" -> "loader" [label="load"];
-  "loader" -> "transforms" [label="images"];
-  "transforms" -> "writers" [label="encode"];
-  "writers" -> "outputs" [label="write"];
+  "cli" -> "quickstart" [label=""];
+  "quickstart" -> "loader" [label=""];
+  "loader" -> "transforms" [label=""];
+  "transforms" -> "writers" [label=""];
+  "writers" -> "outputs" [label=""];
 }
