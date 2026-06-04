@@ -2,8 +2,8 @@ name: Nightly
 
 on:
   schedule:
-    - cron: '0 19 * * 1-6'  # Daily smoke, UTC 19:00 (KST 04:00) Mon-Sat
-    - cron: '0 19 * * 0'    # Weekly full, UTC 19:00 (KST 04:00) Sunday
+    - cron: '11 19 * * 1-6'  # Daily smoke, UTC 19:11 (KST 04:11) Mon-Sat
+    - cron: '11 19 * * 0'    # Weekly full, UTC 19:11 (KST 04:11) Sunday
   workflow_dispatch:
     inputs:
       scope:
