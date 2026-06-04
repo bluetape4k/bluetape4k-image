@@ -270,7 +270,7 @@ jobs:
   # ── 6. images-vips-api 모듈 (full only) ───────────────────────────────────
   test-images-vips-api:
     name: Test / images-vips-api
-    if: ${{ (github.event_name == 'schedule' && github.event.schedule == '0 19 * * 0') || (github.event_name == 'workflow_dispatch' && inputs.scope == 'full') }}
+    if: ${{ (github.event_name == 'schedule' && github.event.schedule == '11 19 * * 0') || (github.event_name == 'workflow_dispatch' && inputs.scope == 'full') }}
 
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -325,7 +325,7 @@ jobs:
   # ── 7. images-vips-java21 모듈 ────────────────────────────────────────────
   test-images-vips-java21:
     name: Test / images-vips-java21
-    if: ${{ (github.event_name == 'schedule' && github.event.schedule == '0 19 * * 0') || (github.event_name == 'workflow_dispatch' && inputs.scope == 'full') }}
+    if: ${{ (github.event_name == 'schedule' && github.event.schedule == '11 19 * * 0') || (github.event_name == 'workflow_dispatch' && inputs.scope == 'full') }}
 
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -380,7 +380,7 @@ jobs:
   # ── 8. images-vips-java25 모듈 ────────────────────────────────────────────
   test-images-vips-java25:
     name: Test / images-vips-java25
-    if: ${{ (github.event_name == 'schedule' && github.event.schedule == '0 19 * * 0') || (github.event_name == 'workflow_dispatch' && inputs.scope == 'full') }}
+    if: ${{ (github.event_name == 'schedule' && github.event.schedule == '11 19 * * 0') || (github.event_name == 'workflow_dispatch' && inputs.scope == 'full') }}
 
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -447,7 +447,7 @@ jobs:
       - test-images-vips-api
       - test-images-vips-java21
       - test-images-vips-java25
-    if: ${{ always() && ((github.event_name == 'schedule' && github.event.schedule == '0 19 * * 0') || (github.event_name == 'workflow_dispatch' && inputs.scope == 'full')) }}
+    if: ${{ always() && ((github.event_name == 'schedule' && github.event.schedule == '11 19 * * 0') || (github.event_name == 'workflow_dispatch' && inputs.scope == 'full')) }}
     steps:
       - name: Download all coverage artifacts
         uses: actions/download-artifact@v8
