@@ -8,8 +8,15 @@ import io.bluetape4k.images.vips.VipsImage
 import io.bluetape4k.images.vips.VipsImageFormat
 import io.bluetape4k.images.vips.VipsLimits
 import io.bluetape4k.images.vips.java25.internal.FfmVipsFormatSupport
+import io.bluetape4k.okio.buffered
+import io.bluetape4k.okio.coroutines.BufferedSuspendedSource
+import io.bluetape4k.okio.coroutines.SuspendedSource
+import io.bluetape4k.okio.coroutines.asBlocking
+import io.bluetape4k.okio.coroutines.buffered as bufferedSuspended
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import okio.BufferedSource
+import okio.Source
 import org.apache.commons.io.input.BoundedInputStream
 import java.io.File
 import java.io.InputStream
@@ -86,6 +93,26 @@ fun ffmVipsImageOf(stream: InputStream): VipsImage {
     return decodeAndCheckPixels(bytes)
 }
 
+/**
+ * Creates a [VipsImage] from a caller-owned [BufferedSource].
+ *
+ * The caller owns [source] and this function does not close it. Input is still
+ * bounded by the existing [InputStream] path.
+ */
+fun ffmVipsImageOf(source: BufferedSource): VipsImage =
+    ffmVipsImageOf(source.inputStream())
+
+/**
+ * Creates a [VipsImage] from an Okio [Source].
+ *
+ * This overload buffers and closes [source]. Use the [BufferedSource] overload
+ * when the caller must keep source ownership.
+ */
+fun ffmVipsImageOf(source: Source): VipsImage =
+    source.buffered().use { bufferedSource ->
+        ffmVipsImageOf(bufferedSource)
+    }
+
 /** [ByteArray]에서 [VipsImage]를 코루틴으로 생성합니다. */
 suspend fun suspendFfmVipsImageOf(bytes: ByteArray): VipsImage =
     withContext(Dispatchers.IO) { ffmVipsImageOf(bytes) }
@@ -97,6 +124,49 @@ suspend fun suspendFfmVipsImageOf(file: File): VipsImage =
 /** [Path]에서 [VipsImage]를 코루틴으로 생성합니다. */
 suspend fun suspendFfmVipsImageOf(path: Path): VipsImage =
     withContext(Dispatchers.IO) { ffmVipsImageOf(path) }
+
+/**
+ * Creates a [VipsImage] from a caller-owned [BufferedSource] on
+ * [Dispatchers.IO].
+ *
+ * The caller owns [source] and must close it.
+ */
+suspend fun suspendFfmVipsImageOf(source: BufferedSource): VipsImage =
+    withContext(Dispatchers.IO) { ffmVipsImageOf(source) }
+
+/**
+ * Creates a [VipsImage] from an Okio [Source] on [Dispatchers.IO].
+ *
+ * This overload buffers and closes [source].
+ */
+suspend fun suspendFfmVipsImageOf(source: Source): VipsImage =
+    withContext(Dispatchers.IO) { ffmVipsImageOf(source) }
+
+/**
+ * Creates a [VipsImage] from a caller-owned [BufferedSuspendedSource].
+ *
+ * vips-ffm decoding is blocking, so this overload uses the `bluetape4k-okio`
+ * blocking bridge. The caller owns [source] and must close it.
+ */
+suspend fun suspendFfmVipsImageOf(source: BufferedSuspendedSource): VipsImage =
+    withContext(Dispatchers.IO) {
+        val blockingSource = source.asBlocking().buffered()
+        ffmVipsImageOf(blockingSource)
+    }
+
+/**
+ * Creates a [VipsImage] from a [SuspendedSource].
+ *
+ * This overload buffers and closes [source].
+ */
+suspend fun suspendFfmVipsImageOf(source: SuspendedSource): VipsImage {
+    val bufferedSource = source.bufferedSuspended()
+    return try {
+        suspendFfmVipsImageOf(bufferedSource)
+    } finally {
+        bufferedSource.close()
+    }
+}
 
 // ─── internal helpers ────────────────────────────────────────────────────────
 

@@ -6,6 +6,11 @@ import io.bluetape4k.images.vips.VipsEncodeOptions
 import io.bluetape4k.images.vips.VipsImageFormat
 import io.bluetape4k.images.vips.coroutines.suspendToBytes
 import io.bluetape4k.images.vips.testfixtures.VipsTestFixtures
+import io.bluetape4k.junit5.coroutines.runSuspendIO
+import io.bluetape4k.okio.asSource
+import io.bluetape4k.okio.buffered
+import io.bluetape4k.okio.coroutines.asSuspendedSource
+import io.bluetape4k.okio.coroutines.buffered as bufferedSuspended
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeGreaterThan
@@ -17,7 +22,10 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import java.io.ByteArrayOutputStream
+import java.nio.channels.AsynchronousFileChannel
+import java.nio.file.Files
 import java.nio.file.Path
+import java.nio.file.StandardOpenOption.READ
 
 @OptIn(IncubatingImageApi::class)
 class JVipsImageTest : AbstractJVipsTest() {
@@ -198,6 +206,36 @@ class JVipsImageTest : AbstractJVipsTest() {
             val out = baos.toByteArray()
             out.size shouldBeGreaterThan 0
             out.startsWith(JPEG_MAGIC).shouldBeTrue()
+        }
+    }
+
+    @Test
+    fun `vipsImageOf loads from caller-owned Okio BufferedSource`() {
+        val bytes = VipsTestFixtures.loadFixture(VipsTestFixtures.SAMPLE_JPEG)
+        bytes.inputStream().asSource().buffered().use { source ->
+            vipsImageOf(source).use { img ->
+                img.width shouldBeEqualTo VipsTestFixtures.SAMPLE_JPEG_WIDTH
+                img.height shouldBeEqualTo VipsTestFixtures.SAMPLE_JPEG_HEIGHT
+            }
+        }
+    }
+
+    @Test
+    fun `suspendVipsImageOf loads from buffered suspended source`(@TempDir tmpDir: Path) = runSuspendIO {
+        val input = tmpDir.resolve("sample.jpg")
+        Files.write(input, VipsTestFixtures.loadFixture(VipsTestFixtures.SAMPLE_JPEG))
+        val channel = AsynchronousFileChannel.open(input, READ)
+        val source = channel.asSuspendedSource().bufferedSuspended()
+
+        try {
+            suspendVipsImageOf(source).use { img ->
+                img.width shouldBeEqualTo VipsTestFixtures.SAMPLE_JPEG_WIDTH
+                img.height shouldBeEqualTo VipsTestFixtures.SAMPLE_JPEG_HEIGHT
+            }
+            channel.isOpen.shouldBeTrue()
+        } finally {
+            source.close()
+            channel.close()
         }
     }
 

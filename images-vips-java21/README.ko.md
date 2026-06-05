@@ -192,6 +192,49 @@ fun main() = runBlocking {
 }
 ```
 
+### Okio Source에서 로드
+
+```kotlin
+import io.bluetape4k.images.vips.java21.suspendVipsImageOf
+import io.bluetape4k.images.vips.java21.vipsImageOf
+import io.bluetape4k.okio.asSource
+import io.bluetape4k.okio.buffered
+import io.bluetape4k.okio.coroutines.asSuspendedSource
+import io.bluetape4k.okio.coroutines.buffered as bufferedSuspended
+import java.io.FileInputStream
+import java.nio.channels.AsynchronousFileChannel
+import java.nio.file.Paths
+import java.nio.file.StandardOpenOption.READ
+
+// Raw Source는 helper-owned: vipsImageOf가 buffer하고 닫습니다.
+val sourceImage = vipsImageOf(FileInputStream("image.webp").asSource())
+sourceImage.close()
+
+// BufferedSource는 caller-owned: 호출 지점에서 닫습니다.
+FileInputStream("image.webp").asSource().buffered().use { source ->
+    vipsImageOf(source).use { image ->
+        println("${image.width}x${image.height}")
+    }
+}
+
+suspend fun loadFromSuspendedSource() {
+    AsynchronousFileChannel.open(Paths.get("image.webp"), READ).use { channel ->
+        val source = channel.asSuspendedSource().bufferedSuspended()
+        try {
+            suspendVipsImageOf(source).use { image ->
+                println("${image.width}x${image.height}")
+            }
+        } finally {
+            source.close()
+        }
+    }
+}
+```
+
+Local large file은 `Path` 진입점을 우선 사용하세요. 서비스가 이미 stream, pipe,
+`bluetape4k-okio` suspended boundary로 이미지 바이트를 받는 경우에 Okio source를
+사용합니다. Non-Path load에는 여전히 50 MB compressed input guard가 적용됩니다.
+
 ### 이미지 자르기 및 출력
 
 ```kotlin

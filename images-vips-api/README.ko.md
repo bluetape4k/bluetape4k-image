@@ -148,6 +148,49 @@ suspend fun processImageAsync(inputPath: String) {
 }
 ```
 
+### Streaming 경계를 위한 Okio Sink
+
+```kotlin
+import io.bluetape4k.images.vips.*
+import io.bluetape4k.images.vips.coroutines.*
+import io.bluetape4k.okio.asSink
+import io.bluetape4k.okio.buffered
+import io.bluetape4k.okio.coroutines.asSuspendedSink
+import io.bluetape4k.okio.coroutines.buffered as bufferedSuspended
+import java.io.File
+import java.nio.channels.AsynchronousFileChannel
+import java.nio.file.Paths
+import java.nio.file.StandardOpenOption.CREATE
+import java.nio.file.StandardOpenOption.TRUNCATE_EXISTING
+import java.nio.file.StandardOpenOption.WRITE
+
+vipsImageOf(Paths.get("photo.jpg")).use { image ->
+    // Caller-owned BufferedSink: helper는 flush만 하고 닫지 않습니다.
+    File("thumb.webp").outputStream().asSink().buffered().use { sink ->
+        image.thumbnail(800).use { thumb ->
+            thumb.writeTo(sink, VipsImageFormat.WEBP, VipsEncodeOptions.Default)
+        }
+    }
+}
+
+suspend fun writeWithSuspendedSink(image: VipsImage) {
+    val channel = AsynchronousFileChannel.open(
+        Paths.get("thumb.jpg"),
+        WRITE,
+        CREATE,
+        TRUNCATE_EXISTING,
+    )
+    channel.use {
+        val sink = channel.asSuspendedSink().bufferedSuspended()
+        image.suspendWriteTo(sink, VipsImageFormat.JPEG, VipsEncodeOptions.Default)
+    }
+}
+```
+
+Local large file은 backend `Path` 진입점을 먼저 선택하세요. 이미지 바이트가 이미
+streaming boundary를 지나고 있고 중간 `ByteArray` 없이 ownership을 명시하고 싶을 때
+Okio sink를 사용합니다.
+
 ### 크롭 및 다중 연산 체인
 
 ```kotlin

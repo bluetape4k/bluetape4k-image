@@ -43,6 +43,23 @@ benchmark module은 scrimage/libvips trade-off를 추측이 아니라 측정 가
 - **Benchmark lane** — scrimage와 libvips resize/encode 경로를 비교하는
   `kotlinx-benchmark` 벤치마크
 
+## 대용량 파일과 Okio I/O
+
+업로드 본문, object storage client, pipe, asynchronous file channel처럼 이미지
+바이트가 이미 streaming 경계를 지나고 있다면 `bluetape4k-okio`를 사용하세요.
+scrimage 기반 `images` 모듈은 Okio `Source`/`Sink`와
+`SuspendedSource`/`SuspendedSink` helper를 받아 lifecycle-safe load/write
+통합을 제공합니다.
+
+libvips 경로에서 local large file을 다룰 때는 `Path` 진입점을 먼저 선택하세요.
+대용량 파일 benchmark에서는 Java 25 FFM backend의 `Path` 경로가 local file
+메모리와 처리량 기준으로 가장 강했습니다. 호출자가 이미 non-file stream이나
+`bluetape4k-okio` suspended boundary를 소유하고 있을 때 vips Okio
+`Source`/`Sink` helper를 사용하세요. Non-Path vips load는 여전히 50 MB stream
+guard 안에서 compressed input을 검증하고 버퍼링합니다.
+
+Benchmark evidence: [`images-benchmark/docs/large-streaming-2026-06-05.md`](images-benchmark/docs/large-streaming-2026-06-05.md).
+
 <!-- README_VISUAL_OVERVIEW:START -->
 ## 개요 다이어그램
 

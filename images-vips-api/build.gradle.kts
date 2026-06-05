@@ -9,6 +9,7 @@ configurations {
 dependencies {
     api(libs.bluetape4k.core)
     api(libs.bluetape4k.io)
+    api(libs.bluetape4k.okio)
     // Consumers need @IncubatingImageApi annotation transitively
     api(project(":bluetape4k-images"))
     api(libs.bluetape4k.coroutines)

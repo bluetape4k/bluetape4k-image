@@ -192,6 +192,50 @@ fun main() = runBlocking {
 }
 ```
 
+### Loading from Okio Sources
+
+```kotlin
+import io.bluetape4k.images.vips.java21.suspendVipsImageOf
+import io.bluetape4k.images.vips.java21.vipsImageOf
+import io.bluetape4k.okio.asSource
+import io.bluetape4k.okio.buffered
+import io.bluetape4k.okio.coroutines.asSuspendedSource
+import io.bluetape4k.okio.coroutines.buffered as bufferedSuspended
+import java.io.FileInputStream
+import java.nio.channels.AsynchronousFileChannel
+import java.nio.file.Paths
+import java.nio.file.StandardOpenOption.READ
+
+// Raw Source is helper-owned: vipsImageOf buffers and closes it.
+val sourceImage = vipsImageOf(FileInputStream("image.webp").asSource())
+sourceImage.close()
+
+// BufferedSource is caller-owned: close it at the call site.
+FileInputStream("image.webp").asSource().buffered().use { source ->
+    vipsImageOf(source).use { image ->
+        println("${image.width}x${image.height}")
+    }
+}
+
+suspend fun loadFromSuspendedSource() {
+    AsynchronousFileChannel.open(Paths.get("image.webp"), READ).use { channel ->
+        val source = channel.asSuspendedSource().bufferedSuspended()
+        try {
+            suspendVipsImageOf(source).use { image ->
+                println("${image.width}x${image.height}")
+            }
+        } finally {
+            source.close()
+        }
+    }
+}
+```
+
+For local large files, `Path` remains the preferred JVips entry point. Use
+Okio sources when the service already receives image bytes through a stream,
+pipe, or `bluetape4k-okio` suspended boundary. Non-Path loads are still subject
+to the 50 MB compressed input guard.
+
 ### Image Crop and Output
 
 ```kotlin
