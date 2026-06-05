@@ -1,0 +1,26 @@
+graph 1 24.305 10.09
+node bom 2.2915 8.861 4.583 1.778 BOM rounded,filled box #9AA8B8 #FFFFFF
+node consumer 8.6109 8.861 4.722 1.778 "Kotlin Services" rounded,filled box #9AA8B8 #FFFFFF
+node examples 15.555 8.861 5.278 1.778 "Runnable Examples" rounded,filled box #9AA8B8 #FFFFFF
+node benchmark 21.805 8.861 4.444 1.778 "Benchmark Lane" rounded,filled box #9AA8B8 #FFFFFF
+node scrimage 2.9165 4.8749 5.833 2.389 "Pure JVM Processing" rounded,filled box #9AA8B8 #FFFFFF
+node captcha 9.1665 4.8749 5.278 2.389 "CAPTCHA Generation" rounded,filled box #9AA8B8 #FFFFFF
+node service 15.486 4.8749 5.972 2.389 "Service Integrations" rounded,filled box #9AA8B8 #FFFFFF
+node vipsApi 21.667 4.8749 5 2.389 "Vips Runtime API" rounded,filled box #9AA8B8 #FFFFFF
+node jni 15.555 0.986 5 1.972 "Java 21 JNI Backend" rounded,filled box #9AA8B8 #FFFFFF
+node ffm 21.805 0.986 5 1.972 "Java 25 FFM Backend" rounded,filled box #9AA8B8 #FFFFFF
+node host 9.0971 0.986 5.139 1.972 "Native Host Capability" rounded,filled box #9AA8B8 #FFFFFF
+edge bom consumer 4 4.5864 8.8611 4.5864 8.8611 6.0866 8.8611 6.0866 8.8611 align 5.1542 8.934 solid #758297
+edge consumer scrimage 7 6.3887 7.9665 6.3887 6.7913 6.3887 4.875 6.3887 4.875 6.3887 4.875 5.9984 4.875 5.9984 4.875 "default path" 5.9512 6.2985 solid #758297
+edge consumer captcha 4 8.009 7.9664 8.009 7.9664 8.009 6.2326 8.009 6.2326 "challenge path" 7.4986 7.1724 solid #758297
+edge consumer service 7 10.974 8.8611 11.915 8.8611 12.778 8.8611 12.778 8.8611 12.778 8.8611 12.778 6.2362 12.778 6.2362 "web path" 12.486 8.5232 solid #758297
+edge consumer vipsApi 10 9.4905 7.9679 9.4905 7.6336 9.4905 7.3333 9.4905 7.3333 9.4905 7.3333 19.375 7.3333 19.375 7.3333 19.375 7.3333 19.375 6.2352 19.375 6.2352 "native path" 14.263 7.4062 solid #758297
+edge benchmark vipsApi 4 21.805 7.9664 21.805 7.9664 21.805 6.2326 21.805 6.2326 compare 21.55 7.1724 solid #758297
+edge scrimage service 10 5.208 6.0722 5.208 6.4201 5.208 6.7083 5.208 6.7083 5.208 6.7083 12.639 6.7083 12.639 6.7083 12.639 6.7083 12.639 6.2321 12.639 6.2321 "thumbnail bytes" 8.2965 6.7812 solid #758297
+edge captcha service 4 11.81 4.875 11.81 4.875 12.336 4.875 12.336 4.875 verify 12.182 4.8021 solid #758297
+edge service vipsApi 4 18.477 4.875 18.477 4.875 19.003 4.875 19.003 4.875 solid #758297
+edge vipsApi jni 7 19.236 3.6764 19.236 2.5338 19.236 0.98611 19.236 0.98611 19.236 0.98611 18.221 0.98611 18.221 0.98611 "Java 21+" 18.944 1.8968 solid #758297
+edge vipsApi ffm 4 21.736 3.6764 21.736 3.6764 21.736 2.138 21.736 2.138 "Java 25+" 21.444 2.9801 solid #758297
+edge host jni 4 11.673 0.98611 11.673 0.98611 12.889 0.98611 12.889 0.98611 libvips 12.026 1.059 solid #758297
+edge host ffm 10 9.0971 -0.0058062 9.0971 -0.1495 9.0971 -0.25 9.0971 -0.25 9.0971 -0.25 21.805 -0.25 21.805 -0.25 21.805 -0.25 21.805 -0.16572 21.805 -0.16572 libvips 15.116 -0.17708 solid #758297
+stop
