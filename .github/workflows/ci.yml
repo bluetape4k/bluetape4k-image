@@ -240,11 +240,6 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y tesseract-ocr tesseract-ocr-eng tesseract-ocr-kor tesseract-ocr-jpn fonts-noto-cjk
-          LEPTONICA_LIB="$(ldconfig -p | awk '/liblept\.so\.5/{print $NF; exit}')"
-          if [ -n "$LEPTONICA_LIB" ] && [ ! -e /usr/lib/x86_64-linux-gnu/libleptonica.so ]; then
-            sudo ln -s "$LEPTONICA_LIB" /usr/lib/x86_64-linux-gnu/libleptonica.so
-            sudo ldconfig
-          fi
           tesseract --list-langs
       - uses: gradle/actions/setup-gradle@v6
         with:
@@ -253,7 +248,7 @@ jobs:
       - name: Test images-ocr
         run: |
           for attempt in 1 2 3 4 5; do
-            ./gradlew :bluetape4k-images-ocr:test -Docr.enabled=true -Docr.container.enabled=true --no-daemon && break
+            ./gradlew :bluetape4k-images-ocr:test -Docr.container.enabled=true --no-daemon && break
             echo "Attempt $attempt failed"
             [ $attempt -lt 5 ] && sleep 30 || exit 1
           done
