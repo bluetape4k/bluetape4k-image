@@ -31,7 +31,7 @@
 요청할 언어에 맞는 Tesseract와 traineddata 패키지를 설치하세요.
 
 ```bash
-# macOS
+# macOS / Homebrew
 brew install tesseract tesseract-lang
 
 # Ubuntu / Debian
@@ -85,6 +85,32 @@ val digits = image.extractText(
     ),
 )
 ```
+
+## 실행 가능한 Quickstart
+
+이 모듈에는 파일 기반 quickstart 테스트가 포함됩니다. 테스트는 작은 이미지를
+생성하고, `immutableImageOf(File)`로 읽은 뒤, 명시적인 언어와 page segmentation
+옵션으로 OCR을 실행합니다. Tess4J가 traineddata 파일을 자동으로 찾지 못하면
+`TESSDATA_PREFIX`를 설정하세요.
+
+```bash
+export TESSDATA_PREFIX="$(brew --prefix)/share/tessdata"  # macOS / Homebrew
+./gradlew :bluetape4k-images-ocr:test \
+  --tests 'io.bluetape4k.images.ocr.OcrQuickstartExampleTest' \
+  -Docr.enabled=true
+```
+
+예상 출력 형태:
+
+```text
+BLUETAPE OCR 123
+```
+
+Quickstart는 `eng`를 사용합니다. macOS에서는 `brew install tesseract
+tesseract-lang`으로 Tesseract 엔진과 bundled language pack set을 함께 설치합니다.
+Ubuntu에서는 `tesseract-ocr-eng`, `tesseract-ocr-kor`, `tesseract-ocr-jpn`처럼
+요청할 traineddata 패키지를 명시적으로 설치하세요. 테스트는 `TESSDATA_PREFIX`가
+없을 때도 일반적인 Homebrew와 Ubuntu tessdata 경로를 확인합니다.
 
 ## 테스트
 

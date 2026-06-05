@@ -248,7 +248,7 @@ jobs:
       - name: Test images-ocr
         run: |
           for attempt in 1 2 3 4 5; do
-            ./gradlew :bluetape4k-images-ocr:test -Docr.enabled=true -Docr.container.enabled=true --no-daemon && break
+            ./gradlew :bluetape4k-images-ocr:test -Docr.container.enabled=true --no-daemon && break
             echo "Attempt $attempt failed"
             [ $attempt -lt 5 ] && sleep 30 || exit 1
           done
