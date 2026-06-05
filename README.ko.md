@@ -14,10 +14,23 @@ Kotlin/JVM 이미지 처리 라이브러리 — [bluetape4k](https://github.com/
 경로(Java2D)와, JNI(Java 21) 및 Panama 외부 함수 & 메모리 API(Java 25)를 통해 제공되는 고성능
 [libvips](https://www.libvips.org/) 경로입니다.
 
-## 프로젝트 목적
+## 개요
 
 `bluetape4k-image`는 Kotlin 서비스가 순수 JVM scrimage 처리로 시작하고, 처리량·메모리·
 native codec이 중요해질 때 libvips 백엔드로 확장할 수 있는 단일 이미지 처리 표면을 제공합니다.
+
+저장소는 세 가지 도입 경로를 중심으로 구성됩니다.
+
+- **순수 JVM 우선** — native runtime 설정 없이 안정적인 resize, crop, filter, analysis,
+  batch, encode workflow가 필요하면 `images`를 사용합니다.
+- **서비스 어댑터** — CAPTCHA challenge, Ktor route, Spring Boot 4 storage/health/metrics
+  wiring으로 이미지 처리를 노출해야 할 때 `images-captcha`, `images-ktor`,
+  `images-spring-boot`를 추가합니다.
+- **Native acceleration** — libvips 처리량, 메모리 동작, AVIF/HEIC 가능 native codec 지원이
+  필요하면 `images-vips-api`에 맞춰 작성하고 Java 21 JNI 또는 Java 25 FFM backend를 선택합니다.
+
+BOM은 artifact version을 정렬하고, runnable example은 local API 형태를 보여 주며,
+benchmark module은 scrimage/libvips trade-off를 추측이 아니라 측정 가능한 증거로 남깁니다.
 
 ## 제공 기능
 
@@ -31,11 +44,11 @@ native codec이 중요해질 때 libvips 백엔드로 확장할 수 있는 단�
   `kotlinx-benchmark` 벤치마크
 
 <!-- README_VISUAL_OVERVIEW:START -->
-## Overview Diagram
+## 개요 다이어그램
 
 ![Bluetape4k Image overview diagram](docs/assets/readme-diagrams/root-readme-overview-01.png)
 
-## Module Composition Chart
+## 모듈 구성 차트
 
 ![Bluetape4k Image module composition chart](docs/assets/readme-charts/root-readme-module-chart-01.png)
 <!-- README_VISUAL_OVERVIEW:END -->

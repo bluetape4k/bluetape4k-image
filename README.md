@@ -14,11 +14,27 @@ Provides two backends: a pure-JVM [scrimage](https://github.com/sksamuel/scrimag
 standard formats with coroutine async I/O, and a high-performance [libvips](https://www.libvips.org/)
 path available via both JNI (Java 21) and the Panama Foreign Function & Memory API (Java 25).
 
-## Project Purpose
+## Overview
 
 `bluetape4k-image` gives Kotlin services one image-processing surface that can
 start with pure-JVM scrimage operations and move to libvips when throughput,
 memory use, or native codecs matter.
+
+The repository is organized around three adoption lanes:
+
+- **Pure JVM first** — use `images` when a service needs dependable resize,
+  crop, filter, analysis, batch, and encode workflows without native runtime
+  setup.
+- **Service adapters** — add `images-captcha`, `images-ktor`, or
+  `images-spring-boot` when image processing should be exposed through CAPTCHA
+  challenges, Ktor routes, or Spring Boot 4 storage/health/metrics wiring.
+- **Native acceleration** — program against `images-vips-api` and choose the
+  Java 21 JNI or Java 25 FFM backend when libvips throughput, memory behavior,
+  or AVIF/HEIC-capable native codec support is required.
+
+The BOM keeps artifact versions aligned, runnable examples show local API
+shape, and the benchmark module keeps scrimage/libvips trade-offs measurable
+instead of implicit.
 
 ## What It Provides
 
