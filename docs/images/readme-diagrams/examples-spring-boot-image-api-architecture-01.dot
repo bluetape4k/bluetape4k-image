@@ -10,10 +10,10 @@ digraph G {
   "service" [label="LocalImageApiService"];
   "storage" [label="ImageStorage"];
   "files" [label="Filesystem root"];
-  "boot" -> "controller" [label=""];
-  "boot" -> "config" [label=""];
-  "controller" -> "service" [label=""];
-  "config" -> "service" [label=""];
-  "service" -> "storage" [label=""];
-  "storage" -> "files" [label=""];
+  "boot" -> "controller" [label="scan"];
+  "boot" -> "config" [label="config"];
+  "controller" -> "service" [label="delegate"];
+  "config" -> "service" [label="bean"];
+  "service" -> "storage" [label="upload/download"];
+  "storage" -> "files" [label="persist"];
 }

@@ -47,7 +47,7 @@
 <path class="edge" d="M 1000 547 L 1000 650 L 625 650 L 625 765" stroke="#DB7890"/>
 <path class="edge" d="M 1500 512 L 1500 650 L 1145 650 L 1145 735" stroke="#45A7A1"/>
 <path class="edge" d="M 1500 512 L 1500 690 L 1705 690 L 1705 775" stroke="#D9AA4D"/>
-<path class="edge-dashed" d="M 510 532 L 200 532 L 200 1111 L 410 1111" stroke="#56708C"/>
+<path class="edge-dashed" d="M 340 486 L 200 486 L 200 1111 L 410 1111" stroke="#56708C"/>
 <path class="edge-dashed" d="M 625 857 L 625 970 L 1115 970 L 1115 1050" stroke="#D9AA4D"/>
 <path class="edge-dashed" d="M 625 857 L 625 990 L 1650 990 L 1650 1070" stroke="#45A7A1"/>
 </g>

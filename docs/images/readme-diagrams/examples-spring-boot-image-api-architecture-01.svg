@@ -80,5 +80,19 @@
   <text class="node-detail" x="1850" y="666.0" text-anchor="middle" dominant-baseline="middle">originals/ and thumbnails/</text>
 </g>
 </g>
+<g id="edge-labels" transform="translate(0 70)">
+<rect x="438.0" y="310.0" width="64" height="24" rx="8" fill="#FFFFFF" stroke="#D7E2EC" opacity="0.94"/>
+<text class="label" x="470.0" y="322.0" text-anchor="middle" dominant-baseline="middle">scan</text>
+<rect x="432.0" y="505.0" width="76" height="24" rx="8" fill="#FFFFFF" stroke="#D7E2EC" opacity="0.94"/>
+<text class="label" x="470.0" y="517.0" text-anchor="middle" dominant-baseline="middle">config</text>
+<rect x="1000.0" y="210.0" width="92" height="24" rx="8" fill="#FFFFFF" stroke="#D7E2EC" opacity="0.94"/>
+<text class="label" x="1046.0" y="222.0" text-anchor="middle" dominant-baseline="middle">delegate</text>
+<rect x="978.0" y="680.0" width="64" height="24" rx="8" fill="#FFFFFF" stroke="#D7E2EC" opacity="0.94"/>
+<text class="label" x="1010.0" y="692.0" text-anchor="middle" dominant-baseline="middle">bean</text>
+<rect x="1536.0" y="310.0" width="148" height="24" rx="8" fill="#FFFFFF" stroke="#D7E2EC" opacity="0.94"/>
+<text class="label" x="1610.0" y="322.0" text-anchor="middle" dominant-baseline="middle">upload/download</text>
+<rect x="1858.0" y="528.0" width="84" height="24" rx="8" fill="#FFFFFF" stroke="#D7E2EC" opacity="0.94"/>
+<text class="label" x="1900.0" y="540.0" text-anchor="middle" dominant-baseline="middle">persist</text>
+</g>
 <text class="footer" x="1100.0" y="930" text-anchor="middle">S3/CDN policy is intentionally left to the advanced workshop, not this local quickstart.</text>
 </svg>

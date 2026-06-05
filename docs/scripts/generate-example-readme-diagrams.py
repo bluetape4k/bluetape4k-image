@@ -200,8 +200,9 @@ def render_edge_label(edge: Edge) -> list[str]:
     else:
         mid_x = sum(x for x, _ in edge.points) / len(edge.points)
         mid_y = sum(y for _, y in edge.points) / len(edge.points)
+    label_w = max(64, len(edge.label) * 8 + 28)
     return [
-        f'<rect x="{mid_x - 58:.1f}" y="{mid_y - 20:.1f}" width="116" height="22" rx="8" fill="#FFFFFF" stroke="#D7E2EC" opacity="0.94"/>',
+        f'<rect x="{mid_x - label_w / 2:.1f}" y="{mid_y - 20:.1f}" width="{label_w}" height="24" rx="8" fill="#FFFFFF" stroke="#D7E2EC" opacity="0.94"/>',
         f'<text class="label" x="{mid_x:.1f}" y="{mid_y - 8:.1f}" text-anchor="middle" dominant-baseline="middle">{esc(edge.label)}</text>',
     ]
 
@@ -349,6 +350,89 @@ def boxes_overlap(first: Node, second: Node, clearance: int = 16) -> bool:
     )
 
 
+def rects_overlap(
+    first: tuple[float, float, float, float],
+    second: tuple[float, float, float, float],
+    clearance: int = 0,
+) -> bool:
+    left1, top1, right1, bottom1 = first
+    left2, top2, right2, bottom2 = second
+    return not (
+        right1 + clearance <= left2
+        or right2 + clearance <= left1
+        or bottom1 + clearance <= top2
+        or bottom2 + clearance <= top1
+    )
+
+
+def node_rect(node: Node) -> tuple[float, float, float, float]:
+    return (node.x, node.y, node.right, node.bottom)
+
+
+def label_rect(edge: Edge) -> tuple[float, float, float, float]:
+    if edge.label_pos:
+        mid_x, mid_y = edge.label_pos
+    else:
+        mid_x = sum(x for x, _ in edge.points) / len(edge.points)
+        mid_y = sum(y for _, y in edge.points) / len(edge.points)
+    label_w = max(64, len(edge.label) * 8 + 28)
+    return (mid_x - label_w / 2, mid_y - 20, mid_x + label_w / 2, mid_y + 4)
+
+
+def segment_intersects_rect(
+    first: tuple[int, int],
+    second: tuple[int, int],
+    rect: tuple[float, float, float, float],
+    clearance: int = 0,
+) -> bool:
+    left, top, right, bottom = rect
+    left -= clearance
+    right += clearance
+    top -= clearance
+    bottom += clearance
+    x1, y1 = first
+    x2, y2 = second
+    if x1 == x2:
+        lo, hi = sorted((y1, y2))
+        return left < x1 < right and max(lo, top) < min(hi, bottom)
+    if y1 == y2:
+        lo, hi = sorted((x1, x2))
+        return top < y1 < bottom and max(lo, left) < min(hi, right)
+    raise ValueError(f"Diagonal connector segment is not allowed: {first} -> {second}")
+
+
+def boundary_side(point: tuple[int, int], node: Node) -> str:
+    x, y = point
+    if x == node.x and node.y <= y <= node.bottom:
+        return "left"
+    if x == node.right and node.y <= y <= node.bottom:
+        return "right"
+    if y == node.y and node.x <= x <= node.right:
+        return "top"
+    if y == node.bottom and node.x <= x <= node.right:
+        return "bottom"
+    raise ValueError(f"{node.key}: connector endpoint {point} is not on node boundary")
+
+
+def validate_endpoint_attachment(diagram: FlowDiagram, edge: Edge, nodes: dict[str, Node]) -> None:
+    if len(edge.points) < 2:
+        raise ValueError(f"{diagram.base}: {edge.source}->{edge.target} needs at least two points")
+    source = nodes[edge.source]
+    target = nodes[edge.target]
+    start, after_start = edge.points[0], edge.points[1]
+    before_end, end = edge.points[-2], edge.points[-1]
+    start_side = boundary_side(start, source)
+    end_side = boundary_side(end, target)
+    if start_side in {"left", "right"} and start[0] == after_start[0]:
+        raise ValueError(f"{diagram.base}: {edge.source}->{edge.target} start has a 0-degree/tangent attachment")
+    if start_side in {"top", "bottom"} and start[1] == after_start[1]:
+        raise ValueError(f"{diagram.base}: {edge.source}->{edge.target} start has a 0-degree/tangent attachment")
+    if end_side in {"left", "right"} and before_end[0] == end[0]:
+        raise ValueError(f"{diagram.base}: {edge.source}->{edge.target} end has a 0-degree/tangent attachment")
+    if end_side in {"top", "bottom"} and before_end[1] == end[1]:
+        raise ValueError(f"{diagram.base}: {edge.source}->{edge.target} end has a 0-degree/tangent attachment")
+
+
 def validate_node_text_fit(diagram: FlowDiagram) -> None:
     for node in diagram.nodes:
         title_limit = node.w - 34
@@ -374,6 +458,9 @@ def validate_flow_routes(diagram: FlowDiagram) -> None:
             if boxes_overlap(first, second):
                 raise ValueError(f"{diagram.base}: node overlap or crowding {first.key}<->{second.key}")
     for edge in diagram.edges:
+        if edge.source not in nodes or edge.target not in nodes:
+            raise ValueError(f"{diagram.base}: unknown edge endpoint {edge.source}->{edge.target}")
+        validate_endpoint_attachment(diagram, edge, nodes)
         for first, second in zip(edge.points, edge.points[1:]):
             for node in diagram.nodes:
                 if node.key in {edge.source, edge.target}:
@@ -382,8 +469,20 @@ def validate_flow_routes(diagram: FlowDiagram) -> None:
                     raise ValueError(
                         f"{diagram.base}: {edge.source}->{edge.target} segment {first}->{second} crosses or hugs {node.key}"
                     )
-        if edge.source not in nodes or edge.target not in nodes:
-            raise ValueError(f"{diagram.base}: unknown edge endpoint {edge.source}->{edge.target}")
+    if diagram.show_edge_labels:
+        for edge in diagram.edges:
+            if not edge.label:
+                continue
+            edge_label_rect = label_rect(edge)
+            for node in diagram.nodes:
+                if rects_overlap(edge_label_rect, node_rect(node), clearance=8):
+                    raise ValueError(f"{diagram.base}: label {edge.label!r} overlaps or hugs node {node.key}")
+            for routed_edge in diagram.edges:
+                for first, second in zip(routed_edge.points, routed_edge.points[1:]):
+                    if segment_intersects_rect(first, second, edge_label_rect, clearance=4):
+                        raise ValueError(
+                            f"{diagram.base}: label {edge.label!r} intersects route {routed_edge.source}->{routed_edge.target}"
+                        )
 
 
 def write_graphviz(base: str, title: str, nodes: list[tuple[str, str]], edges: list[tuple[str, str, str]]) -> None:
@@ -471,7 +570,7 @@ def diagrams() -> tuple[FlowDiagram | SequenceDiagram, ...]:
                 Edge("autoStorage", "s3", "", ((920, 527), (920, 740)), "#D9AA4D"),
                 Edge("autoCdn", "signers", "", ((1415, 567), (1415, 790)), "#DB7890"),
                 Edge("autoStorage", "storageSpi", "", ((1095, 481), (1125, 481), (1125, 700), (1915, 700), (1915, 760)), "#58A978"),
-                Edge("autoHealth", "health", "", ((1680, 466), (1680, 350), (160, 350), (160, 1110), (385, 1110)), "#45A7A1"),
+                Edge("autoHealth", "health", "", ((1850, 420), (1850, 350), (160, 350), (160, 1110), (385, 1110)), "#45A7A1"),
                 Edge("autoMetrics", "metrics", "", ((2020, 606), (2110, 606), (2110, 1015), (1100, 1015), (1100, 1075)), "#8A72D6"),
                 Edge("autoCdn", "actuator", "", ((1585, 521), (2110, 521), (2110, 1010), (1640, 1010), (1640, 1060)), "#B88A44"),
                 Edge("local", "metrics", "", ((565, 857), (565, 1000), (1100, 1000), (1100, 1075)), "#45A7A1"),
@@ -514,7 +613,7 @@ def diagrams() -> tuple[FlowDiagram | SequenceDiagram, ...]:
                 Edge("thumb", "images", "", ((1000, 547), (1000, 650), (625, 650), (625, 765)), "#DB7890"),
                 Edge("captchaRoutes", "captcha", "", ((1500, 512), (1500, 650), (1145, 650), (1145, 735)), "#45A7A1"),
                 Edge("captchaRoutes", "challengeStore", "", ((1500, 512), (1500, 690), (1705, 690), (1705, 775)), "#D9AA4D"),
-                Edge("routing", "auth", "", ((510, 532), (200, 532), (200, 1111), (410, 1111)), "#56708C", True),
+                Edge("routing", "auth", "", ((340, 486), (200, 486), (200, 1111), (410, 1111)), "#56708C", True),
                 Edge("images", "cdn", "", ((625, 857), (625, 970), (1115, 970), (1115, 1050)), "#D9AA4D", True),
                 Edge("images", "native", "", ((625, 857), (625, 990), (1650, 990), (1650, 1070)), "#45A7A1", True),
             ),
@@ -544,45 +643,40 @@ def diagrams() -> tuple[FlowDiagram | SequenceDiagram, ...]:
                 Node("preview", "Workbench preview", ("960 x 540 JPG",), 1490, 460, 370, 110, 4),
             ),
             edges=(
-                Edge("run", "generator", "", ((430, 435), (455, 435), (455, 598), (480, 598))),
-                Edge("fixtures", "generator", "", ((660, 322), (660, 540))),
-                Edge("generator", "thumb", "", ((860, 598), (960, 598), (960, 195), (1050, 195))),
-                Edge("generator", "crop", "", ((860, 598), (960, 598), (960, 355), (1050, 355))),
-                Edge("generator", "convert", "", ((860, 598), (960, 598), (960, 515), (1050, 515))),
-                Edge("crop", "watermark", "", ((1390, 355), (1490, 355))),
-                Edge("convert", "preview", "", ((1390, 515), (1490, 515))),
+                Edge("run", "generator", "run", ((430, 435), (455, 435), (455, 598), (480, 598)), label_pos=(472, 410)),
+                Edge("fixtures", "generator", "load", ((660, 322), (660, 540)), label_pos=(710, 420)),
+                Edge("generator", "thumb", "fit", ((860, 598), (960, 598), (960, 195), (1050, 195)), label_pos=(920, 574)),
+                Edge("generator", "crop", "crop", ((860, 598), (960, 598), (960, 355), (1050, 355)), label_pos=(1000, 330)),
+                Edge("generator", "convert", "png", ((860, 598), (960, 598), (960, 515), (1050, 515)), label_pos=(1000, 490)),
+                Edge("crop", "watermark", "draw", ((1390, 355), (1490, 355)), label_pos=(1445, 330)),
+                Edge("convert", "preview", "reuse", ((1390, 515), (1490, 515)), label_pos=(1445, 490)),
             ),
             footer="All outputs are verified by the same generator that powers :basic-processing:run.",
+            show_edge_labels=True,
         ),
         FlowDiagram(
             base="examples-basic-processing-architecture-01",
             title="Basic Processing Architecture",
             subtitle="Pure JVM image transformations with suspend-aware writers.",
-            width=2600,
-            height=960,
+            width=2480,
+            height=640,
             nodes=(
-                Node("cli", "CLI entrypoint", ("main(args)", "runBlocking"), 290, 220, 340, 110, 0),
-                Node("quickstart", "BasicImageProcessingQuickstart", ("generate(outputDirectory)",), 730, 360, 500, 110, 1),
-                Node("loader", "suspendLoadImage", ("file-backed resources",), 1290, 520, 360, 110, 2),
-                Node("transforms", "ImmutableImage transforms", ("fit, smartCropTo", "withGraphics watermark"), 1700, 520, 410, 110, 3),
-                Node("writers", "Suspend writers", ("JPEG progressive", "PNG max compression"), 1700, 680, 360, 110, 4),
-                Node("outputs", "Output directory", ("build/tmp/basic-processing", "five generated files"), 2110, 680, 360, 110, 5),
+                Node("cli", "CLI entrypoint", ("main(args)", "runBlocking"), 90, 185, 340, 110, 0),
+                Node("quickstart", "BasicImageProcessingQuickstart", ("generate(outputDirectory)",), 520, 185, 500, 110, 1),
+                Node("loader", "suspendLoadImage", ("file-backed resources",), 1110, 185, 360, 110, 2),
+                Node("transforms", "ImmutableImage transforms", ("fit, smartCropTo", "withGraphics watermark"), 1540, 185, 410, 110, 3),
+                Node("writers", "Suspend writers", ("JPEG progressive", "PNG max compression"), 2030, 105, 360, 110, 4),
+                Node("outputs", "Output directory", ("build/tmp/basic-processing", "five generated files"), 2030, 265, 360, 110, 5),
             ),
             edges=(
-                Edge("cli", "quickstart", "", ((630, 275), (680, 275), (680, 415), (730, 415))),
-                Edge("quickstart", "loader", "", ((1230, 415), (1260, 415), (1260, 575), (1290, 575))),
-                Edge("loader", "transforms", "", ((1650, 575), (1700, 575))),
-                Edge("transforms", "writers", "", ((1905, 630), (1905, 680))),
-                Edge("writers", "outputs", "", ((2060, 735), (2110, 735))),
+                Edge("cli", "quickstart", "invoke", ((430, 240), (520, 240)), label_pos=(475, 165)),
+                Edge("quickstart", "loader", "load", ((1020, 240), (1110, 240)), label_pos=(1065, 165)),
+                Edge("loader", "transforms", "images", ((1470, 240), (1540, 240)), label_pos=(1505, 165)),
+                Edge("transforms", "writers", "encode", ((1950, 240), (1980, 240), (1980, 160), (2030, 160)), label_pos=(1995, 85)),
+                Edge("transforms", "outputs", "write", ((1950, 240), (1980, 240), (1980, 320), (2030, 320)), label_pos=(1995, 415)),
             ),
             footer="No server, storage service, Docker, S3, CDN, or native libvips is involved.",
-            panels=(
-                Panel("Entrypoint", 72, 190, 2456, 150, 0),
-                Panel("Workflow", 72, 350, 2456, 150, 1),
-                Panel("Image Library", 72, 510, 2456, 130, 2),
-                Panel("Output", 72, 670, 2456, 130, 4),
-            ),
-            javers_style=True,
+            show_edge_labels=True,
         ),
         SequenceDiagram(
             base="examples-basic-processing-sequence-01",
@@ -622,14 +716,15 @@ def diagrams() -> tuple[FlowDiagram | SequenceDiagram, ...]:
                 Node("response", "Local responses", ("JSON challenge", "PNG thumbnail bytes"), 1540, 380, 360, 110, 5),
             ),
             edges=(
-                Edge("client", "server", "", ((450, 435), (520, 435))),
-                Edge("server", "ready", "", ((880, 435), (970, 435), (970, 225), (1050, 225))),
-                Edge("server", "captcha", "", ((880, 435), (1050, 435))),
-                Edge("server", "thumb", "", ((880, 435), (970, 435), (970, 645), (1050, 645))),
-                Edge("captcha", "response", "", ((1410, 435), (1540, 435))),
-                Edge("thumb", "response", "", ((1410, 645), (1475, 645), (1475, 435), (1540, 435))),
+                Edge("client", "server", "HTTP", ((450, 435), (520, 435)), label_pos=(485, 360)),
+                Edge("server", "ready", "health", ((880, 435), (970, 435), (970, 225), (1050, 225)), label_pos=(928, 410)),
+                Edge("server", "captcha", "mount", ((880, 435), (1050, 435)), label_pos=(925, 465)),
+                Edge("server", "thumb", "mount", ((880, 435), (970, 435), (970, 645), (1050, 645)), label_pos=(925, 520)),
+                Edge("captcha", "response", "json/png", ((1410, 435), (1540, 435)), label_pos=(1475, 410)),
+                Edge("thumb", "response", "png", ((1410, 645), (1475, 645), (1475, 435), (1540, 435)), label_pos=(1465, 735)),
             ),
             footer="The quickstart intentionally skips S3, CDN, Docker, persistence, and native libvips.",
+            show_edge_labels=True,
         ),
         FlowDiagram(
             base="examples-ktor-image-api-architecture-01",
@@ -647,12 +742,12 @@ def diagrams() -> tuple[FlowDiagram | SequenceDiagram, ...]:
                 Node("images", "bluetape4k-images", ("multipart thumbnail",), 1780, 560, 400, 112, 6),
             ),
             edges=(
-                Edge("app", "core", "", ((500, 416), (560, 416), (560, 306), (620, 306))),
-                Edge("app", "routing", "", ((500, 416), (560, 416), (560, 556), (620, 556))),
-                Edge("routing", "captcha", "", ((1000, 556), (1060, 556), (1060, 416), (1120, 416))),
-                Edge("routing", "thumbnail", "", ((1000, 556), (1060, 556), (1060, 616), (1120, 616))),
-                Edge("captcha", "captchaLib", "", ((1640, 416), (1780, 416))),
-                Edge("thumbnail", "images", "", ((1680, 616), (1780, 616))),
+                Edge("app", "core", "install", ((500, 416), (560, 416), (560, 306), (620, 306)), label_pos=(470, 330)),
+                Edge("app", "routing", "routing", ((500, 416), (560, 416), (560, 556), (620, 556)), label_pos=(470, 520)),
+                Edge("routing", "captcha", "mount", ((1000, 556), (1060, 556), (1060, 416), (1120, 416)), label_pos=(960, 470)),
+                Edge("routing", "thumbnail", "mount", ((1000, 556), (1060, 556), (1060, 616), (1120, 616)), label_pos=(960, 665)),
+                Edge("captcha", "captchaLib", "generate", ((1640, 416), (1780, 416)), label_pos=(1710, 392)),
+                Edge("thumbnail", "images", "resize", ((1680, 616), (1780, 616)), label_pos=(1730, 592)),
             ),
             footer="Tests use Ktor testApplication and bluetape4kJsonClient against the same module wiring.",
             panels=(
@@ -661,6 +756,7 @@ def diagrams() -> tuple[FlowDiagram | SequenceDiagram, ...]:
                 Panel("Route Helpers", 1060, 180, 650, 560, 2),
                 Panel("Libraries", 1740, 180, 488, 560, 4),
             ),
+            show_edge_labels=True,
         ),
         SequenceDiagram(
             base="examples-ktor-image-api-sequence-01",
@@ -700,13 +796,14 @@ def diagrams() -> tuple[FlowDiagram | SequenceDiagram, ...]:
                 Node("thumbnail", "Thumbnail object", ("thumbnails/{id}.png",), 1450, 450, 360, 110, 4),
             ),
             edges=(
-                Edge("client", "controller", "", ((430, 355), (500, 355))),
-                Edge("controller", "service", "", ((900, 358), (970, 358))),
-                Edge("service", "original", "", ((1360, 358), (1405, 358), (1405, 205), (1450, 205))),
-                Edge("service", "thumbnail", "", ((1360, 358), (1405, 358), (1405, 505), (1450, 505))),
-                Edge("controller", "client", "", ((500, 405), (465, 405), (465, 375), (430, 375)), "#758297", True),
+                Edge("client", "controller", "multipart", ((430, 355), (500, 355)), label_pos=(465, 260)),
+                Edge("controller", "service", "suspend", ((900, 358), (970, 358)), label_pos=(935, 260)),
+                Edge("service", "original", "upload", ((1360, 358), (1405, 358), (1405, 205), (1450, 205)), label_pos=(1300, 260)),
+                Edge("service", "thumbnail", "fit+png", ((1360, 358), (1405, 358), (1405, 505), (1450, 505)), label_pos=(1300, 455)),
+                Edge("controller", "client", "local urls", ((500, 405), (465, 405), (465, 375), (430, 375)), "#758297", True, label_pos=(465, 455)),
             ),
             footer="Default storage is filesystem-backed under build/tmp/spring-boot-image-api/storage.",
+            show_edge_labels=True,
         ),
         FlowDiagram(
             base="examples-spring-boot-image-api-architecture-01",
@@ -723,12 +820,12 @@ def diagrams() -> tuple[FlowDiagram | SequenceDiagram, ...]:
                 Node("files", "Filesystem root", ("originals/ and thumbnails/",), 1660, 600, 380, 112, 5),
             ),
             edges=(
-                Edge("boot", "controller", "", ((500, 436), (560, 436), (560, 336), (620, 336))),
-                Edge("boot", "config", "", ((500, 436), (560, 436), (560, 596), (620, 596))),
-                Edge("controller", "service", "", ((1020, 336), (1080, 336), (1080, 438), (1140, 438))),
-                Edge("config", "service", "", ((1050, 596), (1090, 596), (1090, 438), (1140, 438))),
-                Edge("service", "storage", "", ((1560, 438), (1660, 438))),
-                Edge("storage", "files", "", ((1850, 492), (1850, 600))),
+                Edge("boot", "controller", "scan", ((500, 436), (560, 436), (560, 336), (620, 336)), label_pos=(470, 330)),
+                Edge("boot", "config", "config", ((500, 436), (560, 436), (560, 596), (620, 596)), label_pos=(470, 525)),
+                Edge("controller", "service", "delegate", ((1020, 336), (1080, 336), (1080, 438), (1140, 438)), label_pos=(1046, 230)),
+                Edge("config", "service", "bean", ((1050, 596), (1090, 596), (1090, 438), (1140, 438)), label_pos=(1010, 700)),
+                Edge("service", "storage", "upload/download", ((1560, 438), (1660, 438)), label_pos=(1610, 330)),
+                Edge("storage", "files", "persist", ((1850, 492), (1850, 600)), label_pos=(1900, 548)),
             ),
             footer="S3/CDN policy is intentionally left to the advanced workshop, not this local quickstart.",
             panels=(
@@ -737,6 +834,7 @@ def diagrams() -> tuple[FlowDiagram | SequenceDiagram, ...]:
                 Panel("Local Service", 1120, 180, 470, 560, 2),
                 Panel("Storage", 1630, 180, 498, 560, 4),
             ),
+            show_edge_labels=True,
         ),
         SequenceDiagram(
             base="examples-spring-boot-image-api-sequence-01",

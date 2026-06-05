@@ -1,14 +1,14 @@
-graph 1 8.0556 2.9514
+graph 1 9.3681 2.9514
 node client 0.61111 1.3056 1.2222 0.5 "Local client" rounded,filled box #9AA8B8 #FFFFFF
-node server 2.7917 1.3056 1.6389 0.5 "Ktor Netty server" rounded,filled box #9AA8B8 #FFFFFF
-node ready 5.0972 2.3611 1.3889 0.5 "Ready endpoint" rounded,filled box #9AA8B8 #FFFFFF
-node captcha 5.0972 1.3056 1.3889 0.5 "CAPTCHA routes" rounded,filled box #9AA8B8 #FFFFFF
-node thumb 5.0972 0.25 1.4722 0.5 "Thumbnail route" rounded,filled box #9AA8B8 #FFFFFF
-node response 7.3194 0.77778 1.4722 0.5 "Local responses" rounded,filled box #9AA8B8 #FFFFFF
-edge client server 4 1.2247 1.3056 1.4063 1.3056 1.6106 1.3056 1.8099 1.3056 solid #758297
-edge server ready 4 3.3569 1.5611 3.6666 1.7046 4.0561 1.8851 4.3867 2.0383 solid #758297
-edge server captcha 4 3.615 1.3056 3.8168 1.3056 4.0337 1.3056 4.2372 1.3056 solid #758297
-edge server thumb 4 3.3569 1.05 3.6666 0.90653 4.0561 0.72605 4.3867 0.57284 solid #758297
-edge captcha response 4 5.7934 1.1415 5.9939 1.0932 6.216 1.0398 6.4269 0.9891 solid #758297
-edge thumb response 4 5.8357 0.42428 6.0239 0.46953 6.2286 0.51877 6.4239 0.56573 solid #758297
+node server 3.0833 1.3056 1.6389 0.5 "Ktor Netty server" rounded,filled box #9AA8B8 #FFFFFF
+node ready 5.8264 2.3611 1.3889 0.5 "Ready endpoint" rounded,filled box #9AA8B8 #FFFFFF
+node captcha 5.8264 1.3056 1.3889 0.5 "CAPTCHA routes" rounded,filled box #9AA8B8 #FFFFFF
+node thumb 5.8264 0.25 1.4722 0.5 "Thumbnail route" rounded,filled box #9AA8B8 #FFFFFF
+node response 8.6319 0.77778 1.4722 0.5 "Local responses" rounded,filled box #9AA8B8 #FFFFFF
+edge client server 4 1.223 1.3056 1.4878 1.3056 1.806 1.3056 2.1031 1.3056 HTTP 1.7431 1.3785 solid #758297
+edge server ready 4 3.758 1.5624 4.1338 1.7085 4.6074 1.8926 5.0051 2.0472 health 4.4965 2.0008 solid #758297
+edge server captcha 4 3.9082 1.3056 4.2441 1.3056 4.6336 1.3056 4.9725 1.3056 mount 4.4965 1.3785 solid #758297
+edge server thumb 4 3.758 1.0487 4.1338 0.90259 4.6074 0.71848 5.0051 0.56386 mount 4.4965 0.91389 solid #758297
+edge captcha response 4 6.5269 1.1751 6.8928 1.1056 7.347 1.0193 7.7385 0.94489 "json/png" 7.2292 1.1619 solid #758297
+edge thumb response 4 6.5665 0.38798 6.9253 0.45616 7.3613 0.53899 7.7389 0.61073 png 7.2292 0.63408 solid #758297
 stop

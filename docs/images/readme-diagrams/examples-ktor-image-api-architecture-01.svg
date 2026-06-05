@@ -84,5 +84,19 @@
   <text class="node-detail" x="1980" y="626.0" text-anchor="middle" dominant-baseline="middle">multipart thumbnail</text>
 </g>
 </g>
+<g id="edge-labels" transform="translate(0 70)">
+<rect x="428.0" y="310.0" width="84" height="24" rx="8" fill="#FFFFFF" stroke="#D7E2EC" opacity="0.94"/>
+<text class="label" x="470.0" y="322.0" text-anchor="middle" dominant-baseline="middle">install</text>
+<rect x="428.0" y="500.0" width="84" height="24" rx="8" fill="#FFFFFF" stroke="#D7E2EC" opacity="0.94"/>
+<text class="label" x="470.0" y="512.0" text-anchor="middle" dominant-baseline="middle">routing</text>
+<rect x="926.0" y="450.0" width="68" height="24" rx="8" fill="#FFFFFF" stroke="#D7E2EC" opacity="0.94"/>
+<text class="label" x="960.0" y="462.0" text-anchor="middle" dominant-baseline="middle">mount</text>
+<rect x="926.0" y="645.0" width="68" height="24" rx="8" fill="#FFFFFF" stroke="#D7E2EC" opacity="0.94"/>
+<text class="label" x="960.0" y="657.0" text-anchor="middle" dominant-baseline="middle">mount</text>
+<rect x="1664.0" y="372.0" width="92" height="24" rx="8" fill="#FFFFFF" stroke="#D7E2EC" opacity="0.94"/>
+<text class="label" x="1710.0" y="384.0" text-anchor="middle" dominant-baseline="middle">generate</text>
+<rect x="1692.0" y="572.0" width="76" height="24" rx="8" fill="#FFFFFF" stroke="#D7E2EC" opacity="0.94"/>
+<text class="label" x="1730.0" y="584.0" text-anchor="middle" dominant-baseline="middle">resize</text>
+</g>
 <text class="footer" x="1150.0" y="930" text-anchor="middle">Tests use Ktor testApplication and bluetape4kJsonClient against the same module wiring.</text>
 </svg>
