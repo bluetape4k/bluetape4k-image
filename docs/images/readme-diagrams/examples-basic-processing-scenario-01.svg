@@ -81,5 +81,21 @@
   <text class="node-detail" x="1675" y="525.0" text-anchor="middle" dominant-baseline="middle">960 x 540 JPG</text>
 </g>
 </g>
+<g id="edge-labels" transform="translate(0 70)">
+<rect x="440.0" y="390.0" width="64" height="24" rx="8" fill="#FFFFFF" stroke="#D7E2EC" opacity="0.94"/>
+<text class="label" x="472.0" y="402.0" text-anchor="middle" dominant-baseline="middle">run</text>
+<rect x="678.0" y="400.0" width="64" height="24" rx="8" fill="#FFFFFF" stroke="#D7E2EC" opacity="0.94"/>
+<text class="label" x="710.0" y="412.0" text-anchor="middle" dominant-baseline="middle">load</text>
+<rect x="888.0" y="554.0" width="64" height="24" rx="8" fill="#FFFFFF" stroke="#D7E2EC" opacity="0.94"/>
+<text class="label" x="920.0" y="566.0" text-anchor="middle" dominant-baseline="middle">fit</text>
+<rect x="968.0" y="310.0" width="64" height="24" rx="8" fill="#FFFFFF" stroke="#D7E2EC" opacity="0.94"/>
+<text class="label" x="1000.0" y="322.0" text-anchor="middle" dominant-baseline="middle">crop</text>
+<rect x="968.0" y="470.0" width="64" height="24" rx="8" fill="#FFFFFF" stroke="#D7E2EC" opacity="0.94"/>
+<text class="label" x="1000.0" y="482.0" text-anchor="middle" dominant-baseline="middle">png</text>
+<rect x="1413.0" y="310.0" width="64" height="24" rx="8" fill="#FFFFFF" stroke="#D7E2EC" opacity="0.94"/>
+<text class="label" x="1445.0" y="322.0" text-anchor="middle" dominant-baseline="middle">draw</text>
+<rect x="1411.0" y="470.0" width="68" height="24" rx="8" fill="#FFFFFF" stroke="#D7E2EC" opacity="0.94"/>
+<text class="label" x="1445.0" y="482.0" text-anchor="middle" dominant-baseline="middle">reuse</text>
+</g>
 <text class="footer" x="980.0" y="870" text-anchor="middle">All outputs are verified by the same generator that powers :basic-processing:run.</text>
 </svg>

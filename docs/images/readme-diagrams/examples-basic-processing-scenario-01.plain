@@ -1,17 +1,17 @@
-graph 1 8.5556 2.9514
+graph 1 9.5035 2.9514
 node run 0.69444 1.8333 1.0556 0.5 "Gradle run" rounded,filled box #9AA8B8 #FFFFFF
 node fixtures 0.69444 0.77778 1.3889 0.5 "Image fixtures" rounded,filled box #9AA8B8 #FFFFFF
-node generator 3.0833 1.3056 1.8889 0.5 "Quickstart generator" rounded,filled box #9AA8B8 #FFFFFF
-node thumb 5.4722 2.3611 1.3889 0.5 "Cafe thumbnail" rounded,filled box #9AA8B8 #FFFFFF
-node crop 5.4722 1.3056 1.0556 0.5 "Smart crop" rounded,filled box #9AA8B8 #FFFFFF
-node convert 5.4722 0.25 1.3889 0.5 "PNG conversion" rounded,filled box #9AA8B8 #FFFFFF
-node watermark 7.7361 1.3056 0.97222 0.5 Watermark rounded,filled box #9AA8B8 #FFFFFF
-node preview 7.7361 0.25 1.6389 0.5 "Workbench preview" rounded,filled box #9AA8B8 #FFFFFF
-edge run generator 4 1.2265 1.7175 1.4489 1.6678 1.7177 1.6077 1.9804 1.549 solid #758297
-edge fixtures generator 4 1.3913 0.93043 1.5758 0.97167 1.7801 1.0174 1.9809 1.0622 solid #758297
-edge generator thumb 4 3.6688 1.5611 3.9912 1.7052 4.3971 1.8867 4.7408 2.0403 solid #758297
-edge generator crop 4 4.0304 1.3056 4.2818 1.3056 4.5488 1.3056 4.7831 1.3056 solid #758297
-edge generator convert 4 3.6688 1.05 3.9912 0.90589 4.3971 0.72443 4.7408 0.57078 solid #758297
-edge crop watermark 4 6.0047 1.3056 6.3277 1.3056 6.7455 1.3056 7.0881 1.3056 solid #758297
-edge convert preview 4 6.1692 0.25 6.3546 0.25 6.559 0.25 6.7569 0.25 solid #758297
+node generator 3.375 1.3056 1.8889 0.5 "Quickstart generator" rounded,filled box #9AA8B8 #FFFFFF
+node thumb 6.0556 2.3611 1.3889 0.5 "Cafe thumbnail" rounded,filled box #9AA8B8 #FFFFFF
+node crop 6.0556 1.3056 1.0556 0.5 "Smart crop" rounded,filled box #9AA8B8 #FFFFFF
+node convert 6.0556 0.25 1.3889 0.5 "PNG conversion" rounded,filled box #9AA8B8 #FFFFFF
+node watermark 8.684 1.3056 0.97222 0.5 Watermark rounded,filled box #9AA8B8 #FFFFFF
+node preview 8.684 0.25 1.6389 0.5 "Workbench preview" rounded,filled box #9AA8B8 #FFFFFF
+edge run generator 4 1.2261 1.7303 1.5243 1.671 1.9106 1.5941 2.2725 1.5221 run 1.9097 1.6896 solid #758297
+edge fixtures generator 4 1.3915 0.91369 1.6595 0.96701 1.9737 1.0295 2.2715 1.0888 load 1.9097 1.1146 solid #758297
+edge generator thumb 4 4.0311 1.5611 4.3982 1.7072 4.8616 1.8915 5.251 2.0465 fit 4.8403 2.0008 solid #758297
+edge generator crop 4 4.3242 1.3056 4.6671 1.3056 5.0484 1.3056 5.3645 1.3056 crop 4.8403 1.3785 solid #758297
+edge generator convert 4 4.0311 1.05 4.3982 0.90396 4.8616 0.71956 5.251 0.56462 png 4.8403 0.85069 solid #758297
+edge crop watermark 4 6.5895 1.3056 7.0067 1.3056 7.5939 1.3056 8.0382 1.3056 draw 7.3073 1.3785 solid #758297
+edge convert preview 4 6.7527 0.25 7.0437 0.25 7.3883 0.25 7.7046 0.25 reuse 7.3073 0.32292 solid #758297
 stop

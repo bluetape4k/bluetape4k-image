@@ -72,5 +72,19 @@
   <text class="node-detail" x="1720" y="455.0" text-anchor="middle" dominant-baseline="middle">PNG thumbnail bytes</text>
 </g>
 </g>
+<g id="edge-labels" transform="translate(0 70)">
+<rect x="453.0" y="340.0" width="64" height="24" rx="8" fill="#FFFFFF" stroke="#D7E2EC" opacity="0.94"/>
+<text class="label" x="485.0" y="352.0" text-anchor="middle" dominant-baseline="middle">HTTP</text>
+<rect x="890.0" y="390.0" width="76" height="24" rx="8" fill="#FFFFFF" stroke="#D7E2EC" opacity="0.94"/>
+<text class="label" x="928.0" y="402.0" text-anchor="middle" dominant-baseline="middle">health</text>
+<rect x="891.0" y="445.0" width="68" height="24" rx="8" fill="#FFFFFF" stroke="#D7E2EC" opacity="0.94"/>
+<text class="label" x="925.0" y="457.0" text-anchor="middle" dominant-baseline="middle">mount</text>
+<rect x="891.0" y="500.0" width="68" height="24" rx="8" fill="#FFFFFF" stroke="#D7E2EC" opacity="0.94"/>
+<text class="label" x="925.0" y="512.0" text-anchor="middle" dominant-baseline="middle">mount</text>
+<rect x="1429.0" y="390.0" width="92" height="24" rx="8" fill="#FFFFFF" stroke="#D7E2EC" opacity="0.94"/>
+<text class="label" x="1475.0" y="402.0" text-anchor="middle" dominant-baseline="middle">json/png</text>
+<rect x="1433.0" y="715.0" width="64" height="24" rx="8" fill="#FFFFFF" stroke="#D7E2EC" opacity="0.94"/>
+<text class="label" x="1465.0" y="727.0" text-anchor="middle" dominant-baseline="middle">png</text>
+</g>
 <text class="footer" x="1000.0" y="870" text-anchor="middle">The quickstart intentionally skips S3, CDN, Docker, persistence, and native libvips.</text>
 </svg>

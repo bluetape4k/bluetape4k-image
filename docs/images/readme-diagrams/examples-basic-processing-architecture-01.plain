@@ -1,13 +1,13 @@
-graph 1 14.75 0.84028
-node cli 0.69444 0.25 1.3889 0.5 "CLI entrypoint" rounded,filled box #9AA8B8 #FFFFFF
-node quickstart 3.5 0.25 2.7222 0.5 BasicImageProcessingQuickstart rounded,filled box #9AA8B8 #FFFFFF
-node loader 6.3889 0.25 1.5556 0.5 suspendLoadImage rounded,filled box #9AA8B8 #FFFFFF
-node transforms 9.0694 0.25 2.3056 0.5 "ImmutableImage transforms" rounded,filled box #9AA8B8 #FFFFFF
-node writers 11.708 0.25 1.4722 0.5 "Suspend writers" rounded,filled box #9AA8B8 #FFFFFF
-node outputs 13.972 0.25 1.5556 0.5 "Output directory" rounded,filled box #9AA8B8 #FFFFFF
-edge cli quickstart 4 1.395 0.25 1.5742 0.25 1.7746 0.25 1.9785 0.25 solid #758297
-edge quickstart loader 4 4.8649 0.25 5.0618 0.25 5.2608 0.25 5.4468 0.25 solid #758297
-edge loader transforms 4 7.1701 0.25 7.3524 0.25 7.552 0.25 7.7509 0.25 solid #758297
-edge transforms writers 4 10.229 0.25 10.423 0.25 10.621 0.25 10.807 0.25 solid #758297
-edge writers outputs 4 12.448 0.25 12.635 0.25 12.839 0.25 13.035 0.25 solid #758297
+graph 1 14.132 1.8958
+node cli 0.69444 0.77778 1.3889 0.5 "CLI entrypoint" rounded,filled box #9AA8B8 #FFFFFF
+node quickstart 3.9375 0.77778 2.7222 0.5 BasicImageProcessingQuickstart rounded,filled box #9AA8B8 #FFFFFF
+node loader 7.1181 0.77778 1.5556 0.5 suspendLoadImage rounded,filled box #9AA8B8 #FFFFFF
+node transforms 10.236 0.77778 2.3056 0.5 "ImmutableImage transforms" rounded,filled box #9AA8B8 #FFFFFF
+node writers 13.354 1.3056 1.4722 0.5 "Suspend writers" rounded,filled box #9AA8B8 #FFFFFF
+node outputs 13.354 0.25 1.5556 0.5 "Output directory" rounded,filled box #9AA8B8 #FFFFFF
+edge cli quickstart 4 1.3941 0.77778 1.693 0.77778 2.056 0.77778 2.4126 0.77778 invoke 1.9826 0.85069 solid #758297
+edge quickstart loader 4 5.3022 0.77778 5.597 0.77778 5.9025 0.77778 6.1764 0.77778 load 5.8194 0.85069 solid #758297
+edge loader transforms 4 7.8998 0.77778 8.2083 0.77778 8.5726 0.77778 8.9202 0.77778 images 8.4896 0.85069 solid #758297
+edge transforms writers 4 11.392 0.9728 11.745 1.0331 12.129 1.0986 12.461 1.1554 encode 11.983 1.1774 solid #758297
+edge transforms outputs 4 11.392 0.58275 11.73 0.52496 12.096 0.46244 12.419 0.40736 write 11.983 0.58681 solid #758297
 stop
