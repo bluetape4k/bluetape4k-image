@@ -116,6 +116,32 @@ throughput optimization. See
 and the raw `kotlinx-benchmark` JSON
 [`docs/raw/benchmark-file-io-throughput-2026-05-29-macos-java25.json`](docs/raw/benchmark-file-io-throughput-2026-05-29-macos-java25.json).
 
+### Large Streaming Pipeline
+
+![Large streaming pipeline benchmark chart](../docs/images/readme-charts/images-benchmark-large-streaming-chart-01.png)
+
+| Boundary | `large-photo` | `ocr-document` | Recommendation |
+|----------|---------------|----------------|----------------|
+| Scrimage `Path` | 223.19 ms/op | 145.13 ms/op | Near-best Scrimage boundary in this run |
+| Scrimage Okio `Source`/`Sink` | 222.00 ms/op | 145.59 ms/op | Lifecycle/integration feature, not a latency win |
+| Scrimage suspended source/sink | 254.95 ms/op | 170.69 ms/op | Coroutine boundary with bridge overhead |
+| vips `Path` | 7.13 ms/op | 5.47 ms/op | Preferred large-file transform path when vips is available |
+| vips `InputStream`/`OutputStream` | 23.99 ms/op | 15.59 ms/op | Similar to vips `ByteArray` because stream input is bounded |
+
+`ImageLargeStreamingBenchmark` generates deterministic large fixtures during
+JMH setup instead of committing huge binary assets. The local Java 25 row
+supports positioning Okio/suspended APIs as memory/lifecycle boundaries rather
+than latency or throughput optimizations for Scrimage. For large-file
+performance, vips `Path` remains the strongest option. See
+[`docs/large-streaming-2026-06-05.md`](docs/large-streaming-2026-06-05.md)
+and the raw `kotlinx-benchmark` JSON
+[`docs/raw/benchmark-large-streaming-2026-06-05-macos-java25.json`](docs/raw/benchmark-large-streaming-2026-06-05-macos-java25.json).
+The JMH GC-profiler addendum
+[`docs/raw/benchmark-large-streaming-jmh-gc-2026-06-05-macos-java25.json`](docs/raw/benchmark-large-streaming-jmh-gc-2026-06-05-macos-java25.json)
+shows Scrimage `Path`, Okio, and stream rows all allocate about 216-218 MiB/op
+for `large-photo` and 164-166 MiB/op for `ocr-document`, while vips `Path`
+stays near 0.54 MiB/op and 0.34 MiB/op on managed heap.
+
 ### Memory Profile (kotlinx-benchmark + GC addendum)
 
 ![Image workload memory profile chart](../docs/images/readme-charts/images-benchmark-memory-profile-chart-01.png)
@@ -149,6 +175,17 @@ JAVA_HOME=$(/usr/libexec/java_home -v 25) ./gradlew :bluetape4k-images-benchmark
 JAVA_HOME=$(/usr/libexec/java_home -v 25) ./gradlew :bluetape4k-images-benchmark:benchmarkIoBoundaryBenchmark --console=plain
 JAVA_HOME=$(/usr/libexec/java_home -v 25) ./gradlew :bluetape4k-images-benchmark:benchmarkIoThroughputBenchmark --console=plain
 JAVA_HOME=$(/usr/libexec/java_home -v 25) ./gradlew :bluetape4k-images-benchmark:benchmarkMemoryProfileBenchmark --console=plain
+JAVA_HOME=$(/usr/libexec/java_home -v 25) ./gradlew :bluetape4k-images-benchmark:benchmarkLargeStreamingBenchmark -Pvips.impl=java25 --console=plain
+
+# Managed heap allocation addendum for large streaming rows
+./gradlew :bluetape4k-images-benchmark:benchmarkBenchmarkJar --console=plain
+
+JAVA25=$(/usr/libexec/java_home -v 25)
+"$JAVA25/bin/java" --enable-native-access=ALL-UNNAMED \
+  -jar images-benchmark/build/benchmarks/benchmark/jars/bluetape4k-images-benchmark-benchmark-jmh-0.3.0-JMH.jar \
+  '.*ImageLargeStreamingBenchmark.*' -wi 1 -i 3 -f 1 -bm avgt -tu ms \
+  -prof gc -rf json \
+  -rff images-benchmark/docs/raw/benchmark-large-streaming-jmh-gc-2026-06-05-macos-java25.json
 ```
 
 **macOS prerequisites**: `brew install vips`
@@ -194,6 +231,7 @@ Chart assets currently referenced by this module:
 | Encode latency | `../docs/images/readme-charts/images-benchmark-encode-latency-chart-01.svg` | `../docs/images/readme-charts/images-benchmark-encode-latency-chart-01.png` |
 | Filter latency | `../docs/images/readme-charts/images-benchmark-filter-latency-chart-01.svg` | `../docs/images/readme-charts/images-benchmark-filter-latency-chart-01.png` |
 | Vips backend comparison | `../docs/images/readme-charts/images-benchmark-vips-backend-comparison-chart-01.svg` | `../docs/images/readme-charts/images-benchmark-vips-backend-comparison-chart-01.png` |
+| Large streaming pipeline | `../docs/images/readme-charts/images-benchmark-large-streaming-chart-01.svg` | `../docs/images/readme-charts/images-benchmark-large-streaming-chart-01.png` |
 
 Render and validate chart updates:
 
@@ -305,6 +343,21 @@ the file boundary.
 |-----------------|------------|
 | `read_*_concurrent` | `Path`, Okio `Source`, `SuspendedSource` |
 | `write_*_concurrent` | `Path`, Okio `Sink`, `SuspendedSink` |
+
+### `ImageLargeStreamingBenchmark`
+
+Measures complete large-image load-transform-write pipelines. Fixtures are
+generated during JMH setup to avoid committing large binary files.
+
+| Scenario | Generated dimensions | Transform |
+|----------|----------------------|-----------|
+| `large-photo` | 4032x3024 | resize to 1920x1440, grayscale, JPEG encode |
+| `ocr-document` | 2480x3508 | resize to 1240x1754, grayscale, JPEG encode |
+
+| Benchmark group | Boundaries |
+|-----------------|------------|
+| `scrimage_*_pipeline` | `ByteArray`, `Path`, `InputStream`/`OutputStream`, Okio `Source`/`Sink`, suspended file source/sink |
+| `vips_*_pipeline` | `ByteArray`, `Path`, `InputStream`/`OutputStream` when Java 25 FFM or Java 21 JNI is available |
 
 ### `VipsBenchmarkState`
 
