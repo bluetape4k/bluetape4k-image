@@ -9,6 +9,7 @@
   <style>
     .canvas{fill:#F6F9FC}
     .frame{fill:#FFFFFF;stroke:#D7E2EC;stroke-width:2}
+    .layer{stroke:#D7E2EC;stroke-width:1.5}
     .title{font-family:"Architects Daughter";font-size:44px;fill:#203040;font-weight:400}
     .subtitle{font-family:"Comic Mono";font-size:16px;fill:#536476;font-weight:400}
     .section{font-family:"Architects Daughter";font-size:21px;fill:#405366;font-weight:400}
@@ -24,6 +25,9 @@
 <rect class="frame" x="34" y="28" width="1832" height="1062" rx="26"/>
 <text class="title" x="72" y="82">Bluetape4k Image overview</text>
 <text class="subtitle" x="76" y="118">One repository covers pure JVM image processing, service adapters, native libvips acceleration, and benchmark evidence.</text>
+<rect class="layer" x="64" y="142" width="1772" height="236" rx="18" fill="#F7FBFF"/>
+<rect class="layer" x="64" y="404" width="1772" height="294" rx="18" fill="#FAFCF7"/>
+<rect class="layer" x="64" y="702" width="1772" height="328" rx="18" fill="#FFFDF7"/>
 <text class="section" x="92" y="165">Entry and selection</text>
 <text class="section" x="92" y="430">Processing and integration surface</text>
 <text class="section" x="92" y="725">Native acceleration choices</text>
