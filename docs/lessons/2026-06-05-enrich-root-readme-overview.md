@@ -32,3 +32,4 @@ The root README now explains the three adoption lanes in prose and shows a riche
 ## Future Guidance
 
 Root README overview diagrams should answer "which path should a user choose?" before listing modules. Use module composition charts for inventory and overview diagrams for adoption flow.
+For same-layer native backend routes, prefer bottom-to-bottom or top-to-top lanes when they keep the connector outside card interiors and make the layer read as one shared capability band.
