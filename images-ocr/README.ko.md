@@ -14,6 +14,18 @@
 - `TesseractOcrEngine`은 호출마다 새 Tess4J 인스턴스를 만들어 mutable OCR 상태를
   호출자끼리 공유하지 않습니다.
 
+## Architecture
+
+![images-ocr Architecture](docs/assets/readme-diagrams/images-ocr-architecture-01.png)
+
+## Class Diagram
+
+![images-ocr Class Diagram](docs/assets/readme-diagrams/images-ocr-class-diagram-01.png)
+
+## Sequence Diagram
+
+![images-ocr Recognition Sequence](docs/assets/readme-diagrams/images-ocr-sequence-diagram-01.png)
+
 ## 실행 요구사항
 
 요청할 언어에 맞는 Tesseract와 traineddata 패키지를 설치하세요.

@@ -14,6 +14,18 @@ Tess4J/Tesseract OCR extensions for `ImmutableImage`.
 - `TesseractOcrEngine` creates a fresh Tess4J instance per call so mutable OCR
   state is not shared across callers.
 
+## Architecture
+
+![images-ocr Architecture](docs/assets/readme-diagrams/images-ocr-architecture-01.png)
+
+## Class Diagram
+
+![images-ocr Class Diagram](docs/assets/readme-diagrams/images-ocr-class-diagram-01.png)
+
+## Sequence Diagram
+
+![images-ocr Recognition Sequence](docs/assets/readme-diagrams/images-ocr-sequence-diagram-01.png)
+
 ## Runtime Requirements
 
 Install Tesseract and the traineddata packages you request.

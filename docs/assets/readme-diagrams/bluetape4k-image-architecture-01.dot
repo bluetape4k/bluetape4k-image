@@ -1,0 +1,31 @@
+digraph G {
+  graph [rankdir=TB, bgcolor="transparent", nodesep=0.65, ranksep=0.85, splines=ortho]
+  node [shape=box, style="rounded,filled", fontname="Comic Mono", fontsize=11, margin="0.12,0.08"]
+  edge [color="#758297", arrowsize=0.7]
+
+  images [label="images\nScrimage / Java2D core", fillcolor="#E8F3FF", color="#5B8DEF"]
+  captcha [label="images-captcha\nJava2D challenges", fillcolor="#FFF0E6", color="#E28A5D"]
+  ocr [label="images-ocr\nTess4J text extraction", fillcolor="#F1ECFF", color="#A58BE3"]
+  vipsApi [label="images-vips-api\nVipsImage contract", fillcolor="#EAF7EF", color="#58A978"]
+  ktor [label="images-ktor\nKtor route helpers", fillcolor="#EAF2FF", color="#6D9CE8"]
+  spring [label="images-spring-boot\nSpring Boot 4 auto-config", fillcolor="#FFF3D9", color="#D6A441"]
+  tesseract [label="Tesseract host\ntraineddata packs", fillcolor="#F1ECFF", color="#A58BE3"]
+  jni [label="Java 21 JNI\nimages-vips-java21", fillcolor="#E8F3FF", color="#5B8DEF"]
+  ffm [label="Java 25 FFM\nimages-vips-java25", fillcolor="#EAF7EF", color="#58A978"]
+  benchmark [label="images-benchmark\nresize / encode", fillcolor="#FFF3D9", color="#D6A441"]
+
+  { rank=same; captcha; ocr; vipsApi }
+  { rank=same; ktor; spring }
+  { rank=same; tesseract; jni; ffm }
+
+  images -> captcha
+  images -> ocr
+  images -> vipsApi
+  captcha -> ktor
+  ocr -> spring
+  ocr -> tesseract
+  vipsApi -> jni
+  vipsApi -> ffm
+  jni -> benchmark
+  ffm -> benchmark
+}
