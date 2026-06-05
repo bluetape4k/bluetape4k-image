@@ -12,6 +12,7 @@ libvips through JNI or FFM Panama.
 |---|---|
 | `bluetape4k-images` | Scrimage-based image processing, coroutine writers, filters, analysis, similarity |
 | `bluetape4k-images-captcha` | Java2D CAPTCHA image challenge generation |
+| `bluetape4k-images-ocr` | Tess4J/Tesseract OCR text extraction for `ImmutableImage` |
 | `bluetape4k-images-ktor` | Ktor route helpers for CAPTCHA issue and verification |
 | `bluetape4k-images-spring-boot` | Spring Boot 4 auto-configuration for local/S3 image storage, CDN, health, and metrics |
 | `bluetape4k-images-vips-api` | Binding-neutral `VipsImage` and `VipsRuntime` contracts |
@@ -33,6 +34,9 @@ Root README visual assets live under `docs/assets/` and should be shared by
 ./gradlew build -x test
 ./gradlew :bluetape4k-images:build
 ./gradlew :bluetape4k-images:test
+./gradlew :bluetape4k-images-ocr:test
+./gradlew :bluetape4k-images-ocr:test -Docr.enabled=true
+./gradlew :bluetape4k-images-ocr:test -Docr.container.enabled=true
 ./gradlew :bluetape4k-images-vips-java21:test
 ./gradlew :bluetape4k-images-vips-java25:test
 ./gradlew test --tests "io.bluetape4k.images.ImmutableImageSupportTest"
@@ -78,6 +82,15 @@ when present. Outside Gradle, set it manually if needed.
 - Uses JVips JNI binding.
 - JNI tests run isolated: `forkEvery = 1`, `maxParallelForks = 1`.
 - Class names: `JVipsImage`, `JVipsRuntime`.
+
+### `bluetape4k-images-ocr`
+
+- Uses Tess4J and host Tesseract; do not add OCR dependencies to
+  `bluetape4k-images`.
+- Host-native OCR tests are gated by `-Docr.enabled=true` and require
+  Tesseract plus requested traineddata packages.
+- Container OCR tests are gated by `-Docr.container.enabled=true` and require
+  Docker. Run native/container OCR checks sequentially.
 
 ## Cross-Repo Lesson Guards
 
