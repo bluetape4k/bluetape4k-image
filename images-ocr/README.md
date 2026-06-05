@@ -31,7 +31,7 @@ Tess4J/Tesseract OCR extensions for `ImmutableImage`.
 Install Tesseract and the traineddata packages you request.
 
 ```bash
-# macOS
+# macOS / Homebrew
 brew install tesseract tesseract-lang
 
 # Ubuntu / Debian
@@ -85,6 +85,33 @@ val digits = image.extractText(
     ),
 )
 ```
+
+## Runnable Quickstart
+
+The module includes a file-based quickstart test that creates a small image,
+loads it through `immutableImageOf(File)`, and runs OCR with explicit language
+and page-segmentation options. Set `TESSDATA_PREFIX` when Tess4J cannot locate
+traineddata files automatically.
+
+```bash
+export TESSDATA_PREFIX="$(brew --prefix)/share/tessdata"  # macOS / Homebrew
+./gradlew :bluetape4k-images-ocr:test \
+  --tests 'io.bluetape4k.images.ocr.OcrQuickstartExampleTest' \
+  -Docr.enabled=true
+```
+
+Expected output shape:
+
+```text
+BLUETAPE OCR 123
+```
+
+The quickstart uses `eng`. On macOS, `brew install tesseract tesseract-lang`
+installs the Tesseract engine plus the bundled language pack set. On Ubuntu,
+install each requested traineddata package explicitly, such as
+`tesseract-ocr-eng`, `tesseract-ocr-kor`, and `tesseract-ocr-jpn`. The test also
+checks common Homebrew and Ubuntu tessdata paths when `TESSDATA_PREFIX` is not
+set.
 
 ## Tests
 

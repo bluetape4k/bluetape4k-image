@@ -4,6 +4,8 @@ configurations {
 
 tasks.withType<Test>().configureEach {
     systemProperty("java.awt.headless", "true")
+    systemProperty("ocr.enabled", System.getProperty("ocr.enabled", "false"))
+    systemProperty("ocr.container.enabled", System.getProperty("ocr.container.enabled", "false"))
 }
 
 dependencies {

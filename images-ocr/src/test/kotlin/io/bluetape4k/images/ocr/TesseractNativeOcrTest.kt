@@ -13,6 +13,7 @@ class TesseractNativeOcrTest {
         val text = textImage("BLUETAPE OCR 123").extractText(
             OcrOptions(
                 languages = listOf("eng"),
+                tessdataPath = defaultTessdataPath(),
                 pageSegmentationMode = TesseractPageSegmentationMode.SINGLE_LINE,
                 variables = mapOf("tessedit_char_whitelist" to "ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789"),
             ),

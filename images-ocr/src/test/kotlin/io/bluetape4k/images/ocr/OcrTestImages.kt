@@ -5,6 +5,8 @@ import java.awt.Color
 import java.awt.Font
 import java.awt.RenderingHints
 import java.awt.image.BufferedImage
+import java.nio.file.Files
+import java.nio.file.Path
 
 internal fun textImage(
     text: String = "BLUETAPE OCR 123",
@@ -24,4 +26,18 @@ internal fun textImage(
         graphics.dispose()
     }
     return ImmutableImage.fromAwt(buffered)
+}
+
+internal fun defaultTessdataPath(): String? {
+    System.getenv("TESSDATA_PREFIX")
+        ?.takeIf(String::isNotBlank)
+        ?.let { return it }
+
+    return listOf(
+        "/opt/homebrew/share/tessdata",
+        "/usr/local/share/tessdata",
+        "/usr/share/tesseract-ocr/5/tessdata",
+        "/usr/share/tesseract-ocr/4.00/tessdata",
+        "/usr/share/tessdata",
+    ).firstOrNull { Files.isDirectory(Path.of(it)) }
 }
