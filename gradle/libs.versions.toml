@@ -21,6 +21,7 @@ twelvemonkeys-imageio = "3.13.1"  # https://mvnrepository.com/artifact/com.twelv
 batik = "1.19"  # https://mvnrepository.com/artifact/org.apache.xmlgraphics/batik-transcoder
 jvips = "8.12.2-69bf715"  # https://mvnrepository.com/artifact/com.criteo/jvips
 vips-ffm = "1.9.8"  # https://mvnrepository.com/artifact/app.photofox.vips-ffm/vips-ffm-core
+tess4j = "5.19.0"  # https://mvnrepository.com/artifact/net.sourceforge.tess4j/tess4j
 
 # Benchmark
 jmh = "1.37"  # https://mvnrepository.com/artifact/org.openjdk.jmh/jmh-core
@@ -122,6 +123,7 @@ batik-transcoder = { module = "org.apache.xmlgraphics:batik-transcoder", version
 batik-codec = { module = "org.apache.xmlgraphics:batik-codec", version.ref = "batik" }
 jvips = { module = "com.criteo:jvips", version.ref = "jvips" }
 vips-ffm = { module = "app.photofox.vips-ffm:vips-ffm-core", version.ref = "vips-ffm" }
+tess4j = { module = "net.sourceforge.tess4j:tess4j", version.ref = "tess4j" }
 
 # Commons
 commons-io = { module = "commons-io:commons-io" }  # version from bt4k catalog

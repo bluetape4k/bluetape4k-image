@@ -1,0 +1,31 @@
+digraph G {
+  graph [rankdir=TB, bgcolor="transparent", nodesep=0.65, ranksep=0.85, splines=ortho]
+  node [shape=box, style="rounded,filled", fontname="Comic Mono", fontsize=11, margin="0.12,0.08"]
+  edge [color="#758297", arrowsize=0.7]
+
+  app [label="Application Code\nblocking or coroutine caller", fillcolor="#EAF7EF", color="#58A978"]
+  image [label="ImmutableImage\nScrimage image value", fillcolor="#E8F3FF", color="#5B8DEF"]
+  extract [label="extractText\nblocking extension", fillcolor="#E8F3FF", color="#5B8DEF"]
+  suspend [label="suspendExtractText\nDispatchers.IO boundary", fillcolor="#F1ECFF", color="#A58BE3"]
+  options [label="OcrOptions\nlanguages, psm, variables", fillcolor="#FFF3D9", color="#D6A441"]
+  engine [label="TesseractOcrEngine\nfresh client per call", fillcolor="#F1ECFF", color="#A58BE3"]
+  client [label="TesseractClient\ninternal adapter boundary", fillcolor="#EAF7EF", color="#58A978"]
+  tess4j [label="Tess4J\nJNA bridge", fillcolor="#FFF0E6", color="#E28A5D"]
+  native [label="Tesseract + traineddata\nruntime language packs", fillcolor="#FFF3D9", color="#D6A441"]
+  result [label="OcrResult or OcrException", fillcolor="#E8F3FF", color="#5B8DEF"]
+
+  { rank=same; app; image }
+  { rank=same; extract; suspend; options }
+  { rank=same; engine; client }
+  { rank=same; tess4j; native }
+
+  app -> extract
+  image -> options
+  extract -> engine
+  suspend -> engine
+  options -> engine
+  engine -> client
+  client -> tess4j
+  tess4j -> native
+  engine -> result
+}

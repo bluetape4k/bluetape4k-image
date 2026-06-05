@@ -26,6 +26,8 @@ native codec이 중요해질 때 libvips 백엔드로 확장할 수 있는 단�
 - **서비스 어댑터** — CAPTCHA challenge, Ktor route, Spring Boot 4 storage/health/metrics
   wiring으로 이미지 처리를 노출해야 할 때 `images-captcha`, `images-ktor`,
   `images-spring-boot`를 추가합니다.
+- **OCR 추출** — 기존 `ImmutableImage` 값에서 Tesseract 기반 텍스트 추출이 필요하면
+  명시적인 언어와 tessdata 설정을 가진 `images-ocr`를 추가합니다.
 - **Native acceleration** — libvips 처리량, 메모리 동작, AVIF/HEIC 가능 native codec 지원이
   필요하면 `images-vips-api`에 맞춰 작성하고 Java 21 JNI 또는 Java 25 FFM backend를 선택합니다.
 
@@ -37,6 +39,8 @@ benchmark module은 scrimage/libvips trade-off를 추측이 아니라 측정 가
 - **순수 JVM 처리** — scrimage/Java2D 기반 로드, 리사이즈, 크롭, 필터, 분석, 배치, 인코딩
 - **Coroutine I/O** — 웹 이미지 워크플로우에 맞는 suspend reader/writer/byte encoder
 - **CAPTCHA 생성** — native runtime 없이 Java2D로 bounded option 기반 이미지 챌린지 생성
+- **OCR 추출** — 다국어 옵션을 지원하는 Tess4J/Tesseract 기반
+  `ImmutableImage.extractText`, `suspendExtractText` helper
 - **Ktor 통합** — Ktor 서비스에서 CAPTCHA 이미지 발급과 one-shot 답변 검증을 처리하는 route helper
 - **libvips 추상화** — binding-neutral `VipsImage`, `VipsRuntime` 계약
 - **두 native backend** — Java 21 JVips/JNI와 Java 25 FFM/Panama 선택지
@@ -77,6 +81,7 @@ Benchmark evidence: [`images-benchmark/docs/large-streaming-2026-06-05.md`](imag
 | `bom`                 | `bluetape4k-image-bom`               | 이미지 아티팩트 버전 정렬용 소비자 BOM                    |
 | `images`              | `bluetape4k-images`                  | Scrimage 기반 처리: 로드, 리사이즈, 필터, 변환, 분석, 배치 처리 |
 | `images-captcha`      | `bluetape4k-images-captcha`          | Java2D CAPTCHA 이미지 챌린지 생성                         |
+| `images-ocr`          | `bluetape4k-images-ocr`              | `ImmutableImage`용 Tess4J/Tesseract OCR 텍스트 추출        |
 | `images-ktor`         | `bluetape4k-images-ktor`             | 썸네일 생성과 CAPTCHA 검증을 위한 Ktor route helper        |
 | `images-spring-boot`  | `bluetape4k-images-spring-boot`      | Spring Boot 4 자동 구성: 스토리지, CDN, 헬스, 메트릭          |
 | `images-vips-api`     | `bluetape4k-images-vips-api`         | 공유 `VipsImage` / `VipsRuntime` 인터페이스 (바인딩 중립)     |
@@ -90,14 +95,35 @@ Benchmark evidence: [`images-benchmark/docs/large-streaming-2026-06-05.md`](imag
 
 ## 요구사항
 
-| 모듈                   | JDK    | libvips | JVM 플래그                          |
-|-----------------------|--------|---------|-------------------------------------|
-| `images`              | 21+    | —       | —                                   |
-| `images-captcha`      | 21+    | —       | —                                   |
-| `images-ktor`         | 21+    | —       | —                                   |
-| `images-vips-api`     | 21+    | —       | —                                   |
-| `images-vips-java21`  | 21+    | 필요    | —                                   |
-| `images-vips-java25`  | 25+    | 필요    | `--enable-native-access=ALL-UNNAMED` |
+| 모듈                   | JDK    | Native package | JVM 플래그                          |
+|-----------------------|--------|----------------|-------------------------------------|
+| `images`              | 21+    | —              | —                                   |
+| `images-captcha`      | 21+    | —              | —                                   |
+| `images-ocr`          | 21+    | Tesseract + traineddata | —                          |
+| `images-ktor`         | 21+    | —              | —                                   |
+| `images-vips-api`     | 21+    | —              | —                                   |
+| `images-vips-java21`  | 21+    | libvips        | —                                   |
+| `images-vips-java25`  | 25+    | libvips        | `--enable-native-access=ALL-UNNAMED` |
+
+### OCR용 Tesseract 설치
+
+`images-ocr` 모듈은 Tess4J를 사용하므로 실행 호스트에 Tesseract와
+`OcrOptions`에서 요청한 traineddata 언어팩이 설치되어 있어야 합니다. 이 모듈은
+traineddata 파일을 번들하지 않습니다.
+
+```bash
+# macOS
+brew install tesseract tesseract-lang
+
+# Ubuntu / Debian
+sudo apt-get install tesseract-ocr tesseract-ocr-eng tesseract-ocr-kor tesseract-ocr-jpn fonts-noto-cjk
+
+# 언어 데이터 확인
+tesseract --list-langs
+```
+
+Tesseract가 언어 데이터를 찾지 못하면 `TESSDATA_PREFIX`를 설정하거나
+`OcrOptions(tessdataPath = "/path/to/tessdata")`를 전달하세요.
 
 ### libvips 설치
 
@@ -156,6 +182,11 @@ capability를 확인하세요.
 - vips 테스트가 예상과 다르게 skip됨: libvips가 설치되어 있고 로드 가능한 환경에서만
   `-Dvips.enabled=true`를 전달하세요. 명시적으로 제외하려면 `-Dvips.enabled=false`를
   전달하세요.
+- OCR에서 `Error opening data file` 또는 언어 누락 오류가 발생함: 요청한 traineddata
+  패키지를 설치하고 `tesseract --list-langs`를 확인한 뒤 `TESSDATA_PREFIX` 또는
+  `OcrOptions.tessdataPath`를 설정하세요.
+- OCR native loading이 `UnsatisfiedLinkError`로 실패함: 실행 호스트에 Tesseract를
+  설치하고 같은 shell에서 `tesseract --version`이 동작하는지 확인하세요.
 
 ## 의존성 추가
 
@@ -176,6 +207,9 @@ dependencies {
 
     // Java2D CAPTCHA 생성 (Java 21+)
     implementation("io.github.bluetape4k.image:bluetape4k-images-captcha:<version>")
+
+    // Tess4J/Tesseract OCR 추출 (Java 21+)
+    implementation("io.github.bluetape4k.image:bluetape4k-images-ocr:<version>")
 
     // CAPTCHA 발급과 검증을 위한 Ktor route helper (Java 21+)
     implementation("io.github.bluetape4k.image:bluetape4k-images-ktor:<version>")
@@ -257,6 +291,29 @@ val challenge = generator.generate()
 // challenge.text는 서버 측에서 안전하게 보관하세요.
 // challenge.image는 Scrimage writer로 인코딩해 클라이언트에 반환하세요.
 ```
+
+### OCR 텍스트 추출 (`images-ocr`)
+
+```kotlin
+import io.bluetape4k.images.ocr.OcrOptions
+import io.bluetape4k.images.ocr.extractText
+import io.bluetape4k.images.ocr.suspendExtractText
+
+val text = image.extractText(
+    OcrOptions(languages = listOf("eng", "kor")),
+)
+
+val suspendText = image.suspendExtractText(
+    OcrOptions(
+        languages = listOf("eng"),
+        tessdataPath = "/opt/homebrew/share/tessdata",
+    ),
+)
+```
+
+문서별 인식 방식이 필요하면 `pageSegmentationMode`, `engineMode`, `variables`,
+`configs`를 설정하세요. 기본 엔진은 OCR 호출마다 새 Tess4J 인스턴스를 만들기 때문에
+호출자끼리 mutable native OCR 상태를 공유하지 않습니다.
 
 ### Ktor 이미지와 CAPTCHA 라우트 (`images-ktor`)
 
@@ -351,6 +408,7 @@ JVipsImageSupport.jvipsImageOf(Path.of("photo.jpg")).use { image ->
 
 - [`images/README.md`](images/README.md) — Scrimage 기반 처리
 - [`images-captcha/README.md`](images-captcha/README.md) — Java2D CAPTCHA 생성
+- [`images-ocr/README.md`](images-ocr/README.md) — Tess4J/Tesseract OCR 추출
 - [`images-ktor/README.md`](images-ktor/README.md) — Ktor 썸네일 및 CAPTCHA route helper
 - [`images-spring-boot/README.md`](images-spring-boot/README.md) — Spring Boot 4 자동 구성
 - [`images-vips-api/README.md`](images-vips-api/README.md) — VipsImage 인터페이스 API

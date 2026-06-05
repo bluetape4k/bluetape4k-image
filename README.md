@@ -28,6 +28,9 @@ The repository is organized around three adoption lanes:
 - **Service adapters** — add `images-captcha`, `images-ktor`, or
   `images-spring-boot` when image processing should be exposed through CAPTCHA
   challenges, Ktor routes, or Spring Boot 4 storage/health/metrics wiring.
+- **OCR extraction** — add `images-ocr` when existing `ImmutableImage` values
+  need Tesseract-backed text extraction with explicit language and tessdata
+  configuration.
 - **Native acceleration** — program against `images-vips-api` and choose the
   Java 21 JNI or Java 25 FFM backend when libvips throughput, memory behavior,
   or AVIF/HEIC-capable native codec support is required.
@@ -44,6 +47,8 @@ instead of implicit.
   common web image workflows.
 - **CAPTCHA generation** — Java2D image challenge generation with bounded
   options, suspend-friendly entrypoint, and no native runtime dependency.
+- **OCR extraction** — Tess4J/Tesseract-backed `ImmutableImage.extractText`
+  and `suspendExtractText` helpers with multilingual options.
 - **Ktor integration** — route helpers for issuing CAPTCHA images and verifying
   one-shot answers in Ktor services.
 - **libvips abstraction** — binding-neutral `VipsImage` and `VipsRuntime`
@@ -86,6 +91,7 @@ Benchmark evidence: [`images-benchmark/docs/large-streaming-2026-06-05.md`](imag
 | `bom`                 | `bluetape4k-image-bom`               | Consumer BOM for aligned image artifacts                 |
 | `images`              | `bluetape4k-images`                  | Scrimage-based processing: load, resize, filter, convert, analyze, batch |
 | `images-captcha`      | `bluetape4k-images-captcha`          | Java2D CAPTCHA image challenge generation                |
+| `images-ocr`          | `bluetape4k-images-ocr`              | Tess4J/Tesseract OCR text extraction for `ImmutableImage` |
 | `images-ktor`         | `bluetape4k-images-ktor`             | Ktor route helpers for thumbnails and CAPTCHA verification |
 | `images-spring-boot`  | `bluetape4k-images-spring-boot`      | Spring Boot 4 auto-configuration: storage, CDN, health, metrics |
 | `images-vips-api`     | `bluetape4k-images-vips-api`         | Shared `VipsImage` / `VipsRuntime` interfaces (binding-neutral) |
@@ -99,14 +105,35 @@ Benchmark evidence: [`images-benchmark/docs/large-streaming-2026-06-05.md`](imag
 
 ## Requirements
 
-| Module                | JDK    | libvips | JVM flag                        |
-|-----------------------|--------|---------|----------------------------------|
-| `images`              | 21+    | —       | —                                |
-| `images-captcha`      | 21+    | —       | —                                |
-| `images-ktor`         | 21+    | —       | —                                |
-| `images-vips-api`     | 21+    | —       | —                                |
-| `images-vips-java21`  | 21+    | Yes     | —                                |
-| `images-vips-java25`  | 25+    | Yes     | `--enable-native-access=ALL-UNNAMED` |
+| Module                | JDK    | Native package | JVM flag                        |
+|-----------------------|--------|----------------|----------------------------------|
+| `images`              | 21+    | —              | —                                |
+| `images-captcha`      | 21+    | —              | —                                |
+| `images-ocr`          | 21+    | Tesseract + traineddata | —                         |
+| `images-ktor`         | 21+    | —              | —                                |
+| `images-vips-api`     | 21+    | —              | —                                |
+| `images-vips-java21`  | 21+    | libvips        | —                                |
+| `images-vips-java25`  | 25+    | libvips        | `--enable-native-access=ALL-UNNAMED` |
+
+### Install Tesseract for OCR
+
+The `images-ocr` module depends on Tess4J and requires a host Tesseract
+installation plus the traineddata language packs requested in `OcrOptions`.
+The module does not bundle traineddata files.
+
+```bash
+# macOS
+brew install tesseract tesseract-lang
+
+# Ubuntu / Debian
+sudo apt-get install tesseract-ocr tesseract-ocr-eng tesseract-ocr-kor tesseract-ocr-jpn fonts-noto-cjk
+
+# Verify language data
+tesseract --list-langs
+```
+
+If Tesseract cannot find language data, set `TESSDATA_PREFIX` or pass
+`OcrOptions(tessdataPath = "/path/to/tessdata")`.
 
 ### Install libvips
 
@@ -167,6 +194,11 @@ JVM.
 - Vips tests are skipped unexpectedly: pass `-Dvips.enabled=true` only when
   libvips is installed and visible. Pass `-Dvips.enabled=false` to opt out
   explicitly.
+- OCR returns `Error opening data file` or missing language errors: install the
+  requested traineddata package, verify `tesseract --list-langs`, then set
+  `TESSDATA_PREFIX` or `OcrOptions.tessdataPath`.
+- OCR native loading fails with `UnsatisfiedLinkError`: install Tesseract on
+  the runtime host and confirm the same shell can run `tesseract --version`.
 
 ## Installation
 
@@ -187,6 +219,9 @@ dependencies {
 
     // Java2D CAPTCHA generation (Java 21+)
     implementation("io.github.bluetape4k.image:bluetape4k-images-captcha:<version>")
+
+    // Tess4J/Tesseract OCR extraction (Java 21+)
+    implementation("io.github.bluetape4k.image:bluetape4k-images-ocr:<version>")
 
     // Ktor route helpers for CAPTCHA issue and verification (Java 21+)
     implementation("io.github.bluetape4k.image:bluetape4k-images-ktor:<version>")
@@ -268,6 +303,30 @@ val challenge = generator.generate()
 // Store challenge.text securely on the server side.
 // Encode challenge.image with a Scrimage writer when returning it to a client.
 ```
+
+### Extracting OCR Text (`images-ocr`)
+
+```kotlin
+import io.bluetape4k.images.ocr.OcrOptions
+import io.bluetape4k.images.ocr.extractText
+import io.bluetape4k.images.ocr.suspendExtractText
+
+val text = image.extractText(
+    OcrOptions(languages = listOf("eng", "kor")),
+)
+
+val suspendText = image.suspendExtractText(
+    OcrOptions(
+        languages = listOf("eng"),
+        tessdataPath = "/opt/homebrew/share/tessdata",
+    ),
+)
+```
+
+Use `pageSegmentationMode`, `engineMode`, `variables`, and `configs` when a
+document needs a specific Tesseract recognition mode. The default engine creates
+a fresh Tess4J instance for each OCR call, so callers do not share mutable
+native OCR state.
 
 ### Ktor Image and CAPTCHA Routes (`images-ktor`)
 
@@ -362,6 +421,7 @@ Each module contains its own detailed README with API reference, architecture di
 
 - [`images/README.md`](images/README.md) — Scrimage-based processing
 - [`images-captcha/README.md`](images-captcha/README.md) — Java2D CAPTCHA generation
+- [`images-ocr/README.md`](images-ocr/README.md) — Tess4J/Tesseract OCR extraction
 - [`images-ktor/README.md`](images-ktor/README.md) — Ktor thumbnail and CAPTCHA route helpers
 - [`images-spring-boot/README.md`](images-spring-boot/README.md) — Spring Boot 4 auto-configuration
 - [`images-vips-api/README.md`](images-vips-api/README.md) — VipsImage interface API
