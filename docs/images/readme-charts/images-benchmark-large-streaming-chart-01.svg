@@ -1,0 +1,105 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="1040" viewBox="0 0 1440 1040" role="img" aria-label="Large Streaming Pipeline Benchmark">
+<defs>
+  <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%">
+    <feDropShadow dx="0" dy="8" stdDeviation="9" flood-color="#1f2937" flood-opacity="0.10"/>
+  </filter>
+  <style>
+    .canvas{fill:#f7f9fc}
+    .frame{fill:#fff;stroke:#d8e0ea;stroke-width:1.5}
+    .title{font-family:"Architects Daughter";font-size:38px;font-weight:400;fill:#102033}
+    .subtitle{font-family:"Comic Mono";font-size:16px;font-weight:400;fill:#536273}
+    .panel{filter:url(#shadow)}
+    .panel-title{font-family:"Architects Daughter";font-size:25px;font-weight:400;fill:#102033}
+    .label{font-family:"Architects Daughter";font-size:18px;font-weight:400;fill:#102033}
+    .axis{font-family:"Comic Mono";font-size:12px;font-weight:400;fill:#536273}
+    .value{font-family:"Comic Mono";font-size:13px;font-weight:700;fill:#102033}
+    .note{font-family:"Comic Mono";font-size:13px;font-weight:400;fill:#536273}
+    .legend{font-family:"Comic Mono";font-size:14px;font-weight:700;fill:#102033}
+  </style>
+</defs>
+<rect class="canvas" width="1440" height="1040"/>
+<rect class="frame" x="34" y="30" width="1368" height="980" rx="28"/>
+<text class="title" x="70" y="84">Large Streaming Pipeline Benchmark</text>
+<text class="subtitle" x="74" y="118">Generated large photo and OCR-like document pipelines on macOS arm64, GraalVM Java 25; lower ms/op is better</text>
+
+<rect x="70" y="148" width="1300" height="492" rx="18" fill="#FFFFFF" stroke="#E2E8F0" class="panel"/>
+<text class="panel-title" x="98" y="190">Scrimage load-transform-write boundaries</text>
+<rect x="944" y="164" width="18" height="18" rx="5" fill="#8FC5F3"/>
+<text class="legend" x="972" y="178">large-photo</text>
+<rect x="1090" y="164" width="18" height="18" rx="5" fill="#F2C879"/>
+<text class="legend" x="1118" y="178">ocr-document</text>
+
+<line x1="438" y1="218" x2="438" y2="594" stroke="#D8E0EA" stroke-width="1"/>
+<line x1="628" y1="218" x2="628" y2="594" stroke="#D8E0EA" stroke-width="1"/>
+<line x1="818" y1="218" x2="818" y2="594" stroke="#D8E0EA" stroke-width="1"/>
+<line x1="1008" y1="218" x2="1008" y2="594" stroke="#D8E0EA" stroke-width="1"/>
+<line x1="1198" y1="218" x2="1198" y2="594" stroke="#D8E0EA" stroke-width="1"/>
+<text class="axis" x="438" y="618" text-anchor="middle">0</text>
+<text class="axis" x="628" y="618" text-anchor="middle">70</text>
+<text class="axis" x="818" y="618" text-anchor="middle">140</text>
+<text class="axis" x="1008" y="618" text-anchor="middle">210</text>
+<text class="axis" x="1198" y="618" text-anchor="middle">280 ms/op</text>
+
+<text class="label" x="100" y="250">ByteArray</text>
+<rect x="438" y="230" width="608" height="18" rx="6" fill="#8FC5F3"/>
+<text class="value" x="1062" y="245">224.04</text>
+<rect x="438" y="254" width="390" height="18" rx="6" fill="#F2C879"/>
+<text class="value" x="844" y="269">143.64</text>
+
+<text class="label" x="100" y="318">Path</text>
+<rect x="438" y="298" width="606" height="18" rx="6" fill="#8FC5F3"/>
+<text class="value" x="1060" y="313">223.19</text>
+<rect x="438" y="322" width="394" height="18" rx="6" fill="#F2C879"/>
+<text class="value" x="848" y="337">145.13</text>
+
+<text class="label" x="100" y="386">InputStream / OutputStream</text>
+<rect x="438" y="366" width="602" height="18" rx="6" fill="#8FC5F3"/>
+<text class="value" x="1056" y="381">221.64</text>
+<rect x="438" y="390" width="403" height="18" rx="6" fill="#F2C879"/>
+<text class="value" x="857" y="405">148.39</text>
+
+<text class="label" x="100" y="454">Okio Source / Sink</text>
+<rect x="438" y="434" width="603" height="18" rx="6" fill="#8FC5F3"/>
+<text class="value" x="1057" y="449">222.00</text>
+<rect x="438" y="458" width="395" height="18" rx="6" fill="#F2C879"/>
+<text class="value" x="849" y="473">145.59</text>
+
+<text class="label" x="100" y="522">Suspended file source/sink</text>
+<rect x="438" y="502" width="692" height="18" rx="6" fill="#8FC5F3"/>
+<text class="value" x="1146" y="517">254.95</text>
+<rect x="438" y="526" width="464" height="18" rx="6" fill="#F2C879"/>
+<text class="value" x="918" y="541">170.69</text>
+
+<text class="note" x="100" y="584">Scrimage rows stay close across ByteArray, Path, InputStream, and Okio; suspended file channels add bridge overhead.</text>
+
+<rect x="70" y="668" width="1300" height="310" rx="18" fill="#FFFFFF" stroke="#E2E8F0" class="panel"/>
+<text class="panel-title" x="98" y="710">libvips Java 25 FFM rows</text>
+<line x1="438" y1="738" x2="438" y2="920" stroke="#D8E0EA" stroke-width="1"/>
+<line x1="628" y1="738" x2="628" y2="920" stroke="#D8E0EA" stroke-width="1"/>
+<line x1="818" y1="738" x2="818" y2="920" stroke="#D8E0EA" stroke-width="1"/>
+<line x1="1008" y1="738" x2="1008" y2="920" stroke="#D8E0EA" stroke-width="1"/>
+<line x1="1198" y1="738" x2="1198" y2="920" stroke="#D8E0EA" stroke-width="1"/>
+<text class="axis" x="438" y="948" text-anchor="middle">0</text>
+<text class="axis" x="628" y="948" text-anchor="middle">7</text>
+<text class="axis" x="818" y="948" text-anchor="middle">14</text>
+<text class="axis" x="1008" y="948" text-anchor="middle">21</text>
+<text class="axis" x="1198" y="948" text-anchor="middle">28 ms/op</text>
+
+<text class="label" x="100" y="770">ByteArray</text>
+<rect x="438" y="750" width="642" height="18" rx="6" fill="#8FC5F3"/>
+<text class="value" x="1096" y="765">23.65</text>
+<rect x="438" y="774" width="418" height="18" rx="6" fill="#F2C879"/>
+<text class="value" x="872" y="789">15.38</text>
+
+<text class="label" x="100" y="840">Path</text>
+<rect x="438" y="820" width="194" height="18" rx="6" fill="#8FC5F3"/>
+<text class="value" x="648" y="835">7.13</text>
+<rect x="438" y="844" width="148" height="18" rx="6" fill="#F2C879"/>
+<text class="value" x="602" y="859">5.47</text>
+
+<text class="label" x="100" y="910">InputStream / OutputStream</text>
+<rect x="438" y="890" width="651" height="18" rx="6" fill="#8FC5F3"/>
+<text class="value" x="1105" y="905">23.99</text>
+<rect x="438" y="914" width="423" height="18" rx="6" fill="#F2C879"/>
+<text class="value" x="877" y="929">15.59</text>
+</svg>

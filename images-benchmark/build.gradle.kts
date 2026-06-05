@@ -94,6 +94,18 @@ benchmark {
             reportFormat = "json"
             advanced("jvmForks", "definedByJmh")
         }
+
+        register("largeStreaming") {
+            include(".*ImageLargeStreamingBenchmark.*")
+            warmups = 1
+            iterations = 3
+            iterationTime = 1
+            iterationTimeUnit = "s"
+            mode = "avgt"
+            outputTimeUnit = "ms"
+            reportFormat = "json"
+            advanced("jvmForks", "definedByJmh")
+        }
     }
 
     targets {

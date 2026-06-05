@@ -118,6 +118,32 @@ raw `kotlinx-benchmark` JSON은
 [`docs/raw/benchmark-file-io-throughput-2026-05-29-macos-java25.json`](docs/raw/benchmark-file-io-throughput-2026-05-29-macos-java25.json)을
 참고하세요.
 
+### 대용량 Streaming Pipeline
+
+![Large streaming pipeline benchmark chart](../docs/images/readme-charts/images-benchmark-large-streaming-chart-01.png)
+
+| 경계 | `large-photo` | `ocr-document` | 권장 판단 |
+|------|---------------|----------------|-----------|
+| Scrimage `Path` | 223.19 ms/op | 145.13 ms/op | 이번 실행에서 가장 빠른 그룹에 가까운 Scrimage 경계 |
+| Scrimage Okio `Source`/`Sink` | 222.00 ms/op | 145.59 ms/op | latency 개선보다 lifecycle/integration 경계에 가깝습니다 |
+| Scrimage suspended source/sink | 254.95 ms/op | 170.69 ms/op | coroutine 경계지만 bridge overhead가 있습니다 |
+| vips `Path` | 7.13 ms/op | 5.47 ms/op | vips 사용 가능 시 대용량 파일 변환 기본 선택지 |
+| vips `InputStream`/`OutputStream` | 23.99 ms/op | 15.59 ms/op | stream 입력이 bounded라 vips `ByteArray`와 유사합니다 |
+
+`ImageLargeStreamingBenchmark`는 큰 binary fixture를 commit하지 않도록 JMH setup
+단계에서 deterministic large fixture를 생성합니다. 이번 로컬 Java 25 결과는
+Okio/suspended API를 Scrimage latency나 throughput 최적화가 아니라 memory/lifecycle
+경계로 설명하는 쪽을 지지합니다. 대용량 파일 성능은 vips `Path` 경로가 가장 강합니다.
+자세한 조건은 [`docs/large-streaming-2026-06-05.md`](docs/large-streaming-2026-06-05.md),
+raw `kotlinx-benchmark` JSON은
+[`docs/raw/benchmark-large-streaming-2026-06-05-macos-java25.json`](docs/raw/benchmark-large-streaming-2026-06-05-macos-java25.json)을
+참고하세요.
+JMH GC-profiler addendum
+[`docs/raw/benchmark-large-streaming-jmh-gc-2026-06-05-macos-java25.json`](docs/raw/benchmark-large-streaming-jmh-gc-2026-06-05-macos-java25.json)을
+보면 Scrimage `Path`, Okio, stream 행은 모두 `large-photo`에서 약 216-218 MiB/op,
+`ocr-document`에서 약 164-166 MiB/op을 managed heap에 할당합니다. 반면 vips
+`Path`는 managed heap 기준 약 0.54 MiB/op, 0.34 MiB/op 수준입니다.
+
 ### Memory Profile (kotlinx-benchmark + GC addendum)
 
 ![Image workload memory profile chart](../docs/images/readme-charts/images-benchmark-memory-profile-chart-01.png)
@@ -152,6 +178,17 @@ JAVA_HOME=$(/usr/libexec/java_home -v 25) ./gradlew :bluetape4k-images-benchmark
 JAVA_HOME=$(/usr/libexec/java_home -v 25) ./gradlew :bluetape4k-images-benchmark:benchmarkIoBoundaryBenchmark --console=plain
 JAVA_HOME=$(/usr/libexec/java_home -v 25) ./gradlew :bluetape4k-images-benchmark:benchmarkIoThroughputBenchmark --console=plain
 JAVA_HOME=$(/usr/libexec/java_home -v 25) ./gradlew :bluetape4k-images-benchmark:benchmarkMemoryProfileBenchmark --console=plain
+JAVA_HOME=$(/usr/libexec/java_home -v 25) ./gradlew :bluetape4k-images-benchmark:benchmarkLargeStreamingBenchmark -Pvips.impl=java25 --console=plain
+
+# 대용량 streaming 행 managed heap allocation addendum
+./gradlew :bluetape4k-images-benchmark:benchmarkBenchmarkJar --console=plain
+
+JAVA25=$(/usr/libexec/java_home -v 25)
+"$JAVA25/bin/java" --enable-native-access=ALL-UNNAMED \
+  -jar images-benchmark/build/benchmarks/benchmark/jars/bluetape4k-images-benchmark-benchmark-jmh-0.3.0-JMH.jar \
+  '.*ImageLargeStreamingBenchmark.*' -wi 1 -i 3 -f 1 -bm avgt -tu ms \
+  -prof gc -rf json \
+  -rff images-benchmark/docs/raw/benchmark-large-streaming-jmh-gc-2026-06-05-macos-java25.json
 ```
 
 **macOS 사전 요구사항**: `brew install vips`
@@ -197,6 +234,7 @@ Gradle `kotlinx-benchmark` task를 기본 실행 경로로 사용하세요. benc
 | Encode latency | `../docs/images/readme-charts/images-benchmark-encode-latency-chart-01.svg` | `../docs/images/readme-charts/images-benchmark-encode-latency-chart-01.png` |
 | Filter latency | `../docs/images/readme-charts/images-benchmark-filter-latency-chart-01.svg` | `../docs/images/readme-charts/images-benchmark-filter-latency-chart-01.png` |
 | Vips backend comparison | `../docs/images/readme-charts/images-benchmark-vips-backend-comparison-chart-01.svg` | `../docs/images/readme-charts/images-benchmark-vips-backend-comparison-chart-01.png` |
+| Large streaming pipeline | `../docs/images/readme-charts/images-benchmark-large-streaming-chart-01.svg` | `../docs/images/readme-charts/images-benchmark-large-streaming-chart-01.png` |
 
 차트 갱신 후 렌더링과 검증:
 
@@ -308,6 +346,21 @@ Read는 scenario당 6,400개 hard-linked path를 사용하고, write는 scenario
 |----------------|------|
 | `read_*_concurrent` | `Path`, Okio `Source`, `SuspendedSource` |
 | `write_*_concurrent` | `Path`, Okio `Sink`, `SuspendedSink` |
+
+### `ImageLargeStreamingBenchmark`
+
+대용량 이미지 전체 load-transform-write pipeline을 측정합니다. 큰 binary file을
+repository에 추가하지 않도록 fixture는 JMH setup에서 생성합니다.
+
+| Scenario | 생성 크기 | Transform |
+|----------|-----------|-----------|
+| `large-photo` | 4032x3024 | 1920x1440으로 resize, grayscale, JPEG encode |
+| `ocr-document` | 2480x3508 | 1240x1754로 resize, grayscale, JPEG encode |
+
+| 벤치마크 그룹 | 경계 |
+|----------------|------|
+| `scrimage_*_pipeline` | `ByteArray`, `Path`, `InputStream`/`OutputStream`, Okio `Source`/`Sink`, suspended file source/sink |
+| `vips_*_pipeline` | Java 25 FFM 또는 Java 21 JNI 사용 가능 시 `ByteArray`, `Path`, `InputStream`/`OutputStream` |
 
 ### `VipsBenchmarkState`
 
