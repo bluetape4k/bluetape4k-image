@@ -52,6 +52,23 @@ instead of implicit.
 - **Benchmark lane** — `kotlinx-benchmark` comparisons for scrimage and
   libvips resize/encode paths.
 
+## Large-File and Okio I/O
+
+Use `bluetape4k-okio` when image bytes already cross a streaming boundary such
+as upload bodies, object-storage clients, pipes, or asynchronous file channels.
+The scrimage-backed `images` module accepts Okio `Source`/`Sink` and
+`SuspendedSource`/`SuspendedSink` helpers for lifecycle-safe load and write
+integration.
+
+For local large files on the libvips path, prefer `Path` entry points first:
+the large-file benchmark shows the Java 25 FFM backend has the strongest local
+file memory and throughput profile through `Path`. Use the vips Okio
+`Source`/`Sink` helpers when the caller already owns a non-file stream or a
+`bluetape4k-okio` suspended boundary. Non-Path vips loads still validate and
+buffer the compressed input within the 50 MB stream guard.
+
+Benchmark evidence: [`images-benchmark/docs/large-streaming-2026-06-05.md`](images-benchmark/docs/large-streaming-2026-06-05.md).
+
 <!-- README_VISUAL_OVERVIEW:START -->
 ## Overview Diagram
 

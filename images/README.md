@@ -137,6 +137,11 @@ val channel = AsynchronousFileChannel.open(Paths.get("image.jpg"), READ)
 val image = suspendLoadImage(channel.asSuspendedSource())
 ```
 
+`BufferedSource` inputs are caller-owned and are not closed by load helpers.
+Pass a raw `Source` when the helper should buffer and close the source. Scrimage
+still decodes into JVM image memory; Okio improves stream ownership and
+integration rather than removing the decoded pixel allocation.
+
 ### Loading and Saving BufferedImage
 
 ```kotlin
@@ -193,6 +198,11 @@ image.suspendWrite(SuspendJpegWriter.Default, channel.asSuspendedSink())
 val jpegBytes = image.suspendBytes(SuspendJpegWriter.Default)
 val webpBytes = image.suspendBytes(SuspendWebpWriter.Default)
 ```
+
+`BufferedSink` outputs are caller-owned and are flushed, not closed. Pass a raw
+`Sink` or `SuspendedSink` when the helper should own and close the output
+boundary. Prefer `SuspendedSource`/`SuspendedSink` from `bluetape4k-okio` for
+asynchronous file channels and service pipelines that already run in coroutines.
 
 ### Batch Image Processing (Issue #135)
 

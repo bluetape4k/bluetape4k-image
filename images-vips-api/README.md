@@ -148,6 +148,49 @@ suspend fun processImageAsync(inputPath: String) {
 }
 ```
 
+### Okio Sinks for Streaming Boundaries
+
+```kotlin
+import io.bluetape4k.images.vips.*
+import io.bluetape4k.images.vips.coroutines.*
+import io.bluetape4k.okio.asSink
+import io.bluetape4k.okio.buffered
+import io.bluetape4k.okio.coroutines.asSuspendedSink
+import io.bluetape4k.okio.coroutines.buffered as bufferedSuspended
+import java.io.File
+import java.nio.channels.AsynchronousFileChannel
+import java.nio.file.Paths
+import java.nio.file.StandardOpenOption.CREATE
+import java.nio.file.StandardOpenOption.TRUNCATE_EXISTING
+import java.nio.file.StandardOpenOption.WRITE
+
+vipsImageOf(Paths.get("photo.jpg")).use { image ->
+    // Caller-owned BufferedSink: flushed, not closed by the helper.
+    File("thumb.webp").outputStream().asSink().buffered().use { sink ->
+        image.thumbnail(800).use { thumb ->
+            thumb.writeTo(sink, VipsImageFormat.WEBP, VipsEncodeOptions.Default)
+        }
+    }
+}
+
+suspend fun writeWithSuspendedSink(image: VipsImage) {
+    val channel = AsynchronousFileChannel.open(
+        Paths.get("thumb.jpg"),
+        WRITE,
+        CREATE,
+        TRUNCATE_EXISTING,
+    )
+    channel.use {
+        val sink = channel.asSuspendedSink().bufferedSuspended()
+        image.suspendWriteTo(sink, VipsImageFormat.JPEG, VipsEncodeOptions.Default)
+    }
+}
+```
+
+For local large files, prefer backend `Path` entry points first. Use Okio sinks
+when bytes already move through a streaming boundary and you want explicit
+ownership control without an intermediate `ByteArray`.
+
 ### Crop and Multi-Operation Chain
 
 ```kotlin

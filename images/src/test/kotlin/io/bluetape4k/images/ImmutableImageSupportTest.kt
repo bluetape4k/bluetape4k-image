@@ -12,12 +12,16 @@ import io.bluetape4k.okio.coroutines.asSuspendedSink
 import io.bluetape4k.okio.coroutines.asSuspendedSource
 import io.bluetape4k.okio.coroutines.buffered as bufferedSuspended
 import kotlinx.coroutines.test.runTest
+import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeGreaterThan
 import io.bluetape4k.assertions.shouldNotBeEqualTo
 import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.assertions.shouldBeTrue
 import okio.Buffer
+import okio.Sink
+import okio.Source
+import okio.Timeout
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
@@ -28,7 +32,6 @@ import java.nio.file.StandardOpenOption.CREATE
 import java.nio.file.StandardOpenOption.READ
 import java.nio.file.StandardOpenOption.TRUNCATE_EXISTING
 import java.nio.file.StandardOpenOption.WRITE
-import kotlin.test.assertFailsWith
 
 @TempFolderTest
 class ImmutableImageSupportTest: AbstractImageTest() {
@@ -117,6 +120,30 @@ class ImmutableImageSupportTest: AbstractImageTest() {
     }
 
     @Test
+    fun `load large generated image from Okio Source closes owned source`() {
+        val source = TrackingSource(whiteTestImage(1024, 768))
+
+        val image = immutableImageOf(source)
+
+        image.width shouldBeEqualTo 1024
+        image.height shouldBeEqualTo 768
+        source.closed.shouldBeTrue()
+    }
+
+    @Test
+    fun `load large generated image from BufferedSource keeps caller ownership`() {
+        val source = TrackingSource(whiteTestImage(1024, 768))
+        val bufferedSource = source.buffered()
+
+        val image = immutableImageOf(bufferedSource)
+
+        image.width shouldBeEqualTo 1024
+        image.height shouldBeEqualTo 768
+        source.closed shouldBeEqualTo false
+        bufferedSource.close()
+    }
+
+    @Test
     fun `suspend load image from Okio Source`() = runTest {
         val image = Path.of("$BASE_PATH/homer.jpg").toFile().inputStream().asSource().use { source ->
             suspendLoadImage(source)
@@ -143,12 +170,16 @@ class ImmutableImageSupportTest: AbstractImageTest() {
         val channel = AsynchronousFileChannel.open(sourcePath, READ)
         val source = channel.asSuspendedSource().bufferedSuspended()
 
-        val image = suspendLoadImage(source)
+        try {
+            val image = suspendLoadImage(source)
 
-        image.width shouldBeGreaterThan 0
-        image.height shouldBeGreaterThan 0
-        channel.isOpen.shouldBeTrue()
-        source.close()
+            image.width shouldBeGreaterThan 0
+            image.height shouldBeGreaterThan 0
+            channel.isOpen.shouldBeTrue()
+        } finally {
+            source.close()
+            channel.close()
+        }
     }
 
     @Test
@@ -162,6 +193,17 @@ class ImmutableImageSupportTest: AbstractImageTest() {
     }
 
     @Test
+    fun `suspendWrite to Okio Sink closes owned sink`() = runTest {
+        val image = immutableImageOf(whiteTestImage(512, 512))
+        val sink = TrackingSink()
+
+        image.suspendWrite(SuspendJpegWriter.Default, sink)
+
+        sink.closed.shouldBeTrue()
+        sink.output.size shouldBeGreaterThan 0L
+    }
+
+    @Test
     fun `suspendWrite writes to suspended file sink`(tempFolder: TempFolder) = runSuspendIO {
         val image = immutableImageOf(Path.of("$BASE_PATH/homer.jpg"))
         val output = tempFolder.createFile("suspended-output.jpg").toPath()
@@ -170,6 +212,37 @@ class ImmutableImageSupportTest: AbstractImageTest() {
         image.suspendWrite(SuspendJpegWriter.Default, channel.asSuspendedSink())
 
         output.toFile().length() shouldBeGreaterThan 0L
+    }
+
+    private class TrackingSource(bytes: ByteArray): Source {
+        private val buffer = Buffer().write(bytes)
+        var closed: Boolean = false
+
+        override fun read(sink: Buffer, byteCount: Long): Long =
+            buffer.read(sink, byteCount)
+
+        override fun timeout(): Timeout = Timeout.NONE
+
+        override fun close() {
+            closed = true
+        }
+    }
+
+    private class TrackingSink: Sink {
+        val output: Buffer = Buffer()
+        var closed: Boolean = false
+
+        override fun write(source: Buffer, byteCount: Long) {
+            output.write(source, byteCount)
+        }
+
+        override fun flush() = Unit
+
+        override fun timeout(): Timeout = Timeout.NONE
+
+        override fun close() {
+            closed = true
+        }
     }
 
     private fun whiteTestImage(w: Int, h: Int): ByteArray {

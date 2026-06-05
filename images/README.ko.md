@@ -144,6 +144,11 @@ val channel = AsynchronousFileChannel.open(Paths.get("image.jpg"), READ)
 val image = suspendLoadImage(channel.asSuspendedSource())
 ```
 
+`BufferedSource` 입력은 caller-owned로 보고 load helper가 닫지 않습니다.
+Helper가 source를 buffer하고 닫아야 한다면 raw `Source`를 전달하세요. Scrimage는
+여전히 JVM image memory로 decode하므로, Okio는 decoded pixel allocation을 없애는
+기능이 아니라 stream ownership과 integration을 개선하는 경계입니다.
+
 ### BufferedImage 로드/저장
 
 ```kotlin
@@ -200,6 +205,11 @@ image.suspendWrite(SuspendJpegWriter.Default, channel.asSuspendedSink())
 val jpegBytes = image.suspendBytes(SuspendJpegWriter.Default)
 val webpBytes = image.suspendBytes(SuspendWebpWriter.Default)
 ```
+
+`BufferedSink` 출력은 caller-owned로 보고 flush만 수행하며 닫지 않습니다. Helper가
+output boundary를 소유하고 닫아야 한다면 raw `Sink` 또는 `SuspendedSink`를
+전달하세요. Asynchronous file channel이나 coroutine 기반 service pipeline에서는
+`bluetape4k-okio`의 `SuspendedSource`/`SuspendedSink`를 우선 사용하세요.
 
 ### 배치 이미지 처리 (Issue #135)
 

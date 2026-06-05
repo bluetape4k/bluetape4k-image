@@ -203,6 +203,50 @@ FileInputStream("image.webp").use { stream ->
 }
 ```
 
+### From Okio Sources
+
+```kotlin
+import io.bluetape4k.images.vips.java25.ffmVipsImageOf
+import io.bluetape4k.images.vips.java25.suspendFfmVipsImageOf
+import io.bluetape4k.okio.asSource
+import io.bluetape4k.okio.buffered
+import io.bluetape4k.okio.coroutines.asSuspendedSource
+import io.bluetape4k.okio.coroutines.buffered as bufferedSuspended
+import java.io.FileInputStream
+import java.nio.channels.AsynchronousFileChannel
+import java.nio.file.Paths
+import java.nio.file.StandardOpenOption.READ
+
+// Raw Source is helper-owned: ffmVipsImageOf buffers and closes it.
+val sourceImage = ffmVipsImageOf(FileInputStream("image.webp").asSource())
+sourceImage.close()
+
+// BufferedSource is caller-owned: close it at the call site.
+FileInputStream("image.webp").asSource().buffered().use { source ->
+    ffmVipsImageOf(source).use { image ->
+        println("${image.width}x${image.height}")
+    }
+}
+
+suspend fun loadFromSuspendedSource() {
+    AsynchronousFileChannel.open(Paths.get("image.webp"), READ).use { channel ->
+        val source = channel.asSuspendedSource().bufferedSuspended()
+        try {
+            suspendFfmVipsImageOf(source).use { image ->
+                println("${image.width}x${image.height}")
+            }
+        } finally {
+            source.close()
+        }
+    }
+}
+```
+
+For local large files, `Path` remains the preferred FFM entry point and has the
+best measured JVM allocation profile. Use Okio sources when the caller already
+owns a stream, pipe, or `bluetape4k-okio` suspended boundary. Non-Path loads are
+still subject to the 50 MB compressed input guard.
+
 ### Crop Region
 
 ```kotlin
