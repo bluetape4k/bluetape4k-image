@@ -4,7 +4,7 @@
 
 - Issue: #171 `feat: add basic images-ocr usage example`
 - Branch: `feat/issue-171-images-ocr-example`
-- Changed area: `images-ocr` test gate, native OCR quickstart test, README/README.ko quickstart docs
+- Changed area: `images-ocr` test gate, native OCR quickstart test, README/README.ko quickstart docs, OCR CI install compatibility
 
 ## Tier Review
 
@@ -13,7 +13,7 @@
 | Tier 1 Security | PASS | No external input surface, credential handling, or network call added. The generated temp image is local test data. |
 | Tier 2 Architecture | PASS | No production architecture or public API contract changed. The runnable example stays inside `images-ocr` per issue scope. |
 | Tier 3 API Design | PASS | Existing `OcrOptions`, `extractText`, and `immutableImageOf(File)` APIs are reused; no new public API added. |
-| Tier 4 Implementation | PASS | `ocr.enabled` and `ocr.container.enabled` are passed through to the test JVM; quickstart uses explicit `tessdataPath`, language, PSM, and whitelist options. |
+| Tier 4 Implementation | PASS | `ocr.enabled` and `ocr.container.enabled` are passed through to the test JVM; quickstart uses explicit `tessdataPath`, language, PSM, and whitelist options. CI/Nightly create the Ubuntu `libleptonica.so` alias that Tess4J/JNA expects. |
 | Tier 5 Tests | PASS | `OcrQuickstartExampleTest` exercises a real generated PNG file and host Tesseract; existing native test now uses the same tessdata path helper. |
 | Tier 6 Performance | PASS | The example creates one small image and one OCR call; no production hot path or benchmark-sensitive code changed. |
 | Tier 7 Docs/Evidence | PASS | `README.md` and `README.ko.md` both document macOS Homebrew, Ubuntu packages, `TESSDATA_PREFIX`, command, and expected output shape. |
@@ -33,6 +33,7 @@
 | `./gradlew :bluetape4k-images-ocr:test --no-daemon` | PASS | `10 passing`, `4 pending` for gated native/container tests. |
 | `export TESSDATA_PREFIX="$(brew --prefix)/share/tessdata"; ./gradlew :bluetape4k-images-ocr:test --tests "io.bluetape4k.images.ocr.OcrQuickstartExampleTest" -Docr.enabled=true --no-daemon` | PASS | README macOS command shape verified; `1 passing`. |
 | `git diff --check` | PASS | No whitespace errors. |
+| PR #174 CI `Test / images-ocr` | FAIL then FIXED | Ubuntu 24.04 installs `liblept5` but Tess4J/JNA searches `libleptonica.so`; CI/Nightly now create a symlink alias before test execution. |
 
 ## Review Verdict
 
