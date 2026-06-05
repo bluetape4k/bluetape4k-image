@@ -14,7 +14,17 @@ AVIF·HEIC는 incubating 인터페이스로 제공되며, libvips 지원은 `ima
 
 ### 클래스 다이어그램
 
-![images Class Structure 2 diagram](../docs/images/readme-diagrams/images-class-02.png)
+#### 핵심 API
+
+![Images Core API Classes diagram](../docs/images/readme-diagrams/images-class-core-01.png)
+
+#### 필터
+
+![Images Filter Classes diagram](../docs/images/readme-diagrams/images-class-filters-01.png)
+
+#### Writer
+
+![Images Writer Classes diagram](../docs/images/readme-diagrams/images-class-writers-01.png)
 
 ## 주요 기능
 

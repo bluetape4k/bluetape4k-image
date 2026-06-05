@@ -1,0 +1,26 @@
+digraph G {
+  graph [layout=neato, splines=ortho, overlap=false, bgcolor="#F6F9FC", margin=0.18];
+  node [shape=box, style="rounded,filled", fixedsize=true, fillcolor="#FFFFFF", color="#9AA8B8", fontname="Comic Mono", fontsize=11];
+  edge [color="#758297", fontname="Comic Mono", fontsize=9];
+  label="Images Core API Classes";
+  labelloc="t";
+  "sources" [label="Input Sources", width="5.000", height="2.056", pos="280,776!"];
+  "image" [label="ImmutableImage", width="5.000", height="2.056", pos="750,776!"];
+  "support" [label="ImmutableImageSupport", width="5.417", height="2.361", pos="1235,765!"];
+  "format" [label="ImageFormat", width="3.889", height="2.056", pos="1620,776!"];
+  "scaler" [label="ImageScaler", width="4.722", height="2.056", pos="280,466!"];
+  "splitter" [label="ImageSplitter", width="4.722", height="2.056", pos="690,466!"];
+  "batch" [label="ImageBatchFlow", width="5.139", height="2.056", pos="1115,466!"];
+  "thumbnail" [label="ThumbnailPipeline", width="5.278", height="2.056", pos="1550,466!"];
+  "analysis" [label="Analysis APIs", width="5.556", height="2.056", pos="720,206!"];
+  "transforms" [label="Transform APIs", width="5.556", height="2.056", pos="1230,206!"];
+  "sources" -> "image" [label="decode"];
+  "image" -> "support" [label="extend"];
+  "support" -> "format" [label="select"];
+  "image" -> "scaler" [label="resize"];
+  "image" -> "splitter" [label="split"];
+  "image" -> "batch" [label="flow"];
+  "image" -> "thumbnail" [label="thumbs"];
+  "image" -> "analysis" [label="inspect"];
+  "image" -> "transforms" [label="transform"];
+}

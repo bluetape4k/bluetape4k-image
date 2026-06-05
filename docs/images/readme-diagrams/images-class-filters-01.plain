@@ -1,0 +1,19 @@
+graph 1 22.083 9.6185
+node filter 10.972 8.2502 5 2.056 Filter rounded,filled box #9AA8B8 #FFFFFF
+node chain 18.819 8.0974 5.972 2.361 ImageFilterChain rounded,filled box #9AA8B8 #FFFFFF
+node converter 18.611 4.0697 5.556 2.361 ColorSpaceConverter rounded,filled box #9AA8B8 #FFFFFF
+node saturation 2.5695 1.028 5.139 2.056 SaturationAdjustFilter rounded,filled box #9AA8B8 #FFFFFF
+node hue 8.0556 1.028 4.722 2.056 HueAdjustFilter rounded,filled box #9AA8B8 #FFFFFF
+node temperature 13.889 1.028 5.278 2.056 ColorTemperatureFilter rounded,filled box #9AA8B8 #FFFFFF
+node median 19.583 1.028 5 2.056 MedianBlurFilter rounded,filled box #9AA8B8 #FFFFFF
+node rounded 2.5001 4.2224 5 2.056 RoundedCornerFilter rounded,filled box #9AA8B8 #FFFFFF
+node support 2.9862 8.2502 5.972 2.056 "Watermark/Caption/Padding" rounded,filled box #9AA8B8 #FFFFFF
+edge chain filter 4 15.83 8.25 15.83 8.25 13.634 8.25 13.634 8.25 "native filters" 14.222 8.3229 solid #758297
+edge chain converter 4 18.611 6.9108 18.611 6.9108 18.611 5.4147 18.611 5.4147 "color ops" 18.283 6.2357 solid #758297
+edge saturation filter 10 5.0695 2.0629 5.0695 2.2213 5.0695 2.3333 5.0695 2.3333 5.0695 2.3333 9.4444 2.3333 9.4444 2.3333 9.4444 2.3333 9.4444 7.0597 9.4444 7.0597 dashed #758297
+edge hue filter 4 9.9305 2.0628 9.9305 2.0628 9.9305 7.0575 9.9305 7.0575 dashed #758297
+edge temperature filter 4 11.991 2.0628 11.991 2.0628 11.991 7.0575 11.991 7.0575 dashed #758297
+edge median filter 10 19.236 2.0619 19.236 2.3622 19.236 2.6111 19.236 2.6111 19.236 2.6111 12.732 2.6111 12.732 2.6111 12.732 2.6111 12.732 7.056 12.732 7.056 dashed #758297
+edge rounded filter 7 5.0062 4.2222 6.8216 4.2222 8.9584 4.2222 8.9584 4.2222 8.9584 4.2222 8.9584 7.0582 8.9584 7.0582 dashed #758297
+edge support filter 4 5.9769 8.25 5.9769 8.25 8.3111 8.25 8.3111 8.25 factory 6.8888 8.3229 solid #758297
+stop
