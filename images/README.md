@@ -10,9 +10,19 @@ A library for loading, converting, resizing, splitting, and applying filters to 
 
 ![Processing Pipeline diagram](../docs/images/readme-diagrams/images-architecture-01.png)
 
-### Class Diagram
+### Class Diagrams
 
-![images Class Structure 2 diagram](../docs/images/readme-diagrams/images-class-02.png)
+#### Core API
+
+![Images Core API Classes diagram](../docs/images/readme-diagrams/images-class-core-01.png)
+
+#### Filters
+
+![Images Filter Classes diagram](../docs/images/readme-diagrams/images-class-filters-01.png)
+
+#### Writers
+
+![Images Writer Classes diagram](../docs/images/readme-diagrams/images-class-writers-01.png)
 
 ## Key Features
 

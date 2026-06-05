@@ -1,0 +1,18 @@
+graph 1 22.778 9.3407
+node context 2.5002 7.9724 5 2.056 SuspendWriteContext rounded,filled box #9AA8B8 #FFFFFF
+node imageWriter 10.417 7.9724 5.556 2.056 SuspendImageWriter rounded,filled box #9AA8B8 #FFFFFF
+node multi 19.306 7.9724 6.389 2.056 SuspendMultiPageImageWriter rounded,filled box #9AA8B8 #FFFFFF
+node tiff 2.778 4.5002 5.556 2.056 SuspendTiffWriter rounded,filled box #9AA8B8 #FFFFFF
+node tiffMulti 19.306 4.5002 6.389 2.056 SuspendTiffMultiPageWriter rounded,filled box #9AA8B8 #FFFFFF
+node jpeg 2.6391 1.028 5.278 2.056 SuspendJpegWriter rounded,filled box #9AA8B8 #FFFFFF
+node png 8.4724 1.028 5 2.056 SuspendPngWriter rounded,filled box #9AA8B8 #FFFFFF
+node gif 14.097 1.028 4.861 2.056 SuspendGifWriter rounded,filled box #9AA8B8 #FFFFFF
+node webp 20 1.028 5.556 2.056 SuspendWebpWriter rounded,filled box #9AA8B8 #FFFFFF
+edge context imageWriter 4 5.0051 8.4861 5.0051 8.4861 7.4728 8.4861 7.4728 8.4861 holds 6.0567 8.559 solid #758297
+edge tiff imageWriter 7 5.2781 5.5325 5.2781 6.556 5.2781 7.9722 5.2781 7.9722 5.2781 7.9722 7.4733 7.9722 7.4733 7.9722 dashed #758297
+edge tiffMulti multi 4 19.306 5.5326 19.306 5.5326 19.306 6.7781 19.306 6.7781 dashed #758297
+edge jpeg imageWriter 10 5.2828 1.0278 5.5719 1.0278 5.7642 1.0278 5.7642 1.0278 5.7642 1.0278 5.7642 7.4583 5.7642 7.4583 5.7642 7.4583 7.4766 7.4583 7.4766 7.4583 dashed #758297
+edge png imageWriter 4 9.3057 2.0602 9.3057 2.0602 9.3057 6.7804 9.3057 6.7804 dashed #758297
+edge gif imageWriter 4 12.176 2.0602 12.176 2.0602 12.176 6.7804 12.176 6.7804 dashed #758297
+edge webp imageWriter 10 19.861 2.0628 19.861 2.4346 19.861 2.7639 19.861 2.7639 19.861 2.7639 12.686 2.7639 12.686 2.7639 12.686 2.7639 12.686 6.7835 12.686 6.7835 dashed #758297
+stop

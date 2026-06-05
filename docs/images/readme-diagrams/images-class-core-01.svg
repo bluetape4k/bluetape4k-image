@@ -1,0 +1,145 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1840" height="1060" viewBox="0 0 1840 1060" role="img" aria-label="Images Core API Classes">
+<defs>
+  <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%">
+    <feDropShadow dx="0" dy="7" stdDeviation="8" flood-color="#203040" flood-opacity="0.10"/>
+  </filter>
+  <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
+    <path d="M 1 1 L 7 4 L 1 7 Z" fill="#758297"/>
+  </marker>
+  <marker id="inherit" markerWidth="11" markerHeight="10" refX="9.5" refY="5" orient="auto" markerUnits="strokeWidth">
+    <path d="M 0.5 1 L 9.5 5 L 0.5 9 Z" fill="#FFFFFF" stroke="#758297" stroke-width="1.7"/>
+  </marker>
+  <style>
+    .canvas{fill:#F6F9FC}
+    .frame{fill:#FFFFFF;stroke:#D7E2EC;stroke-width:2}
+    .title{font-family:"Architects Daughter";font-size:42px;fill:#203040;font-weight:400}
+    .subtitle{font-family:"Comic Mono";font-size:16px;fill:#536476;font-weight:400}
+    .class-name{font-family:"Architects Daughter";font-size:24px;fill:#203040;font-weight:400}
+    .stereo{font-family:"Comic Mono";font-size:12px;fill:#627184;font-weight:400}
+    .member{font-family:"Comic Mono";font-size:13px;fill:#405366;font-weight:400}
+    .edge-label{font-family:"Comic Mono";font-size:12px;fill:#405366;font-weight:400}
+    .footer{font-family:"Comic Mono";font-size:13px;fill:#627184;font-weight:400}
+    .card{filter:url(#shadow);stroke-width:2}
+    .divider{stroke-width:1.4}
+    .dependency{stroke:#758297;stroke-width:2.2;fill:none;marker-end:url(#arrow);stroke-linecap:round;stroke-linejoin:round}
+    .inheritance{stroke:#758297;stroke-width:2.2;fill:none;marker-end:url(#inherit);stroke-linecap:round;stroke-linejoin:round}
+  </style>
+</defs>
+<rect class="canvas" width="1840" height="1060"/>
+<rect class="frame" x="34" y="28" width="1772" height="1002" rx="26"/>
+<text class="title" x="70" y="82">Images Core API Classes</text>
+<text class="subtitle" x="74" y="116">Core loading, immutable transforms, batch processing, thumbnails, and analysis stay separate from filters and writers.</text>
+<g id="edges">
+<path class="dependency" d="M 460 284 L 570 284"/>
+<rect x="478.0" y="258.0" width="74" height="24" rx="8" fill="#FFFFFF" stroke="#D7E2EC" opacity="0.95"/>
+<text class="edge-label" x="515.0" y="274.0" text-anchor="middle">decode</text>
+<path class="dependency" d="M 930 284 L 1040 284"/>
+<rect x="948.0" y="258.0" width="74" height="24" rx="8" fill="#FFFFFF" stroke="#D7E2EC" opacity="0.95"/>
+<text class="edge-label" x="985.0" y="274.0" text-anchor="middle">extend</text>
+<path class="dependency" d="M 1430 284 L 1480 284"/>
+<rect x="1418.0" y="258.0" width="74" height="24" rx="8" fill="#FFFFFF" stroke="#D7E2EC" opacity="0.95"/>
+<text class="edge-label" x="1455.0" y="274.0" text-anchor="middle">select</text>
+<path class="dependency" d="M 750 358 L 750 450 L 280 450 L 280 520"/>
+<rect x="489.0" y="424.0" width="74" height="24" rx="8" fill="#FFFFFF" stroke="#D7E2EC" opacity="0.95"/>
+<text class="edge-label" x="526.0" y="440.0" text-anchor="middle">resize</text>
+<path class="dependency" d="M 750 358 L 750 520"/>
+<rect x="715.0" y="413.0" width="70" height="24" rx="8" fill="#FFFFFF" stroke="#D7E2EC" opacity="0.95"/>
+<text class="edge-label" x="750.0" y="429.0" text-anchor="middle">split</text>
+<path class="dependency" d="M 750 358 L 750 450 L 1115 450 L 1115 520"/>
+<rect x="886.5" y="424.0" width="70" height="24" rx="8" fill="#FFFFFF" stroke="#D7E2EC" opacity="0.95"/>
+<text class="edge-label" x="921.5" y="440.0" text-anchor="middle">flow</text>
+<path class="dependency" d="M 750 358 L 750 430 L 1550 430 L 1550 520"/>
+<rect x="1122.0" y="404.0" width="74" height="24" rx="8" fill="#FFFFFF" stroke="#D7E2EC" opacity="0.95"/>
+<text class="edge-label" x="1159.0" y="420.0" text-anchor="middle">thumbs</text>
+<path class="dependency" d="M 650 358 L 650 430 L 490 430 L 490 735 L 720 735 L 720 780"/>
+<rect x="449.0" y="578.0" width="82" height="24" rx="8" fill="#FFFFFF" stroke="#D7E2EC" opacity="0.95"/>
+<text class="edge-label" x="490.0" y="594.0" text-anchor="middle">inspect</text>
+<path class="dependency" d="M 880 358 L 880 430 L 1320 430 L 1320 735 L 1230 735 L 1230 780"/>
+<rect x="1235.0" y="404.0" width="98" height="24" rx="8" fill="#FFFFFF" stroke="#D7E2EC" opacity="0.95"/>
+<text class="edge-label" x="1284.0" y="420.0" text-anchor="middle">transform</text>
+</g>
+<g id="classes">
+<g id="sources">
+  <rect class="card" x="100" y="210" width="360" height="148" rx="8" fill="#E8F3FF" stroke="#5B8DEF"/>
+  <line class="divider" x1="100" y1="282" x2="460" y2="282" stroke="#5B8DEF"/>
+  <text class="stereo" x="280" y="235" text-anchor="middle">&lt;&lt;facade functions&gt;&gt;</text>
+  <text class="class-name" x="280" y="268" text-anchor="middle">Input Sources</text>
+  <text class="member" x="118" y="312">immutableImageOf(...)</text>
+  <text class="member" x="118" y="334">suspendLoadImage(...)</text>
+</g>
+<g id="image">
+  <rect class="card" x="570" y="210" width="360" height="148" rx="8" fill="#EAF7EF" stroke="#58A978"/>
+  <line class="divider" x1="570" y1="282" x2="930" y2="282" stroke="#58A978"/>
+  <text class="stereo" x="750" y="235" text-anchor="middle">&lt;&lt;Scrimage type&gt;&gt;</text>
+  <text class="class-name" x="750" y="268" text-anchor="middle">ImmutableImage</text>
+  <text class="member" x="588" y="312">width, height, metadata</text>
+  <text class="member" x="588" y="334">copy(), filter(), output()</text>
+</g>
+<g id="support">
+  <rect class="card" x="1040" y="210" width="390" height="170" rx="8" fill="#FFF3D9" stroke="#D6A441"/>
+  <line class="divider" x1="1040" y1="282" x2="1430" y2="282" stroke="#D6A441"/>
+  <text class="stereo" x="1235" y="235" text-anchor="middle">&lt;&lt;extensions&gt;&gt;</text>
+  <text class="class-name" x="1235" y="268" text-anchor="middle">ImmutableImageSupport</text>
+  <text class="member" x="1058" y="312">suspendBytes(writer)</text>
+  <text class="member" x="1058" y="334">suspendWrite(writer, sink)</text>
+  <text class="member" x="1058" y="356">withGraphics { ... }</text>
+</g>
+<g id="format">
+  <rect class="card" x="1480" y="210" width="280" height="148" rx="8" fill="#FDECEF" stroke="#DC6B82"/>
+  <line class="divider" x1="1480" y1="282" x2="1760" y2="282" stroke="#DC6B82"/>
+  <text class="stereo" x="1620" y="235" text-anchor="middle">&lt;&lt;enum&gt;&gt;</text>
+  <text class="class-name" x="1620" y="268" text-anchor="middle">ImageFormat</text>
+  <text class="member" x="1498" y="312">JPG, PNG, GIF, WEBP</text>
+  <text class="member" x="1498" y="334">TIFF, SVG, AVIF, HEIC</text>
+</g>
+<g id="scaler">
+  <rect class="card" x="110" y="520" width="340" height="148" rx="8" fill="#E9F7F6" stroke="#45A7A1"/>
+  <line class="divider" x1="110" y1="592" x2="450" y2="592" stroke="#45A7A1"/>
+  <text class="stereo" x="280" y="545" text-anchor="middle">&lt;&lt;utility&gt;&gt;</text>
+  <text class="class-name" x="280" y="578" text-anchor="middle">ImageScaler</text>
+  <text class="member" x="128" y="622">scale(image, width, height)</text>
+  <text class="member" x="128" y="644">Scrimage-backed resize</text>
+</g>
+<g id="splitter">
+  <rect class="card" x="520" y="520" width="340" height="148" rx="8" fill="#F1ECFF" stroke="#8A72D6"/>
+  <line class="divider" x1="520" y1="592" x2="860" y2="592" stroke="#8A72D6"/>
+  <text class="stereo" x="690" y="545" text-anchor="middle">&lt;&lt;utility&gt;&gt;</text>
+  <text class="class-name" x="690" y="578" text-anchor="middle">ImageSplitter</text>
+  <text class="member" x="538" y="622">split(image, rows, cols)</text>
+  <text class="member" x="538" y="644">List&lt;ImmutableImage&gt;</text>
+</g>
+<g id="batch">
+  <rect class="card" x="930" y="520" width="370" height="148" rx="8" fill="#F7F1E7" stroke="#B88A44"/>
+  <line class="divider" x1="930" y1="592" x2="1300" y2="592" stroke="#B88A44"/>
+  <text class="stereo" x="1115" y="545" text-anchor="middle">&lt;&lt;Flow API&gt;&gt;</text>
+  <text class="class-name" x="1115" y="578" text-anchor="middle">ImageBatchFlow</text>
+  <text class="member" x="948" y="622">processImages(options)</text>
+  <text class="member" x="948" y="644">writeImagesTo(outputDir)</text>
+</g>
+<g id="thumbnail">
+  <rect class="card" x="1360" y="520" width="380" height="148" rx="8" fill="#E8F3FF" stroke="#5B8DEF"/>
+  <line class="divider" x1="1360" y1="592" x2="1740" y2="592" stroke="#5B8DEF"/>
+  <text class="stereo" x="1550" y="545" text-anchor="middle">&lt;&lt;builder API&gt;&gt;</text>
+  <text class="class-name" x="1550" y="578" text-anchor="middle">ThumbnailPipeline</text>
+  <text class="member" x="1378" y="622">size(...), format(...)</text>
+  <text class="member" x="1378" y="644">process(Flow&lt;Path&gt;)</text>
+</g>
+<g id="analysis">
+  <rect class="card" x="520" y="780" width="400" height="148" rx="8" fill="#EAF7EF" stroke="#58A978"/>
+  <line class="divider" x1="520" y1="852" x2="920" y2="852" stroke="#58A978"/>
+  <text class="stereo" x="720" y="805" text-anchor="middle">&lt;&lt;package&gt;&gt;</text>
+  <text class="class-name" x="720" y="838" text-anchor="middle">Analysis APIs</text>
+  <text class="member" x="538" y="882">dominantColor(), readExif()</text>
+  <text class="member" x="538" y="904">blurScore(), similarity</text>
+</g>
+<g id="transforms">
+  <rect class="card" x="1030" y="780" width="400" height="148" rx="8" fill="#FFF3D9" stroke="#D6A441"/>
+  <line class="divider" x1="1030" y1="852" x2="1430" y2="852" stroke="#D6A441"/>
+  <text class="stereo" x="1230" y="805" text-anchor="middle">&lt;&lt;package&gt;&gt;</text>
+  <text class="class-name" x="1230" y="838" text-anchor="middle">Transform APIs</text>
+  <text class="member" x="1048" y="882">smartCropTo(), rotate()</text>
+  <text class="member" x="1048" y="904">autoCrop(), equalize()</text>
+</g>
+</g>
+<text class="footer" x="920.0" y="1010" text-anchor="middle">Source evidence: ImmutableImageSupport, ImageBatchFlow, ThumbnailPipeline, scaler/splitter, analysis, and transforms packages.</text>
+</svg>
