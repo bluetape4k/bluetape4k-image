@@ -1,0 +1,12 @@
+graph 1 11.705 1.3403
+node client 0.61111 0.25 1.2222 0.5 "Local client" rounded,filled box #9AA8B8 #FFFFFF
+node route 3.3229 0.75 1.3889 0.5 "Ktor OCR route" rounded,filled box #9AA8B8 #FFFFFF
+node service 6.0451 0.25 1.3889 0.5 KtorOcrService rounded,filled box #9AA8B8 #FFFFFF
+node ocr 8.6007 0.25 1.0556 0.5 "images-ocr" rounded,filled box #9AA8B8 #FFFFFF
+node native 11.01 0.25 1.3889 0.5 "Host Tesseract" rounded,filled box #9AA8B8 #FFFFFF
+edge client route 4 1.2273 0.36221 1.593 0.43033 2.0653 0.5183 2.4675 0.59323 multipart 1.9253 0.6177 solid #758297
+edge route service 4 4.0237 0.62254 4.3784 0.55671 4.8143 0.47583 5.1891 0.40627 delegate 4.684 0.6177 solid #758297
+edge service client 10 5.3471 0.17632 4.9578 0.13809 4.4609 0.095471 4.0174 0.076389 3.4006 0.049856 3.2452 0.049718 2.6285 0.076389 2.2164 0.094207 1.7581 0.13255 1.3839 0.16867 "JSON text" 3.3229 0.14931 solid #758297
+edge service ocr 4 6.7431 0.25 7.1044 0.25 7.5465 0.25 7.9072 0.25 "OCR call" 7.4062 0.32292 solid #758297
+edge ocr native 4 9.1314 0.25 9.4303 0.25 9.8135 0.25 10.155 0.25 Tess4J 9.7222 0.32292 solid #758297
+stop

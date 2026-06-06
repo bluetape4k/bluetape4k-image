@@ -1,0 +1,17 @@
+digraph G {
+  graph [rankdir=LR, bgcolor="#F6F9FC", margin=0.18, nodesep=0.55, ranksep=0.75];
+  node [shape=box, style="rounded,filled", fillcolor="#FFFFFF", color="#9AA8B8", fontname="Comic Mono", fontsize=11];
+  edge [color="#758297", fontname="Comic Mono", fontsize=9];
+  label="Ktor OCR API Scenario";
+  labelloc="t";
+  "client" [label="Local client"];
+  "route" [label="Ktor OCR route"];
+  "service" [label="KtorOcrService"];
+  "ocr" [label="images-ocr"];
+  "native" [label="Host Tesseract"];
+  "client" -> "route" [label="multipart"];
+  "route" -> "service" [label="delegate"];
+  "service" -> "ocr" [label="OCR call"];
+  "ocr" -> "native" [label="Tess4J"];
+  "service" -> "client" [label="JSON text"];
+}

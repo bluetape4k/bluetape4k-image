@@ -438,6 +438,11 @@ Ktor quickstart는 [`examples/ktor-image-api`](examples/ktor-image-api/README.ko
 사용하세요. `images-ktor`의 CAPTCHA와 thumbnail route helper를 하나의 local-only
 API로 묶고, challenge 발급과 multipart thumbnail 생성 curl 예제를 제공합니다.
 
+Ktor OCR API 예제는 [`examples/ktor-ocr-api`](examples/ktor-ocr-api/README.ko.md)를
+사용하세요. Multipart image upload를 받고, Tesseract language code를 해석한 뒤
+`images-ocr`를 호출하며, host Tesseract/traineddata 설정은 local application
+configuration에 둡니다.
+
 ## 라이선스
 
 [MIT License](LICENSE)
