@@ -2,6 +2,9 @@ import io.gitlab.arturbosch.detekt.Detekt
 import io.gitlab.arturbosch.detekt.report.ReportMergeTask
 import nmcp.NmcpAggregationExtension
 import nmcp.NmcpExtension
+import org.gradle.api.artifacts.repositories.MavenArtifactRepository
+import org.gradle.api.artifacts.repositories.PasswordCredentials
+import org.gradle.authentication.http.BasicAuthentication
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 import java.util.concurrent.TimeUnit
 
@@ -67,6 +70,18 @@ val projectGroup: String by project
 val baseVersion: String by project
 val snapshotVersion: String by project
 
+fun MavenArtifactRepository.configureCentralSnapshotCredentials() {
+    if (centralUser.isNotBlank() && centralPassword.isNotBlank()) {
+        credentials(PasswordCredentials::class) {
+            username = centralUser
+            password = centralPassword
+        }
+        authentication {
+            create<BasicAuthentication>("basic")
+        }
+    }
+}
+
 allprojects {
     group = projectGroup
     version = baseVersion + snapshotVersion
@@ -76,10 +91,11 @@ allprojects {
         maven {
             name = "central-snapshots"
             url = uri("https://central.sonatype.com/repository/maven-snapshots/")
+            configureCentralSnapshotCredentials()
         }
     }
     configurations.all {
-        resolutionStrategy.cacheChangingModulesFor(0, TimeUnit.SECONDS)
+        resolutionStrategy.cacheChangingModulesFor(1, TimeUnit.DAYS)
     }
 }
 

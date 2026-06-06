@@ -36,6 +36,8 @@ env:
   JAVA_VERSION: '21'
   JAVA_DISTRIBUTION: 'temurin'
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+  CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
+  CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
 
 jobs:
   gitleaks:
@@ -118,7 +120,7 @@ jobs:
       - name: Build (compile only)
         run: |
           for attempt in 1 2 3 4 5; do
-            ./gradlew build -x test --parallel && break
+            ./gradlew build -x test --max-workers=1 --no-configuration-cache && break
             echo "Attempt $attempt failed"
             [ $attempt -lt 5 ] && sleep 30 || exit 1
           done
@@ -144,7 +146,7 @@ jobs:
       - name: Test images
         run: |
           for attempt in 1 2 3 4 5; do
-            ./gradlew :bluetape4k-images:test --no-daemon && break
+            ./gradlew :bluetape4k-images:test --no-configuration-cache --no-daemon && break
             echo "Attempt $attempt failed"
             [ $attempt -lt 5 ] && sleep 30 || exit 1
           done
@@ -177,7 +179,7 @@ jobs:
       - name: Test images-captcha
         run: |
           for attempt in 1 2 3 4 5; do
-            ./gradlew :bluetape4k-images-captcha:test --no-daemon && break
+            ./gradlew :bluetape4k-images-captcha:test --no-configuration-cache --no-daemon && break
             echo "Attempt $attempt failed"
             [ $attempt -lt 5 ] && sleep 30 || exit 1
           done
@@ -210,7 +212,7 @@ jobs:
       - name: Test images-spring-boot
         run: |
           for attempt in 1 2 3 4 5; do
-            ./gradlew :bluetape4k-images-spring-boot:test --no-daemon && break
+            ./gradlew :bluetape4k-images-spring-boot:test --no-configuration-cache --no-daemon && break
             echo "Attempt $attempt failed"
             [ $attempt -lt 5 ] && sleep 30 || exit 1
           done
@@ -246,7 +248,7 @@ jobs:
         # the Testcontainers-backed smoke gate for portable OCR runtime coverage.
         run: |
           for attempt in 1 2 3 4 5; do
-            ./gradlew :bluetape4k-images-ocr:test -Docr.container.enabled=true --no-daemon && break
+            ./gradlew :bluetape4k-images-ocr:test -Docr.container.enabled=true --no-configuration-cache --no-daemon && break
             echo "Attempt $attempt failed"
             [ $attempt -lt 5 ] && sleep 30 || exit 1
           done
@@ -279,7 +281,7 @@ jobs:
       - name: Test images-ktor
         run: |
           for attempt in 1 2 3 4 5; do
-            ./gradlew :bluetape4k-images-ktor:test --no-daemon && break
+            ./gradlew :bluetape4k-images-ktor:test --no-configuration-cache --no-daemon && break
             echo "Attempt $attempt failed"
             [ $attempt -lt 5 ] && sleep 30 || exit 1
           done
@@ -314,7 +316,7 @@ jobs:
       - name: Test images-vips-api
         run: |
           for attempt in 1 2 3 4 5; do
-            ./gradlew :bluetape4k-images-vips-api:test --no-daemon && break
+            ./gradlew :bluetape4k-images-vips-api:test --no-configuration-cache --no-daemon && break
             echo "Attempt $attempt failed"
             [ $attempt -lt 5 ] && sleep 30 || exit 1
           done
@@ -349,7 +351,7 @@ jobs:
       - name: Test images-vips-java21
         run: |
           for attempt in 1 2 3 4 5; do
-            ./gradlew :bluetape4k-images-vips-java21:test --no-daemon && break
+            ./gradlew :bluetape4k-images-vips-java21:test --no-configuration-cache --no-daemon && break
             echo "Attempt $attempt failed"
             [ $attempt -lt 5 ] && sleep 30 || exit 1
           done
@@ -384,7 +386,7 @@ jobs:
       - name: Test images-vips-java25
         run: |
           for attempt in 1 2 3 4 5; do
-            ./gradlew :bluetape4k-images-vips-java25:test --no-daemon && break
+            ./gradlew :bluetape4k-images-vips-java25:test --no-configuration-cache --no-daemon && break
             echo "Attempt $attempt failed"
             [ $attempt -lt 5 ] && sleep 30 || exit 1
           done
