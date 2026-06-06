@@ -452,6 +452,11 @@ compact Ktor quickstart. It wires the `images-ktor` CAPTCHA and thumbnail route
 helpers into one local-only API, with curl examples for challenge issuance and
 multipart thumbnail generation.
 
+Use [`examples/ktor-ocr-api`](examples/ktor-ocr-api/README.md) for a compact
+Ktor OCR API. It accepts multipart image uploads, parses Tesseract language
+codes, calls `images-ocr`, and keeps host Tesseract/traineddata setup in local
+application configuration.
+
 ## License
 
 [MIT License](LICENSE)

@@ -72,6 +72,8 @@ jobs:
             gradle_tasks: :basic-processing:test
           - example: ktor-image-api
             gradle_tasks: :ktor-image-api:test
+          - example: ktor-ocr-api
+            gradle_tasks: :ktor-ocr-api:test
           - example: spring-boot-image-api
             gradle_tasks: :spring-boot-image-api:test
           - example: spring-boot-ocr-api

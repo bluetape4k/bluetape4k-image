@@ -117,3 +117,6 @@ project(":spring-boot-ocr-api").projectDir = file("examples/spring-boot-ocr-api"
 
 include("ktor-image-api")
 project(":ktor-image-api").projectDir = file("examples/ktor-image-api")
+
+include("ktor-ocr-api")
+project(":ktor-ocr-api").projectDir = file("examples/ktor-ocr-api")

@@ -1,0 +1,13 @@
+graph 1 16.354 1.5096
+node client 0.375 0.41934 0.75 0.5 Client rounded,filled box #9AA8B8 #FFFFFF
+node route 4.8177 0.91934 1.0556 0.5 "Ktor route" rounded,filled box #9AA8B8 #FFFFFF
+node service 8.9965 0.41934 0.80556 0.5 Service rounded,filled box #9AA8B8 #FFFFFF
+node ocr 13.083 0.41934 1.0556 0.5 "images-ocr" rounded,filled box #9AA8B8 #FFFFFF
+node native 15.868 0.41934 0.97222 0.5 Tesseract rounded,filled box #9AA8B8 #FFFFFF
+edge client route 4 0.75394 0.46068 1.4941 0.54451 3.1814 0.7356 4.128 0.84279 "POST multipart image and languages" 2.3646 0.84451 solid #758297
+edge route service 4 5.3489 0.85702 6.1358 0.76224 7.6269 0.58264 8.4327 0.48558 "Validate content type and file" 7.125 0.84451 solid #758297
+edge service client 13 8.5901 0.3977 8.4709 0.39118 8.3394 0.38407 8.2188 0.37767 7.08 0.31729 6.7963 0.27506 5.6562 0.24573 3.6423 0.19391 3.1361 0.24633 1.125 0.36378 1.0555 0.36784 0.98229 0.37268 0.91014 0.37779 "Return JSON text result" 4.8177 0.31864 solid #758297
+edge service ocr 4 9.4033 0.41934 10.095 0.41934 11.537 0.41934 12.392 0.41934 "Build OcrOptions and extract text" 10.977 0.49225 solid #758297
+edge ocr service 10 12.55 0.22319 12.43 0.18644 12.302 0.15363 12.181 0.13461 11.124 -0.030479 10.827 -0.055152 9.7743 0.13461 9.7007 0.14789 9.6249 0.16781 9.551 0.19107 "Return recognized text" 10.977 0.20753 solid #758297
+edge ocr native 4 13.616 0.41934 14.071 0.41934 14.735 0.41934 15.222 0.41934 "Run Tess4J OCR" 14.497 0.49225 solid #758297
+stop
