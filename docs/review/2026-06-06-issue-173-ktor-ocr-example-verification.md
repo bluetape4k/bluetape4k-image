@@ -48,6 +48,8 @@ Result:
 
 | Check | Status | Evidence |
 |---|---|---|
+| `./gradlew :ktor-ocr-api:test --no-configuration-cache --no-daemon` | PASS | 5 route tests; rerun after CI dependency repair. |
+| `./gradlew :ktor-ocr-api:dependencies --configuration compileClasspath --no-configuration-cache --no-daemon` | PASS | New module no longer directly depends on `bluetape4k-ktor-core`. |
 | `./gradlew projects --no-configuration-cache --no-daemon` | PASS | `:ktor-ocr-api` is listed under examples. |
 | `python3 docs/scripts/generate-example-readme-diagrams.py` | PASS | New scenario, architecture, and sequence families report `manual_exceptions=0`. |
 | `xmllint --noout` for generated `examples-ktor-ocr-api-*.svg` | PASS | No XML errors. |

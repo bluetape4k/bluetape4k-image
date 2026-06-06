@@ -15,8 +15,9 @@ Ktor 사용자는 multipart upload, language option, native Tesseract 설정, ro
   `PartData.FileItem.provider()`를 사용하고, route tests는 `testApplication`으로
   구성한다.
 - `examples/ktor-image-api`: Ktor example은 `application` plugin, Netty server,
-  `installBluetape4kKtorCore`, `testApplication`, `bluetape4kJsonClient` 패턴을
-  사용한다.
+  `testApplication` pattern을 보여준다. 이 OCR example은 신규 Examples matrix에서
+  `bluetape4k-ktor-core` snapshot을 직접 resolve하지 않도록 official Ktor
+  ContentNegotiation과 local error DTO를 사용한다.
 - `images-ktor/ImageThumbnailKtorRoutes.kt`: streamed multipart part는
   `provider().readRemaining(limit).readByteArray()`로 읽고 `part.release()`를 보장한다.
 - `examples/spring-boot-ocr-api`: request-level tessdata path를 받지 않고,
@@ -88,7 +89,7 @@ production policy를 넓힌다. reusable helper가 필요하면 별도 follow-up
 }
 ```
 
-- caller validation failure: `400 bad_request` with shared `ApiErrorResponse`.
+- caller validation failure: `400 bad_request` with local `OcrApiErrorResponse`.
 - `OcrException`: `503 ocr_unavailable`.
 
 ## 구성

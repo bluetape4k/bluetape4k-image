@@ -36,11 +36,12 @@ Implement issue #173 as a new non-published example module:
 - Dependencies:
   - `project(":bluetape4k-images")`
   - `project(":bluetape4k-images-ocr")`
-  - `libs.bluetape4k.ktor.core`
+  - `libs.ktor.server.content.negotiation`
   - `libs.ktor.server.core`
   - `libs.ktor.server.netty`
+  - `libs.ktor.serialization.kotlinx.json`
   - `runtimeOnly(libs.logback)`
-  - tests use `bluetape4k-junit5`, `bluetape4k-ktor-testing`, `ktor-server-test-host`
+  - tests use `bluetape4k-junit5`, Ktor client content negotiation, and `ktor-server-test-host`
 
 ### Route
 

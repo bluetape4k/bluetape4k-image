@@ -20,7 +20,8 @@ References loaded:
 | Priority | File:Line | Area | Finding | Resolution |
 |---|---|---|---|---|
 | P3 | `examples/ktor-ocr-api/src/main/kotlin/io/bluetape4k/images/examples/ktor/ocr/KtorOcrApiApplication.kt:119` | Performance/clarity | `KtorOcrService.recognize` wrapped `suspendExtractText`, but `suspendExtractText` already owns the `Dispatchers.IO` boundary. | Removed the redundant outer dispatcher hop. |
-| P3 | `examples/ktor-ocr-api/src/main/kotlin/io/bluetape4k/images/examples/ktor/ocr/KtorOcrApiApplication.kt:153` | Kotlin quality | `OcrUpload` retained validated content type even though downstream code only needs bytes. | Removed the unused field while preserving content-type validation. |
+| P3 | `examples/ktor-ocr-api/src/main/kotlin/io/bluetape4k/images/examples/ktor/ocr/KtorOcrApiApplication.kt:171` | Kotlin quality | `OcrUpload` retained validated content type even though downstream code only needs bytes. | Removed the unused field while preserving content-type validation. |
+| P3 | `examples/ktor-ocr-api/build.gradle.kts:9` | CI reliability | PR CI failed while resolving direct `bluetape4k-ktor-core:1.11.0-SNAPSHOT` for the new module. | Replaced the direct core/testing dependency with official Ktor ContentNegotiation and local error DTO/test client wiring. |
 
 All P3 items were fixed during review and revalidated with `:ktor-ocr-api:test`.
 
@@ -39,6 +40,7 @@ All P3 items were fixed during review and revalidated with `:ktor-ocr-api:test`.
 ## Verification Evidence
 
 - `./gradlew :ktor-ocr-api:test --no-configuration-cache --no-daemon`: PASS, 5 tests.
+- `./gradlew :ktor-ocr-api:dependencies --configuration compileClasspath --no-configuration-cache --no-daemon`: PASS, no direct `bluetape4k-ktor-core` dependency in the new module.
 - `./gradlew projects --no-configuration-cache --no-daemon`: PASS, `:ktor-ocr-api` listed.
 - `python3 docs/scripts/generate-example-readme-diagrams.py`: PASS, new diagram families report `manual_exceptions=0`.
 - `xmllint --noout` for `examples-ktor-ocr-api-*.svg`: PASS.

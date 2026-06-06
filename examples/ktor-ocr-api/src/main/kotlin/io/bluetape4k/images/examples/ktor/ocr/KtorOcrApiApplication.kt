@@ -6,9 +6,6 @@ import io.bluetape4k.images.ocr.OcrException
 import io.bluetape4k.images.ocr.OcrOptions
 import io.bluetape4k.images.ocr.TesseractOcrEngine
 import io.bluetape4k.images.ocr.suspendExtractText
-import io.bluetape4k.ktor.core.Bluetape4kKtorCoreConfig
-import io.bluetape4k.ktor.core.installBluetape4kKtorCore
-import io.bluetape4k.ktor.core.respondApiError
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.requirePositiveNumber
 import io.ktor.http.ContentType
@@ -16,8 +13,10 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.content.PartData
 import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationCall
+import io.ktor.server.application.install
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
+import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.request.receiveMultipart
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondText
@@ -27,8 +26,10 @@ import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import io.ktor.utils.io.ByteReadChannel
 import io.ktor.utils.io.readRemaining
+import io.ktor.serialization.kotlinx.json.json
 import kotlinx.io.readByteArray
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 import java.io.IOException
 
 /**
@@ -50,9 +51,14 @@ fun Application.configureKtorOcrApi(
     config: KtorOcrApiConfig = KtorOcrApiConfig.fromEnvironment(),
     ocrEngine: OcrEngine = TesseractOcrEngine(),
 ) {
-    installBluetape4kKtorCore(
-        Bluetape4kKtorCoreConfig(installHealthRoutes = false)
-    )
+    install(ContentNegotiation) {
+        json(
+            Json {
+                ignoreUnknownKeys = true
+                explicitNulls = false
+            }
+        )
+    }
 
     val ocrService = KtorOcrService(
         ocrEngine = ocrEngine,
@@ -146,6 +152,22 @@ data class OcrTextResponse(
     }
 }
 
+/**
+ * Error payload returned by the quickstart API.
+ */
+@Serializable
+data class OcrApiErrorResponse(
+    val error: String,
+    val message: String,
+    val status: Int,
+    val path: String,
+) : java.io.Serializable {
+
+    companion object {
+        private const val serialVersionUID: Long = 1L
+    }
+}
+
 private data class OcrUpload(
     val bytes: ByteArray,
 )
@@ -220,24 +242,40 @@ private suspend fun ApplicationCall.respondOcrRoute(block: suspend () -> Unit) {
     try {
         block()
     } catch (e: IllegalArgumentException) {
-        respondApiError(
+        respondOcrApiError(
             status = HttpStatusCode.BadRequest,
             error = "bad_request",
             message = e.message ?: "Invalid OCR request.",
         )
     } catch (e: IOException) {
-        respondApiError(
+        respondOcrApiError(
             status = HttpStatusCode.BadRequest,
             error = "bad_request",
             message = e.message ?: "Invalid image payload.",
         )
     } catch (e: OcrException) {
-        respondApiError(
+        respondOcrApiError(
             status = HttpStatusCode.ServiceUnavailable,
             error = "ocr_unavailable",
             message = e.message ?: "OCR runtime is unavailable.",
         )
     }
+}
+
+private suspend fun ApplicationCall.respondOcrApiError(
+    status: HttpStatusCode,
+    error: String,
+    message: String,
+) {
+    respond(
+        status = status,
+        message = OcrApiErrorResponse(
+            error = error,
+            message = message,
+            status = status.value,
+            path = request.local.uri,
+        )
+    )
 }
 
 private val LANGUAGE_SEPARATOR = Regex("[,+\\s]+")

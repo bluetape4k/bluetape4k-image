@@ -77,3 +77,23 @@ Example layer는 `images-ocr` suspend API의 contract를 신뢰하고, 추가 di
 
 - 중복 boundary 제거 후 `./gradlew :ktor-ocr-api:test --no-configuration-cache --no-daemon`
   PASS.
+
+## L5: 새 example module은 불필요한 snapshot 직접 의존을 피한다
+
+### 문제
+
+PR CI의 `Test / ktor-ocr-api`가 compile 단계에서 실패했다. 원인은 test 실패가 아니라
+신규 module이 `bluetape4k-ktor-core:1.11.0-SNAPSHOT`을 직접 resolve하면서 Central
+snapshot metadata 403을 만난 것이었다.
+
+### 교훈
+
+새 example이 꼭 repo 외부 bluetape4k snapshot artifact를 직접 써야 하는지 먼저 확인한다.
+Ktor JSON 설치와 error DTO처럼 example-local로 충분한 부분은 official Ktor dependency와
+local DTO로 유지해 CI의 snapshot resolution surface를 줄인다.
+
+### 검증
+
+- `./gradlew :ktor-ocr-api:test --no-configuration-cache --no-daemon` PASS.
+- `./gradlew :ktor-ocr-api:dependencies --configuration compileClasspath --no-configuration-cache --no-daemon`
+  결과에서 신규 module의 direct `bluetape4k-ktor-core` 의존이 제거됨.

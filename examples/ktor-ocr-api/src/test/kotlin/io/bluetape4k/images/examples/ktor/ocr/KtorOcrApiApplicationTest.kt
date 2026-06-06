@@ -8,10 +8,8 @@ import io.bluetape4k.images.ocr.OcrEngine
 import io.bluetape4k.images.ocr.OcrException
 import io.bluetape4k.images.ocr.OcrOptions
 import io.bluetape4k.images.ocr.OcrResult
-import io.bluetape4k.ktor.core.ApiErrorResponse
-import io.bluetape4k.ktor.testing.bluetape4kJsonClient
-import io.bluetape4k.ktor.testing.shouldHaveStatus
 import io.ktor.client.call.body
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.forms.MultiPartFormDataContent
 import io.ktor.client.request.forms.append
 import io.ktor.client.request.forms.formData
@@ -20,7 +18,9 @@ import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
+import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.testing.testApplication
+import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.awt.Color
@@ -48,7 +48,7 @@ internal class KtorOcrApiApplicationTest {
 
         val response = client.get("/ready")
 
-        response shouldHaveStatus HttpStatusCode.OK
+        response.status shouldBeEqualTo HttpStatusCode.OK
     }
 
     @Test
@@ -56,13 +56,13 @@ internal class KtorOcrApiApplicationTest {
         application {
             configureTestKtorOcrApi()
         }
-        val client = bluetape4kJsonClient()
+        val client = jsonClient()
 
         val response = client.post("/api/ocr?languages=eng+kor") {
             setBody(imageMultipart("file", samplePngBytes(), ContentType.Image.PNG))
         }
 
-        response shouldHaveStatus HttpStatusCode.OK
+        response.status shouldBeEqualTo HttpStatusCode.OK
         val body = response.body<OcrTextResponse>()
         body.text shouldBeEqualTo "BLUETAPE OCR"
         body.languages shouldBeEqualTo listOf("eng", "kor")
@@ -78,14 +78,14 @@ internal class KtorOcrApiApplicationTest {
         application {
             configureTestKtorOcrApi()
         }
-        val client = bluetape4kJsonClient()
+        val client = jsonClient()
 
         val response = client.post("/api/ocr") {
             setBody(imageMultipart("other", samplePngBytes(), ContentType.Image.PNG))
         }
 
-        response shouldHaveStatus HttpStatusCode.BadRequest
-        val body = response.body<ApiErrorResponse>()
+        response.status shouldBeEqualTo HttpStatusCode.BadRequest
+        val body = response.body<OcrApiErrorResponse>()
         body.error shouldBeEqualTo "bad_request"
         body.status shouldBeEqualTo HttpStatusCode.BadRequest.value
         body.message.contains("Expected multipart file field").shouldBeTrue()
@@ -96,7 +96,7 @@ internal class KtorOcrApiApplicationTest {
         application {
             configureTestKtorOcrApi()
         }
-        val client = bluetape4kJsonClient()
+        val client = jsonClient()
 
         val response = client.post("/api/ocr") {
             setBody(
@@ -111,8 +111,8 @@ internal class KtorOcrApiApplicationTest {
             )
         }
 
-        response shouldHaveStatus HttpStatusCode.BadRequest
-        val body = response.body<ApiErrorResponse>()
+        response.status shouldBeEqualTo HttpStatusCode.BadRequest
+        val body = response.body<OcrApiErrorResponse>()
         body.error shouldBeEqualTo "bad_request"
         body.status shouldBeEqualTo HttpStatusCode.BadRequest.value
         body.message.contains("Unsupported image content type").shouldBeTrue()
@@ -124,14 +124,14 @@ internal class KtorOcrApiApplicationTest {
             configureTestKtorOcrApi()
         }
         testOcrEngine.failNext.set(true)
-        val client = bluetape4kJsonClient()
+        val client = jsonClient()
 
         val response = client.post("/api/ocr") {
             setBody(imageMultipart("file", samplePngBytes(), ContentType.Image.PNG))
         }
 
-        response shouldHaveStatus HttpStatusCode.ServiceUnavailable
-        val body = response.body<ApiErrorResponse>()
+        response.status shouldBeEqualTo HttpStatusCode.ServiceUnavailable
+        val body = response.body<OcrApiErrorResponse>()
         body.error shouldBeEqualTo "ocr_unavailable"
         body.status shouldBeEqualTo HttpStatusCode.ServiceUnavailable.value
         body.message shouldBeEqualTo "Test OCR runtime is unavailable."
@@ -143,6 +143,18 @@ internal class KtorOcrApiApplicationTest {
             ocrEngine = testOcrEngine,
         )
     }
+
+    private fun io.ktor.server.testing.ApplicationTestBuilder.jsonClient() =
+        createClient {
+            install(ContentNegotiation) {
+                json(
+                    Json {
+                        ignoreUnknownKeys = true
+                        explicitNulls = false
+                    }
+                )
+            }
+        }
 
     private fun imageMultipart(
         fieldName: String,
