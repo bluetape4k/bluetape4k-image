@@ -43,6 +43,13 @@ tesseract --list-langs
 런타임이 traineddata 파일을 찾지 못하면 `TESSDATA_PREFIX`를 설정하거나
 `OcrOptions(tessdataPath = "...")`를 전달하세요.
 
+Host-native OCR은 Tess4J/Lept4J를 JNA로 사용하므로 JVM이 호스트의 Leptonica와
+Tesseract shared library를 로드합니다. 현재 런타임은 Homebrew Tesseract 5.5 /
+Leptonica 1.87 조합에서 로컬 검증했습니다. Ubuntu 24.04 패키지는 Leptonica 1.82를
+제공하며, 현재 Lept4J/Tess4J 라인이 기대하는 native symbol set을 만족하지 못합니다.
+따라서 GitHub CI와 Nightly는 portable container-backed OCR gate를 실행하고,
+`-Docr.enabled=true`는 local/manual host-native check로 둡니다.
+
 ## 의존성
 
 ```kotlin
@@ -121,13 +128,15 @@ Ubuntu에서는 `tesseract-ocr-eng`, `tesseract-ocr-kor`, `tesseract-ocr-jpn`처
 ./gradlew :bluetape4k-images-ocr:test
 ```
 
-Native OCR 테스트는 호스트 Tesseract와 언어팩이 필요하므로 gate로 분리합니다.
+Native OCR 테스트는 호스트 Tesseract, 언어팩, 그리고 classpath의 Tess4J/Lept4J
+버전과 호환되는 Leptonica 런타임이 필요하므로 gate로 분리합니다.
 
 ```bash
 ./gradlew :bluetape4k-images-ocr:test -Docr.enabled=true
 ```
 
-Container smoke 테스트는 Docker가 필요하므로 gate로 분리합니다.
+Container smoke 테스트는 Docker가 필요하므로 gate로 분리합니다. GitHub CI와
+Nightly가 사용하는 OCR gate입니다.
 
 ```bash
 ./gradlew :bluetape4k-images-ocr:test -Docr.container.enabled=true

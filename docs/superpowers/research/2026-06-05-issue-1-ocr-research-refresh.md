@@ -65,6 +65,12 @@ files for the common single-image path.
 
 ## Test and CI Strategy
 
+Update from issue #175 on 2026-06-06: the host-native CI lane is no longer the
+default GitHub Actions strategy. Ubuntu 24.04 ships a Leptonica package line
+older than the current Lept4J/Tess4J native symbol surface. CI and Nightly now
+use the `-Docr.container.enabled=true` portable gate, while `-Docr.enabled=true`
+remains a local/manual host-native check.
+
 Use three test levels:
 
 1. Unit tests with a fake `OcrEngine` for API validation, option validation, and

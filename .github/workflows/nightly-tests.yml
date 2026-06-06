@@ -196,12 +196,6 @@ jobs:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.JAVA_DISTRIBUTION }}
 
-      - name: Install Tesseract
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y tesseract-ocr tesseract-ocr-eng tesseract-ocr-kor tesseract-ocr-jpn fonts-noto-cjk
-          tesseract --list-langs
-
       - uses: gradle/actions/setup-gradle@v6
         with:
           gradle-version: wrapper
@@ -209,6 +203,9 @@ jobs:
           cache-read-only: true
 
       - name: Test images-ocr
+        # Ubuntu 24.04 ships Leptonica 1.82, while current Lept4J/Tess4J expects
+        # newer native symbols. Nightly keeps host-native OCR local/manual and
+        # uses the Testcontainers-backed smoke gate for portable coverage.
         run: |
           for attempt in 1 2 3 4 5; do
             ./gradlew --refresh-dependencies :bluetape4k-images-ocr:test -Docr.container.enabled=true --no-configuration-cache --no-daemon && break
