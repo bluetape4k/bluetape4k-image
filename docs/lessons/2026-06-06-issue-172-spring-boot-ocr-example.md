@@ -56,3 +56,22 @@ path filter도 함께 확인한다.
 
 - `.github/workflows/Examples.yml`에 `images-ocr/**` push/PR path filter 추가.
 - `actionlint .github/workflows/Examples.yml` PASS.
+
+## L4: CI installer failures need separate root-cause evidence
+
+### 문제
+
+PR CI의 `Secret Scan (gitleaks)`가 실패했지만 원인은 secret detection이 아니라
+unauthenticated GitHub release lookup이 403/빈 태그로 깨진 설치 단계였다.
+
+### 교훈
+
+Security scan 도구 설치는 authenticated API lookup, retry, 검증된 fallback version을
+갖춰야 한다. CI gate 실패를 보고할 때도 scan 결과 실패와 installer 실패를 분리해서
+판단해야 한다.
+
+### 검증
+
+- `actionlint .github/workflows/ci.yml` PASS.
+- 인증된 gitleaks release/download smoke: `v8.30.1` tarball 다운로드 및 `gitleaks` entry
+  확인 PASS.

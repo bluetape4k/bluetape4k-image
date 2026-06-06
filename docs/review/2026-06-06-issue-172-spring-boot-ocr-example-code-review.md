@@ -4,7 +4,7 @@ Scope:
 
 - New module: `examples/spring-boot-ocr-api`
 - Registration/docs: `settings.gradle.kts`, `AGENTS.md`, root README locale set
-- CI: `.github/workflows/Examples.yml`
+- CI: `.github/workflows/Examples.yml`, `.github/workflows/ci.yml`
 - Diagrams: `docs/scripts/generate-example-readme-diagrams.py` and generated OCR example assets
 
 References loaded:
@@ -24,7 +24,7 @@ References loaded:
 | 4 Kotlin quality | 0 | 0 | 0 | 0 | Constructor injection, English KDoc, Serializable DTO/config data classes, validation helpers, no `!!`; forbidden concurrency scan over production code returned no hits. |
 | 5 Tests/types/silent failure | 0 | 0 | 0 | 0 | MockMvc tests cover success, parsed languages/tessdata property, 400 unsupported type, and 503 OCR failure at `SpringBootOcrApiApplicationTest.kt:53-110`; XML shows 3 tests, 0 failures/errors. |
 | 6 Performance/stability | 0 | 0 | 0 | 0 | Multipart byte read is isolated with `withContext(Dispatchers.IO)` at `SpringBootOcrApiApplication.kt:128`; OCR call delegates to `suspendExtractText`; no unbounded retry/polling/container startup. |
-| 7 Docs/release/evidence | 0 | 0 | 0 | 0 | Bilingual README added, root README locale set updated, `AGENTS.md` updated, Examples workflow includes `images-ocr/**` and `:spring-boot-ocr-api:test`, diagrams validated and visually inspected. |
+| 7 Docs/release/evidence | 0 | 0 | 0 | 0 | Bilingual README added, root README locale set updated, `AGENTS.md` updated, Examples workflow includes `images-ocr/**` and `:spring-boot-ocr-api:test`, CI gitleaks install uses authenticated release lookup plus pinned fallback, diagrams validated and visually inspected. |
 | Current-session integration | 0 | 0 | 0 | 0 | Step 5/6 verification artifact records projects, tests, actionlint, diagram XML/PNG, README link policy, visual inspection, and diff check evidence. |
 
 ## Validation Evidence
@@ -37,6 +37,8 @@ References loaded:
 | `xmllint --noout` over new OCR SVG assets | PASS. |
 | README SVG grep for new OCR diagrams | PASS; no SVG embeds. |
 | `actionlint .github/workflows/Examples.yml` | PASS. |
+| `actionlint .github/workflows/ci.yml` | PASS after gitleaks installer hardening. |
+| Authenticated gitleaks release/download smoke | PASS; resolved `v8.30.1`, downloaded tarball, and verified the `gitleaks` entry. |
 | `rg -n "\\\\'" .github/workflows` | PASS; no escaped single quotes. |
 | `git diff --check` | PASS. |
 | Visual inspection | PASS; architecture is top-down layered, labels fit, routes do not cross box interiors. |
