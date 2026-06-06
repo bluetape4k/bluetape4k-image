@@ -22,6 +22,7 @@ libvips through JNI or FFM Panama.
 | `examples/basic-processing` | Non-published pure JVM image processing quickstart |
 | `examples/ktor-image-api` | Non-published Ktor CAPTCHA and image thumbnail API quickstart |
 | `examples/spring-boot-image-api` | Non-published Spring Boot local-storage image API quickstart |
+| `examples/spring-boot-ocr-api` | Non-published Spring Boot OCR extraction API quickstart |
 | `bom/` | Consumer BOM for aligned image artifacts |
 
 Root README visual assets live under `docs/assets/` and should be shared by

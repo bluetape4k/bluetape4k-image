@@ -9,6 +9,7 @@ on:
       - 'examples/**'
       - 'images/**'
       - 'images-captcha/**'
+      - 'images-ocr/**'
       - 'images-ktor/**'
       - 'images-spring-boot/**'
       - 'buildSrc/**'
@@ -23,6 +24,7 @@ on:
       - 'examples/**'
       - 'images/**'
       - 'images-captcha/**'
+      - 'images-ocr/**'
       - 'images-ktor/**'
       - 'images-spring-boot/**'
       - 'buildSrc/**'
@@ -72,6 +74,8 @@ jobs:
             gradle_tasks: :ktor-image-api:test
           - example: spring-boot-image-api
             gradle_tasks: :spring-boot-image-api:test
+          - example: spring-boot-ocr-api
+            gradle_tasks: :spring-boot-ocr-api:test
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-java@v5

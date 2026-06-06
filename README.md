@@ -442,6 +442,11 @@ for a compact Spring Boot 4 local-storage API. It accepts multipart uploads,
 stores the original image through `LocalImageStorage`, creates a PNG thumbnail,
 and returns storage keys plus local read URLs without S3 or CDN setup.
 
+Use [`examples/spring-boot-ocr-api`](examples/spring-boot-ocr-api/README.md)
+for a compact Spring Boot 4 OCR API. It accepts multipart image uploads, parses
+Tesseract language codes, calls `images-ocr`, and documents local Tesseract plus
+traineddata setup for real OCR runs.
+
 Use [`examples/ktor-image-api`](examples/ktor-image-api/README.md) for a
 compact Ktor quickstart. It wires the `images-ktor` CAPTCHA and thumbnail route
 helpers into one local-only API, with curl examples for challenge issuance and
