@@ -13,6 +13,26 @@ val bluetape4kDependenciesCatalogRef = providers.gradleProperty("bluetape4kDepen
     .orElse(providers.environmentVariable("BLUETAPE4K_DEPENDENCIES_CATALOG_REF"))
     .orElse("catalog/2026-06-02-00")
     .get()
+val centralSnapshotUsername = providers.gradleProperty("central.user")
+    .orElse(providers.gradleProperty("centralPortalUsername"))
+    .orElse(providers.environmentVariable("CENTRAL_USERNAME"))
+    .orNull
+val centralSnapshotPassword = providers.gradleProperty("central.password")
+    .orElse(providers.gradleProperty("centralPortalPassword"))
+    .orElse(providers.environmentVariable("CENTRAL_PASSWORD"))
+    .orNull
+
+fun org.gradle.api.artifacts.repositories.MavenArtifactRepository.configureCentralSnapshotCredentials() {
+    if (!centralSnapshotUsername.isNullOrBlank() && !centralSnapshotPassword.isNullOrBlank()) {
+        credentials(org.gradle.api.artifacts.repositories.PasswordCredentials::class) {
+            username = centralSnapshotUsername
+            password = centralSnapshotPassword
+        }
+        authentication {
+            create<org.gradle.authentication.http.BasicAuthentication>("basic")
+        }
+    }
+}
 
 fun resolveBluetape4kDependenciesCatalogFile(): File {
     providers.gradleProperty("bluetape4kDependenciesCatalogPath")
@@ -48,7 +68,10 @@ require(bluetape4kDependenciesCatalogFile.isFile) {
 dependencyResolutionManagement {
     repositories {
         mavenCentral()
-        maven("https://central.sonatype.com/repository/maven-snapshots/")
+        maven("https://central.sonatype.com/repository/maven-snapshots/") {
+            name = "central-snapshots"
+            configureCentralSnapshotCredentials()
+        }
     }
     versionCatalogs {
         create("bt4k") {

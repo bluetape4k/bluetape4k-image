@@ -19,6 +19,8 @@ env:
   JAVA_VERSION: '21'
   JAVA_DISTRIBUTION: 'temurin'
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+  CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
+  CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
 
 permissions:
   contents: read
@@ -37,7 +39,7 @@ jobs:
   build:
     name: Build & Detekt
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 35
     needs: validate-wrapper
     steps:
       - uses: actions/checkout@v6
@@ -55,7 +57,7 @@ jobs:
       - name: Build (compile only)
         run: |
           for attempt in 1 2 3 4 5; do
-            ./gradlew --refresh-dependencies build -x test --parallel --no-configuration-cache && break
+            ./gradlew build -x test --max-workers=1 --no-configuration-cache && break
             echo "Attempt $attempt failed"
             [ $attempt -lt 5 ] && sleep 30 || exit 1
           done
@@ -65,7 +67,7 @@ jobs:
       - name: Detekt static analysis
         run: |
           for attempt in 1 2 3 4 5; do
-            ./gradlew --refresh-dependencies detekt --parallel --no-configuration-cache && break
+            ./gradlew detekt --max-workers=1 --no-configuration-cache && break
             echo "Attempt $attempt failed"
             [ $attempt -lt 5 ] && sleep 30 || exit 1
           done
@@ -82,7 +84,7 @@ jobs:
   test-images:
     name: Test / images
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 35
     needs: build
     steps:
       - uses: actions/checkout@v6
@@ -101,7 +103,7 @@ jobs:
       - name: Test images
         run: |
           for attempt in 1 2 3 4 5; do
-            ./gradlew --refresh-dependencies :bluetape4k-images:test --no-configuration-cache --no-daemon && break
+            ./gradlew :bluetape4k-images:test --no-configuration-cache --no-daemon && break
             echo "Attempt $attempt failed"
             [ $attempt -lt 5 ] && sleep 30 || exit 1
           done
@@ -110,7 +112,7 @@ jobs:
 
       - name: Generate Kover XML report
         if: always()
-        run: ./gradlew --refresh-dependencies :bluetape4k-images:koverXmlReport --no-configuration-cache --no-daemon
+        run: ./gradlew :bluetape4k-images:koverXmlReport --no-configuration-cache --no-daemon
         continue-on-error: true
 
       - name: Upload test results
@@ -133,7 +135,7 @@ jobs:
   test-images-captcha:
     name: Test / images-captcha
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 35
     needs: build
     steps:
       - uses: actions/checkout@v6
@@ -152,7 +154,7 @@ jobs:
       - name: Test images-captcha
         run: |
           for attempt in 1 2 3 4 5; do
-            ./gradlew --refresh-dependencies :bluetape4k-images-captcha:test --no-configuration-cache --no-daemon && break
+            ./gradlew :bluetape4k-images-captcha:test --no-configuration-cache --no-daemon && break
             echo "Attempt $attempt failed"
             [ $attempt -lt 5 ] && sleep 30 || exit 1
           done
@@ -161,7 +163,7 @@ jobs:
 
       - name: Generate Kover XML report
         if: always()
-        run: ./gradlew --refresh-dependencies :bluetape4k-images-captcha:koverXmlReport --no-configuration-cache --no-daemon
+        run: ./gradlew :bluetape4k-images-captcha:koverXmlReport --no-configuration-cache --no-daemon
         continue-on-error: true
 
       - name: Upload test results
@@ -186,7 +188,7 @@ jobs:
     if: ${{ (github.event_name == 'schedule' && github.event.schedule == '11 19 * * 0') || (github.event_name == 'workflow_dispatch' && inputs.scope == 'full') }}
 
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 35
     needs: build
     steps:
       - uses: actions/checkout@v6
@@ -208,7 +210,7 @@ jobs:
         # uses the Testcontainers-backed smoke gate for portable coverage.
         run: |
           for attempt in 1 2 3 4 5; do
-            ./gradlew --refresh-dependencies :bluetape4k-images-ocr:test -Docr.container.enabled=true --no-configuration-cache --no-daemon && break
+            ./gradlew :bluetape4k-images-ocr:test -Docr.container.enabled=true --no-configuration-cache --no-daemon && break
             echo "Attempt $attempt failed"
             [ $attempt -lt 5 ] && sleep 30 || exit 1
           done
@@ -217,7 +219,7 @@ jobs:
 
       - name: Generate Kover XML report
         if: always()
-        run: ./gradlew --refresh-dependencies :bluetape4k-images-ocr:koverXmlReport --no-configuration-cache --no-daemon
+        run: ./gradlew :bluetape4k-images-ocr:koverXmlReport --no-configuration-cache --no-daemon
         continue-on-error: true
 
       - name: Upload test results
@@ -240,7 +242,7 @@ jobs:
   test-images-ktor:
     name: Test / images-ktor
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 35
     needs: build
     steps:
       - uses: actions/checkout@v6
@@ -259,7 +261,7 @@ jobs:
       - name: Test images-ktor
         run: |
           for attempt in 1 2 3 4 5; do
-            ./gradlew --refresh-dependencies :bluetape4k-images-ktor:test --no-configuration-cache --no-daemon && break
+            ./gradlew :bluetape4k-images-ktor:test --no-configuration-cache --no-daemon && break
             echo "Attempt $attempt failed"
             [ $attempt -lt 5 ] && sleep 30 || exit 1
           done
@@ -268,7 +270,7 @@ jobs:
 
       - name: Generate Kover XML report
         if: always()
-        run: ./gradlew --refresh-dependencies :bluetape4k-images-ktor:koverXmlReport --no-configuration-cache --no-daemon
+        run: ./gradlew :bluetape4k-images-ktor:koverXmlReport --no-configuration-cache --no-daemon
         continue-on-error: true
 
       - name: Upload test results
@@ -291,7 +293,7 @@ jobs:
   test-images-spring-boot:
     name: Test / images-spring-boot
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 35
     needs: build
     steps:
       - uses: actions/checkout@v6
@@ -310,7 +312,7 @@ jobs:
       - name: Test images-spring-boot
         run: |
           for attempt in 1 2 3 4 5; do
-            ./gradlew --refresh-dependencies :bluetape4k-images-spring-boot:test --no-configuration-cache --no-daemon && break
+            ./gradlew :bluetape4k-images-spring-boot:test --no-configuration-cache --no-daemon && break
             echo "Attempt $attempt failed"
             [ $attempt -lt 5 ] && sleep 30 || exit 1
           done
@@ -319,7 +321,7 @@ jobs:
 
       - name: Generate Kover XML report
         if: always()
-        run: ./gradlew --refresh-dependencies :bluetape4k-images-spring-boot:koverXmlReport --no-configuration-cache --no-daemon
+        run: ./gradlew :bluetape4k-images-spring-boot:koverXmlReport --no-configuration-cache --no-daemon
         continue-on-error: true
 
       - name: Upload test results
@@ -344,7 +346,7 @@ jobs:
     if: ${{ (github.event_name == 'schedule' && github.event.schedule == '11 19 * * 0') || (github.event_name == 'workflow_dispatch' && inputs.scope == 'full') }}
 
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 35
     needs: build
     steps:
       - uses: actions/checkout@v6
@@ -366,7 +368,7 @@ jobs:
       - name: Test images-vips-api
         run: |
           for attempt in 1 2 3 4 5; do
-            ./gradlew --refresh-dependencies :bluetape4k-images-vips-api:test --no-configuration-cache --no-daemon && break
+            ./gradlew :bluetape4k-images-vips-api:test --no-configuration-cache --no-daemon && break
             echo "Attempt $attempt failed"
             [ $attempt -lt 5 ] && sleep 30 || exit 1
           done
@@ -375,7 +377,7 @@ jobs:
 
       - name: Generate Kover XML report
         if: always()
-        run: ./gradlew --refresh-dependencies :bluetape4k-images-vips-api:koverXmlReport --no-configuration-cache --no-daemon
+        run: ./gradlew :bluetape4k-images-vips-api:koverXmlReport --no-configuration-cache --no-daemon
         continue-on-error: true
 
       - name: Upload test results
@@ -400,7 +402,7 @@ jobs:
     if: ${{ (github.event_name == 'schedule' && github.event.schedule == '11 19 * * 0') || (github.event_name == 'workflow_dispatch' && inputs.scope == 'full') }}
 
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 35
     needs: build
     steps:
       - uses: actions/checkout@v6
@@ -422,7 +424,7 @@ jobs:
       - name: Test images-vips-java21
         run: |
           for attempt in 1 2 3 4 5; do
-            ./gradlew --refresh-dependencies :bluetape4k-images-vips-java21:test --no-configuration-cache --no-daemon && break
+            ./gradlew :bluetape4k-images-vips-java21:test --no-configuration-cache --no-daemon && break
             echo "Attempt $attempt failed"
             [ $attempt -lt 5 ] && sleep 30 || exit 1
           done
@@ -431,7 +433,7 @@ jobs:
 
       - name: Generate Kover XML report
         if: always()
-        run: ./gradlew --refresh-dependencies :bluetape4k-images-vips-java21:koverXmlReport --no-configuration-cache --no-daemon
+        run: ./gradlew :bluetape4k-images-vips-java21:koverXmlReport --no-configuration-cache --no-daemon
         continue-on-error: true
 
       - name: Upload test results
@@ -456,7 +458,7 @@ jobs:
     if: ${{ (github.event_name == 'schedule' && github.event.schedule == '11 19 * * 0') || (github.event_name == 'workflow_dispatch' && inputs.scope == 'full') }}
 
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 35
     needs: build
     steps:
       - uses: actions/checkout@v6
@@ -478,7 +480,7 @@ jobs:
       - name: Test images-vips-java25
         run: |
           for attempt in 1 2 3 4 5; do
-            ./gradlew --refresh-dependencies :bluetape4k-images-vips-java25:test --no-configuration-cache --no-daemon && break
+            ./gradlew :bluetape4k-images-vips-java25:test --no-configuration-cache --no-daemon && break
             echo "Attempt $attempt failed"
             [ $attempt -lt 5 ] && sleep 30 || exit 1
           done
@@ -487,7 +489,7 @@ jobs:
 
       - name: Generate Kover XML report
         if: always()
-        run: ./gradlew --refresh-dependencies :bluetape4k-images-vips-java25:koverXmlReport --no-configuration-cache --no-daemon
+        run: ./gradlew :bluetape4k-images-vips-java25:koverXmlReport --no-configuration-cache --no-daemon
         continue-on-error: true
 
       - name: Upload test results

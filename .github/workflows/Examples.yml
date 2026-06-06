@@ -44,6 +44,8 @@ env:
   JAVA_VERSION: '21'
   JAVA_DISTRIBUTION: 'temurin'
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+  CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
+  CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
 
 jobs:
   validate-wrapper:
@@ -57,10 +59,11 @@ jobs:
   test-examples:
     name: Test / ${{ matrix.example }}
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 35
     needs: validate-wrapper
     strategy:
       fail-fast: false
+      max-parallel: 1
       matrix:
         include:
           - example: basic-processing
@@ -82,7 +85,7 @@ jobs:
       - name: Test ${{ matrix.example }}
         run: |
           for attempt in 1 2 3 4 5; do
-            ./gradlew ${{ matrix.gradle_tasks }} --no-daemon && break
+            ./gradlew ${{ matrix.gradle_tasks }} --no-configuration-cache --no-daemon && break
             echo "Attempt $attempt failed"
             [ $attempt -lt 5 ] && sleep 30 || exit 1
           done
