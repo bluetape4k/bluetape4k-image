@@ -12,7 +12,7 @@ digraph G {
   client [label="TesseractClient\ninternal adapter boundary", fillcolor="#EAF7EF", color="#58A978"]
   tess4j [label="Tess4J\nJNA bridge", fillcolor="#FFF0E6", color="#E28A5D"]
   native [label="Tesseract + traineddata\nruntime language packs", fillcolor="#FFF3D9", color="#D6A441"]
-  result [label="OcrResult or OcrException", fillcolor="#E8F3FF", color="#5B8DEF"]
+  result [label="OcrResult or OcrException", width=3.2, fillcolor="#E8F3FF", color="#5B8DEF"]
 
   { rank=same; app; image }
   { rank=same; extract; suspend; options }
