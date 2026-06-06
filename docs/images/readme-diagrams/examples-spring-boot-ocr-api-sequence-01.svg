@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="900" viewBox="0 0 1500 900" role="img" aria-label="Spring Boot OCR API Sequence">
+<defs>
+  <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%">
+    <feDropShadow dx="0" dy="7" stdDeviation="8" flood-color="#203040" flood-opacity="0.10"/>
+  </filter>
+  <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
+    <path d="M 1 1 L 7 4 L 1 7 Z" fill="#758297"/>
+  </marker>
+  <style>
+    .canvas{fill:#F6F9FC}
+    .frame{fill:#FFFFFF;stroke:#D7E2EC;stroke-width:2}
+    .title{font-family:"Architects Daughter";font-size:42px;fill:#203040;font-weight:400}
+    .subtitle{font-family:"Comic Mono";font-size:16px;fill:#536476;font-weight:400}
+    .node-title{font-family:"Architects Daughter";font-size:22px;fill:#203040;font-weight:400}
+    .node-detail{font-family:"Comic Mono";font-size:13px;fill:#4D5F70;font-weight:400}
+    .panel-title{font-family:"Architects Daughter";font-size:24px;fill:#203040;font-weight:400}
+    .layer{fill:#F3F7FB;stroke:#D7E2EC;stroke-width:2}
+    .layer-title{font-family:"Architects Daughter";font-size:26px;fill:#22344A;font-weight:400}
+    .label{font-family:"Comic Mono";font-size:12px;fill:#405366;font-weight:400}
+    .footer{font-family:"Comic Mono";font-size:13px;fill:#627184;font-weight:400}
+    .footer-pill{fill:#FFFFFF;stroke:#D7E2EC;stroke-width:1}
+    .card{filter:url(#shadow);stroke-width:2}
+    .edge{stroke:#758297;stroke-width:2.3;fill:none;marker-end:url(#arrow);stroke-linecap:round;stroke-linejoin:round}
+    .edge-dashed{stroke:#758297;stroke-width:2.2;fill:none;marker-end:url(#arrow);stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:7 6}
+    .lifeline{stroke:#9AA8B8;stroke-width:1.7;stroke-dasharray:7 7}
+  </style>
+</defs>
+<rect class="canvas" width="1500" height="900"/>
+<rect class="frame" x="34" y="28" width="1432" height="842" rx="26"/>
+<text class="title" x="70" y="82">Spring Boot OCR API Sequence</text>
+<text class="subtitle" x="74" y="116">Request validation, language options, OCR execution, and error mapping.</text>
+<g id="participants">
+<rect class="card" x="70" y="185" width="230" height="72" rx="10" fill="#E8F3FF" stroke="#5B8DEF"/>
+<text class="node-title" x="185" y="214" text-anchor="middle" dominant-baseline="middle">Client</text>
+<text class="node-detail" x="185" y="238" text-anchor="middle" dominant-baseline="middle">curl/MockMvc</text>
+<line class="lifeline" x1="185" y1="257" x2="185" y2="805"/>
+<rect class="card" x="353" y="185" width="230" height="72" rx="10" fill="#EAF7EF" stroke="#58A978"/>
+<text class="node-title" x="468" y="214" text-anchor="middle" dominant-baseline="middle">Controller</text>
+<text class="node-detail" x="468" y="238" text-anchor="middle" dominant-baseline="middle">REST API</text>
+<line class="lifeline" x1="468" y1="257" x2="468" y2="805"/>
+<rect class="card" x="635" y="185" width="230" height="72" rx="10" fill="#FFF3D9" stroke="#D6A441"/>
+<text class="node-title" x="750" y="214" text-anchor="middle" dominant-baseline="middle">Service</text>
+<text class="node-detail" x="750" y="238" text-anchor="middle" dominant-baseline="middle">options</text>
+<line class="lifeline" x1="750" y1="257" x2="750" y2="805"/>
+<rect class="card" x="917" y="185" width="230" height="72" rx="10" fill="#FDECEF" stroke="#DC6B82"/>
+<text class="node-title" x="1032" y="214" text-anchor="middle" dominant-baseline="middle">images-ocr</text>
+<text class="node-detail" x="1032" y="238" text-anchor="middle" dominant-baseline="middle">suspend API</text>
+<line class="lifeline" x1="1032" y1="257" x2="1032" y2="805"/>
+<rect class="card" x="1200" y="185" width="230" height="72" rx="10" fill="#E9F7F6" stroke="#45A7A1"/>
+<text class="node-title" x="1315" y="214" text-anchor="middle" dominant-baseline="middle">Tesseract</text>
+<text class="node-detail" x="1315" y="238" text-anchor="middle" dominant-baseline="middle">traineddata</text>
+<line class="lifeline" x1="1315" y1="257" x2="1315" y2="805"/>
+</g>
+<g id="messages">
+<path class="edge" d="M 185 325 L 468 325"/>
+<rect x="181.0" y="279" width="291.0" height="28" rx="9" fill="#FFFFFF" stroke="#D7E2EC"/>
+<text class="label" x="326.5" y="293" text-anchor="middle" dominant-baseline="middle">1. POST multipart image and languages</text>
+<circle cx="185" cy="325" r="4" fill="#FFFFFF" stroke="#758297" stroke-width="1.8"/>
+<circle cx="468" cy="325" r="4" fill="#FFFFFF" stroke="#758297" stroke-width="1.8"/>
+<path class="edge" d="M 468 395 L 750 395"/>
+<rect x="477.5" y="349" width="263.0" height="28" rx="9" fill="#FFFFFF" stroke="#D7E2EC"/>
+<text class="label" x="609.0" y="363" text-anchor="middle" dominant-baseline="middle">2. Validate content type and file</text>
+<circle cx="468" cy="395" r="4" fill="#FFFFFF" stroke="#758297" stroke-width="1.8"/>
+<circle cx="750" cy="395" r="4" fill="#FFFFFF" stroke="#758297" stroke-width="1.8"/>
+<path class="edge" d="M 750 485 L 1032 485"/>
+<rect x="749.0" y="439" width="284.0" height="28" rx="9" fill="#FFFFFF" stroke="#D7E2EC"/>
+<text class="label" x="891.0" y="453" text-anchor="middle" dominant-baseline="middle">3. Build OcrOptions and extract text</text>
+<circle cx="750" cy="485" r="4" fill="#FFFFFF" stroke="#758297" stroke-width="1.8"/>
+<circle cx="1032" cy="485" r="4" fill="#FFFFFF" stroke="#758297" stroke-width="1.8"/>
+<path class="edge" d="M 1032 575 L 1315 575"/>
+<rect x="1084.5" y="529" width="178.0" height="28" rx="9" fill="#FFFFFF" stroke="#D7E2EC"/>
+<text class="label" x="1173.5" y="543" text-anchor="middle" dominant-baseline="middle">4. Run Tess4J OCR</text>
+<circle cx="1032" cy="575" r="4" fill="#FFFFFF" stroke="#758297" stroke-width="1.8"/>
+<circle cx="1315" cy="575" r="4" fill="#FFFFFF" stroke="#758297" stroke-width="1.8"/>
+<path class="edge-dashed" d="M 1032 665 L 750 665"/>
+<rect x="787.5" y="619" width="207.0" height="28" rx="9" fill="#FFFFFF" stroke="#D7E2EC"/>
+<text class="label" x="891.0" y="633" text-anchor="middle" dominant-baseline="middle">5. Return recognized text</text>
+<circle cx="750" cy="665" r="4" fill="#FFFFFF" stroke="#758297" stroke-width="1.8"/>
+<circle cx="1032" cy="665" r="4" fill="#FFFFFF" stroke="#758297" stroke-width="1.8"/>
+<path class="edge-dashed" d="M 750 745 L 185 745"/>
+<rect x="360.5" y="699" width="214.0" height="28" rx="9" fill="#FFFFFF" stroke="#D7E2EC"/>
+<text class="label" x="467.5" y="713" text-anchor="middle" dominant-baseline="middle">6. Return JSON text result</text>
+<circle cx="185" cy="745" r="4" fill="#FFFFFF" stroke="#758297" stroke-width="1.8"/>
+<circle cx="750" cy="745" r="4" fill="#FFFFFF" stroke="#758297" stroke-width="1.8"/>
+</g>
+<text class="footer" x="750.0" y="850" text-anchor="middle">The test profile replaces the native engine with a deterministic fake engine.</text>
+</svg>

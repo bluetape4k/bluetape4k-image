@@ -1,0 +1,24 @@
+digraph G {
+  graph [rankdir=LR, bgcolor="#F6F9FC", margin=0.18, nodesep=0.55, ranksep=0.75];
+  node [shape=box, style="rounded,filled", fillcolor="#FFFFFF", color="#9AA8B8", fontname="Comic Mono", fontsize=11];
+  edge [color="#758297", fontname="Comic Mono", fontsize=9];
+  label="Spring Boot OCR API Architecture";
+  labelloc="t";
+  "client" [label="Client"];
+  "controller" [label="OcrApiController"];
+  "service" [label="SpringBootOcrService"];
+  "image" [label="ImmutableImage"];
+  "options" [label="OcrOptions"];
+  "extract" [label="suspendExtractText"];
+  "engine" [label="TesseractOcrEngine"];
+  "tess4j" [label="Tess4J"];
+  "tesseract" [label="Host Tesseract"];
+  "client" -> "controller" [label="request"];
+  "controller" -> "service" [label="delegate"];
+  "service" -> "image" [label="decode"];
+  "service" -> "options" [label="configure"];
+  "service" -> "extract" [label="suspend"];
+  "extract" -> "engine" [label="engine"];
+  "engine" -> "tess4j" [label="client"];
+  "tess4j" -> "tesseract" [label="native"];
+}
