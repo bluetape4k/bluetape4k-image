@@ -43,6 +43,14 @@ tesseract --list-langs
 Set `TESSDATA_PREFIX` or pass `OcrOptions(tessdataPath = "...")` when the
 runtime cannot find traineddata files.
 
+Host-native OCR uses Tess4J/Lept4J through JNA, so the JVM loads the host
+Leptonica and Tesseract shared libraries. The current runtime is validated
+locally on Homebrew Tesseract 5.5 / Leptonica 1.87. Ubuntu 24.04 packages
+provide Leptonica 1.82, which does not satisfy the native symbol set expected by
+the current Lept4J/Tess4J line. For that reason GitHub CI and Nightly run the
+portable container-backed OCR gate, while `-Docr.enabled=true` remains a
+local/manual host-native check.
+
 ## Installation
 
 ```kotlin
@@ -123,13 +131,15 @@ cancellation:
 ./gradlew :bluetape4k-images-ocr:test
 ```
 
-Native OCR tests are gated because they need host Tesseract and language packs:
+Native OCR tests are gated because they need host Tesseract, language packs, and
+a Leptonica runtime compatible with the Tess4J/Lept4J version on the classpath:
 
 ```bash
 ./gradlew :bluetape4k-images-ocr:test -Docr.enabled=true
 ```
 
-Container smoke tests are gated because they need Docker:
+Container smoke tests are gated because they need Docker. This is the OCR gate
+used by GitHub CI and Nightly:
 
 ```bash
 ./gradlew :bluetape4k-images-ocr:test -Docr.container.enabled=true
