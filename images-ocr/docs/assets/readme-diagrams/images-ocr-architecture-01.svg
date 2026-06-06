@@ -92,9 +92,9 @@
 
 <rect class="layer" x="64" y="748" width="1182" height="92" rx="18" fill="#FAFCF7"/>
 <text class="layer-title" x="92" y="782">5. Result Contract</text>
-<g id="result" transform="translate(520,770)">
-  <rect class="card" x="0" y="0" width="270" height="52" rx="10" fill="#E8F3FF" stroke="#5B8DEF"/>
-  <text class="card-title" x="135" y="31" text-anchor="middle">OcrResult or OcrException</text>
+<g id="result" transform="translate(470,770)">
+  <rect class="card" x="0" y="0" width="370" height="52" rx="10" fill="#E8F3FF" stroke="#5B8DEF"/>
+  <text class="card-title" x="185" y="31" text-anchor="middle">OcrResult or OcrException</text>
 </g>
 
 <path class="edge-blue" d="M 435 246 L 435 328"/>
@@ -105,7 +105,7 @@
 <path class="edge-purple" d="M 680 515 L 730 515"/>
 <path class="edge-amber" d="M 865 550 L 865 632"/>
 <path class="edge-amber" d="M 680 667 L 730 667"/>
-<path class="edge-blue" d="M 545 550 L 545 736 L 655 736 L 655 770"/>
+<path class="edge-blue" d="M 545 550 L 545 580 L 370 580 L 370 736 L 655 736 L 655 770"/>
 
 <text class="footer" x="655" y="858" text-anchor="middle">Source evidence: OcrOptions, OcrEngine, TesseractOcrEngine, ImmutableImage OCR extensions, and runtime README requirements.</text>
 </svg>
