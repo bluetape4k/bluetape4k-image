@@ -8,7 +8,7 @@ bluetape4k-aws-bom = "0.4.0-SNAPSHOT"  # https://central.sonatype.com/artifact/i
 spring-boot = "4.0.6"  # https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-dependencies
 aws2 = "2.46.0"  # https://mvnrepository.com/artifact/software.amazon.awssdk/bom
 
-kotlin = "2.3.21"  # https://mvnrepository.com/artifact/org.jetbrains.kotlin/kotlin-bom
+kotlin = "2.4.0"  # https://mvnrepository.com/artifact/org.jetbrains.kotlin/kotlin-bom
 kotlinx-coroutines = "1.11.0"  # https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-bom
 kotlinx-atomicfu = "0.32.1"  # https://mvnrepository.com/artifact/org.jetbrains.kotlinx/atomicfu
 kotlinx-benchmark = "0.4.17"  # https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-benchmark-runtime
