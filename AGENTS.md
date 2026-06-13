@@ -1,5 +1,10 @@
 # AGENTS.md - bluetape4k-image
 
+This repository inherits the workspace guidance from `../AGENTS.md`.
+Read and follow the workspace root guide first. This file only adds
+repo-specific layout, commands, domain rules, and local exceptions.
+
+
 Image processing library with two backend families: scrimage/Java2D and
 libvips through JNI or FFM Panama.
 
@@ -25,9 +30,6 @@ libvips through JNI or FFM Panama.
 | `examples/spring-boot-image-api` | Non-published Spring Boot local-storage image API quickstart |
 | `examples/spring-boot-ocr-api` | Non-published Spring Boot OCR extraction API quickstart |
 | `bom/` | Consumer BOM for aligned image artifacts |
-
-Root README visual assets live under `docs/assets/` and should be shared by
-`README.md` and `README.ko.md` through the same relative path.
 
 ## Commands
 
@@ -94,12 +96,8 @@ when present. Outside Gradle, set it manually if needed.
 - Container OCR tests are gated by `-Docr.container.enabled=true` and require
   Docker. Run native/container OCR checks sequentially.
 
-## Cross-Repo Lesson Guards
+## Repo-Specific Guards
 
-- Before issue, PR, workflow, release, or module-registration work, query GNO
-  for this repo in both `bluetape4k-github` and `bluetape4k-docs`.
-- For image module additions or artifact moves, update README locale sets,
-  repo-local module lists, CI/Nightly coverage, coverage artifacts, and
-  BOM/catalog constraints together.
-- Keep Kover XML/Codecov visible without hard gates unless explicitly decided.
-  Run libvips/native/JNI and Testcontainers-backed checks sequentially.
+- For image module additions or artifact moves, update image-specific benchmark
+  evidence and BOM/catalog constraints together.
+- Run libvips/native/JNI, OCR, and Testcontainers-backed checks sequentially.
