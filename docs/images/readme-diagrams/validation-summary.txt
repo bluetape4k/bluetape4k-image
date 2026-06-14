@@ -1,0 +1,5 @@
+README links: missing=0 svgEmbeds=0 legacyRefs=0 files=33
+SVG/PNG assets: finalSvg=51 xml=pass png=pass fonts=pass markerSize=pass evidenceText=pass fireworksStyle=pass footer=pass textFit=1761 routeCrossings=0 layerGaps=19 sequenceHeaders=31 sequenceLabels=40
+Graphviz artifacts: removed=pass
+Charts: checked=10 source=pass unit=pass direction=pass
+Legacy asset locations: docs/assets=0 images-ocr/docs/assets=0

@@ -13,13 +13,13 @@ ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "docs" / "images" / "readme-diagrams"
 
 PALETTE = [
-    ("#E8F3FF", "#5B8DEF"),
-    ("#EAF7EF", "#58A978"),
-    ("#FFF3D9", "#D6A441"),
-    ("#FDECEF", "#DC6B82"),
-    ("#E9F7F6", "#45A7A1"),
-    ("#F1ECFF", "#8A72D6"),
-    ("#F7F1E7", "#B88A44"),
+    ("#eff6ff", "#bfdbfe"),
+    ("#f0fdf4", "#bbf7d0"),
+    ("#fff7ed", "#fed7aa"),
+    ("#fef2f2", "#fecaca"),
+    ("#f0fdfa", "#ccfbf1"),
+    ("#faf5ff", "#e9d5ff"),
+    ("#f9fafb", "#d1d5db"),
 ]
 
 
@@ -77,6 +77,28 @@ def esc(value: str) -> str:
     return html.escape(value, quote=True)
 
 
+def wrap_words(value: str, max_chars: int) -> list[str]:
+    words = value.split()
+    if not words:
+        return [value]
+    lines: list[str] = []
+    current = words[0]
+    for word in words[1:]:
+        if len(current) + 1 + len(word) <= max_chars:
+            current += " " + word
+        else:
+            lines.append(current)
+            current = word
+    lines.append(current)
+    wrapped: list[str] = []
+    for line in lines:
+        if len(line) <= max_chars:
+            wrapped.append(line)
+        else:
+            wrapped.extend(line[index : index + max_chars] for index in range(0, len(line), max_chars))
+    return wrapped
+
+
 def path_d(points: tuple[tuple[int, int], ...]) -> str:
     first, *rest = points
     return " ".join([f"M {first[0]} {first[1]}", *(f"L {x} {y}" for x, y in rest)])
@@ -98,33 +120,31 @@ def svg_header(diagram: ClassDiagram) -> list[str]:
     return [
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{diagram.width}" height="{diagram.height}" viewBox="0 0 {diagram.width} {diagram.height}" role="img" aria-label="{esc(diagram.title)}">',
         "<defs>",
-        '  <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%">',
-        '    <feDropShadow dx="0" dy="7" stdDeviation="8" flood-color="#203040" flood-opacity="0.10"/>',
-        "  </filter>",
-        '  <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">',
-        '    <path d="M 1 1 L 7 4 L 1 7 Z" fill="#758297"/>',
+        '  <marker id="arrow-blue" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">',
+        '    <polygon points="0 0, 10 3.5, 0 7" fill="#2563eb"/>',
         "  </marker>",
-        '  <marker id="inherit" markerWidth="11" markerHeight="10" refX="9.5" refY="5" orient="auto" markerUnits="strokeWidth">',
-        '    <path d="M 0.5 1 L 9.5 5 L 0.5 9 Z" fill="#FFFFFF" stroke="#758297" stroke-width="1.7"/>',
+        '  <marker id="arrow-gray" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">',
+        '    <polygon points="0 0, 10 3.5, 0 7" fill="#6b7280"/>',
+        "  </marker>",
+        '  <marker id="inherit-open" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">',
+        '    <path d="M 0 0 L 10 3.5 L 0 7 Z" fill="#ffffff" stroke="#2563eb" stroke-width="1.4"/>',
         "  </marker>",
         "  <style>",
-        "    .canvas{fill:#F6F9FC}",
-        "    .frame{fill:#FFFFFF;stroke:#D7E2EC;stroke-width:2}",
-        '    .title{font-family:"Architects Daughter";font-size:42px;fill:#203040;font-weight:400}',
-        '    .subtitle{font-family:"Comic Mono";font-size:16px;fill:#536476;font-weight:400}',
-        '    .class-name{font-family:"Architects Daughter";font-size:24px;fill:#203040;font-weight:400}',
-        '    .stereo{font-family:"Comic Mono";font-size:12px;fill:#627184;font-weight:400}',
-        '    .member{font-family:"Comic Mono";font-size:13px;fill:#405366;font-weight:400}',
-        '    .edge-label{font-family:"Comic Mono";font-size:12px;fill:#405366;font-weight:400}',
-        '    .footer{font-family:"Comic Mono";font-size:13px;fill:#627184;font-weight:400}',
-        "    .card{filter:url(#shadow);stroke-width:2}",
+        "    .canvas{fill:#ffffff}",
+        '    .title{font-family:"Architects Daughter";font-size:42px;fill:#111827;font-weight:400}',
+        '    .subtitle{font-family:"Comic Mono";font-size:16px;fill:#6b7280;font-weight:400}',
+        '    .class-name{font-family:"Architects Daughter";font-size:22px;fill:#111827;font-weight:400}',
+        '    .stereo{font-family:"Comic Mono";font-size:12px;fill:#6b7280;font-weight:400}',
+        '    .member{font-family:"Comic Mono";font-size:13px;fill:#6b7280;font-weight:400}',
+        '    .edge-label{font-family:"Comic Mono";font-size:12px;fill:#374151;font-weight:400}',
+        '    .footer{font-family:"Comic Mono";font-size:13px;fill:#6b7280;font-weight:400}',
+        "    .card{fill:#ffffff;stroke:#94a3b8;stroke-width:1.9}",
         "    .divider{stroke-width:1.4}",
-        "    .dependency{stroke:#758297;stroke-width:2.2;fill:none;marker-end:url(#arrow);stroke-linecap:round;stroke-linejoin:round}",
-        "    .inheritance{stroke:#758297;stroke-width:2.2;fill:none;marker-end:url(#inherit);stroke-linecap:round;stroke-linejoin:round}",
+        "    .dependency{stroke:#6b7280;stroke-width:1.8;fill:none;marker-end:url(#arrow-gray);stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:6 4}",
+        "    .inheritance{stroke:#2563eb;stroke-width:2.1;fill:none;marker-end:url(#inherit-open);stroke-linecap:round;stroke-linejoin:round}",
         "  </style>",
         "</defs>",
         f'<rect class="canvas" width="{diagram.width}" height="{diagram.height}"/>',
-        f'<rect class="frame" x="34" y="28" width="{diagram.width - 68}" height="{diagram.height - 58}" rx="26"/>',
         f'<text class="title" x="70" y="82">{esc(diagram.title)}</text>',
         f'<text class="subtitle" x="74" y="116">{esc(diagram.subtitle)}</text>',
     ]
@@ -132,13 +152,17 @@ def svg_header(diagram: ClassDiagram) -> list[str]:
 
 def render_node(node: ClassNode) -> list[str]:
     fill, stroke = PALETTE[node.color % len(PALETTE)]
+    title_lines = wrap_words(node.title, max(8, int((node.w - 40) / 14.0)))
+    title_start = node.y + 52 - (len(title_lines) - 1) * 12
     out = [
         f'<g id="{esc(node.key)}">',
-        f'  <rect class="card" x="{node.x}" y="{node.y}" width="{node.w}" height="{node.h}" rx="8" fill="{fill}" stroke="{stroke}"/>',
-        f'  <line class="divider" x1="{node.x}" y1="{node.y + 72}" x2="{node.right}" y2="{node.y + 72}" stroke="{stroke}"/>',
+        f'  <rect class="card" x="{node.x}" y="{node.y}" width="{node.w}" height="{node.h}" rx="8"/>',
+        f'  <rect x="{node.x}" y="{node.y}" width="{node.w}" height="72" rx="8" fill="{fill}" stroke="none"/>',
+        f'  <line class="divider" x1="{node.x}" y1="{node.y + 72}" x2="{node.right}" y2="{node.y + 72}" stroke="#d1d5db"/>',
         f'  <text class="stereo" x="{node.cx}" y="{node.y + 25}" text-anchor="middle">{esc(node.stereotype)}</text>',
-        f'  <text class="class-name" x="{node.cx}" y="{node.y + 58}" text-anchor="middle">{esc(node.title)}</text>',
     ]
+    for index, line in enumerate(title_lines):
+        out.append(f'  <text class="class-name" x="{node.cx}" y="{title_start + index * 24}" text-anchor="middle">{esc(line)}</text>')
     for index, member in enumerate(node.members):
         out.append(f'  <text class="member" x="{node.x + 18}" y="{node.y + 102 + index * 22}">{esc(member)}</text>')
     out.append("</g>")
@@ -153,7 +177,7 @@ def render_edge(edge: ClassEdge) -> list[str]:
         label_w = max(70, len(edge.label) * 8 + 26)
         out.extend(
             [
-                f'<rect x="{mid[0] - label_w / 2:.1f}" y="{mid[1] - 26:.1f}" width="{label_w}" height="24" rx="8" fill="#FFFFFF" stroke="#D7E2EC" opacity="0.95"/>',
+                f'<rect x="{mid[0] - label_w / 2:.1f}" y="{mid[1] - 26:.1f}" width="{label_w}" height="24" rx="8" fill="#ffffff" stroke="#d1d5db" opacity="0.96"/>',
                 f'<text class="edge-label" x="{mid[0]:.1f}" y="{mid[1] - 10:.1f}" text-anchor="middle">{esc(edge.label)}</text>',
             ]
         )
@@ -170,17 +194,24 @@ def render_diagram(diagram: ClassDiagram) -> str:
     for node in diagram.nodes:
         out.extend(render_node(node))
     out.append("</g>")
-    out.append(f'<text class="footer" x="{diagram.width / 2:.1f}" y="{diagram.height - 50}" text-anchor="middle">{esc(diagram.footer)}</text>')
+    out.append(f'<text class="footer" x="{diagram.width / 2:.1f}" y="{diagram.height - 50}" text-anchor="middle">{esc(footer_text(diagram.base))}</text>')
     out.append("</svg>")
     return "\n".join(out) + "\n"
+
+
+def footer_text(base: str) -> str:
+    module = "images"
+    return f"https://github.com/bluetape4k/bluetape4k-image | project: bluetape4k-image | module: {module}"
 
 
 def validate_diagram(diagram: ClassDiagram) -> None:
     node_by_key = {node.key: node for node in diagram.nodes}
     for node in diagram.nodes:
-        title_width = len(node.title) * 13
-        if title_width > node.w - 36:
+        title_lines = wrap_words(node.title, max(8, int((node.w - 40) / 14.0)))
+        if any(len(line) * 14 > node.w - 36 for line in title_lines):
             raise ValueError(f"{diagram.base}: title overflows {node.key}")
+        if len(title_lines) > 2:
+            raise ValueError(f"{diagram.base}: title wraps too much {node.key}")
         if node.x < 60 or node.y < 130 or node.right > diagram.width - 60 or node.bottom > diagram.height - 84:
             raise ValueError(f"{diagram.base}: node outside balanced canvas area {node.key}")
         for member in node.members:
@@ -246,39 +277,10 @@ def validate_edges(diagram: ClassDiagram, node_by_key: dict[str, ClassNode]) -> 
                     )
 
 
-def write_graphviz(diagram: ClassDiagram) -> None:
-    dot_path = OUT / f"{diagram.base}.dot"
-    lines = [
-        "digraph G {",
-        "  graph [layout=neato, splines=ortho, overlap=false, bgcolor=\"#F6F9FC\", margin=0.18];",
-        "  node [shape=box, style=\"rounded,filled\", fixedsize=true, fillcolor=\"#FFFFFF\", color=\"#9AA8B8\", fontname=\"Comic Mono\", fontsize=11];",
-        "  edge [color=\"#758297\", fontname=\"Comic Mono\", fontsize=9];",
-        f'  label="{esc(diagram.title)}";',
-        '  labelloc="t";',
-    ]
-    for node in diagram.nodes:
-        lines.append(
-            f'  "{node.key}" [label="{node.title}", width="{node.w / 72:.3f}", height="{node.h / 72:.3f}", pos="{node.cx},{diagram.height - node.cy}!"];'
-        )
-    for edge in diagram.edges:
-        attrs = ['style="dashed"'] if edge.kind == "inheritance" else []
-        if edge.label:
-            attrs.append(f'label="{esc(edge.label)}"')
-        attr_text = f" [{', '.join(attrs)}]" if attrs else ""
-        lines.append(f'  "{edge.source}" -> "{edge.target}"{attr_text};')
-    lines.append("}")
-    dot_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
-    layout_cmd = ["neato", "-n2"]
-    subprocess.run([*layout_cmd, "-Tplain", str(dot_path), "-o", str(OUT / f"{diagram.base}.plain")], check=True)
-    subprocess.run([*layout_cmd, "-Tsvg", str(dot_path), "-o", str(OUT / f"{diagram.base}-graphviz.svg")], check=True)
-    subprocess.run([*layout_cmd, "-Tpng", str(dot_path), "-o", str(OUT / f"{diagram.base}-graphviz.png")], check=True)
-
-
 def save(diagram: ClassDiagram) -> None:
     validate_diagram(diagram)
     svg_path = OUT / f"{diagram.base}.svg"
     svg_path.write_text(render_diagram(diagram), encoding="utf-8")
-    write_graphviz(diagram)
     subprocess.run(["rsvg-convert", str(svg_path), "-o", str(svg_path.with_suffix(".png"))], check=True)
     content = svg_path.read_text(encoding="utf-8")
     for forbidden in ("Inter", "Arial", "Helvetica"):
@@ -308,15 +310,13 @@ def diagrams() -> tuple[ClassDiagram, ...]:
                 ClassNode("transforms", "Transform APIs", "<<package>>", ("smartCropTo(), rotate()", "autoCrop(), equalize()"), 1030, 780, 400, 148, 2),
             ),
             edges=(
-                ClassEdge("sources", "image", "decode", ((460, 284), (570, 284))),
-                ClassEdge("image", "support", "extend", ((930, 284), (1040, 284))),
-                ClassEdge("support", "format", "select", ((1430, 284), (1480, 284))),
-                ClassEdge("image", "scaler", "resize", ((750, 358), (750, 450), (280, 450), (280, 520))),
-                ClassEdge("image", "splitter", "split", ((750, 358), (750, 520))),
-                ClassEdge("image", "batch", "flow", ((750, 358), (750, 450), (1115, 450), (1115, 520))),
-                ClassEdge("image", "thumbnail", "thumbs", ((750, 358), (750, 430), (1550, 430), (1550, 520))),
-                ClassEdge("image", "analysis", "inspect", ((650, 358), (650, 430), (490, 430), (490, 735), (720, 735), (720, 780))),
-                ClassEdge("image", "transforms", "transform", ((880, 358), (880, 430), (1320, 430), (1320, 735), (1230, 735), (1230, 780))),
+                ClassEdge("sources", "image", "", ((460, 284), (570, 284))),
+                ClassEdge("image", "support", "", ((930, 284), (1040, 284))),
+                ClassEdge("support", "format", "", ((1430, 284), (1480, 284))),
+                ClassEdge("image", "scaler", "", ((750, 358), (750, 410), (280, 410), (280, 520))),
+                ClassEdge("image", "splitter", "", ((750, 358), (750, 520))),
+                ClassEdge("image", "batch", "", ((750, 358), (750, 450), (1115, 450), (1115, 520))),
+                ClassEdge("image", "thumbnail", "", ((750, 358), (750, 430), (1550, 430), (1550, 520))),
             ),
             footer="Source evidence: ImmutableImageSupport, ImageBatchFlow, ThumbnailPipeline, scaler/splitter, analysis, and transforms packages.",
         ),
@@ -338,9 +338,9 @@ def diagrams() -> tuple[ClassDiagram, ...]:
                 ClassNode("support", "Watermark/Caption/Padding", "<<support functions>>", ("withGraphics overlays", "layout and padding helpers"), 90, 180, 430, 148, 1),
             ),
             edges=(
-                ClassEdge("chain", "filter", "native filters", ((1230, 264), (1060, 264))),
-                ClassEdge("support", "filter", "factory", ((520, 254), (700, 254))),
-                ClassEdge("chain", "converter", "color ops", ((1445, 350), (1445, 470))),
+                ClassEdge("chain", "filter", "", ((1230, 264), (1060, 264))),
+                ClassEdge("support", "filter", "", ((520, 254), (700, 254))),
+                ClassEdge("chain", "converter", "", ((1445, 350), (1445, 470))),
                 ClassEdge("rounded", "filter", "", ((270, 470), (270, 390), (880, 390), (880, 328)), "inheritance"),
                 ClassEdge("saturation", "filter", "", ((275, 700), (275, 660), (880, 660), (880, 328)), "inheritance"),
                 ClassEdge("hue", "filter", "", ((670, 700), (670, 660), (880, 660), (880, 328)), "inheritance"),
@@ -367,7 +367,7 @@ def diagrams() -> tuple[ClassDiagram, ...]:
                 ClassNode("webp", "SuspendWebpWriter", "<<writer>>", ("lossless, quality, method", "MaxLosslessCompression"), 1330, 680, 400, 148, 6),
             ),
             edges=(
-                ClassEdge("context", "imageWriter", "holds", ((450, 264), (640, 264)), "dependency"),
+                ClassEdge("context", "imageWriter", "", ((450, 264), (640, 264)), "dependency"),
                 ClassEdge("tiffMulti", "multi", "", ((1480, 430), (1480, 328)), "inheritance"),
                 ClassEdge("tiff", "imageWriter", "", ((290, 430), (290, 390), (840, 390), (840, 328)), "inheritance"),
                 ClassEdge("jpeg", "imageWriter", "", ((280, 680), (280, 630), (840, 630), (840, 328)), "inheritance"),

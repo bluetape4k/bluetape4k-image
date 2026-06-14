@@ -16,15 +16,15 @@
 
 ## Architecture
 
-![images-ocr Architecture](docs/assets/readme-diagrams/images-ocr-architecture-01.png)
+![images-ocr Architecture](../docs/images/readme-diagrams/images-ocr-architecture-01.png)
 
 ## Class Diagram
 
-![images-ocr Class Diagram](docs/assets/readme-diagrams/images-ocr-class-diagram-01.png)
+![images-ocr Class Diagram](../docs/images/readme-diagrams/images-ocr-class-diagram-01.png)
 
 ## Sequence Diagram
 
-![images-ocr Recognition Sequence](docs/assets/readme-diagrams/images-ocr-sequence-diagram-01.png)
+![images-ocr Recognition Sequence](../docs/images/readme-diagrams/images-ocr-sequence-diagram-01.png)
 
 ## 실행 요구사항
 

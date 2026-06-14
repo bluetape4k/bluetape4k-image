@@ -4,7 +4,7 @@ English | [한국어](./README.ko.md)
 
 Small runnable example for pure JVM image processing with `bluetape4k-images`.
 It uses the natural photo fixtures `cafe.jpg` and `landscape.jpg`, plus the root
-README representative image `docs/assets/image-workbench.png`, and writes all
+README representative image `docs/images/image-workbench.png`, and writes all
 generated files under `build/tmp/basic-processing` by default.
 
 ## What It Shows

@@ -43,28 +43,28 @@
 - Forbidden font/SVG embed scan: 0 matches for README SVG embeds, `Inter`, `Arial`, `Helvetica`, old `13x13`, and tiny `3.9x3.9` arrowheads.
 - Graphviz evidence exists for the changed root Image Architecture, `images-ocr` Architecture, and `images-ocr` Class Diagram: `.dot`, `.plain`, `*-graphviz.svg`, and `*-graphviz.png`.
 - Rendered PNGs inspected individually:
-  - `docs/assets/readme-diagrams/root-readme-overview-01.png`
-  - `docs/assets/readme-charts/root-readme-module-chart-01.png`
-  - `docs/assets/readme-diagrams/bluetape4k-image-architecture-01.png`
-  - `images-ocr/docs/assets/readme-diagrams/images-ocr-architecture-01.png`
-  - `images-ocr/docs/assets/readme-diagrams/images-ocr-class-diagram-01.png`
-  - `images-ocr/docs/assets/readme-diagrams/images-ocr-sequence-diagram-01.png`
+  - `docs/images/readme-diagrams/root-readme-overview-01.png`
+  - `docs/images/readme-charts/root-readme-module-chart-01.png`
+  - `docs/images/readme-diagrams/bluetape4k-image-architecture-01.png`
+  - `docs/images/readme-diagrams/images-ocr-architecture-01.png`
+  - `docs/images/readme-diagrams/images-ocr-class-diagram-01.png`
+  - `docs/images/readme-diagrams/images-ocr-sequence-diagram-01.png`
 - Overview geometry gate:
 
 ```text
-geometryGate file=docs/assets/readme-diagrams/root-readme-overview-01.svg
+geometryGate file=docs/images/readme-diagrams/root-readme-overview-01.svg
 nodes=12 routes=15 segments=36 badEndpointAngle=0 badBends=0 interiorCrossings=0 marginImbalance=source-layer-balanced titleGap=24 labelsOk=True
 
-geometryGate file=docs/assets/readme-diagrams/bluetape4k-image-architecture-01.svg
+geometryGate file=docs/images/readme-diagrams/bluetape4k-image-architecture-01.svg
 nodes=10 routes=10 segments=28 badEndpointAngle=0 badBends=0 interiorCrossings=0 marginImbalance=balanced titleGap=24 labelsOk=True
 
-geometryGate file=images-ocr/docs/assets/readme-diagrams/images-ocr-architecture-01.svg
+geometryGate file=docs/images/readme-diagrams/images-ocr-architecture-01.svg
 nodes=10 routes=9 segments=19 badEndpointAngle=0 badBends=0 interiorCrossings=0 marginImbalance=balanced titleGap=24 labelsOk=True
 
-geometryGate file=images-ocr/docs/assets/readme-diagrams/images-ocr-class-diagram-01.svg
+geometryGate file=docs/images/readme-diagrams/images-ocr-class-diagram-01.svg
 nodes=11 routes=9 segments=17 badEndpointAngle=0 badBends=0 interiorCrossings=0 marginImbalance=balanced titleGap=24 labelsOk=True
 
-geometryGate file=images-ocr/docs/assets/readme-diagrams/images-ocr-sequence-diagram-01.svg
+geometryGate file=docs/images/readme-diagrams/images-ocr-sequence-diagram-01.svg
 nodes=5 routes=7 segments=8 badEndpointAngle=0 badBends=0 interiorCrossings=0 marginImbalance=balanced titleGap=24 labelsOk=True
 ```
 

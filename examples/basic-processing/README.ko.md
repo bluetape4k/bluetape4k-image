@@ -4,7 +4,7 @@
 
 `bluetape4k-images`만 사용하는 순수 JVM 이미지 처리 실행 예제입니다. 자연스러운
 사진 fixture인 `cafe.jpg`, `landscape.jpg`와 루트 README 대표 이미지
-`docs/assets/image-workbench.png`를 사용하고, 기본 출력은 `build/tmp/basic-processing`
+`docs/images/image-workbench.png`를 사용하고, 기본 출력은 `build/tmp/basic-processing`
 아래에 생성합니다.
 
 ## 보여주는 내용

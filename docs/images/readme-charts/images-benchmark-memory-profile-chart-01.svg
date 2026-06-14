@@ -1,71 +1,80 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="760" viewBox="0 0 1280 760" role="img" aria-label="Image Workload Memory Profile">
+<svg xmlns="http://www.w3.org/2000/svg" width="1560" height="950" viewBox="0 0 1560 950" role="img" aria-label="Memory Profile">
 <defs>
-  <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%">
-    <feDropShadow dx="0" dy="8" stdDeviation="9" flood-color="#1f2937" flood-opacity="0.10"/>
-  </filter>
+  <marker id="arrow-blue" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#2563eb"/></marker>
+  <marker id="arrow-green" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#16a34a"/></marker>
+  <marker id="arrow-orange" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#ea580c"/></marker>
+  <marker id="arrow-purple" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#9333ea"/></marker>
+  <marker id="arrow-gray" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#6b7280"/></marker>
   <style>
-    .canvas{fill:#f7f9fc}.frame{fill:#fff;stroke:#d8e0ea;stroke-width:1.5}
-    .title{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:40px;font-weight:400;fill:#102033}
-    .subtitle{font-family:"Comic Mono","Comic Sans MS","Comic Sans",Arial,sans-serif;font-size:16px;font-weight:400;fill:#536273}
-    .panel{filter:url(#shadow)}.label{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:20px;font-weight:400;fill:#102033}
-    .axis{font-family:"Comic Mono","Comic Sans MS","Comic Sans",Arial,sans-serif;font-size:13px;font-weight:400;fill:#536273}
-    .value{font-family:"Comic Mono","Comic Sans MS","Comic Sans",Arial,sans-serif;font-size:13px;font-weight:700;fill:#102033}
-    .note{font-family:"Comic Mono","Comic Sans MS","Comic Sans",Arial,sans-serif;font-size:13px;font-weight:400;fill:#536273}
+    .canvas{fill:#ffffff}.panel{fill:#f3f6fa;stroke:#cbd5e1;stroke-width:1.4;stroke-dasharray:8 6}.chart-panel{fill:#ffffff;stroke:#bfdbfe;stroke-width:1.7}.card{fill:#ffffff;stroke:#94a3b8;stroke-width:1.9}.badge-text{font-family:"Comic Mono";font-size:11px;fill:#374151;font-weight:700}
+    .edge-blue{stroke:#2563eb;stroke-width:2.1;fill:none;marker-end:url(#arrow-blue);stroke-linecap:round;stroke-linejoin:round}.edge-green{stroke:#16a34a;stroke-width:2.1;fill:none;marker-end:url(#arrow-green);stroke-linecap:round;stroke-linejoin:round}.edge-orange{stroke:#ea580c;stroke-width:2;fill:none;marker-end:url(#arrow-orange);stroke-linecap:round;stroke-linejoin:round}.edge-purple{stroke:#9333ea;stroke-width:2;fill:none;marker-end:url(#arrow-purple);stroke-linecap:round;stroke-linejoin:round}.edge-gray{stroke:#6b7280;stroke-width:1.8;fill:none;marker-end:url(#arrow-gray);stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:6 4}.dashed{stroke-dasharray:6 4}
+    .title{font-family:"Architects Daughter";font-size:42px;fill:#111827;font-weight:400}.subtitle{font-family:"Comic Mono";font-size:16px;fill:#6b7280;font-weight:400}.card-title{font-family:"Architects Daughter";font-size:23px;fill:#111827;font-weight:400}.detail,.label,.note,.axis,.value{font-family:"Comic Mono";fill:#6b7280;font-weight:400}.detail{font-size:13px}.label{font-size:12px}.note{font-size:13px}.axis{font-size:14px}.value{font-size:14px}.panel-title{font-family:"Comic Mono";font-size:16px;fill:#4b5563;font-weight:700;letter-spacing:0.8px}
   </style>
 </defs>
-<rect class="canvas" width="1280" height="760"/>
-<rect class="frame" x="32" y="28" width="1216" height="704" rx="28"/>
-<text class="title" x="66" y="82">Image Workload Memory Profile</text>
-<text class="subtitle" x="70" y="116">Allocation addendum for kotlinx-benchmark memory profile, macOS arm64, GraalVM Java 25; lower is better</text>
-
-<rect x="58" y="144" width="1164" height="494" rx="18" fill="#FFFFFF" stroke="#E2E8F0" class="panel"/>
-<line x1="342" y1="178" x2="342" y2="576" stroke="#D8E0EA" stroke-width="1"/>
-<line x1="502" y1="178" x2="502" y2="576" stroke="#D8E0EA" stroke-width="1"/>
-<line x1="662" y1="178" x2="662" y2="576" stroke="#D8E0EA" stroke-width="1"/>
-<line x1="822" y1="178" x2="822" y2="576" stroke="#D8E0EA" stroke-width="1"/>
-<line x1="982" y1="178" x2="982" y2="576" stroke="#D8E0EA" stroke-width="1"/>
-<text class="axis" x="342" y="604" text-anchor="middle">4 KB</text>
-<text class="axis" x="502" y="604" text-anchor="middle">256 KB</text>
-<text class="axis" x="662" y="604" text-anchor="middle">1 MB</text>
-<text class="axis" x="822" y="604" text-anchor="middle">16 MB</text>
-<text class="axis" x="982" y="604" text-anchor="middle">128 MB</text>
-<text class="axis" x="662" y="628" text-anchor="middle">Allocated bytes per operation, log-like scale</text>
-
-<text class="label" x="88" y="214">scrimage JPEG encode</text>
-<rect x="342" y="194" width="808" height="22" rx="7" fill="#8FC5F3"/>
-<text class="value" x="1164" y="211" text-anchor="end">96.34 MB/op</text>
-
-<text class="label" x="88" y="272">scrimage resize 1920</text>
-<rect x="342" y="252" width="620" height="22" rx="7" fill="#F2C879"/>
-<text class="value" x="976" y="269">24.04 MB/op</text>
-
-<text class="label" x="88" y="330">scrimage PNG encode</text>
-<rect x="342" y="310" width="158" height="22" rx="7" fill="#D8B4F8"/>
-<text class="value" x="516" y="327">0.26 MB/op</text>
-
-<text class="label" x="88" y="388">vips JPEG encode</text>
-<rect x="342" y="368" width="160" height="22" rx="7" fill="#7CC7A2"/>
-<text class="value" x="518" y="385">0.26 MB/op</text>
-
-<text class="label" x="88" y="446">vips crop 1920</text>
-<rect x="342" y="426" width="30" height="22" rx="7" fill="#A7D8DE"/>
-<text class="value" x="388" y="443">4.63 KB/op</text>
-
-<text class="label" x="88" y="504">vips resize 1920</text>
-<rect x="342" y="484" width="27" height="22" rx="7" fill="#A7D8DE"/>
-<text class="value" x="386" y="501">4.14 KB/op</text>
-
-<text class="label" x="88" y="562">vips thumbnail 1920</text>
-<rect x="342" y="542" width="26" height="22" rx="7" fill="#A7D8DE"/>
-<text class="value" x="386" y="559">3.95 KB/op</text>
-
-<rect x="86" y="654" width="18" height="12" rx="5" fill="#8FC5F3"/>
-<text class="note" x="112" y="666">scrimage encode</text>
-<rect x="260" y="654" width="18" height="12" rx="5" fill="#F2C879"/>
-<text class="note" x="286" y="666">scrimage transform</text>
-<rect x="470" y="654" width="18" height="12" rx="5" fill="#7CC7A2"/>
-<text class="note" x="496" y="666">vips encode</text>
-<rect x="620" y="654" width="18" height="12" rx="5" fill="#A7D8DE"/>
-<text class="note" x="646" y="666">vips native transform</text>
-<text class="note" x="86" y="704">Source: benchmark-memory-profile-jmh-gc-2026-05-29-macos-java25.json. Fixtures: landscape.jpg and homer.jpg.</text>
+<rect class="canvas" width="1560" height="950"/>
+<text class="title" x="70" y="82">Memory Profile</text>
+<text class="subtitle" x="74" y="116">Managed heap allocation and latency for representative workloads.</text>
+<desc>Source: memory-profile-2026-05-29.md. Unit: MB/op or ms/op. Direction: lower is better.</desc>
+<rect class="chart-panel" x="56" y="146" width="1448" height="700" rx="12"/>
+<text class="note" x="88" y="190">Measured ranking</text>
+<text class="axis" x="321" y="190">MB/op or ms/op · lower is better</text>
+<text class="axis" x="1410.0" y="214" text-anchor="end">0 to 146.09 (log scale)</text>
+<text class="note" x="780.0" y="898" text-anchor="middle">https://github.com/bluetape4k/bluetape4k-image | project: bluetape4k-image | module: images-benchmark</text>
+<rect x="1090" y="174" width="22" height="14" rx="4" fill="#dbeafe" stroke="#2563eb" stroke-width="1.4"/>
+<text class="axis" x="1122" y="186">MB/op</text>
+<rect x="1250" y="174" width="22" height="14" rx="4" fill="#ffedd5" stroke="#ea580c" stroke-width="1.4"/>
+<text class="axis" x="1282" y="186">ms/op</text>
+<line x1="321.0" y1="226" x2="321.0" y2="786" stroke="#dbe3ee" stroke-width="1" stroke-dasharray="5 7"/>
+<text class="axis" x="321.0" y="814" text-anchor="middle">0</text>
+<line x1="593.2" y1="226" x2="593.2" y2="786" stroke="#dbe3ee" stroke-width="1" stroke-dasharray="5 7"/>
+<text class="axis" x="593.2" y="814" text-anchor="middle">36.5225</text>
+<line x1="865.5" y1="226" x2="865.5" y2="786" stroke="#dbe3ee" stroke-width="1" stroke-dasharray="5 7"/>
+<text class="axis" x="865.5" y="814" text-anchor="middle">73.045</text>
+<line x1="1137.8" y1="226" x2="1137.8" y2="786" stroke="#dbe3ee" stroke-width="1" stroke-dasharray="5 7"/>
+<text class="axis" x="1137.8" y="814" text-anchor="middle">109.567</text>
+<line x1="1410.0" y1="226" x2="1410.0" y2="786" stroke="#dbe3ee" stroke-width="1" stroke-dasharray="5 7"/>
+<text class="axis" x="1410.0" y="814" text-anchor="middle">146.09</text>
+<line x1="321" y1="786" x2="1410" y2="786" stroke="#94a3b8" stroke-width="1.2"/>
+<text class="axis" x="293" y="269.5" text-anchor="end">scrimage encodeJpeg</text>
+<rect x="321" y="238" width="1089.0" height="20" rx="6" fill="#edf2f7" stroke="#dbe3ee" stroke-width="1"/>
+<rect x="321" y="238" width="998.9" height="20" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+<text class="value" x="1331.9" y="252" text-anchor="start">96.34</text>
+<rect x="321" y="265" width="1089.0" height="20" rx="6" fill="#edf2f7" stroke="#dbe3ee" stroke-width="1"/>
+<rect x="321" y="265" width="1089.0" height="20" rx="6" fill="#ffedd5" stroke="#ea580c" stroke-width="1.5"/>
+<text class="value" x="1398.0" y="279" text-anchor="end">146.09</text>
+<text class="axis" x="293" y="359.5" text-anchor="end">scrimage scaleTo</text>
+<rect x="321" y="328" width="1089.0" height="20" rx="6" fill="#edf2f7" stroke="#dbe3ee" stroke-width="1"/>
+<rect x="321" y="328" width="702.7" height="20" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+<text class="value" x="1035.7" y="342" text-anchor="start">24.04</text>
+<rect x="321" y="355" width="1089.0" height="20" rx="6" fill="#edf2f7" stroke="#dbe3ee" stroke-width="1"/>
+<rect x="321" y="355" width="1037.8" height="20" rx="6" fill="#ffedd5" stroke="#ea580c" stroke-width="1.5"/>
+<text class="value" x="1346.8" y="369" text-anchor="end">115.34</text>
+<text class="axis" x="293" y="449.5" text-anchor="end">vips encodeJpeg</text>
+<rect x="321" y="418" width="1089.0" height="20" rx="6" fill="#edf2f7" stroke="#dbe3ee" stroke-width="1"/>
+<rect x="321" y="418" width="50.4" height="20" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+<text class="value" x="383.4" y="432" text-anchor="start">0.26</text>
+<rect x="321" y="445" width="1089.0" height="20" rx="6" fill="#edf2f7" stroke="#dbe3ee" stroke-width="1"/>
+<rect x="321" y="445" width="831.4" height="20" rx="6" fill="#ffedd5" stroke="#ea580c" stroke-width="1.5"/>
+<text class="value" x="1164.4" y="459" text-anchor="start">44.16</text>
+<text class="axis" x="293" y="539.5" text-anchor="end">vips resize</text>
+<rect x="321" y="508" width="1089.0" height="20" rx="6" fill="#edf2f7" stroke="#dbe3ee" stroke-width="1"/>
+<rect x="321" y="508" width="16.0" height="20" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+<text class="value" x="349.0" y="522" text-anchor="start">0.004</text>
+<rect x="321" y="535" width="1089.0" height="20" rx="6" fill="#edf2f7" stroke="#dbe3ee" stroke-width="1"/>
+<rect x="321" y="535" width="48.0" height="20" rx="6" fill="#ffedd5" stroke="#ea580c" stroke-width="1.5"/>
+<text class="value" x="381.0" y="549" text-anchor="start">0.246</text>
+<text class="axis" x="293" y="629.5" text-anchor="end">vips crop</text>
+<rect x="321" y="598" width="1089.0" height="20" rx="6" fill="#edf2f7" stroke="#dbe3ee" stroke-width="1"/>
+<rect x="321" y="598" width="16.0" height="20" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+<text class="value" x="349.0" y="612" text-anchor="start">0.005</text>
+<rect x="321" y="625" width="1089.0" height="20" rx="6" fill="#edf2f7" stroke="#dbe3ee" stroke-width="1"/>
+<rect x="321" y="625" width="17.8" height="20" rx="6" fill="#ffedd5" stroke="#ea580c" stroke-width="1.5"/>
+<text class="value" x="350.8" y="639" text-anchor="start">0.085</text>
+<text class="axis" x="293" y="719.5" text-anchor="end">vips thumbnail</text>
+<rect x="321" y="688" width="1089.0" height="20" rx="6" fill="#edf2f7" stroke="#dbe3ee" stroke-width="1"/>
+<rect x="321" y="688" width="16.0" height="20" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+<text class="value" x="349.0" y="702" text-anchor="start">0.004</text>
+<rect x="321" y="715" width="1089.0" height="20" rx="6" fill="#edf2f7" stroke="#dbe3ee" stroke-width="1"/>
+<rect x="321" y="715" width="51.5" height="20" rx="6" fill="#ffedd5" stroke="#ea580c" stroke-width="1.5"/>
+<text class="value" x="384.5" y="729" text-anchor="start">0.266</text>
 </svg>

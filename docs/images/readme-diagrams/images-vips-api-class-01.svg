@@ -1,108 +1,100 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="2120" height="1181" viewBox="0 0 2120 1181" role="img" aria-label="images vips api Class Structure">
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="980" viewBox="0 0 1280 980" role="img" aria-label="Vips API Class Structure">
 <defs>
-  <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="8" stdDeviation="9" flood-color="#1f2937" flood-opacity="0.10"/></filter>
-  <marker id="openArrow" markerWidth="10" markerHeight="8" refX="8.5" refY="4" orient="auto" markerUnits="strokeWidth"><path d="M 1 1 L 8.5 4 L 1 7" fill="none" stroke="#758297" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></marker>
-  <marker id="inherit" markerWidth="11" markerHeight="10" refX="9.5" refY="5" orient="auto" markerUnits="strokeWidth"><path d="M 0.5 1 L 9.5 5 L 0.5 9 Z" fill="#ffffff" stroke="#758297" stroke-width="1.7"/></marker>
+  <marker id="arrow-blue" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#2563eb"/></marker>
+  <marker id="arrow-green" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#16a34a"/></marker>
+  <marker id="arrow-orange" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#ea580c"/></marker>
+  <marker id="arrow-purple" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#9333ea"/></marker>
+  <marker id="arrow-gray" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#6b7280"/></marker>
   <style>
-    .canvas{fill:#f7f9fc}.frame{fill:#fff;stroke:#d8e0ea;stroke-width:1.5}
-    .title{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:43px;font-weight:400;fill:#102033}
-    .subtitle{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:15px;font-weight:400;fill:#536273}
-    .label{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:25px;font-weight:400;fill:#102033}
-    .smallLabel{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:21px;font-weight:400;fill:#102033}
-    .mono{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:12px;font-weight:400;fill:#102033}
-    .small{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:12px;font-weight:400;fill:#536273}
-    .strong{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:13px;font-weight:400;fill:#102033}
-    .card{stroke-width:2.1;filter:url(#shadow)}.compartment{stroke-width:1.5;fill:none}
-    .line{stroke:#758297;stroke-width:2.1;fill:none;marker-end:url(#openArrow)}
-    .plainLine{stroke:#758297;stroke-width:2.1;fill:none}
-    .dashed{stroke:#758297;stroke-width:2.1;stroke-dasharray:7 6;fill:none;marker-end:url(#openArrow)}
-    .inheritLine{stroke:#758297;stroke-width:2.2;fill:none;marker-end:url(#inherit)}
-    .implLine{stroke:#758297;stroke-width:2.2;stroke-dasharray:8 7;fill:none;marker-end:url(#inherit)}
+    .canvas{fill:#ffffff}.panel{fill:#f3f6fa;stroke:#cbd5e1;stroke-width:1.4;stroke-dasharray:8 6}.chart-panel{fill:#ffffff;stroke:#bfdbfe;stroke-width:1.7}.card{fill:#ffffff;stroke:#94a3b8;stroke-width:1.9}.badge-text{font-family:"Comic Mono";font-size:11px;fill:#374151;font-weight:700}
+    .edge-blue{stroke:#2563eb;stroke-width:2.1;fill:none;marker-end:url(#arrow-blue);stroke-linecap:round;stroke-linejoin:round}.edge-green{stroke:#16a34a;stroke-width:2.1;fill:none;marker-end:url(#arrow-green);stroke-linecap:round;stroke-linejoin:round}.edge-orange{stroke:#ea580c;stroke-width:2;fill:none;marker-end:url(#arrow-orange);stroke-linecap:round;stroke-linejoin:round}.edge-purple{stroke:#9333ea;stroke-width:2;fill:none;marker-end:url(#arrow-purple);stroke-linecap:round;stroke-linejoin:round}.edge-gray{stroke:#6b7280;stroke-width:1.8;fill:none;marker-end:url(#arrow-gray);stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:6 4}.dashed{stroke-dasharray:6 4}
+    .title{font-family:"Architects Daughter";font-size:42px;fill:#111827;font-weight:400}.subtitle{font-family:"Comic Mono";font-size:16px;fill:#6b7280;font-weight:400}.card-title{font-family:"Architects Daughter";font-size:23px;fill:#111827;font-weight:400}.detail,.label,.note,.axis,.value{font-family:"Comic Mono";fill:#6b7280;font-weight:400}.detail{font-size:13px}.label{font-size:12px}.note{font-size:13px}.axis{font-size:14px}.value{font-size:14px}.panel-title{font-family:"Comic Mono";font-size:16px;fill:#4b5563;font-weight:700;letter-spacing:0.8px}
   </style>
 </defs>
-<rect class="canvas" width="2120" height="1181"/>
-<rect class="frame" x="32" y="28" width="2056" height="1125" rx="28"/>
-<text class="title" x="66" y="82">images vips api Class Structure</text>
-<text class="subtitle" x="70" y="118">UML classes from the original Mermaid source</text>
-<path class="line" d="M240 418 L240 478 L1470 478 L1470 538"/>
-<path class="line" d="M240 418 L240 478 L650 478 L650 538"/>
-<path class="line" d="M1060 875 L1060 770.5 L1060 770.5 L1060 666"/>
-<path class="line" d="M240 418 L240 478 L240 478 L240 538"/>
-<path class="line" d="M240 418 L240 478 L1880 478 L1880 538"/>
-<path class="inheritLine" d="M1060 538 L1060 436 L1880 436 L1880 334"/>
-<path class="inheritLine" d="M1470 538 L1470 436 L1880 436 L1880 334"/>
-<path class="inheritLine" d="M650 538 L650 436 L1880 436 L1880 334"/>
-<g transform="translate(70,180)">
-  <rect class="card" x="0" y="0" width="340" height="238" rx="5" fill="#E8F3FF" stroke="#5B8DEF"/>
-  <line class="compartment" x1="0" y1="78" x2="340" y2="78" stroke="#5B8DEF"/>
-  <text class="small" x="170" y="26" text-anchor="middle">«interface»</text>
-  <text class="label" x="170" y="61" text-anchor="middle">VipsImage</text>
-  <text class="mono" x="18" y="108">+width: Int</text>
-<text class="mono" x="18" y="129">+height: Int</text>
-<text class="mono" x="18" y="150">+bands: Int</text>
-<text class="mono" x="18" y="171">+resize(width, height) VipsImage</text>
-<text class="mono" x="18" y="192">+thumbnail(maxDimension) VipsImage</text>
-<text class="mono" x="18" y="213">+crop(left, top, width, height) VipsImage</text>
+<rect class="canvas" width="1280" height="980"/>
+<text class="title" x="70" y="82">Vips API Class Structure</text>
+<text class="subtitle" x="74" y="116">Shared contracts keep backend-specific JNI and FFM implementations behind the same API.</text>
+<desc>Vips API Class Structure explains the current README/source relationship for readers. Source: VipsImage.kt, VipsRuntime.kt, VipsEncodeOptions.kt, SuspendVipsOps.kt</desc>
+<rect class="panel" x="88" y="158" width="1104" height="746" rx="8"/>
+<text class="panel-title" x="108" y="188" dominant-baseline="middle">ARCHITECTURE</text>
+<g id="edges">
+<path class="edge-gray" d="M 420 254 L 480 254"/>
+<path class="edge-gray" d="M 800 254 L 860 254"/>
+<path class="edge-gray" d="M 420 510 L 480 510"/>
+<path class="edge-gray" d="M 800 510 L 860 510"/>
+<path class="edge-gray" d="M 640 308 L 640 456"/>
+<path class="edge-gray" d="M 420 766 L 480 766"/>
+<path class="edge-gray" d="M 800 766 L 860 766"/>
+<path class="edge-gray" d="M 640 564 L 640 712"/>
+</g><g id="cards">
+<g id="runtime">
+<rect class="card" x="100" y="200" width="320" height="108" rx="8"/>
+<rect x="116" y="230" width="48" height="48" rx="8" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1.3"/>
+<text class="badge-text" x="140" y="258" text-anchor="middle">IMG</text>
+<text class="card-title" x="182" y="243.0" dominant-baseline="middle">Vips Runtime</text>
+<text class="detail" x="182" y="265.0" dominant-baseline="middle">load, fromBytes</text>
 </g>
-<g transform="translate(70,538)">
-  <rect class="card" x="0" y="0" width="340" height="196" rx="5" fill="#EAF7EF" stroke="#58A978"/>
-  <line class="compartment" x1="0" y1="78" x2="340" y2="78" stroke="#58A978"/>
-  <text class="small" x="170" y="26" text-anchor="middle"></text>
-  <text class="label" x="170" y="61" text-anchor="middle">VipsEncodeOptions</text>
-  <text class="mono" x="18" y="108">+quality: Int</text>
-<text class="mono" x="18" y="129">+effort: Int</text>
-<text class="mono" x="18" y="150">+lossless: Boolean</text>
-<text class="mono" x="18" y="171">+stripMetadata: Boolean</text>
+<g id="image">
+<rect class="card" x="480" y="200" width="320" height="108" rx="8"/>
+<rect x="496" y="230" width="48" height="48" rx="8" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1.3"/>
+<text class="badge-text" x="520" y="258" text-anchor="middle">API</text>
+<text class="card-title" x="562" y="243.0" dominant-baseline="middle">Vips Image</text>
+<text class="detail" x="562" y="265.0" dominant-baseline="middle">resize, crop, write</text>
 </g>
-<g transform="translate(480,538)">
-  <rect class="card" x="0" y="0" width="340" height="112" rx="5" fill="#FFF3D9" stroke="#D6A441"/>
-  <line class="compartment" x1="0" y1="78" x2="340" y2="78" stroke="#D6A441"/>
-  <text class="small" x="170" y="26" text-anchor="middle"></text>
-  <text class="label" x="170" y="61" text-anchor="middle">VipsDecodeException</text>
-
+<g id="format">
+<rect class="card" x="860" y="200" width="320" height="108" rx="8"/>
+<rect x="876" y="230" width="48" height="48" rx="8" fill="#fff7ed" stroke="#fed7aa" stroke-width="1.3"/>
+<text class="badge-text" x="900" y="258" text-anchor="middle">RUN</text>
+<text class="card-title" x="942" y="232.0" dominant-baseline="middle">Vips Image</text>
+<text class="card-title" x="942" y="254.0" dominant-baseline="middle">Format</text>
+<text class="detail" x="942" y="276.0" dominant-baseline="middle">JPEG, PNG, WEBP</text>
 </g>
-<g transform="translate(1300,538)">
-  <rect class="card" x="0" y="0" width="340" height="112" rx="5" fill="#FDECEF" stroke="#DC6B82"/>
-  <line class="compartment" x1="0" y1="78" x2="340" y2="78" stroke="#DC6B82"/>
-  <text class="small" x="170" y="26" text-anchor="middle"></text>
-  <text class="label" x="170" y="61" text-anchor="middle">VipsEncodeException</text>
-
+<g id="encode">
+<rect class="card" x="100" y="456" width="320" height="108" rx="8"/>
+<rect x="116" y="486" width="48" height="48" rx="8" fill="#fef2f2" stroke="#fecaca" stroke-width="1.3"/>
+<text class="badge-text" x="140" y="514" text-anchor="middle">CAP</text>
+<text class="card-title" x="182" y="488.0" dominant-baseline="middle">Vips Encode</text>
+<text class="card-title" x="182" y="510.0" dominant-baseline="middle">Options</text>
+<text class="detail" x="182" y="532.0" dominant-baseline="middle">quality, effort</text>
 </g>
-<g transform="translate(1710,538)">
-  <rect class="card" x="0" y="0" width="340" height="217" rx="5" fill="#E9F7F6" stroke="#45A7A1"/>
-  <line class="compartment" x1="0" y1="78" x2="340" y2="78" stroke="#45A7A1"/>
-  <text class="small" x="170" y="26" text-anchor="middle">«enum»</text>
-  <text class="label" x="170" y="61" text-anchor="middle">VipsImageFormat</text>
-  <text class="mono" x="18" y="108">JPEG</text>
-<text class="mono" x="18" y="129">PNG</text>
-<text class="mono" x="18" y="150">WEBP</text>
-<text class="mono" x="18" y="171">AVIF</text>
-<text class="mono" x="18" y="192">HEIC</text>
+<g id="limits">
+<rect class="card" x="480" y="456" width="320" height="108" rx="8"/>
+<rect x="496" y="486" width="48" height="48" rx="8" fill="#f0fdfa" stroke="#ccfbf1" stroke-width="1.3"/>
+<text class="badge-text" x="520" y="514" text-anchor="middle">IO</text>
+<text class="card-title" x="562" y="499.0" dominant-baseline="middle">Vips Limits</text>
+<text class="detail" x="562" y="521.0" dominant-baseline="middle">stream guard</text>
 </g>
-<g transform="translate(1710,180)">
-  <rect class="card" x="0" y="0" width="340" height="154" rx="5" fill="#F1ECFF" stroke="#8A72D6"/>
-  <line class="compartment" x1="0" y1="78" x2="340" y2="78" stroke="#8A72D6"/>
-  <text class="small" x="170" y="26" text-anchor="middle">«abstract»</text>
-  <text class="label" x="170" y="61" text-anchor="middle">VipsException</text>
-  <text class="mono" x="18" y="108">-message: String</text>
-<text class="mono" x="18" y="129">-cause: Throwable?</text>
+<g id="errors">
+<rect class="card" x="860" y="456" width="320" height="108" rx="8"/>
+<rect x="876" y="486" width="48" height="48" rx="8" fill="#faf5ff" stroke="#e9d5ff" stroke-width="1.3"/>
+<text class="badge-text" x="900" y="514" text-anchor="middle">VIP</text>
+<text class="card-title" x="942" y="488.0" dominant-baseline="middle">Vips</text>
+<text class="card-title" x="942" y="510.0" dominant-baseline="middle">Exceptions</text>
+<text class="detail" x="942" y="532.0" dominant-baseline="middle">load/write failures</text>
 </g>
-<g transform="translate(890,538)">
-  <rect class="card" x="0" y="0" width="340" height="128" rx="5" fill="#F7F1E7" stroke="#B88A44"/>
-  <line class="compartment" x1="0" y1="94" x2="340" y2="94" stroke="#B88A44"/>
-  <text class="small" x="170" y="26" text-anchor="middle"></text>
-  <text class="label" x="170" y="56.5" text-anchor="middle">Vips Initialization</text>
-<text class="label" x="170" y="81.5" text-anchor="middle">Exception</text>
-
+<g id="suspend">
+<rect class="card" x="100" y="712" width="320" height="108" rx="8"/>
+<rect x="116" y="742" width="48" height="48" rx="8" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1.3"/>
+<text class="badge-text" x="140" y="770" text-anchor="middle">IMG</text>
+<text class="card-title" x="182" y="744.0" dominant-baseline="middle">Suspend Vips</text>
+<text class="card-title" x="182" y="766.0" dominant-baseline="middle">Ops</text>
+<text class="detail" x="182" y="788.0" dominant-baseline="middle">coroutine wrappers</text>
 </g>
-<g transform="translate(890,875)">
-  <rect class="card" x="0" y="0" width="340" height="196" rx="5" fill="#EEF6D9" stroke="#8BA84D"/>
-  <line class="compartment" x1="0" y1="78" x2="340" y2="78" stroke="#8BA84D"/>
-  <text class="small" x="170" y="26" text-anchor="middle">«interface»</text>
-  <text class="label" x="170" y="61" text-anchor="middle">VipsRuntime</text>
-  <text class="mono" x="18" y="108">+init(concurrency, maxPixels) void</text>
-<text class="mono" x="18" y="129">+shutdown() void</text>
-<text class="mono" x="18" y="150">+isInitialized: Boolean</text>
-<text class="mono" x="18" y="171">+isShutdown: Boolean</text>
+<g id="okio">
+<rect class="card" x="480" y="712" width="320" height="108" rx="8"/>
+<rect x="496" y="742" width="48" height="48" rx="8" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1.3"/>
+<text class="badge-text" x="520" y="770" text-anchor="middle">API</text>
+<text class="card-title" x="562" y="744.0" dominant-baseline="middle">Vips Okio</text>
+<text class="card-title" x="562" y="766.0" dominant-baseline="middle">Support</text>
+<text class="detail" x="562" y="788.0" dominant-baseline="middle">Source/Sink</text>
 </g>
+<g id="fixtures">
+<rect class="card" x="860" y="712" width="320" height="108" rx="8"/>
+<rect x="876" y="742" width="48" height="48" rx="8" fill="#fff7ed" stroke="#fed7aa" stroke-width="1.3"/>
+<text class="badge-text" x="900" y="770" text-anchor="middle">RUN</text>
+<text class="card-title" x="942" y="755.0" dominant-baseline="middle">Test fixtures</text>
+<text class="detail" x="942" y="777.0" dominant-baseline="middle">golden asserts</text>
+</g>
+</g>
+<text class="note" x="640.0" y="928" text-anchor="middle">https://github.com/bluetape4k/bluetape4k-image | project: bluetape4k-image | module: images-vips-api</text>
 </svg>

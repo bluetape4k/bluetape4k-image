@@ -258,16 +258,16 @@ Update:
 - New `images-ocr/README.md` and `images-ocr/README.ko.md`.
 - Repo-local `AGENTS.md` module list and command section.
 - Root README visual assets:
-  - `docs/assets/readme-diagrams/root-readme-overview-01.svg`
-  - `docs/assets/readme-diagrams/root-readme-overview-01.png`
-  - `docs/assets/readme-diagrams/root-readme-overview-01.dot`
-  - `docs/assets/readme-diagrams/root-readme-overview-01.plain`
-  - `docs/assets/readme-diagrams/root-readme-overview-01-graphviz.svg`
-  - `docs/assets/readme-diagrams/root-readme-overview-01-graphviz.png`
-  - `docs/assets/readme-charts/root-readme-module-chart-01.svg`
-  - `docs/assets/readme-charts/root-readme-module-chart-01.png`
-  - `docs/assets/readme-diagrams/bluetape4k-image-architecture-01.svg`
-  - `docs/assets/readme-diagrams/bluetape4k-image-architecture-01.png`
+  - `docs/images/readme-diagrams/root-readme-overview-01.svg`
+  - `docs/images/readme-diagrams/root-readme-overview-01.png`
+  - `docs/images/readme-diagrams/root-readme-overview-01.dot`
+  - `docs/images/readme-diagrams/root-readme-overview-01.plain`
+  - `docs/images/readme-diagrams/root-readme-overview-01-graphviz.svg`
+  - `docs/images/readme-diagrams/root-readme-overview-01-graphviz.png`
+  - `docs/images/readme-charts/root-readme-module-chart-01.svg`
+  - `docs/images/readme-charts/root-readme-module-chart-01.png`
+  - `docs/images/readme-diagrams/bluetape4k-image-architecture-01.svg`
+  - `docs/images/readme-diagrams/bluetape4k-image-architecture-01.png`
 
 Diagram labels stay English and README files embed PNG only. The diagram update
 must follow `$bluetape4k-diagram` validation: SVG parses, PNG exists, Graphviz

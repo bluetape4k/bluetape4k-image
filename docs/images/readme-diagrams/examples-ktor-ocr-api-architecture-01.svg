@@ -1,45 +1,39 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="2100" height="1540" viewBox="0 0 2100 1540" role="img" aria-label="Ktor OCR API Architecture">
 <defs>
-  <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%">
-    <feDropShadow dx="0" dy="7" stdDeviation="8" flood-color="#203040" flood-opacity="0.10"/>
-  </filter>
-  <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-    <path d="M 1 1 L 7 4 L 1 7 Z" fill="#758297"/>
-  </marker>
+  <marker id="arrow-blue" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#2563eb"/></marker>
+  <marker id="arrow-gray" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#6b7280"/></marker>
   <style>
-    .canvas{fill:#F6F9FC}
-    .frame{fill:#FFFFFF;stroke:#D7E2EC;stroke-width:2}
-    .title{font-family:"Architects Daughter";font-size:42px;fill:#203040;font-weight:400}
-    .subtitle{font-family:"Comic Mono";font-size:16px;fill:#536476;font-weight:400}
-    .node-title{font-family:"Architects Daughter";font-size:22px;fill:#203040;font-weight:400}
-    .node-detail{font-family:"Comic Mono";font-size:13px;fill:#4D5F70;font-weight:400}
-    .panel-title{font-family:"Architects Daughter";font-size:24px;fill:#203040;font-weight:400}
-    .layer{fill:#F3F7FB;stroke:#D7E2EC;stroke-width:2}
-    .layer-title{font-family:"Architects Daughter";font-size:26px;fill:#22344A;font-weight:400}
-    .label{font-family:"Comic Mono";font-size:12px;fill:#405366;font-weight:400}
-    .footer{font-family:"Comic Mono";font-size:13px;fill:#627184;font-weight:400}
-    .footer-pill{fill:#FFFFFF;stroke:#D7E2EC;stroke-width:1}
-    .card{filter:url(#shadow);stroke-width:2}
-    .edge{stroke:#758297;stroke-width:2.3;fill:none;marker-end:url(#arrow);stroke-linecap:round;stroke-linejoin:round}
-    .edge-dashed{stroke:#758297;stroke-width:2.2;fill:none;marker-end:url(#arrow);stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:7 6}
-    .lifeline{stroke:#9AA8B8;stroke-width:1.7;stroke-dasharray:7 7}
+    .canvas{fill:#ffffff}
+    .title{font-family:"Architects Daughter";font-size:42px;fill:#111827;font-weight:400}
+    .subtitle{font-family:"Comic Mono";font-size:16px;fill:#6b7280;font-weight:400}
+    .node-title{font-family:"Architects Daughter";font-size:22px;fill:#111827;font-weight:400}
+    .node-detail{font-family:"Comic Mono";font-size:13px;fill:#6b7280;font-weight:400}
+    .panel-title{font-family:"Comic Mono";font-size:16px;fill:#4b5563;font-weight:700;letter-spacing:0.8px}
+    .layer{fill:#f3f6fa;stroke:#cbd5e1;stroke-width:1.4;stroke-dasharray:8 6}
+    .layer-title{font-family:"Comic Mono";font-size:16px;fill:#4b5563;font-weight:700;letter-spacing:0.8px}
+    .label{font-family:"Comic Mono";font-size:12px;fill:#374151;font-weight:400}
+    .footer{font-family:"Comic Mono";font-size:13px;fill:#6b7280;font-weight:400}
+    .footer-pill{fill:#ffffff;stroke:#d1d5db;stroke-width:1}
+    .card{fill:#ffffff;stroke:#94a3b8;stroke-width:1.9}
+    .edge{stroke:#2563eb;stroke-width:2.1;fill:none;marker-end:url(#arrow-blue);stroke-linecap:round;stroke-linejoin:round}
+    .edge-dashed{stroke:#6b7280;stroke-width:1.8;fill:none;marker-end:url(#arrow-gray);stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:6 4}
+    .lifeline{stroke:#d1d5db;stroke-width:1.5;stroke-dasharray:7 7}
   </style>
 </defs>
 <rect class="canvas" width="2100" height="1540"/>
-<rect class="frame" x="34" y="28" width="2032" height="1482" rx="26"/>
 <text class="title" x="70" y="82">Ktor OCR API Architecture</text>
 <text class="subtitle" x="74" y="116">Top-down layers keep Ktor routing separate from images-ocr and native Tesseract.</text>
 <g id="layers" transform="translate(0 70)">
-<rect x="70" y="160" width="1960" height="150" rx="18" fill="#E8F3FF" stroke="#5B8DEF" stroke-width="1.8" opacity="0.34"/>
-<text class="panel-title" x="88" y="192" dominant-baseline="middle">Client Layer</text>
-<rect x="70" y="335" width="1960" height="150" rx="18" fill="#EAF7EF" stroke="#58A978" stroke-width="1.8" opacity="0.34"/>
-<text class="panel-title" x="88" y="367" dominant-baseline="middle">Ktor Routing Layer</text>
-<rect x="70" y="505" width="1960" height="160" rx="18" fill="#FFF3D9" stroke="#D6A441" stroke-width="1.8" opacity="0.34"/>
-<text class="panel-title" x="88" y="537" dominant-baseline="middle">Application Layer</text>
-<rect x="70" y="700" width="1960" height="310" rx="18" fill="#FDECEF" stroke="#DC6B82" stroke-width="1.8" opacity="0.34"/>
-<text class="panel-title" x="88" y="732" dominant-baseline="middle">OCR Library Layer</text>
-<rect x="70" y="1050" width="1960" height="320" rx="18" fill="#E9F7F6" stroke="#45A7A1" stroke-width="1.8" opacity="0.34"/>
-<text class="panel-title" x="88" y="1082" dominant-baseline="middle">Native Runtime Layer</text>
+<rect class="layer" x="70" y="160" width="1960" height="150" rx="8"/>
+<text class="panel-title" x="88" y="188" dominant-baseline="middle">CLIENT LAYER</text>
+<rect class="layer" x="70" y="335" width="1960" height="150" rx="8"/>
+<text class="panel-title" x="88" y="363" dominant-baseline="middle">KTOR ROUTING LAYER</text>
+<rect class="layer" x="70" y="510" width="1960" height="155" rx="8"/>
+<text class="panel-title" x="88" y="538" dominant-baseline="middle">APPLICATION LAYER</text>
+<rect class="layer" x="70" y="700" width="1960" height="310" rx="8"/>
+<text class="panel-title" x="88" y="728" dominant-baseline="middle">OCR LIBRARY LAYER</text>
+<rect class="layer" x="70" y="1050" width="1960" height="320" rx="8"/>
+<text class="panel-title" x="88" y="1078" dominant-baseline="middle">NATIVE RUNTIME LAYER</text>
 </g>
 <g id="edges" transform="translate(0 70)">
 <path class="edge" d="M 1050 275 L 1050 360" stroke="#758297"/>
@@ -53,50 +47,59 @@
 </g>
 <g id="nodes" transform="translate(0 70)">
 <g id="client">
-  <rect class="card" x="800" y="185" width="500" height="90" rx="14" fill="#E8F3FF" stroke="#5B8DEF"/>
-  <text class="node-title" x="1050" y="220.0" text-anchor="middle" dominant-baseline="middle">Client</text>
-  <text class="node-detail" x="1050" y="240.0" text-anchor="middle" dominant-baseline="middle">curl or testApplication</text>
+  <rect class="card" x="800" y="185" width="500" height="90" rx="8"/>
+  <rect x="814" y="210" width="40" height="40" rx="8" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1.2"/>
+  <text class="node-title" x="868" y="221.0" dominant-baseline="middle">Client</text>
+  <text class="node-detail" x="868" y="239.0" dominant-baseline="middle">curl or testApplication</text>
 </g>
 <g id="routing">
-  <rect class="card" x="760" y="360" width="580" height="96" rx="14" fill="#EAF7EF" stroke="#58A978"/>
-  <text class="node-title" x="1050" y="398.0" text-anchor="middle" dominant-baseline="middle">Ktor routing</text>
-  <text class="node-detail" x="1050" y="418.0" text-anchor="middle" dominant-baseline="middle">multipart endpoint</text>
+  <rect class="card" x="760" y="360" width="580" height="96" rx="8"/>
+  <rect x="774" y="388" width="40" height="40" rx="8" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1.2"/>
+  <text class="node-title" x="828" y="399.0" dominant-baseline="middle">Ktor routing</text>
+  <text class="node-detail" x="828" y="417.0" dominant-baseline="middle">multipart endpoint</text>
 </g>
 <g id="service">
-  <rect class="card" x="730" y="530" width="640" height="100" rx="14" fill="#FFF3D9" stroke="#D6A441"/>
-  <text class="node-title" x="1050" y="570.0" text-anchor="middle" dominant-baseline="middle">KtorOcrService</text>
-  <text class="node-detail" x="1050" y="590.0" text-anchor="middle" dominant-baseline="middle">validation and options</text>
+  <rect class="card" x="730" y="530" width="640" height="100" rx="8"/>
+  <rect x="744" y="560" width="40" height="40" rx="8" fill="#fff7ed" stroke="#fed7aa" stroke-width="1.2"/>
+  <text class="node-title" x="798" y="571.0" dominant-baseline="middle">KtorOcrService</text>
+  <text class="node-detail" x="798" y="589.0" dominant-baseline="middle">validation and options</text>
 </g>
 <g id="image">
-  <rect class="card" x="420" y="730" width="450" height="96" rx="14" fill="#FDECEF" stroke="#DC6B82"/>
-  <text class="node-title" x="645" y="768.0" text-anchor="middle" dominant-baseline="middle">ImmutableImage</text>
-  <text class="node-detail" x="645" y="788.0" text-anchor="middle" dominant-baseline="middle">uploaded bytes</text>
+  <rect class="card" x="420" y="730" width="450" height="96" rx="8"/>
+  <rect x="434" y="758" width="40" height="40" rx="8" fill="#fef2f2" stroke="#fecaca" stroke-width="1.2"/>
+  <text class="node-title" x="488" y="769.0" dominant-baseline="middle">ImmutableImage</text>
+  <text class="node-detail" x="488" y="787.0" dominant-baseline="middle">uploaded bytes</text>
 </g>
 <g id="options">
-  <rect class="card" x="1220" y="730" width="420" height="96" rx="14" fill="#E9F7F6" stroke="#45A7A1"/>
-  <text class="node-title" x="1430" y="768.0" text-anchor="middle" dominant-baseline="middle">OcrOptions</text>
-  <text class="node-detail" x="1430" y="788.0" text-anchor="middle" dominant-baseline="middle">languages + tessdata path</text>
+  <rect class="card" x="1220" y="730" width="420" height="96" rx="8"/>
+  <rect x="1234" y="758" width="40" height="40" rx="8" fill="#f0fdfa" stroke="#ccfbf1" stroke-width="1.2"/>
+  <text class="node-title" x="1288" y="769.0" dominant-baseline="middle">OcrOptions</text>
+  <text class="node-detail" x="1288" y="787.0" dominant-baseline="middle">languages + tessdata path</text>
 </g>
 <g id="extract">
-  <rect class="card" x="760" y="875" width="580" height="96" rx="14" fill="#F1ECFF" stroke="#8A72D6"/>
-  <text class="node-title" x="1050" y="913.0" text-anchor="middle" dominant-baseline="middle">suspendExtractText</text>
-  <text class="node-detail" x="1050" y="933.0" text-anchor="middle" dominant-baseline="middle">Dispatchers.IO boundary</text>
+  <rect class="card" x="760" y="875" width="580" height="96" rx="8"/>
+  <rect x="774" y="903" width="40" height="40" rx="8" fill="#faf5ff" stroke="#e9d5ff" stroke-width="1.2"/>
+  <text class="node-title" x="828" y="914.0" dominant-baseline="middle">suspendExtractText</text>
+  <text class="node-detail" x="828" y="932.0" dominant-baseline="middle">Dispatchers.IO boundary</text>
 </g>
 <g id="engine">
-  <rect class="card" x="480" y="1080" width="480" height="96" rx="14" fill="#F7F1E7" stroke="#B88A44"/>
-  <text class="node-title" x="720" y="1118.0" text-anchor="middle" dominant-baseline="middle">TesseractOcrEngine</text>
-  <text class="node-detail" x="720" y="1138.0" text-anchor="middle" dominant-baseline="middle">fresh Tess4J client</text>
+  <rect class="card" x="480" y="1080" width="480" height="96" rx="8"/>
+  <rect x="494" y="1108" width="40" height="40" rx="8" fill="#f9fafb" stroke="#d1d5db" stroke-width="1.2"/>
+  <text class="node-title" x="548" y="1119.0" dominant-baseline="middle">TesseractOcrEngine</text>
+  <text class="node-detail" x="548" y="1137.0" dominant-baseline="middle">fresh Tess4J client</text>
 </g>
 <g id="tess4j">
-  <rect class="card" x="1060" y="1080" width="420" height="96" rx="14" fill="#E8F3FF" stroke="#5B8DEF"/>
-  <text class="node-title" x="1270" y="1118.0" text-anchor="middle" dominant-baseline="middle">Tess4J</text>
-  <text class="node-detail" x="1270" y="1138.0" text-anchor="middle" dominant-baseline="middle">JNI bridge</text>
+  <rect class="card" x="1060" y="1080" width="420" height="96" rx="8"/>
+  <rect x="1074" y="1108" width="40" height="40" rx="8" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1.2"/>
+  <text class="node-title" x="1128" y="1119.0" dominant-baseline="middle">Tess4J</text>
+  <text class="node-detail" x="1128" y="1137.0" dominant-baseline="middle">JNI bridge</text>
 </g>
 <g id="tesseract">
-  <rect class="card" x="790" y="1230" width="520" height="96" rx="14" fill="#EAF7EF" stroke="#58A978"/>
-  <text class="node-title" x="1050" y="1268.0" text-anchor="middle" dominant-baseline="middle">Host Tesseract</text>
-  <text class="node-detail" x="1050" y="1288.0" text-anchor="middle" dominant-baseline="middle">installed traineddata</text>
+  <rect class="card" x="790" y="1230" width="520" height="96" rx="8"/>
+  <rect x="804" y="1258" width="40" height="40" rx="8" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1.2"/>
+  <text class="node-title" x="858" y="1269.0" dominant-baseline="middle">Host Tesseract</text>
+  <text class="node-detail" x="858" y="1287.0" dominant-baseline="middle">installed traineddata</text>
 </g>
 </g>
-<text class="footer" x="1050.0" y="1490" text-anchor="middle">The example owns Ktor HTTP wiring only; OCR behavior remains in bluetape4k-images-ocr.</text>
+<text class="footer" x="1050.0" y="1490" text-anchor="middle">https://github.com/bluetape4k/bluetape4k-image | project: bluetape4k-image | module: examples:ktor-ocr-api</text>
 </svg>

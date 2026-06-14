@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1560" height="760" viewBox="0 0 1560 760" role="img" aria-label="Module Composition Chart">
+<defs>
+  <marker id="arrow-blue" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#2563eb"/></marker>
+  <marker id="arrow-green" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#16a34a"/></marker>
+  <marker id="arrow-orange" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#ea580c"/></marker>
+  <marker id="arrow-purple" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#9333ea"/></marker>
+  <marker id="arrow-gray" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#6b7280"/></marker>
+  <style>
+    .canvas{fill:#ffffff}.panel{fill:#f3f6fa;stroke:#cbd5e1;stroke-width:1.4;stroke-dasharray:8 6}.chart-panel{fill:#ffffff;stroke:#bfdbfe;stroke-width:1.7}.card{fill:#ffffff;stroke:#94a3b8;stroke-width:1.9}.badge-text{font-family:"Comic Mono";font-size:11px;fill:#374151;font-weight:700}
+    .edge-blue{stroke:#2563eb;stroke-width:2.1;fill:none;marker-end:url(#arrow-blue);stroke-linecap:round;stroke-linejoin:round}.edge-green{stroke:#16a34a;stroke-width:2.1;fill:none;marker-end:url(#arrow-green);stroke-linecap:round;stroke-linejoin:round}.edge-orange{stroke:#ea580c;stroke-width:2;fill:none;marker-end:url(#arrow-orange);stroke-linecap:round;stroke-linejoin:round}.edge-purple{stroke:#9333ea;stroke-width:2;fill:none;marker-end:url(#arrow-purple);stroke-linecap:round;stroke-linejoin:round}.edge-gray{stroke:#6b7280;stroke-width:1.8;fill:none;marker-end:url(#arrow-gray);stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:6 4}.dashed{stroke-dasharray:6 4}
+    .title{font-family:"Architects Daughter";font-size:42px;fill:#111827;font-weight:400}.subtitle{font-family:"Comic Mono";font-size:16px;fill:#6b7280;font-weight:400}.card-title{font-family:"Architects Daughter";font-size:23px;fill:#111827;font-weight:400}.detail,.label,.note,.axis,.value{font-family:"Comic Mono";fill:#6b7280;font-weight:400}.detail{font-size:13px}.label{font-size:12px}.note{font-size:13px}.axis{font-size:14px}.value{font-size:14px}.panel-title{font-family:"Comic Mono";font-size:16px;fill:#4b5563;font-weight:700;letter-spacing:0.8px}
+  </style>
+</defs>
+<rect class="canvas" width="1560" height="760"/>
+<text class="title" x="70" y="82">Module Composition Chart</text>
+<text class="subtitle" x="74" y="116">Artifact lanes by runtime requirement and adoption role.</text>
+<desc>Source: README module table and settings.gradle.kts. Unit: module count. Direction: higher is better for lane breadth.</desc>
+<rect class="chart-panel" x="56" y="146" width="1448" height="510" rx="12"/>
+<text class="note" x="88" y="190">Measured ranking</text>
+<text class="axis" x="294" y="190">module count · higher is better for lane breadth</text>
+<text class="axis" x="1410.0" y="214" text-anchor="end">0 to 3</text>
+<text class="note" x="780.0" y="708" text-anchor="middle">https://github.com/bluetape4k/bluetape4k-image | project: bluetape4k-image | module: root</text>
+<rect x="1250" y="174" width="22" height="14" rx="4" fill="#dbeafe" stroke="#2563eb" stroke-width="1.4"/>
+<text class="axis" x="1282" y="186">modules</text>
+<line x1="294.0" y1="226" x2="294.0" y2="596" stroke="#dbe3ee" stroke-width="1" stroke-dasharray="5 7"/>
+<text class="axis" x="294.0" y="624" text-anchor="middle">0</text>
+<line x1="573.0" y1="226" x2="573.0" y2="596" stroke="#dbe3ee" stroke-width="1" stroke-dasharray="5 7"/>
+<text class="axis" x="573.0" y="624" text-anchor="middle">0.75</text>
+<line x1="852.0" y1="226" x2="852.0" y2="596" stroke="#dbe3ee" stroke-width="1" stroke-dasharray="5 7"/>
+<text class="axis" x="852.0" y="624" text-anchor="middle">1.5</text>
+<line x1="1131.0" y1="226" x2="1131.0" y2="596" stroke="#dbe3ee" stroke-width="1" stroke-dasharray="5 7"/>
+<text class="axis" x="1131.0" y="624" text-anchor="middle">2.25</text>
+<line x1="1410.0" y1="226" x2="1410.0" y2="596" stroke="#dbe3ee" stroke-width="1" stroke-dasharray="5 7"/>
+<text class="axis" x="1410.0" y="624" text-anchor="middle">3</text>
+<line x1="294" y1="596" x2="1410" y2="596" stroke="#94a3b8" stroke-width="1.2"/>
+<text class="axis" x="266" y="256.0" text-anchor="end">Pure JVM</text>
+<rect x="294" y="238" width="1116.0" height="20" rx="6" fill="#edf2f7" stroke="#dbe3ee" stroke-width="1"/>
+<rect x="294" y="238" width="1116.0" height="20" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+<text class="value" x="1398.0" y="252" text-anchor="end">3</text>
+<text class="axis" x="266" y="326.0" text-anchor="end">Service adapters</text>
+<rect x="294" y="308" width="1116.0" height="20" rx="6" fill="#edf2f7" stroke="#dbe3ee" stroke-width="1"/>
+<rect x="294" y="308" width="744.0" height="20" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+<text class="value" x="1050.0" y="322" text-anchor="start">2</text>
+<text class="axis" x="266" y="396.0" text-anchor="end">OCR</text>
+<rect x="294" y="378" width="1116.0" height="20" rx="6" fill="#edf2f7" stroke="#dbe3ee" stroke-width="1"/>
+<rect x="294" y="378" width="372.0" height="20" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+<text class="value" x="678.0" y="392" text-anchor="start">1</text>
+<text class="axis" x="266" y="466.0" text-anchor="end">Native vips</text>
+<rect x="294" y="448" width="1116.0" height="20" rx="6" fill="#edf2f7" stroke="#dbe3ee" stroke-width="1"/>
+<rect x="294" y="448" width="1116.0" height="20" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+<text class="value" x="1398.0" y="462" text-anchor="end">3</text>
+<text class="axis" x="266" y="536.0" text-anchor="end">Benchmark/BOM</text>
+<rect x="294" y="518" width="1116.0" height="20" rx="6" fill="#edf2f7" stroke="#dbe3ee" stroke-width="1"/>
+<rect x="294" y="518" width="744.0" height="20" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+<text class="value" x="1050.0" y="532" text-anchor="start">2</text>
+</svg>

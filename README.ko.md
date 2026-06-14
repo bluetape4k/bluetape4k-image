@@ -7,7 +7,7 @@
 
 [English](./README.md) | 한국어
 
-![bluetape4k 이미지 처리 작업대 일러스트](./docs/assets/image-workbench.png)
+![bluetape4k 이미지 처리 작업대 일러스트](./docs/images/image-workbench.png)
 
 Kotlin/JVM 이미지 처리 라이브러리 — [bluetape4k](https://github.com/bluetape4k) 생태계의 일부입니다.
 두 가지 백엔드를 제공합니다: 코루틴 비동기 I/O를 갖춘 순수 JVM [scrimage](https://github.com/sksamuel/scrimage)
@@ -67,11 +67,11 @@ Benchmark evidence: [`images-benchmark/docs/large-streaming-2026-06-05.md`](imag
 <!-- README_VISUAL_OVERVIEW:START -->
 ## 개요 다이어그램
 
-![Bluetape4k Image overview diagram](docs/assets/readme-diagrams/root-readme-overview-01.png)
+![Bluetape4k Image overview diagram](docs/images/readme-diagrams/root-readme-overview-01.png)
 
 ## 모듈 구성 차트
 
-![Bluetape4k Image module composition chart](docs/assets/readme-charts/root-readme-module-chart-01.png)
+![Bluetape4k Image module composition chart](docs/images/readme-charts/root-readme-module-chart-01.png)
 <!-- README_VISUAL_OVERVIEW:END -->
 
 ## 모듈 구성
@@ -91,7 +91,7 @@ Benchmark evidence: [`images-benchmark/docs/large-streaming-2026-06-05.md`](imag
 
 ## 아키텍처
 
-![image Architecture diagram](docs/assets/readme-diagrams/bluetape4k-image-architecture-01.png)
+![image Architecture diagram](docs/images/readme-diagrams/bluetape4k-image-architecture-01.png)
 
 ## 요구사항
 
