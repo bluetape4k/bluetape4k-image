@@ -2,8 +2,8 @@
 
 ## Scope
 
-- `images-ocr/docs/assets/readme-diagrams/images-ocr-architecture-01.svg`
-- `images-ocr/docs/assets/readme-diagrams/images-ocr-architecture-01.png`
+- `docs/images/readme-diagrams/images-ocr-architecture-01.svg`
+- `docs/images/readme-diagrams/images-ocr-architecture-01.png`
 - Graphviz evidence files for the same architecture asset.
 
 ## Findings
@@ -18,10 +18,10 @@
 
 | Gate | Result | Evidence |
 |---|---|---|
-| XML parse | PASS | `xmllint --noout images-ocr/docs/assets/readme-diagrams/images-ocr-architecture-01.svg images-ocr/docs/assets/readme-diagrams/images-ocr-architecture-01-graphviz.svg` |
-| PNG pair | PASS | `identify images-ocr/docs/assets/readme-diagrams/images-ocr-architecture-01.png images-ocr/docs/assets/readme-diagrams/images-ocr-architecture-01-graphviz.png` |
+| XML parse | PASS | `xmllint --noout docs/images/readme-diagrams/images-ocr-architecture-01.svg docs/images/readme-diagrams/images-ocr-architecture-01-graphviz.svg` |
+| PNG pair | PASS | `identify docs/images/readme-diagrams/images-ocr-architecture-01.png docs/images/readme-diagrams/images-ocr-architecture-01-graphviz.png` |
 | README embed | PASS | `rg 'images-ocr-architecture-01\.svg' images-ocr/README.md images-ocr/README.ko.md` returned no matches. |
-| Font role guard | PASS | `rg 'font-family=.*(Inter|Arial|Helvetica)|font-family:(Inter|Arial|Helvetica)' images-ocr/docs/assets/readme-diagrams/images-ocr-architecture-01.svg` returned no matches. |
+| Font role guard | PASS | `rg 'font-family=.*(Inter|Arial|Helvetica)|font-family:(Inter|Arial|Helvetica)' docs/images/readme-diagrams/images-ocr-architecture-01.svg` returned no matches. |
 | Diff whitespace | PASS | `git diff --check` |
 | Visual inspection | PASS | Rendered PNG shows no result-label overflow, no Tess4J interior crossing, and no layer-label overlap. |
 

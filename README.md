@@ -7,7 +7,7 @@
 
 English | [한국어](./README.ko.md)
 
-![Bluetape4k image processing workbench](./docs/assets/image-workbench.png)
+![Bluetape4k image processing workbench](./docs/images/image-workbench.png)
 
 Kotlin/JVM image processing library — part of the [bluetape4k](https://github.com/bluetape4k) ecosystem.
 Provides two backends: a pure-JVM [scrimage](https://github.com/sksamuel/scrimage) path (Java2D) for
@@ -77,11 +77,11 @@ Benchmark evidence: [`images-benchmark/docs/large-streaming-2026-06-05.md`](imag
 <!-- README_VISUAL_OVERVIEW:START -->
 ## Overview Diagram
 
-![Bluetape4k Image overview diagram](docs/assets/readme-diagrams/root-readme-overview-01.png)
+![Bluetape4k Image overview diagram](docs/images/readme-diagrams/root-readme-overview-01.png)
 
 ## Module Composition Chart
 
-![Bluetape4k Image module composition chart](docs/assets/readme-charts/root-readme-module-chart-01.png)
+![Bluetape4k Image module composition chart](docs/images/readme-charts/root-readme-module-chart-01.png)
 <!-- README_VISUAL_OVERVIEW:END -->
 
 ## Modules
@@ -101,7 +101,7 @@ Benchmark evidence: [`images-benchmark/docs/large-streaming-2026-06-05.md`](imag
 
 ## Architecture
 
-![image Architecture diagram](docs/assets/readme-diagrams/bluetape4k-image-architecture-01.png)
+![image Architecture diagram](docs/images/readme-diagrams/bluetape4k-image-architecture-01.png)
 
 ## Requirements
 

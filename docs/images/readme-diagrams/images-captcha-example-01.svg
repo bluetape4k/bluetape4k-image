@@ -1,21 +1,23 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="560" height="220" viewBox="0 0 560 220" role="img" aria-label="Example CAPTCHA image">
 <defs>
   <style>
-    .title{font-family:"Architects Daughter";font-size:22px;fill:#203040;font-weight:400}
-    .detail{font-family:"Comic Mono";font-size:12px;fill:#536476;font-weight:400}
-    .captcha{font-family:"Architects Daughter";font-size:56px;fill:#24384F;font-weight:400}
+    .title{font-family:"Architects Daughter";font-size:22px;fill:#111827;font-weight:400}
+    .detail{font-family:"Comic Mono";font-size:12px;fill:#6b7280;font-weight:400}
+    .footer{font-family:"Comic Mono";font-size:9.5px;fill:#6b7280;font-weight:400}
+    .captcha{font-family:"Architects Daughter";font-size:56px;fill:#111827;font-weight:400}
   </style>
 </defs>
-<rect width="560" height="220" rx="22" fill="#F6F9FC"/>
-<rect x="36" y="30" width="488" height="132" rx="18" fill="#FFFFFF" stroke="#D7E2EC" stroke-width="2"/>
-<path d="M62 70 L498 122 M75 141 L476 56 M94 104 L496 99" stroke="#75A9E8" stroke-width="2.2" stroke-linecap="round" opacity="0.42"/>
-<path d="M66 119 C138 58 222 156 302 88 S440 58 506 129" stroke="#DB7890" stroke-width="2" fill="none" opacity="0.45"/>
+<rect width="560" height="220" fill="#ffffff"/>
+<rect x="36" y="30" width="488" height="132" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.9"/>
+<path d="M62 70 L498 122 M75 141 L476 56 M94 104 L496 99" stroke="#2563eb" stroke-width="2.2" stroke-linecap="round" opacity="0.32"/>
+<path d="M66 119 C138 58 222 156 302 88 S440 58 506 129" stroke="#ea580c" stroke-width="2" fill="none" opacity="0.34"/>
 <g opacity="0.55">
-<circle cx="88" cy="60" r="3" fill="#58A978"/><circle cx="122" cy="134" r="2" fill="#D6A441"/><circle cx="184" cy="82" r="2.8" fill="#8A72D6"/>
-<circle cx="266" cy="126" r="2.5" fill="#DC6B82"/><circle cx="348" cy="68" r="3.2" fill="#45A7A1"/><circle cx="430" cy="140" r="2.5" fill="#B88A44"/>
-<circle cx="486" cy="82" r="2.7" fill="#5B8DEF"/><circle cx="392" cy="108" r="2.2" fill="#58A978"/>
+<circle cx="88" cy="60" r="3" fill="#16a34a"/><circle cx="122" cy="134" r="2" fill="#ea580c"/><circle cx="184" cy="82" r="2.8" fill="#9333ea"/>
+<circle cx="266" cy="126" r="2.5" fill="#dc2626"/><circle cx="348" cy="68" r="3.2" fill="#059669"/><circle cx="430" cy="140" r="2.5" fill="#6b7280"/>
+<circle cx="486" cy="82" r="2.7" fill="#2563eb"/><circle cx="392" cy="108" r="2.2" fill="#16a34a"/>
 </g>
 <text class="captcha" x="280" y="105" text-anchor="middle" dominant-baseline="middle" transform="rotate(-3 280 105)">BT4K7M</text>
-<text class="title" x="48" y="188">CAPTCHA challenge preview</text>
-<text class="detail" x="48" y="207">Illustrative output using the 200 x 80 default model, scaled for README.</text>
+<text class="title" x="48" y="182">CAPTCHA challenge preview</text>
+<text class="footer" x="280" y="202" text-anchor="middle">https://github.com/bluetape4k/bluetape4k-image</text>
+<text class="footer" x="280" y="215" text-anchor="middle">project: bluetape4k-image | module: images-captcha</text>
 </svg>

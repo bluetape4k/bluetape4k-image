@@ -1,23 +1,66 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="780" viewBox="0 0 1280 780" role="img" aria-label="Encode Latency Benchmark">
+<svg xmlns="http://www.w3.org/2000/svg" width="1480" height="770" viewBox="0 0 1480 770" role="img" aria-label="Encode Latency">
 <defs>
-  <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="8" stdDeviation="9" flood-color="#1f2937" flood-opacity="0.10"/></filter>
+  <marker id="arrow-blue" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#2563eb"/></marker>
+  <marker id="arrow-green" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#16a34a"/></marker>
+  <marker id="arrow-orange" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#ea580c"/></marker>
+  <marker id="arrow-purple" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#9333ea"/></marker>
+  <marker id="arrow-gray" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#6b7280"/></marker>
   <style>
-    .canvas{fill:#f7f9fc}.frame{fill:#fff;stroke:#d8e0ea;stroke-width:1.5}
-    .title{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:42px;font-weight:400;fill:#102033}
-    .subtitle{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:16px;font-weight:400;fill:#536273}
-    .axis{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:13px;font-weight:400;fill:#536273}
-    .label{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:15px;font-weight:400;fill:#102033}
-    .small{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:13px;font-weight:400;fill:#536273}
-    .value{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:13px;font-weight:700;fill:#102033}
-    .note{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:13px;font-weight:400;fill:#536273}
-    .panel{filter:url(#shadow)}
+    .canvas{fill:#ffffff}.panel{fill:#f3f6fa;stroke:#cbd5e1;stroke-width:1.4;stroke-dasharray:8 6}.chart-panel{fill:#ffffff;stroke:#bfdbfe;stroke-width:1.7}.card{fill:#ffffff;stroke:#94a3b8;stroke-width:1.9}.badge-text{font-family:"Comic Mono";font-size:11px;fill:#374151;font-weight:700}
+    .edge-blue{stroke:#2563eb;stroke-width:2.1;fill:none;marker-end:url(#arrow-blue);stroke-linecap:round;stroke-linejoin:round}.edge-green{stroke:#16a34a;stroke-width:2.1;fill:none;marker-end:url(#arrow-green);stroke-linecap:round;stroke-linejoin:round}.edge-orange{stroke:#ea580c;stroke-width:2;fill:none;marker-end:url(#arrow-orange);stroke-linecap:round;stroke-linejoin:round}.edge-purple{stroke:#9333ea;stroke-width:2;fill:none;marker-end:url(#arrow-purple);stroke-linecap:round;stroke-linejoin:round}.edge-gray{stroke:#6b7280;stroke-width:1.8;fill:none;marker-end:url(#arrow-gray);stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:6 4}.dashed{stroke-dasharray:6 4}
+    .title{font-family:"Architects Daughter";font-size:42px;fill:#111827;font-weight:400}.subtitle{font-family:"Comic Mono";font-size:16px;fill:#6b7280;font-weight:400}.card-title{font-family:"Architects Daughter";font-size:23px;fill:#111827;font-weight:400}.detail,.label,.note,.axis,.value{font-family:"Comic Mono";fill:#6b7280;font-weight:400}.detail{font-size:13px}.label{font-size:12px}.note{font-size:13px}.axis{font-size:14px}.value{font-size:14px}.panel-title{font-family:"Comic Mono";font-size:16px;fill:#4b5563;font-weight:700;letter-spacing:0.8px}
   </style>
 </defs>
-<rect class="canvas" width="1280" height="780"/>
-<rect class="frame" x="32" y="28" width="1216" height="724" rx="28"/>
-<text class="title" x="66" y="82" >Encode Latency Benchmark</text>
-<text class="subtitle" x="70" y="116" >JPEG and PNG encoding from 4K photo input, JMH AverageTime results</text>
-<rect x="58" y="135" width="1164" height="570" rx="18" fill="#FFFFFF" stroke="#E2E8F0" class="panel"/><line x1="250" y1="142" x2="250" y2="656" stroke="#D8E0EA" stroke-width="1" /><text class="axis" x="250" y="680" text-anchor="middle">0</text><line x1="401.85185185185185" y1="142" x2="401.85185185185185" y2="656" stroke="#D8E0EA" stroke-width="1" /><text class="axis" x="401.85185185185185" y="680" text-anchor="middle">50</text><line x1="553.7037037037037" y1="142" x2="553.7037037037037" y2="656" stroke="#D8E0EA" stroke-width="1" /><text class="axis" x="553.7037037037037" y="680" text-anchor="middle">100</text><line x1="705.5555555555557" y1="142" x2="705.5555555555557" y2="656" stroke="#D8E0EA" stroke-width="1" /><text class="axis" x="705.5555555555557" y="680" text-anchor="middle">150</text><line x1="857.4074074074074" y1="142" x2="857.4074074074074" y2="656" stroke="#D8E0EA" stroke-width="1" /><text class="axis" x="857.4074074074074" y="680" text-anchor="middle">200</text><line x1="1009.2592592592592" y1="142" x2="1009.2592592592592" y2="656" stroke="#D8E0EA" stroke-width="1" /><text class="axis" x="1009.2592592592592" y="680" text-anchor="middle">250</text><text class="label" x="84" y="191" >JPEG macOS J25</text><rect x="250" y="170" width="141.37407407407406" height="20" rx="5" fill="#6CA6E8" stroke="none" /><rect x="250" y="202" width="46.102222222222224" height="20" rx="5" fill="#67C28A" stroke="none" /><text class="value" x="399.3740740740741" y="186" >46.55</text><text class="value" x="304.1022222222222" y="218" >15.18</text><text class="label" x="84" y="273" >JPEG Linux J25</text><rect x="250" y="252" width="519.8192592592592" height="20" rx="5" fill="#6CA6E8" stroke="none" /><rect x="250" y="284" width="112.97777777777777" height="20" rx="5" fill="#67C28A" stroke="none" /><text class="value" x="777.8192592592592" y="268" >171.16</text><text class="value" x="370.97777777777776" y="300" >37.20</text><text class="label" x="84" y="355" >JPEG Linux J21</text><rect x="250" y="334" width="489.2362962962963" height="20" rx="5" fill="#6CA6E8" stroke="none" /><rect x="250" y="366" width="113.0385185185185" height="20" rx="5" fill="#67C28A" stroke="none" /><text class="value" x="747.2362962962964" y="350" >161.09</text><text class="value" x="371.0385185185185" y="382" >37.22</text><text class="label" x="84" y="437" >PNG macOS J25</text><rect x="250" y="416" width="257.8748148148148" height="20" rx="5" fill="#6CA6E8" stroke="none" /><rect x="250" y="448" width="142.4674074074074" height="20" rx="5" fill="#67C28A" stroke="none" /><text class="value" x="515.8748148148147" y="432" >84.91</text><text class="value" x="400.4674074074074" y="464" >46.91</text><text class="label" x="84" y="519" >PNG Linux J25</text><rect x="250" y="498" width="756.2525925925926" height="20" rx="5" fill="#6CA6E8" stroke="none" /><rect x="250" y="530" width="418.9592592592592" height="20" rx="5" fill="#67C28A" stroke="none" /><text class="value" x="1014.2525925925926" y="514" >249.01</text><text class="value" x="676.9592592592592" y="546" >137.95</text><text class="label" x="84" y="601" >PNG Linux J21</text><text class="small" x="84" y="626" >vips slower on JNI PNG</text><rect x="250" y="580" width="748.4474074074074" height="20" rx="5" fill="#6CA6E8" stroke="none" /><rect x="250" y="612" width="777.1777777777778" height="20" rx="5" fill="#E88B73" stroke="none" /><text class="value" x="1006.4474074074074" y="596" >246.44</text><text class="value" x="1022" y="628" >255.90</text><text class="axis" x="660" y="710" text-anchor="middle">AverageTime ms/op, lower is better</text><rect x="1082" y="164" width="18" height="12" rx="5" fill="#6CA6E8" stroke="none" /><text class="small" x="1110" y="176" >scrimage encode</text>
-<rect x="1082" y="188" width="18" height="12" rx="5" fill="#67C28A" stroke="none" /><text class="small" x="1110" y="200" >libvips encode</text>
-<rect x="1082" y="212" width="18" height="12" rx="5" fill="#E88B73" stroke="none" /><text class="small" x="1110" y="224" >JNI PNG regression</text>
+<rect class="canvas" width="1480" height="770"/>
+<text class="title" x="70" y="82">Encode Latency</text>
+<text class="subtitle" x="74" y="116">JPEG and PNG encode, AverageTime ms/op.</text>
+<desc>Source: images-benchmark README encode table. Unit: ms/op. Direction: lower is better.</desc>
+<rect class="chart-panel" x="56" y="146" width="1368" height="520" rx="12"/>
+<text class="note" x="88" y="190">Measured ranking</text>
+<text class="axis" x="260" y="190">ms/op · lower is better</text>
+<text class="axis" x="1330.0" y="214" text-anchor="end">0 to 840 (log scale)</text>
+<text class="note" x="740.0" y="718" text-anchor="middle">https://github.com/bluetape4k/bluetape4k-image | project: bluetape4k-image | module: images-benchmark</text>
+<rect x="1010" y="174" width="22" height="14" rx="4" fill="#dbeafe" stroke="#2563eb" stroke-width="1.4"/>
+<text class="axis" x="1042" y="186">scrimage</text>
+<rect x="1170" y="174" width="22" height="14" rx="4" fill="#ffedd5" stroke="#ea580c" stroke-width="1.4"/>
+<text class="axis" x="1202" y="186">vips</text>
+<line x1="260.0" y1="226" x2="260.0" y2="606" stroke="#dbe3ee" stroke-width="1" stroke-dasharray="5 7"/>
+<text class="axis" x="260.0" y="634" text-anchor="middle">0</text>
+<line x1="527.5" y1="226" x2="527.5" y2="606" stroke="#dbe3ee" stroke-width="1" stroke-dasharray="5 7"/>
+<text class="axis" x="527.5" y="634" text-anchor="middle">210</text>
+<line x1="795.0" y1="226" x2="795.0" y2="606" stroke="#dbe3ee" stroke-width="1" stroke-dasharray="5 7"/>
+<text class="axis" x="795.0" y="634" text-anchor="middle">420</text>
+<line x1="1062.5" y1="226" x2="1062.5" y2="606" stroke="#dbe3ee" stroke-width="1" stroke-dasharray="5 7"/>
+<text class="axis" x="1062.5" y="634" text-anchor="middle">630</text>
+<line x1="1330.0" y1="226" x2="1330.0" y2="606" stroke="#dbe3ee" stroke-width="1" stroke-dasharray="5 7"/>
+<text class="axis" x="1330.0" y="634" text-anchor="middle">840</text>
+<line x1="260" y1="606" x2="1330" y2="606" stroke="#94a3b8" stroke-width="1.2"/>
+<text class="axis" x="232" y="269.5" text-anchor="end">JPEG macOS</text>
+<rect x="260" y="238" width="1070.0" height="20" rx="6" fill="#edf2f7" stroke="#dbe3ee" stroke-width="1"/>
+<rect x="260" y="238" width="793.0" height="20" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+<text class="value" x="1065.0" y="252" text-anchor="start">146.09</text>
+<rect x="260" y="265" width="1070.0" height="20" rx="6" fill="#edf2f7" stroke="#dbe3ee" stroke-width="1"/>
+<rect x="260" y="265" width="605.4" height="20" rx="6" fill="#ffedd5" stroke="#ea580c" stroke-width="1.5"/>
+<text class="value" x="877.4" y="279" text-anchor="start">44.16</text>
+<text class="axis" x="232" y="359.5" text-anchor="end">PNG macOS</text>
+<rect x="260" y="328" width="1070.0" height="20" rx="6" fill="#edf2f7" stroke="#dbe3ee" stroke-width="1"/>
+<rect x="260" y="328" width="1068.6" height="20" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+<text class="value" x="1316.6" y="342" text-anchor="end">832.79</text>
+<rect x="260" y="355" width="1070.0" height="20" rx="6" fill="#edf2f7" stroke="#dbe3ee" stroke-width="1"/>
+<rect x="260" y="355" width="727.8" height="20" rx="6" fill="#ffedd5" stroke="#ea580c" stroke-width="1.5"/>
+<text class="value" x="999.8" y="369" text-anchor="start">96.6</text>
+<text class="axis" x="232" y="449.5" text-anchor="end">JPEG CI</text>
+<rect x="260" y="418" width="1070.0" height="20" rx="6" fill="#edf2f7" stroke="#dbe3ee" stroke-width="1"/>
+<rect x="260" y="418" width="798.2" height="20" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+<text class="value" x="1070.2" y="432" text-anchor="start">151</text>
+<rect x="260" y="445" width="1070.0" height="20" rx="6" fill="#edf2f7" stroke="#dbe3ee" stroke-width="1"/>
+<rect x="260" y="445" width="619.0" height="20" rx="6" fill="#ffedd5" stroke="#ea580c" stroke-width="1.5"/>
+<text class="value" x="891.0" y="459" text-anchor="start">48.2</text>
+<text class="axis" x="232" y="539.5" text-anchor="end">PNG CI</text>
+<rect x="260" y="508" width="1070.0" height="20" rx="6" fill="#edf2f7" stroke="#dbe3ee" stroke-width="1"/>
+<rect x="260" y="508" width="1070.0" height="20" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+<text class="value" x="1318.0" y="522" text-anchor="end">840</text>
+<rect x="260" y="535" width="1070.0" height="20" rx="6" fill="#edf2f7" stroke="#dbe3ee" stroke-width="1"/>
+<rect x="260" y="535" width="734.8" height="20" rx="6" fill="#ffedd5" stroke="#ea580c" stroke-width="1.5"/>
+<text class="value" x="1006.8" y="549" text-anchor="start">101</text>
 </svg>

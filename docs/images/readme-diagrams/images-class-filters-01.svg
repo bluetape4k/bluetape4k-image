@@ -1,44 +1,36 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1840" height="980" viewBox="0 0 1840 980" role="img" aria-label="Images Filter Classes">
 <defs>
-  <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%">
-    <feDropShadow dx="0" dy="7" stdDeviation="8" flood-color="#203040" flood-opacity="0.10"/>
-  </filter>
-  <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-    <path d="M 1 1 L 7 4 L 1 7 Z" fill="#758297"/>
+  <marker id="arrow-blue" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+    <polygon points="0 0, 10 3.5, 0 7" fill="#2563eb"/>
   </marker>
-  <marker id="inherit" markerWidth="11" markerHeight="10" refX="9.5" refY="5" orient="auto" markerUnits="strokeWidth">
-    <path d="M 0.5 1 L 9.5 5 L 0.5 9 Z" fill="#FFFFFF" stroke="#758297" stroke-width="1.7"/>
+  <marker id="arrow-gray" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+    <polygon points="0 0, 10 3.5, 0 7" fill="#6b7280"/>
+  </marker>
+  <marker id="inherit-open" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+    <path d="M 0 0 L 10 3.5 L 0 7 Z" fill="#ffffff" stroke="#2563eb" stroke-width="1.4"/>
   </marker>
   <style>
-    .canvas{fill:#F6F9FC}
-    .frame{fill:#FFFFFF;stroke:#D7E2EC;stroke-width:2}
-    .title{font-family:"Architects Daughter";font-size:42px;fill:#203040;font-weight:400}
-    .subtitle{font-family:"Comic Mono";font-size:16px;fill:#536476;font-weight:400}
-    .class-name{font-family:"Architects Daughter";font-size:24px;fill:#203040;font-weight:400}
-    .stereo{font-family:"Comic Mono";font-size:12px;fill:#627184;font-weight:400}
-    .member{font-family:"Comic Mono";font-size:13px;fill:#405366;font-weight:400}
-    .edge-label{font-family:"Comic Mono";font-size:12px;fill:#405366;font-weight:400}
-    .footer{font-family:"Comic Mono";font-size:13px;fill:#627184;font-weight:400}
-    .card{filter:url(#shadow);stroke-width:2}
+    .canvas{fill:#ffffff}
+    .title{font-family:"Architects Daughter";font-size:42px;fill:#111827;font-weight:400}
+    .subtitle{font-family:"Comic Mono";font-size:16px;fill:#6b7280;font-weight:400}
+    .class-name{font-family:"Architects Daughter";font-size:22px;fill:#111827;font-weight:400}
+    .stereo{font-family:"Comic Mono";font-size:12px;fill:#6b7280;font-weight:400}
+    .member{font-family:"Comic Mono";font-size:13px;fill:#6b7280;font-weight:400}
+    .edge-label{font-family:"Comic Mono";font-size:12px;fill:#374151;font-weight:400}
+    .footer{font-family:"Comic Mono";font-size:13px;fill:#6b7280;font-weight:400}
+    .card{fill:#ffffff;stroke:#94a3b8;stroke-width:1.9}
     .divider{stroke-width:1.4}
-    .dependency{stroke:#758297;stroke-width:2.2;fill:none;marker-end:url(#arrow);stroke-linecap:round;stroke-linejoin:round}
-    .inheritance{stroke:#758297;stroke-width:2.2;fill:none;marker-end:url(#inherit);stroke-linecap:round;stroke-linejoin:round}
+    .dependency{stroke:#6b7280;stroke-width:1.8;fill:none;marker-end:url(#arrow-gray);stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:6 4}
+    .inheritance{stroke:#2563eb;stroke-width:2.1;fill:none;marker-end:url(#inherit-open);stroke-linecap:round;stroke-linejoin:round}
   </style>
 </defs>
 <rect class="canvas" width="1840" height="980"/>
-<rect class="frame" x="34" y="28" width="1772" height="922" rx="26"/>
 <text class="title" x="70" y="82">Images Filter Classes</text>
 <text class="subtitle" x="74" y="116">Filter DSL, color conversion helpers, and concrete Scrimage Filter implementations are isolated from writer classes.</text>
 <g id="edges">
 <path class="dependency" d="M 1230 264 L 1060 264"/>
-<rect x="1076.0" y="238.0" width="138" height="24" rx="8" fill="#FFFFFF" stroke="#D7E2EC" opacity="0.95"/>
-<text class="edge-label" x="1145.0" y="254.0" text-anchor="middle">native filters</text>
 <path class="dependency" d="M 520 254 L 700 254"/>
-<rect x="569.0" y="228.0" width="82" height="24" rx="8" fill="#FFFFFF" stroke="#D7E2EC" opacity="0.95"/>
-<text class="edge-label" x="610.0" y="244.0" text-anchor="middle">factory</text>
 <path class="dependency" d="M 1445 350 L 1445 470"/>
-<rect x="1396.0" y="384.0" width="98" height="24" rx="8" fill="#FFFFFF" stroke="#D7E2EC" opacity="0.95"/>
-<text class="edge-label" x="1445.0" y="400.0" text-anchor="middle">color ops</text>
 <path class="inheritance" d="M 270 470 L 270 390 L 880 390 L 880 328"/>
 <path class="inheritance" d="M 275 700 L 275 660 L 880 660 L 880 328"/>
 <path class="inheritance" d="M 670 700 L 670 660 L 880 660 L 880 328"/>
@@ -47,78 +39,87 @@
 </g>
 <g id="classes">
 <g id="filter">
-  <rect class="card" x="700" y="180" width="360" height="148" rx="8" fill="#E8F3FF" stroke="#5B8DEF"/>
-  <line class="divider" x1="700" y1="252" x2="1060" y2="252" stroke="#5B8DEF"/>
+  <rect class="card" x="700" y="180" width="360" height="148" rx="8"/>
+  <rect x="700" y="180" width="360" height="72" rx="8" fill="#eff6ff" stroke="none"/>
+  <line class="divider" x1="700" y1="252" x2="1060" y2="252" stroke="#d1d5db"/>
   <text class="stereo" x="880" y="205" text-anchor="middle">&lt;&lt;Scrimage interface&gt;&gt;</text>
-  <text class="class-name" x="880" y="238" text-anchor="middle">Filter</text>
+  <text class="class-name" x="880" y="232" text-anchor="middle">Filter</text>
   <text class="member" x="718" y="282">apply(image)</text>
   <text class="member" x="718" y="304">native pipeline target</text>
 </g>
 <g id="chain">
-  <rect class="card" x="1230" y="180" width="430" height="170" rx="8" fill="#EAF7EF" stroke="#58A978"/>
-  <line class="divider" x1="1230" y1="252" x2="1660" y2="252" stroke="#58A978"/>
+  <rect class="card" x="1230" y="180" width="430" height="170" rx="8"/>
+  <rect x="1230" y="180" width="430" height="72" rx="8" fill="#f0fdf4" stroke="none"/>
+  <line class="divider" x1="1230" y1="252" x2="1660" y2="252" stroke="#d1d5db"/>
   <text class="stereo" x="1445" y="205" text-anchor="middle">&lt;&lt;DSL builder&gt;&gt;</text>
-  <text class="class-name" x="1445" y="238" text-anchor="middle">ImageFilterChain</text>
+  <text class="class-name" x="1445" y="232" text-anchor="middle">ImageFilterChain</text>
   <text class="member" x="1248" y="282">raw(filter), pixel { ... }</text>
   <text class="member" x="1248" y="304">compactAndApply(source)</text>
 </g>
 <g id="converter">
-  <rect class="card" x="1230" y="470" width="400" height="170" rx="8" fill="#FFF3D9" stroke="#D6A441"/>
-  <line class="divider" x1="1230" y1="542" x2="1630" y2="542" stroke="#D6A441"/>
+  <rect class="card" x="1230" y="470" width="400" height="170" rx="8"/>
+  <rect x="1230" y="470" width="400" height="72" rx="8" fill="#fff7ed" stroke="none"/>
+  <line class="divider" x1="1230" y1="542" x2="1630" y2="542" stroke="#d1d5db"/>
   <text class="stereo" x="1430" y="495" text-anchor="middle">&lt;&lt;object&gt;&gt;</text>
-  <text class="class-name" x="1430" y="528" text-anchor="middle">ColorSpaceConverter</text>
+  <text class="class-name" x="1430" y="522" text-anchor="middle">ColorSpaceConverter</text>
   <text class="member" x="1248" y="572">rgbToHsvInto(...)</text>
   <text class="member" x="1248" y="594">hsvToRgbInto(...)</text>
   <text class="member" x="1248" y="616">kelvinToRgb(kelvin)</text>
 </g>
 <g id="saturation">
-  <rect class="card" x="90" y="700" width="370" height="148" rx="8" fill="#FDECEF" stroke="#DC6B82"/>
-  <line class="divider" x1="90" y1="772" x2="460" y2="772" stroke="#DC6B82"/>
+  <rect class="card" x="90" y="700" width="370" height="148" rx="8"/>
+  <rect x="90" y="700" width="370" height="72" rx="8" fill="#fef2f2" stroke="none"/>
+  <line class="divider" x1="90" y1="772" x2="460" y2="772" stroke="#d1d5db"/>
   <text class="stereo" x="275" y="725" text-anchor="middle">&lt;&lt;Filter&gt;&gt;</text>
-  <text class="class-name" x="275" y="758" text-anchor="middle">SaturationAdjustFilter</text>
+  <text class="class-name" x="275" y="752" text-anchor="middle">SaturationAdjustFilter</text>
   <text class="member" x="108" y="802">factor: Float</text>
   <text class="member" x="108" y="824">uses HSV saturation</text>
 </g>
 <g id="hue">
-  <rect class="card" x="500" y="700" width="340" height="148" rx="8" fill="#E9F7F6" stroke="#45A7A1"/>
-  <line class="divider" x1="500" y1="772" x2="840" y2="772" stroke="#45A7A1"/>
+  <rect class="card" x="500" y="700" width="340" height="148" rx="8"/>
+  <rect x="500" y="700" width="340" height="72" rx="8" fill="#f0fdfa" stroke="none"/>
+  <line class="divider" x1="500" y1="772" x2="840" y2="772" stroke="#d1d5db"/>
   <text class="stereo" x="670" y="725" text-anchor="middle">&lt;&lt;Filter&gt;&gt;</text>
-  <text class="class-name" x="670" y="758" text-anchor="middle">HueAdjustFilter</text>
+  <text class="class-name" x="670" y="752" text-anchor="middle">HueAdjustFilter</text>
   <text class="member" x="518" y="802">deltaDegrees: Float</text>
   <text class="member" x="518" y="824">rotates HSV hue</text>
 </g>
 <g id="temperature">
-  <rect class="card" x="900" y="700" width="380" height="148" rx="8" fill="#F1ECFF" stroke="#8A72D6"/>
-  <line class="divider" x1="900" y1="772" x2="1280" y2="772" stroke="#8A72D6"/>
+  <rect class="card" x="900" y="700" width="380" height="148" rx="8"/>
+  <rect x="900" y="700" width="380" height="72" rx="8" fill="#faf5ff" stroke="none"/>
+  <line class="divider" x1="900" y1="772" x2="1280" y2="772" stroke="#d1d5db"/>
   <text class="stereo" x="1090" y="725" text-anchor="middle">&lt;&lt;Filter&gt;&gt;</text>
-  <text class="class-name" x="1090" y="758" text-anchor="middle">ColorTemperatureFilter</text>
+  <text class="class-name" x="1090" y="752" text-anchor="middle">ColorTemperatureFilter</text>
   <text class="member" x="918" y="802">kelvin: Int</text>
   <text class="member" x="918" y="824">Kelvin RGB balance</text>
 </g>
 <g id="median">
-  <rect class="card" x="1320" y="700" width="360" height="148" rx="8" fill="#F7F1E7" stroke="#B88A44"/>
-  <line class="divider" x1="1320" y1="772" x2="1680" y2="772" stroke="#B88A44"/>
+  <rect class="card" x="1320" y="700" width="360" height="148" rx="8"/>
+  <rect x="1320" y="700" width="360" height="72" rx="8" fill="#f9fafb" stroke="none"/>
+  <line class="divider" x1="1320" y1="772" x2="1680" y2="772" stroke="#d1d5db"/>
   <text class="stereo" x="1500" y="725" text-anchor="middle">&lt;&lt;Filter&gt;&gt;</text>
-  <text class="class-name" x="1500" y="758" text-anchor="middle">MedianBlurFilter</text>
+  <text class="class-name" x="1500" y="752" text-anchor="middle">MedianBlurFilter</text>
   <text class="member" x="1338" y="802">radius: Int</text>
   <text class="member" x="1338" y="824">MedianBoundaryMode</text>
 </g>
 <g id="rounded">
-  <rect class="card" x="90" y="470" width="360" height="148" rx="8" fill="#E8F3FF" stroke="#5B8DEF"/>
-  <line class="divider" x1="90" y1="542" x2="450" y2="542" stroke="#5B8DEF"/>
+  <rect class="card" x="90" y="470" width="360" height="148" rx="8"/>
+  <rect x="90" y="470" width="360" height="72" rx="8" fill="#eff6ff" stroke="none"/>
+  <line class="divider" x1="90" y1="542" x2="450" y2="542" stroke="#d1d5db"/>
   <text class="stereo" x="270" y="495" text-anchor="middle">&lt;&lt;Filter&gt;&gt;</text>
-  <text class="class-name" x="270" y="528" text-anchor="middle">RoundedCornerFilter</text>
+  <text class="class-name" x="270" y="522" text-anchor="middle">RoundedCornerFilter</text>
   <text class="member" x="108" y="572">radius: Int</text>
   <text class="member" x="108" y="594">alpha corner mask</text>
 </g>
 <g id="support">
-  <rect class="card" x="90" y="180" width="430" height="148" rx="8" fill="#EAF7EF" stroke="#58A978"/>
-  <line class="divider" x1="90" y1="252" x2="520" y2="252" stroke="#58A978"/>
+  <rect class="card" x="90" y="180" width="430" height="148" rx="8"/>
+  <rect x="90" y="180" width="430" height="72" rx="8" fill="#f0fdf4" stroke="none"/>
+  <line class="divider" x1="90" y1="252" x2="520" y2="252" stroke="#d1d5db"/>
   <text class="stereo" x="305" y="205" text-anchor="middle">&lt;&lt;support functions&gt;&gt;</text>
-  <text class="class-name" x="305" y="238" text-anchor="middle">Watermark/Caption/Padding</text>
+  <text class="class-name" x="305" y="232" text-anchor="middle">Watermark/Caption/Padding</text>
   <text class="member" x="108" y="282">withGraphics overlays</text>
   <text class="member" x="108" y="304">layout and padding helpers</text>
 </g>
 </g>
-<text class="footer" x="920.0" y="930" text-anchor="middle">Source evidence: filters/* and filters/dsl/*; concrete filters implement Scrimage Filter while DSL composes native and pixel operations.</text>
+<text class="footer" x="920.0" y="930" text-anchor="middle">https://github.com/bluetape4k/bluetape4k-image | project: bluetape4k-image | module: images</text>
 </svg>

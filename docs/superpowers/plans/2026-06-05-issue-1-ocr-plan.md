@@ -37,7 +37,7 @@
 | T6 Testcontainers tests | Add containerized Tesseract CLI smoke gated by `ocr.container.enabled` | `images-ocr/src/test/kotlin/...` |
 | T7 Module docs | Add OCR README locale set and test resources | `images-ocr/README.md`, `images-ocr/README.ko.md`, `src/test/resources/*` |
 | T8 Root docs/guidance | Register OCR in root README locale set and repo-local AGENTS | `README.md`, `README.ko.md`, `AGENTS.md` |
-| T9 Root diagrams/charts | Update root README visual assets to include OCR | `docs/assets/readme-diagrams/*`, `docs/assets/readme-charts/*` |
+| T9 Root diagrams/charts | Update root README visual assets to include OCR | `docs/images/readme-diagrams/*`, `docs/images/readme-charts/*` |
 | T10 CI/Nightly | Add OCR path filters, jobs, coverage artifact, and status needs | `.github/workflows/ci.yml`, `.github/workflows/nightly-tests.yml` |
 | T11 Verification | Run targeted Gradle, docs, diagram, and workflow checks | commands below |
 | T12 Review prep | Save code review artifact, lessons, PR body DoD | `docs/review/*`, `docs/lessons/*`, PR body |
@@ -159,9 +159,9 @@ Run in this order unless Step 3-R changes the plan:
    `./gradlew :bluetape4k-images-ocr:test -Docr.container.enabled=true --console=plain`
 7. `./gradlew :bluetape4k-images-ocr:build --console=plain`
 8. `./gradlew :bluetape4k-images-ocr:koverXmlReport --console=plain`
-9. `xmllint --noout docs/assets/readme-diagrams/*.svg docs/assets/readme-charts/*.svg`
-10. `find docs/assets/readme-diagrams docs/assets/readme-charts -name '*.svg' -exec sh -c 'test -f "${1%.svg}.png"' sh {} \\;`
-11. `rg 'docs/assets/(readme-diagrams|readme-charts)/.*\\.svg' README*.md` must return no hits.
+9. `xmllint --noout docs/images/readme-diagrams/*.svg docs/images/readme-charts/*.svg`
+10. `find docs/images/readme-diagrams docs/images/readme-charts -name '*.svg' -exec sh -c 'test -f "${1%.svg}.png"' sh {} \\;`
+11. `rg 'docs/images/(readme-diagrams|readme-charts)/.*\\.svg' README*.md` must return no hits.
 12. README image-link resolution check.
 13. `actionlint`
 14. `rg "\\\\'" .github/workflows` must return no hits.

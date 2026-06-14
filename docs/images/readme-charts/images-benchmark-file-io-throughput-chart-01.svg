@@ -1,105 +1,66 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="760" viewBox="0 0 1280 760" role="img" aria-label="Image File IO Throughput Benchmark">
+<svg xmlns="http://www.w3.org/2000/svg" width="1480" height="770" viewBox="0 0 1480 770" role="img" aria-label="File IO Throughput">
 <defs>
-  <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%">
-    <feDropShadow dx="0" dy="8" stdDeviation="9" flood-color="#1f2937" flood-opacity="0.10"/>
-  </filter>
+  <marker id="arrow-blue" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#2563eb"/></marker>
+  <marker id="arrow-green" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#16a34a"/></marker>
+  <marker id="arrow-orange" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#ea580c"/></marker>
+  <marker id="arrow-purple" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#9333ea"/></marker>
+  <marker id="arrow-gray" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#6b7280"/></marker>
   <style>
-    .canvas{fill:#f7f9fc}.frame{fill:#fff;stroke:#d8e0ea;stroke-width:1.5}
-    .title{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:38px;font-weight:400;fill:#102033}
-    .subtitle{font-family:"Comic Mono","Comic Sans MS","Comic Sans",Arial,sans-serif;font-size:16px;font-weight:400;fill:#536273}
-    .panel{filter:url(#shadow)}.panel-title{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:24px;font-weight:400;fill:#102033}
-    .label{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:19px;font-weight:400;fill:#102033}
-    .axis{font-family:"Comic Mono","Comic Sans MS","Comic Sans",Arial,sans-serif;font-size:12px;font-weight:400;fill:#536273}
-    .value{font-family:"Comic Mono","Comic Sans MS","Comic Sans",Arial,sans-serif;font-size:13px;font-weight:700;fill:#102033}
-    .note{font-family:"Comic Mono","Comic Sans MS","Comic Sans",Arial,sans-serif;font-size:13px;font-weight:400;fill:#536273}
+    .canvas{fill:#ffffff}.panel{fill:#f3f6fa;stroke:#cbd5e1;stroke-width:1.4;stroke-dasharray:8 6}.chart-panel{fill:#ffffff;stroke:#bfdbfe;stroke-width:1.7}.card{fill:#ffffff;stroke:#94a3b8;stroke-width:1.9}.badge-text{font-family:"Comic Mono";font-size:11px;fill:#374151;font-weight:700}
+    .edge-blue{stroke:#2563eb;stroke-width:2.1;fill:none;marker-end:url(#arrow-blue);stroke-linecap:round;stroke-linejoin:round}.edge-green{stroke:#16a34a;stroke-width:2.1;fill:none;marker-end:url(#arrow-green);stroke-linecap:round;stroke-linejoin:round}.edge-orange{stroke:#ea580c;stroke-width:2;fill:none;marker-end:url(#arrow-orange);stroke-linecap:round;stroke-linejoin:round}.edge-purple{stroke:#9333ea;stroke-width:2;fill:none;marker-end:url(#arrow-purple);stroke-linecap:round;stroke-linejoin:round}.edge-gray{stroke:#6b7280;stroke-width:1.8;fill:none;marker-end:url(#arrow-gray);stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:6 4}.dashed{stroke-dasharray:6 4}
+    .title{font-family:"Architects Daughter";font-size:42px;fill:#111827;font-weight:400}.subtitle{font-family:"Comic Mono";font-size:16px;fill:#6b7280;font-weight:400}.card-title{font-family:"Architects Daughter";font-size:23px;fill:#111827;font-weight:400}.detail,.label,.note,.axis,.value{font-family:"Comic Mono";fill:#6b7280;font-weight:400}.detail{font-size:13px}.label{font-size:12px}.note{font-size:13px}.axis{font-size:14px}.value{font-size:14px}.panel-title{font-family:"Comic Mono";font-size:16px;fill:#4b5563;font-weight:700;letter-spacing:0.8px}
   </style>
 </defs>
-<rect class="canvas" width="1280" height="760"/>
-<rect class="frame" x="32" y="28" width="1216" height="704" rx="28"/>
-<text class="title" x="66" y="82">Large Image File IO Throughput</text>
-<text class="subtitle" x="70" y="116">cafe.jpg and landscape.jpg; reads use 6,400 hard-linked paths, writes use 256 output files; higher files/s is better</text>
-
-<rect x="62" y="148" width="560" height="214" rx="18" fill="#FFFFFF" stroke="#E2E8F0" class="panel"/>
-<text class="panel-title" x="92" y="190">Read cafe.jpg (2.9 MB)</text>
-<line x1="250" y1="215" x2="250" y2="303" stroke="#D8E0EA" stroke-width="1"/>
-<line x1="350" y1="215" x2="350" y2="303" stroke="#D8E0EA" stroke-width="1"/>
-<line x1="450" y1="215" x2="450" y2="303" stroke="#D8E0EA" stroke-width="1"/>
-<line x1="550" y1="215" x2="550" y2="303" stroke="#D8E0EA" stroke-width="1"/>
-<text class="axis" x="250" y="328" text-anchor="middle">0</text>
-<text class="axis" x="350" y="328" text-anchor="middle">5k</text>
-<text class="axis" x="450" y="328" text-anchor="middle">10k</text>
-<text class="axis" x="550" y="328" text-anchor="middle">15k files/s</text>
-<text class="label" x="92" y="234">Path</text>
-<rect x="250" y="219" width="338" height="20" rx="7" fill="#7CC7A2"/>
-<text class="value" x="523" y="234">16,904</text>
-<text class="label" x="92" y="264">Okio Source</text>
-<rect x="250" y="249" width="50" height="20" rx="7" fill="#F2C879"/>
-<text class="value" x="316" y="264">2,513</text>
-<text class="label" x="92" y="294">Susp. Source</text>
-<rect x="250" y="279" width="4" height="20" rx="2" fill="#D8B4F8"/>
-<text class="value" x="270" y="294">74</text>
-
-<rect x="658" y="148" width="560" height="214" rx="18" fill="#FFFFFF" stroke="#E2E8F0" class="panel"/>
-<text class="panel-title" x="688" y="190">Read landscape.jpg (3.4 MB)</text>
-<line x1="846" y1="215" x2="846" y2="303" stroke="#D8E0EA" stroke-width="1"/>
-<line x1="946" y1="215" x2="946" y2="303" stroke="#D8E0EA" stroke-width="1"/>
-<line x1="1046" y1="215" x2="1046" y2="303" stroke="#D8E0EA" stroke-width="1"/>
-<line x1="1146" y1="215" x2="1146" y2="303" stroke="#D8E0EA" stroke-width="1"/>
-<text class="axis" x="846" y="328" text-anchor="middle">0</text>
-<text class="axis" x="946" y="328" text-anchor="middle">5k</text>
-<text class="axis" x="1046" y="328" text-anchor="middle">10k</text>
-<text class="axis" x="1146" y="328" text-anchor="middle">15k files/s</text>
-<text class="label" x="688" y="234">Path</text>
-<rect x="846" y="219" width="320" height="20" rx="7" fill="#7CC7A2"/>
-<text class="value" x="1099" y="234">15,981</text>
-<text class="label" x="688" y="264">Okio Source</text>
-<rect x="846" y="249" width="41" height="20" rx="7" fill="#F2C879"/>
-<text class="value" x="903" y="264">2,072</text>
-<text class="label" x="688" y="294">Susp. Source</text>
-<rect x="846" y="279" width="4" height="20" rx="2" fill="#D8B4F8"/>
-<text class="value" x="866" y="294">70</text>
-
-<rect x="62" y="398" width="560" height="214" rx="18" fill="#FFFFFF" stroke="#E2E8F0" class="panel"/>
-<text class="panel-title" x="92" y="440">Write cafe.jpg (256 files)</text>
-<line x1="250" y1="465" x2="250" y2="553" stroke="#D8E0EA" stroke-width="1"/>
-<line x1="350" y1="465" x2="350" y2="553" stroke="#D8E0EA" stroke-width="1"/>
-<line x1="450" y1="465" x2="450" y2="553" stroke="#D8E0EA" stroke-width="1"/>
-<line x1="550" y1="465" x2="550" y2="553" stroke="#D8E0EA" stroke-width="1"/>
-<text class="axis" x="250" y="578" text-anchor="middle">0</text>
-<text class="axis" x="350" y="578" text-anchor="middle">500</text>
-<text class="axis" x="450" y="578" text-anchor="middle">1,000</text>
-<text class="axis" x="550" y="578" text-anchor="middle">1,500 files/s</text>
-<text class="label" x="92" y="484">Path</text>
-<rect x="250" y="469" width="302" height="20" rx="7" fill="#7CC7A2"/>
-<text class="value" x="568" y="484">1,507</text>
-<text class="label" x="92" y="514">Okio Sink</text>
-<rect x="250" y="499" width="153" height="20" rx="7" fill="#F2C879"/>
-<text class="value" x="419" y="514">767</text>
-<text class="label" x="92" y="544">Susp. Sink</text>
-<rect x="250" y="529" width="29" height="20" rx="7" fill="#D8B4F8"/>
-<text class="value" x="295" y="544">147</text>
-
-<rect x="658" y="398" width="560" height="214" rx="18" fill="#FFFFFF" stroke="#E2E8F0" class="panel"/>
-<text class="panel-title" x="688" y="440">Write landscape.jpg (256 files)</text>
-<line x1="846" y1="465" x2="846" y2="553" stroke="#D8E0EA" stroke-width="1"/>
-<line x1="946" y1="465" x2="946" y2="553" stroke="#D8E0EA" stroke-width="1"/>
-<line x1="1046" y1="465" x2="1046" y2="553" stroke="#D8E0EA" stroke-width="1"/>
-<line x1="1146" y1="465" x2="1146" y2="553" stroke="#D8E0EA" stroke-width="1"/>
-<text class="axis" x="846" y="578" text-anchor="middle">0</text>
-<text class="axis" x="946" y="578" text-anchor="middle">500</text>
-<text class="axis" x="1046" y="578" text-anchor="middle">1,000</text>
-<text class="axis" x="1146" y="578" text-anchor="middle">1,500 files/s</text>
-<text class="label" x="688" y="484">Path</text>
-<rect x="846" y="469" width="256" height="20" rx="7" fill="#7CC7A2"/>
-<text class="value" x="1118" y="484">1,280</text>
-<text class="label" x="688" y="514">Okio Sink</text>
-<rect x="846" y="499" width="156" height="20" rx="7" fill="#F2C879"/>
-<text class="value" x="1018" y="514">778</text>
-<text class="label" x="688" y="544">Susp. Sink</text>
-<rect x="846" y="529" width="31" height="20" rx="7" fill="#D8B4F8"/>
-<text class="value" x="893" y="544">154</text>
-
-<text class="note" x="86" y="664">Source: ImageFileIoThroughputBenchmark, macOS arm64, GraalVM Java 25, 2026-05-29 local run.</text>
-<text class="note" x="86" y="686">Read inputs are 6,400 hard links to avoid 18-22 GB setup copies; writes use 256 real output files per invocation.</text>
-<text class="note" x="86" y="708">The benchmark streams bytes with a fixed 128 KiB buffer and excludes Scrimage decode/encode CPU work.</text>
+<rect class="canvas" width="1480" height="770"/>
+<text class="title" x="70" y="82">File IO Throughput</text>
+<text class="subtitle" x="74" y="116">Compressed file channel throughput snapshot.</text>
+<desc>Source: file-io-throughput-2026-05-29.md. Unit: MB/s. Direction: higher is better.</desc>
+<rect class="chart-panel" x="56" y="146" width="1368" height="520" rx="12"/>
+<text class="note" x="88" y="190">Measured ranking</text>
+<text class="axis" x="285" y="190">MB/s · higher is better</text>
+<text class="axis" x="1330.0" y="214" text-anchor="end">0 to 422</text>
+<text class="note" x="740.0" y="718" text-anchor="middle">https://github.com/bluetape4k/bluetape4k-image | project: bluetape4k-image | module: images-benchmark</text>
+<rect x="1010" y="174" width="22" height="14" rx="4" fill="#dbeafe" stroke="#2563eb" stroke-width="1.4"/>
+<text class="axis" x="1042" y="186">java25</text>
+<rect x="1170" y="174" width="22" height="14" rx="4" fill="#ffedd5" stroke="#ea580c" stroke-width="1.4"/>
+<text class="axis" x="1202" y="186">java21</text>
+<line x1="285.0" y1="226" x2="285.0" y2="606" stroke="#dbe3ee" stroke-width="1" stroke-dasharray="5 7"/>
+<text class="axis" x="285.0" y="634" text-anchor="middle">0</text>
+<line x1="546.2" y1="226" x2="546.2" y2="606" stroke="#dbe3ee" stroke-width="1" stroke-dasharray="5 7"/>
+<text class="axis" x="546.2" y="634" text-anchor="middle">105.5</text>
+<line x1="807.5" y1="226" x2="807.5" y2="606" stroke="#dbe3ee" stroke-width="1" stroke-dasharray="5 7"/>
+<text class="axis" x="807.5" y="634" text-anchor="middle">211</text>
+<line x1="1068.8" y1="226" x2="1068.8" y2="606" stroke="#dbe3ee" stroke-width="1" stroke-dasharray="5 7"/>
+<text class="axis" x="1068.8" y="634" text-anchor="middle">316.5</text>
+<line x1="1330.0" y1="226" x2="1330.0" y2="606" stroke="#dbe3ee" stroke-width="1" stroke-dasharray="5 7"/>
+<text class="axis" x="1330.0" y="634" text-anchor="middle">422</text>
+<line x1="285" y1="606" x2="1330" y2="606" stroke="#94a3b8" stroke-width="1.2"/>
+<text class="axis" x="257" y="269.5" text-anchor="end">read Path</text>
+<rect x="285" y="238" width="1045.0" height="20" rx="6" fill="#edf2f7" stroke="#dbe3ee" stroke-width="1"/>
+<rect x="285" y="238" width="1045.0" height="20" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+<text class="value" x="1318.0" y="252" text-anchor="end">422</text>
+<rect x="285" y="265" width="1045.0" height="20" rx="6" fill="#edf2f7" stroke="#dbe3ee" stroke-width="1"/>
+<rect x="285" y="265" width="955.9" height="20" rx="6" fill="#ffedd5" stroke="#ea580c" stroke-width="1.5"/>
+<text class="value" x="1252.9" y="279" text-anchor="start">386</text>
+<text class="axis" x="257" y="359.5" text-anchor="end">write Path</text>
+<rect x="285" y="328" width="1045.0" height="20" rx="6" fill="#edf2f7" stroke="#dbe3ee" stroke-width="1"/>
+<rect x="285" y="328" width="837.0" height="20" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+<text class="value" x="1134.0" y="342" text-anchor="start">338</text>
+<rect x="285" y="355" width="1045.0" height="20" rx="6" fill="#edf2f7" stroke="#dbe3ee" stroke-width="1"/>
+<rect x="285" y="355" width="720.6" height="20" rx="6" fill="#ffedd5" stroke="#ea580c" stroke-width="1.5"/>
+<text class="value" x="1017.6" y="369" text-anchor="start">291</text>
+<text class="axis" x="257" y="449.5" text-anchor="end">suspended read</text>
+<rect x="285" y="418" width="1045.0" height="20" rx="6" fill="#edf2f7" stroke="#dbe3ee" stroke-width="1"/>
+<rect x="285" y="418" width="745.4" height="20" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+<text class="value" x="1042.4" y="432" text-anchor="start">301</text>
+<rect x="285" y="445" width="1045.0" height="20" rx="6" fill="#edf2f7" stroke="#dbe3ee" stroke-width="1"/>
+<rect x="285" y="445" width="681.0" height="20" rx="6" fill="#ffedd5" stroke="#ea580c" stroke-width="1.5"/>
+<text class="value" x="978.0" y="459" text-anchor="start">275</text>
+<text class="axis" x="257" y="539.5" text-anchor="end">suspended write</text>
+<rect x="285" y="508" width="1045.0" height="20" rx="6" fill="#edf2f7" stroke="#dbe3ee" stroke-width="1"/>
+<rect x="285" y="508" width="609.2" height="20" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+<text class="value" x="906.2" y="522" text-anchor="start">246</text>
+<rect x="285" y="535" width="1045.0" height="20" rx="6" fill="#edf2f7" stroke="#dbe3ee" stroke-width="1"/>
+<rect x="285" y="535" width="539.8" height="20" rx="6" fill="#ffedd5" stroke="#ea580c" stroke-width="1.5"/>
+<text class="value" x="836.8" y="549" text-anchor="start">218</text>
 </svg>

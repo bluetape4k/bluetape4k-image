@@ -1,53 +1,95 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1044" height="526" viewBox="0 0 1044 526" role="img" aria-label="Encode (1240×1754 document image)">
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="980" viewBox="0 0 1280 980" role="img" aria-label="IO Boundary Benchmark Flow">
 <defs>
-  <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="8" stdDeviation="9" flood-color="#1f2937" flood-opacity="0.10"/></filter>
-  <marker id="openArrow" markerWidth="12" markerHeight="10" refX="10" refY="5" orient="auto" markerUnits="strokeWidth"><path d="M 1 1 L 10 5 L 1 9" fill="none" stroke="#758297" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></marker>
-  <marker id="inherit" markerWidth="14" markerHeight="12" refX="12" refY="6" orient="auto" markerUnits="strokeWidth"><path d="M 0 1 L 12 6 L 0 11 Z" fill="#ffffff" stroke="#758297" stroke-width="1.8"/></marker>
+  <marker id="arrow-blue" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#2563eb"/></marker>
+  <marker id="arrow-green" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#16a34a"/></marker>
+  <marker id="arrow-orange" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#ea580c"/></marker>
+  <marker id="arrow-purple" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#9333ea"/></marker>
+  <marker id="arrow-gray" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#6b7280"/></marker>
   <style>
-    .canvas{fill:#f7f9fc}.frame{fill:#fff;stroke:#d8e0ea;stroke-width:1.5}
-    .title{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:43px;font-weight:400;fill:#102033}
-    .subtitle{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:15px;font-weight:400;fill:#536273}
-    .label{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:25px;font-weight:400;fill:#102033}
-    .smallLabel{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:21px;font-weight:400;fill:#102033}
-    .mono{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:12px;font-weight:400;fill:#102033}
-    .small{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:12px;font-weight:400;fill:#536273}
-    .strong{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:13px;font-weight:400;fill:#102033}
-    .card{stroke-width:2.1;filter:url(#shadow)}.compartment{stroke-width:1.5;fill:none}
-    .line{stroke:#758297;stroke-width:2.1;fill:none;marker-end:url(#openArrow)}
-    .plainLine{stroke:#758297;stroke-width:2.1;fill:none}
-    .dashed{stroke:#758297;stroke-width:2.1;stroke-dasharray:7 6;fill:none;marker-end:url(#openArrow)}
-    .inheritLine{stroke:#758297;stroke-width:2.2;fill:none;marker-end:url(#inherit)}
-    .implLine{stroke:#758297;stroke-width:2.2;stroke-dasharray:8 7;fill:none;marker-end:url(#inherit)}
+    .canvas{fill:#ffffff}.panel{fill:#f3f6fa;stroke:#cbd5e1;stroke-width:1.4;stroke-dasharray:8 6}.chart-panel{fill:#ffffff;stroke:#bfdbfe;stroke-width:1.7}.card{fill:#ffffff;stroke:#94a3b8;stroke-width:1.9}.badge-text{font-family:"Comic Mono";font-size:11px;fill:#374151;font-weight:700}
+    .edge-blue{stroke:#2563eb;stroke-width:2.1;fill:none;marker-end:url(#arrow-blue);stroke-linecap:round;stroke-linejoin:round}.edge-green{stroke:#16a34a;stroke-width:2.1;fill:none;marker-end:url(#arrow-green);stroke-linecap:round;stroke-linejoin:round}.edge-orange{stroke:#ea580c;stroke-width:2;fill:none;marker-end:url(#arrow-orange);stroke-linecap:round;stroke-linejoin:round}.edge-purple{stroke:#9333ea;stroke-width:2;fill:none;marker-end:url(#arrow-purple);stroke-linecap:round;stroke-linejoin:round}.edge-gray{stroke:#6b7280;stroke-width:1.8;fill:none;marker-end:url(#arrow-gray);stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:6 4}.dashed{stroke-dasharray:6 4}
+    .title{font-family:"Architects Daughter";font-size:42px;fill:#111827;font-weight:400}.subtitle{font-family:"Comic Mono";font-size:16px;fill:#6b7280;font-weight:400}.card-title{font-family:"Architects Daughter";font-size:23px;fill:#111827;font-weight:400}.detail,.label,.note,.axis,.value{font-family:"Comic Mono";fill:#6b7280;font-weight:400}.detail{font-size:13px}.label{font-size:12px}.note{font-size:13px}.axis{font-size:14px}.value{font-size:14px}.panel-title{font-family:"Comic Mono";font-size:16px;fill:#4b5563;font-weight:700;letter-spacing:0.8px}
   </style>
 </defs>
-<rect class="canvas" width="1044" height="526"/>
-<rect class="frame" x="32" y="28" width="980" height="470" rx="28"/>
-<text class="title" x="66" y="82">Encode (1240×1754 document image)</text>
-<text class="subtitle" x="70" y="118">Architecture nodes and edges from the original Mermaid source</text>
-<path class="line" d="M706 220 C706 303 505 303 505 386"/>
-<g transform="translate(48,170)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#E8F3FF" stroke="#5B8DEF"/>
-  <text class="smallLabel" x="140" y="33" text-anchor="middle">ms/op, lower is</text>
-<text class="smallLabel" x="140" y="59" text-anchor="middle">better</text>
+<rect class="canvas" width="1280" height="980"/>
+<text class="title" x="70" y="82">IO Boundary Benchmark Flow</text>
+<text class="subtitle" x="74" y="116">Compressed image IO boundaries compare Path, byte array, Okio, and suspended bridges.</text>
+<desc>IO Boundary Benchmark Flow explains the current README/source relationship for readers. Source: ImageIoBoundaryBenchmark.kt and benchmark-io-boundary report</desc>
+<rect class="panel" x="88" y="158" width="1104" height="746" rx="8"/>
+<text class="panel-title" x="108" y="188" dominant-baseline="middle">ARCHITECTURE</text>
+<g id="edges">
+<path class="edge-gray" d="M 420 254 L 480 254"/>
+<path class="edge-gray" d="M 800 254 L 860 254"/>
+<path class="edge-gray" d="M 420 510 L 480 510"/>
+<path class="edge-gray" d="M 800 510 L 860 510"/>
+<path class="edge-gray" d="M 640 308 L 640 456"/>
+<path class="edge-gray" d="M 420 766 L 480 766"/>
+<path class="edge-gray" d="M 800 766 L 860 766"/>
+<path class="edge-gray" d="M 640 564 L 640 712"/>
+</g><g id="cards">
+<g id="fixtures">
+<rect class="card" x="100" y="200" width="320" height="108" rx="8"/>
+<rect x="116" y="230" width="48" height="48" rx="8" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1.3"/>
+<text class="badge-text" x="140" y="258" text-anchor="middle">IMG</text>
+<text class="card-title" x="182" y="243.0" dominant-baseline="middle">JPEG fixtures</text>
+<text class="detail" x="182" y="265.0" dominant-baseline="middle">homer, landscape</text>
 </g>
-<g transform="translate(382,170)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#EAF7EF" stroke="#58A978"/>
-  <text class="smallLabel" x="140" y="21" text-anchor="middle">scrimage JPEG macOS,</text>
-<text class="smallLabel" x="140" y="47" text-anchor="middle">vips JPEG macOS,</text>
-<text class="smallLabel" x="140" y="73" text-anchor="middle">scrimage JPEG Linux,</text>
+<g id="boundary">
+<rect class="card" x="480" y="200" width="320" height="108" rx="8"/>
+<rect x="496" y="230" width="48" height="48" rx="8" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1.3"/>
+<text class="badge-text" x="520" y="258" text-anchor="middle">API</text>
+<text class="card-title" x="562" y="243.0" dominant-baseline="middle">Boundary API</text>
+<text class="detail" x="562" y="265.0" dominant-baseline="middle">Path/Source/Sink</text>
 </g>
-<g transform="translate(716,170)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#FFF3D9" stroke="#D6A441"/>
-  <text class="smallLabel" x="140" y="45" text-anchor="middle">y</text>
+<g id="bench">
+<rect class="card" x="860" y="200" width="320" height="108" rx="8"/>
+<rect x="876" y="230" width="48" height="48" rx="8" fill="#fff7ed" stroke="#fed7aa" stroke-width="1.3"/>
+<text class="badge-text" x="900" y="258" text-anchor="middle">RUN</text>
+<text class="card-title" x="942" y="243.0" dominant-baseline="middle">JMH target</text>
+<text class="detail" x="942" y="265.0" dominant-baseline="middle">Average Time</text>
 </g>
-<g transform="translate(215,336)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#FDECEF" stroke="#DC6B82"/>
-  <text class="smallLabel" x="140" y="45" text-anchor="middle">axis</text>
+<g id="byte">
+<rect class="card" x="100" y="456" width="320" height="108" rx="8"/>
+<rect x="116" y="486" width="48" height="48" rx="8" fill="#fef2f2" stroke="#fecaca" stroke-width="1.3"/>
+<text class="badge-text" x="140" y="514" text-anchor="middle">CAP</text>
+<text class="card-title" x="182" y="499.0" dominant-baseline="middle">Byte Array</text>
+<text class="detail" x="182" y="521.0" dominant-baseline="middle">baseline</text>
 </g>
-<g transform="translate(549,336)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#E9F7F6" stroke="#45A7A1"/>
-  <text class="smallLabel" x="140" y="21" text-anchor="middle">52.49, 15.67,</text>
-<text class="smallLabel" x="140" y="47" text-anchor="middle">171.16, 37.20,</text>
-<text class="smallLabel" x="140" y="73" text-anchor="middle">94.87, 49.88,</text>
+<g id="okio">
+<rect class="card" x="480" y="456" width="320" height="108" rx="8"/>
+<rect x="496" y="486" width="48" height="48" rx="8" fill="#f0fdfa" stroke="#ccfbf1" stroke-width="1.3"/>
+<text class="badge-text" x="520" y="514" text-anchor="middle">IO</text>
+<text class="card-title" x="562" y="499.0" dominant-baseline="middle">Okio</text>
+<text class="detail" x="562" y="521.0" dominant-baseline="middle">integration boundary</text>
 </g>
+<g id="suspend">
+<rect class="card" x="860" y="456" width="320" height="108" rx="8"/>
+<rect x="876" y="486" width="48" height="48" rx="8" fill="#faf5ff" stroke="#e9d5ff" stroke-width="1.3"/>
+<text class="badge-text" x="900" y="514" text-anchor="middle">VIP</text>
+<text class="card-title" x="942" y="499.0" dominant-baseline="middle">Suspended IO</text>
+<text class="detail" x="942" y="521.0" dominant-baseline="middle">coroutine bridge</text>
+</g>
+<g id="raw">
+<rect class="card" x="100" y="712" width="320" height="108" rx="8"/>
+<rect x="116" y="742" width="48" height="48" rx="8" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1.3"/>
+<text class="badge-text" x="140" y="770" text-anchor="middle">IMG</text>
+<text class="card-title" x="182" y="755.0" dominant-baseline="middle">Raw JSON</text>
+<text class="detail" x="182" y="777.0" dominant-baseline="middle">docs/raw</text>
+</g>
+<g id="report">
+<rect class="card" x="480" y="712" width="320" height="108" rx="8"/>
+<rect x="496" y="742" width="48" height="48" rx="8" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1.3"/>
+<text class="badge-text" x="520" y="770" text-anchor="middle">API</text>
+<text class="card-title" x="562" y="755.0" dominant-baseline="middle">README table</text>
+<text class="detail" x="562" y="777.0" dominant-baseline="middle">interpretation</text>
+</g>
+<g id="chart">
+<rect class="card" x="860" y="712" width="320" height="108" rx="8"/>
+<rect x="876" y="742" width="48" height="48" rx="8" fill="#fff7ed" stroke="#fed7aa" stroke-width="1.3"/>
+<text class="badge-text" x="900" y="770" text-anchor="middle">RUN</text>
+<text class="card-title" x="942" y="755.0" dominant-baseline="middle">Chart asset</text>
+<text class="detail" x="942" y="777.0" dominant-baseline="middle">lower is better</text>
+</g>
+</g>
+<text class="note" x="640.0" y="928" text-anchor="middle">https://github.com/bluetape4k/bluetape4k-image | project: bluetape4k-image | module: images-benchmark</text>
 </svg>

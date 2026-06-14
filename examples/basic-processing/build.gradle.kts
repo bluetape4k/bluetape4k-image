@@ -17,7 +17,7 @@ sourceSets {
             include("images/landscape.jpg")
         }
         resources {
-            srcDir("../../docs/assets")
+            srcDir("../../docs/images")
             include("image-workbench.png")
         }
     }

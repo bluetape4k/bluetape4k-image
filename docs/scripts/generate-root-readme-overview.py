@@ -10,7 +10,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[2]
-OUT = ROOT / "docs" / "assets" / "readme-diagrams"
+OUT = ROOT / "docs" / "images" / "readme-diagrams"
 BASE = "root-readme-overview-01"
 
 WIDTH = 1900
@@ -18,14 +18,24 @@ HEIGHT = 1120
 
 
 PALETTE = {
-    "blue": ("#E8F3FF", "#5B8DEF"),
-    "green": ("#EAF7EF", "#58A978"),
-    "amber": ("#FFF3D9", "#D6A441"),
-    "pink": ("#FDECEF", "#DC6B82"),
-    "teal": ("#E9F7F6", "#45A7A1"),
-    "lavender": ("#F1ECFF", "#8A72D6"),
-    "sand": ("#F7F1E7", "#B88A44"),
-    "orange": ("#FFF1E8", "#E58554"),
+    "blue": ("#eff6ff", "#bfdbfe"),
+    "green": ("#f0fdf4", "#bbf7d0"),
+    "amber": ("#fff7ed", "#fed7aa"),
+    "pink": ("#fef2f2", "#fecaca"),
+    "teal": ("#f0fdfa", "#ccfbf1"),
+    "lavender": ("#faf5ff", "#e9d5ff"),
+    "sand": ("#f9fafb", "#d1d5db"),
+    "orange": ("#fff7ed", "#fed7aa"),
+}
+
+ARROWS = {
+    "#758297": ("#2563eb", "arrow-blue"),
+    "#45A7A1": ("#16a34a", "arrow-green"),
+    "#E58554": ("#ea580c", "arrow-orange"),
+    "#DC6B82": ("#ea580c", "arrow-orange"),
+    "#8A72D6": ("#9333ea", "arrow-purple"),
+    "#D6A441": ("#16a34a", "arrow-green"),
+    "#B88A44": ("#6b7280", "arrow-gray"),
 }
 
 
@@ -71,6 +81,28 @@ def esc(value: str) -> str:
     return html.escape(value, quote=True)
 
 
+def wrap_words(value: str, max_chars: int) -> list[str]:
+    words = value.split()
+    if not words:
+        return [value]
+    lines: list[str] = []
+    current = words[0]
+    for word in words[1:]:
+        if len(current) + 1 + len(word) <= max_chars:
+            current += " " + word
+        else:
+            lines.append(current)
+            current = word
+    lines.append(current)
+    wrapped: list[str] = []
+    for line in lines:
+        if len(line) <= max_chars:
+            wrapped.append(line)
+        else:
+            wrapped.extend(line[index : index + max_chars] for index in range(0, len(line), max_chars))
+    return wrapped
+
+
 def path_d(points: tuple[tuple[int, int], ...]) -> str:
     first, *rest = points
     return " ".join([f"M {first[0]} {first[1]}", *(f"L {x} {y}" for x, y in rest)])
@@ -100,7 +132,7 @@ def nodes() -> tuple[Node, ...]:
         Node("vipsApi", "Vips Runtime API", ("images-vips-api", "VipsImage / VipsRuntime", "binding-neutral contract"), 1470, 455, 360, 172, "lavender"),
         Node("jni", "Java 21 JNI Backend", ("images-vips-java21", "JVips + system libvips"), 1030, 750, 360, 142, "blue"),
         Node("ffm", "Java 25 FFM Backend", ("images-vips-java25", "Panama FFM + native access"), 1480, 750, 360, 142, "green"),
-        Node("host", "Native Host Capability", ("libvips codecs decide", "AVIF / HEIC availability"), 560, 750, 370, 142, "amber"),
+        Node("host", "Native Host Capability", ("libvips codecs decide", "AVIF / HEIC availability"), 520, 750, 430, 142, "amber"),
     )
 
 
@@ -116,9 +148,9 @@ def edges() -> tuple[Edge, ...]:
         Edge("service", "vipsApi", "", ((1420, 541), (1470, 541)), "#DC6B82"),
         Edge("vipsApi", "jni", "Java 21+", ((1650, 627), (1650, 690), (1210, 690), (1210, 750)), "#8A72D6"),
         Edge("vipsApi", "ffm", "Java 25+", ((1650, 627), (1650, 750)), "#8A72D6"),
-        Edge("host", "jni", "libvips", ((930, 821), (1030, 821)), "#D6A441"),
-        Edge("host", "ffm", "libvips", ((745, 892), (745, 950), (1660, 950), (1660, 892)), "#D6A441"),
-        Edge("benchmark", "vipsApi", "compare", ((1660, 318), (1660, 455)), "#B88A44"),
+        Edge("host", "jni", "libvips", ((950, 821), (1030, 821)), "#D6A441"),
+        Edge("host", "ffm", "libvips", ((735, 892), (735, 950), (1660, 950), (1660, 892)), "#D6A441"),
+        Edge("benchmark", "vipsApi", "compare", ((1660, 318), (1808, 318), (1808, 430), (1760, 430), (1760, 455)), "#B88A44"),
     )
 
 
@@ -126,67 +158,66 @@ def render_header() -> list[str]:
     return [
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{WIDTH}" height="{HEIGHT}" viewBox="0 0 {WIDTH} {HEIGHT}" role="img" aria-label="Bluetape4k Image overview">',
         "<defs>",
-        '  <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%">',
-        '    <feDropShadow dx="0" dy="7" stdDeviation="8" flood-color="#203040" flood-opacity="0.10"/>',
-        "  </filter>",
-        '  <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">',
-        '    <path d="M 1 1 L 7 4 L 1 7 Z" fill="#758297"/>',
-        "  </marker>",
+        '  <marker id="arrow-blue" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#2563eb"/></marker>',
+        '  <marker id="arrow-green" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#16a34a"/></marker>',
+        '  <marker id="arrow-orange" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#ea580c"/></marker>',
+        '  <marker id="arrow-purple" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#9333ea"/></marker>',
+        '  <marker id="arrow-gray" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#6b7280"/></marker>',
         "  <style>",
-        "    .canvas{fill:#F6F9FC}",
-        "    .frame{fill:#FFFFFF;stroke:#D7E2EC;stroke-width:2}",
-        "    .layer{stroke:#D7E2EC;stroke-width:1.5}",
-        '    .title{font-family:"Architects Daughter";font-size:44px;fill:#203040;font-weight:400}',
-        '    .subtitle{font-family:"Comic Mono";font-size:16px;fill:#536476;font-weight:400}',
-        '    .section{font-family:"Architects Daughter";font-size:21px;fill:#405366;font-weight:400}',
-        '    .card-title{font-family:"Architects Daughter";font-size:24px;fill:#203040;font-weight:400}',
-        '    .detail{font-family:"Comic Mono";font-size:13px;fill:#405366;font-weight:400}',
-        '    .label{font-family:"Comic Mono";font-size:12px;fill:#405366;font-weight:400}',
-        '    .footer{font-family:"Comic Mono";font-size:13px;fill:#627184;font-weight:400}',
-        "    .card{filter:url(#shadow);stroke-width:2}",
-        "    .edge{stroke-width:2.2;fill:none;marker-end:url(#arrow);stroke-linecap:round;stroke-linejoin:round}",
+        "    .canvas{fill:#ffffff}",
+        "    .layer{fill:#f3f6fa;stroke:#cbd5e1;stroke-width:1.4;stroke-dasharray:8 6}",
+        '    .title{font-family:"Architects Daughter";font-size:44px;fill:#111827;font-weight:400}',
+        '    .subtitle{font-family:"Comic Mono";font-size:16px;fill:#6b7280;font-weight:400}',
+        '    .section{font-family:"Comic Mono";font-size:16px;fill:#4b5563;font-weight:700;letter-spacing:0.8px}',
+        '    .card-title{font-family:"Architects Daughter";font-size:24px;fill:#111827;font-weight:400}',
+        '    .detail{font-family:"Comic Mono";font-size:13px;fill:#6b7280;font-weight:400}',
+        '    .label{font-family:"Comic Mono";font-size:12px;fill:#374151;font-weight:400}',
+        '    .footer{font-family:"Comic Mono";font-size:13px;fill:#6b7280;font-weight:400}',
+        '    .badge-text{font-family:"Comic Mono";font-size:11px;fill:#374151;font-weight:700}',
+        "    .card{fill:#ffffff;stroke:#94a3b8;stroke-width:1.9}",
         "  </style>",
         "</defs>",
         f'<rect class="canvas" width="{WIDTH}" height="{HEIGHT}"/>',
-        f'<rect class="frame" x="34" y="28" width="{WIDTH - 68}" height="{HEIGHT - 58}" rx="26"/>',
         '<text class="title" x="72" y="82">Bluetape4k Image overview</text>',
         '<text class="subtitle" x="76" y="118">One repository covers pure JVM image processing, service adapters, native libvips acceleration, and benchmark evidence.</text>',
-        '<rect class="layer" x="64" y="142" width="1772" height="236" rx="18" fill="#F7FBFF"/>',
-        '<rect class="layer" x="64" y="404" width="1772" height="294" rx="18" fill="#FAFCF7"/>',
-        '<rect class="layer" x="64" y="702" width="1772" height="328" rx="18" fill="#FFFDF7"/>',
-        '<text class="section" x="92" y="165">Entry and selection</text>',
-        '<text class="section" x="92" y="430">Processing and integration surface</text>',
-        '<text class="section" x="92" y="725">Native acceleration choices</text>',
+        '<rect class="layer" x="64" y="142" width="1772" height="236" rx="8"/>',
+        '<rect class="layer" x="64" y="404" width="1772" height="272" rx="8"/>',
+        '<rect class="layer" x="64" y="710" width="1772" height="320" rx="8"/>',
+        '<text class="section" x="92" y="165">ENTRY AND SELECTION</text>',
+        '<text class="section" x="92" y="430">PROCESSING AND INTEGRATION SURFACE</text>',
+        '<text class="section" x="92" y="733">NATIVE ACCELERATION CHOICES</text>',
     ]
 
 
 def render_node(node: Node) -> list[str]:
     fill, stroke = PALETTE[node.tone]
+    title_lines = wrap_words(node.title, max(8, int((node.w - 44) / 14.5)))
+    detail_lines: list[str] = []
+    for detail in node.detail:
+        detail_lines.extend(wrap_words(detail, max(8, int((node.w - 64) / 8.0))))
+    title_start = node.y + 34 - (len(title_lines) - 1) * 12
     out = [
         f'<g id="{esc(node.key)}">',
-        f'  <rect class="card" x="{node.x}" y="{node.y}" width="{node.w}" height="{node.h}" rx="10" fill="{fill}" stroke="{stroke}"/>',
-        f'  <text class="card-title" x="{node.cx}" y="{node.y + 38}" text-anchor="middle">{esc(node.title)}</text>',
+        f'  <rect class="card" x="{node.x}" y="{node.y}" width="{node.w}" height="{node.h}" rx="8"/>',
+        f'  <rect x="{node.x + 18}" y="{node.y + 20}" width="44" height="44" rx="8" fill="{fill}" stroke="{stroke}" stroke-width="1.3"/>',
+        f'  <text class="badge-text" x="{node.x + 40}" y="{node.y + 48}" text-anchor="middle">{esc(node.key[:3].upper())}</text>',
     ]
-    start_y = node.y + 72
-    for index, detail in enumerate(node.detail):
+    for index, line in enumerate(title_lines):
+        out.append(f'  <text class="card-title" x="{node.x + 82}" y="{title_start + index * 24}">{esc(line)}</text>')
+    start_y = node.y + 72 + max(0, len(title_lines) - 1) * 10
+    for index, detail in enumerate(detail_lines):
         y = start_y + index * 24
-        out.append(f'  <rect x="{node.x + 22}" y="{y - 16}" width="{node.w - 44}" height="22" rx="7" fill="#FFFFFF" stroke="#D7E2EC" opacity="0.92"/>')
-        out.append(f'  <text class="detail" x="{node.cx}" y="{y}" text-anchor="middle">{esc(detail)}</text>')
+        out.append(f'  <text class="detail" x="{node.x + 82}" y="{y}">{esc(detail)}</text>')
     out.append("</g>")
     return out
 
 
 def render_edge(edge: Edge) -> list[str]:
-    out = [f'<path class="edge" d="{path_d(edge.points)}" stroke="{edge.tone}"/>']
+    stroke, marker = ARROWS.get(edge.tone, ARROWS["#758297"])
+    out = [f'<path d="{path_d(edge.points)}" stroke="{stroke}" stroke-width="2.1" fill="none" marker-end="url(#{marker})" stroke-linecap="round" stroke-linejoin="round"/>']
     if edge.label:
         mid = label_point(edge.points)
-        label_w = max(74, len(edge.label) * 8 + 26)
-        out.extend(
-            [
-                f'<rect x="{mid[0] - label_w / 2:.1f}" y="{mid[1] - 26:.1f}" width="{label_w}" height="24" rx="8" fill="#FFFFFF" stroke="#D7E2EC" opacity="0.96"/>',
-                f'<text class="label" x="{mid[0]:.1f}" y="{mid[1] - 10:.1f}" text-anchor="middle">{esc(edge.label)}</text>',
-            ]
-        )
+        out.append(f'<text class="label" x="{mid[0]:.1f}" y="{mid[1] - 10:.1f}" text-anchor="middle">{esc(edge.label)}</text>')
     return out
 
 
@@ -202,7 +233,7 @@ def render_svg() -> str:
     out.append("</g>")
     out.append(
         f'<text class="footer" x="{WIDTH / 2:.1f}" y="{HEIGHT - 50}" text-anchor="middle">'
-        "Source evidence: settings.gradle.kts modules, root README capabilities, module README examples, and libvips requirements."
+        "https://github.com/bluetape4k/bluetape4k-image | project: bluetape4k-image | module: root"
         "</text>"
     )
     out.append("</svg>")
@@ -235,11 +266,17 @@ def validate() -> None:
     for node in ns:
         if node.x < 60 or node.y < 145 or node.right > WIDTH - 60 or node.bottom > HEIGHT - 84:
             raise ValueError(f"{BASE}: node outside balanced canvas area {node.key}")
-        if len(node.title) * 13 > node.w - 40:
+        title_lines = wrap_words(node.title, max(8, int((node.w - 44) / 14.5)))
+        if any(len(line) * 14.5 > node.w - 40 for line in title_lines):
             raise ValueError(f"{BASE}: title overflows {node.key}")
+        rendered_lines = len(title_lines)
         for detail in node.detail:
-            if len(detail) * 8 > node.w - 64:
+            detail_lines = wrap_words(detail, max(8, int((node.w - 64) / 8.0)))
+            rendered_lines += len(detail_lines)
+            if any(len(line) * 8 > node.w - 64 for line in detail_lines):
                 raise ValueError(f"{BASE}: detail overflows {node.key}: {detail}")
+        if 34 + rendered_lines * 24 > node.h - 14:
+            raise ValueError(f"{BASE}: text block too tall for {node.key}")
     for i, first in enumerate(ns):
         for second in ns[i + 1 :]:
             if not (
@@ -266,37 +303,11 @@ def validate() -> None:
                     raise ValueError(f"{BASE}: edge {edge.source}->{edge.target} segment {a}->{b} crosses or crowds {node.key}")
 
 
-def write_graphviz() -> None:
-    dot_path = OUT / f"{BASE}.dot"
-    lines = [
-        "digraph G {",
-        "  graph [layout=neato, splines=ortho, overlap=false, bgcolor=\"#F6F9FC\", margin=0.18];",
-        "  node [shape=box, style=\"rounded,filled\", fixedsize=true, fillcolor=\"#FFFFFF\", color=\"#9AA8B8\", fontname=\"Comic Mono\", fontsize=11];",
-        "  edge [color=\"#758297\", fontname=\"Comic Mono\", fontsize=9];",
-        '  label="Bluetape4k Image overview";',
-        '  labelloc="t";',
-    ]
-    for node in nodes():
-        lines.append(
-            f'  "{node.key}" [label="{node.title}", width="{node.w / 72:.3f}", height="{node.h / 72:.3f}", pos="{node.cx},{HEIGHT - node.cy}!"];'
-        )
-    for edge in edges():
-        label = f' [label="{esc(edge.label)}"]' if edge.label else ""
-        lines.append(f'  "{edge.source}" -> "{edge.target}"{label};')
-    lines.append("}")
-    dot_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
-    cmd = ["neato", "-n2"]
-    subprocess.run([*cmd, "-Tplain", str(dot_path), "-o", str(OUT / f"{BASE}.plain")], check=True)
-    subprocess.run([*cmd, "-Tsvg", str(dot_path), "-o", str(OUT / f"{BASE}-graphviz.svg")], check=True)
-    subprocess.run([*cmd, "-Tpng", str(dot_path), "-o", str(OUT / f"{BASE}-graphviz.png")], check=True)
-
-
 def main() -> int:
     OUT.mkdir(parents=True, exist_ok=True)
     validate()
     svg_path = OUT / f"{BASE}.svg"
     svg_path.write_text(render_svg(), encoding="utf-8")
-    write_graphviz()
     subprocess.run(["rsvg-convert", str(svg_path), "-o", str(svg_path.with_suffix(".png"))], check=True)
     content = svg_path.read_text(encoding="utf-8")
     for forbidden in ("Inter", "Arial", "Helvetica"):

@@ -14,13 +14,13 @@ ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "docs" / "images" / "readme-diagrams"
 
 PALETTE = [
-    ("#E8F3FF", "#5B8DEF"),
-    ("#EAF7EF", "#58A978"),
-    ("#FFF3D9", "#D6A441"),
-    ("#FDECEF", "#DC6B82"),
-    ("#E9F7F6", "#45A7A1"),
-    ("#F1ECFF", "#8A72D6"),
-    ("#F7F1E7", "#B88A44"),
+    ("#eff6ff", "#bfdbfe"),
+    ("#f0fdf4", "#bbf7d0"),
+    ("#fff7ed", "#fed7aa"),
+    ("#fef2f2", "#fecaca"),
+    ("#f0fdfa", "#ccfbf1"),
+    ("#faf5ff", "#e9d5ff"),
+    ("#f9fafb", "#d1d5db"),
 ]
 
 
@@ -125,37 +125,54 @@ def esc(value: str) -> str:
     return html.escape(value, quote=True)
 
 
+def wrap_words(value: str, max_chars: int) -> list[str]:
+    words = value.split()
+    if not words:
+        return [value]
+    lines: list[str] = []
+    current = words[0]
+    for word in words[1:]:
+        if len(current) + 1 + len(word) <= max_chars:
+            current += " " + word
+        else:
+            lines.append(current)
+            current = word
+    lines.append(current)
+    wrapped: list[str] = []
+    for line in lines:
+        if len(line) <= max_chars:
+            wrapped.append(line)
+            continue
+        chunks = [line[index : index + max_chars] for index in range(0, len(line), max_chars)]
+        wrapped.extend(chunks)
+    return wrapped
+
+
 def svg_header(width: int, height: int, title: str, subtitle: str) -> list[str]:
     return [
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}" role="img" aria-label="{esc(title)}">',
         "<defs>",
-        '  <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%">',
-        '    <feDropShadow dx="0" dy="7" stdDeviation="8" flood-color="#203040" flood-opacity="0.10"/>',
-        "  </filter>",
-        '  <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">',
-        '    <path d="M 1 1 L 7 4 L 1 7 Z" fill="#758297"/>',
-        "  </marker>",
+        '  <marker id="arrow-blue" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#2563eb"/></marker>',
+        '  <marker id="arrow-gray" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#6b7280"/></marker>',
         "  <style>",
-        "    .canvas{fill:#F6F9FC}",
-        "    .frame{fill:#FFFFFF;stroke:#D7E2EC;stroke-width:2}",
-        '    .title{font-family:"Architects Daughter";font-size:42px;fill:#203040;font-weight:400}',
-        '    .subtitle{font-family:"Comic Mono";font-size:16px;fill:#536476;font-weight:400}',
-        '    .node-title{font-family:"Architects Daughter";font-size:22px;fill:#203040;font-weight:400}',
-        '    .node-detail{font-family:"Comic Mono";font-size:13px;fill:#4D5F70;font-weight:400}',
-        '    .panel-title{font-family:"Architects Daughter";font-size:24px;fill:#203040;font-weight:400}',
-        '    .layer{fill:#F3F7FB;stroke:#D7E2EC;stroke-width:2}',
-        '    .layer-title{font-family:"Architects Daughter";font-size:26px;fill:#22344A;font-weight:400}',
-        '    .label{font-family:"Comic Mono";font-size:12px;fill:#405366;font-weight:400}',
-        '    .footer{font-family:"Comic Mono";font-size:13px;fill:#627184;font-weight:400}',
-        "    .footer-pill{fill:#FFFFFF;stroke:#D7E2EC;stroke-width:1}",
-        "    .card{filter:url(#shadow);stroke-width:2}",
-        "    .edge{stroke:#758297;stroke-width:2.3;fill:none;marker-end:url(#arrow);stroke-linecap:round;stroke-linejoin:round}",
-        "    .edge-dashed{stroke:#758297;stroke-width:2.2;fill:none;marker-end:url(#arrow);stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:7 6}",
-        "    .lifeline{stroke:#9AA8B8;stroke-width:1.7;stroke-dasharray:7 7}",
+        "    .canvas{fill:#ffffff}",
+        '    .title{font-family:"Architects Daughter";font-size:42px;fill:#111827;font-weight:400}',
+        '    .subtitle{font-family:"Comic Mono";font-size:16px;fill:#6b7280;font-weight:400}',
+        '    .node-title{font-family:"Architects Daughter";font-size:22px;fill:#111827;font-weight:400}',
+        '    .node-detail{font-family:"Comic Mono";font-size:13px;fill:#6b7280;font-weight:400}',
+        '    .panel-title{font-family:"Comic Mono";font-size:16px;fill:#4b5563;font-weight:700;letter-spacing:0.8px}',
+        '    .layer{fill:#f3f6fa;stroke:#cbd5e1;stroke-width:1.4;stroke-dasharray:8 6}',
+        '    .layer-title{font-family:"Comic Mono";font-size:16px;fill:#4b5563;font-weight:700;letter-spacing:0.8px}',
+        '    .label{font-family:"Comic Mono";font-size:12px;fill:#374151;font-weight:400}',
+        '    .footer{font-family:"Comic Mono";font-size:13px;fill:#6b7280;font-weight:400}',
+        "    .footer-pill{fill:#ffffff;stroke:#d1d5db;stroke-width:1}",
+        "    .card{fill:#ffffff;stroke:#94a3b8;stroke-width:1.9}",
+        "    .edge{stroke:#2563eb;stroke-width:2.1;fill:none;marker-end:url(#arrow-blue);stroke-linecap:round;stroke-linejoin:round}",
+        "    .edge-dashed{stroke:#6b7280;stroke-width:1.8;fill:none;marker-end:url(#arrow-gray);stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:6 4}",
+        "    .lifeline{stroke:#d1d5db;stroke-width:1.5;stroke-dasharray:7 7}",
         "  </style>",
         "</defs>",
         f'<rect class="canvas" width="{width}" height="{height}"/>',
-        f'<rect class="frame" x="34" y="28" width="{width - 68}" height="{height - 58}" rx="26"/>',
         f'<text class="title" x="70" y="82">{esc(title)}</text>',
         f'<text class="subtitle" x="74" y="116">{esc(subtitle)}</text>',
     ]
@@ -170,18 +187,23 @@ def wrap_path(points: tuple[tuple[int, int], ...]) -> str:
 
 def render_node(node: Node) -> list[str]:
     fill, stroke = PALETTE[node.color % len(PALETTE)]
-    lines = [node.title, *node.details]
-    gap = 20
+    lines: list[tuple[str, str]] = []
+    for line in wrap_words(node.title, max(8, int((node.w - 44) / 14.5))):
+        lines.append((line, "node-title"))
+    for detail in node.details:
+        for line in wrap_words(detail, max(8, int((node.w - 36) / 8.0))):
+            lines.append((line, "node-detail"))
+    gap = 18
     total = (len(lines) - 1) * gap
     start = node.cy - total / 2
     out = [
         f'<g id="{esc(node.key)}">',
-        f'  <rect class="card" x="{node.x}" y="{node.y}" width="{node.w}" height="{node.h}" rx="14" fill="{fill}" stroke="{stroke}"/>',
+        f'  <rect class="card" x="{node.x}" y="{node.y}" width="{node.w}" height="{node.h}" rx="8"/>',
+        f'  <rect x="{node.x + 14}" y="{node.cy - 20}" width="40" height="40" rx="8" fill="{fill}" stroke="{stroke}" stroke-width="1.2"/>',
     ]
-    for index, text in enumerate(lines):
-        cls = "node-title" if index == 0 else "node-detail"
+    for index, (text, cls) in enumerate(lines):
         out.append(
-            f'  <text class="{cls}" x="{node.cx}" y="{start + index * gap:.1f}" text-anchor="middle" dominant-baseline="middle">{esc(text)}</text>'
+            f'  <text class="{cls}" x="{node.x + 68}" y="{start + index * gap:.1f}" dominant-baseline="middle">{esc(text)}</text>'
         )
     out.append("</g>")
     return out
@@ -200,11 +222,29 @@ def render_edge_label(edge: Edge) -> list[str]:
     else:
         mid_x = sum(x for x, _ in edge.points) / len(edge.points)
         mid_y = sum(y for _, y in edge.points) / len(edge.points)
-    label_w = max(64, len(edge.label) * 8 + 28)
+    label_w = max(88, len(edge.label) * 8 + 36)
     return [
-        f'<rect x="{mid_x - label_w / 2:.1f}" y="{mid_y - 20:.1f}" width="{label_w}" height="24" rx="8" fill="#FFFFFF" stroke="#D7E2EC" opacity="0.94"/>',
+        f'<rect x="{mid_x - label_w / 2:.1f}" y="{mid_y - 20:.1f}" width="{label_w}" height="24" rx="8" fill="#ffffff" stroke="#d1d5db" opacity="0.96"/>',
         f'<text class="label" x="{mid_x:.1f}" y="{mid_y - 8:.1f}" text-anchor="middle" dominant-baseline="middle">{esc(edge.label)}</text>',
     ]
+
+
+def module_for_base(base: str) -> str:
+    if base.startswith("examples-basic-processing"):
+        return "examples:basic-processing"
+    if base.startswith("examples-ktor-image-api"):
+        return "examples:ktor-image-api"
+    if base.startswith("examples-ktor-ocr-api"):
+        return "examples:ktor-ocr-api"
+    if base.startswith("examples-spring-boot-image-api"):
+        return "examples:spring-boot-image-api"
+    if base.startswith("examples-spring-boot-ocr-api"):
+        return "examples:spring-boot-ocr-api"
+    return base.rsplit("-", 2)[0]
+
+
+def footer_text(base: str) -> str:
+    return f"https://github.com/bluetape4k/bluetape4k-image | project: bluetape4k-image | module: {module_for_base(base)}"
 
 
 def render_flow(diagram: FlowDiagram) -> str:
@@ -224,8 +264,8 @@ def render_flow(diagram: FlowDiagram) -> str:
             else:
                 out.extend(
                     [
-                        f'<rect x="{panel.x}" y="{panel.y}" width="{panel.w}" height="{panel.h}" rx="18" fill="{fill}" stroke="{stroke}" stroke-width="1.8" opacity="0.34"/>',
-                        f'<text class="panel-title" x="{panel.x + 18}" y="{panel.y + 32}" dominant-baseline="middle">{esc(panel.title)}</text>',
+                        f'<rect class="layer" x="{panel.x}" y="{panel.y}" width="{panel.w}" height="{panel.h}" rx="8"/>',
+                        f'<text class="panel-title" x="{panel.x + 18}" y="{panel.y + 28}" dominant-baseline="middle">{esc(panel.title.upper())}</text>',
                     ]
                 )
         out.append("</g>")
@@ -249,20 +289,22 @@ def render_flow(diagram: FlowDiagram) -> str:
         out.extend(
             [
                 f'<rect class="footer-pill" x="{pill_x}" y="{pill_y}" width="{pill_w}" height="34" rx="10"/>',
-                f'<text class="footer" x="{diagram.width / 2:.1f}" y="{pill_y + 22}" text-anchor="middle">{esc(diagram.footer)}</text>',
+                f'<text class="footer" x="{diagram.width / 2:.1f}" y="{pill_y + 22}" text-anchor="middle">{esc(footer_text(diagram.base))}</text>',
             ]
         )
     else:
         out.append(
-            f'<text class="footer" x="{diagram.width / 2:.1f}" y="{diagram.height - 50}" text-anchor="middle">{esc(diagram.footer)}</text>'
+            f'<text class="footer" x="{diagram.width / 2:.1f}" y="{diagram.height - 50}" text-anchor="middle">{esc(footer_text(diagram.base))}</text>'
         )
     out.append("</svg>")
     return "\n".join(out) + "\n"
 
 
 def render_sequence(diagram: SequenceDiagram) -> str:
-    margin = 185
-    span = diagram.width - margin * 2
+    width = max(diagram.width, 1860)
+    height = max(diagram.height, 1055)
+    margin = 180
+    span = width - margin * 2
     step = span / max(1, len(diagram.participants) - 1)
     x_by_key = {
         participant.key: int(round(margin + index * step))
@@ -270,11 +312,20 @@ def render_sequence(diagram: SequenceDiagram) -> str:
     }
     top = 185
     header_y = top
-    header_w = 230
-    header_h = 72
+    header_w = 280
+    header_h = 78
     line_start = header_y + header_h
-    line_end = diagram.height - 95
-    out = svg_header(diagram.width, diagram.height, diagram.title, diagram.subtitle)
+    line_end = height - 160
+    min_gap = min(
+        (right - header_w / 2) - (left + header_w / 2)
+        for left, right in zip(
+            [x_by_key[participant.key] for participant in diagram.participants],
+            [x_by_key[participant.key] for participant in diagram.participants][1:],
+        )
+    )
+    if min_gap < 32:
+        raise ValueError(f"{diagram.base}: participant cards too close ({min_gap:.1f}px)")
+    out = svg_header(width, height, diagram.title, diagram.subtitle)
     out.append('<g id="participants">')
     for index, participant in enumerate(diagram.participants):
         fill, stroke = PALETTE[index % len(PALETTE)]
@@ -282,9 +333,9 @@ def render_sequence(diagram: SequenceDiagram) -> str:
         x = participant_x - header_w // 2
         out.extend(
             [
-                f'<rect class="card" x="{x}" y="{header_y}" width="{header_w}" height="{header_h}" rx="10" fill="{fill}" stroke="{stroke}"/>',
-                f'<text class="node-title" x="{participant_x}" y="{header_y + 29}" text-anchor="middle" dominant-baseline="middle">{esc(participant.title)}</text>',
-                f'<text class="node-detail" x="{participant_x}" y="{header_y + 53}" text-anchor="middle" dominant-baseline="middle">{esc(participant.detail)}</text>',
+                f'<rect class="card participant-card" x="{x}" y="{header_y}" width="{header_w}" height="{header_h}" rx="8" style="fill:{fill};stroke:{stroke};stroke-width:1.8"/>',
+                f'<text class="node-title" x="{participant_x}" y="{header_y + 32}" text-anchor="middle" dominant-baseline="middle">{esc(participant.title)}</text>',
+                f'<text class="node-detail" x="{participant_x}" y="{header_y + 56}" text-anchor="middle" dominant-baseline="middle">{esc(participant.detail)}</text>',
                 f'<line class="lifeline" x1="{participant_x}" y1="{line_start}" x2="{participant_x}" y2="{line_end}"/>',
             ]
         )
@@ -293,28 +344,29 @@ def render_sequence(diagram: SequenceDiagram) -> str:
     for index, message in enumerate(diagram.messages, start=1):
         source_x = x_by_key[message.source]
         target_x = x_by_key[message.target]
-        y = message.y + 40
-        left = min(source_x, target_x)
-        right = max(source_x, target_x)
-        label = f"{index}. {message.label}"
-        label_w = min(520, max(178, len(label) * 7 + 32))
-        label_x = (source_x + target_x) / 2 - label_w / 2
-        label_y = y - 46
-        if label_y + 28 > y - 10:
+        y = message.y + 42
+        label = message.label
+        label_w = min(width - 220, max(220, len(label) * 8.2 + 76))
+        label_center = (source_x + target_x) / 2
+        label_x = label_center - label_w / 2
+        label_y = y - 47
+        if label_y + 28 > y - 12:
             raise ValueError(f"Sequence label overlaps connector: {diagram.base} {label}")
         path_class = "edge-dashed" if message.dashed else "edge"
+        badge_color = "#6b7280" if message.dashed else "#2563eb"
         out.extend(
             [
                 f'<path class="{path_class}" d="M {source_x} {y} L {target_x} {y}"/>',
-                f'<rect x="{label_x:.1f}" y="{label_y}" width="{label_w:.1f}" height="28" rx="9" fill="#FFFFFF" stroke="#D7E2EC"/>',
-                f'<text class="label" x="{(source_x + target_x) / 2:.1f}" y="{label_y + 14}" text-anchor="middle" dominant-baseline="middle">{esc(label)}</text>',
-                f'<circle cx="{left}" cy="{y}" r="4" fill="#FFFFFF" stroke="#758297" stroke-width="1.8"/>',
-                f'<circle cx="{right}" cy="{y}" r="4" fill="#FFFFFF" stroke="#758297" stroke-width="1.8"/>',
+                f'<rect x="{target_x - 4}" y="{y - 11}" width="8" height="26" rx="3" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/>',
+                f'<rect x="{label_x:.1f}" y="{label_y}" width="{label_w:.1f}" height="28" rx="9" fill="#ffffff" stroke="#d1d5db"/>',
+                f'<circle cx="{label_x + 18:.1f}" cy="{label_y + 14}" r="12" fill="{badge_color}"/>',
+                f'<text class="label" x="{label_x + 18:.1f}" y="{label_y + 15}" text-anchor="middle" dominant-baseline="middle" style="fill:#ffffff;font-size:12px">{index}</text>',
+                f'<text class="label" x="{label_center + 16:.1f}" y="{label_y + 14}" text-anchor="middle" dominant-baseline="middle">{esc(label)}</text>',
             ]
         )
     out.append("</g>")
     out.append(
-        f'<text class="footer" x="{diagram.width / 2:.1f}" y="{diagram.height - 50}" text-anchor="middle">{esc(diagram.footer)}</text>'
+        f'<text class="footer" x="{width / 2:.1f}" y="{height - 68}" text-anchor="middle">{esc(footer_text(diagram.base))}</text>'
     )
     out.append("</svg>")
     return "\n".join(out) + "\n"
@@ -437,20 +489,45 @@ def validate_node_text_fit(diagram: FlowDiagram) -> None:
     for node in diagram.nodes:
         title_limit = node.w - 34
         detail_limit = node.w - 28
-        title_width = len(node.title) * 13
-        if title_width > title_limit:
-            raise ValueError(
-                f"{diagram.base}: node title overflows {node.key} ({title_width}px > {title_limit}px)"
-            )
-        for detail in node.details:
-            detail_width = len(detail) * 8
-            if detail_width > detail_limit:
+        title_lines = wrap_words(node.title, max(8, int((node.w - 44) / 14.5)))
+        for title_line in title_lines:
+            title_width = len(title_line) * 14.5
+            if title_width > title_limit:
                 raise ValueError(
-                    f"{diagram.base}: node detail overflows {node.key} ({detail_width}px > {detail_limit}px)"
+                    f"{diagram.base}: node title overflows {node.key} ({title_width}px > {title_limit}px)"
                 )
+        for detail in node.details:
+            for detail_line in wrap_words(detail, max(8, int((node.w - 36) / 8.0))):
+                detail_width = len(detail_line) * 8
+                if detail_width > detail_limit:
+                    raise ValueError(
+                        f"{diagram.base}: node detail overflows {node.key} ({detail_width}px > {detail_limit}px)"
+                    )
+        rendered_line_count = len(title_lines) + sum(
+            len(wrap_words(detail, max(8, int((node.w - 36) / 8.0)))) for detail in node.details
+        )
+        if rendered_line_count * 18 > node.h - 24:
+            raise ValueError(f"{diagram.base}: node text block is too tall for {node.key}")
+
+
+def validate_panel_spacing(diagram: FlowDiagram) -> None:
+    if not diagram.panels:
+        return
+    by_x = sorted(diagram.panels, key=lambda panel: (panel.x, panel.y))
+    vertical = [
+        (first, second, second.y - (first.y + first.h))
+        for first, second in zip(by_x, by_x[1:])
+        if first.x == second.x and first.w == second.w
+    ]
+    for first, second, gap in vertical:
+        if gap < 24:
+            raise ValueError(
+                f"{diagram.base}: layer gap too small {first.title}->{second.title} ({gap}px)"
+            )
 
 
 def validate_flow_routes(diagram: FlowDiagram) -> None:
+    validate_panel_spacing(diagram)
     validate_node_text_fit(diagram)
     nodes = {node.key: node for node in diagram.nodes}
     for index, first in enumerate(diagram.nodes):
@@ -485,27 +562,6 @@ def validate_flow_routes(diagram: FlowDiagram) -> None:
                         )
 
 
-def write_graphviz(base: str, title: str, nodes: list[tuple[str, str]], edges: list[tuple[str, str, str]]) -> None:
-    dot_path = OUT / f"{base}.dot"
-    lines = [
-        "digraph G {",
-        "  graph [rankdir=LR, bgcolor=\"#F6F9FC\", margin=0.18, nodesep=0.55, ranksep=0.75];",
-        "  node [shape=box, style=\"rounded,filled\", fillcolor=\"#FFFFFF\", color=\"#9AA8B8\", fontname=\"Comic Mono\", fontsize=11];",
-        "  edge [color=\"#758297\", fontname=\"Comic Mono\", fontsize=9];",
-        f'  label="{esc(title)}";',
-        '  labelloc="t";',
-    ]
-    for key, label in nodes:
-        lines.append(f'  "{key}" [label="{label}"];')
-    for source, target, label in edges:
-        lines.append(f'  "{source}" -> "{target}" [label="{label}"];')
-    lines.append("}")
-    dot_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
-    subprocess.run(["dot", "-Tplain", str(dot_path), "-o", str(OUT / f"{base}.plain")], check=True)
-    subprocess.run(["dot", "-Tsvg", str(dot_path), "-o", str(OUT / f"{base}-graphviz.svg")], check=True)
-    subprocess.run(["dot", "-Tpng", str(dot_path), "-o", str(OUT / f"{base}-graphviz.png")], check=True)
-
-
 def render_png(svg_path: Path) -> None:
     subprocess.run(["rsvg-convert", str(svg_path), "-o", str(svg_path.with_suffix(".png"))], check=True)
 
@@ -514,25 +570,13 @@ def save_flow(diagram: FlowDiagram) -> None:
     validate_flow_routes(diagram)
     svg_path = OUT / f"{diagram.base}.svg"
     svg_path.write_text(render_flow(diagram), encoding="utf-8")
-    write_graphviz(
-        diagram.base,
-        diagram.title,
-        [(node.key, node.title) for node in diagram.nodes],
-        [(edge.source, edge.target, edge.label) for edge in diagram.edges],
-    )
     render_png(svg_path)
-    print(f"{diagram.base}: final_nodes={len(diagram.nodes)} final_edges={len(diagram.edges)} graphviz_edges={len(diagram.edges)} manual_exceptions=0")
+    print(f"{diagram.base}: final_nodes={len(diagram.nodes)} final_edges={len(diagram.edges)} manual_exceptions=0")
 
 
 def save_sequence(diagram: SequenceDiagram) -> None:
     svg_path = OUT / f"{diagram.base}.svg"
     svg_path.write_text(render_sequence(diagram), encoding="utf-8")
-    write_graphviz(
-        diagram.base,
-        diagram.title,
-        [(participant.key, participant.title) for participant in diagram.participants],
-        [(message.source, message.target, message.label) for message in diagram.messages],
-    )
     render_png(svg_path)
     print(f"{diagram.base}: participants={len(diagram.participants)} messages={len(diagram.messages)} label_intersections=0 manual_exceptions=0")
 
@@ -550,38 +594,33 @@ def diagrams() -> tuple[FlowDiagram | SequenceDiagram, ...]:
                 Node("props", "Images properties", ("bluetape4k.images.*",), 960, 225, 360, 82, 1),
                 Node("autoProcessing", "Processing Config", ("AutoConfiguration", "format and quality"), 285, 455, 330, 92, 0),
                 Node("autoStorage", "Storage Config", ("AutoConfiguration", "local or S3 backend"), 745, 435, 350, 92, 2),
-                Node("autoCdn", "CDN Config", ("AutoConfiguration", "S3 or CloudFront"), 1245, 475, 340, 92, 3),
-                Node("autoHealth", "Health Config", ("AutoConfiguration", "reactive probe"), 1680, 420, 340, 92, 4),
-                Node("autoMetrics", "Metrics Config", ("AutoConfiguration", "Micrometer wrapper"), 1680, 560, 340, 92, 5),
-                Node("local", "Local storage", ("filesystem root", "path traversal guard"), 390, 765, 350, 92, 4),
-                Node("s3", "S3 storage", ("S3Operations", "bucket + key prefix"), 875, 740, 350, 92, 2),
-                Node("signers", "Read URL signers", ("pre-signed S3", "CloudFront URLs"), 1320, 790, 350, 92, 3),
-                Node("storageSpi", "ImageStorage SPI", ("upload, download, exists",), 1740, 760, 350, 92, 1),
-                Node("health", "Storage health", ("exists(healthProbeKey)",), 385, 1065, 380, 90, 4),
-                Node("metrics", "Metrics wrapper", ("timers and counters",), 910, 1075, 380, 90, 5),
-                Node("actuator", "Actuator sanitizer", ("privateKeyPem redaction",), 1450, 1060, 380, 90, 6),
+                Node("autoCdn", "CDN Config", ("AutoConfiguration", "S3 or CloudFront"), 1140, 475, 340, 92, 3),
+                Node("autoHealth", "Health Config", ("AutoConfiguration", "reactive probe"), 1570, 420, 340, 92, 4),
+                Node("autoMetrics", "Metrics Config", ("AutoConfiguration", "Micrometer wrapper"), 1570, 560, 340, 92, 5),
+                Node("local", "Local storage", ("filesystem root", "path traversal guard"), 300, 765, 350, 92, 4),
+                Node("s3", "S3 storage", ("S3Operations", "bucket + key prefix"), 745, 765, 350, 92, 2),
+                Node("signers", "Read URL signers", ("pre-signed S3", "CloudFront URLs"), 1140, 765, 350, 92, 3),
+                Node("storageSpi", "ImageStorage SPI", ("upload, download, exists",), 745, 1060, 350, 90, 1),
+                Node("health", "Storage health", ("exists(healthProbeKey)",), 1570, 940, 380, 90, 4),
+                Node("actuator", "Actuator sanitizer", ("privateKeyPem redaction",), 1165, 1060, 380, 90, 6),
+                Node("metrics", "Metrics wrapper", ("timers and counters",), 1600, 1065, 380, 90, 5),
             ),
             edges=(
                 Edge("app", "autoProcessing", "", ((585, 307), (585, 365), (450, 365), (450, 455)), "#56708C"),
                 Edge("props", "autoStorage", "", ((1140, 307), (1140, 365), (920, 365), (920, 435)), "#8A72D6", True),
                 Edge("autoProcessing", "autoStorage", "", ((615, 501), (745, 501)), "#56708C"),
-                Edge("autoStorage", "autoCdn", "", ((1095, 481), (1170, 481), (1170, 521), (1245, 521)), "#DB7890"),
-                Edge("autoStorage", "local", "", ((920, 527), (920, 675), (565, 675), (565, 765)), "#45A7A1"),
-                Edge("autoStorage", "s3", "", ((920, 527), (920, 740)), "#D9AA4D"),
-                Edge("autoCdn", "signers", "", ((1415, 567), (1415, 790)), "#DB7890"),
-                Edge("autoStorage", "storageSpi", "", ((1095, 481), (1125, 481), (1125, 700), (1915, 700), (1915, 760)), "#58A978"),
-                Edge("autoHealth", "health", "", ((1850, 420), (1850, 350), (160, 350), (160, 1110), (385, 1110)), "#45A7A1"),
-                Edge("autoMetrics", "metrics", "", ((2020, 606), (2110, 606), (2110, 1015), (1100, 1015), (1100, 1075)), "#8A72D6"),
-                Edge("autoCdn", "actuator", "", ((1585, 521), (2110, 521), (2110, 1010), (1640, 1010), (1640, 1060)), "#B88A44"),
-                Edge("local", "metrics", "", ((565, 857), (565, 1000), (1100, 1000), (1100, 1075)), "#45A7A1"),
-                Edge("s3", "metrics", "", ((1050, 832), (1050, 1075)), "#D9AA4D"),
+                Edge("autoStorage", "autoCdn", "", ((1095, 481), (1120, 481), (1120, 521), (1140, 521)), "#DB7890"),
+                Edge("autoStorage", "local", "", ((820, 527), (820, 655), (475, 655), (475, 765)), "#45A7A1"),
+                Edge("autoStorage", "s3", "", ((920, 527), (920, 765)), "#D9AA4D"),
+                Edge("autoCdn", "signers", "", ((1310, 567), (1310, 765)), "#DB7890"),
+                Edge("s3", "storageSpi", "", ((920, 857), (920, 1060)), "#58A978"),
             ),
-            footer="Graphviz evidence: images-spring-boot-architecture-01.dot, .plain, and -graphviz.svg. Final SVG follows source-derived Spring Boot module layers.",
+            footer="Optional auto-configuration phases add storage, CDN links, health, metrics, and actuator redaction around the core image service.",
             panels=(
                 Panel("Application", 72, 196, 2056, 142, 0),
                 Panel("Auto-Configuration", 72, 390, 2056, 292, 1),
-                Panel("Runtime Services", 72, 720, 2056, 190, 2),
-                Panel("Operations", 72, 1030, 2056, 170, 4),
+                Panel("Runtime Services", 72, 720, 2056, 170, 2),
+                Panel("Operations", 72, 930, 2056, 270, 4),
             ),
             javers_style=True,
         ),
@@ -601,23 +640,20 @@ def diagrams() -> tuple[FlowDiagram | SequenceDiagram, ...]:
                 Node("images", "bluetape4k-images", ("immutableImageOf", "max + writer"), 430, 765, 390, 92, 5),
                 Node("captcha", "images-captcha", ("CaptchaGenerator", "VerificationService"), 940, 735, 410, 92, 6),
                 Node("challengeStore", "Challenge store", ("in-memory default", "replace for clusters"), 1510, 775, 390, 92, 2),
-                Node("auth", "Authorization policy", ("host application",), 410, 1070, 360, 82, 0),
-                Node("cdn", "S3/CDN URLs", ("compose outside routes",), 935, 1050, 360, 82, 2),
+                Node("auth", "Authorization policy", ("host application",), 330, 1070, 360, 82, 0),
+                Node("cdn", "S3/CDN URLs", ("compose outside routes",), 820, 1050, 360, 82, 2),
                 Node("native", "Native acceleration", ("libvips remains optional",), 1460, 1070, 380, 82, 4),
             ),
             edges=(
                 Edge("app", "routing", "", ((585, 307), (585, 370), (510, 370), (510, 440)), "#56708C"),
                 Edge("core", "errors", "", ((1140, 307), (1140, 365), (1875, 365), (1875, 515)), "#8A72D6", True),
                 Edge("routing", "thumb", "", ((680, 486), (820, 486)), "#56708C"),
-                Edge("routing", "captchaRoutes", "", ((680, 486), (725, 486), (725, 625), (1500, 625), (1500, 512)), "#58A978"),
+                Edge("routing", "captchaRoutes", "", ((680, 486), (725, 486), (725, 370), (1500, 370), (1500, 420)), "#58A978"),
                 Edge("thumb", "images", "", ((1000, 547), (1000, 650), (625, 650), (625, 765)), "#DB7890"),
                 Edge("captchaRoutes", "captcha", "", ((1500, 512), (1500, 650), (1145, 650), (1145, 735)), "#45A7A1"),
                 Edge("captchaRoutes", "challengeStore", "", ((1500, 512), (1500, 690), (1705, 690), (1705, 775)), "#D9AA4D"),
-                Edge("routing", "auth", "", ((340, 486), (200, 486), (200, 1111), (410, 1111)), "#56708C", True),
-                Edge("images", "cdn", "", ((625, 857), (625, 970), (1115, 970), (1115, 1050)), "#D9AA4D", True),
-                Edge("images", "native", "", ((625, 857), (625, 990), (1650, 990), (1650, 1070)), "#45A7A1", True),
             ),
-            footer="Graphviz evidence: images-ktor-architecture-01.dot, .plain, and -graphviz.svg. Host systems compose persistence, authorization, and delivery policy.",
+            footer="Ktor route helpers stay thin; host applications own persistence, authorization, CDN policy, and optional native acceleration.",
             panels=(
                 Panel("Application", 72, 196, 2056, 142, 0),
                 Panel("Route Helpers", 72, 390, 2056, 238, 1),
@@ -658,22 +694,22 @@ def diagrams() -> tuple[FlowDiagram | SequenceDiagram, ...]:
             base="examples-basic-processing-architecture-01",
             title="Basic Processing Architecture",
             subtitle="Pure JVM image transformations with suspend-aware writers.",
-            width=2480,
-            height=640,
+            width=1500,
+            height=850,
             nodes=(
-                Node("cli", "CLI entrypoint", ("main(args)", "runBlocking"), 90, 185, 340, 110, 0),
-                Node("quickstart", "BasicImageProcessingQuickstart", ("generate(outputDirectory)",), 520, 185, 500, 110, 1),
-                Node("loader", "suspendLoadImage", ("file-backed resources",), 1110, 185, 360, 110, 2),
-                Node("transforms", "ImmutableImage transforms", ("fit, smartCropTo", "withGraphics watermark"), 1540, 185, 410, 110, 3),
-                Node("writers", "Suspend writers", ("JPEG progressive", "PNG max compression"), 2030, 105, 360, 110, 4),
-                Node("outputs", "Output directory", ("build/tmp/basic-processing", "five generated files"), 2030, 265, 360, 110, 5),
+                Node("cli", "CLI entrypoint", ("main(args)", "runBlocking"), 90, 220, 320, 110, 0),
+                Node("quickstart", "BasicImageProcessingQuickstart", ("generate(outputDirectory)",), 500, 220, 420, 110, 1),
+                Node("loader", "suspendLoadImage", ("file-backed resources",), 1000, 220, 360, 110, 2),
+                Node("transforms", "ImmutableImage transforms", ("fit, smartCropTo", "withGraphics watermark"), 500, 450, 420, 122, 3),
+                Node("writers", "Suspend writers", ("JPEG progressive", "PNG max compression"), 1000, 400, 360, 110, 4),
+                Node("outputs", "Output directory", ("build/tmp/basic-processing", "five generated files"), 1000, 570, 360, 110, 5),
             ),
             edges=(
-                Edge("cli", "quickstart", "invoke", ((430, 240), (520, 240)), label_pos=(475, 165)),
-                Edge("quickstart", "loader", "load", ((1020, 240), (1110, 240)), label_pos=(1065, 165)),
-                Edge("loader", "transforms", "images", ((1470, 240), (1540, 240)), label_pos=(1505, 165)),
-                Edge("transforms", "writers", "encode", ((1950, 240), (1980, 240), (1980, 160), (2030, 160)), label_pos=(1995, 85)),
-                Edge("transforms", "outputs", "write", ((1950, 240), (1980, 240), (1980, 320), (2030, 320)), label_pos=(1995, 415)),
+                Edge("cli", "quickstart", "invoke", ((410, 275), (500, 275)), label_pos=(455, 185)),
+                Edge("quickstart", "loader", "load", ((920, 275), (1000, 275)), label_pos=(960, 185)),
+                Edge("loader", "transforms", "images", ((1180, 330), (1180, 380), (710, 380), (710, 450)), label_pos=(550, 420)),
+                Edge("transforms", "writers", "encode", ((920, 511), (960, 511), (960, 455), (1000, 455)), label_pos=(1300, 365)),
+                Edge("transforms", "outputs", "write", ((920, 511), (960, 511), (960, 625), (1000, 625)), label_pos=(1180, 715)),
             ),
             footer="No server, storage service, Docker, S3, CDN, or native libvips is involved.",
             show_edge_labels=True,
@@ -836,7 +872,7 @@ def diagrams() -> tuple[FlowDiagram | SequenceDiagram, ...]:
             panels=(
                 Panel("Client Layer", 70, 160, 1960, 150, 0),
                 Panel("Ktor Routing Layer", 70, 335, 1960, 150, 1),
-                Panel("Application Layer", 70, 505, 1960, 160, 2),
+                Panel("Application Layer", 70, 510, 1960, 155, 2),
                 Panel("OCR Library Layer", 70, 700, 1960, 310, 3),
                 Panel("Native Runtime Layer", 70, 1050, 1960, 320, 4),
             ),
@@ -996,7 +1032,7 @@ def diagrams() -> tuple[FlowDiagram | SequenceDiagram, ...]:
             panels=(
                 Panel("Client Layer", 70, 160, 1960, 150, 0),
                 Panel("Spring Web Layer", 70, 335, 1960, 150, 1),
-                Panel("Application Layer", 70, 505, 1960, 160, 2),
+                Panel("Application Layer", 70, 510, 1960, 155, 2),
                 Panel("OCR Library Layer", 70, 700, 1960, 310, 3),
                 Panel("Native Runtime Layer", 70, 1050, 1960, 320, 4),
             ),
@@ -1034,23 +1070,25 @@ def render_captcha_example() -> str:
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}" role="img" aria-label="Example CAPTCHA image">',
         "<defs>",
         "  <style>",
-        '    .title{font-family:"Architects Daughter";font-size:22px;fill:#203040;font-weight:400}',
-        '    .detail{font-family:"Comic Mono";font-size:12px;fill:#536476;font-weight:400}',
-        '    .captcha{font-family:"Architects Daughter";font-size:56px;fill:#24384F;font-weight:400}',
+        '    .title{font-family:"Architects Daughter";font-size:22px;fill:#111827;font-weight:400}',
+        '    .detail{font-family:"Comic Mono";font-size:12px;fill:#6b7280;font-weight:400}',
+        '    .footer{font-family:"Comic Mono";font-size:9.5px;fill:#6b7280;font-weight:400}',
+        '    .captcha{font-family:"Architects Daughter";font-size:56px;fill:#111827;font-weight:400}',
         "  </style>",
         "</defs>",
-        '<rect width="560" height="220" rx="22" fill="#F6F9FC"/>',
-        '<rect x="36" y="30" width="488" height="132" rx="18" fill="#FFFFFF" stroke="#D7E2EC" stroke-width="2"/>',
-        '<path d="M62 70 L498 122 M75 141 L476 56 M94 104 L496 99" stroke="#75A9E8" stroke-width="2.2" stroke-linecap="round" opacity="0.42"/>',
-        '<path d="M66 119 C138 58 222 156 302 88 S440 58 506 129" stroke="#DB7890" stroke-width="2" fill="none" opacity="0.45"/>',
+        '<rect width="560" height="220" fill="#ffffff"/>',
+        '<rect x="36" y="30" width="488" height="132" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.9"/>',
+        '<path d="M62 70 L498 122 M75 141 L476 56 M94 104 L496 99" stroke="#2563eb" stroke-width="2.2" stroke-linecap="round" opacity="0.32"/>',
+        '<path d="M66 119 C138 58 222 156 302 88 S440 58 506 129" stroke="#ea580c" stroke-width="2" fill="none" opacity="0.34"/>',
         '<g opacity="0.55">',
-        '<circle cx="88" cy="60" r="3" fill="#58A978"/><circle cx="122" cy="134" r="2" fill="#D6A441"/><circle cx="184" cy="82" r="2.8" fill="#8A72D6"/>',
-        '<circle cx="266" cy="126" r="2.5" fill="#DC6B82"/><circle cx="348" cy="68" r="3.2" fill="#45A7A1"/><circle cx="430" cy="140" r="2.5" fill="#B88A44"/>',
-        '<circle cx="486" cy="82" r="2.7" fill="#5B8DEF"/><circle cx="392" cy="108" r="2.2" fill="#58A978"/>',
+        '<circle cx="88" cy="60" r="3" fill="#16a34a"/><circle cx="122" cy="134" r="2" fill="#ea580c"/><circle cx="184" cy="82" r="2.8" fill="#9333ea"/>',
+        '<circle cx="266" cy="126" r="2.5" fill="#dc2626"/><circle cx="348" cy="68" r="3.2" fill="#059669"/><circle cx="430" cy="140" r="2.5" fill="#6b7280"/>',
+        '<circle cx="486" cy="82" r="2.7" fill="#2563eb"/><circle cx="392" cy="108" r="2.2" fill="#16a34a"/>',
         "</g>",
         '<text class="captcha" x="280" y="105" text-anchor="middle" dominant-baseline="middle" transform="rotate(-3 280 105)">BT4K7M</text>',
-        '<text class="title" x="48" y="188">CAPTCHA challenge preview</text>',
-        '<text class="detail" x="48" y="207">Illustrative output using the 200 x 80 default model, scaled for README.</text>',
+        '<text class="title" x="48" y="182">CAPTCHA challenge preview</text>',
+        '<text class="footer" x="280" y="202" text-anchor="middle">https://github.com/bluetape4k/bluetape4k-image</text>',
+        '<text class="footer" x="280" y="215" text-anchor="middle">project: bluetape4k-image | module: images-captcha</text>',
         "</svg>",
     ]
     return "\n".join(out) + "\n"
