@@ -507,7 +507,7 @@ Both modules implement the same `VipsImage` interface and are interchangeable at
 | encode JPEG         | 52.49 | **15.67** | **3.3×** |
 | encode PNG          | 94.87 | **49.88** | **1.9×** |
 
-Full details: [`images-benchmark/docs/benchmark-results-2026-04-29.md`](../images-benchmark/docs/benchmark-results-2026-04-29.md)
+Full details: [`benchmark/images-benchmark/docs/benchmark-results-2026-04-29.md`](../benchmark/images-benchmark/docs/benchmark-results-2026-04-29.md)
 
 ## Testing
 

@@ -6,7 +6,7 @@
 
 ## 아키텍처
 
-![images benchmark Architecture diagram](../docs/images/readme-diagrams/images-benchmark-architecture-01.png)
+![images benchmark Architecture diagram](../../docs/images/readme-diagrams/images-benchmark-architecture-01.png)
 
 ## 벤치마크 결과
 
@@ -14,7 +14,7 @@
 
 ### 리사이즈 (4K 3840×2160 → 1920×1080)
 
-![Resize latency benchmark chart](../docs/images/readme-charts/images-benchmark-resize-latency-chart-01.png)
+![Resize latency benchmark chart](../../docs/images/readme-charts/images-benchmark-resize-latency-chart-01.png)
 
 | 환경 | scrimage (ms/op) | vips (ms/op) | 속도 향상 |
 |------|-----------------|--------------|----------|
@@ -24,7 +24,7 @@
 
 ### 인코딩 (4K photo 이미지)
 
-![Encode latency benchmark chart](../docs/images/readme-charts/images-benchmark-encode-latency-chart-01.png)
+![Encode latency benchmark chart](../../docs/images/readme-charts/images-benchmark-encode-latency-chart-01.png)
 
 | 포맷 | 환경 | scrimage (ms/op) | vips (ms/op) | 속도 향상 |
 |------|------|-----------------|--------------|----------|
@@ -43,7 +43,7 @@
 백엔드와 Java 25 FFM 백엔드를 같은 벤치마크 이름으로 반복 실행해 나란히
 비교할 수 있게 합니다.
 
-![Vips backend comparison benchmark chart](../docs/images/readme-charts/images-benchmark-vips-backend-comparison-chart-01.png)
+![Vips backend comparison benchmark chart](../../docs/images/readme-charts/images-benchmark-vips-backend-comparison-chart-01.png)
 
 | 벤치마크 | 작업 |
 |----------|------|
@@ -57,7 +57,7 @@
 
 ### 필터 (scrimage 전용, 1240×1754)
 
-![Filter latency benchmark chart](../docs/images/readme-charts/images-benchmark-filter-latency-chart-01.png)
+![Filter latency benchmark chart](../../docs/images/readme-charts/images-benchmark-filter-latency-chart-01.png)
 
 | 필터      | macOS (ms/op) | CI Linux java25 (ms/op) | CI Linux java21 (ms/op) |
 |-----------|--------------|------------------------|------------------------|
@@ -67,7 +67,7 @@
 
 ### Pipeline Allocation (scrimage chained operations)
 
-![Image pipeline allocation benchmark chart](../docs/images/readme-charts/images-benchmark-pipeline-allocation-chart-01.png)
+![Image pipeline allocation benchmark chart](../../docs/images/readme-charts/images-benchmark-pipeline-allocation-chart-01.png)
 
 | 벤치마크 | 파이프라인 | AverageTime | Allocation |
 |----------|------------|-------------|------------|
@@ -81,7 +81,7 @@ raw `kotlinx-benchmark` JSON은
 
 ### IO 경계 Baseline (Path, Okio, Suspended File Channel)
 
-![Image IO boundary benchmark chart](../docs/images/readme-charts/images-benchmark-io-boundary-chart-01.png)
+![Image IO boundary benchmark chart](../../docs/images/readme-charts/images-benchmark-io-boundary-chart-01.png)
 
 | 작업 | 가장 빠른 baseline | Okio 경계 | Suspended file channel |
 |------|-------------------|-----------|------------------------|
@@ -99,7 +99,7 @@ raw `kotlinx-benchmark` JSON은
 
 ### 동시 파일 IO Throughput
 
-![Concurrent image file IO throughput chart](../docs/images/readme-charts/images-benchmark-file-io-throughput-chart-01.png)
+![Concurrent image file IO throughput chart](../../docs/images/readme-charts/images-benchmark-file-io-throughput-chart-01.png)
 
 | 작업 | Path | Okio | Suspended file channel |
 |------|------|------|------------------------|
@@ -120,7 +120,7 @@ raw `kotlinx-benchmark` JSON은
 
 ### 대용량 Streaming Pipeline
 
-![Large streaming pipeline benchmark chart](../docs/images/readme-charts/images-benchmark-large-streaming-chart-01.png)
+![Large streaming pipeline benchmark chart](../../docs/images/readme-charts/images-benchmark-large-streaming-chart-01.png)
 
 | 경계 | `large-photo` | `ocr-document` | 권장 판단 |
 |------|---------------|----------------|-----------|
@@ -146,7 +146,7 @@ JMH GC-profiler addendum
 
 ### Memory Profile (kotlinx-benchmark + GC addendum)
 
-![Image workload memory profile chart](../docs/images/readme-charts/images-benchmark-memory-profile-chart-01.png)
+![Image workload memory profile chart](../../docs/images/readme-charts/images-benchmark-memory-profile-chart-01.png)
 
 | 워크로드 | AverageTime | Allocation |
 |----------|-------------|------------|
@@ -185,10 +185,10 @@ JAVA_HOME=$(/usr/libexec/java_home -v 25) ./gradlew :bluetape4k-images-benchmark
 
 JAVA25=$(/usr/libexec/java_home -v 25)
 "$JAVA25/bin/java" --enable-native-access=ALL-UNNAMED \
-  -jar images-benchmark/build/benchmarks/benchmark/jars/bluetape4k-images-benchmark-benchmark-jmh-0.3.0-JMH.jar \
+  -jar benchmark/images-benchmark/build/benchmarks/benchmark/jars/bluetape4k-images-benchmark-benchmark-jmh-0.3.0-JMH.jar \
   '.*ImageLargeStreamingBenchmark.*' -wi 1 -i 3 -f 1 -bm avgt -tu ms \
   -prof gc -rf json \
-  -rff images-benchmark/docs/raw/benchmark-large-streaming-jmh-gc-2026-06-05-macos-java25.json
+  -rff benchmark/images-benchmark/docs/raw/benchmark-large-streaming-jmh-gc-2026-06-05-macos-java25.json
 ```
 
 **macOS 사전 요구사항**: `brew install vips`
@@ -216,10 +216,10 @@ Gradle `kotlinx-benchmark` task를 기본 실행 경로로 사용하세요. benc
 2. 백엔드는 한 번에 하나씩 실행합니다. 같은 호스트에서 Java 21과 Java 25 benchmark
    프로세스를 병렬 실행하지 마세요.
 3. 생성된 JMH JSON을
-   `images-benchmark/build/reports/benchmarks/<target>/<timestamp>/benchmark.json`에서
-   `images-benchmark/docs/raw/`로 복사하고,
+   `benchmark/images-benchmark/build/reports/benchmarks/<target>/<timestamp>/benchmark.json`에서
+   `benchmark/images-benchmark/docs/raw/`로 복사하고,
    `benchmark-results-YYYY-MM-DD-macos-java25.json`처럼 환경이 드러나는 이름을 사용합니다.
-4. `images-benchmark/docs/`의 해당 Markdown report에 실행 명령, host/JVM/libvips 조건,
+4. `benchmark/images-benchmark/docs/`의 해당 Markdown report에 실행 명령, host/JVM/libvips 조건,
    raw JSON 링크, 결과 표를 기록합니다. 모든 latency 표는 `AverageTime ms/op`이며
    낮을수록 좋습니다.
 5. `docs/images/readme-charts/` 아래 benchmark chart SVG source를 갱신한 뒤 matching PNG를
@@ -230,11 +230,11 @@ Gradle `kotlinx-benchmark` task를 기본 실행 경로로 사용하세요. benc
 
 | Chart | SVG source | README PNG |
 |-------|------------|------------|
-| Resize latency | `../docs/images/readme-charts/images-benchmark-resize-latency-chart-01.svg` | `../docs/images/readme-charts/images-benchmark-resize-latency-chart-01.png` |
-| Encode latency | `../docs/images/readme-charts/images-benchmark-encode-latency-chart-01.svg` | `../docs/images/readme-charts/images-benchmark-encode-latency-chart-01.png` |
-| Filter latency | `../docs/images/readme-charts/images-benchmark-filter-latency-chart-01.svg` | `../docs/images/readme-charts/images-benchmark-filter-latency-chart-01.png` |
-| Vips backend comparison | `../docs/images/readme-charts/images-benchmark-vips-backend-comparison-chart-01.svg` | `../docs/images/readme-charts/images-benchmark-vips-backend-comparison-chart-01.png` |
-| Large streaming pipeline | `../docs/images/readme-charts/images-benchmark-large-streaming-chart-01.svg` | `../docs/images/readme-charts/images-benchmark-large-streaming-chart-01.png` |
+| Resize latency | `../../docs/images/readme-charts/images-benchmark-resize-latency-chart-01.svg` | `../../docs/images/readme-charts/images-benchmark-resize-latency-chart-01.png` |
+| Encode latency | `../../docs/images/readme-charts/images-benchmark-encode-latency-chart-01.svg` | `../../docs/images/readme-charts/images-benchmark-encode-latency-chart-01.png` |
+| Filter latency | `../../docs/images/readme-charts/images-benchmark-filter-latency-chart-01.svg` | `../../docs/images/readme-charts/images-benchmark-filter-latency-chart-01.png` |
+| Vips backend comparison | `../../docs/images/readme-charts/images-benchmark-vips-backend-comparison-chart-01.svg` | `../../docs/images/readme-charts/images-benchmark-vips-backend-comparison-chart-01.png` |
+| Large streaming pipeline | `../../docs/images/readme-charts/images-benchmark-large-streaming-chart-01.svg` | `../../docs/images/readme-charts/images-benchmark-large-streaming-chart-01.png` |
 
 차트 갱신 후 렌더링과 검증:
 

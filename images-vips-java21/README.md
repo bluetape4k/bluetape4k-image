@@ -361,4 +361,4 @@ The `maxPixels` threshold (default 150 million) was exceeded. Either:
 - [bluetape4k-images](../images/) — Scrimage-based image processing (Coroutine async)
 - [bluetape4k-images-vips-api](../images-vips-api/) — VipsRuntime and VipsImage contracts
 - [bluetape4k-images-vips-java25](../images-vips-java25/) — Panama FFM backend (macOS + Linux, recommended)
-- [bluetape4k-images-benchmark](../images-benchmark/) — JMH benchmarks: scrimage vs vips performance comparison
+- [bluetape4k-images-benchmark](../benchmark/images-benchmark/) — JMH benchmarks: scrimage vs vips performance comparison

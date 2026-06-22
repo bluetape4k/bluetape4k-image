@@ -160,4 +160,4 @@ and format allowlist behavior remains in force.
 | Okio APIs isolated | `images` and `images-vips-api` only expose public Okio; backend modules add concrete load overloads |
 | Resource closing/failure/cancellation | Ownership split and focused tests |
 | README/README.ko limitations | Large-file section with #166 evidence |
-| Benchmark evidence link | README and PR body link `images-benchmark/docs/large-streaming-2026-06-05.md` |
+| Benchmark evidence link | README and PR body link `benchmark/images-benchmark/docs/large-streaming-2026-06-05.md` |

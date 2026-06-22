@@ -6,7 +6,7 @@
 
 ## Architecture
 
-![images benchmark Architecture diagram](../docs/images/readme-diagrams/images-benchmark-architecture-01.png)
+![images benchmark Architecture diagram](../../docs/images/readme-diagrams/images-benchmark-architecture-01.png)
 
 ## Benchmark Results
 
@@ -14,7 +14,7 @@
 
 ### Resize (4K 3840×2160 → 1920×1080)
 
-![Resize latency benchmark chart](../docs/images/readme-charts/images-benchmark-resize-latency-chart-01.png)
+![Resize latency benchmark chart](../../docs/images/readme-charts/images-benchmark-resize-latency-chart-01.png)
 
 | Environment | scrimage (ms/op) | vips (ms/op) | Speedup |
 |-------------|-----------------|--------------|---------|
@@ -24,7 +24,7 @@
 
 ### Encode (4K photo image)
 
-![Encode latency benchmark chart](../docs/images/readme-charts/images-benchmark-encode-latency-chart-01.png)
+![Encode latency benchmark chart](../../docs/images/readme-charts/images-benchmark-encode-latency-chart-01.png)
 
 | Format | Environment | scrimage (ms/op) | vips (ms/op) | Speedup |
 |--------|-------------|-----------------|--------------|---------|
@@ -43,7 +43,7 @@
 JVips JNI backend and the Java 25 FFM backend with stable benchmark names
 across both runs.
 
-![Vips backend comparison benchmark chart](../docs/images/readme-charts/images-benchmark-vips-backend-comparison-chart-01.png)
+![Vips backend comparison benchmark chart](../../docs/images/readme-charts/images-benchmark-vips-backend-comparison-chart-01.png)
 
 | Benchmark | Workload |
 |-----------|----------|
@@ -58,7 +58,7 @@ notes.
 
 ### Filter (scrimage only, 1240×1754 document image)
 
-![Filter latency benchmark chart](../docs/images/readme-charts/images-benchmark-filter-latency-chart-01.png)
+![Filter latency benchmark chart](../../docs/images/readme-charts/images-benchmark-filter-latency-chart-01.png)
 
 | Filter    | macOS (ms/op) | CI Linux java25 (ms/op) | CI Linux java21 (ms/op) |
 |-----------|--------------|------------------------|------------------------|
@@ -68,7 +68,7 @@ notes.
 
 ### Pipeline Allocation (scrimage chained operations)
 
-![Image pipeline allocation benchmark chart](../docs/images/readme-charts/images-benchmark-pipeline-allocation-chart-01.png)
+![Image pipeline allocation benchmark chart](../../docs/images/readme-charts/images-benchmark-pipeline-allocation-chart-01.png)
 
 | Benchmark | Pipeline | AverageTime | Allocation |
 |-----------|----------|-------------|------------|
@@ -81,7 +81,7 @@ and the raw `kotlinx-benchmark` JSON
 
 ### IO Boundary Baseline (Path, Okio, Suspended File Channel)
 
-![Image IO boundary benchmark chart](../docs/images/readme-charts/images-benchmark-io-boundary-chart-01.png)
+![Image IO boundary benchmark chart](../../docs/images/readme-charts/images-benchmark-io-boundary-chart-01.png)
 
 | Workload | Fastest baseline | Okio boundary | Suspended file channel |
 |----------|------------------|---------------|------------------------|
@@ -98,7 +98,7 @@ and the raw `kotlinx-benchmark` JSON
 
 ### Concurrent File IO Throughput
 
-![Concurrent image file IO throughput chart](../docs/images/readme-charts/images-benchmark-file-io-throughput-chart-01.png)
+![Concurrent image file IO throughput chart](../../docs/images/readme-charts/images-benchmark-file-io-throughput-chart-01.png)
 
 | Workload | Path | Okio | Suspended file channel |
 |----------|------|------|------------------------|
@@ -118,7 +118,7 @@ and the raw `kotlinx-benchmark` JSON
 
 ### Large Streaming Pipeline
 
-![Large streaming pipeline benchmark chart](../docs/images/readme-charts/images-benchmark-large-streaming-chart-01.png)
+![Large streaming pipeline benchmark chart](../../docs/images/readme-charts/images-benchmark-large-streaming-chart-01.png)
 
 | Boundary | `large-photo` | `ocr-document` | Recommendation |
 |----------|---------------|----------------|----------------|
@@ -144,7 +144,7 @@ stays near 0.54 MiB/op and 0.34 MiB/op on managed heap.
 
 ### Memory Profile (kotlinx-benchmark + GC addendum)
 
-![Image workload memory profile chart](../docs/images/readme-charts/images-benchmark-memory-profile-chart-01.png)
+![Image workload memory profile chart](../../docs/images/readme-charts/images-benchmark-memory-profile-chart-01.png)
 
 | Workload | AverageTime | Allocation |
 |----------|-------------|------------|
@@ -182,10 +182,10 @@ JAVA_HOME=$(/usr/libexec/java_home -v 25) ./gradlew :bluetape4k-images-benchmark
 
 JAVA25=$(/usr/libexec/java_home -v 25)
 "$JAVA25/bin/java" --enable-native-access=ALL-UNNAMED \
-  -jar images-benchmark/build/benchmarks/benchmark/jars/bluetape4k-images-benchmark-benchmark-jmh-0.3.0-JMH.jar \
+  -jar benchmark/images-benchmark/build/benchmarks/benchmark/jars/bluetape4k-images-benchmark-benchmark-jmh-0.3.0-JMH.jar \
   '.*ImageLargeStreamingBenchmark.*' -wi 1 -i 3 -f 1 -bm avgt -tu ms \
   -prof gc -rf json \
-  -rff images-benchmark/docs/raw/benchmark-large-streaming-jmh-gc-2026-06-05-macos-java25.json
+  -rff benchmark/images-benchmark/docs/raw/benchmark-large-streaming-jmh-gc-2026-06-05-macos-java25.json
 ```
 
 **macOS prerequisites**: `brew install vips`
@@ -213,10 +213,10 @@ Fresh report workflow:
 2. Run one backend at a time. Do not run Java 21 and Java 25 benchmark
    processes in parallel on the same host.
 3. Copy the generated JMH JSON from
-   `images-benchmark/build/reports/benchmarks/<target>/<timestamp>/benchmark.json`
-   to `images-benchmark/docs/raw/` with an environment-specific filename such
+   `benchmark/images-benchmark/build/reports/benchmarks/<target>/<timestamp>/benchmark.json`
+   to `benchmark/images-benchmark/docs/raw/` with an environment-specific filename such
    as `benchmark-results-YYYY-MM-DD-macos-java25.json`.
-4. Update the matching Markdown report under `images-benchmark/docs/` with the
+4. Update the matching Markdown report under `benchmark/images-benchmark/docs/` with the
    measured command, host/JVM/libvips conditions, raw JSON link, and result
    tables. Every latency table uses `AverageTime ms/op`; lower is better.
 5. Update the benchmark chart SVG sources under `docs/images/readme-charts/`,
@@ -227,11 +227,11 @@ Chart assets currently referenced by this module:
 
 | Chart | SVG source | README PNG |
 |-------|------------|------------|
-| Resize latency | `../docs/images/readme-charts/images-benchmark-resize-latency-chart-01.svg` | `../docs/images/readme-charts/images-benchmark-resize-latency-chart-01.png` |
-| Encode latency | `../docs/images/readme-charts/images-benchmark-encode-latency-chart-01.svg` | `../docs/images/readme-charts/images-benchmark-encode-latency-chart-01.png` |
-| Filter latency | `../docs/images/readme-charts/images-benchmark-filter-latency-chart-01.svg` | `../docs/images/readme-charts/images-benchmark-filter-latency-chart-01.png` |
-| Vips backend comparison | `../docs/images/readme-charts/images-benchmark-vips-backend-comparison-chart-01.svg` | `../docs/images/readme-charts/images-benchmark-vips-backend-comparison-chart-01.png` |
-| Large streaming pipeline | `../docs/images/readme-charts/images-benchmark-large-streaming-chart-01.svg` | `../docs/images/readme-charts/images-benchmark-large-streaming-chart-01.png` |
+| Resize latency | `../../docs/images/readme-charts/images-benchmark-resize-latency-chart-01.svg` | `../../docs/images/readme-charts/images-benchmark-resize-latency-chart-01.png` |
+| Encode latency | `../../docs/images/readme-charts/images-benchmark-encode-latency-chart-01.svg` | `../../docs/images/readme-charts/images-benchmark-encode-latency-chart-01.png` |
+| Filter latency | `../../docs/images/readme-charts/images-benchmark-filter-latency-chart-01.svg` | `../../docs/images/readme-charts/images-benchmark-filter-latency-chart-01.png` |
+| Vips backend comparison | `../../docs/images/readme-charts/images-benchmark-vips-backend-comparison-chart-01.svg` | `../../docs/images/readme-charts/images-benchmark-vips-backend-comparison-chart-01.png` |
+| Large streaming pipeline | `../../docs/images/readme-charts/images-benchmark-large-streaming-chart-01.svg` | `../../docs/images/readme-charts/images-benchmark-large-streaming-chart-01.png` |
 
 Render and validate chart updates:
 

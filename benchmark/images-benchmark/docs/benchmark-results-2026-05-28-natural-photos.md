@@ -26,8 +26,8 @@ fixtures:
 
 | Image | Source path | Dimensions | Original size |
 |-------|-------------|------------|---------------|
-| `cafe` | `images-benchmark/src/main/resources/bench/cafe.jpg` | 4032x3024 | 2.9 MiB |
-| `landscape` | `images-benchmark/src/main/resources/bench/landscape.jpg` | 4032x3024 | 3.4 MiB |
+| `cafe` | `benchmark/images-benchmark/src/main/resources/bench/cafe.jpg` | 4032x3024 | 2.9 MiB |
+| `landscape` | `benchmark/images-benchmark/src/main/resources/bench/landscape.jpg` | 4032x3024 | 3.4 MiB |
 
 `BenchmarkImageSets` still keeps synthetic fallback generation for optional
 document and thumbnail resources, but the headline resize and encode rows below

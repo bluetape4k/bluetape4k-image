@@ -48,7 +48,7 @@ AverageTime is lower-is-better. Allocation is `gc.alloc.rate.norm`.
 | `vips_thumbnail` | 1280x720 | 0.274 ms/op | 4,052 B/op (3.96 KB/op) |
 | `vips_encodeJpeg` | N/A | 44.16 ms/op | 271,075 B/op (0.26 MB/op) |
 
-![Image workload memory profile chart](../../docs/images/readme-charts/images-benchmark-memory-profile-chart-01.png)
+![Image workload memory profile chart](../../../docs/images/readme-charts/images-benchmark-memory-profile-chart-01.png)
 
 ## Notes
 

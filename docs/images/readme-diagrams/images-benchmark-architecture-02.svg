@@ -14,7 +14,7 @@
 <rect class="canvas" width="1280" height="980"/>
 <text class="title" x="70" y="82">Resize Benchmark Flow</text>
 <text class="subtitle" x="74" y="116">Resize latency compares scrimage and libvips backends on the same natural photo fixture.</text>
-<desc>Resize Benchmark Flow explains the current README/source relationship for readers. Source: images-benchmark/README.md resize table and benchmark-results docs</desc>
+<desc>Resize Benchmark Flow explains the current README/source relationship for readers. Source: benchmark/images-benchmark/README.md resize table and benchmark-results docs</desc>
 <rect class="panel" x="88" y="158" width="1104" height="746" rx="8"/>
 <text class="panel-title" x="108" y="188" dominant-baseline="middle">ARCHITECTURE</text>
 <g id="edges">

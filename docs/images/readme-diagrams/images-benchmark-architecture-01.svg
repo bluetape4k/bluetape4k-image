@@ -14,7 +14,7 @@
 <rect class="canvas" width="1280" height="980"/>
 <text class="title" x="70" y="82">Benchmark Architecture</text>
 <text class="subtitle" x="74" y="116">kotlinx-benchmark tasks compare scrimage, libvips, IO, and memory profiles.</text>
-<desc>Benchmark Architecture explains the current README/source relationship for readers. Source: images-benchmark/README.md, docs/*.md, src/benchmark/**/*.kt</desc>
+<desc>Benchmark Architecture explains the current README/source relationship for readers. Source: benchmark/images-benchmark/README.md, docs/*.md, src/benchmark/**/*.kt</desc>
 <rect class="panel" x="88" y="158" width="1104" height="746" rx="8"/>
 <text class="panel-title" x="108" y="188" dominant-baseline="middle">ARCHITECTURE</text>
 <g id="edges">

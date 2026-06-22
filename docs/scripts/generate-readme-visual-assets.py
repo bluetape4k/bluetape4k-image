@@ -669,12 +669,12 @@ def specs() -> tuple[DiagramSpec, ...]:
             (("fixtures", "Fixtures", ("photo + document",), 0), ("state", "Benchmark state", ("Java/runtime setup",), 1), ("targets", "Benchmark targets", ("resize encode IO",), 2)),
             (("scrimage", "Scrimage path", ("pure JVM",), 3), ("vips", "libvips path", ("Java21/Java25",), 4), ("gc", "GC addendum", ("allocation profile",), 5)),
             (("json", "Raw JSON", ("docs/raw",), 0), ("reports", "Markdown reports", ("source tables",), 1), ("charts", "README charts", ("rendered evidence",), 2)),
-        ), "images-benchmark/README.md, docs/*.md, src/benchmark/**/*.kt"),
+        ), "benchmark/images-benchmark/README.md, docs/*.md, src/benchmark/**/*.kt"),
         stack_spec("images-benchmark-architecture-02", "Resize Benchmark Flow", "Resize latency compares scrimage and libvips backends on the same natural photo fixture.", (
             (("fixture", "Photo fixture", ("4K natural image",), 0), ("scrimage", "scrimage scaleTo", ("AverageTime",), 1), ("vips", "vips resize", ("AverageTime",), 2)),
             (("mac", "macOS Java 25", ("current run",), 3), ("linux25", "CI Java 25", ("historical row",), 4), ("linux21", "CI Java 21", ("historical row",), 5)),
             (("table", "README table", ("ms/op + speedup",), 0), ("chart", "Chart asset", ("lower is better",), 1), ("decision", "Decision", ("native when available",), 2)),
-        ), "images-benchmark/README.md resize table and benchmark-results docs"),
+        ), "benchmark/images-benchmark/README.md resize table and benchmark-results docs"),
         stack_spec("images-benchmark-architecture-03", "IO Boundary Benchmark Flow", "Compressed image IO boundaries compare Path, byte array, Okio, and suspended bridges.", (
             (("fixtures", "JPEG fixtures", ("homer, landscape",), 0), ("boundary", "Boundary API", ("Path/Source/Sink",), 1), ("bench", "JMH target", ("AverageTime",), 2)),
             (("byte", "ByteArray", ("baseline",), 3), ("okio", "Okio", ("integration boundary",), 4), ("suspend", "Suspended IO", ("coroutine bridge",), 5)),

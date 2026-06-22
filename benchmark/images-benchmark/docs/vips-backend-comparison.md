@@ -27,7 +27,7 @@ natural photo fixtures, summarized in
 Java 21 JNI is reported as `N/A` on this macOS arm64 host because the bundled
 JVips dylib is x86_64 and cannot produce native measurements here.
 
-![Vips backend comparison benchmark chart](../../docs/images/readme-charts/images-benchmark-vips-backend-comparison-chart-01.png)
+![Vips backend comparison benchmark chart](../../../docs/images/readme-charts/images-benchmark-vips-backend-comparison-chart-01.png)
 
 | Operation | Image | Parameter | scrimage baseline (ms/op) | Java 21 JNI (ms/op) | Java 25 FFM measured (ms/op) |
 |-----------|-------|-----------|---------------------------|---------------------|------------------------------|
@@ -75,17 +75,17 @@ JAVA_HOME=$(/usr/libexec/java_home -v 25) \
 
 JAVA_HOME=$(/usr/libexec/java_home -v 25) \
   java --enable-native-access=ALL-UNNAMED \
-  -jar images-benchmark/build/benchmarks/benchmark/jars/bluetape4k-images-benchmark-benchmark-jmh-0.1.3-JMH.jar \
+  -jar benchmark/images-benchmark/build/benchmarks/benchmark/jars/bluetape4k-images-benchmark-benchmark-jmh-0.1.3-JMH.jar \
   '.*VipsBackend.*' \
   -rf json \
-  -rff images-benchmark/docs/raw/benchmark-vips-backend-java25.json
+  -rff benchmark/images-benchmark/docs/raw/benchmark-vips-backend-java25.json
 ```
 
 Repeat the same jar build/run with `-Pvips.impl=java21` and Java 21.
 
 ## Reporting
 
-Store raw JMH JSON under `images-benchmark/docs/raw/` and summarize the stable
+Store raw JMH JSON under `benchmark/images-benchmark/docs/raw/` and summarize the stable
 full-run values in this shape:
 
 | Operation | Parameter | Java 21 JNI (ms/op) | Java 25 FFM (ms/op) | Faster backend |
