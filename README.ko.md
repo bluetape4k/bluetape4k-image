@@ -62,7 +62,7 @@ libvips 경로에서 local large file을 다룰 때는 `Path` 진입점을 먼�
 `Source`/`Sink` helper를 사용하세요. Non-Path vips load는 여전히 50 MB stream
 guard 안에서 compressed input을 검증하고 버퍼링합니다.
 
-Benchmark evidence: [`images-benchmark/docs/large-streaming-2026-06-05.md`](images-benchmark/docs/large-streaming-2026-06-05.md).
+Benchmark evidence: [`benchmark/images-benchmark/docs/large-streaming-2026-06-05.md`](benchmark/images-benchmark/docs/large-streaming-2026-06-05.md).
 
 <!-- README_VISUAL_OVERVIEW:START -->
 ## 개요 다이어그램
@@ -87,7 +87,7 @@ Benchmark evidence: [`images-benchmark/docs/large-streaming-2026-06-05.md`](imag
 | `images-vips-api`     | `bluetape4k-images-vips-api`         | 공유 `VipsImage` / `VipsRuntime` 인터페이스 (바인딩 중립)     |
 | `images-vips-java21`  | `bluetape4k-images-vips-java21`      | JVips JNI 백엔드 — Java 21+, 시스템 libvips 필요           |
 | `images-vips-java25`  | `bluetape4k-images-vips-java25`      | vips-ffm FFM 백엔드 — Java 25+, `--enable-native-access` |
-| `images-benchmark`    | `bluetape4k-images-benchmark`        | `kotlinx-benchmark`: scrimage vs libvips                  |
+| `benchmark/images-benchmark` | `bluetape4k-images-benchmark`        | `kotlinx-benchmark`: scrimage vs libvips                  |
 
 ## 아키텍처
 
@@ -414,7 +414,7 @@ JVipsImageSupport.jvipsImageOf(Path.of("photo.jpg")).use { image ->
 - [`images-vips-api/README.md`](images-vips-api/README.md) — VipsImage 인터페이스 API
 - [`images-vips-java21/README.md`](images-vips-java21/README.md) — JVips JNI 백엔드
 - [`images-vips-java25/README.md`](images-vips-java25/README.md) — vips-ffm FFM 백엔드
-- [`images-benchmark/README.md`](images-benchmark/README.md) — `kotlinx-benchmark` 결과
+- [`benchmark/images-benchmark/README.md`](benchmark/images-benchmark/README.md) — `kotlinx-benchmark` 결과
 
 ## 예제
 

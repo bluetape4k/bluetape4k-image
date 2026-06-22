@@ -90,7 +90,7 @@ ImageResizeBenchmark.vips_resize              1280x720  avgt    5    0.626 ±   
 | CI Linux, java25 | 187.29 ± 9.07 | **0.591** ± 0.046 | **317×** |
 | CI Linux, java21 | 195.63 ± 7.39 | **0.495** ± 0.062 | **395×** |
 
-![Resize latency benchmark chart](../../docs/images/readme-charts/images-benchmark-resize-latency-chart-01.png)
+![Resize latency benchmark chart](../../../docs/images/readme-charts/images-benchmark-resize-latency-chart-01.png)
 
 ### 인코딩 — JPEG
 
@@ -112,7 +112,7 @@ ImageResizeBenchmark.vips_resize              1280x720  avgt    5    0.626 ±   
 | CI Linux, java25 | 249.01 ± 2.14  | **137.95** ± 2.93 | **1.8×** |
 | CI Linux, java21 | 246.44 ± 2.14  | 255.90 ± 10.19 | **−1.04×** ⚠️ |
 
-![Encode latency benchmark chart](../../docs/images/readme-charts/images-benchmark-encode-latency-chart-01.png)
+![Encode latency benchmark chart](../../../docs/images/readme-charts/images-benchmark-encode-latency-chart-01.png)
 
 ### 필터 (scrimage 전용)
 
@@ -122,7 +122,7 @@ ImageResizeBenchmark.vips_resize              1280x720  avgt    5    0.626 ±   
 | Grayscale | 22.51 ± 9.19 | 99.72 ± 23.9 | 97.05 ± 12.6 |
 | Blur      | 29.80 ± 1.23 | 73.64 ± 1.28 | 84.81 ± 6.31 |
 
-![Filter latency benchmark chart](../../docs/images/readme-charts/images-benchmark-filter-latency-chart-01.png)
+![Filter latency benchmark chart](../../../docs/images/readme-charts/images-benchmark-filter-latency-chart-01.png)
 
 ---
 

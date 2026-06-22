@@ -20,7 +20,7 @@ macOS values while preserving historical CI Linux rows.
 ## Verification
 
 - `./gradlew :bluetape4k-images-benchmark:benchmarkBenchmark -Pvips.impl=java25 --console=plain`
-- Raw JSON copied to `images-benchmark/docs/raw/benchmark-results-2026-05-25-macos-java25.json`
+- Raw JSON copied to `benchmark/images-benchmark/docs/raw/benchmark-results-2026-05-25-macos-java25.json`
 
 ## Future Guard
 

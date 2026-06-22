@@ -35,7 +35,7 @@ per operation from the JMH GC profiler.
 | `scrimage_photoPreviewJpeg` | 4032x3024 landscape -> resize 1280x720 -> grayscale -> JPEG | 113.82 ms/op | 53,217,235 B/op (50.75 MB/op) |
 | `scrimage_documentPreviewPng` | 1248x702 homer -> resize 640x905 -> blur -> sepia -> PNG | 57.86 ms/op | 63,850,031 B/op (60.89 MB/op) |
 
-![Image pipeline allocation benchmark chart](../../docs/images/readme-charts/images-benchmark-pipeline-allocation-chart-01.png)
+![Image pipeline allocation benchmark chart](../../../docs/images/readme-charts/images-benchmark-pipeline-allocation-chart-01.png)
 
 ## Interpretation
 

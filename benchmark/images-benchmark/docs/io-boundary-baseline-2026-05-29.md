@@ -45,7 +45,7 @@ GC-profiler addendum.
 | `write_homer_okioSink` | Okio `Sink` | 7.40 ms/op | 2.73 MB/op |
 | `write_homer_suspendedFileSink` | `AsynchronousFileChannel` `SuspendedSink` | 14.03 ms/op | 2.82 MB/op |
 
-![Image IO boundary benchmark chart](../../docs/images/readme-charts/images-benchmark-io-boundary-chart-01.png)
+![Image IO boundary benchmark chart](../../../docs/images/readme-charts/images-benchmark-io-boundary-chart-01.png)
 
 ## Interpretation
 

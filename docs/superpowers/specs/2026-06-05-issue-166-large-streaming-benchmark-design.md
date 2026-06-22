@@ -18,9 +18,9 @@
   `Source`, suspended source, `Path`, Okio `Sink`, buffered `Sink`, and
   suspended sink boundaries for Scrimage-backed load/write.
 - Existing benchmark evidence:
-  - `images-benchmark/docs/io-boundary-baseline-2026-05-29.md`
-  - `images-benchmark/docs/file-io-throughput-2026-05-29.md`
-  - `images-benchmark/docs/memory-profile-2026-05-29.md`
+  - `benchmark/images-benchmark/docs/io-boundary-baseline-2026-05-29.md`
+  - `benchmark/images-benchmark/docs/file-io-throughput-2026-05-29.md`
+  - `benchmark/images-benchmark/docs/memory-profile-2026-05-29.md`
 
 ## Decision
 
@@ -33,7 +33,7 @@ add a new production API in this PR.
 
 - Add one focused `kotlinx-benchmark` configuration and task:
   `benchmarkLargeStreamingBenchmark`.
-- Add one benchmark class under `images-benchmark/src/benchmark/kotlin`.
+- Add one benchmark class under `benchmark/images-benchmark/src/benchmark/kotlin`.
 - Generate deterministic large fixtures in JMH setup instead of committing huge
   binary assets.
 - Measure two scenarios:
@@ -65,9 +65,9 @@ add a new production API in this PR.
 
 - `:bluetape4k-images-benchmark:benchmarkBenchmarkCompile` passes.
 - `:bluetape4k-images-benchmark:benchmarkLargeStreamingBenchmark -Pvips.impl=java25`
-  passes locally and writes raw JSON under `images-benchmark/docs/raw/`.
+  passes locally and writes raw JSON under `benchmark/images-benchmark/docs/raw/`.
 - JMH GC-profiler addendum writes managed-allocation JSON under
-  `images-benchmark/docs/raw/`.
+  `benchmark/images-benchmark/docs/raw/`.
 - README tables and chart state `AverageTime ms/op`; lower is better.
 - Report interpretation explicitly says whether Okio/suspended boundaries are
   latency, throughput, or memory/lifecycle features.

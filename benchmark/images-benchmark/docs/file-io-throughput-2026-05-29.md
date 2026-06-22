@@ -39,7 +39,7 @@ second; the table below reports derived file operations per second.
 | `landscape-6400` | Okio `Source`/`Sink` | 2,072 files/s | 778 files/s |
 | `landscape-6400` | `AsynchronousFileChannel` `SuspendedSource`/`SuspendedSink` | 70 files/s | 154 files/s |
 
-![Concurrent image file IO throughput chart](../../docs/images/readme-charts/images-benchmark-file-io-throughput-chart-01.png)
+![Concurrent image file IO throughput chart](../../../docs/images/readme-charts/images-benchmark-file-io-throughput-chart-01.png)
 
 ## Interpretation
 

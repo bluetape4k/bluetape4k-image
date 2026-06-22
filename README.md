@@ -72,7 +72,7 @@ file memory and throughput profile through `Path`. Use the vips Okio
 `bluetape4k-okio` suspended boundary. Non-Path vips loads still validate and
 buffer the compressed input within the 50 MB stream guard.
 
-Benchmark evidence: [`images-benchmark/docs/large-streaming-2026-06-05.md`](images-benchmark/docs/large-streaming-2026-06-05.md).
+Benchmark evidence: [`benchmark/images-benchmark/docs/large-streaming-2026-06-05.md`](benchmark/images-benchmark/docs/large-streaming-2026-06-05.md).
 
 <!-- README_VISUAL_OVERVIEW:START -->
 ## Overview Diagram
@@ -97,7 +97,7 @@ Benchmark evidence: [`images-benchmark/docs/large-streaming-2026-06-05.md`](imag
 | `images-vips-api`     | `bluetape4k-images-vips-api`         | Shared `VipsImage` / `VipsRuntime` interfaces (binding-neutral) |
 | `images-vips-java21`  | `bluetape4k-images-vips-java21`      | JVips JNI backend — Java 21+, system libvips             |
 | `images-vips-java25`  | `bluetape4k-images-vips-java25`      | vips-ffm FFM backend — Java 25+, `--enable-native-access` |
-| `images-benchmark`    | `bluetape4k-images-benchmark`        | `kotlinx-benchmark`: scrimage vs libvips                 |
+| `benchmark/images-benchmark` | `bluetape4k-images-benchmark`        | `kotlinx-benchmark`: scrimage vs libvips                 |
 
 ## Architecture
 
@@ -427,7 +427,7 @@ Each module contains its own detailed README with API reference, architecture di
 - [`images-vips-api/README.md`](images-vips-api/README.md) — VipsImage interface API
 - [`images-vips-java21/README.md`](images-vips-java21/README.md) — JVips JNI backend
 - [`images-vips-java25/README.md`](images-vips-java25/README.md) — vips-ffm FFM backend
-- [`images-benchmark/README.md`](images-benchmark/README.md) — `kotlinx-benchmark` results
+- [`benchmark/images-benchmark/README.md`](benchmark/images-benchmark/README.md) — `kotlinx-benchmark` results
 
 ## Examples
 

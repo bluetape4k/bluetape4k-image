@@ -22,10 +22,10 @@ JAVA_HOME=$(/usr/libexec/java_home -v 25) \
 
 JAVA25=$(/usr/libexec/java_home -v 25)
 "$JAVA25/bin/java" --enable-native-access=ALL-UNNAMED \
-  -jar images-benchmark/build/benchmarks/benchmark/jars/bluetape4k-images-benchmark-benchmark-jmh-0.3.0-JMH.jar \
+  -jar benchmark/images-benchmark/build/benchmarks/benchmark/jars/bluetape4k-images-benchmark-benchmark-jmh-0.3.0-JMH.jar \
   '.*ImageLargeStreamingBenchmark.*' -wi 1 -i 3 -f 1 -bm avgt -tu ms \
   -prof gc -rf json \
-  -rff images-benchmark/docs/raw/benchmark-large-streaming-jmh-gc-2026-06-05-macos-java25.json
+  -rff benchmark/images-benchmark/docs/raw/benchmark-large-streaming-jmh-gc-2026-06-05-macos-java25.json
 ```
 
 > The benchmark source and primary execution path use `kotlinx-benchmark`.
@@ -48,7 +48,7 @@ binary files are not committed to the repository.
 AverageTime is lower-is-better. This is a local comparable snapshot, not a
 production ranking.
 
-![Large streaming pipeline benchmark chart](../../docs/images/readme-charts/images-benchmark-large-streaming-chart-01.png)
+![Large streaming pipeline benchmark chart](../../../docs/images/readme-charts/images-benchmark-large-streaming-chart-01.png)
 
 ### Scrimage Rows
 

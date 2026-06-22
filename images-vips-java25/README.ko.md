@@ -506,7 +506,7 @@ class ImageController(
 | encode JPEG         | 52.49 | **15.67** | **3.3배** |
 | encode PNG          | 94.87 | **49.88** | **1.9배** |
 
-전체 상세 결과: [`images-benchmark/docs/benchmark-results-2026-04-29.md`](../images-benchmark/docs/benchmark-results-2026-04-29.md)
+전체 상세 결과: [`benchmark/images-benchmark/docs/benchmark-results-2026-04-29.md`](../benchmark/images-benchmark/docs/benchmark-results-2026-04-29.md)
 
 ## 테스트
 
