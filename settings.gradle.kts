@@ -11,8 +11,9 @@ pluginManagement {
 
 val bluetape4kDependenciesCatalogRef = providers.gradleProperty("bluetape4kDependenciesCatalogRef")
     .orElse(providers.environmentVariable("BLUETAPE4K_DEPENDENCIES_CATALOG_REF"))
-    .orElse("catalog/2026-06-25-01")
+    .orElse("catalog/2026-06-25-03")
     .get()
+val bluetape4kDependenciesCatalogCacheKey = bluetape4kDependenciesCatalogRef.replace(Regex("[^A-Za-z0-9._-]"), "_")
 val centralSnapshotUsername = providers.gradleProperty("central.user")
     .orElse(providers.gradleProperty("centralPortalUsername"))
     .orElse(providers.environmentVariable("CENTRAL_USERNAME"))
@@ -46,7 +47,7 @@ fun resolveBluetape4kDependenciesCatalogFile(): File {
         "bluetape4k-dependencies/gradle/libs.versions.toml",
     ).map(::file).firstOrNull { it.isFile }?.let { return it }
 
-    val catalogFile = file(".gradle/bluetape4k-dependencies/libs.versions.toml")
+    val catalogFile = file(".gradle/bluetape4k-dependencies/$bluetape4kDependenciesCatalogCacheKey/libs.versions.toml")
     if (!catalogFile.isFile) {
         catalogFile.parentFile.mkdirs()
         val catalogUrl =
