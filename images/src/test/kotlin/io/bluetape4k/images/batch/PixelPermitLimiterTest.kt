@@ -1,10 +1,10 @@
 package io.bluetape4k.images.batch
 
 import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldBeGreaterThan
-import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.images.AbstractImageTest
 import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
@@ -25,9 +25,9 @@ class PixelPermitLimiterTest : AbstractImageTest() {
         val limiter = PixelPermitLimiter(maxPixels = 1_000L)
 
         // Run a sequence of permits — if not released, the second call would deadlock
-        limiter.withPermit(500L) { Unit }
-        limiter.withPermit(500L) { Unit }
-        limiter.withPermit(500L) { Unit }  // third — works because earlier ones released
+        limiter.withPermit(500L) { }
+        limiter.withPermit(500L) { }
+        limiter.withPermit(500L) { } // third — works because earlier ones released
         // Reaching here without timeout means permits were properly released
     }
 
@@ -79,7 +79,7 @@ class PixelPermitLimiterTest : AbstractImageTest() {
                 }
             }
         }
-        jobs.forEach { it.join() }
+        jobs.joinAll()
 
         counter.get() shouldBeEqualTo 20
     }
@@ -96,7 +96,7 @@ class PixelPermitLimiterTest : AbstractImageTest() {
             limiter.withPermit(maxPixels) {
                 holderStarted = true
                 // simulate holding permits for a while by suspending the test
-                kotlinx.coroutines.delay(Long.MAX_VALUE)
+                delay(timeMillis = Long.MAX_VALUE)
             }
         }
 

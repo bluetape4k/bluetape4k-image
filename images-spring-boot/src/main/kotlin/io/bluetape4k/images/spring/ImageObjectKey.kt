@@ -9,9 +9,10 @@ import java.io.Serializable
  * ## Behavior
  * - [prefix] and [name] must match `^[A-Za-z0-9._/-]+$` and must not contain `..` segments.
  * - [fullKey] is `prefix/name` (no double slash even when prefix ends with `/`).
- * - Validation runs in `init` block — `copy()` cannot bypass it.
+ * - Validation runs in the companion factory; `copy()` keeps constructor visibility.
  * - Construct via [of] factory.
  */
+@ConsistentCopyVisibility
 data class ImageObjectKey private constructor(
     val prefix: String,
     val name: String,
@@ -21,19 +22,21 @@ data class ImageObjectKey private constructor(
         private const val serialVersionUID: Long = 1L
         private val VALID_SEGMENT = Regex("^[A-Za-z0-9._/-]+$")
 
-        /** Creates a validated [ImageObjectKey]. */
-        fun of(prefix: String, name: String): ImageObjectKey = ImageObjectKey(prefix, name)
-    }
+        operator fun invoke(prefix: String, name: String): ImageObjectKey {
+            prefix.requireNotBlank("prefix")
+            name.requireNotBlank("name")
+            require(!prefix.contains("..") && !name.contains("..")) {
+                "prefix and name must not contain '..' segments"
+            }
+            require(VALID_SEGMENT.matches(prefix) && VALID_SEGMENT.matches(name)) {
+                "prefix and name must match [A-Za-z0-9._/-]+"
+            }
 
-    init {
-        prefix.requireNotBlank("prefix")
-        name.requireNotBlank("name")
-        require(!prefix.contains("..") && !name.contains("..")) {
-            "prefix and name must not contain '..' segments"
+            return ImageObjectKey(prefix, name)
         }
-        require(VALID_SEGMENT.matches(prefix) && VALID_SEGMENT.matches(name)) {
-            "prefix and name must match [A-Za-z0-9._/-]+"
-        }
+
+        /** Creates a validated [ImageObjectKey]. */
+        fun of(prefix: String, name: String): ImageObjectKey = invoke(prefix, name)
     }
 
     /** Returns `prefix/name`, normalizing the separator. */
