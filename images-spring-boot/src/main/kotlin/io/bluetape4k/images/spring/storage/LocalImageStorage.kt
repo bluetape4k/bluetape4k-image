@@ -187,7 +187,6 @@ class LocalImageStorage(
     override suspend fun delete(key: ImageObjectKey): Unit = withContext(Dispatchers.IO) {
         try {
             Files.deleteIfExists(resolveKey(key))
-            Unit
         } catch (e: CancellationException) {
             throw e
         } catch (e: IOException) {

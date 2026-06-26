@@ -183,7 +183,6 @@ class S3ImageStorage(
             try {
                 destination.parent?.let { Files.createDirectories(it) }
                 Files.write(destination, bytes)
-                Unit
             } catch (e: CancellationException) {
                 throw e
             } catch (e: IOException) {
@@ -194,15 +193,14 @@ class S3ImageStorage(
     override suspend fun delete(key: ImageObjectKey): Unit = withContext(Dispatchers.IO) {
         try {
             operations.delete(bucket = bucket, key = objectKey(key))
-            Unit
         } catch (e: CancellationException) {
             throw e
         } catch (e: NoSuchKeyException) {
             // idempotent — missing key is not an error
-            Unit
+            log.debug(e) { "delete: ${key.fullKey} not found" }
         } catch (e: S3Exception) {
             if (e.statusCode() == STATUS_NOT_FOUND) {
-                Unit
+                log.debug(e) { "delete: ${key.fullKey} not found" }
             } else {
                 throw e.toImageStorageException(key)
             }
@@ -277,18 +275,18 @@ class S3ImageStorage(
     private fun Throwable.toImageStorageException(key: ImageObjectKey): ImageStorageException =
         when (this) {
             is ImageStorageException -> this
-            is NoSuchKeyException -> ImageStorageException.NotFoundException(key, cause = this)
+            is NoSuchKeyException    -> ImageStorageException.NotFoundException(key, cause = this)
             is NoSuchBucketException -> ImageStorageException.AccessDeniedException(key, cause = this)
-            is S3Exception -> when (statusCode()) {
+            is S3Exception           -> when (statusCode()) {
                 STATUS_UNAUTHORIZED, STATUS_FORBIDDEN ->
                     ImageStorageException.AccessDeniedException(key, cause = this)
-                STATUS_NOT_FOUND ->
+                STATUS_NOT_FOUND                      ->
                     ImageStorageException.NotFoundException(key, cause = this)
-                STATUS_CONFLICT ->
+                STATUS_CONFLICT                       ->
                     ImageStorageException.ConflictException(key, cause = this)
-                else ->
+                else                                  ->
                     ImageStorageException.TransientException(key = key, cause = this)
             }
-            else -> ImageStorageException.TransientException(key = key, cause = this)
+            else                     -> ImageStorageException.TransientException(key = key, cause = this)
         }
 }

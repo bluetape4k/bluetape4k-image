@@ -1,5 +1,6 @@
 package io.bluetape4k.images.spring
 
+import io.bluetape4k.assertions.shouldBeInstanceOf
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
@@ -31,7 +32,7 @@ class ImageStorageExceptionTest {
     @Test
     fun `NotFoundException is ImageStorageException`() {
         val ex = ImageStorageException.NotFoundException(key)
-        assertTrue(ex is ImageStorageException)
+        ex.shouldBeInstanceOf<ImageStorageException>()
     }
 
     @Test
@@ -49,7 +50,7 @@ class ImageStorageExceptionTest {
     @Test
     fun `AccessDeniedException is ImageStorageException`() {
         val ex = ImageStorageException.AccessDeniedException(key)
-        assertTrue(ex is ImageStorageException)
+        ex.shouldBeInstanceOf<ImageStorageException>()
     }
 
     @Test
@@ -67,7 +68,7 @@ class ImageStorageExceptionTest {
     @Test
     fun `ConflictException is ImageStorageException`() {
         val ex = ImageStorageException.ConflictException(key)
-        assertTrue(ex is ImageStorageException)
+        ex.shouldBeInstanceOf<ImageStorageException>()
     }
 
     @Test
@@ -87,7 +88,7 @@ class ImageStorageExceptionTest {
     @Test
     fun `TransientException is ImageStorageException`() {
         val ex = ImageStorageException.TransientException()
-        assertTrue(ex is ImageStorageException)
+        ex.shouldBeInstanceOf<ImageStorageException>()
     }
 
     @Test
@@ -107,7 +108,7 @@ class ImageStorageExceptionTest {
     @Test
     fun `ValidationException is ImageStorageException`() {
         val ex = ImageStorageException.ValidationException(message = "invalid")
-        assertTrue(ex is ImageStorageException)
+        ex.shouldBeInstanceOf<ImageStorageException>()
     }
 
     @Test
@@ -122,11 +123,11 @@ class ImageStorageExceptionTest {
 
         exceptions.forEach { ex ->
             val label = when (ex) {
-                is ImageStorageException.NotFoundException -> "not-found"
+                is ImageStorageException.NotFoundException     -> "not-found"
                 is ImageStorageException.AccessDeniedException -> "access-denied"
-                is ImageStorageException.ConflictException -> "conflict"
-                is ImageStorageException.TransientException -> "transient"
-                is ImageStorageException.ValidationException -> "validation"
+                is ImageStorageException.ConflictException     -> "conflict"
+                is ImageStorageException.TransientException    -> "transient"
+                is ImageStorageException.ValidationException   -> "validation"
             }
             assertNotNull(label)
         }

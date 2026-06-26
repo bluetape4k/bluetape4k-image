@@ -12,5 +12,5 @@ internal fun resizeWithJVips(image: VipsImage, width: Int, height: Int) {
     width.requirePositiveNumber("width")
     height.requirePositiveNumber("height")
     // crop=false: 비율 무시하고 목표 크기로 리사이즈
-    image.resize(width, height, false)
+    image.thumbnailImage(width, height, false)
 }
