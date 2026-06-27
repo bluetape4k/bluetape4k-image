@@ -190,41 +190,35 @@ capability를 확인하세요.
 
 ## 의존성 추가
 
-이 라이브러리는 Sonatype Central Portal에 SNAPSHOT으로 배포됩니다.
-스냅샷 저장소를 추가하고 필요한 모듈을 선언하세요.
+안정 릴리스는 Maven Central에 배포됩니다. 필요한 모듈을 현재 image
+릴리스 버전으로 선언하세요.
 
 ```kotlin
 // build.gradle.kts
-repositories {
-    maven {
-        url = uri("https://central.sonatype.com/repository/maven-snapshots/")
-    }
-}
-
 dependencies {
     // Scrimage 기반 이미지 처리 (Java 21+)
-    implementation("io.github.bluetape4k.image:bluetape4k-images:<version>")
+    implementation("io.github.bluetape4k.image:bluetape4k-images:0.3.0")
 
     // Java2D CAPTCHA 생성 (Java 21+)
-    implementation("io.github.bluetape4k.image:bluetape4k-images-captcha:<version>")
+    implementation("io.github.bluetape4k.image:bluetape4k-images-captcha:0.3.0")
 
     // Tess4J/Tesseract OCR 추출 (Java 21+)
-    implementation("io.github.bluetape4k.image:bluetape4k-images-ocr:<version>")
+    implementation("io.github.bluetape4k.image:bluetape4k-images-ocr:0.3.0")
 
     // CAPTCHA 발급과 검증을 위한 Ktor route helper (Java 21+)
-    implementation("io.github.bluetape4k.image:bluetape4k-images-ktor:<version>")
+    implementation("io.github.bluetape4k.image:bluetape4k-images-ktor:0.3.0")
 
     // Spring Boot 4 자동 구성 (스토리지, CDN, 헬스, 메트릭)
-    implementation("io.github.bluetape4k.image:bluetape4k-images-spring-boot:<version>")
+    implementation("io.github.bluetape4k.image:bluetape4k-images-spring-boot:0.3.0")
 
     // libvips — 공유 API (두 vips 구현체 모두에 필요)
-    implementation("io.github.bluetape4k.image:bluetape4k-images-vips-api:<version>")
+    implementation("io.github.bluetape4k.image:bluetape4k-images-vips-api:0.3.0")
 
     // 아래 vips 백엔드 중 하나를 선택:
     // Java 21 JNI 백엔드
-    runtimeOnly("io.github.bluetape4k.image:bluetape4k-images-vips-java21:<version>")
+    runtimeOnly("io.github.bluetape4k.image:bluetape4k-images-vips-java21:0.3.0")
     // 또는 Java 25 FFM 백엔드
-    runtimeOnly("io.github.bluetape4k.image:bluetape4k-images-vips-java25:<version>")
+    runtimeOnly("io.github.bluetape4k.image:bluetape4k-images-vips-java25:0.3.0")
 }
 ```
 

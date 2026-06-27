@@ -12,6 +12,44 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Aligned the local shared catalog with `bluetape4k-bom:1.11.0-SNAPSHOT`
   and `bluetape4k-aws-bom:0.4.0-SNAPSHOT` for the next development train.
 
+## [0.3.0] - 2026-06-27
+
+### Added
+
+- Added OCR module support and runnable usage examples for basic OCR, Spring
+  Boot, and Ktor adoption paths
+  ([#1](https://github.com/bluetape4k/bluetape4k-image/issues/1),
+  [#171](https://github.com/bluetape4k/bluetape4k-image/issues/171),
+  [#172](https://github.com/bluetape4k/bluetape4k-image/issues/172),
+  [#173](https://github.com/bluetape4k/bluetape4k-image/issues/173)).
+- Added memory-conscious large-file image I/O APIs backed by Okio and expanded
+  large-image and streaming benchmark coverage
+  ([#165](https://github.com/bluetape4k/bluetape4k-image/issues/165),
+  [#166](https://github.com/bluetape4k/bluetape4k-image/issues/166)).
+
+### Changed
+
+- Aligned the release line with `bluetape4k-bom:1.11.0` and
+  `bluetape4k-aws-bom:0.4.0` for the coordinated dependencies train.
+- Evaluated host-native OCR runtime compatibility and refreshed release
+  documentation for the `0.3.0` line
+  ([#175](https://github.com/bluetape4k/bluetape4k-image/issues/175)).
+
+### Fixed
+
+- Stabilized image golden-chain Nightly coverage and hardened scheduled CI
+  snapshot dependency reads against Central snapshot authentication and retry
+  failures
+  ([#144](https://github.com/bluetape4k/bluetape4k-image/issues/144),
+  [#146](https://github.com/bluetape4k/bluetape4k-image/issues/146),
+  [#148](https://github.com/bluetape4k/bluetape4k-image/issues/148),
+  [#150](https://github.com/bluetape4k/bluetape4k-image/issues/150),
+  [#152](https://github.com/bluetape4k/bluetape4k-image/issues/152),
+  [#155](https://github.com/bluetape4k/bluetape4k-image/issues/155),
+  [#158](https://github.com/bluetape4k/bluetape4k-image/issues/158),
+  [#160](https://github.com/bluetape4k/bluetape4k-image/issues/160),
+  [#177](https://github.com/bluetape4k/bluetape4k-image/issues/177)).
+
 ## [0.2.0] - 2026-06-01
 
 ### Added
