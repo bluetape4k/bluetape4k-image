@@ -202,41 +202,35 @@ JVM.
 
 ## Installation
 
-This library is published to Sonatype Central Portal as SNAPSHOT releases.
-Add the snapshot repository and declare the modules you need:
+Stable releases are published to Maven Central. Declare the modules you need
+with the current image release version:
 
 ```kotlin
 // build.gradle.kts
-repositories {
-    maven {
-        url = uri("https://central.sonatype.com/repository/maven-snapshots/")
-    }
-}
-
 dependencies {
     // Scrimage-based image processing (Java 21+)
-    implementation("io.github.bluetape4k.image:bluetape4k-images:<version>")
+    implementation("io.github.bluetape4k.image:bluetape4k-images:0.3.0")
 
     // Java2D CAPTCHA generation (Java 21+)
-    implementation("io.github.bluetape4k.image:bluetape4k-images-captcha:<version>")
+    implementation("io.github.bluetape4k.image:bluetape4k-images-captcha:0.3.0")
 
     // Tess4J/Tesseract OCR extraction (Java 21+)
-    implementation("io.github.bluetape4k.image:bluetape4k-images-ocr:<version>")
+    implementation("io.github.bluetape4k.image:bluetape4k-images-ocr:0.3.0")
 
     // Ktor route helpers for CAPTCHA issue and verification (Java 21+)
-    implementation("io.github.bluetape4k.image:bluetape4k-images-ktor:<version>")
+    implementation("io.github.bluetape4k.image:bluetape4k-images-ktor:0.3.0")
 
     // Spring Boot 4 auto-configuration (storage, CDN, health, metrics)
-    implementation("io.github.bluetape4k.image:bluetape4k-images-spring-boot:<version>")
+    implementation("io.github.bluetape4k.image:bluetape4k-images-spring-boot:0.3.0")
 
     // libvips — shared API (required by both vips implementations)
-    implementation("io.github.bluetape4k.image:bluetape4k-images-vips-api:<version>")
+    implementation("io.github.bluetape4k.image:bluetape4k-images-vips-api:0.3.0")
 
     // Choose ONE vips backend:
     // Java 21 JNI backend
-    runtimeOnly("io.github.bluetape4k.image:bluetape4k-images-vips-java21:<version>")
+    runtimeOnly("io.github.bluetape4k.image:bluetape4k-images-vips-java21:0.3.0")
     // OR Java 25 FFM backend
-    runtimeOnly("io.github.bluetape4k.image:bluetape4k-images-vips-java25:<version>")
+    runtimeOnly("io.github.bluetape4k.image:bluetape4k-images-vips-java25:0.3.0")
 }
 ```
 
