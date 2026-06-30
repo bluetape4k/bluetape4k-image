@@ -2,8 +2,8 @@
 # Gradle Version Catalog for bluetape4k-image
 
 [versions]
-bluetape4k-bom = "1.11.0"  # https://mvnrepository.com/artifact/io.github.bluetape4k/bluetape4k-bom
-bluetape4k-aws-bom = "0.4.0"  # https://central.sonatype.com/artifact/io.github.bluetape4k.aws/bluetape4k-aws-bom
+bluetape4k-bom = "1.11.1-SNAPSHOT"  # https://mvnrepository.com/artifact/io.github.bluetape4k/bluetape4k-bom
+bluetape4k-aws-bom = "0.5.0-SNAPSHOT"  # https://central.sonatype.com/artifact/io.github.bluetape4k.aws/bluetape4k-aws-bom
 
 spring-boot = "4.1.0"  # https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-dependencies
 aws2 = "2.46.17"  # https://mvnrepository.com/artifact/software.amazon.awssdk/bom
