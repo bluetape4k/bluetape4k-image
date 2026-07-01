@@ -66,6 +66,7 @@ A library for loading, converting, resizing, splitting, and applying filters to 
 | `analysis/DominantColor.kt`                    | Dominant color extraction (MedianCut) — `dominantColor()`, `dominantColors()` |
 | `analysis/BlurDetector.kt`                     | Blur detection via Laplacian variance — `blurScore()`, `isBlurry()` |
 | `analysis/ExifData.kt`                         | EXIF metadata parsing — `readExif()`, GPS PII removal |
+| `moderation/SensitiveContentModels.kt`         | Backend-neutral sensitive-content detection result models |
 | `similarity/ImageSimilarity.kt`                | Core similarity: pixel Δ, MSE, PSNR, global SSIM, pHash |
 | `similarity/MssimSimilarity.kt`                | MSSIM — sliding-window Gaussian SSIM                    |
 | `similarity/HashSimilarity.kt`                 | aHash/dHash/wHash/phashOf (64/256/1024bit), HashDistance |
@@ -970,6 +971,50 @@ val asyncExif: ExifData = File("photo.jpg").suspendReadExif()
 | `analysis/MedianCutQuantizer.kt`        | Median Cut quantization engine (5-bit/channel)  |
 | `analysis/BlurDetector.kt`              | `BlurScore` + Laplacian variance computation     |
 | `analysis/ExifData.kt`                  | `ExifData` model + `readExif()` entry points     |
+
+### Sensitive Content Detection Models
+
+`bluetape4k-images` defines only the backend-neutral result contract for sensitive-content detection. It does not bundle a detector runtime, model weights, redaction renderer, policy engine, or treatment action.
+
+```kotlin
+import io.bluetape4k.images.moderation.*
+
+val detection = SensitiveContentDetection(
+    label = "explicit-nudity",
+    category = SensitiveContentCategory.EXPLICIT_NUDITY,
+    severity = SensitiveContentSeverity.HIGH,
+    confidence = 0.94,
+    sourceBackend = "custom-detector",
+    rawBackendLabel = "nsfw_explicit",
+    policyReason = "adult-content",
+    region = SensitiveRegion(
+        geometry = SensitiveRegionGeometry.Rectangle(
+            x = 0.12,
+            y = 0.18,
+            width = 0.44,
+            height = 0.52,
+            coordinateSpace = SensitiveCoordinateSpace.NORMALIZED,
+        ),
+    ),
+)
+```
+
+Geometry variants:
+
+| Geometry | Use case |
+|---|---|
+| `Rectangle` | Axis-aligned boxes in pixel or normalized coordinates |
+| `Polygon` | Closed areas; the first point must be repeated as the last point |
+| `Polyline` | Open paths or contours |
+| `RasterMask` | External mask references or raster mask metadata |
+
+Validation rules:
+
+- `confidence` is always `0.0..1.0`.
+- Normalized coordinates must fit inside `0.0..1.0`.
+- Pixel coordinates are non-negative and can be checked against `ImageDimensions` with `requireWithin(...)`.
+- Detector adapters should map raw backend labels to stable `SensitiveContentCategory` values while preserving `rawBackendLabel`.
+- False negatives, confidence thresholds, and policy mapping remain caller policy concerns.
 
 ## Testing & Quality
 
