@@ -3,6 +3,8 @@ package io.bluetape4k.images.examples.spring.ocr
 import com.jayway.jsonpath.JsonPath
 import com.sksamuel.scrimage.ImmutableImage
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeNull
+import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.images.ocr.OcrEngine
 import io.bluetape4k.images.ocr.OcrException
@@ -29,6 +31,7 @@ import java.awt.Color
 import java.awt.Font
 import java.awt.image.BufferedImage
 import java.io.ByteArrayOutputStream
+import java.util.zip.CRC32
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
 import javax.imageio.ImageIO
@@ -110,6 +113,28 @@ internal class SpringBootOcrApiApplicationTest(
         error.readJsonPath<String>("$.message") shouldBeEqualTo "Test OCR runtime is unavailable."
     }
 
+    @Test
+    fun `rejects decoded pixel limit before OCR engine is called`() {
+        val oversizedImage = MockMultipartFile(
+            "file",
+            "oversized.png",
+            MediaType.IMAGE_PNG_VALUE,
+            pngHeaderBytes(width = 10_000, height = 10_000),
+        )
+
+        val result = mockMvc.perform(multipart("/api/ocr").file(oversizedImage))
+            .andExpect(request().asyncStarted())
+            .andReturn()
+            .dispatch()
+            .andExpect(status().isBadRequest)
+            .andReturn()
+
+        val error = result.response.contentAsString
+        error.readJsonPath<String>("$.error") shouldBeEqualTo "bad_request"
+        error.readJsonPath<String>("$.message") shouldContain "decodedPixels"
+        testOcrEngine.lastOptions.get().shouldBeNull()
+    }
+
     private inline fun <reified T> String.readJsonPath(path: String): T =
         JsonPath.read(this, path)
 
@@ -140,6 +165,61 @@ internal class SpringBootOcrApiApplicationTest(
         val output = ByteArrayOutputStream()
         ImageIO.write(image, "png", output)
         return output.toByteArray()
+    }
+
+    private fun pngHeaderBytes(width: Int, height: Int): ByteArray {
+        val output = ByteArrayOutputStream()
+        output.write(PNG_SIGNATURE)
+        output.writePngChunk(
+            type = "IHDR",
+            data = ByteArray(13).also { data ->
+                data.writeInt(0, width)
+                data.writeInt(4, height)
+                data[8] = 8
+                data[9] = 2
+            }
+        )
+        output.writePngChunk(type = "IEND", data = ByteArray(0))
+        return output.toByteArray()
+    }
+
+    private fun ByteArray.writeInt(offset: Int, value: Int) {
+        this[offset] = (value ushr 24).toByte()
+        this[offset + 1] = (value ushr 16).toByte()
+        this[offset + 2] = (value ushr 8).toByte()
+        this[offset + 3] = value.toByte()
+    }
+
+    private fun ByteArrayOutputStream.writePngChunk(type: String, data: ByteArray) {
+        writeInt(data.size)
+        val typeBytes = type.toByteArray(Charsets.US_ASCII)
+        write(typeBytes)
+        write(data)
+
+        val crc = CRC32()
+        crc.update(typeBytes)
+        crc.update(data)
+        writeInt(crc.value.toInt())
+    }
+
+    private fun ByteArrayOutputStream.writeInt(value: Int) {
+        write((value ushr 24) and 0xFF)
+        write((value ushr 16) and 0xFF)
+        write((value ushr 8) and 0xFF)
+        write(value and 0xFF)
+    }
+
+    private companion object {
+        val PNG_SIGNATURE = byteArrayOf(
+            0x89.toByte(),
+            0x50,
+            0x4E,
+            0x47,
+            0x0D,
+            0x0A,
+            0x1A,
+            0x0A,
+        )
     }
 
     @TestConfiguration(proxyBeanMethods = false)

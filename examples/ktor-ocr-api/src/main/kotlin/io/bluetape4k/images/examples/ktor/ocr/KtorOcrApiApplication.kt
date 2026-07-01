@@ -6,6 +6,7 @@ import io.bluetape4k.images.ocr.OcrException
 import io.bluetape4k.images.ocr.OcrOptions
 import io.bluetape4k.images.ocr.TesseractOcrEngine
 import io.bluetape4k.images.ocr.suspendExtractText
+import io.bluetape4k.images.probeImageDimensions
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.requirePositiveNumber
 import io.ktor.http.ContentType
@@ -90,6 +91,8 @@ data class KtorOcrApiConfig(
     val routePath: String = "/api/ocr",
     val multipartFieldName: String = "file",
     val maxInputBytes: Long = 10L * 1024L * 1024L,
+    val maxInputPixels: Long = 16_777_216L,
+    val maxInputSide: Int = 8_192,
     val defaultLanguages: String = OcrOptions.DEFAULT_LANGUAGE,
     val tessdataPath: String? = null,
 ) : java.io.Serializable {
@@ -98,6 +101,8 @@ data class KtorOcrApiConfig(
         routePath.requireNotBlank("routePath")
         multipartFieldName.requireNotBlank("multipartFieldName")
         maxInputBytes.requirePositiveNumber("maxInputBytes")
+        maxInputPixels.requirePositiveNumber("maxInputPixels")
+        maxInputSide.requirePositiveNumber("maxInputSide")
         defaultLanguages.requireNotBlank("defaultLanguages")
         tessdataPath?.requireNotBlank("tessdataPath")
     }
@@ -202,6 +207,9 @@ private suspend fun ApplicationCall.receiveOcrUpload(config: KtorOcrApiConfig): 
                 require(bytes.isNotEmpty()) {
                     "OCR upload must not be empty."
                 }
+                probeImageDimensions(bytes)
+                    ?.requireMaxPixels(config.maxInputPixels, "OCR upload")
+                    ?.requireMaxSide(config.maxInputSide, "OCR upload")
 
                 return OcrUpload(bytes)
             }

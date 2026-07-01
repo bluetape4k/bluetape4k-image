@@ -11,6 +11,7 @@ uploads with `bluetape4k-images-ocr`.
 - Tesseract language parsing from `languages=eng`, `eng+kor`, or `eng,kor`
 - `ImmutableImage.suspendExtractText` wiring through an injectable `OcrEngine`
 - Optional `example.ocr.tessdata-path` configuration for host traineddata
+- Separate compressed-byte and decoded-pixel upload limits before OCR work
 - Error mapping for request validation and unavailable native OCR runtime
 - Controller tests with a fake `OcrEngine`, so normal CI does not require
   Tesseract
@@ -54,10 +55,16 @@ that starts the application or configure:
 ```yaml
 example:
   ocr:
+    max-input-bytes: 10485760
+    max-input-pixels: 16777216
+    max-input-side: 8192
     tessdata-path: /opt/homebrew/share/tessdata
 ```
 
 The endpoint intentionally does not accept a request-level tessdata path.
+It rejects decoded image headers above `example.ocr.max-input-pixels` before
+or `example.ocr.max-input-side` before creating an `ImmutableImage` or invoking
+OCR.
 
 ## Run
 
@@ -96,5 +103,5 @@ curl -F "file=@sample-ko.png;type=image/png" \
 ```
 
 The tests use MockMvc and a fake `OcrEngine`. They verify multipart OCR
-success, language parsing, unsupported content type rejection, and native OCR
-failure mapping without requiring host Tesseract.
+success, language parsing, unsupported content type rejection, decoded-pixel
+rejection, and native OCR failure mapping without requiring host Tesseract.

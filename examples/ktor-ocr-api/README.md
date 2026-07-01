@@ -11,6 +11,7 @@ with `bluetape4k-images-ocr`.
 - Tesseract language parsing from `languages=eng`, `eng+kor`, or `eng,kor`
 - `ImmutableImage.suspendExtractText` wiring through an injectable `OcrEngine`
 - Optional `EXAMPLE_OCR_TESSDATA_PATH` environment configuration for host traineddata
+- Separate compressed-byte and decoded-pixel upload limits before OCR work
 - Error mapping for request validation and unavailable native OCR runtime
 - Route tests with a fake `OcrEngine`, so normal CI does not require Tesseract
 
@@ -56,6 +57,10 @@ export EXAMPLE_OCR_TESSDATA_PATH=/opt/homebrew/share/tessdata
 
 The endpoint intentionally does not accept a request-level tessdata path.
 
+The quickstart rejects uploads above 10 MiB and rejects decoded image headers
+above 16,777,216 pixels or 8,192 pixels on either side before creating an
+`ImmutableImage` or invoking OCR.
+
 ## Run
 
 ```bash
@@ -100,5 +105,5 @@ curl -F "file=@sample-ko.png;type=image/png" \
 
 The tests use Ktor `testApplication` and a fake `OcrEngine`. They verify
 multipart OCR success, language parsing, missing multipart field rejection,
-unsupported content type rejection, and native OCR failure mapping without
-requiring host Tesseract.
+unsupported content type rejection, decoded-pixel rejection, and native OCR
+failure mapping without requiring host Tesseract.

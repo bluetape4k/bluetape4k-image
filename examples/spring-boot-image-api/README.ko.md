@@ -9,6 +9,7 @@ filesystem-backed storage를 실행해 보는 작은 Spring Boot 4 예제입니�
 
 - `bluetape4k-images-spring-boot`의 `LocalImageStorage` auto-configuration
 - shared `UploadOptions` content-type allowlist 기반 multipart upload validation
+- thumbnail 작업 전 압축 byte 크기와 decoded pixel 수를 분리해서 제한
 - 원본 이미지를 `originals/` 아래에 저장
 - `bluetape4k-images`로 PNG thumbnail 생성
 - 저장된 원본과 thumbnail에 대한 local read URL 반환
@@ -73,6 +74,12 @@ curl -o thumbnail.png "http://localhost:8080/api/images/thumbnails/AbCdEf123456.
 기본 예제는 아래 경로에 파일을 저장합니다.
 
 ```yaml
+example:
+  image:
+    max-input-bytes: 10485760
+    max-input-pixels: 16777216
+    max-input-side: 8192
+
 bluetape4k:
   images:
     storage:
@@ -81,6 +88,10 @@ bluetape4k:
       local:
         root-dir: build/tmp/spring-boot-image-api/storage
 ```
+
+`example.image.max-input-bytes`는 storage 전 압축 request bytes를 제한합니다.
+`example.image.max-input-pixels`와 `example.image.max-input-side`는 thumbnail
+생성을 시작하기 전에 header 기준 decoded image 면적과 width/height를 제한합니다.
 
 이 quickstart는 S3와 CDN 설정을 기본 흐름에서 제외합니다. S3 전환은 bucket,
 credential, public URL, 운영 정책 결정이 필요하므로 advanced workshop 범위가 더
@@ -93,4 +104,5 @@ credential, public URL, 운영 정책 결정이 필요하므로 advanced worksho
 ```
 
 테스트는 in-memory JPEG를 업로드하고, 원본과 thumbnail storage key, local URL
-다운로드, PNG thumbnail bytes, unsupported content type rejection을 검증합니다.
+다운로드, PNG thumbnail bytes, unsupported content type rejection, decoded-pixel
+overflow rejection을 검증합니다.

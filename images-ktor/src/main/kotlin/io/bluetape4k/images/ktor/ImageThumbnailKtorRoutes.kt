@@ -3,6 +3,7 @@ package io.bluetape4k.images.ktor
 import com.sksamuel.scrimage.nio.ImageWriter
 import com.sksamuel.scrimage.nio.PngWriter
 import io.bluetape4k.images.immutableImageOf
+import io.bluetape4k.images.probeImageDimensions
 import io.bluetape4k.images.toByteArray
 import io.bluetape4k.ktor.core.ApiErrorResponse
 import io.bluetape4k.ktor.core.intQueryParameter
@@ -28,6 +29,8 @@ import java.io.IOException
 private const val DEFAULT_IMAGE_ROUTE = "/images"
 private const val DEFAULT_IMAGE_FIELD = "file"
 private const val DEFAULT_MAX_INPUT_BYTES = 10 * 1024 * 1024
+private const val DEFAULT_MAX_INPUT_PIXELS = 16_777_216L
+private const val DEFAULT_MAX_INPUT_SIDE = 8_192
 private const val DEFAULT_THUMBNAIL_SIDE = 320
 private const val DEFAULT_MAX_THUMBNAIL_SIDE = 2_048
 
@@ -43,6 +46,8 @@ class ImageThumbnailKtorRoutesConfig(
     val routePath: String = DEFAULT_IMAGE_ROUTE,
     val multipartFieldName: String = DEFAULT_IMAGE_FIELD,
     val maxInputBytes: Long = DEFAULT_MAX_INPUT_BYTES.toLong(),
+    val maxInputPixels: Long = DEFAULT_MAX_INPUT_PIXELS,
+    val maxInputSide: Int = DEFAULT_MAX_INPUT_SIDE,
     val defaultMaxSide: Int = DEFAULT_THUMBNAIL_SIDE,
     val maxAllowedSide: Int = DEFAULT_MAX_THUMBNAIL_SIDE,
     val writer: ImageWriter = PngWriter.MaxCompression,
@@ -53,6 +58,8 @@ class ImageThumbnailKtorRoutesConfig(
         routePath.requireNotBlank("routePath")
         multipartFieldName.requireNotBlank("multipartFieldName")
         maxInputBytes.requirePositiveNumber("maxInputBytes")
+        maxInputPixels.requirePositiveNumber("maxInputPixels")
+        maxInputSide.requirePositiveNumber("maxInputSide")
         defaultMaxSide.requirePositiveNumber("defaultMaxSide")
         maxAllowedSide.requirePositiveNumber("maxAllowedSide")
         require(defaultMaxSide <= maxAllowedSide) {
@@ -122,6 +129,9 @@ private suspend fun ApplicationCall.receiveImageUpload(config: ImageThumbnailKto
                 require(bytes.isNotEmpty()) {
                     "Image upload must not be empty."
                 }
+                probeImageDimensions(bytes)
+                    ?.requireMaxPixels(config.maxInputPixels, "Image upload")
+                    ?.requireMaxSide(config.maxInputSide, "Image upload")
                 return bytes
             }
             if (part is PartData.FileItem || part is PartData.BinaryItem || part is PartData.BinaryChannelItem) {

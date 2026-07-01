@@ -9,6 +9,7 @@ filesystem-backed storage with `bluetape4k-images-spring-boot`.
 
 - `LocalImageStorage` auto-configuration through `bluetape4k-images-spring-boot`
 - Multipart upload validation through the shared `UploadOptions` content-type allowlist
+- Separate compressed-byte and decoded-pixel upload limits before thumbnail work
 - Original image storage under `originals/`
 - PNG thumbnail generation with `bluetape4k-images`
 - Local read URLs for stored original and thumbnail objects
@@ -73,6 +74,12 @@ curl -o thumbnail.png "http://localhost:8080/api/images/thumbnails/AbCdEf123456.
 The default example stores files under:
 
 ```yaml
+example:
+  image:
+    max-input-bytes: 10485760
+    max-input-pixels: 16777216
+    max-input-side: 8192
+
 bluetape4k:
   images:
     storage:
@@ -81,6 +88,11 @@ bluetape4k:
       local:
         root-dir: build/tmp/spring-boot-image-api/storage
 ```
+
+`example.image.max-input-bytes` limits compressed request bytes before storage.
+`example.image.max-input-pixels` and `example.image.max-input-side` limit
+decoded image area and width/height from the header before thumbnail generation
+starts.
 
 The quickstart intentionally keeps S3 and CDN setup out of the default path.
 Switching to S3 belongs in the advanced workshop because it requires bucket,
@@ -94,4 +106,4 @@ credentials, public URL, and operational policy decisions.
 
 The tests upload an in-memory JPEG, verify original and thumbnail storage keys,
 download both local URLs, check PNG thumbnail bytes, and reject unsupported
-content types.
+content types and decoded-pixel overflow.
