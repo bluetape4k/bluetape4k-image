@@ -4,20 +4,22 @@ import java.io.OutputStream
 import java.nio.file.Path
 
 /**
- * libvips 이미지를 나타내는 바인딩 중립(binding-neutral) 인터페이스.
+ * Binding-neutral libvips image contract.
  *
- * 이 인터페이스는 JVips(Java 21 모듈)와 vips-ffm(Java 25 모듈) 모두에서 구현됩니다.
- * 구현체는 [AutoCloseable]을 통해 네이티브 리소스를 반드시 해제해야 합니다.
+ * Implementations from both the JVips Java 21 backend and the vips-ffm Java 25 backend own native
+ * resources through [AutoCloseable]. Every image returned from a transforming operation is a new
+ * closeable instance and must be closed independently.
  *
- * **사용 예시:**
+ * **Usage example:**
  * ```kotlin
  * vipsImageOf(file).use { image ->
- *     val thumbnail = image.thumbnail(800)
- *     thumbnail.writeTo(outputPath, VipsImageFormat.WEBP)
+ *     image.thumbnail(800).use { thumbnail ->
+ *         thumbnail.writeTo(outputPath, VipsImageFormat.WEBP)
+ *     }
  * }
  * ```
  *
- * **스레드 안전성**: 구현체는 단일 스레드 전용입니다. 여러 코루틴에서 공유하지 마십시오.
+ * **Thread safety**: implementations are single-threaded and must not be shared across coroutines.
  */
 interface VipsImage : AutoCloseable {
 

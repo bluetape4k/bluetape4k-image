@@ -183,6 +183,70 @@ class FfmVipsImageTest : AbstractFfmVipsTest() {
         }
     }
 
+    @Test
+    fun `derived image remains usable after source closes`() {
+        val bytes = VipsTestFixtures.loadFixture(VipsTestFixtures.SAMPLE_JPEG)
+        val source = ffmVipsImageOf(bytes)
+        val derived = source.thumbnail(300)
+
+        source.close()
+
+        derived.use { thumb ->
+            maxOf(thumb.width, thumb.height) shouldBeLessOrEqualTo 300
+            val output = thumb.toBytes(VipsImageFormat.JPEG)
+            output.size shouldBeGreaterThan 0
+            output.startsWith(JPEG_MAGIC).shouldBeTrue()
+        }
+    }
+
+    @Test
+    fun `resized image remains usable after source closes`() {
+        val bytes = VipsTestFixtures.loadFixture(VipsTestFixtures.SAMPLE_JPEG)
+        val source = ffmVipsImageOf(bytes)
+        val derived = source.resize(800, 600)
+
+        source.close()
+
+        derived.use { resized ->
+            resized.width shouldBeLessOrEqualTo 800
+            resized.height shouldBeLessOrEqualTo 600
+            val output = resized.toBytes(VipsImageFormat.JPEG)
+            output.size shouldBeGreaterThan 0
+            output.startsWith(JPEG_MAGIC).shouldBeTrue()
+        }
+    }
+
+    @Test
+    fun `cropped image remains usable after source closes`() {
+        val bytes = VipsTestFixtures.loadFixture(VipsTestFixtures.SAMPLE_JPEG)
+        val source = ffmVipsImageOf(bytes)
+        val derived = source.crop(0, 0, 100, 100)
+
+        source.close()
+
+        derived.use { cropped ->
+            cropped.width shouldBeEqualTo 100
+            cropped.height shouldBeEqualTo 100
+            val output = cropped.toBytes(VipsImageFormat.JPEG)
+            output.size shouldBeGreaterThan 0
+            output.startsWith(JPEG_MAGIC).shouldBeTrue()
+        }
+    }
+
+    @Test
+    fun `closing derived image does not close source image`() {
+        val bytes = VipsTestFixtures.loadFixture(VipsTestFixtures.SAMPLE_JPEG)
+        ffmVipsImageOf(bytes).use { source ->
+            val derived = source.crop(0, 0, 100, 100)
+
+            derived.close()
+
+            val output = source.toBytes(VipsImageFormat.JPEG)
+            output.size shouldBeGreaterThan 0
+            output.startsWith(JPEG_MAGIC).shouldBeTrue()
+        }
+    }
+
     // ─── 11: writeTo Path ─────────────────────────────────────────────────
 
     @Test
