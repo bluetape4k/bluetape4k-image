@@ -68,6 +68,7 @@ AVIF·HEIC는 incubating 인터페이스로 제공되며, libvips 지원은 `ima
 | `analysis/DominantColor.kt`                          | 대표 색상 추출 — `dominantColor()`, `dominantColors()` |
 | `analysis/BlurDetector.kt`                           | 블러 감지 — `blurScore()`, `isBlurry()` |
 | `analysis/ExifData.kt`                               | EXIF 파싱 — `readExif()`, GPS PII 제거 |
+| `moderation/SensitiveContentModels.kt`               | 백엔드 중립 민감 콘텐츠 감지 결과 모델 |
 | `similarity/ImageSimilarity.kt`                      | 핵심 유사도: 픽셀 Δ, MSE, PSNR, 전역 SSIM, pHash |
 | `similarity/MssimSimilarity.kt`                      | MSSIM — 슬라이딩 윈도우 Gaussian SSIM            |
 | `similarity/HashSimilarity.kt`                       | aHash/dHash/wHash/phashOf (64/256/1024bit), HashDistance |
@@ -994,6 +995,50 @@ val asyncExif: ExifData = File("photo.jpg").suspendReadExif()
 | `analysis/MedianCutQuantizer.kt`        | Median Cut quantization 엔진 (5-bit/channel)     |
 | `analysis/BlurDetector.kt`              | `BlurScore` + Laplacian variance 계산             |
 | `analysis/ExifData.kt`                  | `ExifData` 모델 + `readExif()` 진입점            |
+
+### 민감 콘텐츠 감지 결과 모델
+
+`bluetape4k-images`는 민감 콘텐츠 감지 결과를 표현하는 백엔드 중립 모델만 제공합니다. detector runtime, 모델 가중치, redaction renderer, policy engine, mosaic/blur/reject 같은 처리 action은 포함하지 않습니다.
+
+```kotlin
+import io.bluetape4k.images.moderation.*
+
+val detection = SensitiveContentDetection(
+    label = "explicit-nudity",
+    category = SensitiveContentCategory.EXPLICIT_NUDITY,
+    severity = SensitiveContentSeverity.HIGH,
+    confidence = 0.94,
+    sourceBackend = "custom-detector",
+    rawBackendLabel = "nsfw_explicit",
+    policyReason = "adult-content",
+    region = SensitiveRegion(
+        geometry = SensitiveRegionGeometry.Rectangle(
+            x = 0.12,
+            y = 0.18,
+            width = 0.44,
+            height = 0.52,
+            coordinateSpace = SensitiveCoordinateSpace.NORMALIZED,
+        ),
+    ),
+)
+```
+
+지원 geometry:
+
+| Geometry | 용도 |
+|---|---|
+| `Rectangle` | pixel 또는 normalized 좌표의 축 정렬 박스 |
+| `Polygon` | 닫힌 영역. 첫 점을 마지막 점으로 반복해야 함 |
+| `Polyline` | 열린 경로 또는 contour |
+| `RasterMask` | 외부 mask reference 또는 raster mask metadata |
+
+검증 규칙:
+
+- `confidence`는 항상 `0.0..1.0` 범위입니다.
+- normalized 좌표는 `0.0..1.0` 안에 있어야 합니다.
+- pixel 좌표는 음수가 될 수 없고, `ImageDimensions`와 `requireWithin(...)`으로 이미지 경계 검증을 할 수 있습니다.
+- detector adapter는 원본 backend label을 `rawBackendLabel`에 보존하면서 안정적인 `SensitiveContentCategory`로 매핑해야 합니다.
+- false negative, confidence threshold, policy mapping은 호출자 정책의 책임으로 남습니다.
 
 ## 테스트 & 품질
 
