@@ -70,7 +70,10 @@ bluetape4k:
 
 #### S3
 
-`bluetape4k-aws-spring-boot` 의존성과 `S3Operations` 빈 필요.
+`bluetape4k-aws-spring-boot` 의존성과 해당 모듈이 제공하는 `S3Operations`
+빈이 필요합니다. `backend=s3`로 설정했는데 `S3Operations` 빈이 없으면 로컬
+파일시스템으로 조용히 대체하지 않고 시작 단계에서 실패합니다. 애플리케이션이
+S3 저장소 구현을 의도적으로 대체하려면 별도의 `ImageStorage` 빈을 제공하세요.
 
 ```yaml
 bluetape4k.images.storage:

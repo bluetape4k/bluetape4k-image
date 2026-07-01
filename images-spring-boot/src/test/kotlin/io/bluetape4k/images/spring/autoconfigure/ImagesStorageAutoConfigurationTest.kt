@@ -4,16 +4,23 @@ import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeInstanceOf
 import io.bluetape4k.assertions.shouldBeSameInstanceAs
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldContain
+import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.aws.spring.s3.S3Operations
 import io.bluetape4k.images.spring.storage.ImageStorage
 import io.bluetape4k.images.spring.storage.LocalImageStorage
 import io.bluetape4k.images.spring.storage.s3.S3ImageStorage
+import io.mockk.clearMocks
 import io.mockk.mockk
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.boot.autoconfigure.AutoConfigurations
 import org.springframework.boot.test.context.runner.ApplicationContextRunner
 
 class ImagesStorageAutoConfigurationTest {
+
+    private val customStorage = mockk<ImageStorage>(relaxed = true)
+    private val operations = mockk<S3Operations>(relaxed = true)
 
     private val contextRunner = ApplicationContextRunner()
         .withConfiguration(
@@ -22,6 +29,11 @@ class ImagesStorageAutoConfigurationTest {
                 ImagesStorageAutoConfiguration::class.java,
             )
         )
+
+    @BeforeEach
+    fun setUp() {
+        clearMocks(customStorage, operations)
+    }
 
     @Test
     fun `registers LocalImageStorage by default`() {
@@ -54,7 +66,6 @@ class ImagesStorageAutoConfigurationTest {
 
     @Test
     fun `user-provided ImageStorage bean takes precedence`() {
-        val customStorage = mockk<ImageStorage>(relaxed = true)
         contextRunner
             .withBean(ImageStorage::class.java, { customStorage })
             .run { ctx ->
@@ -64,22 +75,21 @@ class ImagesStorageAutoConfigurationTest {
     }
 
     @Test
-    fun `s3 backend falls back to local storage when S3Operations bean is absent`() {
+    fun `s3 backend fails fast when S3Operations bean is absent`() {
         contextRunner
             .withPropertyValues(
                 "bluetape4k.images.storage.backend=s3",
                 "bluetape4k.images.storage.bucket=images",
             )
             .run { ctx ->
-                ctx.getBeanNamesForType(ImageStorage::class.java).size shouldBeEqualTo 1
-                ctx.getBean(ImageStorage::class.java) shouldBeInstanceOf LocalImageStorage::class
+                val failure = ctx.startupFailure.shouldNotBeNull()
+                rootCauseMessage(failure) shouldContain "S3Operations"
+                rootCauseMessage(failure) shouldContain "bluetape4k.images.storage.backend=s3"
             }
     }
 
     @Test
     fun `s3 backend creates S3 storage when S3Operations bean and bucket are present`() {
-        val operations = mockk<S3Operations>(relaxed = true)
-
         contextRunner
             .withBean(S3Operations::class.java, { operations })
             .withPropertyValues(
@@ -94,8 +104,6 @@ class ImagesStorageAutoConfigurationTest {
 
     @Test
     fun `user-provided ImageStorage backs off s3 storage even when bucket is absent`() {
-        val customStorage = mockk<ImageStorage>(relaxed = true)
-
         contextRunner
             .withBean(ImageStorage::class.java, { customStorage })
             .withPropertyValues("bluetape4k.images.storage.backend=s3")
@@ -123,5 +131,12 @@ class ImagesStorageAutoConfigurationTest {
                 val props = ctx.getBean(ImageStorageProperties::class.java)
                 props.maxSizeBytes shouldBeEqualTo 1_048_576L
             }
+    }
+
+    private fun rootCauseMessage(error: Throwable): String {
+        var current = error
+        while (true) {
+            current = current.cause ?: return current.message.orEmpty()
+        }
     }
 }
