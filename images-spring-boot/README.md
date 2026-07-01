@@ -71,7 +71,11 @@ Path traversal is prevented — `ImageObjectKey` rejects `..` segments.
 
 #### S3
 
-Requires `bluetape4k-aws-spring-boot` dependency and an `S3Operations` bean (provided by that module).
+Requires `bluetape4k-aws-spring-boot` dependency and an `S3Operations` bean
+provided by that module. When `backend=s3` is configured and no `S3Operations`
+bean exists, startup fails instead of silently falling back to local filesystem
+storage. Provide a custom `ImageStorage` bean if an application intentionally
+replaces the S3 storage implementation.
 
 ```yaml
 bluetape4k.images.storage:

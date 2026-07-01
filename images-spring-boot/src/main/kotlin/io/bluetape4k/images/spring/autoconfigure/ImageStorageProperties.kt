@@ -10,7 +10,10 @@ import java.time.Duration
  * ## Behavior
  * - Bound to the `bluetape4k.images.storage` prefix.
  * - When [backend] is [Backend.S3], [bucket] must be non-null and non-blank; validation is enforced
- *   by `ImagesStorageAutoConfiguration.S3StorageConfiguration` via `@PostConstruct`.
+ *   by `ImagesStorageAutoConfiguration.S3StorageConfiguration`.
+ * - When [backend] is [Backend.S3], an `io.bluetape4k.aws.spring.s3.S3Operations` bean must be
+ *   available unless the application provides its own
+ *   [io.bluetape4k.images.spring.storage.ImageStorage] bean.
  * - [maxSizeBytes] applies to both upload and download; exceeded sizes raise
  *   [io.bluetape4k.images.spring.ImageStorageException.ValidationException].
  * - [healthProbeKey] is the object name used by the health indicator to probe storage availability.
