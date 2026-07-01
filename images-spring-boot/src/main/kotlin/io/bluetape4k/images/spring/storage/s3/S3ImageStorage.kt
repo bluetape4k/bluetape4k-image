@@ -36,7 +36,9 @@ import java.time.Instant
  * - [bucket] resolves once at construction from [ImageStorageProperties.bucket]; absence or blank
  *   value raises [IllegalArgumentException].
  * - Upload is rejected (with [ImageStorageException.ValidationException]) when the payload size
- *   exceeds [ImageStorageProperties.maxSizeBytes]. Download performs a list-based size pre-check.
+ *   exceeds [ImageStorageProperties.maxSizeBytes]. Download fails closed when the object size
+ *   cannot be verified before download, then checks the downloaded byte count again before
+ *   returning bytes or writing a destination file.
  * - SDK timeout/retry knobs from [ImageStorageProperties.S3] are intended to be applied at the
  *   `S3Client` construction site (see [toClientOverrideConfig]); the current [S3Operations] API does
  *   not expose a per-request override hook, so this class does not pass override config at call time.
@@ -159,17 +161,11 @@ class S3ImageStorage(
     }
 
     override suspend fun download(key: ImageObjectKey): ByteArray = withContext(Dispatchers.IO) {
-        // Best-effort size pre-check via listPage(prefix=fullKey, maxKeys=1) — S3Operations exposes
-        // no HEAD API. If the object is absent at list time, downloadBytes will surface the real error.
-        val preCheckedSize = headSizeOrNull(key)
-        if (preCheckedSize != null && preCheckedSize > properties.maxSizeBytes) {
-            throw ImageStorageException.ValidationException(
-                key = key,
-                message = "Object exceeds maxSizeBytes (${properties.maxSizeBytes}): $preCheckedSize",
-            )
-        }
+        validateDownloadSize(key, verifiedObjectSize(key))
         try {
-            operations.downloadBytes(bucket = bucket, key = objectKey(key))
+            val bytes = operations.downloadBytes(bucket = bucket, key = objectKey(key))
+            validateDownloadSize(key, bytes.size.toLong())
+            bytes
         } catch (e: CancellationException) {
             throw e
         } catch (e: Throwable) {
@@ -247,21 +243,31 @@ class S3ImageStorage(
         }
     }.flowOn(Dispatchers.IO)
 
-    /**
-     * Best-effort lookup of the object size at [key] using `listPage`. Returns `null` when the size
-     * cannot be determined; this method never throws (except for [CancellationException]) — the
-     * downstream `downloadBytes` will surface the real error if the object is truly missing.
-     */
-    private suspend fun headSizeOrNull(key: ImageObjectKey): Long? {
+    /** Verifies object size through `listPage` before starting a byte-array download. */
+    private suspend fun verifiedObjectSize(key: ImageObjectKey): Long {
         val fullKey = objectKey(key)
         return try {
             val page = operations.listPage(bucket = bucket, prefix = fullKey, maxKeys = 1)
             page.objects.firstOrNull { it.key() == fullKey }?.size()
+                ?: throw ImageStorageException.NotFoundException(
+                    key = key,
+                    message = "Image not found during size pre-check: ${key.fullKey}",
+                )
         } catch (e: CancellationException) {
             throw e
         } catch (e: Throwable) {
-            log.debug(e) { "Size pre-check failed for ${key.fullKey}; deferring to download" }
-            null
+            log.debug(e) { "Size pre-check failed for ${key.fullKey}; failing closed" }
+            throw e.toImageStorageException(key)
+        }
+    }
+
+    /** Enforces [ImageStorageProperties.maxSizeBytes] before and after S3 byte-array downloads. */
+    private fun validateDownloadSize(key: ImageObjectKey, size: Long) {
+        if (size > properties.maxSizeBytes) {
+            throw ImageStorageException.ValidationException(
+                key = key,
+                message = "Object exceeds maxSizeBytes (${properties.maxSizeBytes}): $size",
+            )
         }
     }
 
