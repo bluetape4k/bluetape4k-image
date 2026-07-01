@@ -11,6 +11,7 @@
 - `languages=eng`, `eng+kor`, `eng,kor` 형식의 Tesseract language parsing
 - 주입 가능한 `OcrEngine`을 통한 `ImmutableImage.suspendExtractText` 연결
 - host traineddata 위치를 위한 선택적 `EXAMPLE_OCR_TESSDATA_PATH` 환경 설정
+- OCR 작업 전 압축 byte 크기와 decoded pixel 수를 분리해서 제한
 - request validation과 native OCR runtime unavailable 상황의 error mapping
 - normal CI가 Tesseract를 요구하지 않도록 fake `OcrEngine`을 쓰는 route test
 
@@ -56,6 +57,10 @@ export EXAMPLE_OCR_TESSDATA_PATH=/opt/homebrew/share/tessdata
 
 Endpoint는 request-level tessdata path를 받지 않도록 의도적으로 제한되어 있습니다.
 
+이 quickstart는 10 MiB를 넘는 upload를 거부하고, `ImmutableImage` 생성이나 OCR
+호출 전에 image header 기준 16,777,216 pixel 또는 한 변 8,192 pixel을 넘는
+decoded image를 거부합니다.
+
 ## 실행
 
 ```bash
@@ -100,4 +105,5 @@ curl -F "file=@sample-ko.png;type=image/png" \
 
 테스트는 Ktor `testApplication`과 fake `OcrEngine`을 사용합니다. Host Tesseract 없이
 multipart OCR success, language parsing, missing multipart field rejection,
-unsupported content type rejection, native OCR failure mapping을 검증합니다.
+unsupported content type rejection, decoded-pixel rejection, native OCR failure
+mapping을 검증합니다.

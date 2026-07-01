@@ -11,6 +11,7 @@ Spring Boot 4 예제입니다.
 - `languages=eng`, `eng+kor`, `eng,kor` 형식의 Tesseract language parsing
 - 주입 가능한 `OcrEngine`을 통한 `ImmutableImage.suspendExtractText` wiring
 - host traineddata 위치를 위한 optional `example.ocr.tessdata-path` 설정
+- OCR 작업 전 압축 byte 크기와 decoded pixel 수를 분리해서 제한
 - request validation과 native OCR runtime unavailable 오류 매핑
 - 일반 CI에서 Tesseract 없이 실행되는 fake `OcrEngine` 기반 controller test
 
@@ -53,10 +54,15 @@ Tesseract가 traineddata를 찾지 못하면 application을 시작하는 shell�
 ```yaml
 example:
   ocr:
+    max-input-bytes: 10485760
+    max-input-pixels: 16777216
+    max-input-side: 8192
     tessdata-path: /opt/homebrew/share/tessdata
 ```
 
 Endpoint는 request-level tessdata path를 받지 않습니다.
+`ImmutableImage` 생성이나 OCR 호출 전에 `example.ocr.max-input-pixels` 또는
+`example.ocr.max-input-side`를 넘는 decoded image header를 거부합니다.
 
 ## 실행
 
@@ -95,5 +101,5 @@ curl -F "file=@sample-ko.png;type=image/png" \
 ```
 
 테스트는 MockMvc와 fake `OcrEngine`을 사용합니다. Host Tesseract 없이 multipart
-OCR success, language parsing, unsupported content type rejection, native OCR
-failure mapping을 검증합니다.
+OCR success, language parsing, unsupported content type rejection, decoded-pixel
+rejection, native OCR failure mapping을 검증합니다.

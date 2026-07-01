@@ -99,6 +99,8 @@ routing {
             routePath = "/media",
             multipartFieldName = "upload",
             maxInputBytes = 5 * 1024 * 1024,
+            maxInputPixels = 16_777_216,
+            maxInputSide = 8_192,
             defaultMaxSide = 256,
             maxAllowedSide = 1024,
         )
@@ -114,6 +116,10 @@ routing {
     )
 }
 ```
+
+`maxInputBytes` limits compressed upload size, while `maxInputPixels` and
+`maxInputSide` limit decoded image area and width/height from the image header
+before thumbnail generation starts.
 
 The thumbnail helper is pure JVM and local-only. Compose persistence, S3/CDN
 URLs, authorization, and native libvips acceleration outside this route when an

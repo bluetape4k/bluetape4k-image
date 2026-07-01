@@ -2,7 +2,9 @@ package io.bluetape4k.images.examples.ktor.ocr
 
 import com.sksamuel.scrimage.ImmutableImage
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeNull
 import io.bluetape4k.assertions.shouldBeGreaterThan
+import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.images.ocr.OcrEngine
 import io.bluetape4k.images.ocr.OcrException
@@ -27,6 +29,7 @@ import java.awt.Color
 import java.awt.Font
 import java.awt.image.BufferedImage
 import java.io.ByteArrayOutputStream
+import java.util.zip.CRC32
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
 import javax.imageio.ImageIO
@@ -119,6 +122,24 @@ internal class KtorOcrApiApplicationTest {
     }
 
     @Test
+    fun `rejects decoded pixel limit before OCR engine is called`() = testApplication {
+        application {
+            configureTestKtorOcrApi()
+        }
+        val client = jsonClient()
+
+        val response = client.post("/api/ocr") {
+            setBody(imageMultipart("file", pngHeaderBytes(width = 10_000, height = 10_000), ContentType.Image.PNG))
+        }
+
+        response.status shouldBeEqualTo HttpStatusCode.BadRequest
+        val body = response.body<OcrApiErrorResponse>()
+        body.error shouldBeEqualTo "bad_request"
+        body.message shouldContain "decodedPixels"
+        testOcrEngine.lastOptions.get().shouldBeNull()
+    }
+
+    @Test
     fun `maps OCR failures to service unavailable`() = testApplication {
         application {
             configureTestKtorOcrApi()
@@ -188,6 +209,48 @@ internal class KtorOcrApiApplicationTest {
         }
     }
 
+    private fun pngHeaderBytes(width: Int, height: Int): ByteArray {
+        val output = ByteArrayOutputStream()
+        output.write(PNG_SIGNATURE)
+        output.writePngChunk(
+            type = "IHDR",
+            data = ByteArray(13).also { data ->
+                data.writeInt(0, width)
+                data.writeInt(4, height)
+                data[8] = 8
+                data[9] = 2
+            }
+        )
+        output.writePngChunk(type = "IEND", data = ByteArray(0))
+        return output.toByteArray()
+    }
+
+    private fun ByteArray.writeInt(offset: Int, value: Int) {
+        this[offset] = (value ushr 24).toByte()
+        this[offset + 1] = (value ushr 16).toByte()
+        this[offset + 2] = (value ushr 8).toByte()
+        this[offset + 3] = value.toByte()
+    }
+
+    private fun ByteArrayOutputStream.writePngChunk(type: String, data: ByteArray) {
+        writeInt(data.size)
+        val typeBytes = type.toByteArray(Charsets.US_ASCII)
+        write(typeBytes)
+        write(data)
+
+        val crc = CRC32()
+        crc.update(typeBytes)
+        crc.update(data)
+        writeInt(crc.value.toInt())
+    }
+
+    private fun ByteArrayOutputStream.writeInt(value: Int) {
+        write((value ushr 24) and 0xFF)
+        write((value ushr 16) and 0xFF)
+        write((value ushr 8) and 0xFF)
+        write(value and 0xFF)
+    }
+
     private class TestOcrEngine : OcrEngine {
 
         val lastOptions: AtomicReference<OcrOptions?> = AtomicReference()
@@ -209,5 +272,18 @@ internal class KtorOcrApiApplicationTest {
                 options = options,
             )
         }
+    }
+
+    private companion object {
+        val PNG_SIGNATURE = byteArrayOf(
+            0x89.toByte(),
+            0x50,
+            0x4E,
+            0x47,
+            0x0D,
+            0x0A,
+            0x1A,
+            0x0A,
+        )
     }
 }

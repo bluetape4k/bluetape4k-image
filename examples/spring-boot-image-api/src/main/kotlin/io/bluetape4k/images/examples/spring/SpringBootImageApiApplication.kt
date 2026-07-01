@@ -3,6 +3,7 @@ package io.bluetape4k.images.examples.spring
 import com.sksamuel.scrimage.nio.PngWriter
 import io.bluetape4k.codec.Base58
 import io.bluetape4k.images.immutableImageOf
+import io.bluetape4k.images.probeImageDimensions
 import io.bluetape4k.images.spring.ImageObjectKey
 import io.bluetape4k.images.spring.UploadOptions
 import io.bluetape4k.images.spring.storage.ImageStorage
@@ -80,6 +81,7 @@ class ImageApiController(
  */
 class LocalImageApiService(
     private val storage: ImageStorage,
+    private val properties: ImageApiProperties,
 ) {
 
     suspend fun upload(file: MultipartFile, maxSide: Int): ImageUploadResponse {
@@ -94,6 +96,13 @@ class LocalImageApiService(
         }
 
         val uploadBytes = withContext(Dispatchers.IO) { file.bytes }
+        require(uploadBytes.size <= properties.maxInputBytes) {
+            "Image upload exceeds maxInputBytes=${properties.maxInputBytes}."
+        }
+        probeImageDimensions(uploadBytes)
+            ?.requireMaxPixels(properties.maxInputPixels, "Image upload")
+            ?.requireMaxSide(properties.maxInputSide, "Image upload")
+
         val image = immutableImageOf(uploadBytes)
         val thumbnailBytes = withContext(Dispatchers.Default) {
             image.fit(maxSide, maxSide)

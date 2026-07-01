@@ -6,7 +6,9 @@ import io.bluetape4k.images.ocr.OcrException
 import io.bluetape4k.images.ocr.OcrOptions
 import io.bluetape4k.images.ocr.TesseractOcrEngine
 import io.bluetape4k.images.ocr.suspendExtractText
+import io.bluetape4k.images.probeImageDimensions
 import io.bluetape4k.support.requireNotBlank
+import io.bluetape4k.support.requirePositiveNumber
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.springframework.boot.autoconfigure.SpringBootApplication
@@ -41,8 +43,17 @@ class SpringBootOcrApiApplication
  */
 @ConfigurationProperties(prefix = "example.ocr")
 data class ExampleOcrProperties(
+    val maxInputBytes: Long = 10L * 1024L * 1024L,
+    val maxInputPixels: Long = 16_777_216L,
+    val maxInputSide: Int = 8_192,
     val tessdataPath: String? = null,
 ) : Serializable {
+
+    init {
+        maxInputBytes.requirePositiveNumber("maxInputBytes")
+        maxInputPixels.requirePositiveNumber("maxInputPixels")
+        maxInputSide.requirePositiveNumber("maxInputSide")
+    }
 
     private companion object {
         private const val serialVersionUID: Long = 1L
@@ -67,7 +78,7 @@ class OcrApiConfiguration {
     ): SpringBootOcrService =
         SpringBootOcrService(
             ocrEngine = ocrEngine,
-            tessdataPath = properties.tessdataPath,
+            properties = properties,
         )
 }
 
@@ -111,7 +122,7 @@ class OcrApiController(
  */
 class SpringBootOcrService(
     private val ocrEngine: OcrEngine,
-    private val tessdataPath: String?,
+    private val properties: ExampleOcrProperties,
 ) {
 
     suspend fun recognize(file: MultipartFile, languages: String): OcrTextResponse {
@@ -126,10 +137,17 @@ class SpringBootOcrService(
 
         val parsedLanguages = parseLanguages(languages)
         val uploadBytes = withContext(Dispatchers.IO) { file.bytes }
+        require(uploadBytes.size <= properties.maxInputBytes) {
+            "OCR upload exceeds maxInputBytes=${properties.maxInputBytes}."
+        }
+        probeImageDimensions(uploadBytes)
+            ?.requireMaxPixels(properties.maxInputPixels, "OCR upload")
+            ?.requireMaxSide(properties.maxInputSide, "OCR upload")
+
         val text = immutableImageOf(uploadBytes).suspendExtractText(
             options = OcrOptions(
                 languages = parsedLanguages,
-                tessdataPath = tessdataPath?.takeIf { it.isNotBlank() },
+                tessdataPath = properties.tessdataPath?.takeIf { it.isNotBlank() },
             ),
             engine = ocrEngine,
         )

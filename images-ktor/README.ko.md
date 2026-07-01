@@ -98,6 +98,8 @@ routing {
             routePath = "/media",
             multipartFieldName = "upload",
             maxInputBytes = 5 * 1024 * 1024,
+            maxInputPixels = 16_777_216,
+            maxInputSide = 8_192,
             defaultMaxSide = 256,
             maxAllowedSide = 1024,
         )
@@ -113,6 +115,10 @@ routing {
     )
 }
 ```
+
+`maxInputBytes`는 압축된 upload 크기를 제한하고, `maxInputPixels`와
+`maxInputSide`는 thumbnail 생성을 시작하기 전에 image header에서 읽은 decoded
+image 면적과 width/height를 제한합니다.
 
 썸네일 helper는 순수 JVM 기반의 로컬 처리 경계만 제공합니다. persistence, S3/CDN URL,
 authorization, native libvips 가속이 필요하면 애플리케이션 레이어에서 조합하세요.

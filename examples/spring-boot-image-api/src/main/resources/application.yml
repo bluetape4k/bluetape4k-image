@@ -1,6 +1,12 @@
 server:
   port: 8080
 
+example:
+  image:
+    max-input-bytes: 10485760
+    max-input-pixels: 16777216
+    max-input-side: 8192
+
 bluetape4k:
   images:
     storage:
