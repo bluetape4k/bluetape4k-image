@@ -19,6 +19,7 @@ import io.bluetape4k.images.vips.java25.writer.FfmVipsWebpWriter
 import kotlinx.coroutines.CancellationException
 import java.io.OutputStream
 import java.lang.foreign.Arena
+import java.lang.foreign.MemorySegment
 import java.nio.file.Path
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -28,18 +29,16 @@ import java.util.concurrent.atomic.AtomicBoolean
  * 각 인스턴스는 `Arena.ofShared()`로 생성된 메모리 영역을 소유합니다.
  * `use {}` 블록 또는 `close()`로 반드시 리소스를 해제하십시오.
  *
- * vips-ffm의 연산(resize/thumbnail/crop)은 인스턴스 메서드로, 결과 VImage는 소스와 동일한 arena를 공유합니다.
- * 따라서 연산 결과 이미지는 부모 이미지보다 오래 살아서는 안 됩니다.
+ * vips-ffm의 연산(resize/thumbnail/crop)은 소스와 동일한 arena에서 결과를 만들기 때문에, 이 구현은 결과
+ * 픽셀 메모리를 새 arena로 복사해 파생 이미지도 독립적으로 닫을 수 있게 합니다.
  *
- * @param arena 이 이미지를 소유하는 Arena (ownsArena=true일 때만 close() 시 해제)
+ * @param arena 이 이미지를 소유하는 Arena
  * @param vipsImage 래핑할 vips-ffm VImage
- * @param ownsArena true(기본값)이면 close() 시 arena를 해제합니다. 연산 결과 이미지는 false.
  */
 @OptIn(IncubatingImageApi::class)
 internal class FfmVipsImage(
     private val arena: Arena,
     private val vipsImage: VImage,
-    private val ownsArena: Boolean = true,
 ) : VipsImage {
 
     private val closed = AtomicBoolean(false)
@@ -70,8 +69,9 @@ internal class FfmVipsImage(
     override fun resize(width: Int, height: Int): VipsImage {
         checkOpen()
         return try {
-            val resized = resizeWithFfm(arena, vipsImage, width, height, this.width, this.height)
-            FfmVipsImage(arena, resized, ownsArena = false)
+            ownedDerivedImage {
+                resizeWithFfm(arena, vipsImage, width, height, this.width, this.height)
+            }
         } catch (e: VipsOperationException) {
             throw e
         } catch (e: VipsDecodeException) {
@@ -84,8 +84,9 @@ internal class FfmVipsImage(
     override fun thumbnail(maxDimension: Int): VipsImage {
         checkOpen()
         return try {
-            val thumb = thumbnailWithFfm(arena, vipsImage, maxDimension)
-            FfmVipsImage(arena, thumb, ownsArena = false)
+            ownedDerivedImage {
+                thumbnailWithFfm(arena, vipsImage, maxDimension)
+            }
         } catch (e: VipsOperationException) {
             throw e
         } catch (e: VipsDecodeException) {
@@ -98,8 +99,9 @@ internal class FfmVipsImage(
     override fun crop(left: Int, top: Int, width: Int, height: Int): VipsImage {
         checkOpen()
         return try {
-            val cropped = vipsImage.extractArea(left, top, width, height)
-            FfmVipsImage(arena, cropped, ownsArena = false)
+            ownedDerivedImage {
+                vipsImage.extractArea(left, top, width, height)
+            }
         } catch (e: VipsOperationException) {
             throw e
         } catch (e: VipsDecodeException) {
@@ -154,8 +156,42 @@ internal class FfmVipsImage(
     }
 
     override fun close() {
-        if (closed.compareAndSet(false, true) && ownsArena) {
+        if (closed.compareAndSet(false, true)) {
             arena.close()
+        }
+    }
+
+    private fun ownedDerivedImage(operation: () -> VImage): VipsImage {
+        val derivedArena = Arena.ofShared()
+        return try {
+            val derived = operation()
+            val rawMemory = derived.writeToMemory()
+            val ownedMemory = derivedArena.allocate(rawMemory.byteSize())
+            MemorySegment.copy(rawMemory, 0, ownedMemory, 0, rawMemory.byteSize())
+            val bands = derived.getInt("bands")
+                ?: throw VipsDecodeException("Failed to read derived bands count")
+            val format = derived.getInt("format")
+                ?: throw VipsDecodeException("Failed to read derived pixel format")
+            val ownedImage = VImage.newFromMemory(
+                derivedArena,
+                ownedMemory,
+                derived.width,
+                derived.height,
+                bands,
+                format,
+            )
+            FfmVipsImage(derivedArena, ownedImage)
+        } catch (failure: Throwable) {
+            closeArenaAfterFailure(derivedArena, failure)
+            throw failure
+        }
+    }
+
+    private fun closeArenaAfterFailure(arena: Arena, failure: Throwable) {
+        try {
+            arena.close()
+        } catch (closeFailure: Throwable) {
+            failure.addSuppressed(closeFailure)
         }
     }
 }
