@@ -26,3 +26,10 @@ sourceSets {
 application {
     mainClass.set("io.bluetape4k.images.examples.basic.BasicImageProcessingQuickstartKt")
 }
+
+tasks.register<JavaExec>("runSensitiveWorkflow") {
+    group = "application"
+    description = "Runs the deterministic sensitive-content moderation workflow example."
+    classpath = sourceSets.main.get().runtimeClasspath
+    mainClass.set("io.bluetape4k.images.examples.basic.SensitiveContentWorkflowQuickstartKt")
+}
