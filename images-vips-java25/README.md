@@ -74,7 +74,7 @@ Without this flag, `FfmVipsRuntime.init()` will log a warning and FFM operations
 
 ```kotlin
 dependencies {
-    implementation("io.github.bluetape4k.image:bluetape4k-images-vips-java25:1.7.0")
+    implementation("io.github.bluetape4k.image:bluetape4k-images-vips-java25:<version>")
 }
 ```
 

@@ -74,7 +74,7 @@ java --enable-native-access=ALL-UNNAMED -jar myapp.jar
 
 ```kotlin
 dependencies {
-    implementation("io.github.bluetape4k.image:bluetape4k-images-vips-java25:1.7.0")
+    implementation("io.github.bluetape4k.image:bluetape4k-images-vips-java25:<version>")
 }
 ```
 
