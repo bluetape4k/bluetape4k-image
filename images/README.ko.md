@@ -70,6 +70,7 @@ AVIF·HEIC는 incubating 인터페이스로 제공되며, libvips 지원은 `ima
 | `analysis/ExifData.kt`                               | EXIF 파싱 — `readExif()`, GPS PII 제거 |
 | `moderation/SensitiveContentModels.kt`               | 백엔드 중립 민감 콘텐츠 감지 결과 모델 |
 | `moderation/SensitiveContentPolicy.kt`               | 렌더러 중립 moderation policy와 treatment decision |
+| `privacy/PrivacyDerivativePipeline.kt`               | metadata 제거, 크기 제한, redaction을 적용한 공개용 derivative 이미지 |
 | `similarity/ImageSimilarity.kt`                      | 핵심 유사도: 픽셀 Δ, MSE, PSNR, 전역 SSIM, pHash |
 | `similarity/MssimSimilarity.kt`                      | MSSIM — 슬라이딩 윈도우 Gaussian SSIM            |
 | `similarity/HashSimilarity.kt`                       | aHash/dHash/wHash/phashOf (64/256/1024bit), HashDistance |
@@ -1059,6 +1060,59 @@ val report = policy.evaluate(listOf(detection))
 - policy rule은 pixel rendering 없이 `ALLOW`, `MOSAIC`, `BLUR`, `SOLID_MASK`, `DROP`, `REJECT`, `QUARANTINE`, `MANUAL_REVIEW` action을 선택합니다.
 - 기본 policy factory는 rule에 맞지 않거나 알 수 없는 category를 `QUARANTINE`으로 fail-closed 처리합니다.
 - false negative, false positive, confidence threshold, route별 risk level은 애플리케이션 policy 책임으로 남습니다.
+
+### Privacy-safe Derivative 이미지
+
+Ktor route, Spring controller, batch job이 원본 업로드 대신 공개용 preview를 내보내야 할 때 `suspendPrivacyDerivative`를 사용하세요. 이 pipeline은 새 바이트로 다시 인코딩해 EXIF/GPS metadata를 정책적으로 제거하고, decoded pixel budget을 검사하며, 기존 thumbnail 모델로 크기를 줄이고, moderation/detection region 모델에서 넘어온 rectangle redaction을 적용할 수 있습니다.
+
+```kotlin
+import io.bluetape4k.images.*
+import io.bluetape4k.images.analysis.*
+import io.bluetape4k.images.moderation.*
+import io.bluetape4k.images.privacy.*
+import io.bluetape4k.images.thumbnail.ThumbnailSize
+import java.awt.Color
+
+// Ktor route나 Spring controller에서는 먼저 upload body를 bytes로 읽습니다.
+val image = immutableImageOf(uploadBytes)
+val exif = readExif(uploadBytes)
+
+val derivative = image.suspendPrivacyDerivative(
+    sourceExif = exif,
+    options = PrivacyDerivativeOptions(
+        stripMetadata = true,
+        removeGps = true,
+        maxPixels = 16_777_216L,
+        thumbnailSize = ThumbnailSize(width = 640, height = 480, suffix = "public"),
+        redactions = listOf(
+            PrivacyRedaction(
+                region = SensitiveRegion(
+                    geometry = SensitiveRegionGeometry.Rectangle(
+                        x = 0.10,
+                        y = 0.18,
+                        width = 0.35,
+                        height = 0.28,
+                        coordinateSpace = SensitiveCoordinateSpace.NORMALIZED,
+                    ),
+                    id = "face-1",
+                ),
+                maskColorArgb = Color.BLACK.rgb,
+            ),
+        ),
+    ),
+)
+
+// derivative.bytes를 image/jpeg로 반환하고 derivative.report를 audit용으로 저장합니다.
+```
+
+파일 batch에서는 같은 privacy policy를 유지하고, 병렬도·실패 처리·동시 처리 픽셀 압력은 `ImageProcessingOptions`로 제어하세요.
+
+```kotlin
+val results = sourcePaths.processPrivacyDerivatives(
+    privacyOptions = PrivacyDerivativeOptions(removeGps = true, stripMetadata = true),
+    processingOptions = ImageProcessingOptions(parallelism = 2, skipFailures = true),
+)
+```
 
 ## 테스트 & 품질
 

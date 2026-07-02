@@ -68,6 +68,7 @@ A library for loading, converting, resizing, splitting, and applying filters to 
 | `analysis/ExifData.kt`                         | EXIF metadata parsing — `readExif()`, GPS PII removal |
 | `moderation/SensitiveContentModels.kt`         | Backend-neutral sensitive-content detection result models |
 | `moderation/SensitiveContentPolicy.kt`         | Renderer-neutral moderation policy and treatment decisions |
+| `privacy/PrivacyDerivativePipeline.kt`         | Public-safe derivative images with metadata stripping, sizing, and redaction |
 | `similarity/ImageSimilarity.kt`                | Core similarity: pixel Δ, MSE, PSNR, global SSIM, pHash |
 | `similarity/MssimSimilarity.kt`                | MSSIM — sliding-window Gaussian SSIM                    |
 | `similarity/HashSimilarity.kt`                 | aHash/dHash/wHash/phashOf (64/256/1024bit), HashDistance |
@@ -1035,6 +1036,59 @@ Validation rules:
 - Policy rules select actions such as `ALLOW`, `MOSAIC`, `BLUR`, `SOLID_MASK`, `DROP`, `REJECT`, `QUARANTINE`, and `MANUAL_REVIEW` without rendering pixels.
 - The default policy factory fails closed for unmatched or unknown categories by selecting `QUARANTINE`.
 - False negatives, false positives, confidence thresholds, and route-specific risk levels remain application policy concerns.
+
+### Privacy-Safe Derivative Images
+
+Use `suspendPrivacyDerivative` when a Ktor route, Spring controller, or batch job must publish a public preview instead of the original upload. The pipeline re-encodes fresh bytes, strips EXIF/GPS metadata by policy, checks decoded pixel budgets, can resize through the thumbnail model, and can apply rectangle redactions from the moderation/detection region model.
+
+```kotlin
+import io.bluetape4k.images.*
+import io.bluetape4k.images.analysis.*
+import io.bluetape4k.images.moderation.*
+import io.bluetape4k.images.privacy.*
+import io.bluetape4k.images.thumbnail.ThumbnailSize
+import java.awt.Color
+
+// In a Ktor route or Spring controller: read the upload body as bytes first.
+val image = immutableImageOf(uploadBytes)
+val exif = readExif(uploadBytes)
+
+val derivative = image.suspendPrivacyDerivative(
+    sourceExif = exif,
+    options = PrivacyDerivativeOptions(
+        stripMetadata = true,
+        removeGps = true,
+        maxPixels = 16_777_216L,
+        thumbnailSize = ThumbnailSize(width = 640, height = 480, suffix = "public"),
+        redactions = listOf(
+            PrivacyRedaction(
+                region = SensitiveRegion(
+                    geometry = SensitiveRegionGeometry.Rectangle(
+                        x = 0.10,
+                        y = 0.18,
+                        width = 0.35,
+                        height = 0.28,
+                        coordinateSpace = SensitiveCoordinateSpace.NORMALIZED,
+                    ),
+                    id = "face-1",
+                ),
+                maskColorArgb = Color.BLACK.rgb,
+            ),
+        ),
+    ),
+)
+
+// Return derivative.bytes as image/jpeg and persist derivative.report for audit.
+```
+
+For file batches, keep the same privacy policy and let `ImageProcessingOptions` control parallelism, failure handling, and in-flight pixel pressure:
+
+```kotlin
+val results = sourcePaths.processPrivacyDerivatives(
+    privacyOptions = PrivacyDerivativeOptions(removeGps = true, stripMetadata = true),
+    processingOptions = ImageProcessingOptions(parallelism = 2, skipFailures = true),
+)
+```
 
 ## Testing & Quality
 
