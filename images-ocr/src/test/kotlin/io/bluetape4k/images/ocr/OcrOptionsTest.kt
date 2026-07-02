@@ -2,10 +2,12 @@ package io.bluetape4k.images.ocr
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeNull
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
+import java.awt.Rectangle
 import net.sourceforge.tess4j.ITessAPI
 import org.junit.jupiter.api.Test
 
@@ -20,6 +22,8 @@ class OcrOptionsTest {
         options.engineMode shouldBeEqualTo TesseractEngineMode.DEFAULT
         options.pageSegmentationMode shouldBeEqualTo TesseractPageSegmentationMode.AUTO
         options.trimText shouldBeEqualTo true
+        options.structuredDetail shouldBeEqualTo OcrStructuredDetail.PLAIN_TEXT
+        options.regions shouldBeEqualTo emptyList()
     }
 
     @Test
@@ -49,6 +53,23 @@ class OcrOptionsTest {
     }
 
     @Test
+    fun `bounding boxes and regions validate caller supplied geometry`() {
+        val box = OcrBoundingBox(x = 10, y = 20, width = 120, height = 40)
+        val region = OcrRegion(boundingBox = box, id = "header")
+
+        region.boundingBox.toAwtRectangle() shouldBeEqualTo Rectangle(10, 20, 120, 40)
+        box.intersects(region) shouldBeEqualTo true
+        OcrBoundingBox.from(Rectangle(0, 0, 0, 10)).shouldBeNull()
+        OcrBoundingBox.from(Rectangle(-1, 0, 10, 10)).shouldBeNull()
+        assertFailsWith<IllegalArgumentException> {
+            OcrBoundingBox(x = 0, y = 0, width = 0, height = 10)
+        }
+        assertFailsWith<IllegalArgumentException> {
+            OcrRegion(boundingBox = box, id = " ")
+        }
+    }
+
+    @Test
     fun `enum wrappers expose Tess4J constants without leaking callers to ITessAPI`() {
         TesseractEngineMode.DEFAULT.value shouldBeEqualTo ITessAPI.TessOcrEngineMode.OEM_DEFAULT
         TesseractEngineMode.LSTM_ONLY.value shouldBeEqualTo ITessAPI.TessOcrEngineMode.OEM_LSTM_ONLY
@@ -58,13 +79,26 @@ class OcrOptionsTest {
 
     @Test
     fun `serializable models round trip`() {
-        val result = OcrResult(
-            text = "recognized",
-            options = OcrOptions(
+        val options = OcrOptions(
                 languages = listOf("eng", "kor"),
                 tessdataPath = "/opt/tessdata",
                 variables = mapOf("tessedit_char_whitelist" to "ABC"),
                 configs = listOf("quiet"),
+                structuredDetail = OcrStructuredDetail.WORD,
+                regions = listOf(OcrRegion(OcrBoundingBox(x = 0, y = 0, width = 100, height = 40), id = "header")),
+        )
+        val result = OcrStructuredResult(
+            text = "recognized",
+            options = options,
+            pages = listOf(OcrPage(pageIndex = 0, text = "recognized")),
+            words = listOf(
+                OcrWord(
+                    pageIndex = 0,
+                    text = "recognized",
+                    boundingBox = null,
+                    confidence = null,
+                    sourceRegion = null,
+                ),
             ),
         )
 

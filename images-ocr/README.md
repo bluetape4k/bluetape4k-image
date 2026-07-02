@@ -9,8 +9,10 @@ Tess4J/Tesseract OCR extensions for `ImmutableImage`.
 - `ImmutableImage.extractText(...)` for blocking OCR.
 - `ImmutableImage.suspendExtractText(...)` for coroutine callers; blocking OCR
   runs on `Dispatchers.IO` by default.
+- `ImmutableImage.extractOcr(...)` and `suspendExtractOcr(...)` for structured
+  page, block, line, and word metadata when the engine can provide it.
 - `OcrOptions` for languages, `tessdataPath`, engine mode, page segmentation
-  mode, variables, and configs.
+  mode, variables, configs, structured detail, and source regions.
 - `TesseractOcrEngine` creates a fresh Tess4J instance per call so mutable OCR
   state is not shared across callers.
 
@@ -63,8 +65,12 @@ dependencies {
 
 ```kotlin
 import io.bluetape4k.images.immutableImageOf
+import io.bluetape4k.images.ocr.OcrBoundingBox
 import io.bluetape4k.images.ocr.OcrOptions
+import io.bluetape4k.images.ocr.OcrRegion
+import io.bluetape4k.images.ocr.OcrStructuredDetail
 import io.bluetape4k.images.ocr.TesseractPageSegmentationMode
+import io.bluetape4k.images.ocr.extractOcr
 import io.bluetape4k.images.ocr.extractText
 import io.bluetape4k.images.ocr.suspendExtractText
 import java.io.File
@@ -81,6 +87,23 @@ val suspendText = image.suspendExtractText(
         pageSegmentationMode = TesseractPageSegmentationMode.SINGLE_LINE,
     ),
 )
+
+val structured = image.extractOcr(
+    OcrOptions(
+        languages = listOf("eng"),
+        structuredDetail = OcrStructuredDetail.WORD,
+        regions = listOf(
+            OcrRegion(
+                boundingBox = OcrBoundingBox(x = 0, y = 0, width = 640, height = 180),
+                id = "header",
+            ),
+        ),
+    ),
+)
+
+val words = structured.words.map { word ->
+    "${word.text}:${word.confidence ?: "unknown"}"
+}
 ```
 
 Use `variables` for Tesseract tuning:
@@ -93,6 +116,24 @@ val digits = image.extractText(
     ),
 )
 ```
+
+## Structured Results
+
+`OcrStructuredResult` keeps `text` source-compatible with plain extraction and
+adds `pages`, `blocks`, `lines`, and `words` lists. Detail is opt-in:
+
+- `OcrStructuredDetail.PLAIN_TEXT`: plain text plus page metadata only.
+- `OcrStructuredDetail.LINE`: block and line entries when available.
+- `OcrStructuredDetail.WORD`: block, line, and word entries when available.
+
+Bounding boxes and confidence scores are nullable. If Tesseract does not return
+valid geometry or confidence for an entry, the field stays `null`; the module
+does not invent placeholder values. Region-limited extraction uses
+`OcrRegion` metadata and copies the matching region to structured entries whose
+bounding boxes intersect it.
+
+Advanced document OCR backends such as PaddleOCR/GPU/model-download pipelines
+remain out of this module and are tracked separately by issue #169.
 
 ## Runnable Quickstart
 
@@ -123,9 +164,9 @@ set.
 
 ## Tests
 
-Always-on tests validate options, enum mappings, serialization, engine
-delegation, per-call Tess4J configuration, sanitized exceptions, and coroutine
-cancellation:
+Always-on tests validate options, enum mappings, serialization, structured
+result modeling, engine delegation, per-call Tess4J configuration, region
+filtering, sanitized exceptions, and coroutine cancellation:
 
 ```bash
 ./gradlew :bluetape4k-images-ocr:test
