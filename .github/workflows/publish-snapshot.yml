@@ -69,6 +69,7 @@ jobs:
           fi
 
           required_jobs=(
+            "Test / images-barcode-api"
             "Test / images-ocr"
             "Test / images-vips-api"
             "Test / images-vips-java21"

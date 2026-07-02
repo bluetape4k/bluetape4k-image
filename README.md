@@ -31,6 +31,9 @@ The repository is organized around several adoption lanes:
 - **OCR extraction** — add `images-ocr` when existing `ImmutableImage` values
   need Tesseract-backed text extraction with explicit language and tessdata
   configuration.
+- **Barcode extraction** — add `images-barcode-api` for provider-neutral
+  barcode and QR result contracts before selecting ZXing, BoofCV, or another
+  provider module.
 - **Detector boundary** — use the runtime-free detector contracts in `images`
   when face, object, or sensitive-region adapters need stable result models
   before choosing OpenCV, ONNX Runtime, TensorFlow Lite, MediaPipe, or an
@@ -53,6 +56,8 @@ instead of implicit.
   options, suspend-friendly entrypoint, and no native runtime dependency.
 - **OCR extraction** — Tess4J/Tesseract-backed `ImmutableImage.extractText`
   and `suspendExtractText` helpers with multilingual options.
+- **Barcode contracts** — provider-neutral barcode and QR models plus
+  `ImmutableImage.extractBarcodes` / `suspendExtractBarcodes` entry points.
 - **Detector contracts** — backend-neutral face/object/sensitive-region result
   models, detector identity metadata, confidence filtering, and `ImmutableImage`
   sync/suspend entry points without model downloads or native ML dependencies.
@@ -97,6 +102,7 @@ Benchmark evidence: [`benchmark/images-benchmark/docs/large-streaming-2026-06-05
 |-----------------------|--------------------------------------|----------------------------------------------------------|
 | `bom`                 | `bluetape4k-image-bom`               | Consumer BOM for aligned image artifacts                 |
 | `images`              | `bluetape4k-images`                  | Scrimage-based processing plus runtime-free detector result contracts |
+| `images-barcode-api`  | `bluetape4k-images-barcode-api`      | Provider-neutral barcode and QR extraction contracts     |
 | `images-captcha`      | `bluetape4k-images-captcha`          | Java2D CAPTCHA image challenge generation                |
 | `images-ocr`          | `bluetape4k-images-ocr`              | Tess4J/Tesseract OCR text extraction for `ImmutableImage` |
 | `images-ktor`         | `bluetape4k-images-ktor`             | Ktor route helpers for thumbnails and CAPTCHA verification |
@@ -115,6 +121,7 @@ Benchmark evidence: [`benchmark/images-benchmark/docs/large-streaming-2026-06-05
 | Module                | JDK    | Native package | JVM flag                        |
 |-----------------------|--------|----------------|----------------------------------|
 | `images`              | 21+    | —              | —                                |
+| `images-barcode-api`  | 21+    | —              | —                                |
 | `images-captcha`      | 21+    | —              | —                                |
 | `images-ocr`          | 21+    | Tesseract + traineddata | —                         |
 | `images-ktor`         | 21+    | —              | —                                |
@@ -234,6 +241,9 @@ dependencies {
     // Scrimage-based image processing (Java 21+)
     implementation("io.github.bluetape4k.image:bluetape4k-images:0.3.0")
 
+    // Provider-neutral barcode/QR extraction contracts (Java 21+, 0.4.0+)
+    implementation("io.github.bluetape4k.image:bluetape4k-images-barcode-api:<version>")
+
     // Java2D CAPTCHA generation (Java 21+)
     implementation("io.github.bluetape4k.image:bluetape4k-images-captcha:0.3.0")
 
@@ -320,6 +330,25 @@ val challenge = generator.generate()
 // Store challenge.text securely on the server side.
 // Encode challenge.image with a Scrimage writer when returning it to a client.
 ```
+
+### Barcode Extraction Contracts (`images-barcode-api`)
+
+```kotlin
+import com.sksamuel.scrimage.ImmutableImage
+import io.bluetape4k.images.barcode.BarcodeFormat
+import io.bluetape4k.images.barcode.BarcodeOptions
+import io.bluetape4k.images.barcode.BarcodeReader
+import io.bluetape4k.images.barcode.extractBarcodes
+
+fun extractQrCodes(image: ImmutableImage, reader: BarcodeReader) = image.extractBarcodes(
+    reader = reader,
+    options = BarcodeOptions(formats = setOf(BarcodeFormat.QR_CODE)),
+)
+```
+
+`images-barcode-api` intentionally contains no decoder dependency. Provider
+modules such as ZXing or BoofCV implement `BarcodeReader` separately and return
+the shared `BarcodeResult` model.
 
 ### Extracting OCR Text (`images-ocr`)
 
@@ -505,6 +534,7 @@ JVipsImageSupport.jvipsImageOf(Path.of("photo.jpg")).use { image ->
 Each module contains its own detailed README with API reference, architecture diagrams, and usage examples:
 
 - [`images/README.md`](images/README.md) — Scrimage-based processing
+- [`images-barcode-api/README.md`](images-barcode-api/README.md) — Provider-neutral barcode contracts
 - [`images-captcha/README.md`](images-captcha/README.md) — Java2D CAPTCHA generation
 - [`images-ocr/README.md`](images-ocr/README.md) — Tess4J/Tesseract OCR extraction
 - [`images-ktor/README.md`](images-ktor/README.md) — Ktor thumbnail and CAPTCHA route helpers

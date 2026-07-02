@@ -85,6 +85,7 @@ rootProject.name = "bluetape4k-image"
 
 include(
     "bluetape4k-images",
+    "bluetape4k-images-barcode-api",
     "bluetape4k-images-captcha",
     "bluetape4k-images-ocr",
     "bluetape4k-images-ktor",
@@ -95,6 +96,7 @@ include(
     "bluetape4k-images-benchmark",
 )
 project(":bluetape4k-images").projectDir = file("images")
+project(":bluetape4k-images-barcode-api").projectDir = file("images-barcode-api")
 project(":bluetape4k-images-captcha").projectDir = file("images-captcha")
 project(":bluetape4k-images-ocr").projectDir = file("images-ocr")
 project(":bluetape4k-images-ktor").projectDir = file("images-ktor")

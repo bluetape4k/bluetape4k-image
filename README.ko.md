@@ -28,6 +28,9 @@ native codec이 중요해질 때 libvips 백엔드로 확장할 수 있는 단�
   `images-spring-boot`를 추가합니다.
 - **OCR 추출** — 기존 `ImmutableImage` 값에서 Tesseract 기반 텍스트 추출이 필요하면
   명시적인 언어와 tessdata 설정을 가진 `images-ocr`를 추가합니다.
+- **Barcode 추출** — ZXing, BoofCV 또는 다른 provider 모듈을 선택하기 전에
+  provider-neutral barcode/QR 결과 contract가 필요하면 `images-barcode-api`를
+  추가합니다.
 - **Detector boundary** — face, object, sensitive-region adapter가 OpenCV, ONNX
   Runtime, TensorFlow Lite, MediaPipe, 외부 서비스 중 하나를 선택하기 전에 안정적인
   결과 모델이 필요하면 `images`의 runtime-free detector contract를 사용합니다.
@@ -44,6 +47,8 @@ benchmark module은 scrimage/libvips trade-off를 추측이 아니라 측정 가
 - **CAPTCHA 생성** — native runtime 없이 Java2D로 bounded option 기반 이미지 챌린지 생성
 - **OCR 추출** — 다국어 옵션을 지원하는 Tess4J/Tesseract 기반
   `ImmutableImage.extractText`, `suspendExtractText` helper
+- **Barcode contract** — provider-neutral barcode/QR 모델과
+  `ImmutableImage.extractBarcodes`, `suspendExtractBarcodes` 진입점 제공
 - **Detector contract** — model download나 native ML dependency 없이 backend-neutral
   face/object/sensitive-region 결과 모델, detector identity metadata, confidence filtering,
   `ImmutableImage` sync/suspend 진입점 제공
@@ -86,6 +91,7 @@ Benchmark evidence: [`benchmark/images-benchmark/docs/large-streaming-2026-06-05
 |-----------------------|--------------------------------------|----------------------------------------------------------|
 | `bom`                 | `bluetape4k-image-bom`               | 이미지 아티팩트 버전 정렬용 소비자 BOM                    |
 | `images`              | `bluetape4k-images`                  | Scrimage 기반 처리와 runtime-free detector 결과 계약 |
+| `images-barcode-api`  | `bluetape4k-images-barcode-api`      | Provider-neutral barcode/QR 추출 contract                |
 | `images-captcha`      | `bluetape4k-images-captcha`          | Java2D CAPTCHA 이미지 챌린지 생성                         |
 | `images-ocr`          | `bluetape4k-images-ocr`              | `ImmutableImage`용 Tess4J/Tesseract OCR 텍스트 추출        |
 | `images-ktor`         | `bluetape4k-images-ktor`             | 썸네일 생성과 CAPTCHA 검증을 위한 Ktor route helper        |
@@ -104,6 +110,7 @@ Benchmark evidence: [`benchmark/images-benchmark/docs/large-streaming-2026-06-05
 | 모듈                   | JDK    | Native package | JVM 플래그                          |
 |-----------------------|--------|----------------|-------------------------------------|
 | `images`              | 21+    | —              | —                                   |
+| `images-barcode-api`  | 21+    | —              | —                                   |
 | `images-captcha`      | 21+    | —              | —                                   |
 | `images-ocr`          | 21+    | Tesseract + traineddata | —                          |
 | `images-ktor`         | 21+    | —              | —                                   |
@@ -221,6 +228,9 @@ dependencies {
     // Scrimage 기반 이미지 처리 (Java 21+)
     implementation("io.github.bluetape4k.image:bluetape4k-images:0.3.0")
 
+    // Provider-neutral barcode/QR 추출 contract (Java 21+, 0.4.0+)
+    implementation("io.github.bluetape4k.image:bluetape4k-images-barcode-api:<version>")
+
     // Java2D CAPTCHA 생성 (Java 21+)
     implementation("io.github.bluetape4k.image:bluetape4k-images-captcha:0.3.0")
 
@@ -307,6 +317,25 @@ val challenge = generator.generate()
 // challenge.text는 서버 측에서 안전하게 보관하세요.
 // challenge.image는 Scrimage writer로 인코딩해 클라이언트에 반환하세요.
 ```
+
+### Barcode 추출 Contract (`images-barcode-api`)
+
+```kotlin
+import com.sksamuel.scrimage.ImmutableImage
+import io.bluetape4k.images.barcode.BarcodeFormat
+import io.bluetape4k.images.barcode.BarcodeOptions
+import io.bluetape4k.images.barcode.BarcodeReader
+import io.bluetape4k.images.barcode.extractBarcodes
+
+fun extractQrCodes(image: ImmutableImage, reader: BarcodeReader) = image.extractBarcodes(
+    reader = reader,
+    options = BarcodeOptions(formats = setOf(BarcodeFormat.QR_CODE)),
+)
+```
+
+`images-barcode-api`는 의도적으로 decoder dependency를 포함하지 않습니다. ZXing,
+BoofCV 같은 provider 모듈이 별도로 `BarcodeReader`를 구현하고 공통
+`BarcodeResult` 모델을 반환합니다.
 
 ### OCR 텍스트 추출 (`images-ocr`)
 
@@ -488,6 +517,7 @@ JVipsImageSupport.jvipsImageOf(Path.of("photo.jpg")).use { image ->
 각 모듈에는 API 레퍼런스, 아키텍처 다이어그램, 사용 예시를 담은 상세 README가 있습니다.
 
 - [`images/README.md`](images/README.md) — Scrimage 기반 처리
+- [`images-barcode-api/README.md`](images-barcode-api/README.md) — Provider-neutral barcode contract
 - [`images-captcha/README.md`](images-captcha/README.md) — Java2D CAPTCHA 생성
 - [`images-ocr/README.md`](images-ocr/README.md) — Tess4J/Tesseract OCR 추출
 - [`images-ktor/README.md`](images-ktor/README.md) — Ktor 썸네일 및 CAPTCHA route helper

@@ -107,8 +107,10 @@ Engine and entry points:
 
 ```kotlin
 fun interface BarcodeReader {
-    fun readBarcodes(image: ImmutableImage, options: BarcodeOptions = BarcodeOptions()): List<BarcodeResult>
+    fun readBarcodes(image: ImmutableImage, options: BarcodeOptions): List<BarcodeResult>
 }
+
+fun BarcodeReader.readBarcodes(image: ImmutableImage): List<BarcodeResult>
 
 fun ImmutableImage.extractBarcodes(
     reader: BarcodeReader,

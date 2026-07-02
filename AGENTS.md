@@ -16,6 +16,7 @@ libvips through JNI or FFM Panama.
 | Module | Purpose |
 |---|---|
 | `bluetape4k-images` | Scrimage-based image processing, coroutine writers, filters, analysis, similarity |
+| `bluetape4k-images-barcode-api` | Provider-neutral barcode and QR extraction contracts for `ImmutableImage` |
 | `bluetape4k-images-captcha` | Java2D CAPTCHA image challenge generation |
 | `bluetape4k-images-ocr` | Tess4J/Tesseract OCR text extraction for `ImmutableImage` |
 | `bluetape4k-images-ktor` | Ktor route helpers for CAPTCHA issue and verification |
@@ -38,6 +39,7 @@ libvips through JNI or FFM Panama.
 ./gradlew build -x test
 ./gradlew :bluetape4k-images:build
 ./gradlew :bluetape4k-images:test
+./gradlew :bluetape4k-images-barcode-api:test
 ./gradlew :bluetape4k-images-ocr:test
 ./gradlew :bluetape4k-images-ocr:test -Docr.enabled=true
 ./gradlew :bluetape4k-images-ocr:test -Docr.container.enabled=true
@@ -66,6 +68,14 @@ when present. Outside Gradle, set it manually if needed.
 - Use `immutableImageOf(bytes/file/path/stream)` factories.
 - Operations return new instances; never mutate the source image.
 - Use `withGraphics { }` for `ImmutableImage` drawing. `BufferedImage.useGraphics { }` remains available for mutable `BufferedImage` operations.
+
+### `bluetape4k-images-barcode-api`
+
+- Keep this module provider-neutral; do not add ZXing, BoofCV, OpenCV, ZBar,
+  commercial SDK, or native decoder dependencies here.
+- Providers implement the `BarcodeReader` contract from separate modules.
+- Use `immutableImageOf(bytes/path/stream/source)` helpers for input
+  conversions instead of duplicating image loading code.
 
 ### `images-vips-*`
 
