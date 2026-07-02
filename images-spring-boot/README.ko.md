@@ -20,7 +20,18 @@
 ### 의존성
 
 ```kotlin
-implementation("io.github.bluetape4k.image:bluetape4k-images-spring-boot")
+dependencies {
+    implementation(platform("io.github.bluetape4k.image:bluetape4k-image-bom:<version>"))
+    implementation("io.github.bluetape4k.image:bluetape4k-images-spring-boot")
+}
+```
+
+BOM을 import하지 않는다면 모듈 버전을 직접 선언하세요:
+
+```kotlin
+dependencies {
+    implementation("io.github.bluetape4k.image:bluetape4k-images-spring-boot:<version>")
+}
 ```
 
 ### 설정
