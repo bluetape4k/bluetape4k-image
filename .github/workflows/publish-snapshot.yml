@@ -6,6 +6,16 @@ on:
     types: [completed]
     branches: [develop]
   workflow_dispatch:
+    inputs:
+      validation_run_id:
+        description: 'Nightly run ID that already completed full OCR and VIPS validation'
+        required: false
+        type: string
+      override_full_validation:
+        description: 'Manual override when intentionally publishing without a full Nightly validation run'
+        required: true
+        type: boolean
+        default: false
 
 concurrency:
   group: publish-snapshot
@@ -18,15 +28,74 @@ env:
 
 permissions:
   contents: read
+  actions: read
 
 jobs:
+  validate-full-nightly:
+    name: Verify full Nightly validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      publish_eligible: ${{ steps.validate.outputs.publish_eligible }}
+    steps:
+      - name: Check full validation jobs
+        id: validate
+        env:
+          GH_TOKEN: ${{ github.token }}
+          WORKFLOW_RUN_ID: ${{ github.event.workflow_run.id }}
+          WORKFLOW_RUN_CONCLUSION: ${{ github.event.workflow_run.conclusion }}
+          MANUAL_VALIDATION_RUN_ID: ${{ inputs.validation_run_id }}
+          MANUAL_OVERRIDE: ${{ inputs.override_full_validation }}
+        run: |
+          set -euo pipefail
+
+          if [ "${{ github.event_name }}" = "workflow_run" ]; then
+            if [ "$WORKFLOW_RUN_CONCLUSION" != "success" ]; then
+              echo "Nightly run $WORKFLOW_RUN_ID did not succeed: $WORKFLOW_RUN_CONCLUSION"
+              echo "publish_eligible=false" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            validation_run_id="$WORKFLOW_RUN_ID"
+          elif [ "$MANUAL_OVERRIDE" = "true" ]; then
+            echo "Manual override requested; bypassing full Nightly validation requirement."
+            echo "publish_eligible=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          else
+            validation_run_id="$MANUAL_VALIDATION_RUN_ID"
+            if [ -z "$validation_run_id" ]; then
+              echo "validation_run_id is required unless override_full_validation is true."
+              exit 1
+            fi
+          fi
+
+          required_jobs=(
+            "Test / images-ocr"
+            "Test / images-vips-api"
+            "Test / images-vips-java21"
+            "Test / images-vips-java25"
+          )
+
+          job_results="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${validation_run_id}/jobs" \
+            --paginate \
+            --jq '.jobs[] | [.name, .conclusion] | @tsv')"
+
+          for job_name in "${required_jobs[@]}"; do
+            conclusion="$(awk -F '\t' -v name="$job_name" '$1 == name { result = $2 } END { print result }' <<< "$job_results")"
+            if [ "$conclusion" != "success" ]; then
+              echo "Full validation is not publish-eligible: $job_name concluded '${conclusion:-missing}'."
+              echo "publish_eligible=false" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+          done
+
+          echo "Full OCR and VIPS validation succeeded in Nightly run $validation_run_id."
+          echo "publish_eligible=true" >> "$GITHUB_OUTPUT"
+
   publish:
     name: Publish SNAPSHOT to Maven Central
     runs-on: ubuntu-latest
-    # workflow_run: Nightly 성공 시에만 실행. 수동 dispatch는 항상 실행.
-    if: |
-      github.event_name == 'workflow_dispatch' ||
-      github.event.workflow_run.conclusion == 'success'
+    needs: validate-full-nightly
+    if: ${{ needs.validate-full-nightly.outputs.publish_eligible == 'true' }}
     steps:
       - uses: actions/checkout@v7
 
