@@ -371,9 +371,17 @@ val faces = image.detectRegions(
 
 Detection regions reuse the sensitive-content geometry model, so rectangle,
 polygon, polyline, and raster-mask metadata can flow into later moderation
-policy or privacy-safe derivative pipelines. The core module does not download
-models, bundle large fixtures, require GPU support, or select a production
-runtime; those adapters belong in follow-up modules or applications.
+policy or privacy-safe derivative pipelines. The moderation policy layer can
+select `ALLOW`, `MOSAIC`, `BLUR`, `SOLID_MASK`, `DROP`, `REJECT`,
+`QUARANTINE`, or `MANUAL_REVIEW` actions from detector facts without rendering
+pixels. Unknown or unmatched sensitive categories are designed to fail closed
+through quarantine/manual-review style policies, and applications should still
+account for detector false negatives, false positives, and route-specific
+thresholds.
+
+The core module does not download models, bundle large fixtures, require GPU
+support, render treatments, or select a production runtime; those adapters
+belong in follow-up modules or applications.
 
 The test suite includes a license-audited, internet-derived sample corpus under
 `images/src/test/resources/detection/samples/`. It covers face/person, traffic

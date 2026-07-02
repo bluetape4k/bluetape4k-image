@@ -67,6 +67,7 @@ A library for loading, converting, resizing, splitting, and applying filters to 
 | `analysis/BlurDetector.kt`                     | Blur detection via Laplacian variance — `blurScore()`, `isBlurry()` |
 | `analysis/ExifData.kt`                         | EXIF metadata parsing — `readExif()`, GPS PII removal |
 | `moderation/SensitiveContentModels.kt`         | Backend-neutral sensitive-content detection result models |
+| `moderation/SensitiveContentPolicy.kt`         | Renderer-neutral moderation policy and treatment decisions |
 | `similarity/ImageSimilarity.kt`                | Core similarity: pixel Δ, MSE, PSNR, global SSIM, pHash |
 | `similarity/MssimSimilarity.kt`                | MSSIM — sliding-window Gaussian SSIM                    |
 | `similarity/HashSimilarity.kt`                 | aHash/dHash/wHash/phashOf (64/256/1024bit), HashDistance |
@@ -972,9 +973,9 @@ val asyncExif: ExifData = File("photo.jpg").suspendReadExif()
 | `analysis/BlurDetector.kt`              | `BlurScore` + Laplacian variance computation     |
 | `analysis/ExifData.kt`                  | `ExifData` model + `readExif()` entry points     |
 
-### Sensitive Content Detection Models
+### Sensitive Content Moderation Policy
 
-`bluetape4k-images` defines only the backend-neutral result contract for sensitive-content detection. It does not bundle a detector runtime, model weights, redaction renderer, policy engine, or treatment action.
+`bluetape4k-images` defines backend-neutral sensitive-content detection and policy contracts. It does not bundle a detector runtime, model weights, or a redaction renderer.
 
 ```kotlin
 import io.bluetape4k.images.moderation.*
@@ -997,6 +998,23 @@ val detection = SensitiveContentDetection(
         ),
     ),
 )
+
+val policy = SensitiveModerationPolicy.failClosed(
+    rules = listOf(
+        SensitiveModerationRule(
+            id = "explicit-high-blur",
+            categories = setOf(SensitiveContentCategory.EXPLICIT_NUDITY),
+            minimumSeverity = SensitiveContentSeverity.HIGH,
+            minimumConfidence = 0.85,
+            action = SensitiveTreatmentAction.BLUR,
+            level = SensitiveTreatmentLevel.HIGH,
+            parameters = SensitiveTreatmentParameters(blurRadius = 12.0, blurSigma = 3.0),
+            reason = "High-confidence explicit content must be blurred",
+        ),
+    ),
+)
+
+val report = policy.evaluate(listOf(detection))
 ```
 
 Geometry variants:
@@ -1014,7 +1032,9 @@ Validation rules:
 - Normalized coordinates must fit inside `0.0..1.0`.
 - Pixel coordinates are non-negative and can be checked against `ImageDimensions` with `requireWithin(...)`.
 - Detector adapters should map raw backend labels to stable `SensitiveContentCategory` values while preserving `rawBackendLabel`.
-- False negatives, confidence thresholds, and policy mapping remain caller policy concerns.
+- Policy rules select actions such as `ALLOW`, `MOSAIC`, `BLUR`, `SOLID_MASK`, `DROP`, `REJECT`, `QUARANTINE`, and `MANUAL_REVIEW` without rendering pixels.
+- The default policy factory fails closed for unmatched or unknown categories by selecting `QUARANTINE`.
+- False negatives, false positives, confidence thresholds, and route-specific risk levels remain application policy concerns.
 
 ## Testing & Quality
 

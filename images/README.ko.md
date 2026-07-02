@@ -69,6 +69,7 @@ AVIF·HEIC는 incubating 인터페이스로 제공되며, libvips 지원은 `ima
 | `analysis/BlurDetector.kt`                           | 블러 감지 — `blurScore()`, `isBlurry()` |
 | `analysis/ExifData.kt`                               | EXIF 파싱 — `readExif()`, GPS PII 제거 |
 | `moderation/SensitiveContentModels.kt`               | 백엔드 중립 민감 콘텐츠 감지 결과 모델 |
+| `moderation/SensitiveContentPolicy.kt`               | 렌더러 중립 moderation policy와 treatment decision |
 | `similarity/ImageSimilarity.kt`                      | 핵심 유사도: 픽셀 Δ, MSE, PSNR, 전역 SSIM, pHash |
 | `similarity/MssimSimilarity.kt`                      | MSSIM — 슬라이딩 윈도우 Gaussian SSIM            |
 | `similarity/HashSimilarity.kt`                       | aHash/dHash/wHash/phashOf (64/256/1024bit), HashDistance |
@@ -996,9 +997,9 @@ val asyncExif: ExifData = File("photo.jpg").suspendReadExif()
 | `analysis/BlurDetector.kt`              | `BlurScore` + Laplacian variance 계산             |
 | `analysis/ExifData.kt`                  | `ExifData` 모델 + `readExif()` 진입점            |
 
-### 민감 콘텐츠 감지 결과 모델
+### 민감 콘텐츠 Moderation Policy
 
-`bluetape4k-images`는 민감 콘텐츠 감지 결과를 표현하는 백엔드 중립 모델만 제공합니다. detector runtime, 모델 가중치, redaction renderer, policy engine, mosaic/blur/reject 같은 처리 action은 포함하지 않습니다.
+`bluetape4k-images`는 민감 콘텐츠 감지 결과와 policy를 표현하는 백엔드 중립 계약만 제공합니다. detector runtime, 모델 가중치, redaction renderer는 포함하지 않습니다.
 
 ```kotlin
 import io.bluetape4k.images.moderation.*
@@ -1021,6 +1022,23 @@ val detection = SensitiveContentDetection(
         ),
     ),
 )
+
+val policy = SensitiveModerationPolicy.failClosed(
+    rules = listOf(
+        SensitiveModerationRule(
+            id = "explicit-high-blur",
+            categories = setOf(SensitiveContentCategory.EXPLICIT_NUDITY),
+            minimumSeverity = SensitiveContentSeverity.HIGH,
+            minimumConfidence = 0.85,
+            action = SensitiveTreatmentAction.BLUR,
+            level = SensitiveTreatmentLevel.HIGH,
+            parameters = SensitiveTreatmentParameters(blurRadius = 12.0, blurSigma = 3.0),
+            reason = "High-confidence explicit content must be blurred",
+        ),
+    ),
+)
+
+val report = policy.evaluate(listOf(detection))
 ```
 
 지원 geometry:
@@ -1038,7 +1056,9 @@ val detection = SensitiveContentDetection(
 - normalized 좌표는 `0.0..1.0` 안에 있어야 합니다.
 - pixel 좌표는 음수가 될 수 없고, `ImageDimensions`와 `requireWithin(...)`으로 이미지 경계 검증을 할 수 있습니다.
 - detector adapter는 원본 backend label을 `rawBackendLabel`에 보존하면서 안정적인 `SensitiveContentCategory`로 매핑해야 합니다.
-- false negative, confidence threshold, policy mapping은 호출자 정책의 책임으로 남습니다.
+- policy rule은 pixel rendering 없이 `ALLOW`, `MOSAIC`, `BLUR`, `SOLID_MASK`, `DROP`, `REJECT`, `QUARANTINE`, `MANUAL_REVIEW` action을 선택합니다.
+- 기본 policy factory는 rule에 맞지 않거나 알 수 없는 category를 `QUARANTINE`으로 fail-closed 처리합니다.
+- false negative, false positive, confidence threshold, route별 risk level은 애플리케이션 policy 책임으로 남습니다.
 
 ## 테스트 & 품질
 
