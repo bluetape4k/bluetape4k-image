@@ -84,6 +84,24 @@ source.use { reader.readBarcodes(it) }
 
 The helpers reuse `immutableImageOf(...)` from `bluetape4k-images`.
 
+## Test Fixtures
+
+The API module publishes provider-neutral test fixtures through
+`testFixtures(project(":bluetape4k-images-barcode-api"))`.
+
+```kotlin
+import io.bluetape4k.images.barcode.testfixtures.BarcodeTestFixtures
+
+val blank = BarcodeTestFixtures.blankImage()
+val rotated = BarcodeTestFixtures.rotateClockwise(blank)
+val malformed = BarcodeTestFixtures.malformedImageBytes
+```
+
+These fixtures are generated from deterministic code at test runtime. No
+external barcode image assets are bundled, and
+`BarcodeTestFixtures.GENERATED_SOURCE_NOTE` records the source/licensing note
+for provider capability documentation.
+
 ## Tests
 
 ```bash
@@ -92,4 +110,4 @@ The helpers reuse `immutableImageOf(...)` from `bluetape4k-images`.
 
 The tests are pure JVM and always-on. They cover model validation,
 serialization, sync/suspend delegation, cancellation, and input helper
-decoding.
+decoding. They also verify the shared fixture helper behavior.

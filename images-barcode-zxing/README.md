@@ -64,5 +64,7 @@ providers before standardizing on ZXing alone.
 ./gradlew :bluetape4k-images-barcode-zxing:test
 ```
 
-Tests generate QR and Code 128 images in memory with ZXing writers. No external
-image fixtures are required.
+Tests generate QR and Code 128 images in memory with ZXing writers. Shared
+no-code, rotated-image, malformed-byte, and fixture source-note helpers come
+from `BarcodeTestFixtures` in `images-barcode-api` test fixtures. No external
+barcode image binaries are required.
