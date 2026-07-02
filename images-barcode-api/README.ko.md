@@ -38,8 +38,8 @@ dependencies {
 }
 ```
 
-실제 pixel decoding을 수행하려면 이후 제공될 ZXing adapter 같은 provider 모듈을
-하나 추가하세요.
+실제 pixel decoding을 수행하려면 `bluetape4k-images-barcode-zxing` 같은 provider
+모듈을 하나 추가하세요.
 
 ## 사용 예시
 

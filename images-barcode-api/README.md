@@ -40,8 +40,8 @@ dependencies {
 }
 ```
 
-Add one provider module, such as a future ZXing adapter, to actually decode
-barcode pixels.
+Add one provider module, such as `bluetape4k-images-barcode-zxing`, to actually
+decode barcode pixels.
 
 ## Usage
 

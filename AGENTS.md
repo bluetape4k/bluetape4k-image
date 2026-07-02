@@ -17,6 +17,7 @@ libvips through JNI or FFM Panama.
 |---|---|
 | `bluetape4k-images` | Scrimage-based image processing, coroutine writers, filters, analysis, similarity |
 | `bluetape4k-images-barcode-api` | Provider-neutral barcode and QR extraction contracts for `ImmutableImage` |
+| `bluetape4k-images-barcode-zxing` | Pure-JVM ZXing barcode provider for QR and common 1D formats |
 | `bluetape4k-images-captcha` | Java2D CAPTCHA image challenge generation |
 | `bluetape4k-images-ocr` | Tess4J/Tesseract OCR text extraction for `ImmutableImage` |
 | `bluetape4k-images-ktor` | Ktor route helpers for CAPTCHA issue and verification |
@@ -40,6 +41,7 @@ libvips through JNI or FFM Panama.
 ./gradlew :bluetape4k-images:build
 ./gradlew :bluetape4k-images:test
 ./gradlew :bluetape4k-images-barcode-api:test
+./gradlew :bluetape4k-images-barcode-zxing:test
 ./gradlew :bluetape4k-images-ocr:test
 ./gradlew :bluetape4k-images-ocr:test -Docr.enabled=true
 ./gradlew :bluetape4k-images-ocr:test -Docr.container.enabled=true
@@ -76,6 +78,13 @@ when present. Outside Gradle, set it manually if needed.
 - Providers implement the `BarcodeReader` contract from separate modules.
 - Use `immutableImageOf(bytes/path/stream/source)` helpers for input
   conversions instead of duplicating image loading code.
+
+### `bluetape4k-images-barcode-zxing`
+
+- Keep ZXing imports and dependencies inside this provider module.
+- Public APIs should expose only `images-barcode-api` types.
+- Treat no-code images as empty results and malformed encoded inputs as
+  `BarcodeException(MALFORMED_INPUT)`.
 
 ### `images-vips-*`
 
