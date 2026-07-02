@@ -1,0 +1,159 @@
+[
+  {
+    "id": "person-face-obama",
+    "resourcePath": "detection/samples/person-face-obama.jpg",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:President_Barack_Obama.jpg",
+    "downloadUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/President%20Barack%20Obama.jpg?width=320",
+    "license": "Public domain - U.S. federal government work",
+    "attribution": "Official White House Photo by Pete Souza",
+    "sha256": "2c57535de0de7dabe32bb9c15c216aeecb5cd6573036cd569135d1651e67d5b1",
+    "expectedDimensions": {
+      "width": 330,
+      "height": 412
+    },
+    "expectedTags": [
+      "person",
+      "face",
+      "portrait"
+    ],
+    "expectedDetections": [
+      {
+        "label": "person",
+        "category": "PERSON",
+        "confidence": 0.98,
+        "region": {
+          "x": 0.16,
+          "y": 0.03,
+          "width": 0.66,
+          "height": 0.93
+        }
+      },
+      {
+        "label": "face",
+        "category": "FACE",
+        "confidence": 0.96,
+        "region": {
+          "x": 0.34,
+          "y": 0.07,
+          "width": 0.33,
+          "height": 0.23
+        }
+      }
+    ]
+  },
+  {
+    "id": "object-stop-sign",
+    "resourcePath": "detection/samples/object-stop-sign.jpg",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Stop_sign_us.jpg",
+    "downloadUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Stop%20sign%20us.jpg?width=256",
+    "license": "Public domain - released by copyright holder",
+    "attribution": "Dori",
+    "sha256": "3ca6c429075cd8acc8dab1c2bde0b49916e093cd54c7c6c7b50b7a178f973627",
+    "expectedDimensions": {
+      "width": 330,
+      "height": 330
+    },
+    "expectedTags": [
+      "traffic-sign",
+      "object",
+      "text"
+    ],
+    "expectedDetections": [
+      {
+        "label": "stop sign",
+        "category": "OBJECT",
+        "confidence": 0.97,
+        "region": {
+          "x": 0.04,
+          "y": 0.03,
+          "width": 0.92,
+          "height": 0.76
+        }
+      },
+      {
+        "label": "STOP",
+        "category": "TEXT",
+        "confidence": 0.93,
+        "region": {
+          "x": 0.12,
+          "y": 0.32,
+          "width": 0.76,
+          "height": 0.25
+        }
+      }
+    ]
+  },
+  {
+    "id": "landmark-earth-apollo17",
+    "resourcePath": "detection/samples/landmark-earth-apollo17.jpg",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:The_Earth_seen_from_Apollo_17.jpg",
+    "downloadUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/The%20Earth%20seen%20from%20Apollo%2017.jpg?width=320",
+    "license": "Public domain - NASA",
+    "attribution": "NASA/Apollo 17",
+    "sha256": "27f1e962b444029c0f0924161c486ccad397f4011dbeedcad3355a0049b121be",
+    "expectedDimensions": {
+      "width": 330,
+      "height": 330
+    },
+    "expectedTags": [
+      "earth",
+      "space",
+      "landmark"
+    ],
+    "expectedDetections": [
+      {
+        "label": "earth",
+        "category": "LANDMARK",
+        "confidence": 0.95,
+        "region": {
+          "x": 0.05,
+          "y": 0.04,
+          "width": 0.9,
+          "height": 0.9
+        }
+      },
+      {
+        "label": "planet",
+        "category": "OBJECT",
+        "confidence": 0.91,
+        "region": {
+          "x": 0.05,
+          "y": 0.04,
+          "width": 0.9,
+          "height": 0.9
+        }
+      }
+    ]
+  },
+  {
+    "id": "text-ocr-sample",
+    "resourcePath": "detection/samples/text-ocr-sample.png",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:OCR_Des_P%C3%A9riers_04-02-2013.png",
+    "downloadUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/OCR%20Des%20P%C3%A9riers%2004-02-2013.png?width=320",
+    "license": "Public domain - released by copyright holder",
+    "attribution": "Zyephyrus",
+    "sha256": "9e38da00c06ab22983e9650f78daa42c2ab6a481d6dbcd1b60868202366785ea",
+    "expectedDimensions": {
+      "width": 330,
+      "height": 147
+    },
+    "expectedTags": [
+      "document",
+      "text",
+      "ocr"
+    ],
+    "expectedDetections": [
+      {
+        "label": "text block",
+        "category": "TEXT",
+        "confidence": 0.94,
+        "region": {
+          "x": 0.02,
+          "y": 0.05,
+          "width": 0.96,
+          "height": 0.9
+        }
+      }
+    ]
+  }
+]

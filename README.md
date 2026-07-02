@@ -20,7 +20,7 @@ path available via both JNI (Java 21) and the Panama Foreign Function & Memory A
 start with pure-JVM scrimage operations and move to libvips when throughput,
 memory use, or native codecs matter.
 
-The repository is organized around three adoption lanes:
+The repository is organized around several adoption lanes:
 
 - **Pure JVM first** — use `images` when a service needs dependable resize,
   crop, filter, analysis, batch, and encode workflows without native runtime
@@ -31,6 +31,10 @@ The repository is organized around three adoption lanes:
 - **OCR extraction** — add `images-ocr` when existing `ImmutableImage` values
   need Tesseract-backed text extraction with explicit language and tessdata
   configuration.
+- **Detector boundary** — use the runtime-free detector contracts in `images`
+  when face, object, or sensitive-region adapters need stable result models
+  before choosing OpenCV, ONNX Runtime, TensorFlow Lite, MediaPipe, or an
+  external service.
 - **Native acceleration** — program against `images-vips-api` and choose the
   Java 21 JNI or Java 25 FFM backend when libvips throughput, memory behavior,
   or AVIF/HEIC-capable native codec support is required.
@@ -49,6 +53,9 @@ instead of implicit.
   options, suspend-friendly entrypoint, and no native runtime dependency.
 - **OCR extraction** — Tess4J/Tesseract-backed `ImmutableImage.extractText`
   and `suspendExtractText` helpers with multilingual options.
+- **Detector contracts** — backend-neutral face/object/sensitive-region result
+  models, detector identity metadata, confidence filtering, and `ImmutableImage`
+  sync/suspend entry points without model downloads or native ML dependencies.
 - **Ktor integration** — route helpers for issuing CAPTCHA images and verifying
   one-shot answers in Ktor services.
 - **libvips abstraction** — binding-neutral `VipsImage` and `VipsRuntime`
@@ -89,7 +96,7 @@ Benchmark evidence: [`benchmark/images-benchmark/docs/large-streaming-2026-06-05
 | Module                | Artifact ID                          | Description                                              |
 |-----------------------|--------------------------------------|----------------------------------------------------------|
 | `bom`                 | `bluetape4k-image-bom`               | Consumer BOM for aligned image artifacts                 |
-| `images`              | `bluetape4k-images`                  | Scrimage-based processing: load, resize, filter, convert, analyze, batch |
+| `images`              | `bluetape4k-images`                  | Scrimage-based processing plus runtime-free detector result contracts |
 | `images-captcha`      | `bluetape4k-images-captcha`          | Java2D CAPTCHA image challenge generation                |
 | `images-ocr`          | `bluetape4k-images-ocr`              | Tess4J/Tesseract OCR text extraction for `ImmutableImage` |
 | `images-ktor`         | `bluetape4k-images-ktor`             | Ktor route helpers for thumbnails and CAPTCHA verification |
@@ -321,6 +328,66 @@ Use `pageSegmentationMode`, `engineMode`, `variables`, and `configs` when a
 document needs a specific Tesseract recognition mode. The default engine creates
 a fresh Tess4J instance for each OCR call, so callers do not share mutable
 native OCR state.
+
+### Defining Detector Boundaries (`images`)
+
+The core `images` module defines detector result contracts without adding a
+production ML runtime. Implement `ImageDetector` with a deterministic fake,
+OpenCV/ONNX/TensorFlow Lite/MediaPipe adapter, or external service client, then
+use the same result model for face, object, text, logo, or sensitive-region
+outputs.
+
+```kotlin
+import io.bluetape4k.images.detection.*
+
+val detector = ImageDetector { _, _ ->
+    listOf(
+        DetectionResult(
+            label = "face",
+            category = DetectionCategory.FACE,
+            confidence = 0.96,
+            detector = DetectorIdentity(name = "example-detector", version = "test"),
+            region = DetectionRegion(
+                geometry = DetectionRectangleRegion(
+                    x = 0.1,
+                    y = 0.2,
+                    width = 0.4,
+                    height = 0.3,
+                    coordinateSpace = DetectionCoordinateSpace.NORMALIZED,
+                ),
+            ),
+        ),
+    )
+}
+
+val faces = image.detectRegions(
+    detector = detector,
+    options = DetectionOptions(
+        minimumConfidence = 0.8,
+        categories = setOf(DetectionCategory.FACE),
+    ),
+)
+```
+
+Detection regions reuse the sensitive-content geometry model, so rectangle,
+polygon, polyline, and raster-mask metadata can flow into later moderation
+policy or privacy-safe derivative pipelines. The core module does not download
+models, bundle large fixtures, require GPU support, or select a production
+runtime; those adapters belong in follow-up modules or applications.
+
+The test suite includes a license-audited, internet-derived sample corpus under
+`images/src/test/resources/detection/samples/`. It covers face/person, traffic
+sign plus text, Earth/landmark-like imagery, and document text. Running
+`ImageDetectionSampleCorpusTest` writes `build/reports/detection-samples.md`
+with dimensions, dominant colors, blur scores, EXIF presence, and
+manifest-backed detector-boundary categories.
+
+![Manifest-backed detection sample results](docs/images/detection-samples/sample-detection-results.png)
+
+The preview image is generated by
+`docs/scripts/generate-detection-sample-overlays.py` from the same manifest, so
+the rectangles shown in the README are the annotations validated by the test
+suite.
 
 ### Ktor Image and CAPTCHA Routes (`images-ktor`)
 

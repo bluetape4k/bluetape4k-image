@@ -19,7 +19,7 @@ Kotlin/JVM 이미지 처리 라이브러리 — [bluetape4k](https://github.com/
 `bluetape4k-image`는 Kotlin 서비스가 순수 JVM scrimage 처리로 시작하고, 처리량·메모리·
 native codec이 중요해질 때 libvips 백엔드로 확장할 수 있는 단일 이미지 처리 표면을 제공합니다.
 
-저장소는 세 가지 도입 경로를 중심으로 구성됩니다.
+저장소는 여러 도입 경로를 중심으로 구성됩니다.
 
 - **순수 JVM 우선** — native runtime 설정 없이 안정적인 resize, crop, filter, analysis,
   batch, encode workflow가 필요하면 `images`를 사용합니다.
@@ -28,6 +28,9 @@ native codec이 중요해질 때 libvips 백엔드로 확장할 수 있는 단�
   `images-spring-boot`를 추가합니다.
 - **OCR 추출** — 기존 `ImmutableImage` 값에서 Tesseract 기반 텍스트 추출이 필요하면
   명시적인 언어와 tessdata 설정을 가진 `images-ocr`를 추가합니다.
+- **Detector boundary** — face, object, sensitive-region adapter가 OpenCV, ONNX
+  Runtime, TensorFlow Lite, MediaPipe, 외부 서비스 중 하나를 선택하기 전에 안정적인
+  결과 모델이 필요하면 `images`의 runtime-free detector contract를 사용합니다.
 - **Native acceleration** — libvips 처리량, 메모리 동작, AVIF/HEIC 가능 native codec 지원이
   필요하면 `images-vips-api`에 맞춰 작성하고 Java 21 JNI 또는 Java 25 FFM backend를 선택합니다.
 
@@ -41,6 +44,9 @@ benchmark module은 scrimage/libvips trade-off를 추측이 아니라 측정 가
 - **CAPTCHA 생성** — native runtime 없이 Java2D로 bounded option 기반 이미지 챌린지 생성
 - **OCR 추출** — 다국어 옵션을 지원하는 Tess4J/Tesseract 기반
   `ImmutableImage.extractText`, `suspendExtractText` helper
+- **Detector contract** — model download나 native ML dependency 없이 backend-neutral
+  face/object/sensitive-region 결과 모델, detector identity metadata, confidence filtering,
+  `ImmutableImage` sync/suspend 진입점 제공
 - **Ktor 통합** — Ktor 서비스에서 CAPTCHA 이미지 발급과 one-shot 답변 검증을 처리하는 route helper
 - **libvips 추상화** — binding-neutral `VipsImage`, `VipsRuntime` 계약
 - **두 native backend** — Java 21 JVips/JNI와 Java 25 FFM/Panama 선택지
@@ -79,7 +85,7 @@ Benchmark evidence: [`benchmark/images-benchmark/docs/large-streaming-2026-06-05
 | 모듈                   | Artifact ID                          | 설명                                                      |
 |-----------------------|--------------------------------------|----------------------------------------------------------|
 | `bom`                 | `bluetape4k-image-bom`               | 이미지 아티팩트 버전 정렬용 소비자 BOM                    |
-| `images`              | `bluetape4k-images`                  | Scrimage 기반 처리: 로드, 리사이즈, 필터, 변환, 분석, 배치 처리 |
+| `images`              | `bluetape4k-images`                  | Scrimage 기반 처리와 runtime-free detector 결과 계약 |
 | `images-captcha`      | `bluetape4k-images-captcha`          | Java2D CAPTCHA 이미지 챌린지 생성                         |
 | `images-ocr`          | `bluetape4k-images-ocr`              | `ImmutableImage`용 Tess4J/Tesseract OCR 텍스트 추출        |
 | `images-ktor`         | `bluetape4k-images-ktor`             | 썸네일 생성과 CAPTCHA 검증을 위한 Ktor route helper        |
@@ -308,6 +314,64 @@ val suspendText = image.suspendExtractText(
 문서별 인식 방식이 필요하면 `pageSegmentationMode`, `engineMode`, `variables`,
 `configs`를 설정하세요. 기본 엔진은 OCR 호출마다 새 Tess4J 인스턴스를 만들기 때문에
 호출자끼리 mutable native OCR 상태를 공유하지 않습니다.
+
+### Detector Boundary 정의 (`images`)
+
+core `images` 모듈은 production ML runtime을 추가하지 않고 detector 결과 계약만
+정의합니다. deterministic fake, OpenCV/ONNX/TensorFlow Lite/MediaPipe adapter,
+외부 서비스 client 중 무엇을 쓰더라도 `ImageDetector`를 구현하면 face, object, text,
+logo, sensitive-region 결과를 같은 모델로 다룰 수 있습니다.
+
+```kotlin
+import io.bluetape4k.images.detection.*
+
+val detector = ImageDetector { _, _ ->
+    listOf(
+        DetectionResult(
+            label = "face",
+            category = DetectionCategory.FACE,
+            confidence = 0.96,
+            detector = DetectorIdentity(name = "example-detector", version = "test"),
+            region = DetectionRegion(
+                geometry = DetectionRectangleRegion(
+                    x = 0.1,
+                    y = 0.2,
+                    width = 0.4,
+                    height = 0.3,
+                    coordinateSpace = DetectionCoordinateSpace.NORMALIZED,
+                ),
+            ),
+        ),
+    )
+}
+
+val faces = image.detectRegions(
+    detector = detector,
+    options = DetectionOptions(
+        minimumConfidence = 0.8,
+        categories = setOf(DetectionCategory.FACE),
+    ),
+)
+```
+
+Detection region은 sensitive-content geometry model을 재사용하므로 rectangle,
+polygon, polyline, raster-mask metadata를 이후 moderation policy나 privacy-safe
+derivative pipeline으로 넘길 수 있습니다. core 모듈은 model을 다운로드하거나, 큰 fixture를
+번들하거나, GPU 지원을 요구하거나, production runtime을 선택하지 않습니다. 그런 adapter는
+후속 모듈이나 애플리케이션에서 다룹니다.
+
+테스트 suite에는 `images/src/test/resources/detection/samples/` 아래
+license-audited internet sample corpus가 포함됩니다. face/person, traffic sign과 text,
+Earth/landmark 성격의 이미지, document text를 다룹니다.
+`ImageDetectionSampleCorpusTest`를 실행하면 `build/reports/detection-samples.md`에
+dimensions, dominant colors, blur score, EXIF 여부, manifest 기반 detector-boundary
+category가 기록됩니다.
+
+![Manifest 기반 detection sample 결과](docs/images/detection-samples/sample-detection-results.png)
+
+이 preview 이미지는 같은 manifest를 입력으로
+`docs/scripts/generate-detection-sample-overlays.py`가 생성합니다. 따라서 README에
+보이는 rectangle은 테스트 suite가 검증하는 annotation과 동일합니다.
 
 ### Ktor 이미지와 CAPTCHA 라우트 (`images-ktor`)
 
