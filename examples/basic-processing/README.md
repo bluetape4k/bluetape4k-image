@@ -16,6 +16,8 @@ generated files under `build/tmp/basic-processing` by default.
 - Add a simple text watermark
 - Reuse the root README representative image as a 16:9 preview output
 - Write encoded images through suspend-aware `bluetape4k-images` writers
+- Run a deterministic sensitive-content moderation workflow without bundling an
+  ML runtime or model weights
 
 ## Diagrams
 
@@ -61,3 +63,51 @@ Expected outputs:
 
 The test calls the same generator used by the `run` task and verifies that every
 output file exists, is decodable, and has the expected dimensions.
+
+## Sensitive Moderation Workflow
+
+The `runSensitiveWorkflow` task demonstrates a detector-result to policy to
+action pipeline with deterministic fake detector output. It is intentionally not
+a production moderator. The example is useful for wiring, audit reports, and
+safe derivative behavior, but real deployments still need model validation,
+false-positive and false-negative monitoring, threshold review, and human
+escalation rules.
+
+```bash
+./gradlew :basic-processing:runSensitiveWorkflow
+```
+
+Use a custom output directory:
+
+```bash
+./gradlew :basic-processing:runSensitiveWorkflow --args="/tmp/bluetape4k-sensitive-workflow"
+```
+
+Expected outputs:
+
+| File | Purpose |
+| --- | --- |
+| `06-sensitive-moderation-preview.jpg` | Public-safe derivative generated from the sample policy's rectangle actions |
+| `06-sensitive-moderation-report.txt` | Text audit summary of detections, policy decisions, action intensity, and renderer coverage |
+
+The example covers these geometry and action cases:
+
+| Detector fixture | Geometry | Policy action | Action parameters |
+| --- | --- | --- | --- |
+| `suggestive-low` | rectangle | `ALLOW` | no treatment |
+| `explicit-medium` | rectangle | `MOSAIC` | `mosaicBlockSize=18` |
+| `pii-text-line` | polyline | `BLUR` | `blurRadius=6.0`, `blurSigma=2.0` |
+| `minor-face` | rectangle | `SOLID_MASK` | `maskOpacity=0.95` |
+| `violence-contour` | polygon | `MANUAL_REVIEW` | `reviewPriority=70` |
+| `weapon-silhouette` | rectangle | `DROP` | `rejectReason=weapon policy` |
+| `hate-symbol-mask` | raster mask metadata | `REJECT` | `rejectReason=hate-symbol policy` |
+| `unknown-sensitive-region` | polygon | `QUARANTINE` | fail-closed fallback |
+
+Only rectangle actions are rendered by the core privacy derivative pipeline in
+this example. Polygon, polyline, and raster-mask cases are included in the
+policy/audit contract so a future renderer or detector adapter can plug into the
+same `SensitiveContentDetection` and `SensitiveModerationPolicy` models without
+moving model runtime dependencies into `bluetape4k-images`.
+
+Blog seed: see
+[`docs/blog/sensitive-content-moderation-workflow-outline.md`](../../docs/blog/sensitive-content-moderation-workflow-outline.md).

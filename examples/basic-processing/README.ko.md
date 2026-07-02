@@ -16,6 +16,8 @@
 - 간단한 텍스트 워터마크 추가
 - 루트 README 대표 이미지를 16:9 preview 출력으로 재사용
 - suspend-aware `bluetape4k-images` writer로 인코딩 결과 저장
+- 무거운 ML runtime이나 model weight 없이 deterministic sensitive-content
+  moderation workflow 실행
 
 ## 다이어그램
 
@@ -61,3 +63,51 @@
 
 테스트는 `run` 태스크가 사용하는 같은 generator를 호출하고, 모든 출력 파일이 존재하며
 디코딩 가능하고 기대한 크기인지 검증합니다.
+
+## Sensitive Moderation Workflow
+
+`runSensitiveWorkflow` 태스크는 detector 결과를 policy, action, public-safe
+derivative로 이어 붙이는 흐름을 deterministic fake detector 출력으로 보여줍니다.
+이 예제는 production moderator가 아닙니다. wiring, audit report, 안전한 derivative
+동작을 확인하는 용도이며, 실제 배포에서는 model 검증, false-positive/false-negative
+모니터링, threshold review, human escalation rule이 따로 필요합니다.
+
+```bash
+./gradlew :basic-processing:runSensitiveWorkflow
+```
+
+출력 디렉터리를 직접 지정할 수도 있습니다.
+
+```bash
+./gradlew :basic-processing:runSensitiveWorkflow --args="/tmp/bluetape4k-sensitive-workflow"
+```
+
+예상 출력:
+
+| 파일 | 용도 |
+| --- | --- |
+| `06-sensitive-moderation-preview.jpg` | sample policy의 rectangle action으로 만든 public-safe derivative |
+| `06-sensitive-moderation-report.txt` | detection, policy decision, action intensity, renderer coverage를 정리한 text audit summary |
+
+예제는 다음 geometry와 action 조합을 다룹니다.
+
+| Detector fixture | Geometry | Policy action | Action parameters |
+| --- | --- | --- | --- |
+| `suggestive-low` | rectangle | `ALLOW` | no treatment |
+| `explicit-medium` | rectangle | `MOSAIC` | `mosaicBlockSize=18` |
+| `pii-text-line` | polyline | `BLUR` | `blurRadius=6.0`, `blurSigma=2.0` |
+| `minor-face` | rectangle | `SOLID_MASK` | `maskOpacity=0.95` |
+| `violence-contour` | polygon | `MANUAL_REVIEW` | `reviewPriority=70` |
+| `weapon-silhouette` | rectangle | `DROP` | `rejectReason=weapon policy` |
+| `hate-symbol-mask` | raster mask metadata | `REJECT` | `rejectReason=hate-symbol policy` |
+| `unknown-sensitive-region` | polygon | `QUARANTINE` | fail-closed fallback |
+
+이 예제에서 core privacy derivative pipeline이 실제로 렌더링하는 것은 rectangle
+action뿐입니다. polygon, polyline, raster-mask case는 policy/audit contract를
+보여주기 위해 포함했습니다. 이후 renderer나 detector adapter를 붙일 때도
+`SensitiveContentDetection`과 `SensitiveModerationPolicy` 모델은 그대로 사용할 수 있고,
+model runtime dependency를 `bluetape4k-images` 안으로 밀어 넣을 필요가 없습니다.
+
+Blog seed는
+[`docs/blog/sensitive-content-moderation-workflow-outline.md`](../../docs/blog/sensitive-content-moderation-workflow-outline.md)에
+정리했습니다.
