@@ -68,6 +68,7 @@ AVIF·HEIC는 incubating 인터페이스로 제공되며, libvips 지원은 `ima
 | `analysis/DominantColor.kt`                          | 대표 색상 추출 — `dominantColor()`, `dominantColors()` |
 | `analysis/BlurDetector.kt`                           | 블러 감지 — `blurScore()`, `isBlurry()` |
 | `analysis/ExifData.kt`                               | EXIF 파싱 — `readExif()`, GPS PII 제거 |
+| `analysis/ImageMetadataReport.kt`                    | 개인정보 보호형 metadata report — EXIF/XMP/IPTC/ICC/dimensions/HDR hints |
 | `moderation/SensitiveContentModels.kt`               | 백엔드 중립 민감 콘텐츠 감지 결과 모델 |
 | `moderation/SensitiveContentPolicy.kt`               | 렌더러 중립 moderation policy와 treatment decision |
 | `privacy/PrivacyDerivativePipeline.kt`               | metadata 제거, 크기 제한, redaction을 적용한 공개용 derivative 이미지 |
@@ -916,7 +917,7 @@ val asyncResult = image.suspendApplyFilters {
 
 ### 이미지 분석
 
-대표 색상 추출, 블러 감지, EXIF 메타데이터 파싱 — 순수 JVM, 네이티브 의존성 없음.
+대표 색상 추출, 블러 감지, 개인정보 보호형 metadata report — 순수 JVM, 네이티브 의존성 없음.
 
 #### 대표 색상 추출 (Median Cut)
 
@@ -962,12 +963,12 @@ if (image.isBlurry()) {
 val asyncScore: BlurScore = image.suspendBlurScore(threshold = 150.0)
 ```
 
-#### EXIF 메타데이터
+#### Metadata Report
 
 ```kotlin
 import io.bluetape4k.images.analysis.*
 
-// File에서 읽기
+// EXIF 전용 view
 val exif: ExifData = File("photo.jpg").readExif()
 println("제조사=${exif.cameraMake}, 모델=${exif.cameraModel}")
 println("ISO=${exif.iso}, 조리개=f/${exif.aperture}")
@@ -987,6 +988,28 @@ val exifFromPath: ExifData = Paths.get("photo.jpg").readExif()
 
 // Suspend
 val asyncExif: ExifData = File("photo.jpg").suspendReadExif()
+
+// 공개 API에 안전한 확장 report (GPS 제거, raw tag 제외)
+val publicReport: ImageMetadataReport = readImageMetadataReport(uploadBytes)
+println("크기=${publicReport.dimensions}")
+println("xmp=${publicReport.containsXmp}, iptc=${publicReport.containsIptc}")
+println("icc=${publicReport.iccProfile?.colorSpace}, hdr=${publicReport.hdrHints.hasHdrHint}")
+
+// 내부 diagnostic은 opt-in이며 값 길이가 제한됩니다. 운영자 도구에는 쓸 수 있지만
+// 공개 API 응답에는 노출하지 마세요.
+val diagnosticReport = File("photo.jpg").readImageMetadataReport(
+    ImageMetadataReadOptions(
+        stripSensitiveMetadata = false,
+        includeDiagnosticTags = true,
+        maxDiagnosticValueLength = 128,
+    ),
+).withoutSensitiveMetadata()
+
+// 선택적 backend adapter는 sanitizing된 header fact로 report를 보강할 수 있습니다.
+val vipsAwareReport = publicReport.withBackendHeaderFields(
+    sourceBackend = "vips",
+    headerFields = mapOf("interpretation" to "scRGB HDR", "gainmap" to "present"),
+)
 ```
 
 #### 주요 파일
@@ -997,6 +1020,7 @@ val asyncExif: ExifData = File("photo.jpg").suspendReadExif()
 | `analysis/MedianCutQuantizer.kt`        | Median Cut quantization 엔진 (5-bit/channel)     |
 | `analysis/BlurDetector.kt`              | `BlurScore` + Laplacian variance 계산             |
 | `analysis/ExifData.kt`                  | `ExifData` 모델 + `readExif()` 진입점            |
+| `analysis/ImageMetadataReport.kt`       | 공개 API 안전 metadata report + 제한된 내부 diagnostics |
 
 ### 민감 콘텐츠 Moderation Policy
 

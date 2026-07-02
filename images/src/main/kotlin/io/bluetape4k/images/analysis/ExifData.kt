@@ -186,7 +186,7 @@ private inline fun <T> runCatchingDebug(tag: String, block: () -> T?): T? =
         null
     }
 
-private fun Metadata.toExifData(): ExifData {
+internal fun Metadata.toExifData(): ExifData {
     val ifd0 = getFirstDirectoryOfType(ExifIFD0Directory::class.java)
     val subIfd = getFirstDirectoryOfType(ExifSubIFDDirectory::class.java)
     val gps = getFirstDirectoryOfType(GpsDirectory::class.java)
