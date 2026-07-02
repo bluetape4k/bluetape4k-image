@@ -1,9 +1,6 @@
 package io.bluetape4k.images.barcode.zxing
 
 import com.google.zxing.BarcodeFormat as ZxingFormat
-import com.google.zxing.MultiFormatWriter
-import com.google.zxing.client.j2se.MatrixToImageWriter
-import com.sksamuel.scrimage.ImmutableImage
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeTrue
@@ -14,9 +11,8 @@ import io.bluetape4k.images.barcode.BarcodeFailureReason
 import io.bluetape4k.images.barcode.BarcodeFormat
 import io.bluetape4k.images.barcode.BarcodeOptions
 import io.bluetape4k.images.barcode.extractBarcodes
-import java.awt.Color
-import java.awt.geom.AffineTransform
-import java.awt.image.BufferedImage
+import io.bluetape4k.images.barcode.testfixtures.BarcodeTestFixtures
+import io.bluetape4k.images.barcode.zxing.ZxingBarcodeImageFixtures.barcodeImage
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
@@ -68,14 +64,14 @@ class ZxingBarcodeReaderTest {
 
     @Test
     fun `no barcode image returns no results`() {
-        val results = blankImage().extractBarcodes(reader)
+        val results = BarcodeTestFixtures.blankImage().extractBarcodes(reader)
 
         results.isEmpty().shouldBeTrue()
     }
 
     @Test
     fun `try harder reads rotated QR code`() {
-        val image = rotateClockwise(barcodeImage("rotated-qr", ZxingFormat.QR_CODE))
+        val image = BarcodeTestFixtures.rotateClockwise(barcodeImage("rotated-qr", ZxingFormat.QR_CODE))
 
         val result = image.extractBarcodes(
             reader,
@@ -89,7 +85,7 @@ class ZxingBarcodeReaderTest {
     @Test
     fun `malformed encoded bytes map to barcode exception`() {
         val error = assertFailsWith<BarcodeException> {
-            reader.readBarcodes("not-an-image".toByteArray())
+            reader.readBarcodes(BarcodeTestFixtures.malformedImageBytes)
         }
 
         error.reason shouldBeEqualTo BarcodeFailureReason.MALFORMED_INPUT
@@ -98,7 +94,10 @@ class ZxingBarcodeReaderTest {
     @Test
     fun `unsupported requested format maps to barcode exception`() {
         val error = assertFailsWith<BarcodeException> {
-            blankImage().extractBarcodes(reader, BarcodeOptions(formats = setOf(BarcodeFormat.UNKNOWN)))
+            BarcodeTestFixtures.blankImage().extractBarcodes(
+                reader,
+                BarcodeOptions(formats = setOf(BarcodeFormat.UNKNOWN)),
+            )
         }
 
         error.reason shouldBeEqualTo BarcodeFailureReason.UNSUPPORTED_FORMAT
@@ -111,46 +110,5 @@ class ZxingBarcodeReaderTest {
         val result = image.extractBarcodes(reader, BarcodeOptions(includeRawBytes = true)).single()
 
         result.rawBytes.shouldNotBeNull().isNotEmpty().shouldBeTrue()
-    }
-
-    private fun barcodeImage(
-        text: String,
-        format: ZxingFormat,
-    ): ImmutableImage {
-        val dimensions = when (format) {
-            ZxingFormat.CODE_128 -> 360 to 120
-            else -> 220 to 220
-        }
-        val matrix = MultiFormatWriter().encode(text, format, dimensions.first, dimensions.second)
-        return ImmutableImage.fromAwt(MatrixToImageWriter.toBufferedImage(matrix))
-    }
-
-    private fun blankImage(): ImmutableImage {
-        val buffered = BufferedImage(180, 120, BufferedImage.TYPE_INT_RGB)
-        val graphics = buffered.createGraphics()
-        try {
-            graphics.color = Color.WHITE
-            graphics.fillRect(0, 0, buffered.width, buffered.height)
-        } finally {
-            graphics.dispose()
-        }
-        return ImmutableImage.fromAwt(buffered)
-    }
-
-    private fun rotateClockwise(image: ImmutableImage): ImmutableImage {
-        val source = image.awt()
-        val rotated = BufferedImage(source.height, source.width, BufferedImage.TYPE_INT_RGB)
-        val graphics = rotated.createGraphics()
-        try {
-            graphics.color = Color.WHITE
-            graphics.fillRect(0, 0, rotated.width, rotated.height)
-            val transform = AffineTransform()
-            transform.translate(source.height.toDouble(), 0.0)
-            transform.rotate(Math.PI / 2.0)
-            graphics.drawImage(source, transform, null)
-        } finally {
-            graphics.dispose()
-        }
-        return ImmutableImage.fromAwt(rotated)
     }
 }

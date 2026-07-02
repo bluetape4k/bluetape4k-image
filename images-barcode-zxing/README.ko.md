@@ -63,5 +63,7 @@ multi-barcode detection이 필요하다면 ZXing만 표준화하기 전에 다�
 ./gradlew :bluetape4k-images-barcode-zxing:test
 ```
 
-테스트는 ZXing writer로 QR과 Code 128 이미지를 메모리에서 생성합니다. 외부 이미지
-fixture가 필요하지 않습니다.
+테스트는 ZXing writer로 QR과 Code 128 이미지를 메모리에서 생성합니다.
+No-code image, rotated image, malformed byte, fixture source-note helper는
+`images-barcode-api` test fixtures의 `BarcodeTestFixtures`를 공유합니다. 외부
+barcode 이미지 binary는 필요하지 않습니다.

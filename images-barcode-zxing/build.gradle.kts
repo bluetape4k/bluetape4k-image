@@ -9,4 +9,5 @@ dependencies {
     implementation(libs.zxing.javase)
 
     testImplementation(libs.bluetape4k.junit5)
+    testImplementation(testFixtures(project(":bluetape4k-images-barcode-api")))
 }

@@ -346,6 +346,18 @@ backend format label을 `BarcodeResult`로 변환하며, barcode가 없으면 �
 반환합니다. ZXing은 순수 JVM Apache-2.0 provider지만, 장기적으로 유일한 provider가
 아니라 첫 OSS provider 경로로 다룹니다.
 
+#### Barcode Provider Capability Matrix
+
+| Provider | 모듈 | 상태 | 포맷과 범위 | Fixture와 문서 근거 |
+|----------|------|------|-------------|-------------------|
+| API contract | `images-barcode-api` | 사용 가능 | 직접 decoding 없음. `BarcodeReader`, `BarcodeOptions`, `BarcodeResult`, `BarcodeRegion`, input helper 제공 | `BarcodeTestFixtures`가 no-code image, rotated image, malformed bytes, generated-source note를 공유 fixture로 제공 |
+| ZXing | `images-barcode-zxing` | 사용 가능 | ZXing 기반 QR Code와 주요 1D/2D 포맷. 테스트는 QR Code와 Code 128을 검증 | ZXing writer가 deterministic in-memory QR/Code 128 이미지를 생성 |
+| BoofCV | — | 보류 | Research 기준 QR, Micro QR, Aztec 특화 범위. 0.4.0의 broad 1D barcode backend로는 채택하지 않음 | `docs/superpowers/research/2026-07-03-issue-246-boofcv-provider-research.md` 참고 |
+| Commercial/native SDK | — | 향후 조사 | 산업용, native, commercial 요구를 위한 선택 provider | #248에서 추적 |
+
+Barcode fixture는 deterministic code로 테스트 실행 시 생성됩니다. 외부 barcode 이미지
+binary는 repository에 포함하지 않습니다.
+
 ### OCR 텍스트 추출 (`images-ocr`)
 
 ```kotlin

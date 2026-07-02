@@ -80,6 +80,23 @@ source.use { reader.readBarcodes(it) }
 
 Helper는 `bluetape4k-images`의 `immutableImageOf(...)`를 재사용합니다.
 
+## 테스트 Fixture
+
+API 모듈은 `testFixtures(project(":bluetape4k-images-barcode-api"))`를 통해
+provider-neutral test fixture를 제공합니다.
+
+```kotlin
+import io.bluetape4k.images.barcode.testfixtures.BarcodeTestFixtures
+
+val blank = BarcodeTestFixtures.blankImage()
+val rotated = BarcodeTestFixtures.rotateClockwise(blank)
+val malformed = BarcodeTestFixtures.malformedImageBytes
+```
+
+이 fixture들은 결정적인 코드로 테스트 실행 시 생성됩니다. 외부 barcode 이미지
+asset은 번들하지 않으며, `BarcodeTestFixtures.GENERATED_SOURCE_NOTE`에 provider
+capability 문서용 source/license note를 기록합니다.
+
 ## 테스트
 
 ```bash
@@ -87,4 +104,5 @@ Helper는 `bluetape4k-images`의 `immutableImageOf(...)`를 재사용합니다.
 ```
 
 테스트는 순수 JVM에서 항상 실행됩니다. Model validation, serialization,
-sync/suspend delegation, cancellation, input helper decoding을 검증합니다.
+sync/suspend delegation, cancellation, input helper decoding과 공유 fixture helper
+동작을 검증합니다.
