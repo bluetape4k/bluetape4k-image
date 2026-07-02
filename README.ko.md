@@ -356,9 +356,16 @@ val faces = image.detectRegions(
 
 Detection region은 sensitive-content geometry model을 재사용하므로 rectangle,
 polygon, polyline, raster-mask metadata를 이후 moderation policy나 privacy-safe
-derivative pipeline으로 넘길 수 있습니다. core 모듈은 model을 다운로드하거나, 큰 fixture를
-번들하거나, GPU 지원을 요구하거나, production runtime을 선택하지 않습니다. 그런 adapter는
-후속 모듈이나 애플리케이션에서 다룹니다.
+derivative pipeline으로 넘길 수 있습니다. moderation policy layer는 detector가 만든
+사실만 보고 `ALLOW`, `MOSAIC`, `BLUR`, `SOLID_MASK`, `DROP`, `REJECT`,
+`QUARANTINE`, `MANUAL_REVIEW` action을 선택할 수 있으며, pixel rendering은 하지
+않습니다. 알 수 없거나 rule에 맞지 않는 민감 category는 quarantine/manual-review
+성격의 fail-closed 정책으로 다루고, 애플리케이션은 detector false negative, false
+positive, route별 threshold를 별도로 고려해야 합니다.
+
+core 모듈은 model을 다운로드하거나, 큰 fixture를 번들하거나, GPU 지원을 요구하거나,
+treatment를 렌더링하거나, production runtime을 선택하지 않습니다. 그런 adapter는 후속
+모듈이나 애플리케이션에서 다룹니다.
 
 테스트 suite에는 `images/src/test/resources/detection/samples/` 아래
 license-audited internet sample corpus가 포함됩니다. face/person, traffic sign과 text,
