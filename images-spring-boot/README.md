@@ -21,7 +21,18 @@ reactive health indicators, and Micrometer metrics.
 ### Dependency
 
 ```kotlin
-implementation("io.github.bluetape4k.image:bluetape4k-images-spring-boot")
+dependencies {
+    implementation(platform("io.github.bluetape4k.image:bluetape4k-image-bom:<version>"))
+    implementation("io.github.bluetape4k.image:bluetape4k-images-spring-boot")
+}
+```
+
+If you do not import the BOM, declare the module version directly:
+
+```kotlin
+dependencies {
+    implementation("io.github.bluetape4k.image:bluetape4k-images-spring-boot:<version>")
+}
 ```
 
 ### Configuration
