@@ -70,6 +70,7 @@ jobs:
 
           required_jobs=(
             "Test / images-barcode-api"
+            "Test / images-barcode-zxing"
             "Test / images-ocr"
             "Test / images-vips-api"
             "Test / images-vips-java21"
