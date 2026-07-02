@@ -66,6 +66,7 @@ A library for loading, converting, resizing, splitting, and applying filters to 
 | `analysis/DominantColor.kt`                    | Dominant color extraction (MedianCut) — `dominantColor()`, `dominantColors()` |
 | `analysis/BlurDetector.kt`                     | Blur detection via Laplacian variance — `blurScore()`, `isBlurry()` |
 | `analysis/ExifData.kt`                         | EXIF metadata parsing — `readExif()`, GPS PII removal |
+| `analysis/ImageMetadataReport.kt`              | Privacy-aware metadata report — EXIF/XMP/IPTC/ICC/dimensions/HDR hints |
 | `moderation/SensitiveContentModels.kt`         | Backend-neutral sensitive-content detection result models |
 | `moderation/SensitiveContentPolicy.kt`         | Renderer-neutral moderation policy and treatment decisions |
 | `privacy/PrivacyDerivativePipeline.kt`         | Public-safe derivative images with metadata stripping, sizing, and redaction |
@@ -890,7 +891,7 @@ val asyncResult = image.suspendApplyFilters {
 
 ### Image Analysis
 
-Dominant color extraction, blur detection, and EXIF metadata parsing — all pure JVM, no native dependencies.
+Dominant color extraction, blur detection, and privacy-aware metadata reports — all pure JVM, no native dependencies.
 
 ![Image Analysis diagram](../docs/images/readme-diagrams/images-class-04.png)
 
@@ -938,12 +939,12 @@ if (image.isBlurry()) {
 val asyncScore: BlurScore = image.suspendBlurScore(threshold = 150.0)
 ```
 
-#### EXIF Metadata
+#### Metadata Reports
 
 ```kotlin
 import io.bluetape4k.images.analysis.*
 
-// From File
+// EXIF-only view
 val exif: ExifData = File("photo.jpg").readExif()
 println("make=${exif.cameraMake}, model=${exif.cameraModel}")
 println("iso=${exif.iso}, aperture=f/${exif.aperture}")
@@ -963,6 +964,28 @@ val exifFromPath: ExifData = Paths.get("photo.jpg").readExif()
 
 // Suspend
 val asyncExif: ExifData = File("photo.jpg").suspendReadExif()
+
+// Public-safe extended report (GPS stripped, raw tags omitted)
+val publicReport: ImageMetadataReport = readImageMetadataReport(uploadBytes)
+println("dimensions=${publicReport.dimensions}")
+println("xmp=${publicReport.containsXmp}, iptc=${publicReport.containsIptc}")
+println("icc=${publicReport.iccProfile?.colorSpace}, hdr=${publicReport.hdrHints.hasHdrHint}")
+
+// Internal diagnostics are opt-in and bounded. Use them for operator tooling,
+// not for public API responses.
+val diagnosticReport = File("photo.jpg").readImageMetadataReport(
+    ImageMetadataReadOptions(
+        stripSensitiveMetadata = false,
+        includeDiagnosticTags = true,
+        maxDiagnosticValueLength = 128,
+    ),
+).withoutSensitiveMetadata()
+
+// Optional backend adapters can enrich the report with sanitized header facts.
+val vipsAwareReport = publicReport.withBackendHeaderFields(
+    sourceBackend = "vips",
+    headerFields = mapOf("interpretation" to "scRGB HDR", "gainmap" to "present"),
+)
 ```
 
 #### Key Files
@@ -973,6 +996,7 @@ val asyncExif: ExifData = File("photo.jpg").suspendReadExif()
 | `analysis/MedianCutQuantizer.kt`        | Median Cut quantization engine (5-bit/channel)  |
 | `analysis/BlurDetector.kt`              | `BlurScore` + Laplacian variance computation     |
 | `analysis/ExifData.kt`                  | `ExifData` model + `readExif()` entry points     |
+| `analysis/ImageMetadataReport.kt`       | Public-safe metadata report + bounded internal diagnostics |
 
 ### Sensitive Content Moderation Policy
 
