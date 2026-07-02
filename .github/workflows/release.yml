@@ -126,6 +126,7 @@ jobs:
 
           required_jobs=(
             "Test / images"
+            "Test / images-barcode-api"
             "Test / images-captcha"
             "Test / images-ocr"
             "Test / images-ktor"

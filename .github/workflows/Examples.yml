@@ -8,6 +8,7 @@ on:
     paths:
       - 'examples/**'
       - 'images/**'
+      - 'images-barcode-api/**'
       - 'images-captcha/**'
       - 'images-ocr/**'
       - 'images-ktor/**'
@@ -23,6 +24,7 @@ on:
     paths:
       - 'examples/**'
       - 'images/**'
+      - 'images-barcode-api/**'
       - 'images-captcha/**'
       - 'images-ocr/**'
       - 'images-ktor/**'
