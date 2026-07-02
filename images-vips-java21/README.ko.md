@@ -285,6 +285,19 @@ Java 21 백엔드는 decode 전에 AVIF/HEIC ISO BMFF brand를 allowlist로 검�
 처리는 호스트 libvips codec set에 의존하며, native 지원이 없으면 sanitized
 `VipsDecodeException` 또는 `VipsEncodeException`으로 보고됩니다.
 
+AVIF/HEIC route를 활성화하기 전에 codec status를 확인하세요.
+
+```kotlin
+val report = JVipsRuntime.codecCapabilityReport()
+val avif = report.codec(VipsImageFormat.AVIF)
+val heic = report.codec(VipsImageFormat.HEIC)
+```
+
+JVips는 native libvips operation을 직접 검사할 수 없으므로 AVIF/HEIC decode와 AVIF
+encode는 `UNKNOWN`으로 보고합니다. 배포 호스트에서는 caller-provided sample로
+`JVipsRuntime.smokeTestCodec(...)`을 실행하세요. HEIC encode는 JVips binding이 노출하지
+않기 때문에 `UNAVAILABLE`입니다.
+
 ## 동시성 & 스레드 안전성
 
 - **JVipsRuntime 싱글턴**: `AtomicReference<State>` CAS를 통한 스레드 안전성 보장

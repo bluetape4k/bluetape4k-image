@@ -191,6 +191,22 @@ native HEIF-family codecs fail as sanitized `VipsDecodeException` or
 small AVIF/HEIC decode or encode smoke test on the same machine that runs the
 JVM.
 
+Each vips runtime exposes a structured codec report and an opt-in smoke helper:
+
+```kotlin
+val report = runtime.codecCapabilityReport()
+val heic = report.codec(VipsImageFormat.HEIC)
+
+val smoke = runtime.smokeTestCodec(
+    sampleBytes = heicSampleBytes,
+    outputFormat = VipsImageFormat.HEIC,
+)
+```
+
+Java 25 reports native operation availability through `heifload_buffer` and
+`heifsave_buffer`. Java 21 reports JVips limitations explicitly and uses
+`UNKNOWN` where the binding cannot inspect the native libvips build.
+
 ### Troubleshooting libvips startup
 
 - `FFM API requires --enable-native-access` or `UnsupportedOperationException`:

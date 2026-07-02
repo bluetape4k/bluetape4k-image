@@ -178,6 +178,22 @@ sanitized `VipsDecodeException` 또는 `VipsEncodeException`으로 실패합니�
 `vips --version`과 작은 AVIF/HEIC decode 또는 encode smoke test로 같은 JVM 실행 환경의
 capability를 확인하세요.
 
+각 vips runtime은 구조화된 codec report와 opt-in smoke helper를 제공합니다.
+
+```kotlin
+val report = runtime.codecCapabilityReport()
+val heic = report.codec(VipsImageFormat.HEIC)
+
+val smoke = runtime.smokeTestCodec(
+    sampleBytes = heicSampleBytes,
+    outputFormat = VipsImageFormat.HEIC,
+)
+```
+
+Java 25는 `heifload_buffer`, `heifsave_buffer` native operation availability를
+보고합니다. Java 21은 JVips 한계를 명시하고, binding이 native libvips 빌드를 직접 검사할
+수 없는 항목은 `UNKNOWN`으로 보고합니다.
+
 ### libvips 시작 문제 해결
 
 - `FFM API requires --enable-native-access` 또는 `UnsupportedOperationException`:

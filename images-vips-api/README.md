@@ -76,6 +76,26 @@ libheif build. Unsupported input signatures raise `VipsDecodeException`. Missing
 native HEIF-family loader or saver support raises sanitized `VipsDecodeException`
 or `VipsEncodeException`.
 
+Use `VipsRuntime.codecCapabilityReport()` before advertising AVIF/HEIC support
+from a service endpoint. The report always lists JPEG, PNG, and WebP as stable
+formats, then marks AVIF/HEIC decode and encode as `AVAILABLE`, `UNAVAILABLE`,
+or `UNKNOWN` with backend-specific native operation clues such as
+`heifload_buffer` and `heifsave_buffer`.
+
+For deployment checks, run `VipsRuntime.smokeTestCodec(...)` with small
+caller-provided AVIF or HEIC samples from the same host image pipeline:
+
+```kotlin
+val report = runtime.codecCapabilityReport()
+val avif = report.codec(VipsImageFormat.AVIF)
+
+val smoke = runtime.smokeTestCodec(
+    sampleBytes = avifSampleBytes,
+    outputFormat = VipsImageFormat.AVIF,
+)
+require(smoke.succeeded) { smoke.failureReason.orEmpty() }
+```
+
 ## Usage Examples
 
 ### Initialize and Load Image

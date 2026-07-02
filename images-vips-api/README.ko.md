@@ -76,6 +76,26 @@ Native AVIF/HEIC 지원은 libheif가 포함된 libvips 빌드가 필요합니�
 loader 또는 saver가 없으면 sanitized `VipsDecodeException` 또는 `VipsEncodeException`으로
 실패합니다.
 
+서비스 endpoint에서 AVIF/HEIC 지원 여부를 노출하기 전에는
+`VipsRuntime.codecCapabilityReport()`를 사용하십시오. Report는 JPEG, PNG, WebP를 항상
+stable format으로 표시하고, AVIF/HEIC decode/encode는 `AVAILABLE`, `UNAVAILABLE`,
+`UNKNOWN` 중 하나로 보고합니다. 백엔드가 확인할 수 있는 경우 `heifload_buffer`,
+`heifsave_buffer` 같은 native operation 단서도 함께 제공합니다.
+
+배포 환경 검증에는 같은 호스트 이미지 파이프라인에서 준비한 작은 AVIF/HEIC 샘플로
+`VipsRuntime.smokeTestCodec(...)`을 실행하십시오.
+
+```kotlin
+val report = runtime.codecCapabilityReport()
+val avif = report.codec(VipsImageFormat.AVIF)
+
+val smoke = runtime.smokeTestCodec(
+    sampleBytes = avifSampleBytes,
+    outputFormat = VipsImageFormat.AVIF,
+)
+require(smoke.succeeded) { smoke.failureReason.orEmpty() }
+```
+
 ## 사용 예시
 
 ### 초기화 및 이미지 로드
