@@ -23,6 +23,27 @@ fun interface OcrEngine {
 }
 
 /**
+ * Recognizes plain text plus structured OCR entries from an [ImmutableImage].
+ *
+ * ## Contract
+ * - [recognize] remains the source-compatible plain-text surface.
+ * - [recognizeStructured] returns page metadata and optional block, line, and
+ *   word entries according to [OcrOptions.structuredDetail].
+ * - Missing confidence or bounding-box data must remain `null`.
+ */
+interface StructuredOcrEngine: OcrEngine {
+
+    /**
+     * Recognizes structured OCR content from [image] using [options].
+     *
+     * @param image image to inspect
+     * @param options OCR options, including structured detail and source regions
+     * @return structured OCR result
+     */
+    fun recognizeStructured(image: ImmutableImage, options: OcrOptions): OcrStructuredResult
+}
+
+/**
  * Base exception for OCR failures.
  */
 open class OcrException(

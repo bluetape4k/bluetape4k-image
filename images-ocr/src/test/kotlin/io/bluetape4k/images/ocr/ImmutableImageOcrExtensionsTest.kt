@@ -31,6 +31,27 @@ class ImmutableImageOcrExtensionsTest {
     }
 
     @Test
+    fun `extractOcr delegates to supplied structured engine`() {
+        val calls = AtomicInteger()
+        val options = OcrOptions(structuredDetail = OcrStructuredDetail.LINE)
+        val engine = RecordingStructuredOcrEngine(
+            calls = calls,
+            result = OcrStructuredResult(
+                text = "structured ocr",
+                options = options,
+                pages = listOf(OcrPage(pageIndex = 0, text = "structured ocr")),
+                lines = listOf(OcrTextLine(pageIndex = 0, text = "structured ocr")),
+            ),
+        )
+
+        val result = textImage().extractOcr(options, engine)
+
+        result.text shouldBeEqualTo "structured ocr"
+        result.lines.size shouldBeEqualTo 1
+        calls.get() shouldBeEqualTo 1
+    }
+
+    @Test
     fun `suspendExtractText delegates on the supplied dispatcher`() = runTest {
         val calls = AtomicInteger()
         val dispatcher = StandardTestDispatcher(testScheduler)
@@ -64,5 +85,49 @@ class ImmutableImageOcrExtensionsTest {
             }
         }
         calls.get() shouldBeEqualTo 0
+    }
+
+    @Test
+    fun `suspendExtractOcr delegates on the supplied dispatcher`() = runTest {
+        val calls = AtomicInteger()
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        val options = OcrOptions(structuredDetail = OcrStructuredDetail.WORD)
+        val engine = RecordingStructuredOcrEngine(
+            calls = calls,
+            result = OcrStructuredResult(
+                text = "suspend structured ocr",
+                options = options,
+                pages = listOf(OcrPage(pageIndex = 0, text = "suspend structured ocr")),
+                words = listOf(OcrWord(pageIndex = 0, text = "ocr")),
+            ),
+        )
+
+        val deferred = this.async {
+            textImage().suspendExtractOcr(options = options, engine = engine, dispatcher = dispatcher)
+        }
+
+        calls.get() shouldBeEqualTo 0
+        testScheduler.advanceUntilIdle()
+        deferred.await().words.size shouldBeEqualTo 1
+        calls.get() shouldBeEqualTo 1
+    }
+
+    private class RecordingStructuredOcrEngine(
+        private val calls: AtomicInteger,
+        private val result: OcrStructuredResult,
+    ): StructuredOcrEngine {
+
+        override fun recognize(image: com.sksamuel.scrimage.ImmutableImage, options: OcrOptions): OcrResult =
+            OcrResult(text = result.text, options = options)
+
+        override fun recognizeStructured(
+            image: com.sksamuel.scrimage.ImmutableImage,
+            options: OcrOptions,
+        ): OcrStructuredResult {
+            calls.incrementAndGet()
+            image.width shouldBeEqualTo 640
+            options shouldBeEqualTo result.options
+            return result
+        }
     }
 }

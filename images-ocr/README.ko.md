@@ -9,8 +9,10 @@
 - Blocking OCR용 `ImmutableImage.extractText(...)`
 - 코루틴 호출자를 위한 `ImmutableImage.suspendExtractText(...)`; blocking OCR은 기본적으로
   `Dispatchers.IO`에서 실행합니다.
+- 엔진이 제공할 수 있는 page, block, line, word 메타데이터를 반환하는
+  `ImmutableImage.extractOcr(...)`와 `suspendExtractOcr(...)`
 - 언어, `tessdataPath`, engine mode, page segmentation mode, variables, configs를
-  설정하는 `OcrOptions`
+  비롯해 structured detail과 source region을 설정하는 `OcrOptions`
 - `TesseractOcrEngine`은 호출마다 새 Tess4J 인스턴스를 만들어 mutable OCR 상태를
   호출자끼리 공유하지 않습니다.
 
@@ -62,8 +64,12 @@ dependencies {
 
 ```kotlin
 import io.bluetape4k.images.immutableImageOf
+import io.bluetape4k.images.ocr.OcrBoundingBox
 import io.bluetape4k.images.ocr.OcrOptions
+import io.bluetape4k.images.ocr.OcrRegion
+import io.bluetape4k.images.ocr.OcrStructuredDetail
 import io.bluetape4k.images.ocr.TesseractPageSegmentationMode
+import io.bluetape4k.images.ocr.extractOcr
 import io.bluetape4k.images.ocr.extractText
 import io.bluetape4k.images.ocr.suspendExtractText
 import java.io.File
@@ -80,6 +86,23 @@ val suspendText = image.suspendExtractText(
         pageSegmentationMode = TesseractPageSegmentationMode.SINGLE_LINE,
     ),
 )
+
+val structured = image.extractOcr(
+    OcrOptions(
+        languages = listOf("eng"),
+        structuredDetail = OcrStructuredDetail.WORD,
+        regions = listOf(
+            OcrRegion(
+                boundingBox = OcrBoundingBox(x = 0, y = 0, width = 640, height = 180),
+                id = "header",
+            ),
+        ),
+    ),
+)
+
+val words = structured.words.map { word ->
+    "${word.text}:${word.confidence ?: "unknown"}"
+}
 ```
 
 Tesseract 튜닝이 필요하면 `variables`를 사용하세요.
@@ -92,6 +115,24 @@ val digits = image.extractText(
     ),
 )
 ```
+
+## Structured Results
+
+`OcrStructuredResult`는 plain extraction과 같은 `text`를 유지하면서 `pages`,
+`blocks`, `lines`, `words` 목록을 추가로 제공합니다. Detail level은 명시적으로
+선택합니다.
+
+- `OcrStructuredDetail.PLAIN_TEXT`: plain text와 page metadata만 반환합니다.
+- `OcrStructuredDetail.LINE`: 가능한 경우 block과 line entry를 반환합니다.
+- `OcrStructuredDetail.WORD`: 가능한 경우 block, line, word entry를 반환합니다.
+
+Bounding box와 confidence는 nullable입니다. Tesseract가 유효한 geometry나
+confidence를 반환하지 않으면 해당 필드는 `null`로 남기고 placeholder 값을 만들지
+않습니다. Region-limited extraction은 `OcrRegion` metadata를 사용하며, bounding
+box가 해당 region과 교차하는 structured entry에 matching region을 복사합니다.
+
+PaddleOCR/GPU/model download pipeline 같은 advanced document OCR backend는 이
+모듈의 범위에 넣지 않고 issue #169에서 별도 research/adoption lane으로 추적합니다.
 
 ## 실행 가능한 Quickstart
 
@@ -121,8 +162,9 @@ Ubuntu에서는 `tesseract-ocr-eng`, `tesseract-ocr-kor`, `tesseract-ocr-jpn`처
 
 ## 테스트
 
-항상 실행되는 테스트는 options, enum mapping, serialization, engine delegation,
-호출별 Tess4J 설정, sanitized exception, coroutine cancellation을 검증합니다.
+항상 실행되는 테스트는 options, enum mapping, serialization, structured result
+modeling, engine delegation, 호출별 Tess4J 설정, region filtering, sanitized
+exception, coroutine cancellation을 검증합니다.
 
 ```bash
 ./gradlew :bluetape4k-images-ocr:test
