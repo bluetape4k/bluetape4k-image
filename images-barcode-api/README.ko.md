@@ -17,6 +17,12 @@
 
 ## 아키텍처
 
+![Barcode API + Provider Architecture](../docs/images/readme-diagrams/images-barcode-api-architecture-01.png)
+
+파란 실선은 caller input 흐름, 초록 실선은 provider module이
+`BarcodeReader` contract를 구현하는 관계, 보라 실선은 API 쪽
+filtering/normalization, 회색 점선은 provider-private decoder 호출을 뜻합니다.
+
 `images-barcode-api`는 `bluetape4k-images`와 Kotlin coroutines에만 의존합니다.
 `ImmutableImage`를 입력으로 받고 provider 출력을 bluetape4k 모델로 정규화하며,
 decoder lifecycle, native setup, provider별 설정은 provider 모듈이 책임집니다.

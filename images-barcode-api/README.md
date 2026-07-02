@@ -17,6 +17,13 @@ Provider-neutral barcode and QR extraction contracts for `ImmutableImage`.
 
 ## Architecture
 
+![Barcode API + Provider Architecture](../docs/images/readme-diagrams/images-barcode-api-architecture-01.png)
+
+Solid blue arrows show caller input flow, green arrows show provider modules
+implementing the `BarcodeReader` contract, purple arrows show API-side
+filtering/normalization, and dashed gray arrows show provider-private decoder
+calls.
+
 `images-barcode-api` depends only on `bluetape4k-images` and Kotlin coroutines.
 It accepts `ImmutableImage` values, normalizes provider output into bluetape4k
 models, and leaves decoder lifecycle, native setup, and provider-specific

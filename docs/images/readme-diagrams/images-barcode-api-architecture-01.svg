@@ -1,0 +1,159 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="860" viewBox="0 0 1280 860" role="img" aria-label="Barcode API Provider Architecture">
+<defs>
+  <marker id="arrow-blue" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse">
+    <polygon points="0 0, 14 7, 0 14" fill="#2563eb" stroke="#2563eb" stroke-width="0" stroke-dasharray="none" style="stroke-dasharray:none"/>
+  </marker>
+  <marker id="arrow-green" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse">
+    <polygon points="0 0, 14 7, 0 14" fill="#16a34a" stroke="#16a34a" stroke-width="0" stroke-dasharray="none" style="stroke-dasharray:none"/>
+  </marker>
+  <marker id="arrow-purple" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse">
+    <polygon points="0 0, 14 7, 0 14" fill="#9333ea" stroke="#9333ea" stroke-width="0" stroke-dasharray="none" style="stroke-dasharray:none"/>
+  </marker>
+  <marker id="arrow-gray" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
+    <polygon points="0 0, 10 5, 0 10" fill="#6b7280" stroke="#6b7280" stroke-width="0" stroke-dasharray="none" style="stroke-dasharray:none"/>
+  </marker>
+  <style>
+    .canvas{fill:#ffffff}
+    .lane{fill:#f3f6fa;stroke:#cbd5e1;stroke-width:1.4;stroke-dasharray:8 6}
+    .lane-provider{fill:#f8fafc;stroke:#cbd5e1;stroke-width:1.4;stroke-dasharray:8 6}
+    .card{fill:#ffffff;stroke:#94a3b8;stroke-width:1.9}
+    .card-soft{fill:#ffffff;stroke:#c4b5fd;stroke-width:1.9}
+    .badge-text{font-family:"Comic Mono";font-size:11px;fill:#374151;font-weight:700}
+    .title{font-family:"Architects Daughter";font-size:42px;fill:#111827;font-weight:400}
+    .subtitle{font-family:"Comic Mono";font-size:16px;fill:#6b7280;font-weight:400}
+    .panel-title{font-family:"Comic Mono";font-size:16px;fill:#4b5563;font-weight:700;letter-spacing:0.8px}
+    .card-title{font-family:"Architects Daughter";font-size:24px;fill:#111827;font-weight:400}
+    .detail,.label,.note{font-family:"Comic Mono";fill:#6b7280;font-weight:400}
+    .detail{font-size:13px}
+    .label{font-size:12px}
+    .note{font-size:13px}
+    .edge-blue{stroke:#2563eb;stroke-width:2.2;fill:none;marker-end:url(#arrow-blue);stroke-linecap:round;stroke-linejoin:round}
+    .edge-green{stroke:#16a34a;stroke-width:2.2;fill:none;marker-end:url(#arrow-green);stroke-linecap:round;stroke-linejoin:round}
+    .edge-purple{stroke:#9333ea;stroke-width:2.2;fill:none;marker-end:url(#arrow-purple);stroke-linecap:round;stroke-linejoin:round}
+    .edge-gray{stroke:#6b7280;stroke-width:1.8;fill:none;marker-end:url(#arrow-gray);stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:6 4}
+    .key-box{fill:#ffffff;stroke:#cbd5e1;stroke-width:1.2}
+  </style>
+</defs>
+<rect class="canvas" width="1280" height="860"/>
+<text class="title" x="70" y="78">Barcode API + Provider Architecture</text>
+<text class="subtitle" x="74" y="112">The API module owns stable contracts; decoder-specific provider modules plug in without coupling callers to ZXing or native runtimes.</text>
+<desc>Barcode API Provider Architecture explains images-barcode-api source contracts, provider-neutral models, and future provider module boundaries.</desc>
+
+<rect class="lane" x="78" y="150" width="1124" height="138" rx="8"/>
+<text class="panel-title" x="98" y="180" dominant-baseline="middle">CALLER INPUTS</text>
+<rect class="lane" x="78" y="318" width="1124" height="268" rx="8"/>
+<text class="panel-title" x="98" y="348" dominant-baseline="middle">images-barcode-api CONTRACTS</text>
+<rect class="lane-provider" x="78" y="616" width="1124" height="150" rx="8"/>
+<text class="panel-title" x="98" y="646" dominant-baseline="middle">PROVIDER MODULES</text>
+
+<g id="edges">
+  <path class="connector edge-blue" d="M 318 224 L 388 224"/>
+  <path class="connector edge-blue" d="M 622 224 L 692 224"/>
+  <path class="connector edge-blue" d="M 820 268 L 820 334"/>
+  <path class="connector edge-blue" d="M 917 430 L 917 482"/>
+  <path class="connector edge-purple" d="M 758 532 L 818 532"/>
+  <path class="connector edge-green" d="M 640 656 L 640 610 Q 640 600 630 600 L 518 600 Q 508 600 508 590 L 508 430"/>
+  <path class="connector edge-gray" d="M 782 690 L 902 690"/>
+</g>
+
+<g id="cards">
+  <g id="caller">
+    <rect class="card" x="98" y="190" width="220" height="68" rx="8"/>
+    <rect x="114" y="206" width="42" height="36" rx="7" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1.3"/>
+    <text class="badge-text" x="135" y="228" text-anchor="middle">APP</text>
+    <text class="card-title" x="174" y="217" dominant-baseline="middle">Caller code</text>
+    <text class="detail" x="174" y="239" dominant-baseline="middle">service or route</text>
+  </g>
+  <g id="encoded-input">
+    <rect class="card" x="388" y="190" width="234" height="68" rx="8"/>
+    <rect x="404" y="206" width="42" height="36" rx="7" fill="#f0fdfa" stroke="#99f6e4" stroke-width="1.3"/>
+    <text class="badge-text" x="425" y="228" text-anchor="middle">IO</text>
+    <text class="card-title" x="464" y="217" dominant-baseline="middle">Encoded inputs</text>
+    <text class="detail" x="464" y="239" dominant-baseline="middle">bytes, path, stream, source</text>
+  </g>
+  <g id="immutable-image">
+    <rect class="card" x="692" y="190" width="234" height="68" rx="8"/>
+    <rect x="708" y="206" width="42" height="36" rx="7" fill="#ecfdf5" stroke="#bbf7d0" stroke-width="1.3"/>
+    <text class="badge-text" x="729" y="228" text-anchor="middle">IMG</text>
+    <text class="card-title" x="768" y="217" dominant-baseline="middle">ImmutableImage</text>
+    <text class="detail" x="768" y="239" dominant-baseline="middle">loaded by bluetape4k-images</text>
+  </g>
+
+  <g id="input-helpers">
+    <rect class="card" x="108" y="482" width="370" height="100" rx="8"/>
+    <rect x="126" y="514" width="48" height="42" rx="8" fill="#f0fdfa" stroke="#99f6e4" stroke-width="1.3"/>
+    <text class="badge-text" x="150" y="539" text-anchor="middle">LOAD</text>
+    <text class="card-title" x="194" y="510" dominant-baseline="middle">Input helpers</text>
+    <text class="detail" x="194" y="534" dominant-baseline="middle">readBarcodes(bytes/path/input/source)</text>
+    <text class="detail" x="194" y="556" dominant-baseline="middle">reuse immutableImageOf(...)</text>
+  </g>
+  <g id="reader-contract">
+    <rect class="card" x="438" y="334" width="250" height="96" rx="8"/>
+    <rect x="456" y="362" width="48" height="42" rx="8" fill="#f5f3ff" stroke="#ddd6fe" stroke-width="1.3"/>
+    <text class="badge-text" x="480" y="387" text-anchor="middle">SPI</text>
+    <text class="card-title" x="522" y="362" dominant-baseline="middle">BarcodeReader</text>
+    <text class="detail" x="522" y="386" dominant-baseline="middle">provider contract</text>
+    <text class="detail" x="522" y="408" dominant-baseline="middle">ImmutableImage + options</text>
+  </g>
+  <g id="extensions">
+    <rect class="card" x="742" y="334" width="350" height="96" rx="8"/>
+    <rect x="760" y="362" width="48" height="42" rx="8" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1.3"/>
+    <text class="badge-text" x="784" y="387" text-anchor="middle">API</text>
+    <text class="card-title" x="826" y="362" dominant-baseline="middle">Image extensions</text>
+    <text class="detail" x="826" y="386" dominant-baseline="middle">extractBarcodes(...)</text>
+    <text class="detail" x="826" y="408" dominant-baseline="middle">suspendExtractBarcodes(...)</text>
+  </g>
+  <g id="options">
+    <rect class="card" x="538" y="482" width="220" height="100" rx="8"/>
+    <rect x="556" y="514" width="48" height="42" rx="8" fill="#fff7ed" stroke="#fed7aa" stroke-width="1.3"/>
+    <text class="badge-text" x="580" y="539" text-anchor="middle">OPT</text>
+    <text class="card-title" x="622" y="510" dominant-baseline="middle">Options</text>
+    <text class="detail" x="622" y="534" dominant-baseline="middle">formats</text>
+    <text class="detail" x="622" y="556" dominant-baseline="middle">confidence filter</text>
+  </g>
+  <g id="models">
+    <rect class="card" x="818" y="482" width="334" height="100" rx="8"/>
+    <rect x="836" y="514" width="48" height="42" rx="8" fill="#ecfdf5" stroke="#bbf7d0" stroke-width="1.3"/>
+    <text class="badge-text" x="860" y="539" text-anchor="middle">DTO</text>
+    <text class="card-title" x="902" y="510" dominant-baseline="middle">Normalized results</text>
+    <text class="detail" x="902" y="534" dominant-baseline="middle">BarcodeResult, region, provider id</text>
+    <text class="detail" x="902" y="556" dominant-baseline="middle">Serializable value models</text>
+  </g>
+
+  <g id="zxing-provider">
+    <rect class="card-soft" x="118" y="656" width="260" height="68" rx="8"/>
+    <rect x="134" y="672" width="42" height="36" rx="7" fill="#f5f3ff" stroke="#ddd6fe" stroke-width="1.3"/>
+    <text class="badge-text" x="155" y="694" text-anchor="middle">ZX</text>
+    <text class="card-title" x="194" y="679" dominant-baseline="middle">ZXing provider</text>
+    <text class="detail" x="194" y="701" dominant-baseline="middle">future module, issue #245</text>
+  </g>
+  <g id="other-providers">
+    <rect class="card-soft" x="498" y="656" width="284" height="68" rx="8"/>
+    <rect x="514" y="672" width="42" height="36" rx="7" fill="#f5f3ff" stroke="#ddd6fe" stroke-width="1.3"/>
+    <text class="badge-text" x="535" y="694" text-anchor="middle">ALT</text>
+    <text class="card-title" x="574" y="679" dominant-baseline="middle">Other providers</text>
+    <text class="detail" x="574" y="701" dominant-baseline="middle">BoofCV, native, commercial SDK</text>
+  </g>
+  <g id="decoder-backend">
+    <rect class="card-soft" x="902" y="656" width="250" height="68" rx="8"/>
+    <rect x="918" y="672" width="42" height="36" rx="7" fill="#fef2f2" stroke="#fecaca" stroke-width="1.3"/>
+    <text class="badge-text" x="939" y="694" text-anchor="middle">DEC</text>
+    <text class="card-title" x="978" y="679" dominant-baseline="middle">Decoder backend</text>
+    <text class="detail" x="978" y="701" dominant-baseline="middle">provider-specific lifecycle</text>
+  </g>
+</g>
+
+<g id="legend">
+  <rect class="key-box" x="146" y="790" width="988" height="38" rx="6"/>
+  <path class="connector edge-blue" d="M 176 809 L 222 809"/>
+  <text class="label" x="236" y="813">caller input</text>
+  <path class="connector edge-green" d="M 392 809 L 438 809"/>
+  <text class="label" x="452" y="813">provider implements</text>
+  <path class="connector edge-purple" d="M 654 809 L 700 809"/>
+  <text class="label" x="714" y="813">API normalization</text>
+  <path class="connector edge-gray" d="M 908 809 L 954 809"/>
+  <text class="label" x="968" y="813">private decoder call</text>
+</g>
+
+<text class="note" x="640" y="848" text-anchor="middle">https://github.com/bluetape4k/bluetape4k-image | project: bluetape4k-image | module: images-barcode-api</text>
+</svg>
