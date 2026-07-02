@@ -286,6 +286,19 @@ Unsupported bytes fail before libvips is called. Valid AVIF/HEIC containers stil
 depend on the host libvips codec set; missing native support is reported as a
 sanitized `VipsDecodeException` or `VipsEncodeException`.
 
+Inspect codec status before enabling AVIF/HEIC routes:
+
+```kotlin
+val report = JVipsRuntime.codecCapabilityReport()
+val avif = report.codec(VipsImageFormat.AVIF)
+val heic = report.codec(VipsImageFormat.HEIC)
+```
+
+JVips cannot inspect native libvips operations directly, so AVIF/HEIC decode and
+AVIF encode report `UNKNOWN`; use `JVipsRuntime.smokeTestCodec(...)` with
+caller-provided samples on the deployment host. HEIC encode reports
+`UNAVAILABLE` because the JVips binding does not expose it.
+
 ## Concurrency & Thread Safety
 
 - **JVipsRuntime singleton**: Thread-safe via `AtomicReference<State>` compare-and-swap

@@ -291,6 +291,18 @@ The Java 25 backend maps AVIF output to HEIF `AV1` compression and HEIC output
 to HEIF `HEVC` compression. Both paths require the matching native libvips
 loader/saver support on the deployment host.
 
+Inspect codec status before enabling AVIF/HEIC routes:
+
+```kotlin
+val report = FfmVipsRuntime.codecCapabilityReport()
+val avif = report.codec(VipsImageFormat.AVIF)
+val heic = report.codec(VipsImageFormat.HEIC)
+```
+
+The report checks `heifload_buffer` for decode and `heifsave_buffer` for encode.
+Use `FfmVipsRuntime.smokeTestCodec(...)` with caller-provided AVIF/HEIC samples
+to verify the exact deployment host.
+
 ### Maximum Pixel Count
 
 Image dimensions are validated against `FfmVipsRuntime.maxPixels`. Exceeding this limit throws `VipsDecodeException`:

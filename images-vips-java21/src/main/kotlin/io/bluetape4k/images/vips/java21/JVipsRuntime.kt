@@ -1,11 +1,23 @@
 package io.bluetape4k.images.vips.java21
 
+import io.bluetape4k.images.IncubatingImageApi
+import io.bluetape4k.images.vips.VipsCodecCapability
+import io.bluetape4k.images.vips.VipsCodecCapabilityReport
+import io.bluetape4k.images.vips.VipsCodecDirection
+import io.bluetape4k.images.vips.VipsCodecOperationCapability
+import io.bluetape4k.images.vips.VipsCodecSmokeResult
+import io.bluetape4k.images.vips.VipsDecodeException
 import io.bluetape4k.images.vips.VipsInitializationException
+import io.bluetape4k.images.vips.VipsEncodeException
+import io.bluetape4k.images.vips.VipsEncodeOptions
+import io.bluetape4k.images.vips.VipsImage
+import io.bluetape4k.images.vips.VipsImageFormat
 import io.bluetape4k.images.vips.VipsLimits
 import io.bluetape4k.images.vips.VipsRuntime
 import io.bluetape4k.images.vips.java21.internal.DefaultJVipsNativeRuntime
 import io.bluetape4k.images.vips.java21.internal.JVipsNativeRuntime
 import io.bluetape4k.logging.KLogging
+import kotlinx.coroutines.CancellationException
 import org.jetbrains.annotations.VisibleForTesting
 import java.util.concurrent.atomic.AtomicReference
 
@@ -22,6 +34,7 @@ import java.util.concurrent.atomic.AtomicReference
  * devtools가 `ApplicationContext`를 재시작할 때 [shutdown] → [init] 순으로 호출되어
  * `VipsInitializationException`이 발생합니다. `Runtime.addShutdownHook`만 사용하십시오.
  */
+@OptIn(IncubatingImageApi::class)
 object JVipsRuntime : VipsRuntime, KLogging() {
 
     private enum class RuntimeState { UNINITIALIZED, INITIALIZING, INITIALIZED, SHUTDOWN }
@@ -113,6 +126,90 @@ object JVipsRuntime : VipsRuntime, KLogging() {
     override val isShutdown: Boolean
         get() = state.get() == RuntimeState.SHUTDOWN
 
+    override fun codecCapabilityReport(): VipsCodecCapabilityReport =
+        VipsCodecCapabilityReport(
+            backendName = BACKEND_NAME,
+            codecs = listOf(
+                VipsCodecCapability.heifFamily(
+                    format = VipsImageFormat.AVIF,
+                    decode = VipsCodecOperationCapability.unknown(
+                        direction = VipsCodecDirection.DECODE,
+                        operationName = "heifload_buffer",
+                        reason = "JVips cannot inspect libvips operations; run smokeTestCodec with caller samples.",
+                    ),
+                    encode = VipsCodecOperationCapability.unknown(
+                        direction = VipsCodecDirection.ENCODE,
+                        operationName = "heifsave_buffer",
+                        reason = "JVips exposes AVIF output but cannot prove native AV1 encoder support.",
+                    ),
+                    nativeDependencies = listOf("libvips", "libheif", "libaom"),
+                ),
+                VipsCodecCapability.heifFamily(
+                    format = VipsImageFormat.HEIC,
+                    decode = VipsCodecOperationCapability.unknown(
+                        direction = VipsCodecDirection.DECODE,
+                        operationName = "heifload_buffer",
+                        reason = "JVips cannot inspect libvips operations; run smokeTestCodec with caller samples.",
+                    ),
+                    encode = VipsCodecOperationCapability.unavailable(
+                        direction = VipsCodecDirection.ENCODE,
+                        operationName = "heifsave_buffer",
+                        reason = "JVips does not expose HEIC encoding; use the Java 25 FFM backend.",
+                    ),
+                    nativeDependencies = listOf("libvips", "libheif"),
+                ),
+            ),
+        )
+
+    override fun smokeTestCodec(
+        sampleBytes: ByteArray,
+        outputFormat: VipsImageFormat,
+        options: VipsEncodeOptions,
+    ): VipsCodecSmokeResult {
+        require(sampleBytes.isNotEmpty()) { "sampleBytes must not be empty" }
+
+        val image: VipsImage = try {
+            vipsImageOf(sampleBytes)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: VipsDecodeException) {
+            return VipsCodecSmokeResult.failure(
+                backendName = BACKEND_NAME,
+                format = outputFormat,
+                stage = VipsCodecDirection.DECODE,
+                reason = "${outputFormat.name} decode failed on $BACKEND_NAME; verify native codec support.",
+            )
+        } catch (e: Exception) {
+            return VipsCodecSmokeResult.failure(
+                backendName = BACKEND_NAME,
+                format = outputFormat,
+                stage = VipsCodecDirection.DECODE,
+                reason = "${outputFormat.name} decode failed on $BACKEND_NAME; verify native codec support.",
+            )
+        }
+
+        return try {
+            image.use { it.toBytes(outputFormat, options) }
+            VipsCodecSmokeResult.success(BACKEND_NAME, outputFormat)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: VipsEncodeException) {
+            VipsCodecSmokeResult.failure(
+                backendName = BACKEND_NAME,
+                format = outputFormat,
+                stage = VipsCodecDirection.ENCODE,
+                reason = "${outputFormat.name} encode failed on $BACKEND_NAME; verify native codec support.",
+            )
+        } catch (e: Exception) {
+            VipsCodecSmokeResult.failure(
+                backendName = BACKEND_NAME,
+                format = outputFormat,
+                stage = VipsCodecDirection.ENCODE,
+                reason = "${outputFormat.name} encode failed on $BACKEND_NAME; verify native codec support.",
+            )
+        }
+    }
+
     /**
      * 테스트 전용: 상태를 UNINITIALIZED로 리셋하고 기본 nativeRuntime을 복원합니다.
      *
@@ -125,4 +222,6 @@ object JVipsRuntime : VipsRuntime, KLogging() {
         nativeRuntime = DefaultJVipsNativeRuntime
         _maxPixels = VipsLimits.DEFAULT_MAX_PIXELS
     }
+
+    private const val BACKEND_NAME = "JVips/JNI"
 }

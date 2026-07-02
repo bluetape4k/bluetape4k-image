@@ -1,11 +1,25 @@
 package io.bluetape4k.images.vips.java25
 
+import io.bluetape4k.images.IncubatingImageApi
+import io.bluetape4k.images.vips.VipsCodecCapability
+import io.bluetape4k.images.vips.VipsCodecCapabilityReport
+import io.bluetape4k.images.vips.VipsCodecDirection
+import io.bluetape4k.images.vips.VipsCodecOperationCapability
+import io.bluetape4k.images.vips.VipsCodecSmokeResult
+import io.bluetape4k.images.vips.VipsDecodeException
+import io.bluetape4k.images.vips.VipsEncodeException
+import io.bluetape4k.images.vips.VipsEncodeOptions
+import io.bluetape4k.images.vips.VipsImage
+import io.bluetape4k.images.vips.VipsImageFormat
 import io.bluetape4k.images.vips.VipsInitializationException
 import io.bluetape4k.images.vips.VipsLimits
 import io.bluetape4k.images.vips.VipsRuntime
+import io.bluetape4k.images.vips.java25.internal.DefaultFfmVipsCodecProbe
 import io.bluetape4k.images.vips.java25.internal.DefaultFfmVipsNativeRuntime
+import io.bluetape4k.images.vips.java25.internal.FfmVipsCodecProbe
 import io.bluetape4k.images.vips.java25.internal.FfmVipsNativeRuntime
 import io.bluetape4k.logging.KLogging
+import kotlinx.coroutines.CancellationException
 import org.jetbrains.annotations.VisibleForTesting
 import java.util.concurrent.atomic.AtomicReference
 
@@ -23,6 +37,7 @@ import java.util.concurrent.atomic.AtomicReference
  *
  * **Spring devtools 경고**: [shutdown]을 `@PreDestroy` 빈 메서드로 등록하지 마십시오.
  */
+@OptIn(IncubatingImageApi::class)
 object FfmVipsRuntime : VipsRuntime, KLogging() {
 
     private enum class RuntimeState { UNINITIALIZED, INITIALIZING, INITIALIZED, SHUTDOWN }
@@ -31,6 +46,9 @@ object FfmVipsRuntime : VipsRuntime, KLogging() {
 
     @VisibleForTesting
     internal var nativeRuntime: FfmVipsNativeRuntime = DefaultFfmVipsNativeRuntime
+
+    @VisibleForTesting
+    internal var codecProbe: FfmVipsCodecProbe = DefaultFfmVipsCodecProbe
 
     @Volatile
     private var _maxPixels: Long = VipsLimits.DEFAULT_MAX_PIXELS
@@ -110,12 +128,122 @@ object FfmVipsRuntime : VipsRuntime, KLogging() {
     override val isShutdown: Boolean
         get() = state.get() == RuntimeState.SHUTDOWN
 
+    override fun codecCapabilityReport(): VipsCodecCapabilityReport {
+        val canLoadHeif = codecProbe.supportsOperation(HEIF_LOAD_OPERATION)
+        val canSaveHeif = codecProbe.supportsOperation(HEIF_SAVE_OPERATION)
+
+        return VipsCodecCapabilityReport(
+            backendName = BACKEND_NAME,
+            libvipsVersion = codecProbe.libvipsVersion(),
+            codecs = listOf(
+                heifCapability(
+                    format = VipsImageFormat.AVIF,
+                    canLoadHeif = canLoadHeif,
+                    canSaveHeif = canSaveHeif,
+                    nativeDependencies = listOf("libvips", "libheif", "libaom"),
+                ),
+                heifCapability(
+                    format = VipsImageFormat.HEIC,
+                    canLoadHeif = canLoadHeif,
+                    canSaveHeif = canSaveHeif,
+                    nativeDependencies = listOf("libvips", "libheif", "HEVC encoder"),
+                ),
+            ),
+            inspectedOperations = setOf(HEIF_LOAD_OPERATION, HEIF_SAVE_OPERATION),
+        )
+    }
+
+    override fun smokeTestCodec(
+        sampleBytes: ByteArray,
+        outputFormat: VipsImageFormat,
+        options: VipsEncodeOptions,
+    ): VipsCodecSmokeResult {
+        require(sampleBytes.isNotEmpty()) { "sampleBytes must not be empty" }
+
+        val image: VipsImage = try {
+            ffmVipsImageOf(sampleBytes)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: VipsDecodeException) {
+            return VipsCodecSmokeResult.failure(
+                backendName = BACKEND_NAME,
+                format = outputFormat,
+                stage = VipsCodecDirection.DECODE,
+                reason = "${outputFormat.name} decode failed on $BACKEND_NAME; verify native codec support.",
+            )
+        } catch (e: Exception) {
+            return VipsCodecSmokeResult.failure(
+                backendName = BACKEND_NAME,
+                format = outputFormat,
+                stage = VipsCodecDirection.DECODE,
+                reason = "${outputFormat.name} decode failed on $BACKEND_NAME; verify native codec support.",
+            )
+        }
+
+        return try {
+            image.use { it.toBytes(outputFormat, options) }
+            VipsCodecSmokeResult.success(BACKEND_NAME, outputFormat)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: VipsEncodeException) {
+            VipsCodecSmokeResult.failure(
+                backendName = BACKEND_NAME,
+                format = outputFormat,
+                stage = VipsCodecDirection.ENCODE,
+                reason = "${outputFormat.name} encode failed on $BACKEND_NAME; verify native codec support.",
+            )
+        } catch (e: Exception) {
+            VipsCodecSmokeResult.failure(
+                backendName = BACKEND_NAME,
+                format = outputFormat,
+                stage = VipsCodecDirection.ENCODE,
+                reason = "${outputFormat.name} encode failed on $BACKEND_NAME; verify native codec support.",
+            )
+        }
+    }
+
     @VisibleForTesting
     internal fun resetForTest() {
         state.set(RuntimeState.UNINITIALIZED)
         nativeRuntime = DefaultFfmVipsNativeRuntime
+        codecProbe = DefaultFfmVipsCodecProbe
         _maxPixels = VipsLimits.DEFAULT_MAX_PIXELS
     }
+
+    private fun heifCapability(
+        format: VipsImageFormat,
+        canLoadHeif: Boolean,
+        canSaveHeif: Boolean,
+        nativeDependencies: List<String>,
+    ): VipsCodecCapability =
+        VipsCodecCapability.heifFamily(
+            format = format,
+            decode = operationCapability(
+                direction = VipsCodecDirection.DECODE,
+                operationName = HEIF_LOAD_OPERATION,
+                available = canLoadHeif,
+                unavailableReason = "$HEIF_LOAD_OPERATION is unavailable; install libvips with libheif support.",
+            ),
+            encode = operationCapability(
+                direction = VipsCodecDirection.ENCODE,
+                operationName = HEIF_SAVE_OPERATION,
+                available = canSaveHeif,
+                unavailableReason = "$HEIF_SAVE_OPERATION is unavailable; install libvips with HEIF encoder support.",
+            ),
+            nativeDependencies = nativeDependencies,
+        )
+
+    private fun operationCapability(
+        direction: VipsCodecDirection,
+        operationName: String,
+        available: Boolean,
+        unavailableReason: String,
+    ): VipsCodecOperationCapability =
+        if (available) {
+            VipsCodecOperationCapability.available(direction, operationName)
+        } else {
+            VipsCodecOperationCapability.unavailable(direction, operationName, unavailableReason)
+        }
 
     private fun checkNativeAccessEnabled() {
         // ManagementFactory.inputArguments is canonical: covers -javaagent, JDK_JAVA_OPTIONS, _JAVA_OPTIONS.
@@ -133,4 +261,8 @@ object FfmVipsRuntime : VipsRuntime, KLogging() {
             )
         }
     }
+
+    private const val BACKEND_NAME = "vips-ffm"
+    private const val HEIF_LOAD_OPERATION = "heifload_buffer"
+    private const val HEIF_SAVE_OPERATION = "heifsave_buffer"
 }

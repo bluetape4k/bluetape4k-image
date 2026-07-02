@@ -1,11 +1,10 @@
 package io.bluetape4k.images.vips.java25.internal
 
-import app.photofox.vipsffm.jextract.VipsRaw
 import io.bluetape4k.images.IncubatingImageApi
 import io.bluetape4k.images.vips.VipsDecodeException
 import io.bluetape4k.images.vips.VipsEncodeException
 import io.bluetape4k.images.vips.VipsImageFormat
-import java.lang.foreign.Arena
+import io.bluetape4k.images.vips.java25.FfmVipsRuntime
 
 @OptIn(IncubatingImageApi::class)
 internal object FfmVipsFormatSupport {
@@ -47,12 +46,5 @@ internal object FfmVipsFormatSupport {
         }
 
     private fun supportsOperation(name: String): Boolean =
-        runCatching {
-            Arena.ofConfined().use { arena ->
-                VipsRaw.vips_type_find(
-                    arena.allocateFrom("VipsOperation"),
-                    arena.allocateFrom(name),
-                ) != 0L
-            }
-        }.getOrDefault(false)
+        FfmVipsRuntime.codecProbe.supportsOperation(name)
 }
