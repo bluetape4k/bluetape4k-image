@@ -350,42 +350,43 @@ def render_diagram(spec: DiagramSpec) -> str:
 
 
 def render_fireworks_ocr_sequence(spec: DiagramSpec) -> str:
-    width, height = 1900, 1055
+    width, height = 2050, 1120
     participants = (
-        ("caller", "Caller", "blocking or suspend", 200),
-        ("ext", "OCR extension", "validate options", 500),
-        ("io", "Dispatchers.IO", "blocking bridge", 800),
-        ("engine", "OCR engine", "fresh Tess4J", 1100),
-        ("native", "Host Tesseract", "traineddata", 1400),
-        ("result", "Result text", "String", 1700),
+        ("caller", "Caller", "plain or structured", 190),
+        ("ext", "OCR extension", "extractOcr APIs", 500),
+        ("io", "Dispatchers.IO", "blocking bridge", 810),
+        ("engine", "Structured OCR\nEngine", "fresh Tess4J", 1120),
+        ("native", "Host Tesseract", "text + words", 1430),
+        ("result", "Structured OCR\nResult", "pages blocks words", 1740),
     )
     x_by_key = {key: x for key, _, _, x in participants}
     messages = (
-        ("caller", "ext", "build OcrOptions", 322, False),
-        ("ext", "io", "withContext(IO)", 402, False),
-        ("io", "engine", "create client", 482, False),
-        ("engine", "native", "recognize image", 562, False),
-        ("native", "engine", "text result", 652, True),
-        ("engine", "io", "return text", 732, True),
-        ("io", "ext", "resume caller", 812, True),
-        ("ext", "caller", "String or OCR error", 892, True),
+        ("caller", "ext", "build OcrOptions detail + regions", 322, False),
+        ("ext", "io", "suspend path uses IO", 402, False),
+        ("io", "engine", "recognizeStructured", 482, False),
+        ("engine", "native", "doOCR + getWords(level)", 562, False),
+        ("native", "engine", "text + Word metadata", 652, True),
+        ("engine", "result", "map nullable box/confidence", 742, False),
+        ("result", "io", "OcrStructuredResult", 832, True),
+        ("io", "ext", "resume structured caller", 912, True),
+        ("ext", "caller", "text-compatible result", 992, True),
     )
     out = [
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}" role="img" aria-label="{esc(spec.title)}">',
         "<defs>",
-        '  <marker id="arrow-blue" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#2563eb"/></marker>',
-        '  <marker id="arrow-gray" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#6b7280"/></marker>',
+        '  <marker id="arrow-blue" markerWidth="10" markerHeight="9" refX="9" refY="5" viewBox="0 0 10 10" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#4f86c6" stroke="#4f86c6"/></marker>',
+        '  <marker id="arrow-gray" markerWidth="10" markerHeight="9" refX="9" refY="5" viewBox="0 0 10 10" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#5f7f7a" stroke="#5f7f7a"/></marker>',
         "  <style>",
         '    .canvas{fill:#ffffff}.title{font-family:"Architects Daughter";font-size:42px;fill:#111827;font-weight:400}.subtitle{font-family:"Comic Mono";font-size:16px;fill:#6b7280;font-weight:400}',
-        '    .card{fill:#ffffff;stroke:#94a3b8;stroke-width:1.9}.node-title{font-family:"Architects Daughter";font-size:20px;fill:#111827;font-weight:400}.detail,.label,.note{font-family:"Comic Mono";fill:#6b7280;font-weight:400}.detail{font-size:12px}.label{font-size:12px;fill:#374151}.note{font-size:13px}.lifeline{stroke:#cbd5e1;stroke-width:1.5;stroke-dasharray:7 7}.activation{fill:#dbeafe;stroke:#93c5fd;stroke-width:1}',
-        '    .edge{stroke:#2563eb;stroke-width:2.1;fill:none;marker-end:url(#arrow-blue);stroke-linecap:round}.edge-return{stroke:#6b7280;stroke-width:1.8;fill:none;marker-end:url(#arrow-gray);stroke-linecap:round;stroke-dasharray:6 4}',
+        '    .card{fill:#ffffff;stroke:#94a3b8;stroke-width:1.9}.node-title{font-family:"Architects Daughter";font-size:20px;fill:#111827;font-weight:400}.detail,.label,.note{font-family:"Comic Mono";fill:#6b7280;font-weight:400}.detail{font-size:12px}.label{font-size:12px;fill:#374151}.note{font-size:13px}.lifeline{stroke:#cbd5e1;stroke-width:1.5;stroke-dasharray:7 7}.activation{fill:#dcebf8;stroke:#9bbfdf;stroke-width:1}',
+        '    .edge{stroke:#4f86c6;stroke-width:2.1;fill:none;marker-end:url(#arrow-blue);stroke-linecap:round}.edge-return{stroke:#5f7f7a;stroke-width:1.8;fill:none;marker-end:url(#arrow-gray);stroke-linecap:round;stroke-dasharray:6 4}',
         "  </style>",
         "</defs>",
         f'<rect class="canvas" width="{width}" height="{height}"/>',
         f'<desc>{esc(spec.intent)} Source: {esc(spec.source)}</desc>',
         f'<text class="title" x="70" y="78">{esc(spec.title)}</text>',
         f'<text class="subtitle" x="74" y="112">{esc(spec.subtitle)}</text>',
-        f'<rect x="88" y="158" width="{width - 176}" height="810" rx="8" fill="#f3f6fa" stroke="#cbd5e1" stroke-width="1.4" stroke-dasharray="8 6"/>',
+        f'<rect class="frame panel" x="88" y="158" width="{width - 176}" height="880" rx="8" fill="#f3f6fa" stroke="#cbd5e1" stroke-width="1.4" stroke-dasharray="8 6"/>',
         '<g id="participants">',
     ]
     palette = [
@@ -399,12 +400,24 @@ def render_fireworks_ocr_sequence(spec: DiagramSpec) -> str:
     header_y, header_w, header_h = 190, 250, 78
     for index, (key, title, detail, x) in enumerate(participants):
         fill, stroke = palette[index % len(palette)]
+        title_lines = tuple(title.split("\n"))
+        if len(title_lines) == 1:
+            title_text = [
+                f'<text class="node-title participant" x="{x}" y="{header_y + 32}" text-anchor="middle" dominant-baseline="middle">{esc(title_lines[0])}</text>'
+            ]
+            detail_y = header_y + 56
+        else:
+            title_text = [
+                f'<text class="node-title participant" x="{x}" y="{header_y + 24 + offset * 22}" text-anchor="middle" dominant-baseline="middle">{esc(line)}</text>'
+                for offset, line in enumerate(title_lines)
+            ]
+            detail_y = header_y + 68
         out.extend(
             [
                 f'<rect class="card participant-card" x="{x - header_w / 2:.1f}" y="{header_y}" width="{header_w}" height="{header_h}" rx="8" style="fill:{fill};stroke:{stroke};stroke-width:1.8"/>',
-                f'<text class="node-title" x="{x}" y="{header_y + 32}" text-anchor="middle" dominant-baseline="middle">{esc(title)}</text>',
-                f'<text class="detail" x="{x}" y="{header_y + 56}" text-anchor="middle" dominant-baseline="middle">{esc(detail)}</text>',
-                f'<line class="lifeline" x1="{x}" y1="{header_y + header_h}" x2="{x}" y2="900"/>',
+                *title_text,
+                f'<text class="detail role" x="{x}" y="{detail_y}" text-anchor="middle" dominant-baseline="middle">{esc(detail)}</text>',
+                f'<line class="lifeline" x1="{x}" y1="{header_y + header_h}" x2="{x}" y2="1010"/>',
             ]
         )
     out.append("</g><g id=\"messages\">")
@@ -415,12 +428,12 @@ def render_fireworks_ocr_sequence(spec: DiagramSpec) -> str:
         label_w = min(300, max(148, len(label) * 8.2 + 76))
         label_center = (sx + tx) / 2
         lx = label_center - label_w / 2
-        badge_color = "#6b7280" if dashed else "#2563eb"
+        badge_color = "#5f7f7a" if dashed else "#4f86c6"
         out.extend(
             [
                 f'<path class="{css}" d="M {sx} {y} L {tx} {y}"/>',
                 f'<rect class="activation" x="{tx - 4}" y="{y - 13}" width="8" height="28" rx="3"/>',
-                f'<rect x="{lx:.1f}" y="{y - 47}" width="{label_w}" height="28" rx="9" fill="#ffffff" stroke="#d1d5db"/>',
+                f'<rect class="labelPill" x="{lx:.1f}" y="{y - 47}" width="{label_w}" height="28" rx="9" fill="#ffffff" stroke="#d1d5db"/>',
                 f'<circle cx="{lx + 18:.1f}" cy="{y - 33}" r="12" fill="{badge_color}"/>',
                 f'<text class="label" x="{lx + 18:.1f}" y="{y - 32}" text-anchor="middle" dominant-baseline="middle" style="fill:#ffffff;font-size:12px">{index}</text>',
                 f'<text class="label" x="{label_center + 16:.1f}" y="{y - 33}" text-anchor="middle" dominant-baseline="middle">{esc(label)}</text>',
@@ -715,20 +728,20 @@ def specs() -> tuple[DiagramSpec, ...]:
             (("resize", "FfmVipsResize", ("geometry op",), 3), ("thumb", "FfmVipsThumbnail", ("thumbnail op",), 4), ("writers", "Ffm writers", ("encode output",), 5)),
             (("format", "FfmVipsFormatSupport", ("capability",), 0), ("native", "FFM native runtime", ("symbols + linker",), 1), ("tests", "Golden tests", ("resize/filter",), 2)),
         ), "FfmVipsImage.kt, FfmVipsRuntime.kt, ops/*, writer/*"),
-        stack_spec("images-ocr-architecture-01", "Images OCR Architecture", "ImmutableImage OCR extensions isolate coroutine dispatch, options, engine creation, and host Tesseract.", (
-            (("image", "ImmutableImage", ("source pixels",), 0), ("extensions", "OCR extensions", ("extractText", "suspendExtractText"), 1), ("options", "OcrOptions", ("languages tessdata",), 2)),
-            (("engine", "OcrEngine", ("interface",), 3), ("tess", "TesseractOcrEngine", ("fresh Tess4J per call",), 4), ("dispatch", "Dispatchers.IO", ("blocking boundary",), 5)),
-            (("tess4j", "Tess4J", ("JNA bridge",), 0), ("native", "Host Tesseract", ("traineddata",), 1), ("tests", "Container gate", ("portable CI path",), 2)),
+        stack_spec("images-ocr-architecture-01", "Images OCR Architecture", "ImmutableImage OCR extensions now return plain text or structured page/block/line/word metadata.", (
+            (("image", "ImmutableImage", ("source pixels",), 0), ("extensions", "OCR extensions", ("extractText", "extractOcr"), 1), ("options", "OcrOptions", ("detail + regions",), 2)),
+            (("engine", "StructuredOcrEngine", ("plain + structured",), 3), ("tess", "TesseractOcrEngine", ("fresh Tess4J per call",), 4), ("dispatch", "Dispatchers.IO", ("suspend boundary",), 5)),
+            (("tess4j", "Tess4J", ("text + Word boxes",), 0), ("result", "OcrStructuredResult", ("nullable box/conf",), 1), ("tests", "Fake + container gates", ("normal CI safe",), 2)),
         ), "images-ocr/src/main/kotlin/** and images-ocr README runtime notes"),
-        stack_spec("images-ocr-class-diagram-01", "Images OCR Class Diagram", "Public OCR extension points are small: options, engine interface, and Tesseract implementation.", (
-            (("extensions", "OCR extensions", ("ImmutableImageOcrExtensions", "extractText, suspendExtractText"), 0), ("engine", "OcrEngine", ("recognize(image, options)",), 1), ("options", "OcrOptions", ("languages, psm, vars",), 2)),
-            (("tesseract", "TesseractOcrEngine", ("OcrEngine impl",), 3), ("psm", "Page Segmentation", ("mode enum",), 4), ("oem", "Engine Mode", ("mode enum",), 5)),
-            (("tests", "OCR tests", ("native and container",), 0), ("fixtures", "OCR fixtures", ("test images",), 1), ("ci", "CI gate", ("container-backed",), 2)),
+        stack_spec("images-ocr-class-diagram-01", "Images OCR Class Diagram", "Public OCR types separate source-compatible text helpers from structured extraction metadata.", (
+            (("extensions", "OCR extensions", ("extractText/extractOcr", "suspend variants"), 0), ("engine", "StructuredOcrEngine", ("recognizeStructured",), 1), ("options", "OcrOptions", ("detail, regions, vars",), 2)),
+            (("result", "OcrStructuredResult", ("pages blocks lines words",), 3), ("geometry", "OcrBoundingBox", ("nullable source boxes",), 4), ("region", "OcrRegion", ("caller metadata",), 5)),
+            (("tesseract", "TesseractOcrEngine", ("internal Tess4J adapter",), 0), ("modes", "Tesseract modes", ("PSM + OEM enums",), 1), ("tests", "OCR tests", ("fake + gated smoke",), 2)),
         ), "OcrEngine.kt, OcrOptions.kt, TesseractOcrEngine.kt, ImmutableImageOcrExtensions.kt", "Class relationships are summarized to keep README scale readable."),
-        stack_spec("images-ocr-sequence-diagram-01", "Images OCR Recognition Sequence", "A caller builds options, crosses the IO dispatcher, and receives text from a fresh Tesseract client.", (
-            (("caller", "Caller", ("blocking or suspend",), 0), ("ext", "OCR extension", ("validate options",), 1), ("dispatcher", "Dispatchers.IO", ("blocking bridge",), 2)),
-            (("engine", "TesseractOcrEngine", ("new Tess4J",), 3), ("native", "Host Tesseract", ("recognize text",), 4), ("result", "Recognized text", ("String result",), 5)),
-            (("error", "OCR failure", ("native/config errors",), 0), ("cleanup", "Per-call state", ("not shared",), 1), ("tests", "Container tests", ("portable check",), 2)),
+        stack_spec("images-ocr-sequence-diagram-01", "Images OCR Recognition Sequence", "A caller requests structured detail, Tesseract returns text/word data, and the engine maps explicit nullable metadata.", (
+            (("caller", "Caller", ("plain or structured",), 0), ("ext", "OCR extension", ("extractOcr path",), 1), ("dispatcher", "Dispatchers.IO", ("suspend bridge",), 2)),
+            (("engine", "TesseractOcrEngine", ("recognizeStructured",), 3), ("native", "Host Tesseract", ("doOCR + getWords",), 4), ("result", "Structured result", ("text + entries",), 5)),
+            (("error", "OCR failure", ("native/config errors",), 0), ("metadata", "Missing metadata", ("null not invented",), 1), ("tests", "Fake fixtures", ("normal CI path",), 2)),
         ), "ImmutableImageOcrExtensions.kt and TesseractOcrEngine.kt", "Fresh OCR clients avoid shared mutable Tess4J state."),
     )
 

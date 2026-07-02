@@ -13,7 +13,7 @@
 </defs>
 <rect class="canvas" width="1280" height="980"/>
 <text class="title" x="70" y="82">Images OCR Architecture</text>
-<text class="subtitle" x="74" y="116">ImmutableImage OCR extensions isolate coroutine dispatch, options, engine creation, and host Tesseract.</text>
+<text class="subtitle" x="74" y="116">ImmutableImage OCR extensions now return plain text or structured page/block/line/word metadata.</text>
 <desc>Images OCR Architecture explains the current README/source relationship for readers. Source: images-ocr/src/main/kotlin/** and images-ocr README runtime notes</desc>
 <rect class="panel" x="88" y="158" width="1104" height="746" rx="8"/>
 <text class="panel-title" x="108" y="188" dominant-baseline="middle">ARCHITECTURE</text>
@@ -41,21 +41,22 @@
 <text class="badge-text" x="520" y="258" text-anchor="middle">API</text>
 <text class="card-title" x="562" y="232.0" dominant-baseline="middle">OCR extensions</text>
 <text class="detail" x="562" y="254.0" dominant-baseline="middle">extract Text</text>
-<text class="detail" x="562" y="276.0" dominant-baseline="middle">suspend Extract Text</text>
+<text class="detail" x="562" y="276.0" dominant-baseline="middle">extract Ocr</text>
 </g>
 <g id="options">
 <rect class="card" x="860" y="200" width="320" height="108" rx="8"/>
 <rect x="876" y="230" width="48" height="48" rx="8" fill="#fff7ed" stroke="#fed7aa" stroke-width="1.3"/>
 <text class="badge-text" x="900" y="258" text-anchor="middle">RUN</text>
 <text class="card-title" x="942" y="243.0" dominant-baseline="middle">Ocr Options</text>
-<text class="detail" x="942" y="265.0" dominant-baseline="middle">languages tessdata</text>
+<text class="detail" x="942" y="265.0" dominant-baseline="middle">detail + regions</text>
 </g>
 <g id="engine">
 <rect class="card" x="100" y="456" width="320" height="108" rx="8"/>
 <rect x="116" y="486" width="48" height="48" rx="8" fill="#fef2f2" stroke="#fecaca" stroke-width="1.3"/>
 <text class="badge-text" x="140" y="514" text-anchor="middle">CAP</text>
-<text class="card-title" x="182" y="499.0" dominant-baseline="middle">Ocr Engine</text>
-<text class="detail" x="182" y="521.0" dominant-baseline="middle">interface</text>
+<text class="card-title" x="182" y="488.0" dominant-baseline="middle">Structured Ocr</text>
+<text class="card-title" x="182" y="510.0" dominant-baseline="middle">Engine</text>
+<text class="detail" x="182" y="532.0" dominant-baseline="middle">plain + structured</text>
 </g>
 <g id="tess">
 <rect class="card" x="480" y="456" width="320" height="108" rx="8"/>
@@ -70,28 +71,31 @@
 <rect x="876" y="486" width="48" height="48" rx="8" fill="#faf5ff" stroke="#e9d5ff" stroke-width="1.3"/>
 <text class="badge-text" x="900" y="514" text-anchor="middle">VIP</text>
 <text class="card-title" x="942" y="499.0" dominant-baseline="middle">Dispatchers.IO</text>
-<text class="detail" x="942" y="521.0" dominant-baseline="middle">blocking boundary</text>
+<text class="detail" x="942" y="521.0" dominant-baseline="middle">suspend boundary</text>
 </g>
 <g id="tess4j">
 <rect class="card" x="100" y="712" width="320" height="108" rx="8"/>
 <rect x="116" y="742" width="48" height="48" rx="8" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1.3"/>
 <text class="badge-text" x="140" y="770" text-anchor="middle">IMG</text>
 <text class="card-title" x="182" y="755.0" dominant-baseline="middle">Tess4J</text>
-<text class="detail" x="182" y="777.0" dominant-baseline="middle">JNA bridge</text>
+<text class="detail" x="182" y="777.0" dominant-baseline="middle">text + Word boxes</text>
 </g>
-<g id="native">
+<g id="result">
 <rect class="card" x="480" y="712" width="320" height="108" rx="8"/>
 <rect x="496" y="742" width="48" height="48" rx="8" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1.3"/>
 <text class="badge-text" x="520" y="770" text-anchor="middle">API</text>
-<text class="card-title" x="562" y="755.0" dominant-baseline="middle">Host Tesseract</text>
-<text class="detail" x="562" y="777.0" dominant-baseline="middle">traineddata</text>
+<text class="card-title" x="562" y="744.0" dominant-baseline="middle">Ocr Structured</text>
+<text class="card-title" x="562" y="766.0" dominant-baseline="middle">Result</text>
+<text class="detail" x="562" y="788.0" dominant-baseline="middle">nullable box/conf</text>
 </g>
 <g id="tests">
 <rect class="card" x="860" y="712" width="320" height="108" rx="8"/>
 <rect x="876" y="742" width="48" height="48" rx="8" fill="#fff7ed" stroke="#fed7aa" stroke-width="1.3"/>
 <text class="badge-text" x="900" y="770" text-anchor="middle">RUN</text>
-<text class="card-title" x="942" y="755.0" dominant-baseline="middle">Container gate</text>
-<text class="detail" x="942" y="777.0" dominant-baseline="middle">portable CI path</text>
+<text class="card-title" x="942" y="733.0" dominant-baseline="middle">Fake +</text>
+<text class="card-title" x="942" y="755.0" dominant-baseline="middle">container</text>
+<text class="card-title" x="942" y="777.0" dominant-baseline="middle">gates</text>
+<text class="detail" x="942" y="799.0" dominant-baseline="middle">normal CI safe</text>
 </g>
 </g>
 <text class="note" x="640.0" y="928" text-anchor="middle">https://github.com/bluetape4k/bluetape4k-image | project: bluetape4k-image | module: images-ocr</text>
