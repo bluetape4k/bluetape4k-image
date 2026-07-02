@@ -1,6 +1,8 @@
 # Git worktrees
 .worktrees/
 
+.kotlin/
+
 # Gradle
 .gradle/
 build/
