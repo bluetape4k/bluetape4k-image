@@ -53,7 +53,7 @@ Add to `build.gradle.kts`:
 
 ```kotlin
 dependencies {
-    implementation("io.github.bluetape4k.image:bluetape4k-images-vips-java21:1.7.0")
+    implementation("io.github.bluetape4k.image:bluetape4k-images-vips-java21:<version>")
 }
 ```
 
@@ -61,7 +61,7 @@ Or use the BOM:
 
 ```kotlin
 dependencies {
-    implementation(platform("io.github.bluetape4k.image:bluetape4k-image-bom:1.7.0"))
+    implementation(platform("io.github.bluetape4k.image:bluetape4k-image-bom:<version>"))
     implementation("io.github.bluetape4k.image:bluetape4k-images-vips-java21")
 }
 ```
