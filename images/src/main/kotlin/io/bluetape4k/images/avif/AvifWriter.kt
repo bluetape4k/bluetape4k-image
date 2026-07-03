@@ -37,14 +37,14 @@ data class AvifEncodeOptions(
  *
  * ## 동작/계약
  * - 이 인터페이스는 incubating 상태입니다 ([IncubatingImageApi]).
- * - 구현체는 `bluetape4k-images-vips` 모듈(Issue #136)에서 제공됩니다.
- * - 현재 이 모듈에는 구현체가 없습니다.
+ * - The core `images` module only defines the contract.
+ * - Runtime AVIF support is provided by a libvips backend such as `images-vips-java21` or `images-vips-java25`.
  *
  * ```kotlin
  * @OptIn(IncubatingImageApi::class)
- * val writer: AvifWriter = VipsAvifWriter()
+ * val image: VipsImage = vipsRuntime.load(input)
  * val bos = ByteArrayOutputStream()
- * writer.suspendWrite(image, bos)
+ * image.writeTo(bos, VipsImageFormat.AVIF)
  * ```
  *
  * @see AvifEncodeOptions

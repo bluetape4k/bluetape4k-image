@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="2100" height="700" viewBox="0 0 2100 700" role="img" aria-label="Spring Boot OCR API Scenario">
 <defs>
-  <marker id="arrow-blue" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#2563eb"/></marker>
-  <marker id="arrow-gray" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#6b7280"/></marker>
+  <marker markerUnits="userSpaceOnUse" id="arrow-blue" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#2563eb"/></marker>
+  <marker markerUnits="userSpaceOnUse" id="arrow-gray" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#6b7280"/></marker>
   <style>
     .canvas{fill:#ffffff}
     .title{font-family:"Architects Daughter";font-size:42px;fill:#111827;font-weight:400}
@@ -24,11 +24,11 @@
 <text class="title" x="70" y="82">Spring Boot OCR API Scenario</text>
 <text class="subtitle" x="74" y="116">Multipart upload extracts text through images-ocr and host Tesseract.</text>
 <g id="edges" transform="translate(0 70)">
-<path class="edge" d="M 430 295 L 520 295" stroke="#758297"/>
-<path class="edge" d="M 910 295 L 1000 295" stroke="#758297"/>
-<path class="edge" d="M 1470 295 L 1515 295 L 1515 165 L 1570 165" stroke="#758297"/>
-<path class="edge" d="M 1770 220 L 1770 390" stroke="#758297"/>
-<path class="edge-dashed" d="M 1000 340 L 955 340 L 955 415 L 260 415 L 260 350" stroke="#758297"/>
+<path data-connector="true" class="edge" d="M 430 295 L 520 295" stroke="#758297"/>
+<path data-connector="true" class="edge" d="M 910 295 L 1000 295" stroke="#758297"/>
+<path data-connector="true" class="edge" d="M 1470 295 L 1497 295 Q 1515 295 1515 277 L 1515 183 Q 1515 165 1533 165 L 1570 165" stroke="#758297"/>
+<path data-connector="true" class="edge" d="M 1770 220 L 1770 390" stroke="#758297"/>
+<path data-connector="true" class="edge-dashed" d="M 1000 340 L 973 340 Q 955 340 955 358 L 955 397 Q 955 415 937 415 L 278 415 Q 260 415 260 397 L 260 350" stroke="#758297"/>
 </g>
 <g id="nodes" transform="translate(0 70)">
 <g id="client">

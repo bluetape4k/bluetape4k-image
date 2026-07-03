@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1500" height="850" viewBox="0 0 1500 850" role="img" aria-label="Basic Processing Architecture">
 <defs>
-  <marker id="arrow-blue" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#2563eb"/></marker>
-  <marker id="arrow-gray" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#6b7280"/></marker>
+  <marker markerUnits="userSpaceOnUse" id="arrow-blue" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#2563eb"/></marker>
+  <marker markerUnits="userSpaceOnUse" id="arrow-gray" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#6b7280"/></marker>
   <style>
     .canvas{fill:#ffffff}
     .title{font-family:"Architects Daughter";font-size:42px;fill:#111827;font-weight:400}
@@ -24,11 +24,11 @@
 <text class="title" x="70" y="82">Basic Processing Architecture</text>
 <text class="subtitle" x="74" y="116">Pure JVM image transformations with suspend-aware writers.</text>
 <g id="edges" transform="translate(0 70)">
-<path class="edge" d="M 410 275 L 500 275" stroke="#758297"/>
-<path class="edge" d="M 920 275 L 1000 275" stroke="#758297"/>
-<path class="edge" d="M 1180 330 L 1180 380 L 710 380 L 710 450" stroke="#758297"/>
-<path class="edge" d="M 920 511 L 960 511 L 960 455 L 1000 455" stroke="#758297"/>
-<path class="edge" d="M 920 511 L 960 511 L 960 625 L 1000 625" stroke="#758297"/>
+<path data-connector="true" class="edge" d="M 410 275 L 500 275" stroke="#758297"/>
+<path data-connector="true" class="edge" d="M 920 275 L 1000 275" stroke="#758297"/>
+<path data-connector="true" class="edge" d="M 1180 330 L 1180 362 Q 1180 380 1162 380 L 728 380 Q 710 380 710 398 L 710 450" stroke="#758297"/>
+<path data-connector="true" class="edge" d="M 920 511 L 942 511 Q 960 511 960 493 L 960 473 Q 960 455 978 455 L 1000 455" stroke="#758297"/>
+<path data-connector="true" class="edge" d="M 920 511 L 942 511 Q 960 511 960 529 L 960 607 Q 960 625 978 625 L 1000 625" stroke="#758297"/>
 </g>
 <g id="nodes" transform="translate(0 70)">
 <g id="cli">

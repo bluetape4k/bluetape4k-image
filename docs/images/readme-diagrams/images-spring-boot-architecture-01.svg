@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="2200" height="1320" viewBox="0 0 2200 1320" role="img" aria-label="Images Spring Boot Architecture">
 <defs>
-  <marker id="arrow-blue" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#2563eb"/></marker>
-  <marker id="arrow-gray" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#6b7280"/></marker>
+  <marker markerUnits="userSpaceOnUse" id="arrow-blue" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#2563eb"/></marker>
+  <marker markerUnits="userSpaceOnUse" id="arrow-gray" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#6b7280"/></marker>
   <style>
     .canvas{fill:#ffffff}
     .title{font-family:"Architects Daughter";font-size:42px;fill:#111827;font-weight:400}
@@ -34,14 +34,14 @@
 <text class="layer-title" x="104" y="964" dominant-baseline="middle">Operations</text>
 </g>
 <g id="edges" transform="translate(0 0)">
-<path class="edge" d="M 585 307 L 585 365 L 450 365 L 450 455" stroke="#56708C"/>
-<path class="edge-dashed" d="M 1140 307 L 1140 365 L 920 365 L 920 435" stroke="#8A72D6"/>
-<path class="edge" d="M 615 501 L 745 501" stroke="#56708C"/>
-<path class="edge" d="M 1095 481 L 1120 481 L 1120 521 L 1140 521" stroke="#DB7890"/>
-<path class="edge" d="M 820 527 L 820 655 L 475 655 L 475 765" stroke="#45A7A1"/>
-<path class="edge" d="M 920 527 L 920 765" stroke="#D9AA4D"/>
-<path class="edge" d="M 1310 567 L 1310 765" stroke="#DB7890"/>
-<path class="edge" d="M 920 857 L 920 1060" stroke="#58A978"/>
+<path data-connector="true" class="edge" d="M 585 307 L 585 347 Q 585 365 567 365 L 468 365 Q 450 365 450 383 L 450 455" stroke="#56708C"/>
+<path data-connector="true" class="edge-dashed" d="M 1140 307 L 1140 347 Q 1140 365 1122 365 L 938 365 Q 920 365 920 383 L 920 435" stroke="#8A72D6"/>
+<path data-connector="true" class="edge" d="M 615 501 L 745 501" stroke="#56708C"/>
+<path data-connector="true" class="edge" d="M 1095 481 L 1107.5 481 Q 1120 481 1120 493.5 L 1120 511 Q 1120 521 1130 521 L 1140 521" stroke="#DB7890"/>
+<path data-connector="true" class="edge" d="M 820 527 L 820 637 Q 820 655 802 655 L 493 655 Q 475 655 475 673 L 475 765" stroke="#45A7A1"/>
+<path data-connector="true" class="edge" d="M 920 527 L 920 765" stroke="#D9AA4D"/>
+<path data-connector="true" class="edge" d="M 1310 567 L 1310 765" stroke="#DB7890"/>
+<path data-connector="true" class="edge" d="M 920 857 L 920 1060" stroke="#58A978"/>
 </g>
 <g id="nodes" transform="translate(0 0)">
 <g id="app">

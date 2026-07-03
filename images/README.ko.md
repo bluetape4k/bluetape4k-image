@@ -919,6 +919,8 @@ val asyncResult = image.suspendApplyFilters {
 
 대표 색상 추출, 블러 감지, 개인정보 보호형 metadata report — 순수 JVM, 네이티브 의존성 없음.
 
+![Image Analysis diagram](../docs/images/readme-diagrams/images-class-04.png)
+
 #### 대표 색상 추출 (Median Cut)
 
 ```kotlin
