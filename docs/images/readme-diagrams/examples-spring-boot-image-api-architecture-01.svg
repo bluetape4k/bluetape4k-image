@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="2200" height="980" viewBox="0 0 2200 980" role="img" aria-label="Spring Boot Image API Architecture">
 <defs>
-  <marker markerUnits="userSpaceOnUse" id="arrow-blue" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#2563eb"/></marker>
-  <marker markerUnits="userSpaceOnUse" id="arrow-gray" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#6b7280"/></marker>
+  <marker markerUnits="userSpaceOnUse" id="arrow-blue" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#2563eb" stroke="#2563eb" stroke-width="0" stroke-dasharray="none" style="stroke-dasharray:none"/></marker>
+  <marker markerUnits="userSpaceOnUse" id="arrow-gray" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#6b7280" stroke="#6b7280" stroke-width="0" stroke-dasharray="none" style="stroke-dasharray:none"/></marker>
   <style>
     .canvas{fill:#ffffff}
     .title{font-family:"Architects Daughter";font-size:42px;fill:#111827;font-weight:400}
@@ -34,12 +34,12 @@
 <text class="panel-title" x="1648" y="208" dominant-baseline="middle">STORAGE</text>
 </g>
 <g id="edges" transform="translate(0 70)">
-<path data-connector="true" class="edge" d="M 500 436 L 542 436 Q 560 436 560 418 L 560 354 Q 560 336 578 336 L 620 336" stroke="#758297"/>
-<path data-connector="true" class="edge" d="M 500 436 L 542 436 Q 560 436 560 454 L 560 578 Q 560 596 578 596 L 620 596" stroke="#758297"/>
-<path data-connector="true" class="edge" d="M 1020 336 L 1062 336 Q 1080 336 1080 354 L 1080 420 Q 1080 438 1098 438 L 1140 438" stroke="#758297"/>
-<path data-connector="true" class="edge" d="M 1050 596 L 1072 596 Q 1090 596 1090 578 L 1090 456 Q 1090 438 1108 438 L 1140 438" stroke="#758297"/>
-<path data-connector="true" class="edge" d="M 1560 438 L 1660 438" stroke="#758297"/>
-<path data-connector="true" class="edge" d="M 1850 492 L 1850 600" stroke="#758297"/>
+<path data-connector="true" class="edge" d="M 500 436 L 542 436 Q 560 436 560 418 L 560 354 Q 560 336 578 336 L 620 336" stroke="#2563eb"/>
+<path data-connector="true" class="edge" d="M 500 436 L 542 436 Q 560 436 560 454 L 560 578 Q 560 596 578 596 L 620 596" stroke="#2563eb"/>
+<path data-connector="true" class="edge" d="M 1020 336 L 1062 336 Q 1080 336 1080 354 L 1080 420 Q 1080 438 1098 438 L 1140 438" stroke="#2563eb"/>
+<path data-connector="true" class="edge" d="M 1050 596 L 1072 596 Q 1090 596 1090 578 L 1090 456 Q 1090 438 1108 438 L 1140 438" stroke="#2563eb"/>
+<path data-connector="true" class="edge" d="M 1560 438 L 1660 438" stroke="#2563eb"/>
+<path data-connector="true" class="edge" d="M 1850 492 L 1850 600" stroke="#2563eb"/>
 </g>
 <g id="nodes" transform="translate(0 70)">
 <g id="boot">

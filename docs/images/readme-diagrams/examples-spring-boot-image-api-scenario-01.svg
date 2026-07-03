@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1900" height="900" viewBox="0 0 1900 900" role="img" aria-label="Spring Boot Image API Scenario">
 <defs>
-  <marker markerUnits="userSpaceOnUse" id="arrow-blue" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#2563eb"/></marker>
-  <marker markerUnits="userSpaceOnUse" id="arrow-gray" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#6b7280"/></marker>
+  <marker markerUnits="userSpaceOnUse" id="arrow-blue" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#2563eb" stroke="#2563eb" stroke-width="0" stroke-dasharray="none" style="stroke-dasharray:none"/></marker>
+  <marker markerUnits="userSpaceOnUse" id="arrow-gray" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#6b7280" stroke="#6b7280" stroke-width="0" stroke-dasharray="none" style="stroke-dasharray:none"/></marker>
   <style>
     .canvas{fill:#ffffff}
     .title{font-family:"Architects Daughter";font-size:42px;fill:#111827;font-weight:400}
@@ -24,11 +24,11 @@
 <text class="title" x="70" y="82">Spring Boot Image API Scenario</text>
 <text class="subtitle" x="74" y="116">Multipart upload creates a local original object and a PNG thumbnail.</text>
 <g id="edges" transform="translate(0 70)">
-<path data-connector="true" class="edge" d="M 430 355 L 500 355" stroke="#758297"/>
-<path data-connector="true" class="edge" d="M 900 358 L 970 358" stroke="#758297"/>
-<path data-connector="true" class="edge" d="M 1360 358 L 1387 358 Q 1405 358 1405 340 L 1405 223 Q 1405 205 1423 205 L 1450 205" stroke="#758297"/>
-<path data-connector="true" class="edge" d="M 1360 358 L 1387 358 Q 1405 358 1405 376 L 1405 487 Q 1405 505 1423 505 L 1450 505" stroke="#758297"/>
-<path data-connector="true" class="edge-dashed" d="M 500 405 L 480 405 Q 465 405 465 390 Q 465 375 450 375 L 430 375" stroke="#758297"/>
+<path data-connector="true" class="edge" d="M 430 355 L 500 355" stroke="#2563eb"/>
+<path data-connector="true" class="edge" d="M 900 358 L 970 358" stroke="#2563eb"/>
+<path data-connector="true" class="edge" d="M 1360 358 L 1387 358 Q 1405 358 1405 340 L 1405 223 Q 1405 205 1423 205 L 1450 205" stroke="#2563eb"/>
+<path data-connector="true" class="edge" d="M 1360 358 L 1387 358 Q 1405 358 1405 376 L 1405 487 Q 1405 505 1423 505 L 1450 505" stroke="#2563eb"/>
+<path data-connector="true" class="edge-dashed" d="M 500 405 L 480 405 Q 465 405 465 390 Q 465 375 450 375 L 430 375" stroke="#6b7280"/>
 </g>
 <g id="nodes" transform="translate(0 70)">
 <g id="client">

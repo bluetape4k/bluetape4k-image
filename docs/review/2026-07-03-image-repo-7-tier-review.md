@@ -86,15 +86,41 @@ Status: PASS for README parity.
 
 Status: PASS.
 
-- Rendered 52 README-facing SVG files to PNG.
-- Connector audit passed for all 52 SVGs.
-- Endpoint audit passed for all 52 SVGs.
-- Geometry audit passed for all 52 SVGs.
-- Mixed-corner audit passed: `files=52`, `paths=300`, `q_bends=120`,
-  `failures=0`.
-- Sequence-style audit passed: `sequence_files=6`.
-- Contact sheets were regenerated under `.omx/artifacts/diagram-contact-sheets/`
-  for local visual review.
+Evidence ledger:
+
+- Best-practice references opened before final edits:
+  `sequence-workflow-sample.png`, `bluetape4k-coroutines-sequence-01.png`, and
+  `bluetape4k-image-architecture-01.png` from `bluetape4k-wiki`.
+- Scope: `svg_files=52`, `png_files=52`, `connector_files=41`,
+  `connectors=310`, `cards=335`, `zero_connector_files=11`.
+- Zero-connector exceptions: the 10 README chart SVGs and
+  `images-captcha-example-01.svg`, which is a static decorative sample image.
+- `xmllint --noout`: `files=52`, `errors=0`.
+- CairoSVG render: 52 SVG files rendered to PNG with `-s 2`.
+- `diagram-connector-audit.py`: all 52 SVGs PASS; connector-bearing files
+  report `intrusions=0` and `crossings=0`; `root-readme-overview-01.svg` now
+  reports `connectors=13`.
+- `diagram-endpoint-audit.py`: `PASS files=52`.
+- `diagram-geometry-audit.py`: `geometry_failures=0` for every SVG.
+- `diagram-mixed-corner-audit.py`: `PASS files=52`, `paths=300`,
+  `q_bends=120`, `failures=0`.
+- `diagram-sequence-style-audit.py`: `PASS sequence_files=6`.
+- Additional marker parity audit: `connector_marker_refs=310`, `mismatches=0`,
+  `context_stroke=0`, `dashed_marker_dash_failures=0`.
+- Additional sequence audit: `files=6`, `saturated_hits=0`,
+  `return_not_teal=0`, `labels=41`, `gap_min=19.0`, `gap_max=19.0`,
+  `gap_failures=0`, `numbering_failures=0`.
+- Full-size PNG inspection covered all 6 sequence diagrams plus representative
+  high-risk root, barcode, architecture, class, and chart assets:
+  `root-readme-overview-01.png`, `bluetape4k-image-architecture-01.png`,
+  `images-barcode-api-architecture-01.png`, `images-ktor-architecture-01.png`,
+  `images-spring-boot-architecture-01.png`, `images-class-core-01.png`,
+  `images-class-filters-01.png`, `images-class-writers-01.png`,
+  `images-ocr-class-diagram-01.png`, `images-vips-api-class-01.png`,
+  `examples-ktor-image-api-architecture-01.png`,
+  `examples-spring-boot-image-api-architecture-01.png`,
+  `root-readme-module-chart-01.png`, and
+  `images-benchmark-vips-backend-comparison-chart-01.png`.
 
 ## Remaining Watch Items
 

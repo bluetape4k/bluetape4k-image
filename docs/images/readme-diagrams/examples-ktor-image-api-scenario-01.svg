@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="2000" height="920" viewBox="0 0 2000 920" role="img" aria-label="Ktor Image API Scenario">
 <defs>
-  <marker markerUnits="userSpaceOnUse" id="arrow-blue" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#2563eb"/></marker>
-  <marker markerUnits="userSpaceOnUse" id="arrow-gray" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#6b7280"/></marker>
+  <marker markerUnits="userSpaceOnUse" id="arrow-blue" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#2563eb" stroke="#2563eb" stroke-width="0" stroke-dasharray="none" style="stroke-dasharray:none"/></marker>
+  <marker markerUnits="userSpaceOnUse" id="arrow-gray" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#6b7280" stroke="#6b7280" stroke-width="0" stroke-dasharray="none" style="stroke-dasharray:none"/></marker>
   <style>
     .canvas{fill:#ffffff}
     .title{font-family:"Architects Daughter";font-size:42px;fill:#111827;font-weight:400}
@@ -24,12 +24,12 @@
 <text class="title" x="70" y="82">Ktor Image API Scenario</text>
 <text class="subtitle" x="74" y="116">Local Ktor service exposes CAPTCHA and thumbnail routes without infrastructure.</text>
 <g id="edges" transform="translate(0 70)">
-<path data-connector="true" class="edge" d="M 450 435 L 520 435" stroke="#758297"/>
-<path data-connector="true" class="edge" d="M 880 435 L 952 435 Q 970 435 970 417 L 970 243 Q 970 225 988 225 L 1050 225" stroke="#758297"/>
-<path data-connector="true" class="edge" d="M 880 435 L 1050 435" stroke="#758297"/>
-<path data-connector="true" class="edge" d="M 880 435 L 952 435 Q 970 435 970 453 L 970 627 Q 970 645 988 645 L 1050 645" stroke="#758297"/>
-<path data-connector="true" class="edge" d="M 1410 435 L 1540 435" stroke="#758297"/>
-<path data-connector="true" class="edge" d="M 1410 645 L 1457 645 Q 1475 645 1475 627 L 1475 453 Q 1475 435 1493 435 L 1540 435" stroke="#758297"/>
+<path data-connector="true" class="edge" d="M 450 435 L 520 435" stroke="#2563eb"/>
+<path data-connector="true" class="edge" d="M 880 435 L 952 435 Q 970 435 970 417 L 970 243 Q 970 225 988 225 L 1050 225" stroke="#2563eb"/>
+<path data-connector="true" class="edge" d="M 880 435 L 1050 435" stroke="#2563eb"/>
+<path data-connector="true" class="edge" d="M 880 435 L 952 435 Q 970 435 970 453 L 970 627 Q 970 645 988 645 L 1050 645" stroke="#2563eb"/>
+<path data-connector="true" class="edge" d="M 1410 435 L 1540 435" stroke="#2563eb"/>
+<path data-connector="true" class="edge" d="M 1410 645 L 1457 645 Q 1475 645 1475 627 L 1475 453 Q 1475 435 1493 435 L 1540 435" stroke="#2563eb"/>
 </g>
 <g id="nodes" transform="translate(0 70)">
 <g id="client">
