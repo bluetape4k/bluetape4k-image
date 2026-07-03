@@ -47,13 +47,13 @@
 <text class="panel-title" x="98" y="686" dominant-baseline="middle">PROVIDER MODULES</text>
 
 <g id="edges">
-  <path class="connector edge-blue" d="M 440 224 L 560 224"/>
-  <path class="connector edge-blue" d="M 950 224 L 1080 224"/>
-  <path class="connector edge-blue" d="M 1260 258 L 1260 350"/>
-  <path class="connector edge-blue" d="M 1260 455 L 1260 500"/>
-  <path class="connector edge-purple" d="M 960 552 L 1050 552"/>
-  <path class="connector edge-green" d="M 815 696 L 815 642 Q 815 632 805 632 L 620 632 Q 610 632 610 622 L 610 455"/>
-  <path class="connector edge-gray" d="M 1030 730 L 1170 730"/>
+  <path data-connector="true" class="connector edge-blue" d="M 440 224 L 560 224"/>
+  <path data-connector="true" class="connector edge-blue" d="M 950 224 L 1080 224"/>
+  <path data-connector="true" class="connector edge-blue" d="M 1260 258 L 1260 350"/>
+  <path data-connector="true" class="connector edge-blue" d="M 1260 455 L 1260 500"/>
+  <path data-connector="true" class="connector edge-purple" d="M 960 552 L 1050 552"/>
+  <path data-connector="true" class="connector edge-green" d="M 815 696 L 815 642 Q 815 632 805 632 L 620 632 Q 610 632 610 622 L 610 455"/>
+  <path data-connector="true" class="connector edge-gray" d="M 1030 730 L 1170 730"/>
 </g>
 
 <g id="cards">
@@ -145,13 +145,13 @@
 
 <g id="legend">
   <rect class="key-box" x="210" y="826" width="1180" height="38" rx="6"/>
-  <path class="connector edge-blue" d="M 250 845 L 296 845"/>
+  <path data-connector="true" class="connector edge-blue" d="M 250 845 L 296 845"/>
   <text class="label" x="310" y="849">caller input</text>
-  <path class="connector edge-green" d="M 510 845 L 556 845"/>
+  <path data-connector="true" class="connector edge-green" d="M 510 845 L 556 845"/>
   <text class="label" x="570" y="849">provider implements</text>
-  <path class="connector edge-purple" d="M 820 845 L 866 845"/>
+  <path data-connector="true" class="connector edge-purple" d="M 820 845 L 866 845"/>
   <text class="label" x="880" y="849">API normalization</text>
-  <path class="connector edge-gray" d="M 1120 845 L 1166 845"/>
+  <path data-connector="true" class="connector edge-gray" d="M 1120 845 L 1166 845"/>
   <text class="label" x="1180" y="849">private decoder call</text>
 </g>
 

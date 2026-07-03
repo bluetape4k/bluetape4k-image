@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="2300" height="980" viewBox="0 0 2300 980" role="img" aria-label="Ktor Image API Architecture">
 <defs>
-  <marker id="arrow-blue" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#2563eb"/></marker>
-  <marker id="arrow-gray" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#6b7280"/></marker>
+  <marker markerUnits="userSpaceOnUse" id="arrow-blue" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#2563eb"/></marker>
+  <marker markerUnits="userSpaceOnUse" id="arrow-gray" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#6b7280"/></marker>
   <style>
     .canvas{fill:#ffffff}
     .title{font-family:"Architects Daughter";font-size:42px;fill:#111827;font-weight:400}
@@ -34,12 +34,12 @@
 <text class="panel-title" x="1758" y="208" dominant-baseline="middle">LIBRARIES</text>
 </g>
 <g id="edges" transform="translate(0 70)">
-<path class="edge" d="M 500 416 L 560 416 L 560 306 L 620 306" stroke="#758297"/>
-<path class="edge" d="M 500 416 L 560 416 L 560 556 L 620 556" stroke="#758297"/>
-<path class="edge" d="M 1000 556 L 1060 556 L 1060 416 L 1120 416" stroke="#758297"/>
-<path class="edge" d="M 1000 556 L 1060 556 L 1060 616 L 1120 616" stroke="#758297"/>
-<path class="edge" d="M 1640 416 L 1780 416" stroke="#758297"/>
-<path class="edge" d="M 1680 616 L 1780 616" stroke="#758297"/>
+<path data-connector="true" class="edge" d="M 500 416 L 542 416 Q 560 416 560 398 L 560 324 Q 560 306 578 306 L 620 306" stroke="#758297"/>
+<path data-connector="true" class="edge" d="M 500 416 L 542 416 Q 560 416 560 434 L 560 538 Q 560 556 578 556 L 620 556" stroke="#758297"/>
+<path data-connector="true" class="edge" d="M 1000 556 L 1042 556 Q 1060 556 1060 538 L 1060 434 Q 1060 416 1078 416 L 1120 416" stroke="#758297"/>
+<path data-connector="true" class="edge" d="M 1000 556 L 1042 556 Q 1060 556 1060 574 L 1060 598 Q 1060 616 1078 616 L 1120 616" stroke="#758297"/>
+<path data-connector="true" class="edge" d="M 1640 416 L 1780 416" stroke="#758297"/>
+<path data-connector="true" class="edge" d="M 1680 616 L 1780 616" stroke="#758297"/>
 </g>
 <g id="nodes" transform="translate(0 70)">
 <g id="app">

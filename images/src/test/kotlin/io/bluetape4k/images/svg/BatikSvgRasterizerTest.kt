@@ -1,6 +1,11 @@
 package io.bluetape4k.images.svg
 
 import com.sksamuel.scrimage.nio.PngWriter
+import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.shouldContain
+import io.bluetape4k.assertions.shouldBeGreaterThan
+import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.images.AbstractImageTest
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.junit5.tempfolder.TempFolder
@@ -8,9 +13,6 @@ import io.bluetape4k.junit5.tempfolder.TempFolderTest
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.utils.Resourcex
-import io.bluetape4k.assertions.shouldBeGreaterThan
-import io.bluetape4k.assertions.shouldBeTrue
-import io.bluetape4k.assertions.shouldNotBeNull
 import org.junit.jupiter.api.Test
 
 @TempFolderTest
@@ -74,6 +76,24 @@ class BatikSvgRasterizerTest : AbstractImageTest() {
         dest.exists().shouldBeTrue()
         dest.length() shouldBeGreaterThan 0L
         log.debug { "저장됨: ${dest.absolutePath} (${dest.length()} bytes)" }
+    }
+
+    @Test
+    fun `SVG rasterize options require positive numeric values`() {
+        listOf(
+            "width" to { SvgRasterizeOptions(width = 0) },
+            "height" to { SvgRasterizeOptions(height = 0) },
+            "dpi" to { SvgRasterizeOptions(dpi = 0) },
+            "timeoutMillis" to { SvgRasterizeOptions(timeoutMillis = 0L) },
+            "maxWidthPx" to { SvgRasterizeOptions(maxWidthPx = 0) },
+            "maxHeightPx" to { SvgRasterizeOptions(maxHeightPx = 0) },
+        ).forEach { (field, factory) ->
+            val error = assertFailsWith<IllegalArgumentException> {
+                factory()
+            }
+
+            error.message shouldContain field
+        }
     }
 
     @Test

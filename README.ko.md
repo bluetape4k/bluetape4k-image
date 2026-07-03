@@ -82,6 +82,9 @@ Benchmark evidence: [`benchmark/images-benchmark/docs/large-streaming-2026-06-05
 
 ![Bluetape4k Image overview diagram](docs/images/readme-diagrams/root-readme-overview-01.png)
 
+색상 의미: 파란색은 API 선택, 초록색은 처리 결과, 주황색은 서비스 검증,
+보라색은 native backend 선택, 회색은 benchmark 비교를 나타냅니다.
+
 ## 모듈 구성 차트
 
 ![Bluetape4k Image module composition chart](docs/images/readme-charts/root-readme-module-chart-01.png)
@@ -353,7 +356,8 @@ backend format label을 `BarcodeResult`로 변환하며, barcode가 없으면 �
 | API contract | `images-barcode-api` | 사용 가능 | 직접 decoding 없음. `BarcodeReader`, `BarcodeOptions`, `BarcodeResult`, `BarcodeRegion`, input helper 제공 | `BarcodeTestFixtures`가 no-code image, rotated image, malformed bytes, generated-source note를 공유 fixture로 제공 |
 | ZXing | `images-barcode-zxing` | 사용 가능 | ZXing 기반 QR Code와 주요 1D/2D 포맷. 테스트는 QR Code와 Code 128을 검증 | ZXing writer가 deterministic in-memory QR/Code 128 이미지를 생성 |
 | BoofCV | — | 보류 | Research 기준 QR, Micro QR, Aztec 특화 범위. 0.4.0의 broad 1D barcode backend로는 채택하지 않음 | `docs/superpowers/research/2026-07-03-issue-246-boofcv-provider-research.md` 참고 |
-| Commercial/native SDK | — | 보류 | 산업용, native, commercial 요구를 위한 선택 provider | #248은 license, CI, native runtime, redistribution policy 승인 전까지 구현 issue를 만들지 않도록 권고 |
+| Commercial SDK | — | 보류 | 산업용 decoding 요구를 위한 유료 또는 closed-source 선택 provider | #248은 license, redistribution, support policy 승인 전까지 구현 issue를 만들지 않도록 권고 |
+| Native/JNI SDK | — | 보류 | native packaging, JNI/FFM 설정, platform-specific CI가 필요한 선택 provider | #248은 native runtime과 CI policy 승인 전까지 구현 issue를 만들지 않도록 권고 |
 
 Barcode fixture는 deterministic code로 테스트 실행 시 생성됩니다. 외부 barcode 이미지
 binary는 repository에 포함하지 않습니다.

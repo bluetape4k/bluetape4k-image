@@ -1,12 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1840" height="980" viewBox="0 0 1840 980" role="img" aria-label="Images Filter Classes">
 <defs>
-  <marker id="arrow-blue" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+  <marker markerUnits="userSpaceOnUse" id="arrow-blue" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
     <polygon points="0 0, 10 3.5, 0 7" fill="#2563eb"/>
   </marker>
-  <marker id="arrow-gray" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+  <marker markerUnits="userSpaceOnUse" id="arrow-gray" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
     <polygon points="0 0, 10 3.5, 0 7" fill="#6b7280"/>
   </marker>
-  <marker id="inherit-open" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+  <marker markerUnits="userSpaceOnUse" id="inherit-open" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
     <path d="M 0 0 L 10 3.5 L 0 7 Z" fill="#ffffff" stroke="#2563eb" stroke-width="1.4"/>
   </marker>
   <style>
@@ -28,14 +28,14 @@
 <text class="title" x="70" y="82">Images Filter Classes</text>
 <text class="subtitle" x="74" y="116">Filter DSL, color conversion helpers, and concrete Scrimage Filter implementations are isolated from writer classes.</text>
 <g id="edges">
-<path class="dependency" d="M 1230 264 L 1060 264"/>
-<path class="dependency" d="M 520 254 L 700 254"/>
-<path class="dependency" d="M 1445 350 L 1445 470"/>
-<path class="inheritance" d="M 270 470 L 270 390 L 880 390 L 880 328"/>
-<path class="inheritance" d="M 275 700 L 275 660 L 880 660 L 880 328"/>
-<path class="inheritance" d="M 670 700 L 670 660 L 880 660 L 880 328"/>
-<path class="inheritance" d="M 1090 700 L 1090 660 L 880 660 L 880 328"/>
-<path class="inheritance" d="M 1500 700 L 1500 660 L 880 660 L 880 328"/>
+<path data-connector="true" class="dependency" d="M 1230 264 L 1060 264"/>
+<path data-connector="true" class="dependency" d="M 520 254 L 700 254"/>
+<path data-connector="true" class="dependency" d="M 1445 350 L 1445 470"/>
+<path data-connector="true" class="inheritance" d="M 270 470 L 270 408 Q 270 390 288 390 L 862 390 Q 880 390 880 372 L 880 328"/>
+<path data-connector="true" class="inheritance" d="M 275 700 L 275 678 Q 275 660 293 660 L 862 660 Q 880 660 880 642 L 880 328"/>
+<path data-connector="true" class="inheritance" d="M 670 700 L 670 678 Q 670 660 688 660 L 862 660 Q 880 660 880 642 L 880 328"/>
+<path data-connector="true" class="inheritance" d="M 1090 700 L 1090 678 Q 1090 660 1072 660 L 898 660 Q 880 660 880 642 L 880 328"/>
+<path data-connector="true" class="inheritance" d="M 1500 700 L 1500 678 Q 1500 660 1482 660 L 898 660 Q 880 660 880 642 L 880 328"/>
 </g>
 <g id="classes">
 <g id="filter">

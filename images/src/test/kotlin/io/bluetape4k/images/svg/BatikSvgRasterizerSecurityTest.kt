@@ -1,14 +1,20 @@
 package io.bluetape4k.images.svg
 
+import com.sun.net.httpserver.HttpServer
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.images.AbstractImageTest
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.junit5.tempfolder.TempFolderTest
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.utils.Resourcex
-import io.bluetape4k.assertions.shouldBeFalse
-import io.bluetape4k.assertions.shouldBeTrue
 import org.junit.jupiter.api.Test
+import java.io.ByteArrayInputStream
+import java.net.InetAddress
+import java.net.InetSocketAddress
+import java.util.concurrent.atomic.AtomicInteger
 
 /**
  * BatikSvgRasterizer XXE/SSRF 보안 방어 검증 테스트입니다.
@@ -58,32 +64,41 @@ class BatikSvgRasterizerSecurityTest : AbstractImageTest() {
     }
 
     @Test
-    fun `외부 HTTP 리소스 참조 SVG - allowExternalResources=false에서 처리됨`() = runSuspendIO {
-        // external_resource.svg: http://example.com/remote.png 참조
-        // allowExternalResources=false(기본값)이면 외부 리소스는 로드되지 않아야 함
-        // 이미지 생성 자체는 성공할 수 있음 (리소스 무시)
-        val input = Resourcex.getInputStream("images/external_resource.svg")!!
+    fun `외부 HTTP 리소스 참조 SVG - allowExternalResources=false에서 요청하지 않음`() = runSuspendIO {
+        val requests = AtomicInteger()
+        val server = HttpServer.create(InetSocketAddress(InetAddress.getByName("127.0.0.1"), 0), 0)
+        server.createContext("/remote.png") { exchange ->
+            requests.incrementAndGet()
+            exchange.sendResponseHeaders(200, 0)
+            exchange.responseBody.use { }
+        }
+        server.start()
+
+        val port = server.address.port
+        val svg = """
+            <svg xmlns="http://www.w3.org/2000/svg"
+                 xmlns:xlink="http://www.w3.org/1999/xlink"
+                 width="32" height="32">
+              <rect width="32" height="32" fill="#ffffff"/>
+              <image x="0" y="0" width="16" height="16"
+                     href="http://127.0.0.1:$port/remote.png"
+                     xlink:href="http://127.0.0.1:$port/remote.png"/>
+            </svg>
+        """.trimIndent()
         val opts = SvgRasterizeOptions(allowExternalResources = false)
 
-        // 예외 발생 또는 빈 이미지로 처리 — 외부 HTTP 요청이 실제로 나가지 않는 것이 핵심
-        // 단위 테스트 환경에서 실제 HTTP 요청 여부를 직접 검증하기 위해
-        // "네트워크 오류"를 유발해서 예외가 발생한다면, 그것 자체가 외부 접근을 시도했다는 증거이므로
-        // allowExternalResources=false 시에는 예외 없이 리소스를 무시해야 함
-        var processedSuccessfully = false
         try {
-            input.use {
+            ByteArrayInputStream(svg.toByteArray()).use {
                 val image = rasterizer.rasterize(it, opts)
-                // 래스터화 자체는 성공 가능 (외부 이미지는 빈 영역으로 대체됨)
-                processedSuccessfully = true
                 log.debug { "외부 리소스 SVG: 래스터화 성공 (${image.width}x${image.height}), 외부 로드 없음" }
             }
         } catch (e: Exception) {
-            // 네트워크 접근 시도 후 실패한 경우: DOC 차단 또는 연결 거부
-            log.debug { "외부 리소스 SVG: 예외로 거부됨 (${e.javaClass.simpleName})" }
+            log.debug { "외부 리소스 SVG: 예외로 거부됨 (${e.javaClass.simpleName}), 요청 횟수=${requests.get()}" }
+        } finally {
+            server.stop(0)
         }
-        // 어느 경우든 테스트는 통과 — 외부 HTTP 요청이 성공적으로 완료되어 콘텐츠를 가져왔을 때만 문제
-        // (이 경우 테스트 자체가 네트워크 없는 CI에서 항상 실패하므로 차단 효과가 있음)
-        log.debug { "외부 리소스 처리 완료 (processedSuccessfully=$processedSuccessfully)" }
+
+        requests.get() shouldBeEqualTo 0
     }
 
     @Test
