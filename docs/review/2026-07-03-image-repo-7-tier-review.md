@@ -90,7 +90,12 @@ Evidence ledger:
 
 - Best-practice references opened before final edits:
   `sequence-workflow-sample.png`, `bluetape4k-coroutines-sequence-01.png`, and
-  `bluetape4k-image-architecture-01.png` from `bluetape4k-wiki`.
+  `leader-redis-lettuce-sequence-02.png` from `bluetape4k-wiki`.
+- Sequence generator source was updated, not only the generated SVG files:
+  `docs/scripts/generate-example-readme-diagrams.py` and
+  `docs/scripts/generate-readme-visual-assets.py` now emit the muted
+  best-practices frame, participant card, lifeline, activation, label, line,
+  badge, and marker palette for sequence assets.
 - Scope: `svg_files=52`, `png_files=52`, `connector_files=41`,
   `connectors=310`, `cards=335`, `zero_connector_files=11`.
 - Zero-connector exceptions: the 10 README chart SVGs and
@@ -107,12 +112,20 @@ Evidence ledger:
 - `diagram-sequence-style-audit.py`: `PASS sequence_files=6`.
 - Additional marker parity audit: `connector_marker_refs=310`, `mismatches=0`,
   `context_stroke=0`, `dashed_marker_dash_failures=0`.
-- Additional sequence audit: `files=6`, `saturated_hits=0`,
-  `return_not_teal=0`, `labels=41`, `gap_min=19.0`, `gap_max=19.0`,
-  `gap_failures=0`, `numbering_failures=0`.
+- Additional sequence palette audit: `sequence_palette_files=6`,
+  `connector_paths=41`, `labels=41`,
+  `visible_semantic_colors=[#2E8F89,#3E9868,#4F83BF,#B9851B,#C94D68]`,
+  `stale_tailwind_palette_hits=0`, `marker_mismatches=0`,
+  `label_badge_mismatches=0`.
 - Full-size PNG inspection covered all 6 sequence diagrams plus representative
   high-risk root, barcode, architecture, class, and chart assets:
-  `root-readme-overview-01.png`, `bluetape4k-image-architecture-01.png`,
+  `examples-basic-processing-sequence-01.png`,
+  `examples-ktor-image-api-sequence-01.png`,
+  `examples-ktor-ocr-api-sequence-01.png`,
+  `examples-spring-boot-image-api-sequence-01.png`,
+  `examples-spring-boot-ocr-api-sequence-01.png`,
+  `images-ocr-sequence-diagram-01.png`, `root-readme-overview-01.png`,
+  `bluetape4k-image-architecture-01.png`,
   `images-barcode-api-architecture-01.png`, `images-ktor-architecture-01.png`,
   `images-spring-boot-architecture-01.png`, `images-class-core-01.png`,
   `images-class-filters-01.png`, `images-class-writers-01.png`,

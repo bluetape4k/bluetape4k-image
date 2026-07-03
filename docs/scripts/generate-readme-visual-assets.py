@@ -41,6 +41,19 @@ PALETTE = [
     ("#F7F1E7", "#B88A44"),
 ]
 
+SEQ_BLUE = "#4F83BF"
+SEQ_GREEN = "#3E9868"
+SEQ_AMBER = "#B9851B"
+SEQ_TEAL = "#2E8F89"
+SEQ_FRAME_FILL = "#fbfcf8"
+SEQ_FRAME_STROKE = "#41545d"
+SEQ_CARD_STROKE = "#546e7a"
+SEQ_LIFELINE = "#9aaab1"
+SEQ_TEXT = "#263238"
+SEQ_MUTED_TEXT = "#36464f"
+SEQ_ACTIVATION_FILL = "#e6f2ec"
+SEQ_ACTIVATION_STROKE = "#5b7e67"
+
 
 @dataclass(frozen=True)
 class Card:
@@ -374,32 +387,25 @@ def render_fireworks_ocr_sequence(spec: DiagramSpec) -> str:
     out = [
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}" role="img" aria-label="{esc(spec.title)}">',
         "<defs>",
-        '  <marker id="arrow-blue" markerWidth="10" markerHeight="9" refX="9" refY="5" viewBox="0 0 10 10" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#4f86c6" stroke="#4f86c6"/></marker>',
-        '  <marker id="arrow-gray" markerWidth="10" markerHeight="9" refX="9" refY="5" viewBox="0 0 10 10" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#5f7f7a" stroke="#5f7f7a"/></marker>',
+        f'  <marker markerUnits="userSpaceOnUse" id="arrow-blue" markerWidth="13" markerHeight="13" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="{SEQ_BLUE}" stroke="{SEQ_BLUE}" stroke-width="0" stroke-dasharray="none" style="stroke-dasharray:none"/></marker>',
+        f'  <marker markerUnits="userSpaceOnUse" id="arrow-green" markerWidth="13" markerHeight="13" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="{SEQ_GREEN}" stroke="{SEQ_GREEN}" stroke-width="0" stroke-dasharray="none" style="stroke-dasharray:none"/></marker>',
+        f'  <marker markerUnits="userSpaceOnUse" id="arrow-amber" markerWidth="13" markerHeight="13" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="{SEQ_AMBER}" stroke="{SEQ_AMBER}" stroke-width="0" stroke-dasharray="none" style="stroke-dasharray:none"/></marker>',
+        f'  <marker markerUnits="userSpaceOnUse" id="arrow-teal" markerWidth="13" markerHeight="13" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="{SEQ_TEAL}" stroke="{SEQ_TEAL}" stroke-width="0" stroke-dasharray="none" style="stroke-dasharray:none"/></marker>',
         "  <style>",
-        '    .canvas{fill:#ffffff}.title{font-family:"Architects Daughter";font-size:42px;fill:#111827;font-weight:400}.subtitle{font-family:"Comic Mono";font-size:16px;fill:#6b7280;font-weight:400}',
-        '    .card{fill:#ffffff;stroke:#94a3b8;stroke-width:1.9}.node-title{font-family:"Architects Daughter";font-size:20px;fill:#111827;font-weight:400}.detail,.label,.note{font-family:"Comic Mono";fill:#6b7280;font-weight:400}.detail{font-size:12px}.label{font-size:12px;fill:#374151}.note{font-size:13px}.lifeline{stroke:#cbd5e1;stroke-width:1.5;stroke-dasharray:7 7}.activation{fill:#dcebf8;stroke:#9bbfdf;stroke-width:1}',
-        '    .edge{stroke:#4f86c6;stroke-width:2.1;fill:none;marker-end:url(#arrow-blue);stroke-linecap:round}.edge-return{stroke:#5f7f7a;stroke-width:1.8;fill:none;marker-end:url(#arrow-gray);stroke-linecap:round;stroke-dasharray:6 4}',
+        f'    .canvas{{fill:#F6F9FC}}.title{{font-family:"Architects Daughter";font-size:42px;fill:{SEQ_TEXT};font-weight:400}}.subtitle{{font-family:"Comic Mono";font-size:16px;fill:{SEQ_MUTED_TEXT};font-weight:400}}',
+        f'    .card{{fill:#FFFFFF;stroke:{SEQ_CARD_STROKE};stroke-width:2}}.node-title{{font-family:"Architects Daughter";font-size:20px;fill:{SEQ_TEXT};font-weight:400}}.detail,.label,.note{{font-family:"Comic Mono";fill:{SEQ_MUTED_TEXT};font-weight:400}}.detail{{font-size:12px}}.label{{font-size:12px}}.note{{font-size:13px}}.lifeline{{stroke:{SEQ_LIFELINE};stroke-width:2;stroke-dasharray:7 8}}.activation{{fill:{SEQ_ACTIVATION_FILL};stroke:{SEQ_ACTIVATION_STROKE};stroke-width:1.5}}',
+        f'    .edge{{stroke:{SEQ_BLUE};stroke-width:2.1;fill:none;marker-end:url(#arrow-blue);stroke-linecap:round;stroke-linejoin:round}}.edge-green{{stroke:{SEQ_GREEN};marker-end:url(#arrow-green)}}.edge-amber{{stroke:{SEQ_AMBER};marker-end:url(#arrow-amber)}}.edge-return{{stroke:{SEQ_TEAL};stroke-width:1.8;fill:none;marker-end:url(#arrow-teal);stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:6 4}}',
         "  </style>",
         "</defs>",
         f'<rect class="canvas" width="{width}" height="{height}"/>',
         f'<desc>{esc(spec.intent)} Source: {esc(spec.source)}</desc>',
+        f'<rect class="frame panel" x="32" y="28" width="{width - 64}" height="{height - 56}" rx="30" fill="{SEQ_FRAME_FILL}" stroke="{SEQ_FRAME_STROKE}" stroke-width="3"/>',
         f'<text class="title" x="70" y="78">{esc(spec.title)}</text>',
         f'<text class="subtitle" x="74" y="112">{esc(spec.subtitle)}</text>',
-        f'<rect class="frame panel" x="88" y="158" width="{width - 176}" height="880" rx="8" fill="#f3f6fa" stroke="#cbd5e1" stroke-width="1.4" stroke-dasharray="8 6"/>',
         '<g id="participants">',
-    ]
-    palette = [
-        ("#eff6ff", "#bfdbfe"),
-        ("#faf5ff", "#e9d5ff"),
-        ("#f0fdf4", "#bbf7d0"),
-        ("#fff7ed", "#fed7aa"),
-        ("#f0fdfa", "#ccfbf1"),
-        ("#f9fafb", "#d1d5db"),
     ]
     header_y, header_w, header_h = 190, 250, 78
     for index, (key, title, detail, x) in enumerate(participants):
-        fill, stroke = palette[index % len(palette)]
         title_lines = tuple(title.split("\n"))
         if len(title_lines) == 1:
             title_text = [
@@ -414,7 +420,7 @@ def render_fireworks_ocr_sequence(spec: DiagramSpec) -> str:
             detail_y = header_y + 68
         out.extend(
             [
-                f'<rect class="card participant-card" x="{x - header_w / 2:.1f}" y="{header_y}" width="{header_w}" height="{header_h}" rx="8" style="fill:{fill};stroke:{stroke};stroke-width:1.8"/>',
+                f'<rect class="card participant-card header" x="{x - header_w / 2:.1f}" y="{header_y}" width="{header_w}" height="{header_h}" rx="8"/>',
                 *title_text,
                 f'<text class="detail role" x="{x}" y="{detail_y}" text-anchor="middle" dominant-baseline="middle">{esc(detail)}</text>',
                 f'<line class="lifeline" x1="{x}" y1="{header_y + header_h}" x2="{x}" y2="1010"/>',
@@ -425,17 +431,26 @@ def render_fireworks_ocr_sequence(spec: DiagramSpec) -> str:
         sx = x_by_key[source]
         tx = x_by_key[target]
         css = "edge-return" if dashed else "edge"
+        if not dashed and any(token in label.lower() for token in ("io", "nullable", "metadata")):
+            css = "edge edge-green"
+        elif not dashed and any(token in label.lower() for token in ("recognize", "doocr", "words")):
+            css = "edge edge-amber"
         label_w = min(300, max(148, len(label) * 8.2 + 76))
         label_center = (sx + tx) / 2
         lx = label_center - label_w / 2
-        badge_color = "#5f7f7a" if dashed else "#4f86c6"
+        badge_color = {
+            "edge": SEQ_BLUE,
+            "edge edge-green": SEQ_GREEN,
+            "edge edge-amber": SEQ_AMBER,
+            "edge-return": SEQ_TEAL,
+        }[css]
         out.extend(
             [
-                f'<path class="{css}" d="M {sx} {y} L {tx} {y}"/>',
+                f'<path data-connector="true" class="{css}" d="M {sx} {y} L {tx} {y}"/>',
                 f'<rect class="activation" x="{tx - 4}" y="{y - 13}" width="8" height="28" rx="3"/>',
-                f'<rect class="labelPill" x="{lx:.1f}" y="{y - 47}" width="{label_w}" height="28" rx="9" fill="#ffffff" stroke="#d1d5db"/>',
+                f'<rect class="labelPill" x="{lx:.1f}" y="{y - 47}" width="{label_w}" height="28" rx="9" fill="#FFFFFF" stroke="{badge_color}"/>',
                 f'<circle cx="{lx + 18:.1f}" cy="{y - 33}" r="12" fill="{badge_color}"/>',
-                f'<text class="label" x="{lx + 18:.1f}" y="{y - 32}" text-anchor="middle" dominant-baseline="middle" style="fill:#ffffff;font-size:12px">{index}</text>',
+                f'<text class="label" x="{lx + 18:.1f}" y="{y - 32}" text-anchor="middle" dominant-baseline="middle" style="fill:#FFFFFF;font-size:12px">{index}</text>',
                 f'<text class="label" x="{label_center + 16:.1f}" y="{y - 33}" text-anchor="middle" dominant-baseline="middle">{esc(label)}</text>',
             ]
         )
