@@ -12,6 +12,9 @@ A later checklist challenge also showed that "script passed" and contact-sheet
 review were not enough evidence: the pass had not explicitly proven marker
 color parity, dashed marker isolation, sequence palette parity, zero-connector
 exceptions, or full-size inspection of high-risk PNGs.
+The sequence palette challenge exposed another gap: generated SVG post-fixes
+are not enough when the generator still emits the older Tailwind-like palette.
+The generator source must be part of the defect pattern audit.
 
 ## Decision
 
@@ -22,6 +25,8 @@ then render PNGs and inspect a contact sheet plus representative single images.
 For connector-heavy or sequence diagrams, add an explicit evidence ledger with
 counts for connectors, cards, marker references, dashed marker heads, sequence
 labels, and zero-connector exceptions.
+For sequence diagrams, validate the generator or source template itself against
+the opened best-practices family before accepting regenerated SVG/PNG assets.
 
 ## Outcome
 
@@ -34,9 +39,12 @@ The final checklist passed for 52 SVG files:
 - `diagram-mixed-corner-audit.py`
 - `diagram-sequence-style-audit.py` for sequence diagrams
 - Additional invariant audit: `connector_marker_refs=310`, `mismatches=0`,
-  `context_stroke=0`, `dashed_marker_dash_failures=0`, `sequence_files=6`,
-  `saturated_hits=0`, `return_not_teal=0`, `labels=41`,
-  `gap_failures=0`, `numbering_failures=0`
+  `context_stroke=0`, `dashed_marker_dash_failures=0`, `sequence_files=6`
+- Additional sequence palette audit: `sequence_palette_files=6`,
+  `connector_paths=41`, `labels=41`,
+  `visible_semantic_colors=[#2E8F89,#3E9868,#4F83BF,#B9851B,#C94D68]`,
+  `stale_tailwind_palette_hits=0`, `marker_mismatches=0`,
+  `label_badge_mismatches=0`
 
 The review also fixed the SVG SSRF test so it proves zero outbound HTTP
 requests, not just "success or exception".
@@ -52,6 +60,14 @@ requests, not just "success or exception".
   PR evidence.
 - Sequence return lines must use the muted teal return palette, and normal call
   lines must avoid saturated `#2563eb` when the sequence checklist applies.
+- Sequence frame/background, participant cards, lifelines, activation bars,
+  label pills, number badges, message lines, and markers must all be checked
+  against the opened best-practices PNGs. Do not treat line color replacement
+  alone as palette parity.
+- When sequence assets are generated, update the generator first. Then
+  regenerate SVG/PNG and audit the generated files for old palette literals
+  such as `#2563eb`, Tailwind pastel participant fills, old pale-blue
+  activation bars, and mismatched marker IDs.
 - Marker definitions must match connector stroke colors and must set
   `stroke-dasharray="none"` so dashed connector patterns do not bleed into
   arrowheads.

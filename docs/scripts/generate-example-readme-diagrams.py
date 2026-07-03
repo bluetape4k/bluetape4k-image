@@ -23,6 +23,20 @@ PALETTE = [
     ("#f9fafb", "#d1d5db"),
 ]
 
+SEQ_BLUE = "#4F83BF"
+SEQ_GREEN = "#3E9868"
+SEQ_AMBER = "#B9851B"
+SEQ_TEAL = "#2E8F89"
+SEQ_RED = "#C94D68"
+SEQ_FRAME_FILL = "#fbfcf8"
+SEQ_FRAME_STROKE = "#41545d"
+SEQ_CARD_STROKE = "#546e7a"
+SEQ_LIFELINE = "#9aaab1"
+SEQ_TEXT = "#263238"
+SEQ_MUTED_TEXT = "#36464f"
+SEQ_ACTIVATION_FILL = "#e6f2ec"
+SEQ_ACTIVATION_STROKE = "#5b7e67"
+
 
 @dataclass(frozen=True)
 class Node:
@@ -178,6 +192,50 @@ def svg_header(width: int, height: int, title: str, subtitle: str) -> list[str]:
     ]
 
 
+def seq_marker(marker_id: str, color: str) -> str:
+    return (
+        f'  <marker markerUnits="userSpaceOnUse" id="{marker_id}" markerWidth="13" markerHeight="13" '
+        'viewBox="0 0 10 10" refX="9" refY="5" orient="auto">'
+        f'<path d="M 0 0 L 10 5 L 0 10 Z" fill="{color}" stroke="{color}" stroke-width="0" '
+        'stroke-dasharray="none" style="stroke-dasharray:none"/></marker>'
+    )
+
+
+def sequence_header(width: int, height: int, title: str, subtitle: str) -> list[str]:
+    return [
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}" role="img" aria-label="{esc(title)}">',
+        "<defs>",
+        seq_marker("arrow-blue", SEQ_BLUE),
+        seq_marker("arrow-green", SEQ_GREEN),
+        seq_marker("arrow-amber", SEQ_AMBER),
+        seq_marker("arrow-teal", SEQ_TEAL),
+        seq_marker("arrow-red", SEQ_RED),
+        "  <style>",
+        "    .canvas{fill:#F6F9FC}",
+        f'    .title{{font-family:"Architects Daughter";font-size:42px;fill:{SEQ_TEXT};font-weight:400}}',
+        f'    .subtitle{{font-family:"Comic Mono";font-size:16px;fill:{SEQ_MUTED_TEXT};font-weight:400}}',
+        f'    .node-title{{font-family:"Architects Daughter";font-size:22px;fill:{SEQ_TEXT};font-weight:400}}',
+        f'    .node-detail{{font-family:"Comic Mono";font-size:13px;fill:{SEQ_MUTED_TEXT};font-weight:400}}',
+        f'    .label{{font-family:"Comic Mono";font-size:12px;fill:{SEQ_MUTED_TEXT};font-weight:400}}',
+        f'    .footer{{font-family:"Comic Mono";font-size:13px;fill:{SEQ_MUTED_TEXT};font-weight:400}}',
+        "    .footer-pill{fill:#FFFFFF;stroke:#d7e0e4;stroke-width:1}",
+        f"    .card{{fill:#FFFFFF;stroke:{SEQ_CARD_STROKE};stroke-width:2}}",
+        f"    .lifeline{{stroke:{SEQ_LIFELINE};stroke-width:2;stroke-dasharray:7 8}}",
+        f"    .activation{{fill:{SEQ_ACTIVATION_FILL};stroke:{SEQ_ACTIVATION_STROKE};stroke-width:1.5}}",
+        f"    .edge{{stroke:{SEQ_BLUE};stroke-width:2.1;fill:none;marker-end:url(#arrow-blue);stroke-linecap:round;stroke-linejoin:round}}",
+        f"    .edge-green{{stroke:{SEQ_GREEN};marker-end:url(#arrow-green)}}",
+        f"    .edge-amber{{stroke:{SEQ_AMBER};marker-end:url(#arrow-amber)}}",
+        f"    .edge-red{{stroke:{SEQ_RED};marker-end:url(#arrow-red)}}",
+        f"    .edge-dashed{{stroke:{SEQ_TEAL};stroke-width:1.8;fill:none;marker-end:url(#arrow-teal);stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:6 4}}",
+        "  </style>",
+        "</defs>",
+        f'<rect class="canvas" width="{width}" height="{height}"/>',
+        f'<rect class="frame" x="32" y="28" width="{width - 64}" height="{height - 56}" rx="30" fill="{SEQ_FRAME_FILL}" stroke="{SEQ_FRAME_STROKE}" stroke-width="3"/>',
+        f'<text class="title" x="70" y="82">{esc(title)}</text>',
+        f'<text class="subtitle" x="74" y="116">{esc(subtitle)}</text>',
+    ]
+
+
 def wrap_path(points: tuple[tuple[int, int], ...]) -> str:
     first, *rest = points
     chunks = [f"M {first[0]} {first[1]}"]
@@ -325,17 +383,16 @@ def render_sequence(diagram: SequenceDiagram) -> str:
     )
     if min_gap < 32:
         raise ValueError(f"{diagram.base}: participant cards too close ({min_gap:.1f}px)")
-    out = svg_header(width, height, diagram.title, diagram.subtitle)
+    out = sequence_header(width, height, diagram.title, diagram.subtitle)
     out.append('<g id="participants">')
     for index, participant in enumerate(diagram.participants):
-        fill, stroke = PALETTE[index % len(PALETTE)]
         participant_x = x_by_key[participant.key]
         x = participant_x - header_w // 2
         out.extend(
             [
-                f'<rect class="card participant-card" x="{x}" y="{header_y}" width="{header_w}" height="{header_h}" rx="8" style="fill:{fill};stroke:{stroke};stroke-width:1.8"/>',
-                f'<text class="node-title" x="{participant_x}" y="{header_y + 32}" text-anchor="middle" dominant-baseline="middle">{esc(participant.title)}</text>',
-                f'<text class="node-detail" x="{participant_x}" y="{header_y + 56}" text-anchor="middle" dominant-baseline="middle">{esc(participant.detail)}</text>',
+                f'<rect class="card participant-card header" x="{x}" y="{header_y}" width="{header_w}" height="{header_h}" rx="8"/>',
+                f'<text class="node-title participant" x="{participant_x}" y="{header_y + 32}" text-anchor="middle" dominant-baseline="middle">{esc(participant.title)}</text>',
+                f'<text class="node-detail role" x="{participant_x}" y="{header_y + 56}" text-anchor="middle" dominant-baseline="middle">{esc(participant.detail)}</text>',
                 f'<line class="lifeline" x1="{participant_x}" y1="{line_start}" x2="{participant_x}" y2="{line_end}"/>',
             ]
         )
@@ -353,14 +410,26 @@ def render_sequence(diagram: SequenceDiagram) -> str:
         if label_y + 28 > y - 12:
             raise ValueError(f"Sequence label overlaps connector: {diagram.base} {label}")
         path_class = "edge-dashed" if message.dashed else "edge"
-        badge_color = "#6b7280" if message.dashed else "#2563eb"
+        if not message.dashed and "create" in label.lower():
+            path_class = "edge edge-green"
+        elif not message.dashed and any(token in label.lower() for token in ("load", "multipart", "recognize", "fit")):
+            path_class = "edge edge-amber"
+        elif not message.dashed and any(token in label.lower() for token in ("bad", "fail", "error")):
+            path_class = "edge edge-red"
+        path_color = {
+            "edge": SEQ_BLUE,
+            "edge edge-green": SEQ_GREEN,
+            "edge edge-amber": SEQ_AMBER,
+            "edge edge-red": SEQ_RED,
+            "edge-dashed": SEQ_TEAL,
+        }[path_class]
         out.extend(
             [
-                f'<path class="{path_class}" d="M {source_x} {y} L {target_x} {y}"/>',
-                f'<rect x="{target_x - 4}" y="{y - 11}" width="8" height="26" rx="3" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/>',
-                f'<rect x="{label_x:.1f}" y="{label_y}" width="{label_w:.1f}" height="28" rx="9" fill="#ffffff" stroke="#d1d5db"/>',
-                f'<circle cx="{label_x + 18:.1f}" cy="{label_y + 14}" r="12" fill="{badge_color}"/>',
-                f'<text class="label" x="{label_x + 18:.1f}" y="{label_y + 15}" text-anchor="middle" dominant-baseline="middle" style="fill:#ffffff;font-size:12px">{index}</text>',
+                f'<path data-connector="true" class="{path_class}" d="M {source_x} {y} L {target_x} {y}"/>',
+                f'<rect class="activation" x="{target_x - 4}" y="{y - 11}" width="8" height="26" rx="3"/>',
+                f'<rect class="pill" x="{label_x:.1f}" y="{label_y}" width="{label_w:.1f}" height="28" rx="9" fill="#FFFFFF" stroke="{path_color}"/>',
+                f'<circle cx="{label_x + 18:.1f}" cy="{label_y + 14}" r="12" fill="{path_color}"/>',
+                f'<text class="label" x="{label_x + 18:.1f}" y="{label_y + 15}" text-anchor="middle" dominant-baseline="middle" style="fill:#FFFFFF;font-size:12px">{index}</text>',
                 f'<text class="label" x="{label_center + 16:.1f}" y="{label_y + 14}" text-anchor="middle" dominant-baseline="middle">{esc(label)}</text>',
             ]
         )
