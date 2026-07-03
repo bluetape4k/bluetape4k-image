@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1960" height="920" viewBox="0 0 1960 920" role="img" aria-label="Basic Processing Scenario">
 <defs>
-  <marker markerUnits="userSpaceOnUse" id="arrow-blue" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#2563eb"/></marker>
-  <marker markerUnits="userSpaceOnUse" id="arrow-gray" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#6b7280"/></marker>
+  <marker markerUnits="userSpaceOnUse" id="arrow-blue" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#2563eb" stroke="#2563eb" stroke-width="0" stroke-dasharray="none" style="stroke-dasharray:none"/></marker>
+  <marker markerUnits="userSpaceOnUse" id="arrow-gray" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#6b7280" stroke="#6b7280" stroke-width="0" stroke-dasharray="none" style="stroke-dasharray:none"/></marker>
   <style>
     .canvas{fill:#ffffff}
     .title{font-family:"Architects Daughter";font-size:42px;fill:#111827;font-weight:400}
@@ -24,13 +24,13 @@
 <text class="title" x="70" y="82">Basic Processing Scenario</text>
 <text class="subtitle" x="74" y="116">CLI quickstart turns bundled photo fixtures into deterministic output files.</text>
 <g id="edges" transform="translate(0 70)">
-<path data-connector="true" class="edge" d="M 430 435 L 442.5 435 Q 455 435 455 447.5 L 455 585.5 Q 455 598 467.5 598 L 480 598" stroke="#758297"/>
-<path data-connector="true" class="edge" d="M 660 322 L 660 540" stroke="#758297"/>
-<path data-connector="true" class="edge" d="M 860 598 L 942 598 Q 960 598 960 580 L 960 213 Q 960 195 978 195 L 1050 195" stroke="#758297"/>
-<path data-connector="true" class="edge" d="M 860 598 L 942 598 Q 960 598 960 580 L 960 373 Q 960 355 978 355 L 1050 355" stroke="#758297"/>
-<path data-connector="true" class="edge" d="M 860 598 L 942 598 Q 960 598 960 580 L 960 533 Q 960 515 978 515 L 1050 515" stroke="#758297"/>
-<path data-connector="true" class="edge" d="M 1390 355 L 1490 355" stroke="#758297"/>
-<path data-connector="true" class="edge" d="M 1390 515 L 1490 515" stroke="#758297"/>
+<path data-connector="true" class="edge" d="M 430 435 L 442.5 435 Q 455 435 455 447.5 L 455 585.5 Q 455 598 467.5 598 L 480 598" stroke="#2563eb"/>
+<path data-connector="true" class="edge" d="M 660 322 L 660 540" stroke="#2563eb"/>
+<path data-connector="true" class="edge" d="M 860 598 L 942 598 Q 960 598 960 580 L 960 213 Q 960 195 978 195 L 1050 195" stroke="#2563eb"/>
+<path data-connector="true" class="edge" d="M 860 598 L 942 598 Q 960 598 960 580 L 960 373 Q 960 355 978 355 L 1050 355" stroke="#2563eb"/>
+<path data-connector="true" class="edge" d="M 860 598 L 942 598 Q 960 598 960 580 L 960 533 Q 960 515 978 515 L 1050 515" stroke="#2563eb"/>
+<path data-connector="true" class="edge" d="M 1390 355 L 1490 355" stroke="#2563eb"/>
+<path data-connector="true" class="edge" d="M 1390 515 L 1490 515" stroke="#2563eb"/>
 </g>
 <g id="nodes" transform="translate(0 70)">
 <g id="run">

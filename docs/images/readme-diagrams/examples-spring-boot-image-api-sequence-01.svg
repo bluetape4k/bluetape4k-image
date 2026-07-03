@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1860" height="1055" viewBox="0 0 1860 1055" role="img" aria-label="Spring Boot Image API Sequence">
 <defs>
-  <marker markerUnits="userSpaceOnUse" id="arrow-blue" markerWidth="16" markerHeight="16" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#2563eb" stroke="#2563eb" stroke-width="0"/></marker>
-  <marker markerUnits="userSpaceOnUse" id="arrow-gray" markerWidth="16" markerHeight="16" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#6b7280" stroke="#6b7280" stroke-width="0"/></marker>
+  <marker markerUnits="userSpaceOnUse" id="arrow-blue" markerWidth="16" markerHeight="16" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#4f86c6" stroke="#4f86c6" stroke-width="0" stroke-dasharray="none" style="stroke-dasharray:none"/></marker>
+  <marker markerUnits="userSpaceOnUse" id="arrow-teal" markerWidth="16" markerHeight="16" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#2c7a7b" stroke="#2c7a7b" stroke-width="0" stroke-dasharray="none" style="stroke-dasharray:none"/></marker>
   <style>
     .canvas{fill:#ffffff}
     .title{font-family:"Architects Daughter";font-size:42px;fill:#111827;font-weight:400}
@@ -15,8 +15,8 @@
     .footer{font-family:"Comic Mono";font-size:13px;fill:#6b7280;font-weight:400}
     .footer-pill{fill:#ffffff;stroke:#d1d5db;stroke-width:1}
     .card{fill:#ffffff;stroke:#94a3b8;stroke-width:1.9}
-    .edge{stroke:#2563eb;stroke-width:2.1;fill:none;marker-end:url(#arrow-blue);stroke-linecap:round;stroke-linejoin:round}
-    .edge-dashed{stroke:#6b7280;stroke-width:1.8;fill:none;marker-end:url(#arrow-gray);stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:6 4}
+    .edge{stroke:#4f86c6;stroke-width:2.1;fill:none;marker-end:url(#arrow-blue);stroke-linecap:round;stroke-linejoin:round}
+    .edge-dashed{stroke:#2c7a7b;stroke-width:1.8;fill:none;marker-end:url(#arrow-teal);stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:6 4}
     .lifeline{stroke:#d1d5db;stroke-width:1.5;stroke-dasharray:7 7}
   </style>
 </defs>
@@ -50,43 +50,43 @@
 <path data-connector="true" class="edge" d="M 180 327 L 555 327"/>
 <rect class="activation" x="551" y="316" width="8" height="26" rx="3" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/>
 <rect class="pill" x="194.2" y="280" width="346.6" height="28" rx="9" fill="#ffffff" stroke="#d1d5db"/>
-<circle cx="212.2" cy="294" r="12" fill="#2563eb"/>
+<circle cx="212.2" cy="294" r="12" fill="#4f86c6"/>
 <text class="label" x="212.2" y="295" text-anchor="middle" dominant-baseline="middle" style="fill:#ffffff;font-size:12px">1</text>
 <text class="label" x="383.5" y="294" text-anchor="middle" dominant-baseline="middle">POST multipart image with maxSide</text>
 <path data-connector="true" class="edge" d="M 555 397 L 930 397"/>
 <rect class="activation" x="926" y="386" width="8" height="26" rx="3" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/>
 <rect class="pill" x="602.0" y="350" width="281.0" height="28" rx="9" fill="#ffffff" stroke="#d1d5db"/>
-<circle cx="620.0" cy="364" r="12" fill="#2563eb"/>
+<circle cx="620.0" cy="364" r="12" fill="#4f86c6"/>
 <text class="label" x="620.0" y="365" text-anchor="middle" dominant-baseline="middle" style="fill:#ffffff;font-size:12px">2</text>
 <text class="label" x="758.5" y="364" text-anchor="middle" dominant-baseline="middle">Validate file and maxSide</text>
 <path data-connector="true" class="edge" d="M 930 477 L 1305 477"/>
 <rect class="activation" x="1301" y="466" width="8" height="26" rx="3" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/>
 <rect class="pill" x="993.4" y="430" width="248.2" height="28" rx="9" fill="#ffffff" stroke="#d1d5db"/>
-<circle cx="1011.4" cy="444" r="12" fill="#2563eb"/>
+<circle cx="1011.4" cy="444" r="12" fill="#4f86c6"/>
 <text class="label" x="1011.4" y="445" text-anchor="middle" dominant-baseline="middle" style="fill:#ffffff;font-size:12px">3</text>
 <text class="label" x="1133.5" y="444" text-anchor="middle" dominant-baseline="middle">Upload original bytes</text>
 <path data-connector="true" class="edge" d="M 1305 547 L 1680 547"/>
 <rect class="activation" x="1676" y="536" width="8" height="26" rx="3" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/>
 <rect class="pill" x="1356.1" y="500" width="272.8" height="28" rx="9" fill="#ffffff" stroke="#d1d5db"/>
-<circle cx="1374.1" cy="514" r="12" fill="#2563eb"/>
+<circle cx="1374.1" cy="514" r="12" fill="#4f86c6"/>
 <text class="label" x="1374.1" y="515" text-anchor="middle" dominant-baseline="middle" style="fill:#ffffff;font-size:12px">4</text>
 <text class="label" x="1508.5" y="514" text-anchor="middle" dominant-baseline="middle">Write originals/{id}.ext</text>
 <path data-connector="true" class="edge" d="M 930 617 L 1305 617"/>
 <rect class="activation" x="1301" y="606" width="8" height="26" rx="3" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/>
 <rect class="pill" x="997.5" y="570" width="240.0" height="28" rx="9" fill="#ffffff" stroke="#d1d5db"/>
-<circle cx="1015.5" cy="584" r="12" fill="#2563eb"/>
+<circle cx="1015.5" cy="584" r="12" fill="#4f86c6"/>
 <text class="label" x="1015.5" y="585" text-anchor="middle" dominant-baseline="middle" style="fill:#ffffff;font-size:12px">5</text>
 <text class="label" x="1133.5" y="584" text-anchor="middle" dominant-baseline="middle">Upload PNG thumbnail</text>
 <path data-connector="true" class="edge" d="M 1305 687 L 1680 687"/>
 <rect class="activation" x="1676" y="676" width="8" height="26" rx="3" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/>
 <rect class="pill" x="1352.0" y="640" width="281.0" height="28" rx="9" fill="#ffffff" stroke="#d1d5db"/>
-<circle cx="1370.0" cy="654" r="12" fill="#2563eb"/>
+<circle cx="1370.0" cy="654" r="12" fill="#4f86c6"/>
 <text class="label" x="1370.0" y="655" text-anchor="middle" dominant-baseline="middle" style="fill:#ffffff;font-size:12px">6</text>
 <text class="label" x="1508.5" y="654" text-anchor="middle" dominant-baseline="middle">Write thumbnails/{id}.png</text>
 <path data-connector="true" class="edge-dashed" d="M 930 767 L 180 767"/>
 <rect class="activation" x="176" y="756" width="8" height="26" rx="3" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/>
 <rect class="pill" x="381.7" y="720" width="346.6" height="28" rx="9" fill="#ffffff" stroke="#d1d5db"/>
-<circle cx="399.7" cy="734" r="12" fill="#6b7280"/>
+<circle cx="399.7" cy="734" r="12" fill="#2c7a7b"/>
 <text class="label" x="399.7" y="735" text-anchor="middle" dominant-baseline="middle" style="fill:#ffffff;font-size:12px">7</text>
 <text class="label" x="571.0" y="734" text-anchor="middle" dominant-baseline="middle">Return object keys and local URLs</text>
 </g>

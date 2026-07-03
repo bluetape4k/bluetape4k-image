@@ -1,11 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="2050" height="1120" viewBox="0 0 2050 1120" role="img" aria-label="Images OCR Recognition Sequence">
 <defs>
-  <marker markerUnits="userSpaceOnUse" id="arrow-blue" markerWidth="16" markerHeight="16" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#4f86c6" stroke="#4f86c6" stroke-width="0"/></marker>
-  <marker markerUnits="userSpaceOnUse" id="arrow-gray" markerWidth="16" markerHeight="16" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#5f7f7a" stroke="#5f7f7a" stroke-width="0"/></marker>
+  <marker markerUnits="userSpaceOnUse" id="arrow-blue" markerWidth="16" markerHeight="16" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#4f86c6" stroke="#4f86c6" stroke-width="0" stroke-dasharray="none" style="stroke-dasharray:none"/></marker>
+  <marker markerUnits="userSpaceOnUse" id="arrow-teal" markerWidth="16" markerHeight="16" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#2c7a7b" stroke="#2c7a7b" stroke-width="0" stroke-dasharray="none" style="stroke-dasharray:none"/></marker>
   <style>
     .canvas{fill:#ffffff}.title{font-family:"Architects Daughter";font-size:42px;fill:#111827;font-weight:400}.subtitle{font-family:"Comic Mono";font-size:16px;fill:#6b7280;font-weight:400}
     .card{fill:#ffffff;stroke:#94a3b8;stroke-width:1.9}.node-title{font-family:"Architects Daughter";font-size:20px;fill:#111827;font-weight:400}.detail,.label,.note{font-family:"Comic Mono";fill:#6b7280;font-weight:400}.detail{font-size:12px}.label{font-size:12px;fill:#374151}.note{font-size:13px}.lifeline{stroke:#cbd5e1;stroke-width:1.5;stroke-dasharray:7 7}.activation{fill:#dcebf8;stroke:#9bbfdf;stroke-width:1}
-    .edge{stroke:#4f86c6;stroke-width:2.1;fill:none;marker-end:url(#arrow-blue);stroke-linecap:round}.edge-return{stroke:#5f7f7a;stroke-width:1.8;fill:none;marker-end:url(#arrow-gray);stroke-linecap:round;stroke-dasharray:6 4}
+    .edge{stroke:#4f86c6;stroke-width:2.1;fill:none;marker-end:url(#arrow-blue);stroke-linecap:round}.edge-return{stroke:#2c7a7b;stroke-width:1.8;fill:none;marker-end:url(#arrow-teal);stroke-linecap:round;stroke-dasharray:6 4}
   </style>
 </defs>
 <rect class="canvas" width="2050" height="1120"/>
@@ -68,7 +68,7 @@
 <path data-connector="true" class="edge-return" d="M 1430 652 L 1120 652"/>
 <rect class="activation" x="1116" y="639" width="8" height="28" rx="3"/>
 <rect class="labelPill" x="1155.0" y="605" width="240.0" height="28" rx="9" fill="#ffffff" stroke="#d1d5db"/>
-<circle cx="1173.0" cy="619" r="12" fill="#5f7f7a"/>
+<circle cx="1173.0" cy="619" r="12" fill="#2c7a7b"/>
 <text class="label" x="1173.0" y="620" text-anchor="middle" dominant-baseline="middle" style="fill:#ffffff;font-size:12px">5</text>
 <text class="label" x="1291.0" y="619" text-anchor="middle" dominant-baseline="middle">text + Word metadata</text>
 <path data-connector="true" class="edge" d="M 1120 742 L 1740 742"/>
@@ -80,19 +80,19 @@
 <path data-connector="true" class="edge-return" d="M 1740 832 L 810 832"/>
 <rect class="activation" x="806" y="819" width="8" height="28" rx="3"/>
 <rect class="labelPill" x="1159.1" y="785" width="231.79999999999998" height="28" rx="9" fill="#ffffff" stroke="#d1d5db"/>
-<circle cx="1177.1" cy="799" r="12" fill="#5f7f7a"/>
+<circle cx="1177.1" cy="799" r="12" fill="#2c7a7b"/>
 <text class="label" x="1177.1" y="800" text-anchor="middle" dominant-baseline="middle" style="fill:#ffffff;font-size:12px">7</text>
 <text class="label" x="1291.0" y="799" text-anchor="middle" dominant-baseline="middle">OcrStructuredResult</text>
 <path data-connector="true" class="edge-return" d="M 810 912 L 500 912"/>
 <rect class="activation" x="496" y="899" width="8" height="28" rx="3"/>
 <rect class="labelPill" x="518.6" y="865" width="272.79999999999995" height="28" rx="9" fill="#ffffff" stroke="#d1d5db"/>
-<circle cx="536.6" cy="879" r="12" fill="#5f7f7a"/>
+<circle cx="536.6" cy="879" r="12" fill="#2c7a7b"/>
 <text class="label" x="536.6" y="880" text-anchor="middle" dominant-baseline="middle" style="fill:#ffffff;font-size:12px">8</text>
 <text class="label" x="671.0" y="879" text-anchor="middle" dominant-baseline="middle">resume structured caller</text>
 <path data-connector="true" class="edge-return" d="M 500 992 L 190 992"/>
 <rect class="activation" x="186" y="979" width="8" height="28" rx="3"/>
 <rect class="labelPill" x="216.8" y="945" width="256.4" height="28" rx="9" fill="#ffffff" stroke="#d1d5db"/>
-<circle cx="234.8" cy="959" r="12" fill="#5f7f7a"/>
+<circle cx="234.8" cy="959" r="12" fill="#2c7a7b"/>
 <text class="label" x="234.8" y="960" text-anchor="middle" dominant-baseline="middle" style="fill:#ffffff;font-size:12px">9</text>
 <text class="label" x="361.0" y="959" text-anchor="middle" dominant-baseline="middle">text-compatible result</text>
 </g>

@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="2100" height="700" viewBox="0 0 2100 700" role="img" aria-label="Ktor OCR API Scenario">
 <defs>
-  <marker markerUnits="userSpaceOnUse" id="arrow-blue" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#2563eb"/></marker>
-  <marker markerUnits="userSpaceOnUse" id="arrow-gray" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#6b7280"/></marker>
+  <marker markerUnits="userSpaceOnUse" id="arrow-blue" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#2563eb" stroke="#2563eb" stroke-width="0" stroke-dasharray="none" style="stroke-dasharray:none"/></marker>
+  <marker markerUnits="userSpaceOnUse" id="arrow-gray" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#6b7280" stroke="#6b7280" stroke-width="0" stroke-dasharray="none" style="stroke-dasharray:none"/></marker>
   <style>
     .canvas{fill:#ffffff}
     .title{font-family:"Architects Daughter";font-size:42px;fill:#111827;font-weight:400}
@@ -24,11 +24,11 @@
 <text class="title" x="70" y="82">Ktor OCR API Scenario</text>
 <text class="subtitle" x="74" y="116">Multipart upload extracts text through images-ocr and host Tesseract.</text>
 <g id="edges" transform="translate(0 70)">
-<path data-connector="true" class="edge" d="M 430 295 L 520 295" stroke="#758297"/>
-<path data-connector="true" class="edge" d="M 940 295 L 1030 295" stroke="#758297"/>
-<path data-connector="true" class="edge" d="M 1480 295 L 1512 295 Q 1530 295 1530 277 L 1530 183 Q 1530 165 1548 165 L 1580 165" stroke="#758297"/>
-<path data-connector="true" class="edge" d="M 1780 220 L 1780 390" stroke="#758297"/>
-<path data-connector="true" class="edge-dashed" d="M 1030 340 L 998 340 Q 980 340 980 358 L 980 402 Q 980 420 962 420 L 278 420 Q 260 420 260 402 L 260 350" stroke="#758297"/>
+<path data-connector="true" class="edge" d="M 430 295 L 520 295" stroke="#2563eb"/>
+<path data-connector="true" class="edge" d="M 940 295 L 1030 295" stroke="#2563eb"/>
+<path data-connector="true" class="edge" d="M 1480 295 L 1512 295 Q 1530 295 1530 277 L 1530 183 Q 1530 165 1548 165 L 1580 165" stroke="#2563eb"/>
+<path data-connector="true" class="edge" d="M 1780 220 L 1780 390" stroke="#2563eb"/>
+<path data-connector="true" class="edge-dashed" d="M 1030 340 L 998 340 Q 980 340 980 358 L 980 402 Q 980 420 962 420 L 278 420 Q 260 420 260 402 L 260 350" stroke="#6b7280"/>
 </g>
 <g id="nodes" transform="translate(0 70)">
 <g id="client">
