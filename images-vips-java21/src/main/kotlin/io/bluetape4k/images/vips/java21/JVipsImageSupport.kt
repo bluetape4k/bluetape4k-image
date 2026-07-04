@@ -70,13 +70,9 @@ fun vipsImageOf(file: File): VipsImageApi =
  * @throws VipsDecodeException 지원하지 않는 포맷, 파일 읽기 실패, maxPixels 초과 시
  */
 fun vipsImageOf(path: Path): VipsImageApi {
-    val header = path.toFile().inputStream().use { it.readNBytes(12) }
-    checkFormatAllowlist(header)
-    val size = path.toFile().length()
-    if (size > MAX_INPUT_BYTES) {
-        throw VipsDecodeException("File exceeds ${MAX_INPUT_BYTES / (1024 * 1024)} MB limit")
-    }
-    return decodeAndCheckPixels(path.toFile().readBytes())
+    val bytes = readPathBytesBounded(path)
+    checkFormatAllowlist(bytes)
+    return decodeAndCheckPixels(bytes)
 }
 
 /**
@@ -192,6 +188,9 @@ private fun readBounded(stream: InputStream): ByteArray {
         .get()
     return bounded.readBytes()
 }
+
+private fun readPathBytesBounded(path: Path): ByteArray =
+    path.toFile().inputStream().use(::readBounded)
 
 @OptIn(IncubatingImageApi::class)
 private fun checkFormatAllowlist(bytes: ByteArray) {
