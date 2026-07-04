@@ -8,7 +8,8 @@ import java.io.Serializable
  *
  * ## Behavior
  * - [contentType] must be one of [ALLOWED_CONTENT_TYPES]. SVG is excluded for XSS risk.
- * - [cacheControl] is set in the `Cache-Control` header on the stored object.
+ * - [cacheControl] and [metadata] express caller intent for storage or CDN implementations that
+ *   support those headers. Implementations that cannot forward them must document that boundary.
  * - Validation runs in `init` block so invalid options are rejected at construction time.
  */
 data class UploadOptions(

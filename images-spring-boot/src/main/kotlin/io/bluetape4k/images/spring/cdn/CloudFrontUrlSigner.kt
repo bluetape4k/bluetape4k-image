@@ -34,7 +34,7 @@ import java.util.Base64
  *   `distributionDomain` (no `http(s)` prefix, no path segment), a non-blank `keyPairId`, a positive
  *   `maxExpiry`, and exactly one of `privateKeyPath` (preferred) or `privateKeyPem` (discouraged).
  * - When both `privateKeyPath` and `privateKeyPem` are supplied, construction fails with
- *   [IllegalStateException].
+ *   [IllegalArgumentException].
  * - The PEM private key is parsed once at construction time. When loaded from
  *   [CdnProperties.CloudFront.privateKeyPath], the read byte buffer is zero-filled after parsing.
  *   When supplied through [CdnProperties.CloudFront.privateKeyPem], the value lives on the JVM
@@ -85,10 +85,10 @@ class CloudFrontUrlSigner(properties: CdnProperties.CloudFront) : CdnReadSigner,
 
         val pemPath = properties.privateKeyPath
         val pemInline = properties.privateKeyPem
-        check(!(pemPath != null && pemInline != null)) {
+        require(!(pemPath != null && pemInline != null)) {
             "Specify either private-key-path or private-key-pem, not both."
         }
-        check(pemPath != null || pemInline != null) {
+        require(pemPath != null || pemInline != null) {
             "Either private-key-path or private-key-pem must be provided."
         }
 

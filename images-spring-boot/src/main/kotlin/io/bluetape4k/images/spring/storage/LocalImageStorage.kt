@@ -145,13 +145,7 @@ class LocalImageStorage(
             throw ImageStorageException.NotFoundException(key)
         }
         try {
-            val size = Files.size(path)
-            if (size > maxSizeBytes) {
-                throw ImageStorageException.ValidationException(
-                    key = key,
-                    message = "File exceeds maxSizeBytes ($maxSizeBytes): $size",
-                )
-            }
+            validateStoredSize(key, path)
             Files.readAllBytes(path)
         } catch (e: CancellationException) {
             throw e
@@ -169,6 +163,7 @@ class LocalImageStorage(
                 throw ImageStorageException.NotFoundException(key)
             }
             try {
+                validateStoredSize(key, path)
                 destination.parent?.let { Files.createDirectories(it) }
                 Files.newInputStream(path).use { input ->
                     Files.newOutputStream(destination).use { output ->
@@ -232,6 +227,16 @@ class LocalImageStorage(
             throw ImageStorageException.TransientException(key = prefix, cause = e)
         }
     }.flowOn(Dispatchers.IO)
+
+    private fun validateStoredSize(key: ImageObjectKey, path: Path) {
+        val size = Files.size(path)
+        if (size > maxSizeBytes) {
+            throw ImageStorageException.ValidationException(
+                key = key,
+                message = "File exceeds maxSizeBytes ($maxSizeBytes): $size",
+            )
+        }
+    }
 
     /** Best-effort cleanup of a partially-written file. Never raises. */
     private fun deletePartialQuietly(target: Path) {
