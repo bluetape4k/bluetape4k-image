@@ -107,6 +107,23 @@ class ImageThumbnailKtorRoutesTest {
         body.message shouldContain "decodedPixels"
     }
 
+    @Test
+    fun `returns bad request when uploaded image payload is malformed`() = testApplication {
+        installBluetape4kKtorCoreForTest(testCoreConfig) {
+            bluetape4kImageThumbnailRoutes()
+        }
+        val client = bluetape4kJsonClient()
+
+        val response = client.post("/images/thumbnail") {
+            setBody(imageMultipart("not an image".toByteArray()))
+        }
+
+        response shouldHaveStatus HttpStatusCode.BadRequest
+        val body = response.body<ApiErrorResponse>()
+        body.error shouldBeEqualTo "bad_request"
+        body.message shouldContain "Image parsing failed"
+    }
+
     private fun imageMultipart(bytes: ByteArray): MultiPartFormDataContent =
         MultiPartFormDataContent(
             formData {
