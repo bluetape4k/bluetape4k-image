@@ -76,6 +76,40 @@ class CaptchaVerificationServiceTest {
         result shouldBeInstanceOf CaptchaVerificationResult.Success::class
     }
 
+    @Test
+    fun `in-memory store removes expired challenges on save`() {
+        val clock = MutableClock(Instant.parse("2026-05-24T00:00:00Z"))
+        val store = InMemoryCaptchaChallengeStore(clock = clock)
+        val expired = issued("expired", "OLD", Instant.parse("2026-05-24T00:00:30Z"))
+        val active = issued("active", "NEW", Instant.parse("2026-05-24T00:05:00Z"))
+
+        store.save(expired)
+        clock.instant = Instant.parse("2026-05-24T00:01:00Z")
+        store.save(active)
+
+        store.size shouldBeEqualTo 1
+        store.consume(expired.id) shouldBeEqualTo null
+        store.consume(active.id) shouldBeEqualTo active
+    }
+
+    @Test
+    fun `in-memory store evicts earliest expiring challenges over max entries`() {
+        val clock = MutableClock(Instant.parse("2026-05-24T00:00:00Z"))
+        val store = InMemoryCaptchaChallengeStore(clock = clock, maxEntries = 2)
+        val first = issued("first", "ONE", Instant.parse("2026-05-24T00:03:00Z"))
+        val second = issued("second", "TWO", Instant.parse("2026-05-24T00:04:00Z"))
+        val third = issued("third", "THREE", Instant.parse("2026-05-24T00:05:00Z"))
+
+        store.save(first)
+        store.save(second)
+        store.save(third)
+
+        store.size shouldBeEqualTo 2
+        store.consume(first.id) shouldBeEqualTo null
+        store.consume(second.id) shouldBeEqualTo second
+        store.consume(third.id) shouldBeEqualTo third
+    }
+
     private fun newChallenge(clock: Clock): CaptchaChallenge {
         val generator = captchaGenerator(clock) {
             length(6)
@@ -85,6 +119,13 @@ class CaptchaVerificationServiceTest {
 
         return generator.generate()
     }
+
+    private fun issued(id: String, answer: String, expiresAt: Instant): IssuedCaptchaChallenge =
+        IssuedCaptchaChallenge(
+            id = CaptchaChallengeId(id),
+            answer = answer,
+            expiresAt = expiresAt,
+        )
 
     private class MutableClock(
         var instant: Instant,
