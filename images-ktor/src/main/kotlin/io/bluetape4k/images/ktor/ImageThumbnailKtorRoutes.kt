@@ -2,6 +2,7 @@ package io.bluetape4k.images.ktor
 
 import com.sksamuel.scrimage.nio.ImageWriter
 import com.sksamuel.scrimage.nio.PngWriter
+import io.bluetape4k.images.ImageDecodeLimits
 import io.bluetape4k.images.immutableImageOf
 import io.bluetape4k.images.probeImageDimensions
 import io.bluetape4k.images.toByteArray
@@ -21,6 +22,7 @@ import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 import io.ktor.utils.io.ByteReadChannel
 import io.ktor.utils.io.readRemaining
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.io.readByteArray
@@ -84,10 +86,20 @@ fun Route.bluetape4kImageThumbnailRoutes(
                 val maxSide = call.thumbnailMaxSide(config)
                 val uploadBytes = call.receiveImageUpload(config)
                 val thumbnailBytes = withContext(Dispatchers.IO) {
-                    immutableImageOf(uploadBytes)
-                        .max(maxSide, maxSide)
-                        .forWriter(config.writer)
-                        .toByteArray()
+                    try {
+                        immutableImageOf(uploadBytes, config.toDecodeLimits())
+                            .max(maxSide, maxSide)
+                            .forWriter(config.writer)
+                            .toByteArray()
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (e: IllegalArgumentException) {
+                        throw e
+                    } catch (e: IOException) {
+                        throw e
+                    } catch (e: RuntimeException) {
+                        throw IllegalArgumentException("Invalid image payload.", e)
+                    }
                 }
 
                 call.respondBytes(thumbnailBytes, config.responseContentType, HttpStatusCode.OK)
@@ -152,6 +164,13 @@ private suspend fun ApplicationCall.receiveImageUpload(config: ImageThumbnailKto
 
 private suspend fun ByteReadChannel.readImageBytes(config: ImageThumbnailKtorRoutesConfig): ByteArray =
     readRemaining(config.maxInputBytes + 1).readByteArray()
+
+private fun ImageThumbnailKtorRoutesConfig.toDecodeLimits(): ImageDecodeLimits =
+    ImageDecodeLimits(
+        maxEncodedBytes = maxInputBytes,
+        maxDecodedPixels = maxInputPixels,
+        maxDecodedSide = maxInputSide,
+    )
 
 private fun ApplicationCall.thumbnailMaxSide(config: ImageThumbnailKtorRoutesConfig): Int {
     val maxSide = intQueryParameter(
