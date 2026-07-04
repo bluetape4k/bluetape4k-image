@@ -26,7 +26,9 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.awt.Color
+import java.io.ByteArrayInputStream
 import java.nio.channels.AsynchronousFileChannel
+import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardOpenOption.CREATE
 import java.nio.file.StandardOpenOption.READ
@@ -141,6 +143,51 @@ class ImmutableImageSupportTest: AbstractImageTest() {
         image.height shouldBeEqualTo 768
         source.closed shouldBeEqualTo false
         bufferedSource.close()
+    }
+
+    @Test
+    fun `bounded byte array loader rejects encoded payload over max bytes`() {
+        val bytes = whiteTestImage(16, 16)
+        val limits = ImageDecodeLimits(maxEncodedBytes = bytes.size - 1L)
+
+        assertFailsWith<IllegalArgumentException> {
+            immutableImageOf(bytes, limits)
+        }.message shouldBeEqualTo "Image input encodedBytes=${bytes.size} exceeds maxEncodedBytes=${limits.maxEncodedBytes}."
+    }
+
+    @Test
+    fun `bounded byte array loader rejects decoded pixels before full decode`() {
+        val bytes = whiteTestImage(16, 16)
+        val limits = ImageDecodeLimits(maxEncodedBytes = bytes.size.toLong(), maxDecodedPixels = 255L)
+
+        assertFailsWith<IllegalArgumentException> {
+            immutableImageOf(bytes, limits)
+        }.message shouldBeEqualTo "Image input decodedPixels=256 exceeds maxInputPixels=255 (dimensions=16x16)."
+    }
+
+    @Test
+    fun `bounded stream loader rejects encoded payload while reading`() {
+        val bytes = whiteTestImage(16, 16)
+        val limits = ImageDecodeLimits(maxEncodedBytes = bytes.size - 1L)
+
+        assertFailsWith<IllegalArgumentException> {
+            immutableImageOf(ByteArrayInputStream(bytes), limits)
+        }.message shouldBeEqualTo "Image input encodedBytes=${bytes.size} exceeds maxEncodedBytes=${limits.maxEncodedBytes}."
+    }
+
+    @Test
+    fun `bounded path loader accepts valid image within limits`(tempFolder: TempFolder) {
+        val bytes = whiteTestImage(16, 16)
+        val path = tempFolder.createFile("bounded.png").toPath()
+        Files.write(path, bytes)
+
+        val image = immutableImageOf(
+            path,
+            ImageDecodeLimits(maxEncodedBytes = bytes.size.toLong(), maxDecodedPixels = 256L, maxDecodedSide = 16)
+        )
+
+        image.width shouldBeEqualTo 16
+        image.height shouldBeEqualTo 16
     }
 
     @Test

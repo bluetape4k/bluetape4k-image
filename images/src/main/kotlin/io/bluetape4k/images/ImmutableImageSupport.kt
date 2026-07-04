@@ -45,6 +45,29 @@ fun immutableImageOf(bytes: ByteArray): ImmutableImage =
     ImmutableImage.loader().fromBytes(bytes)
 
 /**
+ * Loads an [ImmutableImage] from encoded bytes after applying resource limits.
+ *
+ * ## Contract
+ * - [ImageDecodeLimits.maxEncodedBytes] is checked before any decode work.
+ * - Header-derived dimensions are checked before full pixel decode when an
+ *   ImageIO reader can identify the payload.
+ * - Decoded dimensions are checked again after Scrimage returns the image.
+ *
+ * Use this overload at external input boundaries. The one-argument overload is
+ * preserved for source compatibility and trusted in-process payloads.
+ */
+fun immutableImageOf(
+    bytes: ByteArray,
+    limits: ImageDecodeLimits,
+): ImmutableImage {
+    bytes.requireWithinEncodedLimit(limits, "Image input")
+    probeImageDimensions(bytes)?.requireWithinDecodeLimits(limits, "Image input")
+
+    return ImmutableImage.loader().fromBytes(bytes)
+        .also { it.requireWithinDecodeLimits(limits, "Decoded image") }
+}
+
+/**
  * [InputStream]을 읽어 [ImmutableImage]로 변환합니다.
  *
  * ## 동작/계약
@@ -61,6 +84,19 @@ fun immutableImageOf(bytes: ByteArray): ImmutableImage =
  */
 fun immutableImageOf(inputStream: InputStream): ImmutableImage =
     ImmutableImage.loader().fromStream(inputStream.buffered())
+
+/**
+ * Loads an [ImmutableImage] from an [InputStream] after applying resource limits.
+ *
+ * This overload reads at most [ImageDecodeLimits.maxEncodedBytes] plus one byte
+ * from the caller-owned stream, then delegates to the bounded byte-array
+ * overload. The stream lifecycle remains caller-owned.
+ */
+fun immutableImageOf(
+    inputStream: InputStream,
+    limits: ImageDecodeLimits,
+): ImmutableImage =
+    immutableImageOf(inputStream.readBoundedImageBytes(limits), limits)
 
 /**
  * Loads an [ImmutableImage] from a caller-owned [BufferedSource].
@@ -115,6 +151,15 @@ fun immutableImageOf(file: File): ImmutableImage =
     ImmutableImage.loader().fromFile(file)
 
 /**
+ * Loads an [ImmutableImage] from a [File] after applying resource limits.
+ */
+fun immutableImageOf(
+    file: File,
+    limits: ImageDecodeLimits,
+): ImmutableImage =
+    immutableImageOf(file.toPath(), limits)
+
+/**
  * [Path]의 파일을 읽어 [ImmutableImage]로 변환합니다.
  *
  * ## 동작/계약
@@ -130,6 +175,23 @@ fun immutableImageOf(file: File): ImmutableImage =
  */
 fun immutableImageOf(path: Path): ImmutableImage =
     ImmutableImage.loader().fromPath(path)
+
+/**
+ * Loads an [ImmutableImage] from a [Path] after applying resource limits.
+ */
+fun immutableImageOf(
+    path: Path,
+    limits: ImageDecodeLimits,
+): ImmutableImage {
+    val size = Files.size(path)
+    require(size <= limits.maxEncodedBytes) {
+        "Image input encodedBytes=$size exceeds maxEncodedBytes=${limits.maxEncodedBytes}."
+    }
+    probeImageDimensions(path)?.requireWithinDecodeLimits(limits, "Image input")
+
+    return ImmutableImage.loader().fromPath(path)
+        .also { it.requireWithinDecodeLimits(limits, "Decoded image") }
+}
 
 /**
  * Coroutines 환경에서 [File]을 읽어 [ImmutableImage]로 변환합니다.
@@ -428,6 +490,45 @@ suspend fun ImmutableImage.suspendWrite(writer: SuspendImageWriter, sink: Suspen
  */
 fun ImmutableImage.forSuspendWriter(writer: SuspendImageWriter): SuspendWriteContext =
     SuspendWriteContext(writer, this, this.metadata)
+
+private fun ByteArray.requireWithinEncodedLimit(limits: ImageDecodeLimits, subject: String) {
+    require(size.toLong() <= limits.maxEncodedBytes) {
+        "$subject encodedBytes=$size exceeds maxEncodedBytes=${limits.maxEncodedBytes}."
+    }
+}
+
+private fun ImageDimensions.requireWithinDecodeLimits(
+    limits: ImageDecodeLimits,
+    subject: String,
+): ImageDimensions =
+    requireMaxPixels(limits.maxDecodedPixels, subject)
+        .requireMaxSide(limits.maxDecodedSide, subject)
+
+private fun ImmutableImage.requireWithinDecodeLimits(
+    limits: ImageDecodeLimits,
+    subject: String,
+): ImmutableImage {
+    ImageDimensions(width, height).requireWithinDecodeLimits(limits, subject)
+    return this
+}
+
+private fun InputStream.readBoundedImageBytes(limits: ImageDecodeLimits): ByteArray {
+    val output = ByteArrayOutputStream(
+        limits.maxEncodedBytes.coerceAtMost(IMAGE_BUFFER_SIZE.toLong()).toInt()
+    )
+    val buffer = ByteArray(IMAGE_BUFFER_SIZE)
+    var total = 0L
+    while (true) {
+        val read = read(buffer)
+        if (read < 0) break
+        total += read.toLong()
+        require(total <= limits.maxEncodedBytes) {
+            "Image input encodedBytes=$total exceeds maxEncodedBytes=${limits.maxEncodedBytes}."
+        }
+        output.write(buffer, 0, read)
+    }
+    return output.toByteArray()
+}
 
 
 /**
