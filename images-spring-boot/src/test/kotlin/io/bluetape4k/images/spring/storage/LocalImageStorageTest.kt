@@ -1,5 +1,6 @@
 package io.bluetape4k.images.spring.storage
 
+import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.images.spring.ImageObjectKey
 import io.bluetape4k.images.spring.ImageStorageException
 import io.bluetape4k.images.spring.UploadOptions
@@ -11,10 +12,8 @@ import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
-import kotlin.test.assertFailsWith
 import java.nio.file.Files
 import java.nio.file.Path
-import kotlin.test.assertFailsWith
 
 class LocalImageStorageTest {
 
@@ -132,6 +131,21 @@ class LocalImageStorageTest {
 
         assertFailsWith<ImageStorageException.NotFoundException> {
             storage.download(missingKey, destination)
+        }
+    }
+
+    @Test
+    fun `download to path throws ValidationException when file exceeds maxSizeBytes`() = runTest {
+        val permissiveStorage = LocalImageStorage(tempDir, maxSizeBytes = 1024 * 1024L * 10)
+        val bigBytes = ByteArray(10) { it.toByte() }
+        val bigKey = ImageObjectKey.of("big", "dest-file.jpg")
+        permissiveStorage.upload(bigKey, bigBytes, options)
+
+        val restrictiveStorage = LocalImageStorage(tempDir, maxSizeBytes = 4L)
+        val destination = Files.createTempFile(tempDir, "oversized-dest-", ".jpg")
+
+        assertFailsWith<ImageStorageException.ValidationException> {
+            restrictiveStorage.download(bigKey, destination)
         }
     }
 

@@ -29,7 +29,7 @@ data class CdnProperties(
      *
      * ## Behavior
      * - Exactly one of [privateKeyPem] or [privateKeyPath] must be set when CDN is enabled with CloudFront.
-     * - Specifying both raises [IllegalStateException] at bean creation time.
+     * - Specifying both raises [IllegalArgumentException] at bean creation time.
      * - [privateKeyPem] inline is discouraged: the value resides in JVM heap and cannot be zeroed out.
      *   Prefer [privateKeyPath] pointing to a file-system secret or mounted Kubernetes secret.
      * - [toString] redacts [privateKeyPem] to prevent accidental exposure in logs and Actuator endpoints.
