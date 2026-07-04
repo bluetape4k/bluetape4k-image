@@ -1,6 +1,7 @@
 package io.bluetape4k.images.captcha
 
 import io.bluetape4k.support.requireNotBlank
+import io.bluetape4k.support.requirePositiveNumber
 import java.io.Serializable
 import java.time.Clock
 import java.time.Instant
@@ -77,15 +78,28 @@ interface CaptchaChallengeStore {
  * JVM-local in-memory CAPTCHA metadata store.
  *
  * This implementation is intended for tests, demos, and single-node
- * applications. Use a distributed store implementation when application
- * instances must share issued challenges.
+ * applications. [save] removes stale entries before inserting a new challenge,
+ * then enforces [maxEntries] by evicting entries with the earliest expiration.
+ *
+ * Use a distributed store implementation when application instances must share
+ * issued challenges or when cleanup must run independently of challenge issue
+ * traffic.
  */
-class InMemoryCaptchaChallengeStore: CaptchaChallengeStore {
+class InMemoryCaptchaChallengeStore @JvmOverloads constructor(
+    private val clock: Clock = Clock.systemUTC(),
+    private val maxEntries: Int = DEFAULT_MAX_ENTRIES,
+): CaptchaChallengeStore {
+
+    init {
+        maxEntries.requirePositiveNumber("maxEntries")
+    }
 
     private val challenges = ConcurrentHashMap<CaptchaChallengeId, IssuedCaptchaChallenge>()
 
     override fun save(challenge: IssuedCaptchaChallenge): IssuedCaptchaChallenge {
+        removeExpired(clock.instant())
         challenges[challenge.id] = challenge
+        trimToMaxEntries()
         return challenge
     }
 
@@ -97,6 +111,35 @@ class InMemoryCaptchaChallengeStore: CaptchaChallengeStore {
      */
     val size: Int
         get() = challenges.size
+
+    /**
+     * Removes expired challenges and returns the number of entries removed.
+     */
+    fun removeExpired(now: Instant = clock.instant()): Int {
+        var removed = 0
+        challenges.forEach { (id, challenge) ->
+            if (!challenge.expiresAt.isAfter(now) && challenges.remove(id, challenge)) {
+                removed++
+            }
+        }
+        return removed
+    }
+
+    private fun trimToMaxEntries() {
+        val overflow = challenges.size - maxEntries
+        if (overflow <= 0) return
+
+        challenges.entries
+            .sortedBy { it.value.expiresAt }
+            .take(overflow)
+            .forEach { (id, challenge) ->
+                challenges.remove(id, challenge)
+            }
+    }
+
+    private companion object {
+        const val DEFAULT_MAX_ENTRIES: Int = 10_000
+    }
 }
 
 /**
@@ -159,7 +202,8 @@ sealed interface CaptchaVerificationResult: Serializable {
  *
  * Verification is one-shot: every call to [verify] consumes the stored
  * challenge before comparing the answer. This prevents replay and brute-force
- * retries against the same challenge id.
+ * retries against the same challenge id. A wrong answer or expired challenge
+ * also consumes the id; a retry for the same id returns [CaptchaVerificationResult.NotFound].
  *
  * Example:
  *
