@@ -110,6 +110,8 @@ jobs:
               - 'gradle.properties'
               - 'gradle/**'
               - 'buildSrc/**'
+              - '.github/workflows/ci.yml'
+              - '.github/scripts/**'
             images:
               - 'images/**'
             images-barcode-api:
