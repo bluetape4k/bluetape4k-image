@@ -65,21 +65,9 @@ fun ffmVipsImageOf(file: File): VipsImage = ffmVipsImageOf(file.toPath())
  * **경로 탐색(Path Traversal) 주의**: 호출자는 경로가 허용된 디렉토리 내에 있음을 사전에 검증해야 합니다.
  */
 fun ffmVipsImageOf(path: Path): VipsImage {
-    val fileSize = Files.size(path)
-    if (fileSize > MAX_INPUT_BYTES) {
-        throw VipsDecodeException("File exceeds ${MAX_INPUT_BYTES / (1024 * 1024)} MB limit")
-    }
-    val header = path.toFile().inputStream().use { it.readNBytes(12) }
-    checkFormatAllowlist(header)
-    return try {
-        withOwnedArena { arena ->
-            val vImage = VImage.newFromFile(arena, path.toAbsolutePath().toString())
-            checkPixelCount(vImage)
-            FfmVipsImage(arena, vImage)
-        }
-    } catch (e: VipsError) {
-        throw VipsDecodeException("Image decode failed", e)
-    }
+    val bytes = readPathBytesBounded(path)
+    checkFormatAllowlist(bytes)
+    return decodeAndCheckPixels(bytes)
 }
 
 /**
@@ -181,6 +169,9 @@ private fun readBounded(stream: InputStream): ByteArray {
         .get()
     return bounded.readBytes()
 }
+
+private fun readPathBytesBounded(path: Path): ByteArray =
+    Files.newInputStream(path).use(::readBounded)
 
 @OptIn(IncubatingImageApi::class)
 private fun checkFormatAllowlist(bytes: ByteArray) {
