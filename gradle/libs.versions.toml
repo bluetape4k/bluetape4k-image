@@ -6,13 +6,13 @@ bluetape4k-bom = "1.11.1-SNAPSHOT"  # https://mvnrepository.com/artifact/io.gith
 bluetape4k-aws-bom = "0.5.0-SNAPSHOT"  # https://central.sonatype.com/artifact/io.github.bluetape4k.aws/bluetape4k-aws-bom
 
 spring-boot = "4.1.0"  # https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-dependencies
-aws2 = "2.46.17"  # https://mvnrepository.com/artifact/software.amazon.awssdk/bom
+aws2 = "2.47.1"  # https://mvnrepository.com/artifact/software.amazon.awssdk/bom
 
 kotlin = "2.4.0"  # https://mvnrepository.com/artifact/org.jetbrains.kotlin/kotlin-bom
 kotlinx-coroutines = "1.11.0"  # https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-bom
 kotlinx-atomicfu = "0.32.1"  # https://mvnrepository.com/artifact/org.jetbrains.kotlinx/atomicfu
 kotlinx-benchmark = "0.4.17"  # https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-benchmark-runtime
-ktor = "3.5.0"  # https://mvnrepository.com/artifact/io.ktor/ktor-server-core
+ktor = "3.5.1"  # https://mvnrepository.com/artifact/io.ktor/ktor-server-core
 
 # Image processing
 scrimage = "4.6.5"  # https://mvnrepository.com/artifact/com.sksamuel.scrimage/scrimage-core
@@ -42,7 +42,7 @@ dependency-management = "1.1.7"  # https://mvnrepository.com/artifact/io.spring.
 dokka = "2.2.0"  # https://mvnrepository.com/artifact/org.jetbrains.dokka/dokka-gradle-plugin
 kover = "0.9.8"  # https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kover-gradle-plugin
 test-logger = "4.0.0"  # https://mvnrepository.com/artifact/com.adarshr/gradle-test-logger-plugin
-nmcp = "1.6.0"  # https://mvnrepository.com/artifact/com.gradleup.nmcp/nmcp
+nmcp = "1.6.1"  # https://mvnrepository.com/artifact/com.gradleup.nmcp/nmcp
 
 # ────────────────────────────────────────────────────────────────────────────
 [plugins]
