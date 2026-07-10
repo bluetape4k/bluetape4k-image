@@ -10,32 +10,29 @@
 
 ## 벤치마크 결과
 
-> AverageTime ms/op. 최신 macOS Java 25 실행: [`docs/benchmark-results-2026-05-25.md`](docs/benchmark-results-2026-05-25.md). CI Linux 행은 기존 [`docs/benchmark-results-2026-04-29.md`](docs/benchmark-results-2026-04-29.md) 값을 유지합니다.
+> AverageTime ms/op이며 낮을수록 좋습니다. 현재 비교 가능한 macOS Java 25 FFM 근거는 커밋된 자연사진 fixture를 사용한 [`docs/benchmark-results-2026-05-28-natural-photos.md`](docs/benchmark-results-2026-05-28-natural-photos.md) 및 [raw JSON](docs/raw/benchmark-results-2026-05-28-macos-java25-natural-photos.json)입니다. 동일 fixture를 사용하지 않은 CI Linux 행은 의도적으로 제외합니다.
 
-### 리사이즈 (4K 3840×2160 → 1920×1080)
+### 리사이즈 (자연 4K 사진 → 1920×1080)
 
 ![Resize latency benchmark chart](../../docs/images/readme-charts/images-benchmark-resize-latency-chart-01.png)
 
-| 환경 | scrimage (ms/op) | vips (ms/op) | 속도 향상 |
-|------|-----------------|--------------|----------|
-| macOS, java25 vips-ffm | 65.64 ± 0.76 | 0.170 ± 0.006 | **386배** |
-| CI Linux, java25 | 187.29 ± 9.07 | 0.591 ± 0.046 | **317배** |
-| CI Linux, java21 | 195.63 ± 7.39 | 0.495 ± 0.062 | **395배** |
+| 자연사진 | scrimage (ms/op) | vips Java 25 FFM (ms/op) | 속도 향상 |
+|----------|-----------------|---------------------------|----------|
+| `cafe` | 114.885 ± 3.207 | 0.257 ± 0.083 | **446배** |
+| `landscape` | 115.641 ± 2.242 | 0.244 ± 0.028 | **473배** |
 
-### 인코딩 (4K photo 이미지)
+### 인코딩 (자연 4K 사진)
 
 ![Encode latency benchmark chart](../../docs/images/readme-charts/images-benchmark-encode-latency-chart-01.png)
 
-| 포맷 | 환경 | scrimage (ms/op) | vips (ms/op) | 속도 향상 |
-|------|------|-----------------|--------------|----------|
-| JPEG | macOS, java25 vips-ffm | 46.55 ± 0.75 | 15.18 ± 0.55 | **3.1배** |
-| JPEG | CI Linux, java25 | 171.16 ± 121.3 | 37.20 ± 0.99  | **4.6배** |
-| JPEG | CI Linux, java21 | 161.09 ± 38.9  | 37.22 ± 1.50  | **4.3배** |
-| PNG  | macOS, java25 vips-ffm | 84.91 ± 4.21 | 46.91 ± 0.52 | **1.8배** |
-| PNG  | CI Linux, java25 | 249.01 ± 2.14  | 137.95 ± 2.93 | **1.8배** |
-| PNG  | CI Linux, java21 | 246.44 ± 2.14  | 255.90 ± 10.2 | −1.04배 ⚠️ |
+| 포맷 | 자연사진 | scrimage (ms/op) | vips Java 25 FFM (ms/op) | 속도 향상 |
+|------|----------|-----------------|---------------------------|----------|
+| JPEG | `cafe` | 137.947 ± 2.417 | 58.351 ± 23.828 | **2.4배** |
+| JPEG | `landscape` | 144.961 ± 5.511 | 46.749 ± 6.066 | **3.1배** |
+| PNG | `cafe` | 884.105 ± 156.993 | 585.288 ± 186.247 | **1.5배** |
+| PNG | `landscape` | 989.370 ± 346.605 | 546.388 ± 25.444 | **1.8배** |
 
-> ⚠️ **java21 (JNI) PNG**: JNI 경계 오버헤드가 압축 이득을 상쇄합니다. Linux PNG 인코딩은 java25 (FFM) 사용을 권장합니다.
+> 이 값은 한 macOS Java 25 FFM host에서 측정한 자연사진 snapshot입니다. host 간 또는 Java 21 JNI 순위 비교가 아닙니다.
 
 ### Vips 백엔드 비교
 

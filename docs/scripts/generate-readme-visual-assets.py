@@ -11,6 +11,7 @@ from __future__ import annotations
 import html
 import math
 import re
+import shutil
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
@@ -118,6 +119,7 @@ class ChartSpec:
     series: tuple[str, ...]
     source: str
     log_scale: bool = False
+    minimum_bar_width: float = 16.0
 
 
 def esc(value: str) -> str:
@@ -792,7 +794,7 @@ def render_chart(spec: ChartSpec) -> str:
     out.extend([
         f'<rect class="chart-panel" x="{panel_x}" y="{panel_y}" width="{panel_w}" height="{panel_h}" rx="12"/>',
         f'<text class="note" x="{panel_x + 32}" y="{panel_y + 44}">Measured ranking</text>',
-        f'<text class="axis" x="{left}" y="{panel_y + 44}">{esc(spec.unit)} · {esc(spec.direction)}</text>',
+        f'<text class="axis" x="{left}" y="{panel_y + 44}">{esc(spec.unit)} - {esc(spec.direction)}</text>',
         f'<text class="axis" x="{left + plot_w:.1f}" y="{panel_y + 68}" text-anchor="end">0 to {max_value:g}{(" (log scale)" if spec.log_scale else "")}</text>',
         f'<text class="note" x="{width / 2:.1f}" y="{height - 52}" text-anchor="middle">{esc(footer_text(spec.base))}</text>',
     ])
@@ -813,7 +815,7 @@ def render_chart(spec: ChartSpec) -> str:
         out.append(f'<text class="axis" x="{left - 28}" y="{label_y:.1f}" text-anchor="end">{esc(label)}</text>')
         for series_index, value in enumerate(row):
             measure = math.log10(value + 1) if spec.log_scale and value > 0 else value
-            bar_w = 0 if value <= 0 else max(16, measure / scaled_max * plot_w)
+            bar_w = 0 if value <= 0 else max(spec.minimum_bar_width, measure / scaled_max * plot_w)
             bar_y = y + series_index * series_gap
             fill, stroke = colors[series_index % len(colors)]
             out.append(f'<rect x="{left}" y="{bar_y}" width="{plot_w:.1f}" height="{bar_h}" rx="6" fill="#edf2f7" stroke="#dbe3ee" stroke-width="1"/>')
@@ -833,15 +835,18 @@ def render_chart(spec: ChartSpec) -> str:
 def save_chart(spec: ChartSpec) -> str:
     svg = CHART_OUT / f"{spec.base}.svg"
     svg.write_text(render_chart(spec), encoding="utf-8")
-    subprocess.run(["rsvg-convert", str(svg), "-o", str(svg.with_suffix(".png"))], check=True)
+    cairosvg = shutil.which("cairosvg")
+    if cairosvg is None:
+        raise RuntimeError("CairoSVG CLI is required to render README chart PNG assets")
+    subprocess.run([cairosvg, str(svg), "-o", str(svg.with_suffix(".png")), "-s", "2"], check=True)
     return f"{spec.base}: chartRows={len(spec.rows)} series={len(spec.series)} unit={spec.unit} direction={spec.direction} fontFallback=0 sourceEvidence={esc(spec.source)}"
 
 
 def chart_specs() -> tuple[ChartSpec, ...]:
     return (
         ChartSpec("root-readme-module-chart-01", "Module Composition Chart", "Artifact lanes by runtime requirement and adoption role.", "module count", "higher is better for lane breadth", (("Pure JVM", (3,)), ("Service adapters", (2,)), ("OCR", (1,)), ("Native vips", (3,)), ("Benchmark/BOM", (2,))), ("modules",), "README module table and settings.gradle.kts"),
-        ChartSpec("images-benchmark-resize-latency-chart-01", "Resize Latency", "Scrimage vs vips resize, AverageTime ms/op.", "ms/op", "lower is better", (("macOS Java25", (115.34, 0.246)), ("CI Java25", (117.11, 0.29)), ("CI Java21", (118.44, 0.31))), ("scrimage", "vips"), "images-benchmark README resize table", True),
-        ChartSpec("images-benchmark-encode-latency-chart-01", "Encode Latency", "JPEG and PNG encode, AverageTime ms/op.", "ms/op", "lower is better", (("JPEG macOS", (146.09, 44.16)), ("PNG macOS", (832.79, 96.6)), ("JPEG CI", (151.0, 48.2)), ("PNG CI", (840.0, 101.0))), ("scrimage", "vips"), "images-benchmark README encode table", True),
+        ChartSpec("images-benchmark-resize-latency-chart-01", "Natural Photo Resize Latency", "4K natural-photo resize, AverageTime ms/op.", "ms/op", "lower is better", (("cafe 1920x1080", (114.885, 0.257)), ("landscape 1920x1080", (115.641, 0.244))), ("scrimage", "vips Java 25 FFM"), "benchmark-results-2026-05-28-natural-photos.md", minimum_bar_width=0),
+        ChartSpec("images-benchmark-encode-latency-chart-01", "Natural Photo Encode Latency", "Natural-photo JPEG and PNG encode, AverageTime ms/op.", "ms/op", "lower is better", (("JPEG cafe", (137.947, 58.351)), ("JPEG landscape", (144.961, 46.749)), ("PNG cafe", (884.105, 585.288)), ("PNG landscape", (989.370, 546.388))), ("scrimage", "vips Java 25 FFM"), "benchmark-results-2026-05-28-natural-photos.md", minimum_bar_width=0),
         ChartSpec("images-benchmark-vips-backend-comparison-chart-01", "Vips Backend Comparison", "Java 21 JVips and Java 25 FFM backend snapshots.", "ms/op", "lower is better", (("resize", (0.31, 0.246)), ("thumbnail", (0.34, 0.266)), ("crop", (0.12, 0.085)), ("encodeJpeg", (49.4, 44.16))), ("java21", "java25"), "VipsBackendBenchmark and README backend table", True),
         ChartSpec("images-benchmark-filter-latency-chart-01", "Filter Latency", "Current filter benchmark comparison.", "ms/op", "lower is better", (("grayscale", (14.8, 15.6, 16.2)), ("sepia", (22.4, 23.1, 23.8)), ("blur", (57.3, 59.4, 60.1)), ("watermark", (31.7, 32.5, 33.0))), ("macOS", "CI java25", "CI java21"), "images-benchmark README filter table"),
         ChartSpec("images-benchmark-pipeline-allocation-chart-01", "Pipeline Allocation", "High-level scrimage pipelines with managed heap allocation.", "MB/op", "lower is better", (("photoPreviewJpeg", (50.75, 113.82)), ("documentPreviewPng", (60.89, 57.86))), ("MB/op", "ms/op"), "pipeline-allocation-2026-05-29.md"),
