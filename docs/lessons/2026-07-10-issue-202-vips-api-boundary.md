@@ -33,6 +33,12 @@ Vips 전용 AVIF/HEIC capability API의 opt-in 경계와 publication metadata를
 - opted/unopted compiler fixture tasks
 - Java 21/25 main/test compilation
 - `BluetapeImage` POM/module metadata assertions
+  - POM: `images-vips-api/build/publications/BluetapeImage/pom-default.xml`
+    (`sha256=2e5ccf6fd18b1165d0118c85be922c7a503e6dbac39ff595395848dd0776ce4c`)
+  - module metadata: `images-vips-api/build/publications/BluetapeImage/module.json`
+    (`sha256=8931fb3d8bef7e428d56d4734fedbc241e36b2a2ca7d62871a834c5c10a3631f`)
+  - final green group exit `0`; unopted fixture expected exit `1` with
+    `VipsIncubatingApi` under `-Werror`; normal/fixture boundary assertions passed
 - Step 6-R six-perspective review: final `P0=0`, `P1=0`
 
 ## Future Guidance

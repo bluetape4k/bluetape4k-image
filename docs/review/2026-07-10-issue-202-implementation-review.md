@@ -29,6 +29,13 @@
 
 - POM 직접 의존성 검증은 `pom_forbidden=0`이다.
 - Gradle normal variant에는 `bluetape4k-images`, Scrimage, TwelveMonkeys direct dependency가 없고, test-fixtures variant에만 `bluetape4k-images`가 남는다.
+- Audit descriptor evidence:
+  - `images-vips-api/build/publications/BluetapeImage/pom-default.xml`
+    - SHA-256: `2e5ccf6fd18b1165d0118c85be922c7a503e6dbac39ff595395848dd0776ce4c`
+  - `images-vips-api/build/publications/BluetapeImage/module.json`
+    - SHA-256: `8931fb3d8bef7e428d56d4734fedbc241e36b2a2ca7d62871a834c5c10a3631f`
+  - final green Gradle task group exit code: `0`; unopted fixture exit code: expected `1` with `VipsIncubatingApi` and `-Werror` diagnostic.
+  - assertion results: `pom_forbidden=0`, `normal_metadata_boundary=pass`, `fixture_metadata_boundary=pass`.
 - `VipsIncubatingApi`는 AVIF/HEIC enum entry와 내부 capability implementation 사용으로 한정되고, 기존 `IncubatingImageApi` import는 Vips API/Java 21/Java 25 소스에서 제거됐다.
 - core AVIF/HEIC KDoc은 binding-neutral이며 README EN/KO 쌍이 함께 갱신됐다.
 - CI workflow, module registration, diagram, concurrency helper, CHANGELOG 변경은 범위 밖이다. 새 module/새 dependency/production concurrency 변경도 없다.
