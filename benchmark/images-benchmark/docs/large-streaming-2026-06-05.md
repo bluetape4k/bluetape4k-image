@@ -1,4 +1,9 @@
-# Large Image Streaming Pipeline Benchmark (2026-06-05)
+# Superseded: Large Image Streaming Pipeline Benchmark (2026-06-05)
+
+> **Historical evidence only.** This report used an asymmetric grayscale
+> transform and must not support current recommendations. See the refreshed
+> [2026-07-10 report](large-streaming-2026-07-10.md). The raw JSON below is
+> retained unchanged for historical reproducibility.
 
 This report adds full load-transform-write pipeline evidence for milestone
 `0.3.0` large-file and OCR-preprocessing work.
@@ -47,8 +52,6 @@ binary files are not committed to the repository.
 
 AverageTime is lower-is-better. This is a local comparable snapshot, not a
 production ranking.
-
-![Large streaming pipeline benchmark chart](../../../docs/images/readme-charts/images-benchmark-large-streaming-chart-01.png)
 
 ### Scrimage Rows
 

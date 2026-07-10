@@ -86,7 +86,7 @@ file memory and throughput profile through `Path`. Use the vips Okio
 `bluetape4k-okio` suspended boundary. Non-Path vips loads still validate and
 buffer the compressed input within the 50 MB stream guard.
 
-Benchmark evidence: [`benchmark/images-benchmark/docs/large-streaming-2026-06-05.md`](benchmark/images-benchmark/docs/large-streaming-2026-06-05.md).
+Benchmark evidence: [`benchmark/images-benchmark/docs/large-streaming-2026-07-10.md`](benchmark/images-benchmark/docs/large-streaming-2026-07-10.md).
 
 <!-- README_VISUAL_OVERVIEW:START -->
 ## Overview Diagram

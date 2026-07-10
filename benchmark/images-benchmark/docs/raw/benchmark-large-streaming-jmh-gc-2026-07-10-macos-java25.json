@@ -1,0 +1,434 @@
+[
+  {
+    "benchmark": "io.bluetape4k.images.benchmark.ImageLargeStreamingBenchmark.scrimage_byteArray_pipeline",
+    "params": {
+      "scenario": "large-photo"
+    },
+    "forks": 1,
+    "warmupIterations": 1,
+    "warmupTime": "1 s",
+    "measurementIterations": 3,
+    "measurementTime": "1 s",
+    "mode": "avgt",
+    "primaryMetric": {
+      "score": 177.9900046111111,
+      "scoreUnit": "ms/op"
+    },
+    "secondaryMetrics": {
+      "gc.alloc.rate.norm": {
+        "score": 121127658.66666667,
+        "scoreUnit": "B/op"
+      }
+    },
+    "jvm": "Java 25 runtime (sanitized)",
+    "jvmArgs": [
+      "--enable-native-access=ALL-UNNAMED",
+      "--enable-native-access=ALL-UNNAMED"
+    ]
+  },
+  {
+    "benchmark": "io.bluetape4k.images.benchmark.ImageLargeStreamingBenchmark.scrimage_byteArray_pipeline",
+    "params": {
+      "scenario": "ocr-document"
+    },
+    "forks": 1,
+    "warmupIterations": 1,
+    "warmupTime": "1 s",
+    "measurementIterations": 3,
+    "measurementTime": "1 s",
+    "mode": "avgt",
+    "primaryMetric": {
+      "score": 110.14926386666666,
+      "scoreUnit": "ms/op"
+    },
+    "secondaryMetrics": {
+      "gc.alloc.rate.norm": {
+        "score": 89281835.73333333,
+        "scoreUnit": "B/op"
+      }
+    },
+    "jvm": "Java 25 runtime (sanitized)",
+    "jvmArgs": [
+      "--enable-native-access=ALL-UNNAMED",
+      "--enable-native-access=ALL-UNNAMED"
+    ]
+  },
+  {
+    "benchmark": "io.bluetape4k.images.benchmark.ImageLargeStreamingBenchmark.scrimage_inputStream_pipeline",
+    "params": {
+      "scenario": "large-photo"
+    },
+    "forks": 1,
+    "warmupIterations": 1,
+    "warmupTime": "1 s",
+    "measurementIterations": 3,
+    "measurementTime": "1 s",
+    "mode": "avgt",
+    "primaryMetric": {
+      "score": 179.7246342777778,
+      "scoreUnit": "ms/op"
+    },
+    "secondaryMetrics": {
+      "gc.alloc.rate.norm": {
+        "score": 120145564.44444443,
+        "scoreUnit": "B/op"
+      }
+    },
+    "jvm": "Java 25 runtime (sanitized)",
+    "jvmArgs": [
+      "--enable-native-access=ALL-UNNAMED",
+      "--enable-native-access=ALL-UNNAMED"
+    ]
+  },
+  {
+    "benchmark": "io.bluetape4k.images.benchmark.ImageLargeStreamingBenchmark.scrimage_inputStream_pipeline",
+    "params": {
+      "scenario": "ocr-document"
+    },
+    "forks": 1,
+    "warmupIterations": 1,
+    "warmupTime": "1 s",
+    "measurementIterations": 3,
+    "measurementTime": "1 s",
+    "mode": "avgt",
+    "primaryMetric": {
+      "score": 115.20921299999999,
+      "scoreUnit": "ms/op"
+    },
+    "secondaryMetrics": {
+      "gc.alloc.rate.norm": {
+        "score": 88532271.1111111,
+        "scoreUnit": "B/op"
+      }
+    },
+    "jvm": "Java 25 runtime (sanitized)",
+    "jvmArgs": [
+      "--enable-native-access=ALL-UNNAMED",
+      "--enable-native-access=ALL-UNNAMED"
+    ]
+  },
+  {
+    "benchmark": "io.bluetape4k.images.benchmark.ImageLargeStreamingBenchmark.scrimage_okioSourceSink_pipeline",
+    "params": {
+      "scenario": "large-photo"
+    },
+    "forks": 1,
+    "warmupIterations": 1,
+    "warmupTime": "1 s",
+    "measurementIterations": 3,
+    "measurementTime": "1 s",
+    "mode": "avgt",
+    "primaryMetric": {
+      "score": 184.91369211111112,
+      "scoreUnit": "ms/op"
+    },
+    "secondaryMetrics": {
+      "gc.alloc.rate.norm": {
+        "score": 120158674.66666667,
+        "scoreUnit": "B/op"
+      }
+    },
+    "jvm": "Java 25 runtime (sanitized)",
+    "jvmArgs": [
+      "--enable-native-access=ALL-UNNAMED",
+      "--enable-native-access=ALL-UNNAMED"
+    ]
+  },
+  {
+    "benchmark": "io.bluetape4k.images.benchmark.ImageLargeStreamingBenchmark.scrimage_okioSourceSink_pipeline",
+    "params": {
+      "scenario": "ocr-document"
+    },
+    "forks": 1,
+    "warmupIterations": 1,
+    "warmupTime": "1 s",
+    "measurementIterations": 3,
+    "measurementTime": "1 s",
+    "mode": "avgt",
+    "primaryMetric": {
+      "score": 115.02699996296296,
+      "scoreUnit": "ms/op"
+    },
+    "secondaryMetrics": {
+      "gc.alloc.rate.norm": {
+        "score": 88539438.81481482,
+        "scoreUnit": "B/op"
+      }
+    },
+    "jvm": "Java 25 runtime (sanitized)",
+    "jvmArgs": [
+      "--enable-native-access=ALL-UNNAMED",
+      "--enable-native-access=ALL-UNNAMED"
+    ]
+  },
+  {
+    "benchmark": "io.bluetape4k.images.benchmark.ImageLargeStreamingBenchmark.scrimage_path_pipeline",
+    "params": {
+      "scenario": "large-photo"
+    },
+    "forks": 1,
+    "warmupIterations": 1,
+    "warmupTime": "1 s",
+    "measurementIterations": 3,
+    "measurementTime": "1 s",
+    "mode": "avgt",
+    "primaryMetric": {
+      "score": 178.5553656666667,
+      "scoreUnit": "ms/op"
+    },
+    "secondaryMetrics": {
+      "gc.alloc.rate.norm": {
+        "score": 119104337.33333333,
+        "scoreUnit": "B/op"
+      }
+    },
+    "jvm": "Java 25 runtime (sanitized)",
+    "jvmArgs": [
+      "--enable-native-access=ALL-UNNAMED",
+      "--enable-native-access=ALL-UNNAMED"
+    ]
+  },
+  {
+    "benchmark": "io.bluetape4k.images.benchmark.ImageLargeStreamingBenchmark.scrimage_path_pipeline",
+    "params": {
+      "scenario": "ocr-document"
+    },
+    "forks": 1,
+    "warmupIterations": 1,
+    "warmupTime": "1 s",
+    "measurementIterations": 3,
+    "measurementTime": "1 s",
+    "mode": "avgt",
+    "primaryMetric": {
+      "score": 110.527932,
+      "scoreUnit": "ms/op"
+    },
+    "secondaryMetrics": {
+      "gc.alloc.rate.norm": {
+        "score": 87489727.46666667,
+        "scoreUnit": "B/op"
+      }
+    },
+    "jvm": "Java 25 runtime (sanitized)",
+    "jvmArgs": [
+      "--enable-native-access=ALL-UNNAMED",
+      "--enable-native-access=ALL-UNNAMED"
+    ]
+  },
+  {
+    "benchmark": "io.bluetape4k.images.benchmark.ImageLargeStreamingBenchmark.scrimage_suspendedSourceSink_pipeline",
+    "params": {
+      "scenario": "large-photo"
+    },
+    "forks": 1,
+    "warmupIterations": 1,
+    "warmupTime": "1 s",
+    "measurementIterations": 3,
+    "measurementTime": "1 s",
+    "mode": "avgt",
+    "primaryMetric": {
+      "score": 209.31452226666667,
+      "scoreUnit": "ms/op"
+    },
+    "secondaryMetrics": {
+      "gc.alloc.rate.norm": {
+        "score": 121678505.59999998,
+        "scoreUnit": "B/op"
+      }
+    },
+    "jvm": "Java 25 runtime (sanitized)",
+    "jvmArgs": [
+      "--enable-native-access=ALL-UNNAMED",
+      "--enable-native-access=ALL-UNNAMED"
+    ]
+  },
+  {
+    "benchmark": "io.bluetape4k.images.benchmark.ImageLargeStreamingBenchmark.scrimage_suspendedSourceSink_pipeline",
+    "params": {
+      "scenario": "ocr-document"
+    },
+    "forks": 1,
+    "warmupIterations": 1,
+    "warmupTime": "1 s",
+    "measurementIterations": 3,
+    "measurementTime": "1 s",
+    "mode": "avgt",
+    "primaryMetric": {
+      "score": 139.42204960119048,
+      "scoreUnit": "ms/op"
+    },
+    "secondaryMetrics": {
+      "gc.alloc.rate.norm": {
+        "score": 89306881.28571428,
+        "scoreUnit": "B/op"
+      }
+    },
+    "jvm": "Java 25 runtime (sanitized)",
+    "jvmArgs": [
+      "--enable-native-access=ALL-UNNAMED",
+      "--enable-native-access=ALL-UNNAMED"
+    ]
+  },
+  {
+    "benchmark": "io.bluetape4k.images.benchmark.ImageLargeStreamingBenchmark.vips_byteArray_pipeline",
+    "params": {
+      "scenario": "large-photo"
+    },
+    "forks": 1,
+    "warmupIterations": 1,
+    "warmupTime": "1 s",
+    "measurementIterations": 3,
+    "measurementTime": "1 s",
+    "mode": "avgt",
+    "primaryMetric": {
+      "score": 25.5143301042735,
+      "scoreUnit": "ms/op"
+    },
+    "secondaryMetrics": {
+      "gc.alloc.rate.norm": {
+        "score": 577813.7367521367,
+        "scoreUnit": "B/op"
+      }
+    },
+    "jvm": "Java 25 runtime (sanitized)",
+    "jvmArgs": [
+      "--enable-native-access=ALL-UNNAMED",
+      "--enable-native-access=ALL-UNNAMED"
+    ]
+  },
+  {
+    "benchmark": "io.bluetape4k.images.benchmark.ImageLargeStreamingBenchmark.vips_byteArray_pipeline",
+    "params": {
+      "scenario": "ocr-document"
+    },
+    "forks": 1,
+    "warmupIterations": 1,
+    "warmupTime": "1 s",
+    "measurementIterations": 3,
+    "measurementTime": "1 s",
+    "mode": "avgt",
+    "primaryMetric": {
+      "score": 16.045328925925926,
+      "scoreUnit": "ms/op"
+    },
+    "secondaryMetrics": {
+      "gc.alloc.rate.norm": {
+        "score": 363620.48677248677,
+        "scoreUnit": "B/op"
+      }
+    },
+    "jvm": "Java 25 runtime (sanitized)",
+    "jvmArgs": [
+      "--enable-native-access=ALL-UNNAMED",
+      "--enable-native-access=ALL-UNNAMED"
+    ]
+  },
+  {
+    "benchmark": "io.bluetape4k.images.benchmark.ImageLargeStreamingBenchmark.vips_inputStream_pipeline",
+    "params": {
+      "scenario": "large-photo"
+    },
+    "forks": 1,
+    "warmupIterations": 1,
+    "warmupTime": "1 s",
+    "measurementIterations": 3,
+    "measurementTime": "1 s",
+    "mode": "avgt",
+    "primaryMetric": {
+      "score": 25.968722702991453,
+      "scoreUnit": "ms/op"
+    },
+    "secondaryMetrics": {
+      "gc.alloc.rate.norm": {
+        "score": 2603464.8324786327,
+        "scoreUnit": "B/op"
+      }
+    },
+    "jvm": "Java 25 runtime (sanitized)",
+    "jvmArgs": [
+      "--enable-native-access=ALL-UNNAMED",
+      "--enable-native-access=ALL-UNNAMED"
+    ]
+  },
+  {
+    "benchmark": "io.bluetape4k.images.benchmark.ImageLargeStreamingBenchmark.vips_inputStream_pipeline",
+    "params": {
+      "scenario": "ocr-document"
+    },
+    "forks": 1,
+    "warmupIterations": 1,
+    "warmupTime": "1 s",
+    "measurementIterations": 3,
+    "measurementTime": "1 s",
+    "mode": "avgt",
+    "primaryMetric": {
+      "score": 17.022119856334402,
+      "scoreUnit": "ms/op"
+    },
+    "secondaryMetrics": {
+      "gc.alloc.rate.norm": {
+        "score": 1469862.9450160165,
+        "scoreUnit": "B/op"
+      }
+    },
+    "jvm": "Java 25 runtime (sanitized)",
+    "jvmArgs": [
+      "--enable-native-access=ALL-UNNAMED",
+      "--enable-native-access=ALL-UNNAMED"
+    ]
+  },
+  {
+    "benchmark": "io.bluetape4k.images.benchmark.ImageLargeStreamingBenchmark.vips_path_pipeline",
+    "params": {
+      "scenario": "large-photo"
+    },
+    "forks": 1,
+    "warmupIterations": 1,
+    "warmupTime": "1 s",
+    "measurementIterations": 3,
+    "measurementTime": "1 s",
+    "mode": "avgt",
+    "primaryMetric": {
+      "score": 26.23084188888889,
+      "scoreUnit": "ms/op"
+    },
+    "secondaryMetrics": {
+      "gc.alloc.rate.norm": {
+        "score": 2602945.9145299145,
+        "scoreUnit": "B/op"
+      }
+    },
+    "jvm": "Java 25 runtime (sanitized)",
+    "jvmArgs": [
+      "--enable-native-access=ALL-UNNAMED",
+      "--enable-native-access=ALL-UNNAMED"
+    ]
+  },
+  {
+    "benchmark": "io.bluetape4k.images.benchmark.ImageLargeStreamingBenchmark.vips_path_pipeline",
+    "params": {
+      "scenario": "ocr-document"
+    },
+    "forks": 1,
+    "warmupIterations": 1,
+    "warmupTime": "1 s",
+    "measurementIterations": 3,
+    "measurementTime": "1 s",
+    "mode": "avgt",
+    "primaryMetric": {
+      "score": 17.515854640634057,
+      "scoreUnit": "ms/op"
+    },
+    "secondaryMetrics": {
+      "gc.alloc.rate.norm": {
+        "score": 1469543.900040821,
+        "scoreUnit": "B/op"
+      }
+    },
+    "jvm": "Java 25 runtime (sanitized)",
+    "jvmArgs": [
+      "--enable-native-access=ALL-UNNAMED",
+      "--enable-native-access=ALL-UNNAMED"
+    ]
+  }
+]

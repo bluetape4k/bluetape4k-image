@@ -75,7 +75,7 @@ libvips 경로에서 local large file을 다룰 때는 `Path` 진입점을 먼�
 `Source`/`Sink` helper를 사용하세요. Non-Path vips load는 여전히 50 MB stream
 guard 안에서 compressed input을 검증하고 버퍼링합니다.
 
-Benchmark evidence: [`benchmark/images-benchmark/docs/large-streaming-2026-06-05.md`](benchmark/images-benchmark/docs/large-streaming-2026-06-05.md).
+Benchmark evidence: [`benchmark/images-benchmark/docs/large-streaming-2026-07-10.md`](benchmark/images-benchmark/docs/large-streaming-2026-07-10.md).
 
 <!-- README_VISUAL_OVERVIEW:START -->
 ## 개요 다이어그램
