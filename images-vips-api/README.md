@@ -365,7 +365,13 @@ dependencies {
 
 Existing consumers that used `bluetape4k-images` types through this module's
 former transitive dependency must declare that dependency directly. Add it back
-to the consuming application's dependency block if a rollback is required.
+to the consuming application's dependency block if a rollback is required:
+
+```kotlin
+dependencies {
+    implementation("io.github.bluetape4k.image:bluetape4k-images:${version}")
+}
+```
 
 ## testFixtures
 
