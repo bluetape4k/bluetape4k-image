@@ -6,6 +6,28 @@ configurations {
     testImplementation.get().extendsFrom(compileOnly.get(), runtimeOnly.get())
 }
 
+sourceSets {
+    val main by getting
+    val unoptedVipsOptInFixture by creating {
+        compileClasspath += main.output
+        compileClasspath += main.compileClasspath
+        runtimeClasspath += main.output
+    }
+    val optedVipsOptInFixture by creating {
+        compileClasspath += main.output
+        compileClasspath += main.compileClasspath
+        runtimeClasspath += main.output
+    }
+}
+
+tasks.named<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>("compileUnoptedVipsOptInFixtureKotlin") {
+    compilerOptions.allWarningsAsErrors.set(true)
+}
+
+tasks.named<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>("compileOptedVipsOptInFixtureKotlin") {
+    compilerOptions.allWarningsAsErrors.set(true)
+}
+
 dependencies {
     api(libs.bluetape4k.core)
     api(libs.bluetape4k.io)
