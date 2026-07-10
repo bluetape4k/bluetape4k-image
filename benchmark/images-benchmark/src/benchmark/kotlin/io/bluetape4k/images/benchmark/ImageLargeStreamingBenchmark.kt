@@ -1,7 +1,6 @@
 package io.bluetape4k.images.benchmark
 
 import com.sksamuel.scrimage.ImmutableImage
-import com.sksamuel.scrimage.filter.GrayscaleFilter
 import com.sksamuel.scrimage.nio.JpegWriter
 import io.bluetape4k.images.immutableImageOf
 import io.bluetape4k.images.suspendLoadImage
@@ -58,14 +57,13 @@ import javax.imageio.ImageWriteParam
  */
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
-@Warmup(iterations = 2, time = 1, timeUnit = TimeUnit.SECONDS)
+@Warmup(iterations = 1, time = 1, timeUnit = TimeUnit.SECONDS)
 @Measurement(iterations = 3, time = 1, timeUnit = TimeUnit.SECONDS)
 @Fork(value = 1, jvmArgsPrepend = ["--enable-native-access=ALL-UNNAMED"])
 @State(Scope.Benchmark)
 class ImageLargeStreamingBenchmark {
 
     companion object {
-        private val GRAYSCALE_FILTER = GrayscaleFilter()
         private val JPEG_WRITER = JpegWriter(82, false)
         private val SUSPEND_JPEG_WRITER = io.bluetape4k.images.coroutines.SuspendJpegWriter(82, false)
         private val VIPS_ENCODE_OPTIONS = VipsEncodeOptions(quality = 82, effort = 4)
@@ -84,10 +82,19 @@ class ImageLargeStreamingBenchmark {
     fun setup() {
         config = WorkloadConfig.of(scenario)
         tempDir = Files.createTempDirectory("bt4k-image-large-streaming-")
-        inputPath = tempDir.resolve("${config.name}.jpg")
-        writeJpeg(config.createImage(), inputPath, quality = 0.88f)
-        inputBytes = Files.readAllBytes(inputPath)
-        vipsSupport = VipsLargePipelineSupport.create()
+        try {
+            inputPath = tempDir.resolve("${config.name}.jpg")
+            writeJpeg(config.createImage(), inputPath, quality = 0.88f)
+            inputBytes = Files.readAllBytes(inputPath)
+            vipsSupport = VipsLargePipelineSupport.createRequiredFfm()
+        } catch (cause: Throwable) {
+            try {
+                cleanupTempDir()
+            } catch (cleanupFailure: Throwable) {
+                cause.addSuppressed(cleanupFailure)
+            }
+            throw cause
+        }
     }
 
     @TearDown(Level.Trial)
@@ -95,6 +102,10 @@ class ImageLargeStreamingBenchmark {
         if (!::tempDir.isInitialized) {
             return
         }
+        cleanupTempDir()
+    }
+
+    private fun cleanupTempDir() {
         Files.walk(tempDir).use { paths ->
             paths.sorted(Comparator.reverseOrder())
                 .forEach(Files::deleteIfExists)
@@ -176,10 +187,6 @@ class ImageLargeStreamingBenchmark {
 
     @Benchmark
     fun vips_byteArray_pipeline(bh: Blackhole) {
-        if (!vipsSupport.available) {
-            bh.consume(null)
-            return
-        }
         val bytes = vipsSupport.createFromBytes(inputBytes).use { image ->
             image.resize(config.targetWidth, config.targetHeight).use { resized ->
                 resized.toBytes(VipsImageFormat.JPEG, VIPS_ENCODE_OPTIONS)
@@ -190,10 +197,6 @@ class ImageLargeStreamingBenchmark {
 
     @Benchmark
     fun vips_path_pipeline(bh: Blackhole) {
-        if (!vipsSupport.available) {
-            bh.consume(null)
-            return
-        }
         val output = createOutput("vips-path")
         try {
             vipsSupport.createFromPath(inputPath).use { image ->
@@ -209,10 +212,6 @@ class ImageLargeStreamingBenchmark {
 
     @Benchmark
     fun vips_inputStream_pipeline(bh: Blackhole) {
-        if (!vipsSupport.available) {
-            bh.consume(null)
-            return
-        }
         val output = createOutput("vips-stream")
         try {
             Files.newInputStream(inputPath).use { input ->
@@ -232,7 +231,6 @@ class ImageLargeStreamingBenchmark {
 
     private fun transform(image: ImmutableImage): ImmutableImage =
         image.scaleTo(config.targetWidth, config.targetHeight)
-            .filter(GRAYSCALE_FILTER)
 
     private fun createOutput(prefix: String): Path =
         Files.createTempFile(tempDir, "$prefix-", ".jpg")
@@ -350,50 +348,36 @@ private fun writeJpeg(image: BufferedImage, path: Path, quality: Float) {
 }
 
 private class VipsLargePipelineSupport private constructor(
-    val available: Boolean,
-    private val createFromBytesFn: ((ByteArray) -> VipsImage)?,
-    private val createFromPathFn: ((Path) -> VipsImage)?,
-    private val createFromStreamFn: ((InputStream) -> VipsImage)?,
+    private val createFromBytesFn: (ByteArray) -> VipsImage,
+    private val createFromPathFn: (Path) -> VipsImage,
+    private val createFromStreamFn: (InputStream) -> VipsImage,
 ) {
     companion object {
         private const val FFM_RUNTIME_CLASS = "io.bluetape4k.images.vips.java25.FfmVipsRuntime"
-        private const val JNI_RUNTIME_CLASS = "io.bluetape4k.images.vips.java21.JVipsRuntime"
         private const val FFM_IMAGE_SUPPORT_CLASS = "io.bluetape4k.images.vips.java25.FfmVipsImageSupportKt"
-        private const val JNI_IMAGE_SUPPORT_CLASS = "io.bluetape4k.images.vips.java21.JVipsImageSupportKt"
         private const val PROP_VIPS_PATH = "vipsffm.libpath.vips.override"
         private const val PROP_GLIB_PATH = "vipsffm.libpath.glib.override"
         private const val PROP_GOBJECT_PATH = "vipsffm.libpath.gobject.override"
         private const val HOMEBREW_LIB = "/opt/homebrew/lib"
 
-        fun create(): VipsLargePipelineSupport {
+        fun createRequiredFfm(): VipsLargePipelineSupport {
             applyMacOsVipsLibraryPaths()
-            return tryCreate(FFM_RUNTIME_CLASS, FFM_IMAGE_SUPPORT_CLASS, "ffmVipsImageOf")
-                ?: tryCreate(JNI_RUNTIME_CLASS, JNI_IMAGE_SUPPORT_CLASS, "vipsImageOf")
-                ?: VipsLargePipelineSupport(false, null, null, null)
-        }
-
-        private fun tryCreate(
-            runtimeClass: String,
-            supportClass: String,
-            factoryMethodName: String,
-        ): VipsLargePipelineSupport? {
             return try {
-                val runtimeKClass = Class.forName(runtimeClass)
+                val runtimeKClass = Class.forName(FFM_RUNTIME_CLASS)
                 val runtime = runtimeKClass.getField("INSTANCE").get(null) as VipsRuntime
                 runtime.init()
 
-                val supportKClass = Class.forName(supportClass)
-                val bytesMethod = supportKClass.getMethod(factoryMethodName, ByteArray::class.java)
-                val pathMethod = supportKClass.getMethod(factoryMethodName, Path::class.java)
-                val streamMethod = supportKClass.getMethod(factoryMethodName, InputStream::class.java)
+                val supportKClass = Class.forName(FFM_IMAGE_SUPPORT_CLASS)
+                val bytesMethod = supportKClass.getMethod("ffmVipsImageOf", ByteArray::class.java)
+                val pathMethod = supportKClass.getMethod("ffmVipsImageOf", Path::class.java)
+                val streamMethod = supportKClass.getMethod("ffmVipsImageOf", InputStream::class.java)
                 VipsLargePipelineSupport(
-                    available = true,
                     createFromBytesFn = { bytes -> bytesMethod.invoke(null, bytes) as VipsImage },
                     createFromPathFn = { path -> pathMethod.invoke(null, path) as VipsImage },
                     createFromStreamFn = { input -> streamMethod.invoke(null, input) as VipsImage },
                 )
-            } catch (_: Throwable) {
-                null
+            } catch (cause: Throwable) {
+                throw IllegalStateException("Java 25 FFM libvips backend is required for this benchmark", cause)
             }
         }
 
@@ -414,11 +398,11 @@ private class VipsLargePipelineSupport private constructor(
     }
 
     fun createFromBytes(bytes: ByteArray): VipsImage =
-        requireNotNull(createFromBytesFn) { "vips is unavailable; check available before calling" }(bytes)
+        createFromBytesFn(bytes)
 
     fun createFromPath(path: Path): VipsImage =
-        requireNotNull(createFromPathFn) { "vips is unavailable; check available before calling" }(path)
+        createFromPathFn(path)
 
     fun createFromStream(input: InputStream): VipsImage =
-        requireNotNull(createFromStreamFn) { "vips is unavailable; check available before calling" }(input)
+        createFromStreamFn(input)
 }
