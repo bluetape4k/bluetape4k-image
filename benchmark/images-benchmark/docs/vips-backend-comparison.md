@@ -66,16 +66,25 @@ JAVA_HOME=$(/usr/libexec/java_home -v 25) \
   -Pvips.impl=java25 --console=plain
 ```
 
-For focused runs, build the JMH jar for each backend and pass a JMH filter:
+The Gradle tasks above are the normal benchmark execution surface. Use the
+direct JMH jar only for focused/debug evidence that needs the `VipsBackend` JMH
+regex filter and a narrow raw JSON output. Resolve the jar produced by the
+preceding Gradle task instead of copying a versioned artifact name:
 
 ```bash
 JAVA_HOME=$(/usr/libexec/java_home -v 25) \
   ./gradlew :bluetape4k-images-benchmark:benchmarkBenchmarkJar \
   -Pvips.impl=java25 --console=plain
 
+jmh_jar="$(find benchmark/images-benchmark/build/benchmarks/benchmark/jars \
+  -maxdepth 1 -type f \
+  -name 'bluetape4k-images-benchmark-benchmark-jmh-*-JMH.jar' \
+  -print -quit)"
+test -n "$jmh_jar"
+
 JAVA_HOME=$(/usr/libexec/java_home -v 25) \
   java --enable-native-access=ALL-UNNAMED \
-  -jar benchmark/images-benchmark/build/benchmarks/benchmark/jars/bluetape4k-images-benchmark-benchmark-jmh-0.1.3-JMH.jar \
+  -jar "$jmh_jar" \
   '.*VipsBackend.*' \
   -rf json \
   -rff benchmark/images-benchmark/docs/raw/benchmark-vips-backend-java25.json
