@@ -1,6 +1,5 @@
 package io.bluetape4k.images.vips
 
-import io.bluetape4k.images.IncubatingImageApi
 import io.bluetape4k.support.requireNotBlank
 import java.io.Serializable
 
@@ -91,7 +90,7 @@ data class VipsCodecOperationCapability(
  * [VipsCodecCapabilityReport.stableFormats] because they do not require
  * optional HEIF-family native codecs.
  */
-@OptIn(IncubatingImageApi::class)
+@OptIn(VipsIncubatingApi::class)
 data class VipsCodecCapability(
     val format: VipsImageFormat,
     val decode: VipsCodecOperationCapability,
@@ -134,7 +133,7 @@ data class VipsCodecCapability(
  * @property codecs HEIF-family codec capabilities.
  * @property inspectedOperations native libvips operation names inspected for this report.
  */
-@OptIn(IncubatingImageApi::class)
+@OptIn(VipsIncubatingApi::class)
 data class VipsCodecCapabilityReport(
     val backendName: String,
     val libvipsVersion: String? = null,

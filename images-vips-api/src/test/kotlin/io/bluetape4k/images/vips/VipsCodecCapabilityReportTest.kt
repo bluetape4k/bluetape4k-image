@@ -3,10 +3,9 @@ package io.bluetape4k.images.vips
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeTrue
-import io.bluetape4k.images.IncubatingImageApi
 import org.junit.jupiter.api.Test
 
-@OptIn(IncubatingImageApi::class)
+@OptIn(VipsIncubatingApi::class)
 class VipsCodecCapabilityReportTest {
 
     @Test
