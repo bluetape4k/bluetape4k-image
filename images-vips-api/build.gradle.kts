@@ -67,11 +67,12 @@ extensions.configure<PublishingExtension> {
                         dependency.children()
                             .filterIsInstance<Node>()
                             .associate { it.name().toString().substringAfter('}') to it.text() }
-                            .let { coordinates ->
-                                "${coordinates["groupId"]}:${coordinates["artifactId"]}" in setOf(
-                                    "io.github.bluetape4k.image:bluetape4k-images",
-                                    "com.sksamuel.scrimage:scrimage-core",
-                                    "com.twelvemonkeys.imageio:imageio-core",
+                            .let { details ->
+                                details["optional"] == "true" &&
+                                    "${details["groupId"]}:${details["artifactId"]}" in setOf(
+                                        "io.github.bluetape4k.image:bluetape4k-images",
+                                        "com.sksamuel.scrimage:scrimage-core",
+                                        "com.twelvemonkeys.imageio:imageio-core",
                                 )
                             }
                 }
