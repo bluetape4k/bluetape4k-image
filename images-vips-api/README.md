@@ -363,6 +363,10 @@ dependencies {
 }
 ```
 
+Existing consumers that used `bluetape4k-images` types through this module's
+former transitive dependency must declare that dependency directly. Add it back
+to the consuming application's dependency block if a rollback is required.
+
 ## testFixtures
 
 Repository tests can use the local test-fixtures variant for pixel helpers

@@ -363,6 +363,10 @@ dependencies {
 }
 ```
 
+기존에 이 모듈의 transitive dependency를 통해 `bluetape4k-images` 타입을 사용하던
+소비자는 해당 의존성을 직접 선언해야 합니다. Rollback이 필요하면 소비 애플리케이션의
+dependency block에 다시 추가하세요.
+
 ## testFixtures
 
 Repository 테스트는 모듈의 main API에 이미지 구현 의존성을 추가하지 않고, pixel helper를
