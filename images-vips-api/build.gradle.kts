@@ -27,10 +27,12 @@ sourceSets {
 
 tasks.named<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>("compileUnoptedVipsOptInFixtureKotlin") {
     compilerOptions.allWarningsAsErrors.set(true)
+    onlyIf { providers.gradleProperty("verifyVipsOptInFixtures").isPresent }
 }
 
 tasks.named<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>("compileOptedVipsOptInFixtureKotlin") {
     compilerOptions.allWarningsAsErrors.set(true)
+    onlyIf { providers.gradleProperty("verifyVipsOptInFixtures").isPresent }
 }
 
 dependencies {

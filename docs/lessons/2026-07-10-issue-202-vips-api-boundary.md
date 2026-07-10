@@ -16,11 +16,16 @@ Vips 전용 AVIF/HEIC capability API의 opt-in 경계와 publication metadata를
   namespace local name을 사용한다.
 - custom Kotlin source set으로 compiler opt-in 진단을 검증할 때 `main.output`뿐 아니라
   `main.compileClasspath`도 포함해야 한다.
+- 의도적으로 실패하는 compiler fixture는 default `build` lifecycle에서 실행되면 안 된다.
+  `-PverifyVipsOptInFixtures`가 있을 때만 전용 task를 실행해 CI build와 negative test를 분리한다.
 
 ## Outcome
 
 - opt-in fixture는 컴파일되고, opt-in 없는 fixture는 `VipsIncubatingApi` 경고를
   `-Werror`로 승격해 실패한다.
+- Default `:bluetape4k-images-vips-api:build -x test` lifecycle은 property 없이
+  성공하고, fixture contract는 `-PverifyVipsOptInFixtures`가 있는 별도 invocation에서만
+  검증한다.
 - 생성 POM의 forbidden direct dependency 수는 `0`이며, Gradle normal variant는
   image implementation dependency가 없고 test-fixtures variant에만 해당 의존성이 남는다.
 - EN/KO README와 core AVIF/HEIC KDoc은 consumer migration과 binding-neutral contract를
@@ -37,8 +42,8 @@ Vips 전용 AVIF/HEIC capability API의 opt-in 경계와 publication metadata를
     (`sha256=2e5ccf6fd18b1165d0118c85be922c7a503e6dbac39ff595395848dd0776ce4c`)
   - module metadata: `images-vips-api/build/publications/BluetapeImage/module.json`
     (`sha256=8931fb3d8bef7e428d56d4734fedbc241e36b2a2ca7d62871a834c5c10a3631f`)
-  - final green group exit `0`; unopted fixture expected exit `1` with
-    `VipsIncubatingApi` under `-Werror`; normal/fixture boundary assertions passed
+- final green group exit `0`; unopted fixture expected exit `1` with
+    `VipsIncubatingApi` under `-Werror` and `-PverifyVipsOptInFixtures`; normal/fixture boundary assertions passed
 - Step 6-R six-perspective review: final `P0=0`, `P1=0`
 
 ## Future Guidance
