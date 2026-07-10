@@ -90,3 +90,26 @@ rerun.
 After the P1 repairs, rerun performance, stability, security, architecture,
 developer/API, and library-user lenses. The main session must then normalize
 findings and record `P0=0` and `P1=0` before Step 3-R.
+
+## Re-Review After Repair
+
+**PASS — P0: 0, P1: 0.** The repaired design is eligible for a user review
+gate before implementation planning. No source or benchmark artifact changed
+during this review.
+
+| Lens | Result | Evidence checked |
+| --- | --- | --- |
+| Performance | PASS | Color-preserving parity, authoritative Gradle/JMH settings, raw-row evidence, chart scenario/scale contract |
+| Stability/SRE and security | PASS | Fail-fast libvips readiness, run-owned temporary residue, metadata scrubbing, generator allowlist, SVG/PNG QA |
+| Architecture/scope | PASS | New-versus-archived evidence lifecycle, GC addendum policy, all README surfaces, narrow regression guards |
+| Developer/API | PASS | Cross-backend execution contract, configuration precedence, raw-data traceability, artifact generation boundary |
+| Library user | PASS | Both benchmark README locations and locales, root README locales, report supersession, chart labels and rendered visual checks |
+
+### Non-Blocking Follow-Ups
+
+- Make the implementation plan describe exception-safe benchmark-setup cleanup
+  and preserve the libvips initialization cause in its fail-fast error.
+- Make raw-data validation enumerate the expected backend/scenario rows.
+- When checking the Scrimage path, verify the shared transform has no grayscale
+  filter and that every affected benchmark method still JPEG-encodes after that
+  transform.
