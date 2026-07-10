@@ -287,6 +287,16 @@ test "$gc_strings_clean" = true
 mv "$gc_dest.tmp" "$gc_dest"
 ```
 
+### Step 3-P handoff: implementation risk controls
+
+The pre-implementation architect, critic, and verifier scans found no P0/P1 readiness blocker. Carry these controls into Step 4:
+
+- Confirm the controlled `vipsffm.libpath.vips.override` failure reaches the required FFM factory, fails with an actionable cause, and leaves no run-owned temp directory; do not reintroduce JNI fallback or null-result rows.
+- Preserve the setup exception contract: clean only the run-owned directory, retain the original throwable, and attach cleanup failures as suppressed.
+- Treat the 16-row method/scenario gate, non-null numeric scores, native-access metadata, and invalid-library failure as execution evidence; structural JSON shape alone is insufficient.
+- Record Java/vendor/architecture and raw SHA-256 before deriving reports; compare rounded values across report, README, and chart before publishing.
+- Keep source-test path resolution deterministic under the module project directory and use unique temporary manifest paths.
+
 ### Task 4: Replace stale derived evidence and regenerate the target chart
 
 **Complexity:** high
