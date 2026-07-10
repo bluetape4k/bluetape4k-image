@@ -68,14 +68,16 @@ scrimage 기반 `images` 모듈은 Okio `Source`/`Sink`와
 `SuspendedSource`/`SuspendedSink` helper를 받아 lifecycle-safe load/write
 통합을 제공합니다.
 
-libvips 경로에서 local large file을 다룰 때는 `Path` 진입점을 먼저 선택하세요.
-대용량 파일 benchmark에서는 Java 25 FFM backend의 `Path` 경로가 local file
-메모리와 처리량 기준으로 가장 강했습니다. 호출자가 이미 non-file stream이나
+libvips 경로에서 caller가 local file path를 이미 소유한다면 `Path` 진입점을
+사용하세요. 이는 짧은 benchmark snapshot의 처리량이나 메모리 순위가 아니라
+API와 lifecycle 선택입니다. 호출자가 이미 non-file stream이나
 `bluetape4k-okio` suspended boundary를 소유하고 있을 때 vips Okio
-`Source`/`Sink` helper를 사용하세요. Non-Path vips load는 여전히 50 MB stream
-guard 안에서 compressed input을 검증하고 버퍼링합니다.
+`Source`/`Sink` helper를 사용하세요. 현재 모든 vips 입력 overload는 `Path`를
+포함해 50 MiB input guard 안에서 compressed input을 검증하고 버퍼링합니다.
+따라서 `Path`가 이 제한을 우회하거나 streaming memory semantics를 제공하지는
+않습니다.
 
-Benchmark evidence: [`benchmark/images-benchmark/docs/large-streaming-2026-06-05.md`](benchmark/images-benchmark/docs/large-streaming-2026-06-05.md).
+벤치마크 근거: [`benchmark/images-benchmark/docs/large-streaming-2026-07-10.md`](benchmark/images-benchmark/docs/large-streaming-2026-07-10.md).
 
 <!-- README_VISUAL_OVERVIEW:START -->
 ## 개요 다이어그램

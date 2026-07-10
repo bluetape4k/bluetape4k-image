@@ -119,25 +119,28 @@ and the raw `kotlinx-benchmark` JSON
 
 | Boundary | `large-photo` | `ocr-document` | Recommendation |
 |----------|---------------|----------------|----------------|
-| Scrimage `Path` | 223.19 ms/op | 145.13 ms/op | Near-best Scrimage boundary in this run |
-| Scrimage Okio `Source`/`Sink` | 222.00 ms/op | 145.59 ms/op | Lifecycle/integration feature, not a latency win |
-| Scrimage suspended source/sink | 254.95 ms/op | 170.69 ms/op | Coroutine boundary with bridge overhead |
-| vips `Path` | 7.13 ms/op | 5.47 ms/op | Preferred large-file transform path when vips is available |
-| vips `InputStream`/`OutputStream` | 23.99 ms/op | 15.59 ms/op | Similar to vips `ByteArray` because stream input is bounded |
+| Scrimage `Path` | 187.44 ms/op | 114.77 ms/op | Color-preserving blocking path |
+| Scrimage Okio `Source`/`Sink` | 183.37 ms/op | 115.41 ms/op | Lifecycle/integration boundary, not a latency promise |
+| Scrimage suspended source/sink | 215.61 ms/op | 136.77 ms/op | Coroutine boundary with bridge overhead |
+| vips `Path` | 27.34 ms/op | 16.76 ms/op | Local-file API boundary; still buffers within the 50 MiB guard |
+| vips `InputStream`/`OutputStream` | 25.76 ms/op | 16.61 ms/op | Caller-owned stream boundary; also buffers within the 50 MiB guard |
 
 `ImageLargeStreamingBenchmark` generates deterministic large fixtures during
 JMH setup instead of committing huge binary assets. The local Java 25 row
 supports positioning Okio/suspended APIs as memory/lifecycle boundaries rather
 than latency or throughput optimizations for Scrimage. For large-file
-performance, vips `Path` remains the strongest option. See
-[`docs/large-streaming-2026-06-05.md`](docs/large-streaming-2026-06-05.md)
+performance, choose the vips input boundary from the caller's existing
+resource and lifecycle rather than treating this short snapshot as a universal
+ranking. Every current vips input overload, including `Path`, validates and
+buffers the compressed input within the 50 MiB guard; neither boundary is a
+streaming-memory or guard-bypass choice. See
+[`docs/large-streaming-2026-07-10.md`](docs/large-streaming-2026-07-10.md)
 and the raw `kotlinx-benchmark` JSON
-[`docs/raw/benchmark-large-streaming-2026-06-05-macos-java25.json`](docs/raw/benchmark-large-streaming-2026-06-05-macos-java25.json).
+[`docs/raw/benchmark-large-streaming-2026-07-10-macos-java25.json`](docs/raw/benchmark-large-streaming-2026-07-10-macos-java25.json).
 The JMH GC-profiler addendum
-[`docs/raw/benchmark-large-streaming-jmh-gc-2026-06-05-macos-java25.json`](docs/raw/benchmark-large-streaming-jmh-gc-2026-06-05-macos-java25.json)
-shows Scrimage `Path`, Okio, and stream rows all allocate about 216-218 MiB/op
-for `large-photo` and 164-166 MiB/op for `ocr-document`, while vips `Path`
-stays near 0.54 MiB/op and 0.34 MiB/op on managed heap.
+[`docs/raw/benchmark-large-streaming-jmh-gc-2026-07-10-macos-java25.json`](docs/raw/benchmark-large-streaming-jmh-gc-2026-07-10-macos-java25.json)
+reports managed-heap allocation for the same 16 rows; native libvips memory is
+not inferred from those Java allocation numbers.
 
 ### Memory Profile (kotlinx-benchmark + GC addendum)
 
@@ -161,11 +164,11 @@ and the raw `kotlinx-benchmark` JSON
 ## Running Benchmarks
 
 ```bash
-# Java 25 - scrimage + vips-ffm (Panama FFM, macOS/Linux)
+# Java 25 - full benchmark set, including FFM-only large streaming (macOS/Linux)
 ./gradlew :bluetape4k-images-benchmark:benchmarkBenchmark -Pvips.impl=java25
 
-# Java 21 - scrimage + JVips JNI (Linux only)
-./gradlew :bluetape4k-images-benchmark:benchmarkBenchmark -Pvips.impl=java21
+# Java 21 - selected JVips JNI-compatible benchmarks (Linux only; excludes FFM-only large streaming)
+./gradlew :bluetape4k-images-benchmark:benchmarkPipelineAllocationBenchmark :bluetape4k-images-benchmark:benchmarkMemoryProfileBenchmark :bluetape4k-images-benchmark:benchmarkIoBoundaryBenchmark :bluetape4k-images-benchmark:benchmarkIoThroughputBenchmark -Pvips.impl=java21
 
 # Focused evidence used by the 2026-05-29 reports
 JAVA_HOME=$(/usr/libexec/java_home -v 25) ./gradlew :bluetape4k-images-benchmark:benchmarkPipelineAllocationBenchmark --console=plain
@@ -182,7 +185,7 @@ JAVA25=$(/usr/libexec/java_home -v 25)
   -jar benchmark/images-benchmark/build/benchmarks/benchmark/jars/bluetape4k-images-benchmark-benchmark-jmh-0.3.0-JMH.jar \
   '.*ImageLargeStreamingBenchmark.*' -wi 1 -i 3 -f 1 -bm avgt -tu ms \
   -prof gc -rf json \
-  -rff benchmark/images-benchmark/docs/raw/benchmark-large-streaming-jmh-gc-2026-06-05-macos-java25.json
+  -rff benchmark/images-benchmark/docs/raw/benchmark-large-streaming-jmh-gc-2026-07-10-macos-java25.json
 ```
 
 **macOS prerequisites**: `brew install vips`
@@ -348,13 +351,13 @@ generated during JMH setup to avoid committing large binary files.
 
 | Scenario | Generated dimensions | Transform |
 |----------|----------------------|-----------|
-| `large-photo` | 4032x3024 | resize to 1920x1440, grayscale, JPEG encode |
-| `ocr-document` | 2480x3508 | resize to 1240x1754, grayscale, JPEG encode |
+| `large-photo` | 4032x3024 | resize to 1920x1440, JPEG encode |
+| `ocr-document` | 2480x3508 | resize to 1240x1754, JPEG encode |
 
 | Benchmark group | Boundaries |
 |-----------------|------------|
 | `scrimage_*_pipeline` | `ByteArray`, `Path`, `InputStream`/`OutputStream`, Okio `Source`/`Sink`, suspended file source/sink |
-| `vips_*_pipeline` | `ByteArray`, `Path`, `InputStream`/`OutputStream` when Java 25 FFM or Java 21 JNI is available |
+| `vips_*_pipeline` | `ByteArray`, `Path`, `InputStream`/`OutputStream` with the required Java 25 FFM backend |
 
 ### `VipsBenchmarkState`
 

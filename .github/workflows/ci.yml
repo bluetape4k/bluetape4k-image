@@ -642,7 +642,7 @@ jobs:
       - test-images-vips-api
       - test-images-vips-java21
       - test-images-vips-java25
-    if: always()
+    if: always() && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') && (needs.test-images.result == 'success' || needs.test-images-barcode-api.result == 'success' || needs.test-images-barcode-zxing.result == 'success' || needs.test-images-captcha.result == 'success' || needs.test-images-ocr.result == 'success' || needs.test-images-ktor.result == 'success' || needs.test-images-spring-boot.result == 'success' || needs.test-images-vips-api.result == 'success' || needs.test-images-vips-java21.result == 'success' || needs.test-images-vips-java25.result == 'success')
     steps:
       - uses: actions/checkout@v7
 
@@ -660,21 +660,46 @@ jobs:
 
       - name: Validate coverage artifacts
         shell: bash
+        env:
+          TEST_IMAGES_RESULT: ${{ needs.test-images.result }}
+          TEST_IMAGES_BARCODE_API_RESULT: ${{ needs.test-images-barcode-api.result }}
+          TEST_IMAGES_BARCODE_ZXING_RESULT: ${{ needs.test-images-barcode-zxing.result }}
+          TEST_IMAGES_CAPTCHA_RESULT: ${{ needs.test-images-captcha.result }}
+          TEST_IMAGES_OCR_RESULT: ${{ needs.test-images-ocr.result }}
+          TEST_IMAGES_KTOR_RESULT: ${{ needs.test-images-ktor.result }}
+          TEST_IMAGES_SPRING_BOOT_RESULT: ${{ needs.test-images-spring-boot.result }}
+          TEST_IMAGES_VIPS_API_RESULT: ${{ needs.test-images-vips-api.result }}
+          TEST_IMAGES_VIPS_JAVA21_RESULT: ${{ needs.test-images-vips-java21.result }}
+          TEST_IMAGES_VIPS_JAVA25_RESULT: ${{ needs.test-images-vips-java25.result }}
         run: |
           set -euo pipefail
 
-          expected_artifacts=(
-            coverage-images
-            coverage-images-barcode-api
-            coverage-images-barcode-zxing
-            coverage-images-captcha
-            coverage-images-ocr
-            coverage-images-ktor
-            coverage-images-spring-boot
-            coverage-images-vips-api
-            coverage-images-vips-java21
-            coverage-images-vips-java25
+          coverage_results=(
+            "coverage-images:${TEST_IMAGES_RESULT}"
+            "coverage-images-barcode-api:${TEST_IMAGES_BARCODE_API_RESULT}"
+            "coverage-images-barcode-zxing:${TEST_IMAGES_BARCODE_ZXING_RESULT}"
+            "coverage-images-captcha:${TEST_IMAGES_CAPTCHA_RESULT}"
+            "coverage-images-ocr:${TEST_IMAGES_OCR_RESULT}"
+            "coverage-images-ktor:${TEST_IMAGES_KTOR_RESULT}"
+            "coverage-images-spring-boot:${TEST_IMAGES_SPRING_BOOT_RESULT}"
+            "coverage-images-vips-api:${TEST_IMAGES_VIPS_API_RESULT}"
+            "coverage-images-vips-java21:${TEST_IMAGES_VIPS_JAVA21_RESULT}"
+            "coverage-images-vips-java25:${TEST_IMAGES_VIPS_JAVA25_RESULT}"
           )
+
+          expected_artifacts=()
+          for coverage_result in "${coverage_results[@]}"; do
+            artifact="${coverage_result%%:*}"
+            result="${coverage_result##*:}"
+            if [[ "$result" == "success" ]]; then
+              expected_artifacts+=("$artifact")
+            fi
+          done
+
+          if (( ${#expected_artifacts[@]} == 0 )); then
+            echo "::error title=Coverage artifacts unavailable::Coverage Report ran without a successful module test."
+            exit 1
+          fi
 
           missing_artifacts=()
           empty_artifacts=()

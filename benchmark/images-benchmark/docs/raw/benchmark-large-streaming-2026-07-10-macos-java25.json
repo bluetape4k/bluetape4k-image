@@ -1,0 +1,322 @@
+[
+  {
+    "benchmark": "io.bluetape4k.images.benchmark.ImageLargeStreamingBenchmark.scrimage_byteArray_pipeline",
+    "params": {
+      "scenario": "large-photo"
+    },
+    "forks": 1,
+    "warmupIterations": 1,
+    "warmupTime": "1 s",
+    "measurementIterations": 3,
+    "measurementTime": "1 s",
+    "mode": "avgt",
+    "primaryMetric": {
+      "score": 186.140213,
+      "scoreUnit": "ms/op"
+    },
+    "jvm": "Java 25 runtime (sanitized)",
+    "jvmArgs": [
+      "--enable-native-access=ALL-UNNAMED"
+    ]
+  },
+  {
+    "benchmark": "io.bluetape4k.images.benchmark.ImageLargeStreamingBenchmark.scrimage_byteArray_pipeline",
+    "params": {
+      "scenario": "ocr-document"
+    },
+    "forks": 1,
+    "warmupIterations": 1,
+    "warmupTime": "1 s",
+    "measurementIterations": 3,
+    "measurementTime": "1 s",
+    "mode": "avgt",
+    "primaryMetric": {
+      "score": 117.40729166666665,
+      "scoreUnit": "ms/op"
+    },
+    "jvm": "Java 25 runtime (sanitized)",
+    "jvmArgs": [
+      "--enable-native-access=ALL-UNNAMED"
+    ]
+  },
+  {
+    "benchmark": "io.bluetape4k.images.benchmark.ImageLargeStreamingBenchmark.scrimage_inputStream_pipeline",
+    "params": {
+      "scenario": "large-photo"
+    },
+    "forks": 1,
+    "warmupIterations": 1,
+    "warmupTime": "1 s",
+    "measurementIterations": 3,
+    "measurementTime": "1 s",
+    "mode": "avgt",
+    "primaryMetric": {
+      "score": 183.646662,
+      "scoreUnit": "ms/op"
+    },
+    "jvm": "Java 25 runtime (sanitized)",
+    "jvmArgs": [
+      "--enable-native-access=ALL-UNNAMED"
+    ]
+  },
+  {
+    "benchmark": "io.bluetape4k.images.benchmark.ImageLargeStreamingBenchmark.scrimage_inputStream_pipeline",
+    "params": {
+      "scenario": "ocr-document"
+    },
+    "forks": 1,
+    "warmupIterations": 1,
+    "warmupTime": "1 s",
+    "measurementIterations": 3,
+    "measurementTime": "1 s",
+    "mode": "avgt",
+    "primaryMetric": {
+      "score": 114.8762284074074,
+      "scoreUnit": "ms/op"
+    },
+    "jvm": "Java 25 runtime (sanitized)",
+    "jvmArgs": [
+      "--enable-native-access=ALL-UNNAMED"
+    ]
+  },
+  {
+    "benchmark": "io.bluetape4k.images.benchmark.ImageLargeStreamingBenchmark.scrimage_okioSourceSink_pipeline",
+    "params": {
+      "scenario": "large-photo"
+    },
+    "forks": 1,
+    "warmupIterations": 1,
+    "warmupTime": "1 s",
+    "measurementIterations": 3,
+    "measurementTime": "1 s",
+    "mode": "avgt",
+    "primaryMetric": {
+      "score": 183.36506483333332,
+      "scoreUnit": "ms/op"
+    },
+    "jvm": "Java 25 runtime (sanitized)",
+    "jvmArgs": [
+      "--enable-native-access=ALL-UNNAMED"
+    ]
+  },
+  {
+    "benchmark": "io.bluetape4k.images.benchmark.ImageLargeStreamingBenchmark.scrimage_okioSourceSink_pipeline",
+    "params": {
+      "scenario": "ocr-document"
+    },
+    "forks": 1,
+    "warmupIterations": 1,
+    "warmupTime": "1 s",
+    "measurementIterations": 3,
+    "measurementTime": "1 s",
+    "mode": "avgt",
+    "primaryMetric": {
+      "score": 115.40581174074076,
+      "scoreUnit": "ms/op"
+    },
+    "jvm": "Java 25 runtime (sanitized)",
+    "jvmArgs": [
+      "--enable-native-access=ALL-UNNAMED"
+    ]
+  },
+  {
+    "benchmark": "io.bluetape4k.images.benchmark.ImageLargeStreamingBenchmark.scrimage_path_pipeline",
+    "params": {
+      "scenario": "large-photo"
+    },
+    "forks": 1,
+    "warmupIterations": 1,
+    "warmupTime": "1 s",
+    "measurementIterations": 3,
+    "measurementTime": "1 s",
+    "mode": "avgt",
+    "primaryMetric": {
+      "score": 187.44063188888887,
+      "scoreUnit": "ms/op"
+    },
+    "jvm": "Java 25 runtime (sanitized)",
+    "jvmArgs": [
+      "--enable-native-access=ALL-UNNAMED"
+    ]
+  },
+  {
+    "benchmark": "io.bluetape4k.images.benchmark.ImageLargeStreamingBenchmark.scrimage_path_pipeline",
+    "params": {
+      "scenario": "ocr-document"
+    },
+    "forks": 1,
+    "warmupIterations": 1,
+    "warmupTime": "1 s",
+    "measurementIterations": 3,
+    "measurementTime": "1 s",
+    "mode": "avgt",
+    "primaryMetric": {
+      "score": 114.77320677777777,
+      "scoreUnit": "ms/op"
+    },
+    "jvm": "Java 25 runtime (sanitized)",
+    "jvmArgs": [
+      "--enable-native-access=ALL-UNNAMED"
+    ]
+  },
+  {
+    "benchmark": "io.bluetape4k.images.benchmark.ImageLargeStreamingBenchmark.scrimage_suspendedSourceSink_pipeline",
+    "params": {
+      "scenario": "large-photo"
+    },
+    "forks": 1,
+    "warmupIterations": 1,
+    "warmupTime": "1 s",
+    "measurementIterations": 3,
+    "measurementTime": "1 s",
+    "mode": "avgt",
+    "primaryMetric": {
+      "score": 215.60632786666667,
+      "scoreUnit": "ms/op"
+    },
+    "jvm": "Java 25 runtime (sanitized)",
+    "jvmArgs": [
+      "--enable-native-access=ALL-UNNAMED"
+    ]
+  },
+  {
+    "benchmark": "io.bluetape4k.images.benchmark.ImageLargeStreamingBenchmark.scrimage_suspendedSourceSink_pipeline",
+    "params": {
+      "scenario": "ocr-document"
+    },
+    "forks": 1,
+    "warmupIterations": 1,
+    "warmupTime": "1 s",
+    "measurementIterations": 3,
+    "measurementTime": "1 s",
+    "mode": "avgt",
+    "primaryMetric": {
+      "score": 136.77338020833335,
+      "scoreUnit": "ms/op"
+    },
+    "jvm": "Java 25 runtime (sanitized)",
+    "jvmArgs": [
+      "--enable-native-access=ALL-UNNAMED"
+    ]
+  },
+  {
+    "benchmark": "io.bluetape4k.images.benchmark.ImageLargeStreamingBenchmark.vips_byteArray_pipeline",
+    "params": {
+      "scenario": "large-photo"
+    },
+    "forks": 1,
+    "warmupIterations": 1,
+    "warmupTime": "1 s",
+    "measurementIterations": 3,
+    "measurementTime": "1 s",
+    "mode": "avgt",
+    "primaryMetric": {
+      "score": 25.12768268394309,
+      "scoreUnit": "ms/op"
+    },
+    "jvm": "Java 25 runtime (sanitized)",
+    "jvmArgs": [
+      "--enable-native-access=ALL-UNNAMED"
+    ]
+  },
+  {
+    "benchmark": "io.bluetape4k.images.benchmark.ImageLargeStreamingBenchmark.vips_byteArray_pipeline",
+    "params": {
+      "scenario": "ocr-document"
+    },
+    "forks": 1,
+    "warmupIterations": 1,
+    "warmupTime": "1 s",
+    "measurementIterations": 3,
+    "measurementTime": "1 s",
+    "mode": "avgt",
+    "primaryMetric": {
+      "score": 16.299072264550265,
+      "scoreUnit": "ms/op"
+    },
+    "jvm": "Java 25 runtime (sanitized)",
+    "jvmArgs": [
+      "--enable-native-access=ALL-UNNAMED"
+    ]
+  },
+  {
+    "benchmark": "io.bluetape4k.images.benchmark.ImageLargeStreamingBenchmark.vips_inputStream_pipeline",
+    "params": {
+      "scenario": "large-photo"
+    },
+    "forks": 1,
+    "warmupIterations": 1,
+    "warmupTime": "1 s",
+    "measurementIterations": 3,
+    "measurementTime": "1 s",
+    "mode": "avgt",
+    "primaryMetric": {
+      "score": 25.75897966282051,
+      "scoreUnit": "ms/op"
+    },
+    "jvm": "Java 25 runtime (sanitized)",
+    "jvmArgs": [
+      "--enable-native-access=ALL-UNNAMED"
+    ]
+  },
+  {
+    "benchmark": "io.bluetape4k.images.benchmark.ImageLargeStreamingBenchmark.vips_inputStream_pipeline",
+    "params": {
+      "scenario": "ocr-document"
+    },
+    "forks": 1,
+    "warmupIterations": 1,
+    "warmupTime": "1 s",
+    "measurementIterations": 3,
+    "measurementTime": "1 s",
+    "mode": "avgt",
+    "primaryMetric": {
+      "score": 16.613098715053763,
+      "scoreUnit": "ms/op"
+    },
+    "jvm": "Java 25 runtime (sanitized)",
+    "jvmArgs": [
+      "--enable-native-access=ALL-UNNAMED"
+    ]
+  },
+  {
+    "benchmark": "io.bluetape4k.images.benchmark.ImageLargeStreamingBenchmark.vips_path_pipeline",
+    "params": {
+      "scenario": "large-photo"
+    },
+    "forks": 1,
+    "warmupIterations": 1,
+    "warmupTime": "1 s",
+    "measurementIterations": 3,
+    "measurementTime": "1 s",
+    "mode": "avgt",
+    "primaryMetric": {
+      "score": 27.338096421270397,
+      "scoreUnit": "ms/op"
+    },
+    "jvm": "Java 25 runtime (sanitized)",
+    "jvmArgs": [
+      "--enable-native-access=ALL-UNNAMED"
+    ]
+  },
+  {
+    "benchmark": "io.bluetape4k.images.benchmark.ImageLargeStreamingBenchmark.vips_path_pipeline",
+    "params": {
+      "scenario": "ocr-document"
+    },
+    "forks": 1,
+    "warmupIterations": 1,
+    "warmupTime": "1 s",
+    "measurementIterations": 3,
+    "measurementTime": "1 s",
+    "mode": "avgt",
+    "primaryMetric": {
+      "score": 16.755661217486338,
+      "scoreUnit": "ms/op"
+    },
+    "jvm": "Java 25 runtime (sanitized)",
+    "jvmArgs": [
+      "--enable-native-access=ALL-UNNAMED"
+    ]
+  }
+]
