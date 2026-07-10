@@ -17,7 +17,7 @@
 <desc>Source: large-streaming-2026-07-10.md. Unit: ms/op. Direction: lower is better.</desc>
 <rect class="chart-panel" x="56" y="146" width="1448" height="610" rx="12"/>
 <text class="note" x="88" y="190">Measured ranking</text>
-<text class="axis" x="312" y="190">ms/op · lower is better</text>
+<text class="axis" x="312" y="190">ms/op - lower is better</text>
 <text class="axis" x="1410.0" y="214" text-anchor="end">0 to 215.61</text>
 <text class="note" x="780.0" y="808" text-anchor="middle">https://github.com/bluetape4k/bluetape4k-image | project: bluetape4k-image | module: images-benchmark</text>
 <rect x="1090" y="174" width="22" height="14" rx="4" fill="#dbeafe" stroke="#2563eb" stroke-width="1.4"/>

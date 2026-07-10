@@ -122,14 +122,18 @@ and the raw `kotlinx-benchmark` JSON
 | Scrimage `Path` | 187.44 ms/op | 114.77 ms/op | Color-preserving blocking path |
 | Scrimage Okio `Source`/`Sink` | 183.37 ms/op | 115.41 ms/op | Lifecycle/integration boundary, not a latency promise |
 | Scrimage suspended source/sink | 215.61 ms/op | 136.77 ms/op | Coroutine boundary with bridge overhead |
-| vips `Path` | 27.34 ms/op | 16.76 ms/op | Preferred local-file transform path when Java 25 FFM is available |
-| vips `InputStream`/`OutputStream` | 25.76 ms/op | 16.61 ms/op | Caller-owned stream boundary |
+| vips `Path` | 27.34 ms/op | 16.76 ms/op | Local-file API boundary; still buffers within the 50 MiB guard |
+| vips `InputStream`/`OutputStream` | 25.76 ms/op | 16.61 ms/op | Caller-owned stream boundary; also buffers within the 50 MiB guard |
 
 `ImageLargeStreamingBenchmark` generates deterministic large fixtures during
 JMH setup instead of committing huge binary assets. The local Java 25 row
 supports positioning Okio/suspended APIs as memory/lifecycle boundaries rather
 than latency or throughput optimizations for Scrimage. For large-file
-performance, vips `Path` remains the strongest option. See
+performance, choose the vips input boundary from the caller's existing
+resource and lifecycle rather than treating this short snapshot as a universal
+ranking. Every current vips input overload, including `Path`, validates and
+buffers the compressed input within the 50 MiB guard; neither boundary is a
+streaming-memory or guard-bypass choice. See
 [`docs/large-streaming-2026-07-10.md`](docs/large-streaming-2026-07-10.md)
 and the raw `kotlinx-benchmark` JSON
 [`docs/raw/benchmark-large-streaming-2026-07-10-macos-java25.json`](docs/raw/benchmark-large-streaming-2026-07-10-macos-java25.json).
@@ -160,11 +164,11 @@ and the raw `kotlinx-benchmark` JSON
 ## Running Benchmarks
 
 ```bash
-# Java 25 - scrimage + vips-ffm (Panama FFM, macOS/Linux)
+# Java 25 - full benchmark set, including FFM-only large streaming (macOS/Linux)
 ./gradlew :bluetape4k-images-benchmark:benchmarkBenchmark -Pvips.impl=java25
 
-# Java 21 - scrimage + JVips JNI (Linux only)
-./gradlew :bluetape4k-images-benchmark:benchmarkBenchmark -Pvips.impl=java21
+# Java 21 - selected JVips JNI-compatible benchmarks (Linux only; excludes FFM-only large streaming)
+./gradlew :bluetape4k-images-benchmark:benchmarkPipelineAllocationBenchmark :bluetape4k-images-benchmark:benchmarkMemoryProfileBenchmark :bluetape4k-images-benchmark:benchmarkIoBoundaryBenchmark :bluetape4k-images-benchmark:benchmarkIoThroughputBenchmark -Pvips.impl=java21
 
 # Focused evidence used by the 2026-05-29 reports
 JAVA_HOME=$(/usr/libexec/java_home -v 25) ./gradlew :bluetape4k-images-benchmark:benchmarkPipelineAllocationBenchmark --console=plain

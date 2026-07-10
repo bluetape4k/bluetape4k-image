@@ -79,12 +79,14 @@ The scrimage-backed `images` module accepts Okio `Source`/`Sink` and
 `SuspendedSource`/`SuspendedSink` helpers for lifecycle-safe load and write
 integration.
 
-For local large files on the libvips path, prefer `Path` entry points first:
-the large-file benchmark shows the Java 25 FFM backend has the strongest local
-file memory and throughput profile through `Path`. Use the vips Okio
-`Source`/`Sink` helpers when the caller already owns a non-file stream or a
-`bluetape4k-okio` suspended boundary. Non-Path vips loads still validate and
-buffer the compressed input within the 50 MB stream guard.
+For local files on the libvips path, use `Path` entry points when the caller
+already owns a local file path. This is an API and lifecycle choice, not a
+throughput or memory ranking from one short benchmark snapshot. Use the vips
+Okio `Source`/`Sink` helpers when the caller already owns a non-file stream or
+a `bluetape4k-okio` suspended boundary. All current vips input overloads,
+including `Path`, validate and buffer the compressed input within the 50 MiB
+input guard; `Path` does not bypass that limit or provide streaming memory
+semantics.
 
 Benchmark evidence: [`benchmark/images-benchmark/docs/large-streaming-2026-07-10.md`](benchmark/images-benchmark/docs/large-streaming-2026-07-10.md).
 
