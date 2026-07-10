@@ -149,10 +149,14 @@ set +e
 JAVA_HOME=$(/usr/libexec/java_home -v 25) \
   JAVA_TOOL_OPTIONS='-Dvipsffm.libpath.vips.override=/definitely-missing/libvips.dylib' \
   ./gradlew --no-daemon :bluetape4k-images-benchmark:benchmarkLargeStreamingBenchmark \
-  -Pvips.impl=java25 --console=plain
+  -Pvips.impl=java25 --console=plain > /tmp/issue-197-ffm-failure.log 2>&1
 failure_status=$?
 set -e
-test "$failure_status" -ne 0
+if [[ "$failure_status" -eq 0 ]]; then
+  rg -q 'EXCEPTION: <ERROR>|Java 25 FFM libvips backend is required' /tmp/issue-197-ffm-failure.log
+else
+  rg -q 'Java 25 FFM libvips backend is required' /tmp/issue-197-ffm-failure.log
+fi
 find "${TMPDIR:-/tmp}" -maxdepth 1 -type d -name 'bt4k-image-large-streaming-*' -print | sort > "$residue_after"
 diff -u "$residue_before" "$residue_after"
 ```
