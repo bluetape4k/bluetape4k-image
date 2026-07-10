@@ -1,6 +1,6 @@
 package io.bluetape4k.images.vips.java21
 
-import io.bluetape4k.images.IncubatingImageApi
+import io.bluetape4k.images.vips.VipsIncubatingApi
 import io.bluetape4k.images.vips.VipsEncodeException
 import io.bluetape4k.images.vips.VipsEncodeOptions
 import io.bluetape4k.images.vips.VipsImageFormat
@@ -27,7 +27,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardOpenOption.READ
 
-@OptIn(IncubatingImageApi::class)
+@OptIn(VipsIncubatingApi::class)
 class JVipsImageTest : AbstractJVipsTest() {
 
     companion object {

@@ -2,13 +2,13 @@ package io.bluetape4k.images.vips.java21
 
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldContain
-import io.bluetape4k.images.IncubatingImageApi
+import io.bluetape4k.images.vips.VipsIncubatingApi
 import io.bluetape4k.images.vips.VipsCodecDirection
 import io.bluetape4k.images.vips.VipsCodecSupport
 import io.bluetape4k.images.vips.VipsImageFormat
 import org.junit.jupiter.api.Test
 
-@OptIn(IncubatingImageApi::class)
+@OptIn(VipsIncubatingApi::class)
 class JVipsCodecCapabilityTest {
 
     @Test

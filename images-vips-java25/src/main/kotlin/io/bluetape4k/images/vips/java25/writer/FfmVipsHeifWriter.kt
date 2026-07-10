@@ -4,7 +4,7 @@ import app.photofox.vipsffm.VImage
 import app.photofox.vipsffm.VipsError
 import app.photofox.vipsffm.VipsOption
 import app.photofox.vipsffm.enums.VipsForeignHeifCompression
-import io.bluetape4k.images.IncubatingImageApi
+import io.bluetape4k.images.vips.VipsIncubatingApi
 import io.bluetape4k.images.vips.VipsEncodeException
 import io.bluetape4k.images.vips.VipsEncodeOptions
 import io.bluetape4k.images.vips.VipsImageFormat
@@ -12,7 +12,7 @@ import io.bluetape4k.images.vips.VipsImageFormat
 /**
  * vips-ffm HEIF-family encoder for AVIF and HEIC.
  */
-@OptIn(IncubatingImageApi::class)
+@OptIn(VipsIncubatingApi::class)
 internal object FfmVipsHeifWriter {
 
     fun writeToBytes(image: VImage, format: VipsImageFormat, options: VipsEncodeOptions): ByteArray {

@@ -1,6 +1,6 @@
 package io.bluetape4k.images.vips.java25
 
-import io.bluetape4k.images.IncubatingImageApi
+import io.bluetape4k.images.vips.VipsIncubatingApi
 import io.bluetape4k.images.vips.VipsCodecCapability
 import io.bluetape4k.images.vips.VipsCodecCapabilityReport
 import io.bluetape4k.images.vips.VipsCodecDirection
@@ -37,7 +37,7 @@ import java.util.concurrent.atomic.AtomicReference
  *
  * **Spring devtools 경고**: [shutdown]을 `@PreDestroy` 빈 메서드로 등록하지 마십시오.
  */
-@OptIn(IncubatingImageApi::class)
+@OptIn(VipsIncubatingApi::class)
 object FfmVipsRuntime : VipsRuntime, KLogging() {
 
     private enum class RuntimeState { UNINITIALIZED, INITIALIZING, INITIALIZED, SHUTDOWN }

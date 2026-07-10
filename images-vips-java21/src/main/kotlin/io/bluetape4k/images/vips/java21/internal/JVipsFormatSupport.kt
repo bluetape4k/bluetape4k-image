@@ -1,10 +1,10 @@
 package io.bluetape4k.images.vips.java21.internal
 
-import io.bluetape4k.images.IncubatingImageApi
+import io.bluetape4k.images.vips.VipsIncubatingApi
 import io.bluetape4k.images.vips.VipsEncodeException
 import io.bluetape4k.images.vips.VipsImageFormat
 
-@OptIn(IncubatingImageApi::class)
+@OptIn(VipsIncubatingApi::class)
 internal object JVipsFormatSupport {
 
     fun requireEncoding(format: VipsImageFormat) {

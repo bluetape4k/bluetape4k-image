@@ -2,7 +2,7 @@ package io.bluetape4k.images.vips.java25
 
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldContain
-import io.bluetape4k.images.IncubatingImageApi
+import io.bluetape4k.images.vips.VipsIncubatingApi
 import io.bluetape4k.images.vips.VipsCodecDirection
 import io.bluetape4k.images.vips.VipsCodecSupport
 import io.bluetape4k.images.vips.VipsImageFormat
@@ -12,7 +12,7 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
-@OptIn(IncubatingImageApi::class)
+@OptIn(VipsIncubatingApi::class)
 class FfmVipsCodecCapabilityTest {
 
     private val testProbe = object : FfmVipsCodecProbe {

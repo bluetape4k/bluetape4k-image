@@ -2,7 +2,7 @@ package io.bluetape4k.images.vips.java21
 
 import com.criteo.vips.VipsImage
 import com.criteo.vips.VipsException
-import io.bluetape4k.images.IncubatingImageApi
+import io.bluetape4k.images.vips.VipsIncubatingApi
 import io.bluetape4k.images.vips.VipsDecodeException
 import io.bluetape4k.images.vips.VipsImageFormat
 import io.bluetape4k.images.vips.VipsImage as VipsImageApi
@@ -192,13 +192,13 @@ private fun readBounded(stream: InputStream): ByteArray {
 private fun readPathBytesBounded(path: Path): ByteArray =
     path.toFile().inputStream().use(::readBounded)
 
-@OptIn(IncubatingImageApi::class)
+@OptIn(VipsIncubatingApi::class)
 private fun checkFormatAllowlist(bytes: ByteArray) {
     if (bytes.detectAllowedFormat() != null) return
     throw VipsDecodeException("Unsupported image format — only JPEG, PNG, WebP, AVIF, and HEIC are allowed")
 }
 
-@OptIn(IncubatingImageApi::class)
+@OptIn(VipsIncubatingApi::class)
 private fun ByteArray.detectAllowedFormat(): VipsImageFormat? {
     if (startsWith(JPEG_MAGIC)) return VipsImageFormat.JPEG
     if (startsWith(PNG_MAGIC)) return VipsImageFormat.PNG

@@ -2,7 +2,7 @@ package io.bluetape4k.images.vips.java25
 
 import app.photofox.vipsffm.VImage
 import app.photofox.vipsffm.VipsError
-import io.bluetape4k.images.IncubatingImageApi
+import io.bluetape4k.images.vips.VipsIncubatingApi
 import io.bluetape4k.images.vips.VipsDecodeException
 import io.bluetape4k.images.vips.VipsImage
 import io.bluetape4k.images.vips.VipsImageFormat
@@ -173,14 +173,14 @@ private fun readBounded(stream: InputStream): ByteArray {
 private fun readPathBytesBounded(path: Path): ByteArray =
     Files.newInputStream(path).use(::readBounded)
 
-@OptIn(IncubatingImageApi::class)
+@OptIn(VipsIncubatingApi::class)
 private fun checkFormatAllowlist(bytes: ByteArray) {
     val format = bytes.detectAllowedFormat()
         ?: throw VipsDecodeException("Unsupported image format — only JPEG, PNG, WebP, AVIF, and HEIC are allowed")
     FfmVipsFormatSupport.requireDecoding(format)
 }
 
-@OptIn(IncubatingImageApi::class)
+@OptIn(VipsIncubatingApi::class)
 private fun ByteArray.detectAllowedFormat(): VipsImageFormat? {
     if (startsWith(JPEG_MAGIC)) return VipsImageFormat.JPEG
     if (startsWith(PNG_MAGIC)) return VipsImageFormat.PNG

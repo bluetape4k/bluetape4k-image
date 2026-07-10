@@ -1,6 +1,6 @@
 package io.bluetape4k.images.vips.java21
 
-import io.bluetape4k.images.IncubatingImageApi
+import io.bluetape4k.images.vips.VipsIncubatingApi
 import io.bluetape4k.images.vips.VipsCodecCapability
 import io.bluetape4k.images.vips.VipsCodecCapabilityReport
 import io.bluetape4k.images.vips.VipsCodecDirection
@@ -34,7 +34,7 @@ import java.util.concurrent.atomic.AtomicReference
  * devtools가 `ApplicationContext`를 재시작할 때 [shutdown] → [init] 순으로 호출되어
  * `VipsInitializationException`이 발생합니다. `Runtime.addShutdownHook`만 사용하십시오.
  */
-@OptIn(IncubatingImageApi::class)
+@OptIn(VipsIncubatingApi::class)
 object JVipsRuntime : VipsRuntime, KLogging() {
 
     private enum class RuntimeState { UNINITIALIZED, INITIALIZING, INITIALIZED, SHUTDOWN }
