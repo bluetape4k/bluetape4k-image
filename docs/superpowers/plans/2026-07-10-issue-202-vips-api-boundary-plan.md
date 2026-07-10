@@ -162,9 +162,11 @@ No module registration, BOM/catalog, CI workflow, dependency upgrade, runtime co
 
   tasks.named<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>("compileUnoptedVipsOptInFixtureKotlin") {
       compilerOptions.allWarningsAsErrors.set(true)
+      onlyIf { providers.gradleProperty("verifyVipsOptInFixtures").isPresent }
   }
   tasks.named<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>("compileOptedVipsOptInFixtureKotlin") {
       compilerOptions.allWarningsAsErrors.set(true)
+      onlyIf { providers.gradleProperty("verifyVipsOptInFixtures").isPresent }
   }
   ~~~
 
@@ -180,7 +182,7 @@ No module registration, BOM/catalog, CI workflow, dependency upgrade, runtime co
 
 - [ ] **Step 2: Verify strict compilation fails with the marker diagnostic.**
 
-  Run: `./gradlew :bluetape4k-images-vips-api:compileUnoptedVipsOptInFixtureKotlin --rerun-tasks --console=plain`
+  Run: `./gradlew :bluetape4k-images-vips-api:compileUnoptedVipsOptInFixtureKotlin -PverifyVipsOptInFixtures --rerun-tasks --console=plain`
 
   Expected: `FAILURE` caused by warnings-as-errors; the diagnostic names `VipsIncubatingApi`. Record this expected failure in the Step DoD evidence.
 
@@ -195,7 +197,7 @@ No module registration, BOM/catalog, CI workflow, dependency upgrade, runtime co
   }
   ~~~
 
-  Run: `./gradlew :bluetape4k-images-vips-api:compileOptedVipsOptInFixtureKotlin --rerun-tasks --console=plain`
+  Run: `./gradlew :bluetape4k-images-vips-api:compileOptedVipsOptInFixtureKotlin -PverifyVipsOptInFixtures --rerun-tasks --console=plain`
 
   Expected: `BUILD SUCCESSFUL` with no opt-in warning promoted to an error.
 
@@ -433,14 +435,14 @@ No module registration, BOM/catalog, CI workflow, dependency upgrade, runtime co
     :bluetape4k-images-vips-java25:compileTestKotlin \
     :bluetape4k-images-vips-api:generatePomFileForBluetapeImagePublication \
     :bluetape4k-images-vips-api:generateMetadataFileForBluetapeImagePublication \
-    --rerun-tasks
+    -PverifyVipsOptInFixtures --rerun-tasks
   ~~~
 
   Expected: `BUILD SUCCESSFUL`. Run the unopted fixture separately because its expected failure is a required assertion, not a normal build success.
 
 - [ ] **Step 2: Re-run the unopted expected-failure command and inspect the diagnostic.**
 
-  Run: `./gradlew :bluetape4k-images-vips-api:compileUnoptedVipsOptInFixtureKotlin --rerun-tasks --console=plain`
+  Run: `./gradlew :bluetape4k-images-vips-api:compileUnoptedVipsOptInFixtureKotlin -PverifyVipsOptInFixtures --rerun-tasks --console=plain`
 
   Expected: non-zero exit and a diagnostic containing `VipsIncubatingApi`.
 

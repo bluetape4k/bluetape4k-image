@@ -38,6 +38,8 @@
   - assertion results: `pom_forbidden=0`, `normal_metadata_boundary=pass`, `fixture_metadata_boundary=pass`.
 - `VipsIncubatingApi`는 AVIF/HEIC enum entry와 내부 capability implementation 사용으로 한정되고, 기존 `IncubatingImageApi` import는 Vips API/Java 21/Java 25 소스에서 제거됐다.
 - core AVIF/HEIC KDoc은 binding-neutral이며 README EN/KO 쌍이 함께 갱신됐다.
+- Default CI `build -x test` skips the intentional negative fixture; the opted/unopted compiler contracts execute only with `-PverifyVipsOptInFixtures`.
+- CI regression repair: the first PR build ran the negative fixture through the default lifecycle. The fixture tasks are now property-gated; local CI-equivalent lifecycle exit is `0`, explicit opted exit is `0`, and explicit unopted exit is expected `1`.
 - CI workflow, module registration, diagram, concurrency helper, CHANGELOG 변경은 범위 밖이다. 새 module/새 dependency/production concurrency 변경도 없다.
 
 ## Gate verdict
