@@ -1,7 +1,7 @@
 package io.bluetape4k.images.vips.java21
 
 import com.criteo.vips.VipsException
-import io.bluetape4k.images.IncubatingImageApi
+import io.bluetape4k.images.vips.VipsIncubatingApi
 import io.bluetape4k.images.vips.VipsEncodeException
 import io.bluetape4k.images.vips.VipsEncodeOptions
 import io.bluetape4k.images.vips.VipsImage
@@ -29,7 +29,7 @@ import java.util.concurrent.atomic.AtomicBoolean
  *
  * `use {}` 블록 또는 `close()`로 반드시 리소스를 해제하십시오.
  */
-@OptIn(IncubatingImageApi::class)
+@OptIn(VipsIncubatingApi::class)
 internal class JVipsImage(private val handle: NativeHandle) : VipsImage {
 
     private val closed = AtomicBoolean(false)

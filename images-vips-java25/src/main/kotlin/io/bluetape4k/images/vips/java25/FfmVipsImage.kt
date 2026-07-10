@@ -2,7 +2,7 @@ package io.bluetape4k.images.vips.java25
 
 import app.photofox.vipsffm.VImage
 import app.photofox.vipsffm.VipsError
-import io.bluetape4k.images.IncubatingImageApi
+import io.bluetape4k.images.vips.VipsIncubatingApi
 import io.bluetape4k.images.vips.VipsDecodeException
 import io.bluetape4k.images.vips.VipsEncodeException
 import io.bluetape4k.images.vips.VipsEncodeOptions
@@ -35,7 +35,7 @@ import java.util.concurrent.atomic.AtomicBoolean
  * @param arena 이 이미지를 소유하는 Arena
  * @param vipsImage 래핑할 vips-ffm VImage
  */
-@OptIn(IncubatingImageApi::class)
+@OptIn(VipsIncubatingApi::class)
 internal class FfmVipsImage(
     private val arena: Arena,
     private val vipsImage: VImage,
