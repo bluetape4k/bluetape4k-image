@@ -294,9 +294,16 @@ loader/saver support on the deployment host.
 Inspect codec status before enabling AVIF/HEIC routes:
 
 ```kotlin
+import io.bluetape4k.images.vips.VipsImageFormat
+import io.bluetape4k.images.vips.VipsIncubatingApi
+import io.bluetape4k.images.vips.java25.FfmVipsRuntime
+
+@OptIn(VipsIncubatingApi::class)
+fun inspectCodecStatus() {
 val report = FfmVipsRuntime.codecCapabilityReport()
 val avif = report.codec(VipsImageFormat.AVIF)
 val heic = report.codec(VipsImageFormat.HEIC)
+}
 ```
 
 The report checks `heifload_buffer` for decode and `heifsave_buffer` for encode.

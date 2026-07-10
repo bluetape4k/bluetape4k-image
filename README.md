@@ -208,9 +208,17 @@ native HEIF-family codecs fail as sanitized `VipsDecodeException` or
 small AVIF/HEIC decode or encode smoke test on the same machine that runs the
 JVM.
 
-Each vips runtime exposes a structured codec report and an opt-in smoke helper:
+Each vips runtime exposes a structured codec report and an opt-in smoke helper.
+The AVIF/HEIC capability surface is binding-specific and is marked with
+`VipsIncubatingApi`:
 
 ```kotlin
+import io.bluetape4k.images.vips.VipsImageFormat
+import io.bluetape4k.images.vips.VipsIncubatingApi
+import io.bluetape4k.images.vips.VipsRuntime
+
+@OptIn(VipsIncubatingApi::class)
+fun verifyHeic(runtime: VipsRuntime, heicSampleBytes: ByteArray) {
 val report = runtime.codecCapabilityReport()
 val heic = report.codec(VipsImageFormat.HEIC)
 
@@ -218,6 +226,7 @@ val smoke = runtime.smokeTestCodec(
     sampleBytes = heicSampleBytes,
     outputFormat = VipsImageFormat.HEIC,
 )
+}
 ```
 
 Java 25 reports native operation availability through `heifload_buffer` and

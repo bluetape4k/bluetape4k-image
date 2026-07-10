@@ -83,9 +83,16 @@ or `UNKNOWN` with backend-specific native operation clues such as
 `heifload_buffer` and `heifsave_buffer`.
 
 For deployment checks, run `VipsRuntime.smokeTestCodec(...)` with small
-caller-provided AVIF or HEIC samples from the same host image pipeline:
+caller-provided AVIF or HEIC samples from the same host image pipeline. This
+binding-specific capability API is marked with `VipsIncubatingApi`:
 
 ```kotlin
+import io.bluetape4k.images.vips.VipsImageFormat
+import io.bluetape4k.images.vips.VipsIncubatingApi
+import io.bluetape4k.images.vips.VipsRuntime
+
+@OptIn(VipsIncubatingApi::class)
+fun verifyAvif(runtime: VipsRuntime, avifSampleBytes: ByteArray) {
 val report = runtime.codecCapabilityReport()
 val avif = report.codec(VipsImageFormat.AVIF)
 
@@ -94,6 +101,7 @@ val smoke = runtime.smokeTestCodec(
     outputFormat = VipsImageFormat.AVIF,
 )
 require(smoke.succeeded) { smoke.failureReason.orEmpty() }
+}
 ```
 
 ## Usage Examples
@@ -356,6 +364,16 @@ dependencies {
 ```
 
 ## testFixtures
+
+Repository tests can use the local test-fixtures variant for pixel helpers
+without adding an image implementation dependency to the module's main API:
+
+```kotlin
+dependencies {
+    // Repository test source only: uses the local test-fixtures variant.
+    testImplementation(testFixtures(project(":bluetape4k-images-vips-api")))
+}
+```
 
 ### VipsGoldenAssert
 

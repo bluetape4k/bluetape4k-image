@@ -33,20 +33,13 @@ data class HeicReadOptions(
 }
 
 /**
- * HEIC/HEIF 형식에서 이미지를 읽는 코루틴 기반 reader 인터페이스입니다.
+ * Reads an image in HEIC/HEIF format.
  *
- * ## 동작/계약
- * - 이 인터페이스는 incubating 상태입니다 ([IncubatingImageApi]).
- * - The core `images` module only defines the contract.
- * - Runtime HEIC support is provided by a libvips backend such as `images-vips-java21` or `images-vips-java25`.
- * - `input` 스트림은 호출자가 닫을 책임이 있습니다.
- *
- * ```kotlin
- * @OptIn(IncubatingImageApi::class)
- * File("photo.heic").inputStream().use { input ->
- *     val image: VipsImage = vipsRuntime.load(input)
- * }
- * ```
+ * ## Contract
+ * - This interface is incubating ([IncubatingImageApi]).
+ * - The core `images` module declares the decoding contract only.
+ * - A compatible backend supplies runtime HEIC support.
+ * - The caller is responsible for closing [input].
  *
  * @see HeicReadOptions
  * @see IncubatingImageApi
@@ -55,7 +48,7 @@ data class HeicReadOptions(
 interface HeicReader {
 
     /**
-     * [input] HEIC/HEIF 스트림에서 이미지를 읽습니다.
+     * Reads an image from a HEIC/HEIF [input] stream.
      *
      * @param input   HEIC/HEIF 데이터를 담은 [InputStream]
      * @param options HEIC 읽기 옵션 (기본값: [HeicReadOptions.Default])

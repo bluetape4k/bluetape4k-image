@@ -288,9 +288,16 @@ Java 21 백엔드는 decode 전에 AVIF/HEIC ISO BMFF brand를 allowlist로 검�
 AVIF/HEIC route를 활성화하기 전에 codec status를 확인하세요.
 
 ```kotlin
+import io.bluetape4k.images.vips.VipsImageFormat
+import io.bluetape4k.images.vips.VipsIncubatingApi
+import io.bluetape4k.images.vips.java21.JVipsRuntime
+
+@OptIn(VipsIncubatingApi::class)
+fun inspectCodecStatus() {
 val report = JVipsRuntime.codecCapabilityReport()
 val avif = report.codec(VipsImageFormat.AVIF)
 val heic = report.codec(VipsImageFormat.HEIC)
+}
 ```
 
 JVips는 native libvips operation을 직접 검사할 수 없으므로 AVIF/HEIC decode와 AVIF

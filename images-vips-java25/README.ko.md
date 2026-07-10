@@ -294,9 +294,16 @@ compression으로 매핑합니다. 두 경로 모두 배포 호스트의 native 
 AVIF/HEIC route를 활성화하기 전에 codec status를 확인하세요.
 
 ```kotlin
+import io.bluetape4k.images.vips.VipsImageFormat
+import io.bluetape4k.images.vips.VipsIncubatingApi
+import io.bluetape4k.images.vips.java25.FfmVipsRuntime
+
+@OptIn(VipsIncubatingApi::class)
+fun inspectCodecStatus() {
 val report = FfmVipsRuntime.codecCapabilityReport()
 val avif = report.codec(VipsImageFormat.AVIF)
 val heic = report.codec(VipsImageFormat.HEIC)
+}
 ```
 
 Report는 decode용 `heifload_buffer`와 encode용 `heifsave_buffer`를 확인합니다.

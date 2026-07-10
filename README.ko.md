@@ -195,8 +195,15 @@ sanitized `VipsDecodeException` 또는 `VipsEncodeException`으로 실패합니�
 capability를 확인하세요.
 
 각 vips runtime은 구조화된 codec report와 opt-in smoke helper를 제공합니다.
+AVIF/HEIC capability surface는 binding 전용이며 `VipsIncubatingApi`로 표시됩니다.
 
 ```kotlin
+import io.bluetape4k.images.vips.VipsImageFormat
+import io.bluetape4k.images.vips.VipsIncubatingApi
+import io.bluetape4k.images.vips.VipsRuntime
+
+@OptIn(VipsIncubatingApi::class)
+fun verifyHeic(runtime: VipsRuntime, heicSampleBytes: ByteArray) {
 val report = runtime.codecCapabilityReport()
 val heic = report.codec(VipsImageFormat.HEIC)
 
@@ -204,6 +211,7 @@ val smoke = runtime.smokeTestCodec(
     sampleBytes = heicSampleBytes,
     outputFormat = VipsImageFormat.HEIC,
 )
+}
 ```
 
 Java 25는 `heifload_buffer`, `heifsave_buffer` native operation availability를
