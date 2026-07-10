@@ -350,13 +350,13 @@ repository에 추가하지 않도록 fixture는 JMH setup에서 생성합니다.
 
 | Scenario | 생성 크기 | Transform |
 |----------|-----------|-----------|
-| `large-photo` | 4032x3024 | 1920x1440으로 resize, grayscale, JPEG encode |
-| `ocr-document` | 2480x3508 | 1240x1754로 resize, grayscale, JPEG encode |
+| `large-photo` | 4032x3024 | 1920x1440으로 resize, JPEG encode |
+| `ocr-document` | 2480x3508 | 1240x1754로 resize, JPEG encode |
 
 | 벤치마크 그룹 | 경계 |
 |----------------|------|
 | `scrimage_*_pipeline` | `ByteArray`, `Path`, `InputStream`/`OutputStream`, Okio `Source`/`Sink`, suspended file source/sink |
-| `vips_*_pipeline` | Java 25 FFM 또는 Java 21 JNI 사용 가능 시 `ByteArray`, `Path`, `InputStream`/`OutputStream` |
+| `vips_*_pipeline` | Java 25 FFM backend를 필수로 사용하는 `ByteArray`, `Path`, `InputStream`/`OutputStream` |
 
 ### `VipsBenchmarkState`
 

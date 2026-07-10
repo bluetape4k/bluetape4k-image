@@ -347,13 +347,13 @@ generated during JMH setup to avoid committing large binary files.
 
 | Scenario | Generated dimensions | Transform |
 |----------|----------------------|-----------|
-| `large-photo` | 4032x3024 | resize to 1920x1440, grayscale, JPEG encode |
-| `ocr-document` | 2480x3508 | resize to 1240x1754, grayscale, JPEG encode |
+| `large-photo` | 4032x3024 | resize to 1920x1440, JPEG encode |
+| `ocr-document` | 2480x3508 | resize to 1240x1754, JPEG encode |
 
 | Benchmark group | Boundaries |
 |-----------------|------------|
 | `scrimage_*_pipeline` | `ByteArray`, `Path`, `InputStream`/`OutputStream`, Okio `Source`/`Sink`, suspended file source/sink |
-| `vips_*_pipeline` | `ByteArray`, `Path`, `InputStream`/`OutputStream` when Java 25 FFM or Java 21 JNI is available |
+| `vips_*_pipeline` | `ByteArray`, `Path`, `InputStream`/`OutputStream` with the required Java 25 FFM backend |
 
 ### `VipsBenchmarkState`
 
