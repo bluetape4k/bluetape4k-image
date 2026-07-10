@@ -10,32 +10,29 @@
 
 ## Benchmark Results
 
-> AverageTime ms/op. Current macOS Java 25 run: [`docs/benchmark-results-2026-05-25.md`](docs/benchmark-results-2026-05-25.md). Historical CI Linux rows remain from [`docs/benchmark-results-2026-04-29.md`](docs/benchmark-results-2026-04-29.md).
+> AverageTime ms/op; lower is better. Current comparable macOS Java 25 FFM evidence uses committed natural-photo fixtures: [`docs/benchmark-results-2026-05-28-natural-photos.md`](docs/benchmark-results-2026-05-28-natural-photos.md) and its [raw JSON](docs/raw/benchmark-results-2026-05-28-macos-java25-natural-photos.json). Historical CI Linux rows are intentionally excluded because they do not use the same fixture set.
 
-### Resize (4K 3840×2160 → 1920×1080)
+### Resize (natural 4K photo → 1920×1080)
 
 ![Resize latency benchmark chart](../../docs/images/readme-charts/images-benchmark-resize-latency-chart-01.png)
 
-| Environment | scrimage (ms/op) | vips (ms/op) | Speedup |
-|-------------|-----------------|--------------|---------|
-| macOS, java25 vips-ffm | 65.64 ± 0.76 | 0.170 ± 0.006 | **386×** |
-| CI Linux, java25 | 187.29 ± 9.07 | 0.591 ± 0.046 | **317×** |
-| CI Linux, java21 | 195.63 ± 7.39 | 0.495 ± 0.062 | **395×** |
+| Natural photo | scrimage (ms/op) | vips Java 25 FFM (ms/op) | Speedup |
+|---------------|-----------------|---------------------------|---------|
+| `cafe` | 114.885 ± 3.207 | 0.257 ± 0.083 | **446×** |
+| `landscape` | 115.641 ± 2.242 | 0.244 ± 0.028 | **473×** |
 
-### Encode (4K photo image)
+### Encode (natural 4K photo)
 
 ![Encode latency benchmark chart](../../docs/images/readme-charts/images-benchmark-encode-latency-chart-01.png)
 
-| Format | Environment | scrimage (ms/op) | vips (ms/op) | Speedup |
-|--------|-------------|-----------------|--------------|---------|
-| JPEG | macOS, java25 vips-ffm | 46.55 ± 0.75 | 15.18 ± 0.55 | **3.1×** |
-| JPEG | CI Linux, java25 | 171.16 ± 121.3 | 37.20 ± 0.99  | **4.6×** |
-| JPEG | CI Linux, java21 | 161.09 ± 38.9  | 37.22 ± 1.50  | **4.3×** |
-| PNG  | macOS, java25 vips-ffm | 84.91 ± 4.21 | 46.91 ± 0.52 | **1.8×** |
-| PNG  | CI Linux, java25 | 249.01 ± 2.14  | 137.95 ± 2.93 | **1.8×** |
-| PNG  | CI Linux, java21 | 246.44 ± 2.14  | 255.90 ± 10.2 | −1.04× ⚠️ |
+| Format | Natural photo | scrimage (ms/op) | vips Java 25 FFM (ms/op) | Speedup |
+|--------|---------------|-----------------|---------------------------|---------|
+| JPEG | `cafe` | 137.947 ± 2.417 | 58.351 ± 23.828 | **2.4×** |
+| JPEG | `landscape` | 144.961 ± 5.511 | 46.749 ± 6.066 | **3.1×** |
+| PNG | `cafe` | 884.105 ± 156.993 | 585.288 ± 186.247 | **1.5×** |
+| PNG | `landscape` | 989.370 ± 346.605 | 546.388 ± 25.444 | **1.8×** |
 
-> ⚠️ **java21 (JNI) PNG**: JNI boundary overhead exceeds compression gain vs scrimage. Use java25 (FFM) for PNG encoding on Linux.
+> These are natural-photo snapshots on one macOS Java 25 FFM host. They are not a cross-host or Java 21 JNI ranking.
 
 ### Vips Backend Comparison
 
