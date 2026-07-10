@@ -33,19 +33,12 @@ data class AvifEncodeOptions(
 }
 
 /**
- * AVIF 형식으로 이미지를 기록하는 코루틴 기반 writer 인터페이스입니다.
+ * Writes an image in AVIF format.
  *
- * ## 동작/계약
- * - 이 인터페이스는 incubating 상태입니다 ([IncubatingImageApi]).
- * - The core `images` module only defines the contract.
- * - Runtime AVIF support is provided by a libvips backend such as `images-vips-java21` or `images-vips-java25`.
- *
- * ```kotlin
- * @OptIn(IncubatingImageApi::class)
- * val image: VipsImage = vipsRuntime.load(input)
- * val bos = ByteArrayOutputStream()
- * image.writeTo(bos, VipsImageFormat.AVIF)
- * ```
+ * ## Contract
+ * - This interface is incubating ([IncubatingImageApi]).
+ * - The core `images` module declares the encoding contract only.
+ * - A compatible backend supplies runtime AVIF support.
  *
  * @see AvifEncodeOptions
  * @see IncubatingImageApi
@@ -54,7 +47,7 @@ data class AvifEncodeOptions(
 interface AvifWriter {
 
     /**
-     * [image]를 AVIF 형식으로 [out]에 씁니다.
+     * Writes [image] as AVIF to [out].
      *
      * @param image   쓸 이미지
      * @param out     쓰기 대상 [OutputStream]

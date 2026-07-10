@@ -83,9 +83,16 @@ stable format으로 표시하고, AVIF/HEIC decode/encode는 `AVAILABLE`, `UNAVA
 `heifsave_buffer` 같은 native operation 단서도 함께 제공합니다.
 
 배포 환경 검증에는 같은 호스트 이미지 파이프라인에서 준비한 작은 AVIF/HEIC 샘플로
-`VipsRuntime.smokeTestCodec(...)`을 실행하십시오.
+`VipsRuntime.smokeTestCodec(...)`을 실행하십시오. 이 binding 전용 capability API는
+`VipsIncubatingApi`로 표시됩니다.
 
 ```kotlin
+import io.bluetape4k.images.vips.VipsImageFormat
+import io.bluetape4k.images.vips.VipsIncubatingApi
+import io.bluetape4k.images.vips.VipsRuntime
+
+@OptIn(VipsIncubatingApi::class)
+fun verifyAvif(runtime: VipsRuntime, avifSampleBytes: ByteArray) {
 val report = runtime.codecCapabilityReport()
 val avif = report.codec(VipsImageFormat.AVIF)
 
@@ -94,6 +101,7 @@ val smoke = runtime.smokeTestCodec(
     outputFormat = VipsImageFormat.AVIF,
 )
 require(smoke.succeeded) { smoke.failureReason.orEmpty() }
+}
 ```
 
 ## 사용 예시
@@ -356,6 +364,16 @@ dependencies {
 ```
 
 ## testFixtures
+
+Repository 테스트는 모듈의 main API에 이미지 구현 의존성을 추가하지 않고, pixel helper를
+위해 local test-fixtures variant를 사용할 수 있습니다.
+
+```kotlin
+dependencies {
+    // Repository test source only: uses the local test-fixtures variant.
+    testImplementation(testFixtures(project(":bluetape4k-images-vips-api")))
+}
+```
 
 ### VipsGoldenAssert
 

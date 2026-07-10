@@ -1,3 +1,8 @@
+import groovy.util.Node
+import org.gradle.api.publish.PublishingExtension
+import org.gradle.api.publish.maven.MavenPublication
+import org.gradle.kotlin.dsl.configure
+
 plugins {
     `java-test-fixtures`
 }
@@ -44,4 +49,33 @@ dependencies {
 
     testImplementation(libs.bluetape4k.junit5)
     testImplementation(libs.kotlinx.coroutines.test)
+}
+
+extensions.configure<PublishingExtension> {
+    publications.named<MavenPublication>("BluetapeImage") {
+        pom.withXml {
+            val dependencies = asNode()
+                .children()
+                .filterIsInstance<Node>()
+                .firstOrNull { it.name().toString().substringAfter('}') == "dependencies" }
+
+            dependencies
+                ?.children()
+                ?.filterIsInstance<Node>()
+                ?.filter { dependency ->
+                    dependency.name().toString().substringAfter('}') == "dependency" &&
+                        dependency.children()
+                            .filterIsInstance<Node>()
+                            .associate { it.name().toString().substringAfter('}') to it.text() }
+                            .let { coordinates ->
+                                "${coordinates["groupId"]}:${coordinates["artifactId"]}" in setOf(
+                                    "io.github.bluetape4k.image:bluetape4k-images",
+                                    "com.sksamuel.scrimage:scrimage-core",
+                                    "com.twelvemonkeys.imageio:imageio-core",
+                                )
+                            }
+                }
+                ?.forEach(dependencies::remove)
+        }
+    }
 }

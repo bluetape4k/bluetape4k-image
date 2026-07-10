@@ -289,9 +289,16 @@ sanitized `VipsDecodeException` or `VipsEncodeException`.
 Inspect codec status before enabling AVIF/HEIC routes:
 
 ```kotlin
+import io.bluetape4k.images.vips.VipsImageFormat
+import io.bluetape4k.images.vips.VipsIncubatingApi
+import io.bluetape4k.images.vips.java21.JVipsRuntime
+
+@OptIn(VipsIncubatingApi::class)
+fun inspectCodecStatus() {
 val report = JVipsRuntime.codecCapabilityReport()
 val avif = report.codec(VipsImageFormat.AVIF)
 val heic = report.codec(VipsImageFormat.HEIC)
+}
 ```
 
 JVips cannot inspect native libvips operations directly, so AVIF/HEIC decode and
