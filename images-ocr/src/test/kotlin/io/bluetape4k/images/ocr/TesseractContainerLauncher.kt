@@ -7,8 +7,10 @@ private const val REUSE_PROPERTY = "ocr.container.reuse"
 
 internal fun tesseractContainerReuseEnabled(
     reuseRequested: String? = System.getProperty(REUSE_PROPERTY),
-    ci: String? = System.getenv("CI"),
-): Boolean = reuseRequested.equals("true", ignoreCase = true) && !ci.equals("true", ignoreCase = true)
+    environment: Map<String, String> = System.getenv(),
+): Boolean = reuseRequested.equals("true", ignoreCase = true) &&
+    "CI" !in environment &&
+    "GITHUB_ACTIONS" !in environment
 
 internal object TesseractContainerLauncher {
 
