@@ -183,3 +183,9 @@ Nightly가 사용하는 OCR gate입니다.
 ```bash
 ./gradlew :bluetape4k-images-ocr:test -Docr.container.enabled=true
 ```
+
+테스트 launcher는 module test JVM마다 재사용하지 않는 Tesseract container 하나를
+시작합니다. 개발자가 로컬에서 container reuse를 명시적으로 사용하려면
+`~/.testcontainers.properties`에서 reusable container를 활성화하고
+`-Docr.container.reuse=true`를 전달해야 합니다. `CI=true`에서는 이 opt-in을
+무시하며, 테스트와 예제는 reuse를 암묵적으로 활성화하지 않습니다.

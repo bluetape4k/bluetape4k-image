@@ -185,3 +185,9 @@ used by GitHub CI and Nightly:
 ```bash
 ./gradlew :bluetape4k-images-ocr:test -Docr.container.enabled=true
 ```
+
+The test launcher starts one non-reusable Tesseract container per module test
+JVM. Developers may explicitly opt into local reuse by enabling reusable
+containers in `~/.testcontainers.properties` and passing
+`-Docr.container.reuse=true`. The opt-in is ignored when `CI=true`; tests and
+examples never enable reuse implicitly.
