@@ -705,7 +705,7 @@ jobs:
           empty_artifacts=()
 
           for artifact in "${expected_artifacts[@]}"; do
-            artifact_dir="coverage-artifacts/${artifact}"
+            artifact_dir="coverage-artifacts/${artifact#coverage-}"
             if [[ ! -d "${artifact_dir}" ]]; then
               missing_artifacts+=("${artifact}")
               continue
