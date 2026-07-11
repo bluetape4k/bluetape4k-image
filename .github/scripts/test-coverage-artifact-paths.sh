@@ -8,15 +8,19 @@ workflows=(
 )
 
 for workflow in "${workflows[@]}"; do
-  grep -F 'artifact_dir="coverage-artifacts/${artifact#coverage-}"' "$workflow" >/dev/null || {
-    echo "Coverage artifact path is not normalized in ${workflow}" >&2
-    exit 1
-  }
+  required_lines=(
+    'artifact_dir="coverage-artifacts/${artifact}"'
+    'normalized_artifact_dir="coverage-artifacts/${artifact#coverage-}"'
+    'if [[ ! -d "${artifact_dir}" && -d "${normalized_artifact_dir}" ]]; then'
+    'artifact_dir="${normalized_artifact_dir}"'
+  )
 
-  if grep -F 'artifact_dir="coverage-artifacts/${artifact}"' "$workflow" >/dev/null; then
-    echo "Legacy coverage artifact path remains in ${workflow}" >&2
-    exit 1
-  fi
+  for required_line in "${required_lines[@]}"; do
+    grep -F "$required_line" "$workflow" >/dev/null || {
+      echo "Missing single/multi artifact path fallback in ${workflow}: ${required_line}" >&2
+      exit 1
+    }
+  done
 done
 
-echo "CI and Nightly coverage artifact paths are normalized."
+echo "CI and Nightly support single and multiple coverage artifact paths."
