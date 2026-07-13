@@ -2,50 +2,50 @@
 
 - Date: 2026-07-13
 - Artifact: `docs/superpowers/plans/2026-07-13-issue-208-codec-runtime-matrix-plan.md`
+- Artifact SHA-256: `caeff9e8ff24d825f9250efcb26378279d9f5ba573850b784ff6c1243f981341`
 - Artifact kind: implementation plan
-- Review mode: six isolated main-session passes plus integration
+- Review mode: six isolated read-only role lenses plus main integration
 
-The native collaboration interface available in this session does not accept
-the mandatory installed `agent_type`. Unlabeled agent dispatch would violate
-the workspace routing contract, so each perspective was executed as a separate
-read-only main-session pass and then integrated against the current artifact.
+## Initial Findings
 
-## Initial Findings and Repairs
+| Priority | Lens | Finding | Repair |
+|---|---|---|---|
+| P1 | Performance | Default/focused/direct-profiler protocols could drift; experimental profiler included ineligible directions; chart keys were incomplete. | Pinned class/config/CLI protocol parity, derived profiler regexes from direction eligibility, required exact latency/allocation cell equality, and enumerated the full comparability key. |
+| P1 | Stability | Capability and experimental preparation were sibling dependencies; Java 21 `N/A` did not expand to terminal cells; failed attempts lacked durable lineage tests. | Enforced the output-provider chain, expanded `N_A` preflight to all expected backend cells while rejecting native artifacts, and added immutable failed-attempt ledger plus one-way replacement lineage tests. |
+| P1 | Security | Fixture/finalizer caller paths widened trust; promotion races/symlinks were underspecified. | Derived fixed roots from the pinned working directory, rejected traversal and symlinks, required locked no-replace atomic promotion, and added strict bounded JSON plus full raw-tree leakage scans. |
+| P1 | Operator/Ops | JMH jar selection could choose stale output; clean/prerequisite/rollback rules were not fail closed. | Staged the exact `Jar.archiveFile` provider with freshness/class/hash checks, added prerequisite and run-path absence gates, and defined append-only correction through a new superseding run. |
+| P1 | Developer/API | A concurrent draft opened catalog-version scope, replacement lineage implied mutating an old ledger, and dynamic JMH filtering lacked a concrete plugin API and RED/GREEN functional proof. | Forbade catalog changes, made lineage new-run-to-old-ledger only, used the actual kotlinx-benchmark 0.4.17 `JavaExec` parameter-file contract with `onlyIf`/`setArgs`, and added TestKit RED/GREEN cases. |
+| P1 | User/caller | Local results could be over-generalized; locale parity and rerun commands were not executable contracts. | Required a local-only/no-production-ranking statement, a value/command/link parity ledger, fresh run IDs, and tested Gradle-provider mapping for `supersedes` and failed-attempt replacement. |
 
-| Priority | Lens | Finding | Repair | Rerun |
-|---|---|---|---|---|
-| P1 | performance | Eligible AVIF/HEIC rows had latency commands but no allocation-profiler addendum, and output-size ownership was ambiguous. | Added direction-specific GC-profiler commands and assigned stable versus experimental size sampling outside JMH. | PASS |
-| P1 | stability | Java 21 and Java 25 shared a run ID but a single preflight path, allowing last-writer-wins evidence. | Backend-keyed preflight, eligibility, and size artifacts in both spec and plan. | PASS |
-| P1 | security | Serializable evidence models did not explicitly forbid host-local `Path`/`File` values. | Restricted persisted paths to repository-relative strings and retained bounded diagnostic/leakage checks. | PASS |
-| P1 | operator/Ops | Generated JMH reports could be selected ambiguously and experimental task ordering was incomplete. | Require start-time-bounded single-report staging; name all Sync/JavaExec/JMH tasks and their exact dependencies. | PASS |
-| P1 | developer/API | Early drafts invoked fixture preparation before Gradle wiring, leaked Vips API toward `src/main`, and disagreed on the finalizer entrypoint name. | Kept Vips types in `src/benchmark`, delayed task invocation until wiring, and standardized `CodecMatrixFinalizeMain`. | PASS |
-| P1 | user/caller | Internal `N_A` would serialize differently from the documented `N/A` terminal status. | Added `@SerialName("N/A")` and retained one bilingual status legend. | PASS |
-| P1 | main integration | Preparation, capability, experimental fixture generation, report staging, and finalization were not initially one executable graph. | Added the exact task contract, run-ID propagation, source-set classpaths, dry-run proofs, rollback, and append-only promotion. | PASS |
+No P0 finding was reported. All P1 findings were repaired in the plan and the affected lens was rerun after each repair.
 
-## Perspective Rerun Verdict
+## Integration Decisions
+
+- `src/main` stays Vips-free; the selected runtime/image adapter and native entrypoints stay under `src/benchmark`.
+- Backend facts use backend-keyed preflight, eligibility, size, latency, and allocation artifacts under one run ID, avoiding last-writer-wins evidence.
+- `prepareExperimentalCodecMatrixFixtures` consumes the capability task output provider, enforcing preflight -> stable fixtures -> capability -> experimental fixtures -> JMH.
+- The installed kotlinx-benchmark 0.4.17 source shows one JMH jar per target containing the compiled benchmark source set. Therefore a configuration-specific AVIF/HEIC jar is neither available nor required; the plan instead stages the exact target `Jar.archiveFile` and verifies both matrix classes before profiler use.
+- Accepted and failed raw evidence is immutable. `supersedes` and `replaces-failed-attempt` create forward references only from a new manifest to an existing manifest hash.
+- Catalog/BOM/settings/CI/Nightly/public API changes remain out of scope. Dependency-resolution failure reopens approval rather than granting an inline catalog fix.
+
+## Final Rerun Verdict
 
 | Lens | P0 | P1 | Residual P2/P3 | Verdict |
 |---|---:|---:|---:|---|
-| Performance | 0 | 0 | 0 | PASS — timing, allocation, and size boundaries share the pinned protocol. |
-| Stability | 0 | 0 | 0 | PASS — per-backend facts, lifecycle, smoke blockers, and reruns fail closed. |
-| Security | 0 | 0 | 0 | PASS — selectors, input paths, serialized paths, diagnostics, and promotion are constrained. |
-| Operator/Ops | 0 | 0 | 0 | PASS — exact commands, outputs, sequencing, and stop conditions are executable. |
-| Developer/API | 0 | 0 | 0 | PASS — source-set ownership, dependencies, tests, and commit boundaries are consistent. |
-| User/caller | 0 | 0 | 0 | PASS — scenarios, statuses, metric caveats, locale parity, and chart trigger are explicit. |
-| Main integration | 0 | 0 | 0 | PASS — every acceptance row maps to implementation, proof, evidence, and documentation. |
+| Performance | 0 | 0 | 0 | PASS |
+| Stability | 0 | 0 | 0 | PASS |
+| Security | 0 | 0 | 0 | PASS |
+| Operator/Ops | 0 | 0 | 0 | PASS |
+| Developer/API | 0 | 0 | 0 | PASS |
+| User/caller | 0 | 0 | 0 | PASS |
+| Main integration | 0 | 0 | 0 | PASS |
 
-## Completion Checks
+Main integration rechecked all 11 tasks, exact class/task names, vips-free source-set boundaries, TDD order, task isolation, evidence immutability, documentation parity, and the PR stop boundary against the approved spec.
 
-- Stable PNG/WebP scope is exactly four boundaries across `web-photo` and
-  `profile`, producing eight rows per runnable backend.
-- AVIF/HEIC stay opt-in, direction-specific, capability-gated, and absent from
-  the default benchmark graph.
-- `cafe.jpg` and `homer.jpg` are the only source fixtures; preparation is
-  deterministic and occurs before any timed process.
-- Java 21 JNI and Java 25 FFM execute sequentially with backend-keyed evidence;
-  a known incompatible Java 21 native binary becomes `N/A` without loading it.
-- Finalization is the only path to tracked raw evidence and rejects missing
-  metrics, blocking states, hash mismatches, leakage, and overwrite.
-- The plan stops at PR readiness and does not authorize PR creation or merge.
+Required checks: 7/7; N/A: 0; Blocked: 0.
 
 Final plan review convergence: **P0=0, P1=0**.
+
+## Concurrent-Change Boundary
+
+During this plan review, another process committed `7e405dc` (`feat: add codec matrix manifest model`). That implementation commit is outside this review's mutation scope and was neither reverted nor included as evidence that later implementation tasks pass. This artifact approves only the current plan; implementation verification must still follow its RED/GREEN and review gates.
