@@ -764,9 +764,6 @@ uname -m
 test ! -e benchmark/images-benchmark/build/codec-matrix/issue-208-20260713-macos-arm64
 test ! -e benchmark/images-benchmark/docs/raw/issue-208-20260713-macos-arm64
 test ! -e benchmark/images-benchmark/docs/raw/failed/issue-208-20260713-macos-arm64
-./gradlew :bluetape4k-images-benchmark:prepareCodecMatrixFixtures \
-  -Pcodec.matrix.runId=issue-208-20260713-macos-arm64 \
-  -Pvips.impl=java25 --console=plain
 ```
 
 - [ ] **Step 2: Run Java 21 preflight first**
@@ -780,9 +777,13 @@ JAVA_HOME=$(/usr/libexec/java_home -v 21) \
 
 Expected on current macOS arm64: structured `N_A` for x86_64 JNI without initialization. Do not invoke Java 21 capability or native JMH unless preflight proves compatibility.
 
-- [ ] **Step 3: Run Java 25 capability and stable latency**
+- [ ] **Step 3: Prepare fixtures, then run Java 25 capability and stable latency**
 
 ```bash
+JAVA_HOME=$(/usr/libexec/java_home -v 25) \
+  ./gradlew :bluetape4k-images-benchmark:prepareCodecMatrixFixtures \
+  -Pcodec.matrix.runId=issue-208-20260713-macos-arm64 \
+  -Pvips.impl=java25 --console=plain
 JAVA_HOME=$(/usr/libexec/java_home -v 25) \
   ./gradlew :bluetape4k-images-benchmark:codecMatrixCapabilityReport \
   -Pcodec.matrix.runId=issue-208-20260713-macos-arm64 \
@@ -819,14 +820,16 @@ JAVA_HOME=$(/usr/libexec/java_home -v 25) \
   -Pcodec.matrix.runId=issue-208-20260713-macos-arm64 \
   -Pvips.impl=java25 --console=plain
 jmh_jar=benchmark/images-benchmark/build/codec-matrix/issue-208-20260713-macos-arm64/staging/codec-matrix-profiler-java25.jar
+root="$PWD"
+java25=$(/usr/libexec/java_home -v 25)/bin/java
+export DYLD_LIBRARY_PATH=/opt/homebrew/lib${DYLD_LIBRARY_PATH:+:$DYLD_LIBRARY_PATH}
 test -f "$jmh_jar"
 jar tf "$jmh_jar" | rg 'VipsCodecMatrixBenchmark|VipsExperimentalCodecMatrixBenchmark'
-JAVA_HOME=$(/usr/libexec/java_home -v 25) \
-  java --enable-native-access=ALL-UNNAMED \
+"$java25" --enable-native-access=ALL-UNNAMED \
   -Dcodec.matrix.backend=java25 \
   -Dcodec.matrix.runId=issue-208-20260713-macos-arm64 \
-  -Dcodec.matrix.preflight=benchmark/images-benchmark/build/codec-matrix/issue-208-20260713-macos-arm64/preflight-java25.json \
-  -Dcodec.matrix.fixtureManifest=benchmark/images-benchmark/build/codec-matrix/issue-208-20260713-macos-arm64/fixtures/manifest.json \
+  -Dcodec.matrix.preflight="$root/benchmark/images-benchmark/build/codec-matrix/issue-208-20260713-macos-arm64/preflight-java25.json" \
+  -Dcodec.matrix.fixtureManifest="$root/benchmark/images-benchmark/build/codec-matrix/issue-208-20260713-macos-arm64/fixtures/manifest.json" \
   -jar "$jmh_jar" '.*VipsCodecMatrixBenchmark.*' \
   -wi 1 -i 3 -w 1s -r 1s -f 1 -t 1 -bm avgt -tu ms -prof gc \
   -rf json \
@@ -847,8 +850,8 @@ equal the corresponding latency cell keys exactly:
 eligibility=benchmark/images-benchmark/build/reports/benchmarks/codec-matrix/issue-208-20260713-macos-arm64/eligibility-java25.json
 eligible_methods() {
   jq -r --arg format "$1" '
-    .cells[] | select(.format == $format and .status == "ELIGIBLE") |
-    if .direction == "ENCODE" then
+    .cells[] | select(.key.format == $format and .status == "ELIGIBLE") |
+    if .key.direction == "encode" then
       (if $format == "AVIF" then "encodeAvifFromJpeg" else "encodeHeicFromJpeg" end)
     else
       (if $format == "AVIF" then "decodeAvifToJpeg" else "decodeHeicToJpeg" end)
@@ -857,25 +860,23 @@ eligible_methods() {
 avif_methods="$(eligible_methods AVIF)"
 heic_methods="$(eligible_methods HEIC)"
 test -z "$avif_methods" || \
-JAVA_HOME=$(/usr/libexec/java_home -v 25) \
-  java --enable-native-access=ALL-UNNAMED \
+"$java25" --enable-native-access=ALL-UNNAMED \
   -Dcodec.matrix.backend=java25 \
   -Dcodec.matrix.runId=issue-208-20260713-macos-arm64 \
-  -Dcodec.matrix.preflight=benchmark/images-benchmark/build/codec-matrix/issue-208-20260713-macos-arm64/preflight-java25.json \
-  -Dcodec.matrix.fixtureManifest=benchmark/images-benchmark/build/codec-matrix/issue-208-20260713-macos-arm64/fixtures/manifest.json \
-  -Dcodec.matrix.eligibility=benchmark/images-benchmark/build/reports/benchmarks/codec-matrix/issue-208-20260713-macos-arm64/eligibility-java25.json \
+  -Dcodec.matrix.preflight="$root/benchmark/images-benchmark/build/codec-matrix/issue-208-20260713-macos-arm64/preflight-java25.json" \
+  -Dcodec.matrix.fixtureManifest="$root/benchmark/images-benchmark/build/codec-matrix/issue-208-20260713-macos-arm64/fixtures/manifest.json" \
+  -Dcodec.matrix.eligibility="$root/benchmark/images-benchmark/build/reports/benchmarks/codec-matrix/issue-208-20260713-macos-arm64/eligibility-java25.json" \
   -jar "$jmh_jar" \
   ".*VipsExperimentalCodecMatrixBenchmark.*(${avif_methods}).*" \
   -wi 1 -i 3 -w 1s -r 1s -f 1 -t 1 -bm avgt -tu ms -prof gc -rf json \
   -rff benchmark/images-benchmark/build/codec-matrix/issue-208-20260713-macos-arm64/staging/allocation-java25-avif.json
 test -z "$heic_methods" || \
-JAVA_HOME=$(/usr/libexec/java_home -v 25) \
-  java --enable-native-access=ALL-UNNAMED \
+"$java25" --enable-native-access=ALL-UNNAMED \
   -Dcodec.matrix.backend=java25 \
   -Dcodec.matrix.runId=issue-208-20260713-macos-arm64 \
-  -Dcodec.matrix.preflight=benchmark/images-benchmark/build/codec-matrix/issue-208-20260713-macos-arm64/preflight-java25.json \
-  -Dcodec.matrix.fixtureManifest=benchmark/images-benchmark/build/codec-matrix/issue-208-20260713-macos-arm64/fixtures/manifest.json \
-  -Dcodec.matrix.eligibility=benchmark/images-benchmark/build/reports/benchmarks/codec-matrix/issue-208-20260713-macos-arm64/eligibility-java25.json \
+  -Dcodec.matrix.preflight="$root/benchmark/images-benchmark/build/codec-matrix/issue-208-20260713-macos-arm64/preflight-java25.json" \
+  -Dcodec.matrix.fixtureManifest="$root/benchmark/images-benchmark/build/codec-matrix/issue-208-20260713-macos-arm64/fixtures/manifest.json" \
+  -Dcodec.matrix.eligibility="$root/benchmark/images-benchmark/build/reports/benchmarks/codec-matrix/issue-208-20260713-macos-arm64/eligibility-java25.json" \
   -jar "$jmh_jar" \
   ".*VipsExperimentalCodecMatrixBenchmark.*(${heic_methods}).*" \
   -wi 1 -i 3 -w 1s -r 1s -f 1 -t 1 -bm avgt -tu ms -prof gc -rf json \
@@ -888,7 +889,8 @@ JAVA_HOME=$(/usr/libexec/java_home -v 25) \
 ./gradlew :bluetape4k-images-benchmark:finalizeCodecMatrixEvidence \
   -Pcodec.matrix.runId=issue-208-20260713-macos-arm64 \
   -Pvips.impl=java25 --console=plain
-jq empty benchmark/images-benchmark/docs/raw/issue-208-20260713-macos-arm64/*.json
+find benchmark/images-benchmark/docs/raw/issue-208-20260713-macos-arm64 \
+  -type f -name '*.json' -exec jq empty {} +
 git add benchmark/images-benchmark/docs/raw/issue-208-20260713-macos-arm64
 git commit -m "perf: record codec runtime benchmark evidence"
 ```
