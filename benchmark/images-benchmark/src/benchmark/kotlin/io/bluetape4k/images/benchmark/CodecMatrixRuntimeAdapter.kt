@@ -31,7 +31,7 @@ internal class CodecMatrixRuntimeAdapter private constructor(
     }
 
     override fun open(bytes: ByteArray): CodecMatrixCodecHandle {
-        val image = imageFactory(bytes)
+        val image = openImage(bytes)
         return object : CodecMatrixCodecHandle {
             override val width: Int get() = image.width
             override val height: Int get() = image.height
@@ -44,6 +44,8 @@ internal class CodecMatrixRuntimeAdapter private constructor(
             }
         }
     }
+
+    fun openImage(bytes: ByteArray): VipsImage = imageFactory(bytes)
 
     fun capabilities(format: CodecMatrixFormat): List<CodecMatrixDirectionalCapability> {
         val report = runtime.codecCapabilityReport()

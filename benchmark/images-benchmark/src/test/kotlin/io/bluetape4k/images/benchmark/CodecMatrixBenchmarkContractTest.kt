@@ -16,6 +16,9 @@ class CodecMatrixBenchmarkContractTest {
     private val buildScript = Files.readString(
         repositoryRoot().resolve("benchmark/images-benchmark/build.gradle.kts"),
     )
+    private val stableBenchmarkSource = repositoryRoot()
+        .resolve("benchmark/images-benchmark/src/benchmark/kotlin/io/bluetape4k/images/benchmark/VipsCodecMatrixBenchmark.kt")
+        .let { path -> if (Files.isRegularFile(path)) Files.readString(path) else "" }
 
     @Test
     fun `backend selector and focused benchmark configurations are exact`() {
@@ -70,6 +73,9 @@ class CodecMatrixBenchmarkContractTest {
         buildScript.shouldContain("javaLauncher.set(selectedJavaLauncher)")
         buildScript.shouldContain("classpath = sourceSets.main.get().runtimeClasspath")
         buildScript.shouldContain("classpath = sourceSets.named(\"benchmark\").get().runtimeClasspath")
+        buildScript.shouldContain("systemProperty(\"vips.impl\", vipsImpl)")
+        buildScript.shouldContain("if (vipsImpl == \"java25\")")
+        buildScript.shouldContain("jvmArgs(\"--enable-native-access=ALL-UNNAMED\")")
         buildScript.shouldContain("codecMatrixSupersedes.orNull?.let")
         buildScript.shouldContain("listOf(\"--supersedes\", it)")
         buildScript.shouldContain("codecMatrixReplacesFailedAttempt.orNull?.let")
@@ -86,6 +92,40 @@ class CodecMatrixBenchmarkContractTest {
         buildScript.shouldContain("_jmhTest.class")
         buildScript.shouldContain("codecMatrixSha256(targetJar)")
         buildScript.shouldContain("copyCodecMatrixInputImmutable(archive, targetJar)")
+    }
+
+    @Test
+    fun `stable codec matrix pins protocol fixtures options and strict native execution`() {
+        listOf(
+            "class VipsCodecMatrixBenchmark",
+            "class VipsCodecMatrixState",
+            "fun encodePngFromJpeg",
+            "fun decodePngToJpeg",
+            "fun encodeWebpFromJpeg",
+            "fun decodeWebpToJpeg",
+            "@Threads(1)",
+            "@Fork(1)",
+            "@Warmup(iterations = 1, time = 1, timeUnit = TimeUnit.SECONDS)",
+            "@Measurement(iterations = 3, time = 1, timeUnit = TimeUnit.SECONDS)",
+            "@BenchmarkMode(Mode.AverageTime)",
+            "@OutputTimeUnit(TimeUnit.MILLISECONDS)",
+            "@State(Scope.Thread)",
+            "@Param(\"web-photo\", \"profile\")",
+            "VipsEncodeOptions(quality = 85, effort = 4, lossless = false, stripMetadata = true)",
+            "CodecMatrixJson.readPreflight",
+            "CodecMatrixJson.readFixture",
+            "CodecMatrixRuntimeAdapter.create",
+            "VipsImageFormat.PNG",
+            "VipsImageFormat.WEBP",
+            "VipsImageFormat.JPEG",
+            "bh.consume(image.toBytes",
+        ).forEach(stableBenchmarkSource::shouldContain)
+        stableBenchmarkSource.windowed("@Benchmark\n".length).count { it == "@Benchmark\n" }
+            .shouldBeEqualTo(4)
+        stableBenchmarkSource.contains("vipsAvailable").shouldBeEqualTo(false)
+        stableBenchmarkSource.contains("bh.consume(null)").shouldBeEqualTo(false)
+        stableBenchmarkSource.contains("shutdown(").shouldBeEqualTo(false)
+        stableBenchmarkSource.contains("catch (").shouldBeEqualTo(false)
     }
 
     @Test
