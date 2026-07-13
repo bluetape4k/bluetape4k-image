@@ -131,8 +131,14 @@ once during JMH trial setup:
 
 Rules:
 
+- Resolve the checked-in sources from
+  `benchmark/images-benchmark/src/main/resources/bench/cafe.jpg` and
+  `images/src/test/resources/images/homer.jpg`. Record their SHA-256 values in
+  the result report.
 - The transformation recipe is deterministic and happens outside the measured
-  loop.
+  loop: scale uniformly until both target dimensions are covered, then take the
+  centered target rectangle using integer pixel coordinates. Do not stretch the
+  source or select a random crop.
 - The derived raster is encoded once into the JPEG, PNG, and WebP inputs needed
   by the stable matrix.
 - Stable runs use identical input bytes for Java 21 and Java 25.
@@ -150,6 +156,18 @@ Rules:
 Add a focused `VipsCodecMatrixBenchmark` and codec-specific thread-scoped state
 under `src/benchmark`. The state reuses the current binding-neutral runtime
 selection and prepares the two derived fixture families.
+
+All measured rows use one explicit option profile:
+
+```text
+quality=85, effort=4, lossless=false, stripMetadata=true
+```
+
+PNG ignores `quality` and maps `effort` to its compression level. WebP is the
+common lossy web profile, not a lossless-quality peer to PNG. The report must
+therefore present latency and byte-size trade-offs without claiming equivalent
+visual quality or compression efficiency. JPEG input and forcing-output bytes
+also use quality 85 with metadata stripped.
 
 The stable class exposes four method families for each scenario:
 
@@ -170,6 +188,11 @@ Add a named `codecMatrix` benchmark configuration. Its expected Gradle task is:
 :bluetape4k-images-benchmark:benchmarkCodecMatrixBenchmark
 ```
 
+The configuration uses one fork, one one-second warmup iteration, and three
+one-second measurement iterations in `AverageTime` mode with `ms` output. The
+focused GC-profiler addendum uses the same warmup, measurement, fork, fixture,
+and codec option profile.
+
 The existing JPEG benchmark remains unchanged as historical evidence and is
 referenced beside the new matrix rather than duplicated in the focused task.
 
@@ -177,7 +200,21 @@ referenced beside the new matrix rather than duplicated in the focused task.
 
 Add a separate `VipsExperimentalCodecMatrixBenchmark` for AVIF/HEIC. Exclude
 this class from the plugin's default `main` configuration and include it only in
-explicit experimental configurations.
+the explicit `codecMatrixAvif` and `codecMatrixHeic` configurations. Their
+expected Gradle tasks are:
+
+```text
+:bluetape4k-images-benchmark:benchmarkCodecMatrixAvifBenchmark
+:bluetape4k-images-benchmark:benchmarkCodecMatrixHeicBenchmark
+```
+
+Add a `codecMatrixCapabilityReport` Gradle task backed by benchmark-harness code
+that initializes only the selected `-Pvips.impl` runtime and writes a structured
+JSON snapshot under `build/reports/benchmarks/codec-matrix/`. Each entry records
+backend, scenario, format, direction, capability, final status, sanitized
+reason, JVM, architecture, and observed libvips version. `UNAVAILABLE` and
+`UNKNOWN` are successful observations from this task; runtime initialization,
+fixture corruption, or malformed output fails the task.
 
 Before an experimental run:
 
@@ -192,6 +229,11 @@ Before an experimental run:
    do not infer support from installed package names.
 7. If capability is available but the smoke operation fails, record `SKIPPED`
    with the failed stage and do not run a long benchmark.
+
+The experimental benchmark tasks do not fabricate JMH skip rows. The workflow
+runs the capability task first and invokes only tasks whose snapshot and smoke
+gate permit measurement. The committed capability snapshot is the evidence for
+every unmeasured matrix cell.
 
 Java 21 JVips therefore does not receive fabricated AVIF/HEIC rows on this host.
 Java 25 FFM rows are measured only after capability and smoke gates pass.
@@ -250,9 +292,12 @@ OS, architecture, JVM, and backend in the filename. The report contains:
 - interpretation limits and non-comparable rows.
 
 Update both benchmark README locales with a concise table and a link to the
-detailed report. If a chart materially improves comparison, generate matching
-SVG and PNG assets through `bluetape-diagram`, embed the PNG, and validate both
-formats. Do not create a chart that combines non-comparable scenarios or hosts.
+detailed report. When at least two comparable rows are measured for the same
+scenario and host, generate matching latency/output-size SVG and PNG assets
+through `bluetape-diagram`, embed the PNG, and validate both formats. If fewer
+than two comparable rows exist, keep a table and record the evidence-backed
+chart N/A. Do not create a chart that combines non-comparable scenarios or
+hosts.
 
 ## 10. Test and Validation Strategy
 
@@ -260,13 +305,18 @@ formats. Do not create a chart that combines non-comparable scenarios or hosts.
 
 - Verify the stable matrix contains the four named transcode boundaries.
 - Verify the default benchmark configuration excludes the experimental class.
+- Verify the focused configuration names and one-warmup/three-measurement
+  timing profile.
 - Verify the codec matrix contains no unavailable-runtime no-op branch.
 - Verify `web-photo` derives 1920x1080 and `profile` derives 512x512.
+- Verify the derived rasters use deterministic cover-and-center-crop semantics.
 - Verify missing fixtures fail instead of using a synthetic fallback.
 - Verify prepared PNG/WebP/JPEG inputs have valid magic bytes and positive
   sizes.
 - Verify capability states map to measured, `UNSUPPORTED`, or `SKIPPED` without
   raw native exception leakage.
+- Verify the capability task produces the required JSON fields, treats
+  unsupported/unknown as observations, and fails malformed evidence.
 
 ### 10.2 Compile and task validation
 
@@ -275,6 +325,7 @@ formats. Do not create a chart that combines non-comparable scenarios or hosts.
 ./gradlew :bluetape4k-images-benchmark:benchmarkBenchmarkCompile -Pvips.impl=java25 --console=plain
 ./gradlew :bluetape4k-images-benchmark:benchmarkBenchmarkCompile -Pvips.impl=java21 --console=plain
 ./gradlew :bluetape4k-images-benchmark:tasks --all --console=plain
+./gradlew :bluetape4k-images-benchmark:codecMatrixCapabilityReport -Pvips.impl=java25 --console=plain
 ```
 
 Dry-run the default and focused tasks to prove experimental isolation before
