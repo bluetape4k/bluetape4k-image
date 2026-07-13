@@ -116,3 +116,20 @@ native probes into compile/build/check/test tasks.
 | Main integration | 0 | 0 | 0 | PASS — acceptance criteria, hazards, ownership, rollback, and proof are aligned. |
 
 Latest effective spec review convergence: **P0=0, P1=0**.
+
+## Plan-Integration Addendum
+
+The implementation-plan review exposed one cross-backend evidence collision in
+the otherwise approved task contract: Java 21 and Java 25 commands share one
+run ID, so a single `preflight.json` or `eligibility.json` path could overwrite
+the other backend's facts before finalization. The spec now assigns
+`preflight-<backend>.json`, `eligibility-<backend>.json`, and
+`sizes-<backend>.json`. This is a storage-key clarification only; it does not
+change the selected design, benchmark boundary, or acceptance scope.
+
+The stability, operator/Ops, developer/API, and integration lenses were rerun
+against the backend-keyed contract. Each backend has an immutable evidence
+slot, stable fixtures remain shared by hash, and finalization can prove both
+runtime outcomes without last-writer-wins behavior.
+
+Latest post-plan-integration spec convergence: **P0=0, P1=0**.
