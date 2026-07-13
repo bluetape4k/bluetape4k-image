@@ -27,6 +27,14 @@ class CodecMatrixBenchmarkContractTest {
         .let { path -> if (Files.isRegularFile(path)) Files.readString(path) else "" }
 
     @Test
+    fun `runtime parameter files stay outside immutable evidence staging`() {
+        val runDirectory = tempDir.resolve("run")
+
+        codecMatrixParameterFile(runDirectory, CodecMatrixFormat.AVIF) shouldBeEqualTo
+            runDirectory.resolve("parameters/parameters-codecMatrixAvif.txt")
+    }
+
+    @Test
     fun `backend selector and focused benchmark configurations are exact`() {
         buildScript.shouldContain("providers.gradleProperty(\"vips.impl\").orElse(\"java25\").get()")
         buildScript.shouldContain("vipsImpl == \"java21\" || vipsImpl == \"java25\"")

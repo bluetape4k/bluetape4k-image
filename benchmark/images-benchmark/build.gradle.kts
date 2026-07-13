@@ -446,8 +446,8 @@ val prepareExperimentalCodecMatrixFixtures = tasks.register<JavaExec>("prepareEx
     jvmArgs("--enable-native-access=ALL-UNNAMED")
     inputs.file(codecMatrixReportDirectoryProvider.map { it.file("eligibility-$vipsImpl.json") })
     inputs.file(codecMatrixRunDirectoryProvider.map { it.file("fixtures/manifest.json") })
-    outputs.file(codecMatrixRunDirectoryProvider.map { it.file("staging/parameters-codecMatrixAvif.txt") })
-    outputs.file(codecMatrixRunDirectoryProvider.map { it.file("staging/parameters-codecMatrixHeic.txt") })
+    outputs.file(codecMatrixRunDirectoryProvider.map { it.file("parameters/parameters-codecMatrixAvif.txt") })
+    outputs.file(codecMatrixRunDirectoryProvider.map { it.file("parameters/parameters-codecMatrixHeic.txt") })
     doFirst {
         setArgs(listOf("--backend", vipsImpl, "--run-id", validatedCodecMatrixRunId()))
     }
@@ -620,7 +620,7 @@ afterEvaluate {
         dependsOn(prepareExperimentalCodecMatrixFixtures)
         val format = if (name.contains("Avif")) "codecMatrixAvif" else "codecMatrixHeic"
         val parameterFile = provider {
-            codecMatrixRunDirectory().resolve("staging/parameters-$format.txt")
+            codecMatrixRunDirectory().resolve("parameters/parameters-$format.txt")
         }
         onlyIf("at least one experimental codec direction is eligible") {
             val file = parameterFile.get()
