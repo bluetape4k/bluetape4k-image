@@ -52,6 +52,34 @@
 양쪽 백엔드 실행 명령, raw JSON 리포팅 형식, 로컬 검증 노트는
 [`docs/vips-backend-comparison.md`](docs/vips-backend-comparison.md)를 참고하세요.
 
+### Codec Runtime Matrix (PNG, WebP, AVIF, HEIC)
+
+2026-07-13 codec 실행은 `cafe.jpg`를 `1920x1080` web-photo fixture로,
+`homer.jpg`를 `512x512` profile fixture로 사용합니다. Java 25 FFM/libvips
+8.18.4는 16개 방향 셀을 모두 측정했습니다. Java 21 JNI는 이 macOS arm64
+host에서 JNI binary architecture를 확인할 수 없어 `N/A`이며 Java 25와
+순위를 비교하지 않습니다.
+
+![Codec runtime matrix latency chart](../../docs/images/readme-charts/images-benchmark-codec-runtime-latency-chart-01.png)
+
+| Scenario | PNG encode / decode | WebP encode / decode | AVIF encode / decode | HEIC encode / decode |
+|----------|---------------------|-----------------------|-----------------------|-----------------------|
+| profile | 5.945 / 2.156 ms | 10.415 / 2.605 ms | 51.134 / 4.339 ms | 60.350 / 7.681 ms |
+| web-photo | 80.132 / 18.825 ms | 106.405 / 20.020 ms | 511.268 / 38.751 ms | 339.555 / 73.038 ms |
+
+![Codec encode output size chart](../../docs/images/readme-charts/images-benchmark-codec-output-size-chart-01.png)
+
+상태 범례: `MEASURED`는 latency와 allocation 근거가 승인되었다는 뜻이고,
+`N/A`는 이 host에서 runtime을 평가할 수 없다는 뜻입니다. `UNSUPPORTED`는
+사용 가능한 runtime이 해당 codec/direction을 지원하지 않는 경우이며,
+`SKIPPED`는 eligible 셀을 의도적으로 실행하지 않은 경우입니다. Encode는
+JPEG에서 대상 codec으로, decode는 대상 codec에서 JPEG로 변환합니다.
+Managed-heap allocation에는 native libvips memory가 포함되지 않으며 output
+size는 시각 품질 순위가 아닙니다. 자세한 조건은
+[`codec runtime matrix report`](docs/codec-runtime-matrix-2026-07-13.md),
+원본 근거는 [immutable raw evidence](docs/raw/issue-208-20260713-macos-arm64-09/)를
+참고하세요.
+
 ### 필터 (scrimage 전용, 1240×1754)
 
 ![Filter latency benchmark chart](../../docs/images/readme-charts/images-benchmark-filter-latency-chart-01.png)
