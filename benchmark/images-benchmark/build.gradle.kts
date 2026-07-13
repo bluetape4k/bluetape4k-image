@@ -56,8 +56,16 @@ val selectedJavaLauncher = javaToolchains.launcherFor {
     languageVersion.set(JavaLanguageVersion.of(javaVersion))
 }
 val homebrewVipsLibraryDirectory = file("/opt/homebrew/lib")
+val codecMatrixNativeTaskNames = setOf(
+    "codecMatrixCapabilityReport",
+    "prepareExperimentalCodecMatrixFixtures",
+    "benchmarkBenchmark",
+    "benchmarkCodecMatrixBenchmark",
+    "benchmarkCodecMatrixAvifBenchmark",
+    "benchmarkCodecMatrixHeicBenchmark",
+)
 
-tasks.withType<JavaExec>().configureEach {
+tasks.withType<JavaExec>().matching { task -> task.name in codecMatrixNativeTaskNames }.configureEach {
     if (homebrewVipsLibraryDirectory.isDirectory) {
         environment("DYLD_LIBRARY_PATH", homebrewVipsLibraryDirectory.absolutePath)
     }
