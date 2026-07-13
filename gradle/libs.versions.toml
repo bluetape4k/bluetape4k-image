@@ -9,6 +9,7 @@ spring-boot = "4.1.0"  # https://mvnrepository.com/artifact/org.springframework.
 aws2 = "2.47.1"  # https://mvnrepository.com/artifact/software.amazon.awssdk/bom
 
 kotlin = "2.4.0"  # https://mvnrepository.com/artifact/org.jetbrains.kotlin/kotlin-bom
+# Temporary issue #208 exception. Remove after the central catalog publishes this alias in a release-train tag.
 kotlinx-serialization = "1.11.0"  # https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-serialization-json
 kotlinx-coroutines = "1.11.0"  # https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-bom
 kotlinx-atomicfu = "0.32.1"  # https://mvnrepository.com/artifact/org.jetbrains.kotlinx/atomicfu

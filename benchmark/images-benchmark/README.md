@@ -191,7 +191,9 @@ and the raw `kotlinx-benchmark` JSON
 
 ```bash
 # Java 25 - full benchmark set, including FFM-only large streaming (macOS/Linux)
-./gradlew :bluetape4k-images-benchmark:benchmarkBenchmark -Pvips.impl=java25
+RUN_ID="local-$(date +%Y%m%d-%H%M%S)"
+./gradlew :bluetape4k-images-benchmark:benchmarkBenchmark \
+  -Pcodec.matrix.runId="$RUN_ID" -Pvips.impl=java25
 
 # Java 21 - selected JVips JNI-compatible benchmarks (Linux only; excludes FFM-only large streaming)
 ./gradlew :bluetape4k-images-benchmark:benchmarkPipelineAllocationBenchmark :bluetape4k-images-benchmark:benchmarkMemoryProfileBenchmark :bluetape4k-images-benchmark:benchmarkIoBoundaryBenchmark :bluetape4k-images-benchmark:benchmarkIoThroughputBenchmark -Pvips.impl=java21
@@ -272,6 +274,7 @@ identify docs/images/readme-charts/*.png
 
 # Validate the documented benchmark task path without running a full benchmark
 ./gradlew :bluetape4k-images-benchmark:benchmarkBenchmark \
+  -Pcodec.matrix.runId=local-dry-run-01 \
   -Pvips.impl=java25 --dry-run --console=plain
 ```
 
