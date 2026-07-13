@@ -18,6 +18,7 @@ internal fun parseCodecMatrixFixtureRunId(arguments: Array<String>): CodecMatrix
 internal fun codecMatrixFixturePaths(
     workingDirectory: Path,
     runId: CodecMatrixRunId,
+    backend: CodecMatrixBackend = CodecMatrixBackend.JAVA25,
 ): CodecMatrixFixturePaths {
     require(workingDirectory.isAbsolute) { "working directory must be absolute" }
     require(workingDirectory == workingDirectory.normalize()) { "working directory must be normalized" }
@@ -29,7 +30,7 @@ internal fun codecMatrixFixturePaths(
     val moduleBuild = workingDirectory.resolve("benchmark/images-benchmark/build")
     return CodecMatrixFixturePaths(
         generatedSources = moduleBuild.resolve("generated/codec-matrix-source-fixtures"),
-        backendPreflight = moduleBuild.resolve("codec-matrix/${runId.value}/preflight/backend.json"),
+        backendPreflight = moduleBuild.resolve("codec-matrix/${runId.value}/preflight-${backend.selector}.json"),
         runDirectory = moduleBuild.resolve("codec-matrix/${runId.value}"),
     )
 }
@@ -38,7 +39,8 @@ internal object CodecMatrixFixtureMain {
     @JvmStatic
     fun main(arguments: Array<String>) {
         val runId = parseCodecMatrixFixtureRunId(arguments)
-        val paths = codecMatrixFixturePaths(Path.of("").toAbsolutePath().normalize(), runId)
+        val backend = CodecMatrixBackend.parse(System.getProperty("vips.impl", "java25"))
+        val paths = codecMatrixFixturePaths(Path.of("").toAbsolutePath().normalize(), runId, backend)
         requireSafeRegularFile(paths.backendPreflight, "backend preflight")
         prepareCodecMatrixFixtures(
             CodecMatrixFixturePreparationRequest(
