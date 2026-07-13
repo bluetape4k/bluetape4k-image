@@ -23,6 +23,21 @@ internal object CodecMatrixExperimentalFixtureMain {
             CodecMatrixJson.sha256(Files.readAllBytes(eligibilityPath)),
         )
         require(eligibility.runId == parsed.runId) { "eligibility run ID differs" }
+        EXPERIMENTAL_OUTPUT_FORMATS.forEach { format ->
+            val parameterFile = codecMatrixParameterFile(runDirectory, format)
+            val latencyFile = runDirectory.resolve(
+                "staging/latency-${parsed.backend.selector}-${format.configurationName()}.json",
+            )
+            writeCodecMatrixBenchmarkParameters(
+                parameterFile,
+                renderCodecMatrixBenchmarkParameters(format, eligibility, latencyFile),
+            )
+        }
+        if (eligibility.cells.none { cell ->
+            cell.key.format in EXPERIMENTAL_OUTPUT_FORMATS && cell.status == CodecMatrixCellStatus.ELIGIBLE
+        }) {
+            return
+        }
         val fixturePath = runDirectory.resolve("fixtures/manifest.json")
         val fixtures = CodecMatrixJson.readFixture(
             fixturePath,
@@ -147,6 +162,12 @@ private fun CodecMatrixFormat.extensionName(): String = when (this) {
     CodecMatrixFormat.AVIF -> "avif"
     CodecMatrixFormat.HEIC -> "heic"
     else -> error("experimental extension requested for $this")
+}
+
+private fun CodecMatrixFormat.configurationName(): String = when (this) {
+    CodecMatrixFormat.AVIF -> "codecMatrixAvif"
+    CodecMatrixFormat.HEIC -> "codecMatrixHeic"
+    else -> error("experimental configuration requested for $this")
 }
 
 private val EXPERIMENTAL_OUTPUT_FORMATS = listOf(CodecMatrixFormat.AVIF, CodecMatrixFormat.HEIC)

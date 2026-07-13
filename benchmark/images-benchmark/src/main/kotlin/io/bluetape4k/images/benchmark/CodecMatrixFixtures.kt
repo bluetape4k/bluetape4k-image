@@ -170,8 +170,16 @@ private fun publishFixtures(
 ) {
     val fixtureDirectory = runDirectory.resolve("fixtures")
     if (Files.exists(fixtureDirectory, LinkOption.NOFOLLOW_LINKS)) {
-        validateExistingFixtures(runDirectory, expectedFiles)
-        return
+        requireSafeDirectory(fixtureDirectory, "existing fixture directory")
+        val empty = Files.newDirectoryStream(fixtureDirectory).use { entries ->
+            !entries.iterator().hasNext()
+        }
+        if (empty) {
+            Files.delete(fixtureDirectory)
+        } else {
+            validateExistingFixtures(runDirectory, expectedFiles)
+            return
+        }
     }
 
     Files.createDirectories(runDirectory)
