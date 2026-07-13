@@ -465,12 +465,7 @@ tasks.register<JavaExec>("finalizeCodecMatrixEvidence") {
     inputs.property("replacesFailedAttempt", codecMatrixReplacesFailedAttempt.orElse(""))
     inputs.dir(codecMatrixRunDirectoryProvider.map { it.dir("staging") })
     inputs.dir(codecMatrixReportDirectoryProvider)
-    outputs.dirs(codecMatrixRunId.map { runId ->
-        listOf(
-            layout.projectDirectory.dir("docs/raw/$runId").asFile,
-            layout.projectDirectory.dir("docs/raw/failed/$runId").asFile,
-        )
-    })
+    outputs.upToDateWhen { false }
     doFirst {
         val runId = validatedCodecMatrixRunId()
         val stagingDirectory = codecMatrixRunDirectory().resolve("staging")
