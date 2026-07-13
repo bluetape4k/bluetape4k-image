@@ -53,6 +53,32 @@ See [`docs/vips-backend-comparison.md`](docs/vips-backend-comparison.md) for
 the side-by-side run commands, raw JSON reporting shape, and local validation
 notes.
 
+### Codec Runtime Matrix (PNG, WebP, AVIF, HEIC)
+
+The 2026-07-13 codec run uses `cafe.jpg` as a `1920x1080` web-photo fixture
+and `homer.jpg` as a `512x512` profile fixture. Java 25 FFM/libvips 8.18.4
+measured all 16 direction cells. Java 21 JNI is `N/A` on this macOS arm64 host
+because the JNI binary architecture could not be established; it is not ranked
+against Java 25.
+
+![Codec runtime matrix latency chart](../../docs/images/readme-charts/images-benchmark-codec-runtime-latency-chart-01.png)
+
+| Scenario | PNG encode / decode | WebP encode / decode | AVIF encode / decode | HEIC encode / decode |
+|----------|---------------------|-----------------------|-----------------------|-----------------------|
+| profile | 5.945 / 2.156 ms | 10.415 / 2.605 ms | 51.134 / 4.339 ms | 60.350 / 7.681 ms |
+| web-photo | 80.132 / 18.825 ms | 106.405 / 20.020 ms | 511.268 / 38.751 ms | 339.555 / 73.038 ms |
+
+![Codec encode output size chart](../../docs/images/readme-charts/images-benchmark-codec-output-size-chart-01.png)
+
+Status legend: `MEASURED` means accepted latency and allocation evidence;
+`N/A` means the runtime could not be evaluated on this host; `UNSUPPORTED`
+means an available runtime lacks a codec/direction; `SKIPPED` means an eligible
+cell was intentionally not run. Encode is JPEG to the named codec; decode is
+the named codec to JPEG. Managed-heap allocation excludes native libvips
+memory, and output size is not a visual-quality ranking. See the
+[`codec runtime matrix report`](docs/codec-runtime-matrix-2026-07-13.md) and
+the [immutable raw evidence](docs/raw/issue-208-20260713-macos-arm64-09/).
+
 ### Filter (scrimage only, 1240×1754 document image)
 
 ![Filter latency benchmark chart](../../docs/images/readme-charts/images-benchmark-filter-latency-chart-01.png)

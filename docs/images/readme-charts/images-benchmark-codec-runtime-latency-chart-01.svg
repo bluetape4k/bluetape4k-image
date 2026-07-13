@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1560" height="940" viewBox="0 0 1560 940" role="img" aria-label="Java 25 codec runtime matrix latency">
+  <defs>
+    <style>
+      .canvas{fill:#ffffff}.panel{fill:#ffffff;stroke:#bfdbfe;stroke-width:1.7}.title{font-family:"Architects Daughter";font-size:42px;fill:#111827}.subtitle,.axis,.value,.note,.legend{font-family:"Comic Mono";fill:#6b7280}.subtitle{font-size:16px}.panel-title{font-family:"Architects Daughter";font-size:25px;fill:#111827}.axis{font-size:13px}.value{font-size:12px}.note{font-size:13px}.legend{font-size:14px}.grid{stroke:#dbe3ee;stroke-width:1;stroke-dasharray:5 7}.baseline{stroke:#94a3b8;stroke-width:1.2}.track{fill:#f1f5f9;stroke:#dbe3ee;stroke-width:1}.encode{fill:#dbeafe;stroke:#2563eb;stroke-width:1.5}.decode{fill:#dcfce7;stroke:#16a34a;stroke-width:1.5}
+    </style>
+  </defs>
+  <rect class="canvas" width="1560" height="940"/>
+  <text class="title" x="70" y="78">Codec Runtime Matrix Latency</text>
+  <text class="subtitle" x="74" y="112">Java 25 FFM / libvips 8.18.4 - AverageTime ms/op, lower is better.</text>
+  <desc>Source: codec-runtime-matrix-2026-07-13.md, run issue-208-20260713-macos-arm64-09. Independent zero-based scales are used for the profile and web-photo fixtures.</desc>
+
+  <rect class="encode" x="1164" y="82" width="22" height="14" rx="4"/>
+  <text class="legend" x="1196" y="94">encode: JPEG to codec</text>
+  <rect class="decode" x="1164" y="108" width="22" height="14" rx="4"/>
+  <text class="legend" x="1196" y="120">decode: codec to JPEG</text>
+
+  <rect class="panel" x="56" y="148" width="710" height="690" rx="12"/>
+  <text class="panel-title" x="88" y="192">profile / homer.jpg / 512 x 512</text>
+  <text class="axis" x="88" y="218">Independent scale: 0 to 65 ms/op</text>
+  <line class="grid" x1="230" y1="248" x2="230" y2="755"/><line class="grid" x1="351" y1="248" x2="351" y2="755"/><line class="grid" x1="472" y1="248" x2="472" y2="755"/><line class="grid" x1="593" y1="248" x2="593" y2="755"/><line class="grid" x1="714" y1="248" x2="714" y2="755"/>
+  <line class="baseline" x1="230" y1="755" x2="714" y2="755"/>
+  <text class="axis" x="230" y="782" text-anchor="middle">0</text><text class="axis" x="351" y="782" text-anchor="middle">16.25</text><text class="axis" x="472" y="782" text-anchor="middle">32.5</text><text class="axis" x="593" y="782" text-anchor="middle">48.75</text><text class="axis" x="714" y="782" text-anchor="middle">65</text>
+
+  <text class="axis" x="204" y="306" text-anchor="end">PNG</text>
+  <rect class="track" x="230" y="270" width="484" height="22" rx="6"/><rect class="encode" x="230" y="270" width="44.3" height="22" rx="6"/><text class="value" x="282" y="286">5.945</text>
+  <rect class="track" x="230" y="299" width="484" height="22" rx="6"/><rect class="decode" x="230" y="299" width="16.1" height="22" rx="6"/><text class="value" x="254" y="315">2.156</text>
+
+  <text class="axis" x="204" y="422" text-anchor="end">WebP</text>
+  <rect class="track" x="230" y="386" width="484" height="22" rx="6"/><rect class="encode" x="230" y="386" width="77.6" height="22" rx="6"/><text class="value" x="315" y="402">10.415</text>
+  <rect class="track" x="230" y="415" width="484" height="22" rx="6"/><rect class="decode" x="230" y="415" width="19.4" height="22" rx="6"/><text class="value" x="257" y="431">2.605</text>
+
+  <text class="axis" x="204" y="538" text-anchor="end">AVIF</text>
+  <rect class="track" x="230" y="502" width="484" height="22" rx="6"/><rect class="encode" x="230" y="502" width="380.7" height="22" rx="6"/><text class="value" x="618" y="518">51.134</text>
+  <rect class="track" x="230" y="531" width="484" height="22" rx="6"/><rect class="decode" x="230" y="531" width="32.3" height="22" rx="6"/><text class="value" x="270" y="547">4.339</text>
+
+  <text class="axis" x="204" y="654" text-anchor="end">HEIC</text>
+  <rect class="track" x="230" y="618" width="484" height="22" rx="6"/><rect class="encode" x="230" y="618" width="449.4" height="22" rx="6"/><text class="value" x="687" y="634">60.350</text>
+  <rect class="track" x="230" y="647" width="484" height="22" rx="6"/><rect class="decode" x="230" y="647" width="57.2" height="22" rx="6"/><text class="value" x="295" y="663">7.681</text>
+
+  <rect class="panel" x="794" y="148" width="710" height="690" rx="12"/>
+  <text class="panel-title" x="826" y="192">web-photo / cafe.jpg / 1920 x 1080</text>
+  <text class="axis" x="826" y="218">Independent scale: 0 to 550 ms/op</text>
+  <line class="grid" x1="968" y1="248" x2="968" y2="755"/><line class="grid" x1="1089" y1="248" x2="1089" y2="755"/><line class="grid" x1="1210" y1="248" x2="1210" y2="755"/><line class="grid" x1="1331" y1="248" x2="1331" y2="755"/><line class="grid" x1="1452" y1="248" x2="1452" y2="755"/>
+  <line class="baseline" x1="968" y1="755" x2="1452" y2="755"/>
+  <text class="axis" x="968" y="782" text-anchor="middle">0</text><text class="axis" x="1089" y="782" text-anchor="middle">137.5</text><text class="axis" x="1210" y="782" text-anchor="middle">275</text><text class="axis" x="1331" y="782" text-anchor="middle">412.5</text><text class="axis" x="1452" y="782" text-anchor="middle">550</text>
+
+  <text class="axis" x="942" y="306" text-anchor="end">PNG</text>
+  <rect class="track" x="968" y="270" width="484" height="22" rx="6"/><rect class="encode" x="968" y="270" width="70.5" height="22" rx="6"/><text class="value" x="1046" y="286">80.132</text>
+  <rect class="track" x="968" y="299" width="484" height="22" rx="6"/><rect class="decode" x="968" y="299" width="16.6" height="22" rx="6"/><text class="value" x="992" y="315">18.825</text>
+
+  <text class="axis" x="942" y="422" text-anchor="end">WebP</text>
+  <rect class="track" x="968" y="386" width="484" height="22" rx="6"/><rect class="encode" x="968" y="386" width="93.6" height="22" rx="6"/><text class="value" x="1069" y="402">106.405</text>
+  <rect class="track" x="968" y="415" width="484" height="22" rx="6"/><rect class="decode" x="968" y="415" width="17.6" height="22" rx="6"/><text class="value" x="993" y="431">20.020</text>
+
+  <text class="axis" x="942" y="538" text-anchor="end">AVIF</text>
+  <rect class="track" x="968" y="502" width="484" height="22" rx="6"/><rect class="encode" x="968" y="502" width="449.9" height="22" rx="6"/><text class="value" x="1426" y="518">511.268</text>
+  <rect class="track" x="968" y="531" width="484" height="22" rx="6"/><rect class="decode" x="968" y="531" width="34.1" height="22" rx="6"/><text class="value" x="1010" y="547">38.751</text>
+
+  <text class="axis" x="942" y="654" text-anchor="end">HEIC</text>
+  <rect class="track" x="968" y="618" width="484" height="22" rx="6"/><rect class="encode" x="968" y="618" width="298.8" height="22" rx="6"/><text class="value" x="1275" y="634">339.555</text>
+  <rect class="track" x="968" y="647" width="484" height="22" rx="6"/><rect class="decode" x="968" y="647" width="64.3" height="22" rx="6"/><text class="value" x="1040" y="663">73.038</text>
+
+  <text class="note" x="780" y="890" text-anchor="middle">github.com/bluetape4k/bluetape4k-image | images-benchmark | issue #208 evidence</text>
+</svg>
