@@ -376,6 +376,9 @@ val codecMatrixPreflight = tasks.register<JavaExec>("codecMatrixPreflight") {
     mainClass.set("io.bluetape4k.images.benchmark.CodecMatrixPreflightMain")
     javaLauncher.set(selectedJavaLauncher)
     workingDir(repositoryDirectory)
+    if (vipsImpl == "java25") {
+        jvmArgs("--enable-native-access=ALL-UNNAMED")
+    }
     inputs.property("backend", vipsImpl)
     inputs.property("runId", codecMatrixRunId)
     outputs.file(codecMatrixRunDirectoryProvider.map { it.file("preflight-$vipsImpl.json") })
@@ -395,6 +398,7 @@ val prepareCodecMatrixFixtures = tasks.register<JavaExec>("prepareCodecMatrixFix
     inputs.file(codecMatrixRunDirectoryProvider.map { it.file("preflight-$vipsImpl.json") })
     outputs.dir(codecMatrixRunDirectoryProvider.map { it.dir("fixtures") })
     doFirst {
+        systemProperty("vips.impl", vipsImpl)
         setArgs(listOf("--run-id", validatedCodecMatrixRunId()))
     }
 }
