@@ -1,0 +1,94 @@
+[
+  {
+    "benchmark": "io.bluetape4k.images.benchmark.VipsExperimentalCodecMatrixBenchmark.decodeAvifToJpeg",
+    "params": {
+      "scenario": "web-photo"
+    },
+    "mode": "avgt",
+    "threads": 1,
+    "forks": 1,
+    "warmupIterations": 1,
+    "warmupTime": "1 s",
+    "measurementIterations": 3,
+    "measurementTime": "1 s",
+    "primaryMetric": {
+      "score": 38.66850388224122,
+      "scoreUnit": "ms/op"
+    },
+    "secondaryMetrics": {
+      "gc.alloc.rate.norm": {
+        "score": 870204.1519468186,
+        "scoreUnit": "B/op"
+      }
+    }
+  },
+  {
+    "benchmark": "io.bluetape4k.images.benchmark.VipsExperimentalCodecMatrixBenchmark.decodeAvifToJpeg",
+    "params": {
+      "scenario": "profile"
+    },
+    "mode": "avgt",
+    "threads": 1,
+    "forks": 1,
+    "warmupIterations": 1,
+    "warmupTime": "1 s",
+    "measurementIterations": 3,
+    "measurementTime": "1 s",
+    "primaryMetric": {
+      "score": 4.383085917270264,
+      "scoreUnit": "ms/op"
+    },
+    "secondaryMetrics": {
+      "gc.alloc.rate.norm": {
+        "score": 69589.0905592465,
+        "scoreUnit": "B/op"
+      }
+    }
+  },
+  {
+    "benchmark": "io.bluetape4k.images.benchmark.VipsExperimentalCodecMatrixBenchmark.encodeAvifFromJpeg",
+    "params": {
+      "scenario": "web-photo"
+    },
+    "mode": "avgt",
+    "threads": 1,
+    "forks": 1,
+    "warmupIterations": 1,
+    "warmupTime": "1 s",
+    "measurementIterations": 3,
+    "measurementTime": "1 s",
+    "primaryMetric": {
+      "score": 512.4355696666667,
+      "scoreUnit": "ms/op"
+    },
+    "secondaryMetrics": {
+      "gc.alloc.rate.norm": {
+        "score": 743568.0,
+        "scoreUnit": "B/op"
+      }
+    }
+  },
+  {
+    "benchmark": "io.bluetape4k.images.benchmark.VipsExperimentalCodecMatrixBenchmark.encodeAvifFromJpeg",
+    "params": {
+      "scenario": "profile"
+    },
+    "mode": "avgt",
+    "threads": 1,
+    "forks": 1,
+    "warmupIterations": 1,
+    "warmupTime": "1 s",
+    "measurementIterations": 3,
+    "measurementTime": "1 s",
+    "primaryMetric": {
+      "score": 51.91769998333333,
+      "scoreUnit": "ms/op"
+    },
+    "secondaryMetrics": {
+      "gc.alloc.rate.norm": {
+        "score": 65065.06666666667,
+        "scoreUnit": "B/op"
+      }
+    }
+  }
+]

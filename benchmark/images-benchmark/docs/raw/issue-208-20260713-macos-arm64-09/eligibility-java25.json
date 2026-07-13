@@ -1,0 +1,218 @@
+{
+  "schemaVersion": 1,
+  "runId": {
+    "value": "issue-208-20260713-macos-arm64-09"
+  },
+  "expectedCellCount": 16,
+  "cells": [
+    {
+      "key": {
+        "backend": "java25",
+        "scenario": "web-photo",
+        "format": "PNG",
+        "direction": "encode",
+        "inputSha256": {
+          "value": "5b6e2e5991609ecfcf489a33ff200036689e4c3da048c20d4101df1f752728bb"
+        }
+      },
+      "status": "ELIGIBLE",
+      "reasonCode": "NONE"
+    },
+    {
+      "key": {
+        "backend": "java25",
+        "scenario": "web-photo",
+        "format": "PNG",
+        "direction": "decode",
+        "inputSha256": {
+          "value": "51948986bd7a99b573bdb2eb045f9f4752cf8592d4452cc88c646007c814327d"
+        }
+      },
+      "status": "ELIGIBLE",
+      "reasonCode": "NONE"
+    },
+    {
+      "key": {
+        "backend": "java25",
+        "scenario": "web-photo",
+        "format": "WEBP",
+        "direction": "encode",
+        "inputSha256": {
+          "value": "5b6e2e5991609ecfcf489a33ff200036689e4c3da048c20d4101df1f752728bb"
+        }
+      },
+      "status": "ELIGIBLE",
+      "reasonCode": "NONE"
+    },
+    {
+      "key": {
+        "backend": "java25",
+        "scenario": "web-photo",
+        "format": "WEBP",
+        "direction": "decode",
+        "inputSha256": {
+          "value": "8d26bd6c6c0cdde7057d3650079944ce2e27d26f095ae32c17cdde68ae654f96"
+        }
+      },
+      "status": "ELIGIBLE",
+      "reasonCode": "NONE"
+    },
+    {
+      "key": {
+        "backend": "java25",
+        "scenario": "web-photo",
+        "format": "AVIF",
+        "direction": "decode",
+        "inputSha256": {
+          "value": "e2a56a0b2929b5ed4701b87d065d074316627e8337d16e940f642fdbb5435584"
+        }
+      },
+      "status": "ELIGIBLE",
+      "reasonCode": "NONE"
+    },
+    {
+      "key": {
+        "backend": "java25",
+        "scenario": "web-photo",
+        "format": "AVIF",
+        "direction": "encode",
+        "inputSha256": {
+          "value": "5b6e2e5991609ecfcf489a33ff200036689e4c3da048c20d4101df1f752728bb"
+        }
+      },
+      "status": "ELIGIBLE",
+      "reasonCode": "NONE"
+    },
+    {
+      "key": {
+        "backend": "java25",
+        "scenario": "web-photo",
+        "format": "HEIC",
+        "direction": "decode",
+        "inputSha256": {
+          "value": "db1629465ae01052ce8f07a4cefb2683a8062db6bdfa765364d50aee107810fe"
+        }
+      },
+      "status": "ELIGIBLE",
+      "reasonCode": "NONE"
+    },
+    {
+      "key": {
+        "backend": "java25",
+        "scenario": "web-photo",
+        "format": "HEIC",
+        "direction": "encode",
+        "inputSha256": {
+          "value": "5b6e2e5991609ecfcf489a33ff200036689e4c3da048c20d4101df1f752728bb"
+        }
+      },
+      "status": "ELIGIBLE",
+      "reasonCode": "NONE"
+    },
+    {
+      "key": {
+        "backend": "java25",
+        "scenario": "profile",
+        "format": "PNG",
+        "direction": "encode",
+        "inputSha256": {
+          "value": "6bca6f3aa1f7af1cb1096bf87746997404643f84d3e9af862a97741b61aff551"
+        }
+      },
+      "status": "ELIGIBLE",
+      "reasonCode": "NONE"
+    },
+    {
+      "key": {
+        "backend": "java25",
+        "scenario": "profile",
+        "format": "PNG",
+        "direction": "decode",
+        "inputSha256": {
+          "value": "ae31030716d9dbbb74178ffeafc648a512d3650cd2ba528685591c67928b1940"
+        }
+      },
+      "status": "ELIGIBLE",
+      "reasonCode": "NONE"
+    },
+    {
+      "key": {
+        "backend": "java25",
+        "scenario": "profile",
+        "format": "WEBP",
+        "direction": "encode",
+        "inputSha256": {
+          "value": "6bca6f3aa1f7af1cb1096bf87746997404643f84d3e9af862a97741b61aff551"
+        }
+      },
+      "status": "ELIGIBLE",
+      "reasonCode": "NONE"
+    },
+    {
+      "key": {
+        "backend": "java25",
+        "scenario": "profile",
+        "format": "WEBP",
+        "direction": "decode",
+        "inputSha256": {
+          "value": "36893de3ea32bb037400ec94d39788e230f828780769b5bd68c5802e64e6bc07"
+        }
+      },
+      "status": "ELIGIBLE",
+      "reasonCode": "NONE"
+    },
+    {
+      "key": {
+        "backend": "java25",
+        "scenario": "profile",
+        "format": "AVIF",
+        "direction": "decode",
+        "inputSha256": {
+          "value": "ec307c5dd261e406167542bff42b914c90e1905429fa3a8bf83d5c44fd0ddc92"
+        }
+      },
+      "status": "ELIGIBLE",
+      "reasonCode": "NONE"
+    },
+    {
+      "key": {
+        "backend": "java25",
+        "scenario": "profile",
+        "format": "AVIF",
+        "direction": "encode",
+        "inputSha256": {
+          "value": "6bca6f3aa1f7af1cb1096bf87746997404643f84d3e9af862a97741b61aff551"
+        }
+      },
+      "status": "ELIGIBLE",
+      "reasonCode": "NONE"
+    },
+    {
+      "key": {
+        "backend": "java25",
+        "scenario": "profile",
+        "format": "HEIC",
+        "direction": "decode",
+        "inputSha256": {
+          "value": "b40c8c58764371d0c11d65d9d4b2b8513b85640d87053088b8884bdf78ac0d9c"
+        }
+      },
+      "status": "ELIGIBLE",
+      "reasonCode": "NONE"
+    },
+    {
+      "key": {
+        "backend": "java25",
+        "scenario": "profile",
+        "format": "HEIC",
+        "direction": "encode",
+        "inputSha256": {
+          "value": "6bca6f3aa1f7af1cb1096bf87746997404643f84d3e9af862a97741b61aff551"
+        }
+      },
+      "status": "ELIGIBLE",
+      "reasonCode": "NONE"
+    }
+  ],
+  "artifacts": []
+}

@@ -1,0 +1,189 @@
+{
+  "schemaVersion": 1,
+  "runId": {
+    "value": "issue-208-20260713-macos-arm64-09"
+  },
+  "recipe": "cover-center-crop-v1",
+  "options": {
+    "jpegQuality": 85,
+    "jpegProgressive": false,
+    "pngCompression": 4,
+    "webpLosslessLevel": -1,
+    "webpQuality": 85,
+    "webpMethod": 4,
+    "webpLossless": false,
+    "webpNoAlpha": false
+  },
+  "fixtures": [
+    {
+      "scenario": "web-photo",
+      "source": {
+        "path": {
+          "value": "generated/codec-matrix-source-fixtures/cafe.jpg"
+        },
+        "sha256": {
+          "value": "ec07fa417de74dfb0c425bf2099ce9c4df508f111e4ab2e7f4057db2eb10205e"
+        },
+        "byteCount": 3061079,
+        "dimensions": {
+          "width": 4032,
+          "height": 3024
+        }
+      },
+      "derived": {
+        "path": {
+          "value": "fixtures/web-photo/input.png"
+        },
+        "sha256": {
+          "value": "51948986bd7a99b573bdb2eb045f9f4752cf8592d4452cc88c646007c814327d"
+        },
+        "byteCount": 4106689,
+        "dimensions": {
+          "width": 1920,
+          "height": 1080
+        }
+      },
+      "inputs": [
+        {
+          "format": "JPEG",
+          "path": {
+            "value": "fixtures/web-photo/input.jpg"
+          },
+          "sha256": {
+            "value": "5b6e2e5991609ecfcf489a33ff200036689e4c3da048c20d4101df1f752728bb"
+          },
+          "byteCount": 429306,
+          "dimensions": {
+            "width": 1920,
+            "height": 1080
+          },
+          "magic": {
+            "signature": "FFD8FF",
+            "valid": true
+          }
+        },
+        {
+          "format": "PNG",
+          "path": {
+            "value": "fixtures/web-photo/input.png"
+          },
+          "sha256": {
+            "value": "51948986bd7a99b573bdb2eb045f9f4752cf8592d4452cc88c646007c814327d"
+          },
+          "byteCount": 4106689,
+          "dimensions": {
+            "width": 1920,
+            "height": 1080
+          },
+          "magic": {
+            "signature": "89504E470D0A1A0A",
+            "valid": true
+          }
+        },
+        {
+          "format": "WEBP",
+          "path": {
+            "value": "fixtures/web-photo/input.webp"
+          },
+          "sha256": {
+            "value": "8d26bd6c6c0cdde7057d3650079944ce2e27d26f095ae32c17cdde68ae654f96"
+          },
+          "byteCount": 327690,
+          "dimensions": {
+            "width": 1920,
+            "height": 1080
+          },
+          "magic": {
+            "signature": "RIFF....WEBP",
+            "valid": true
+          }
+        }
+      ]
+    },
+    {
+      "scenario": "profile",
+      "source": {
+        "path": {
+          "value": "generated/codec-matrix-source-fixtures/homer.jpg"
+        },
+        "sha256": {
+          "value": "66a14651276f98767d9459eb6091d3b6881f0c912f01f161b41b38a5ae9577c6"
+        },
+        "byteCount": 83973,
+        "dimensions": {
+          "width": 1248,
+          "height": 702
+        }
+      },
+      "derived": {
+        "path": {
+          "value": "fixtures/profile/input.png"
+        },
+        "sha256": {
+          "value": "ae31030716d9dbbb74178ffeafc648a512d3650cd2ba528685591c67928b1940"
+        },
+        "byteCount": 257323,
+        "dimensions": {
+          "width": 512,
+          "height": 512
+        }
+      },
+      "inputs": [
+        {
+          "format": "JPEG",
+          "path": {
+            "value": "fixtures/profile/input.jpg"
+          },
+          "sha256": {
+            "value": "6bca6f3aa1f7af1cb1096bf87746997404643f84d3e9af862a97741b61aff551"
+          },
+          "byteCount": 32205,
+          "dimensions": {
+            "width": 512,
+            "height": 512
+          },
+          "magic": {
+            "signature": "FFD8FF",
+            "valid": true
+          }
+        },
+        {
+          "format": "PNG",
+          "path": {
+            "value": "fixtures/profile/input.png"
+          },
+          "sha256": {
+            "value": "ae31030716d9dbbb74178ffeafc648a512d3650cd2ba528685591c67928b1940"
+          },
+          "byteCount": 257323,
+          "dimensions": {
+            "width": 512,
+            "height": 512
+          },
+          "magic": {
+            "signature": "89504E470D0A1A0A",
+            "valid": true
+          }
+        },
+        {
+          "format": "WEBP",
+          "path": {
+            "value": "fixtures/profile/input.webp"
+          },
+          "sha256": {
+            "value": "36893de3ea32bb037400ec94d39788e230f828780769b5bd68c5802e64e6bc07"
+          },
+          "byteCount": 19252,
+          "dimensions": {
+            "width": 512,
+            "height": 512
+          },
+          "magic": {
+            "signature": "RIFF....WEBP",
+            "valid": true
+          }
+        }
+      ]
+    }
+  ]
+}

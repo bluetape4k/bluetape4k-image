@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "runId": {
+    "value": "issue-208-20260713-macos-arm64-09"
+  },
+  "requestedBackend": "java21",
+  "requestedSelector": "java21",
+  "status": "N/A",
+  "reasonCode": "CAPABILITY_UNKNOWN",
+  "reason": "JNI binary architecture is unavailable",
+  "facts": {
+    "osName": "Mac OS X",
+    "kernelVersion": "26.5.1",
+    "architecture": "arm64",
+    "cpuModel": "Apple M5",
+    "jdkVendor": "Oracle Corporation",
+    "jdkVersion": "21.0.11+9-LTS-jvmci-23.1-b92",
+    "jdkMajor": 21,
+    "nativeAccessEnabled": false,
+    "loaderPathAvailable": true,
+    "diskAvailableBytes": 1647365464064,
+    "gitSha": "999b1e87f764a175d9887af9972ed41644e37f9e",
+    "gitDirty": false
+  }
+}

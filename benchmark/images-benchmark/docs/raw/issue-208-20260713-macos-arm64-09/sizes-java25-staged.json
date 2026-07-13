@@ -1,0 +1,265 @@
+{
+  "schemaVersion": 1,
+  "runId": {
+    "value": "issue-208-20260713-macos-arm64-09"
+  },
+  "backend": "java25",
+  "observations": [
+    {
+      "key": {
+        "backend": "java25",
+        "scenario": "web-photo",
+        "format": "PNG",
+        "direction": "encode",
+        "inputSha256": {
+          "value": "5b6e2e5991609ecfcf489a33ff200036689e4c3da048c20d4101df1f752728bb"
+        }
+      },
+      "inputBytes": 429306,
+      "outputBytes": 3485741,
+      "outputSha256": {
+        "value": "3ad824525179147c348ea21656694f27c9679d16f4e1f8cf87bf13a746e53a73"
+      }
+    },
+    {
+      "key": {
+        "backend": "java25",
+        "scenario": "web-photo",
+        "format": "PNG",
+        "direction": "decode",
+        "inputSha256": {
+          "value": "51948986bd7a99b573bdb2eb045f9f4752cf8592d4452cc88c646007c814327d"
+        }
+      },
+      "inputBytes": 4106689,
+      "outputBytes": 428521,
+      "outputSha256": {
+        "value": "24d565cf07f03e6a6392bc7eb06b7f1c654e66853e7cb57d62e7ba91a7af2e0a"
+      }
+    },
+    {
+      "key": {
+        "backend": "java25",
+        "scenario": "web-photo",
+        "format": "WEBP",
+        "direction": "encode",
+        "inputSha256": {
+          "value": "5b6e2e5991609ecfcf489a33ff200036689e4c3da048c20d4101df1f752728bb"
+        }
+      },
+      "inputBytes": 429306,
+      "outputBytes": 332028,
+      "outputSha256": {
+        "value": "b3e1ddba4bc9fd868598abd311ddaa2f6bcfd6b785d690dc430e9675f98b8d2f"
+      }
+    },
+    {
+      "key": {
+        "backend": "java25",
+        "scenario": "web-photo",
+        "format": "WEBP",
+        "direction": "decode",
+        "inputSha256": {
+          "value": "8d26bd6c6c0cdde7057d3650079944ce2e27d26f095ae32c17cdde68ae654f96"
+        }
+      },
+      "inputBytes": 327690,
+      "outputBytes": 414997,
+      "outputSha256": {
+        "value": "6b599ee2ab4e8eb00d880d0ea73a0d39c3a5c027efde296bb73744b502ab4e0a"
+      }
+    },
+    {
+      "key": {
+        "backend": "java25",
+        "scenario": "profile",
+        "format": "PNG",
+        "direction": "encode",
+        "inputSha256": {
+          "value": "6bca6f3aa1f7af1cb1096bf87746997404643f84d3e9af862a97741b61aff551"
+        }
+      },
+      "inputBytes": 32205,
+      "outputBytes": 225576,
+      "outputSha256": {
+        "value": "ca6a43e0f687626b2bfe937f558599ee6366cb25f5b840b872613d6da97f23c9"
+      }
+    },
+    {
+      "key": {
+        "backend": "java25",
+        "scenario": "profile",
+        "format": "PNG",
+        "direction": "decode",
+        "inputSha256": {
+          "value": "ae31030716d9dbbb74178ffeafc648a512d3650cd2ba528685591c67928b1940"
+        }
+      },
+      "inputBytes": 257323,
+      "outputBytes": 32181,
+      "outputSha256": {
+        "value": "b31a32e3e7073499dd5b7290bd928c5555f370cacd31a56f13be812ad57cb52b"
+      }
+    },
+    {
+      "key": {
+        "backend": "java25",
+        "scenario": "profile",
+        "format": "WEBP",
+        "direction": "encode",
+        "inputSha256": {
+          "value": "6bca6f3aa1f7af1cb1096bf87746997404643f84d3e9af862a97741b61aff551"
+        }
+      },
+      "inputBytes": 32205,
+      "outputBytes": 19914,
+      "outputSha256": {
+        "value": "e5d281971ae073469a4ada6644c035e4e99e415c36c5151762cc6e6907fa2db3"
+      }
+    },
+    {
+      "key": {
+        "backend": "java25",
+        "scenario": "profile",
+        "format": "WEBP",
+        "direction": "decode",
+        "inputSha256": {
+          "value": "36893de3ea32bb037400ec94d39788e230f828780769b5bd68c5802e64e6bc07"
+        }
+      },
+      "inputBytes": 19252,
+      "outputBytes": 31467,
+      "outputSha256": {
+        "value": "0463f5acc0adc9789becfb3ab944b52d460749982e2937cbd0e277b4f32bfe4e"
+      }
+    },
+    {
+      "key": {
+        "backend": "java25",
+        "scenario": "web-photo",
+        "format": "AVIF",
+        "direction": "encode",
+        "inputSha256": {
+          "value": "5b6e2e5991609ecfcf489a33ff200036689e4c3da048c20d4101df1f752728bb"
+        }
+      },
+      "inputBytes": 429306,
+      "outputBytes": 364133,
+      "outputSha256": {
+        "value": "e2a56a0b2929b5ed4701b87d065d074316627e8337d16e940f642fdbb5435584"
+      }
+    },
+    {
+      "key": {
+        "backend": "java25",
+        "scenario": "web-photo",
+        "format": "AVIF",
+        "direction": "decode",
+        "inputSha256": {
+          "value": "e2a56a0b2929b5ed4701b87d065d074316627e8337d16e940f642fdbb5435584"
+        }
+      },
+      "inputBytes": 364133,
+      "outputBytes": 428429,
+      "outputSha256": {
+        "value": "5cc50d7fbaf252696a33b444698b2009bd754415e314f3a7788275b54c97db32"
+      }
+    },
+    {
+      "key": {
+        "backend": "java25",
+        "scenario": "web-photo",
+        "format": "HEIC",
+        "direction": "encode",
+        "inputSha256": {
+          "value": "5b6e2e5991609ecfcf489a33ff200036689e4c3da048c20d4101df1f752728bb"
+        }
+      },
+      "inputBytes": 429306,
+      "outputBytes": 754672,
+      "outputSha256": {
+        "value": "db1629465ae01052ce8f07a4cefb2683a8062db6bdfa765364d50aee107810fe"
+      }
+    },
+    {
+      "key": {
+        "backend": "java25",
+        "scenario": "web-photo",
+        "format": "HEIC",
+        "direction": "decode",
+        "inputSha256": {
+          "value": "db1629465ae01052ce8f07a4cefb2683a8062db6bdfa765364d50aee107810fe"
+        }
+      },
+      "inputBytes": 754672,
+      "outputBytes": 429295,
+      "outputSha256": {
+        "value": "06a79d7606f139b62926688208cd7a3a05d775ba2adbb49e96ced1d8247b76ce"
+      }
+    },
+    {
+      "key": {
+        "backend": "java25",
+        "scenario": "profile",
+        "format": "AVIF",
+        "direction": "encode",
+        "inputSha256": {
+          "value": "6bca6f3aa1f7af1cb1096bf87746997404643f84d3e9af862a97741b61aff551"
+        }
+      },
+      "inputBytes": 32205,
+      "outputBytes": 23605,
+      "outputSha256": {
+        "value": "ec307c5dd261e406167542bff42b914c90e1905429fa3a8bf83d5c44fd0ddc92"
+      }
+    },
+    {
+      "key": {
+        "backend": "java25",
+        "scenario": "profile",
+        "format": "AVIF",
+        "direction": "decode",
+        "inputSha256": {
+          "value": "ec307c5dd261e406167542bff42b914c90e1905429fa3a8bf83d5c44fd0ddc92"
+        }
+      },
+      "inputBytes": 23605,
+      "outputBytes": 31999,
+      "outputSha256": {
+        "value": "1055dd9e8a21130f51e4612bb75791b8de8d08f6c6a61b78fbf44f7dc84790f0"
+      }
+    },
+    {
+      "key": {
+        "backend": "java25",
+        "scenario": "profile",
+        "format": "HEIC",
+        "direction": "encode",
+        "inputSha256": {
+          "value": "6bca6f3aa1f7af1cb1096bf87746997404643f84d3e9af862a97741b61aff551"
+        }
+      },
+      "inputBytes": 32205,
+      "outputBytes": 55961,
+      "outputSha256": {
+        "value": "b40c8c58764371d0c11d65d9d4b2b8513b85640d87053088b8884bdf78ac0d9c"
+      }
+    },
+    {
+      "key": {
+        "backend": "java25",
+        "scenario": "profile",
+        "format": "HEIC",
+        "direction": "decode",
+        "inputSha256": {
+          "value": "b40c8c58764371d0c11d65d9d4b2b8513b85640d87053088b8884bdf78ac0d9c"
+        }
+      },
+      "inputBytes": 55961,
+      "outputBytes": 32200,
+      "outputSha256": {
+        "value": "915cc118479e6018e4002d085d3a2a1dbae9e25d7aedc0f3a2f83ff4495b8852"
+      }
+    }
+  ]
+}

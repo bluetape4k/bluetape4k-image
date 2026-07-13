@@ -1,0 +1,186 @@
+[
+  {
+    "benchmark": "io.bluetape4k.images.benchmark.VipsCodecMatrixBenchmark.decodePngToJpeg",
+    "params": {
+      "scenario": "web-photo"
+    },
+    "mode": "avgt",
+    "threads": 1,
+    "forks": 1,
+    "warmupIterations": 1,
+    "warmupTime": "1 s",
+    "measurementIterations": 3,
+    "measurementTime": "1 s",
+    "primaryMetric": {
+      "score": 19.001345319124155,
+      "scoreUnit": "ms/op"
+    },
+    "secondaryMetrics": {
+      "gc.alloc.rate.norm": {
+        "score": 868771.2946657349,
+        "scoreUnit": "B/op"
+      }
+    }
+  },
+  {
+    "benchmark": "io.bluetape4k.images.benchmark.VipsCodecMatrixBenchmark.decodePngToJpeg",
+    "params": {
+      "scenario": "profile"
+    },
+    "mode": "avgt",
+    "threads": 1,
+    "forks": 1,
+    "warmupIterations": 1,
+    "warmupTime": "1 s",
+    "measurementIterations": 3,
+    "measurementTime": "1 s",
+    "primaryMetric": {
+      "score": 2.1482312483641723,
+      "scoreUnit": "ms/op"
+    },
+    "secondaryMetrics": {
+      "gc.alloc.rate.norm": {
+        "score": 69490.83757008516,
+        "scoreUnit": "B/op"
+      }
+    }
+  },
+  {
+    "benchmark": "io.bluetape4k.images.benchmark.VipsCodecMatrixBenchmark.decodeWebpToJpeg",
+    "params": {
+      "scenario": "web-photo"
+    },
+    "mode": "avgt",
+    "threads": 1,
+    "forks": 1,
+    "warmupIterations": 1,
+    "warmupTime": "1 s",
+    "measurementIterations": 3,
+    "measurementTime": "1 s",
+    "primaryMetric": {
+      "score": 20.093263599084967,
+      "scoreUnit": "ms/op"
+    },
+    "secondaryMetrics": {
+      "gc.alloc.rate.norm": {
+        "score": 842108.5166013072,
+        "scoreUnit": "B/op"
+      }
+    }
+  },
+  {
+    "benchmark": "io.bluetape4k.images.benchmark.VipsCodecMatrixBenchmark.decodeWebpToJpeg",
+    "params": {
+      "scenario": "profile"
+    },
+    "mode": "avgt",
+    "threads": 1,
+    "forks": 1,
+    "warmupIterations": 1,
+    "warmupTime": "1 s",
+    "measurementIterations": 3,
+    "measurementTime": "1 s",
+    "primaryMetric": {
+      "score": 2.6807993916853885,
+      "scoreUnit": "ms/op"
+    },
+    "secondaryMetrics": {
+      "gc.alloc.rate.norm": {
+        "score": 68146.17646305471,
+        "scoreUnit": "B/op"
+      }
+    }
+  },
+  {
+    "benchmark": "io.bluetape4k.images.benchmark.VipsCodecMatrixBenchmark.encodePngFromJpeg",
+    "params": {
+      "scenario": "web-photo"
+    },
+    "mode": "avgt",
+    "threads": 1,
+    "forks": 1,
+    "warmupIterations": 1,
+    "warmupTime": "1 s",
+    "measurementIterations": 3,
+    "measurementTime": "1 s",
+    "primaryMetric": {
+      "score": 80.44657261538462,
+      "scoreUnit": "ms/op"
+    },
+    "secondaryMetrics": {
+      "gc.alloc.rate.norm": {
+        "score": 6984120.82051282,
+        "scoreUnit": "B/op"
+      }
+    }
+  },
+  {
+    "benchmark": "io.bluetape4k.images.benchmark.VipsCodecMatrixBenchmark.encodePngFromJpeg",
+    "params": {
+      "scenario": "profile"
+    },
+    "mode": "avgt",
+    "threads": 1,
+    "forks": 1,
+    "warmupIterations": 1,
+    "warmupTime": "1 s",
+    "measurementIterations": 3,
+    "measurementTime": "1 s",
+    "primaryMetric": {
+      "score": 6.018047326404779,
+      "scoreUnit": "ms/op"
+    },
+    "secondaryMetrics": {
+      "gc.alloc.rate.norm": {
+        "score": 456466.2928509557,
+        "scoreUnit": "B/op"
+      }
+    }
+  },
+  {
+    "benchmark": "io.bluetape4k.images.benchmark.VipsCodecMatrixBenchmark.encodeWebpFromJpeg",
+    "params": {
+      "scenario": "web-photo"
+    },
+    "mode": "avgt",
+    "threads": 1,
+    "forks": 1,
+    "warmupIterations": 1,
+    "warmupTime": "1 s",
+    "measurementIterations": 3,
+    "measurementTime": "1 s",
+    "primaryMetric": {
+      "score": 106.64608886666667,
+      "scoreUnit": "ms/op"
+    },
+    "secondaryMetrics": {
+      "gc.alloc.rate.norm": {
+        "score": 679169.0666666667,
+        "scoreUnit": "B/op"
+      }
+    }
+  },
+  {
+    "benchmark": "io.bluetape4k.images.benchmark.VipsCodecMatrixBenchmark.encodeWebpFromJpeg",
+    "params": {
+      "scenario": "profile"
+    },
+    "mode": "avgt",
+    "threads": 1,
+    "forks": 1,
+    "warmupIterations": 1,
+    "warmupTime": "1 s",
+    "measurementIterations": 3,
+    "measurementTime": "1 s",
+    "primaryMetric": {
+      "score": 10.44742440560348,
+      "scoreUnit": "ms/op"
+    },
+    "secondaryMetrics": {
+      "gc.alloc.rate.norm": {
+        "score": 47147.30401851462,
+        "scoreUnit": "B/op"
+      }
+    }
+  }
+]

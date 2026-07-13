@@ -1,0 +1,702 @@
+{
+  "schemaVersion": 1,
+  "runId": {
+    "value": "issue-208-20260713-macos-arm64-09"
+  },
+  "expectedCellCount": 32,
+  "cells": [
+    {
+      "key": {
+        "backend": "java25",
+        "scenario": "web-photo",
+        "format": "PNG",
+        "direction": "encode",
+        "inputSha256": {
+          "value": "5b6e2e5991609ecfcf489a33ff200036689e4c3da048c20d4101df1f752728bb"
+        }
+      },
+      "status": "MEASURED",
+      "reasonCode": "NONE",
+      "metrics": {
+        "latencyMs": 80.13204597435897,
+        "allocationBytesPerOp": 6984120.82051282,
+        "inputBytes": 429306,
+        "outputBytes": 3485741,
+        "outputSha256": {
+          "value": "3ad824525179147c348ea21656694f27c9679d16f4e1f8cf87bf13a746e53a73"
+        }
+      }
+    },
+    {
+      "key": {
+        "backend": "java25",
+        "scenario": "web-photo",
+        "format": "PNG",
+        "direction": "decode",
+        "inputSha256": {
+          "value": "51948986bd7a99b573bdb2eb045f9f4752cf8592d4452cc88c646007c814327d"
+        }
+      },
+      "status": "MEASURED",
+      "reasonCode": "NONE",
+      "metrics": {
+        "latencyMs": 18.825243820987655,
+        "allocationBytesPerOp": 868771.2946657349,
+        "inputBytes": 4106689,
+        "outputBytes": 428521,
+        "outputSha256": {
+          "value": "24d565cf07f03e6a6392bc7eb06b7f1c654e66853e7cb57d62e7ba91a7af2e0a"
+        }
+      }
+    },
+    {
+      "key": {
+        "backend": "java25",
+        "scenario": "web-photo",
+        "format": "WEBP",
+        "direction": "encode",
+        "inputSha256": {
+          "value": "5b6e2e5991609ecfcf489a33ff200036689e4c3da048c20d4101df1f752728bb"
+        }
+      },
+      "status": "MEASURED",
+      "reasonCode": "NONE",
+      "metrics": {
+        "latencyMs": 106.404875,
+        "allocationBytesPerOp": 679169.0666666667,
+        "inputBytes": 429306,
+        "outputBytes": 332028,
+        "outputSha256": {
+          "value": "b3e1ddba4bc9fd868598abd311ddaa2f6bcfd6b785d690dc430e9675f98b8d2f"
+        }
+      }
+    },
+    {
+      "key": {
+        "backend": "java25",
+        "scenario": "web-photo",
+        "format": "WEBP",
+        "direction": "decode",
+        "inputSha256": {
+          "value": "8d26bd6c6c0cdde7057d3650079944ce2e27d26f095ae32c17cdde68ae654f96"
+        }
+      },
+      "status": "MEASURED",
+      "reasonCode": "NONE",
+      "metrics": {
+        "latencyMs": 20.019682738562093,
+        "allocationBytesPerOp": 842108.5166013072,
+        "inputBytes": 327690,
+        "outputBytes": 414997,
+        "outputSha256": {
+          "value": "6b599ee2ab4e8eb00d880d0ea73a0d39c3a5c027efde296bb73744b502ab4e0a"
+        }
+      }
+    },
+    {
+      "key": {
+        "backend": "java25",
+        "scenario": "web-photo",
+        "format": "AVIF",
+        "direction": "decode",
+        "inputSha256": {
+          "value": "e2a56a0b2929b5ed4701b87d065d074316627e8337d16e940f642fdbb5435584"
+        }
+      },
+      "status": "MEASURED",
+      "reasonCode": "NONE",
+      "metrics": {
+        "latencyMs": 38.75099422981956,
+        "allocationBytesPerOp": 870204.1519468186,
+        "inputBytes": 364133,
+        "outputBytes": 428429,
+        "outputSha256": {
+          "value": "5cc50d7fbaf252696a33b444698b2009bd754415e314f3a7788275b54c97db32"
+        }
+      }
+    },
+    {
+      "key": {
+        "backend": "java25",
+        "scenario": "web-photo",
+        "format": "AVIF",
+        "direction": "encode",
+        "inputSha256": {
+          "value": "5b6e2e5991609ecfcf489a33ff200036689e4c3da048c20d4101df1f752728bb"
+        }
+      },
+      "status": "MEASURED",
+      "reasonCode": "NONE",
+      "metrics": {
+        "latencyMs": 511.2683589444444,
+        "allocationBytesPerOp": 743568.0,
+        "inputBytes": 429306,
+        "outputBytes": 364133,
+        "outputSha256": {
+          "value": "e2a56a0b2929b5ed4701b87d065d074316627e8337d16e940f642fdbb5435584"
+        }
+      }
+    },
+    {
+      "key": {
+        "backend": "java25",
+        "scenario": "web-photo",
+        "format": "HEIC",
+        "direction": "decode",
+        "inputSha256": {
+          "value": "db1629465ae01052ce8f07a4cefb2683a8062db6bdfa765364d50aee107810fe"
+        }
+      },
+      "status": "MEASURED",
+      "reasonCode": "NONE",
+      "metrics": {
+        "latencyMs": 73.03820138095239,
+        "allocationBytesPerOp": 871753.3333333334,
+        "inputBytes": 754672,
+        "outputBytes": 429295,
+        "outputSha256": {
+          "value": "06a79d7606f139b62926688208cd7a3a05d775ba2adbb49e96ced1d8247b76ce"
+        }
+      }
+    },
+    {
+      "key": {
+        "backend": "java25",
+        "scenario": "web-photo",
+        "format": "HEIC",
+        "direction": "encode",
+        "inputSha256": {
+          "value": "5b6e2e5991609ecfcf489a33ff200036689e4c3da048c20d4101df1f752728bb"
+        }
+      },
+      "status": "MEASURED",
+      "reasonCode": "NONE",
+      "metrics": {
+        "latencyMs": 339.5553496111111,
+        "allocationBytesPerOp": 1521699.5555555557,
+        "inputBytes": 429306,
+        "outputBytes": 754672,
+        "outputSha256": {
+          "value": "db1629465ae01052ce8f07a4cefb2683a8062db6bdfa765364d50aee107810fe"
+        }
+      }
+    },
+    {
+      "key": {
+        "backend": "java25",
+        "scenario": "profile",
+        "format": "PNG",
+        "direction": "encode",
+        "inputSha256": {
+          "value": "6bca6f3aa1f7af1cb1096bf87746997404643f84d3e9af862a97741b61aff551"
+        }
+      },
+      "status": "MEASURED",
+      "reasonCode": "NONE",
+      "metrics": {
+        "latencyMs": 5.944637114189914,
+        "allocationBytesPerOp": 456466.2928509557,
+        "inputBytes": 32205,
+        "outputBytes": 225576,
+        "outputSha256": {
+          "value": "ca6a43e0f687626b2bfe937f558599ee6366cb25f5b840b872613d6da97f23c9"
+        }
+      }
+    },
+    {
+      "key": {
+        "backend": "java25",
+        "scenario": "profile",
+        "format": "PNG",
+        "direction": "decode",
+        "inputSha256": {
+          "value": "ae31030716d9dbbb74178ffeafc648a512d3650cd2ba528685591c67928b1940"
+        }
+      },
+      "status": "MEASURED",
+      "reasonCode": "NONE",
+      "metrics": {
+        "latencyMs": 2.155700860495359,
+        "allocationBytesPerOp": 69490.83757008516,
+        "inputBytes": 257323,
+        "outputBytes": 32181,
+        "outputSha256": {
+          "value": "b31a32e3e7073499dd5b7290bd928c5555f370cacd31a56f13be812ad57cb52b"
+        }
+      }
+    },
+    {
+      "key": {
+        "backend": "java25",
+        "scenario": "profile",
+        "format": "WEBP",
+        "direction": "encode",
+        "inputSha256": {
+          "value": "6bca6f3aa1f7af1cb1096bf87746997404643f84d3e9af862a97741b61aff551"
+        }
+      },
+      "status": "MEASURED",
+      "reasonCode": "NONE",
+      "metrics": {
+        "latencyMs": 10.415348412797764,
+        "allocationBytesPerOp": 47147.30401851462,
+        "inputBytes": 32205,
+        "outputBytes": 19914,
+        "outputSha256": {
+          "value": "e5d281971ae073469a4ada6644c035e4e99e415c36c5151762cc6e6907fa2db3"
+        }
+      }
+    },
+    {
+      "key": {
+        "backend": "java25",
+        "scenario": "profile",
+        "format": "WEBP",
+        "direction": "decode",
+        "inputSha256": {
+          "value": "36893de3ea32bb037400ec94d39788e230f828780769b5bd68c5802e64e6bc07"
+        }
+      },
+      "status": "MEASURED",
+      "reasonCode": "NONE",
+      "metrics": {
+        "latencyMs": 2.605418811902681,
+        "allocationBytesPerOp": 68146.17646305471,
+        "inputBytes": 19252,
+        "outputBytes": 31467,
+        "outputSha256": {
+          "value": "0463f5acc0adc9789becfb3ab944b52d460749982e2937cbd0e277b4f32bfe4e"
+        }
+      }
+    },
+    {
+      "key": {
+        "backend": "java25",
+        "scenario": "profile",
+        "format": "AVIF",
+        "direction": "decode",
+        "inputSha256": {
+          "value": "ec307c5dd261e406167542bff42b914c90e1905429fa3a8bf83d5c44fd0ddc92"
+        }
+      },
+      "status": "MEASURED",
+      "reasonCode": "NONE",
+      "metrics": {
+        "latencyMs": 4.338720745464915,
+        "allocationBytesPerOp": 69589.0905592465,
+        "inputBytes": 23605,
+        "outputBytes": 31999,
+        "outputSha256": {
+          "value": "1055dd9e8a21130f51e4612bb75791b8de8d08f6c6a61b78fbf44f7dc84790f0"
+        }
+      }
+    },
+    {
+      "key": {
+        "backend": "java25",
+        "scenario": "profile",
+        "format": "AVIF",
+        "direction": "encode",
+        "inputSha256": {
+          "value": "6bca6f3aa1f7af1cb1096bf87746997404643f84d3e9af862a97741b61aff551"
+        }
+      },
+      "status": "MEASURED",
+      "reasonCode": "NONE",
+      "metrics": {
+        "latencyMs": 51.133525,
+        "allocationBytesPerOp": 65065.06666666667,
+        "inputBytes": 32205,
+        "outputBytes": 23605,
+        "outputSha256": {
+          "value": "ec307c5dd261e406167542bff42b914c90e1905429fa3a8bf83d5c44fd0ddc92"
+        }
+      }
+    },
+    {
+      "key": {
+        "backend": "java25",
+        "scenario": "profile",
+        "format": "HEIC",
+        "direction": "decode",
+        "inputSha256": {
+          "value": "b40c8c58764371d0c11d65d9d4b2b8513b85640d87053088b8884bdf78ac0d9c"
+        }
+      },
+      "status": "MEASURED",
+      "reasonCode": "NONE",
+      "metrics": {
+        "latencyMs": 7.681015169674272,
+        "allocationBytesPerOp": 70063.18914334182,
+        "inputBytes": 55961,
+        "outputBytes": 32200,
+        "outputSha256": {
+          "value": "915cc118479e6018e4002d085d3a2a1dbae9e25d7aedc0f3a2f83ff4495b8852"
+        }
+      }
+    },
+    {
+      "key": {
+        "backend": "java25",
+        "scenario": "profile",
+        "format": "HEIC",
+        "direction": "encode",
+        "inputSha256": {
+          "value": "6bca6f3aa1f7af1cb1096bf87746997404643f84d3e9af862a97741b61aff551"
+        }
+      },
+      "status": "MEASURED",
+      "reasonCode": "NONE",
+      "metrics": {
+        "latencyMs": 60.34984556862745,
+        "allocationBytesPerOp": 132464.7843137255,
+        "inputBytes": 32205,
+        "outputBytes": 55961,
+        "outputSha256": {
+          "value": "b40c8c58764371d0c11d65d9d4b2b8513b85640d87053088b8884bdf78ac0d9c"
+        }
+      }
+    },
+    {
+      "key": {
+        "backend": "java21",
+        "scenario": "web-photo",
+        "format": "PNG",
+        "direction": "encode",
+        "inputSha256": {
+          "value": "5b6e2e5991609ecfcf489a33ff200036689e4c3da048c20d4101df1f752728bb"
+        }
+      },
+      "status": "N/A",
+      "reasonCode": "CAPABILITY_UNKNOWN",
+      "reason": "JNI binary architecture is unavailable",
+      "rerunGuidance": "rerun on a compatible host"
+    },
+    {
+      "key": {
+        "backend": "java21",
+        "scenario": "web-photo",
+        "format": "PNG",
+        "direction": "decode",
+        "inputSha256": {
+          "value": "51948986bd7a99b573bdb2eb045f9f4752cf8592d4452cc88c646007c814327d"
+        }
+      },
+      "status": "N/A",
+      "reasonCode": "CAPABILITY_UNKNOWN",
+      "reason": "JNI binary architecture is unavailable",
+      "rerunGuidance": "rerun on a compatible host"
+    },
+    {
+      "key": {
+        "backend": "java21",
+        "scenario": "web-photo",
+        "format": "WEBP",
+        "direction": "encode",
+        "inputSha256": {
+          "value": "5b6e2e5991609ecfcf489a33ff200036689e4c3da048c20d4101df1f752728bb"
+        }
+      },
+      "status": "N/A",
+      "reasonCode": "CAPABILITY_UNKNOWN",
+      "reason": "JNI binary architecture is unavailable",
+      "rerunGuidance": "rerun on a compatible host"
+    },
+    {
+      "key": {
+        "backend": "java21",
+        "scenario": "web-photo",
+        "format": "WEBP",
+        "direction": "decode",
+        "inputSha256": {
+          "value": "8d26bd6c6c0cdde7057d3650079944ce2e27d26f095ae32c17cdde68ae654f96"
+        }
+      },
+      "status": "N/A",
+      "reasonCode": "CAPABILITY_UNKNOWN",
+      "reason": "JNI binary architecture is unavailable",
+      "rerunGuidance": "rerun on a compatible host"
+    },
+    {
+      "key": {
+        "backend": "java21",
+        "scenario": "web-photo",
+        "format": "AVIF",
+        "direction": "decode",
+        "inputSha256": {
+          "value": "e2a56a0b2929b5ed4701b87d065d074316627e8337d16e940f642fdbb5435584"
+        }
+      },
+      "status": "N/A",
+      "reasonCode": "CAPABILITY_UNKNOWN",
+      "reason": "JNI binary architecture is unavailable",
+      "rerunGuidance": "rerun on a compatible host"
+    },
+    {
+      "key": {
+        "backend": "java21",
+        "scenario": "web-photo",
+        "format": "AVIF",
+        "direction": "encode",
+        "inputSha256": {
+          "value": "5b6e2e5991609ecfcf489a33ff200036689e4c3da048c20d4101df1f752728bb"
+        }
+      },
+      "status": "N/A",
+      "reasonCode": "CAPABILITY_UNKNOWN",
+      "reason": "JNI binary architecture is unavailable",
+      "rerunGuidance": "rerun on a compatible host"
+    },
+    {
+      "key": {
+        "backend": "java21",
+        "scenario": "web-photo",
+        "format": "HEIC",
+        "direction": "decode",
+        "inputSha256": {
+          "value": "db1629465ae01052ce8f07a4cefb2683a8062db6bdfa765364d50aee107810fe"
+        }
+      },
+      "status": "N/A",
+      "reasonCode": "CAPABILITY_UNKNOWN",
+      "reason": "JNI binary architecture is unavailable",
+      "rerunGuidance": "rerun on a compatible host"
+    },
+    {
+      "key": {
+        "backend": "java21",
+        "scenario": "web-photo",
+        "format": "HEIC",
+        "direction": "encode",
+        "inputSha256": {
+          "value": "5b6e2e5991609ecfcf489a33ff200036689e4c3da048c20d4101df1f752728bb"
+        }
+      },
+      "status": "N/A",
+      "reasonCode": "CAPABILITY_UNKNOWN",
+      "reason": "JNI binary architecture is unavailable",
+      "rerunGuidance": "rerun on a compatible host"
+    },
+    {
+      "key": {
+        "backend": "java21",
+        "scenario": "profile",
+        "format": "PNG",
+        "direction": "encode",
+        "inputSha256": {
+          "value": "6bca6f3aa1f7af1cb1096bf87746997404643f84d3e9af862a97741b61aff551"
+        }
+      },
+      "status": "N/A",
+      "reasonCode": "CAPABILITY_UNKNOWN",
+      "reason": "JNI binary architecture is unavailable",
+      "rerunGuidance": "rerun on a compatible host"
+    },
+    {
+      "key": {
+        "backend": "java21",
+        "scenario": "profile",
+        "format": "PNG",
+        "direction": "decode",
+        "inputSha256": {
+          "value": "ae31030716d9dbbb74178ffeafc648a512d3650cd2ba528685591c67928b1940"
+        }
+      },
+      "status": "N/A",
+      "reasonCode": "CAPABILITY_UNKNOWN",
+      "reason": "JNI binary architecture is unavailable",
+      "rerunGuidance": "rerun on a compatible host"
+    },
+    {
+      "key": {
+        "backend": "java21",
+        "scenario": "profile",
+        "format": "WEBP",
+        "direction": "encode",
+        "inputSha256": {
+          "value": "6bca6f3aa1f7af1cb1096bf87746997404643f84d3e9af862a97741b61aff551"
+        }
+      },
+      "status": "N/A",
+      "reasonCode": "CAPABILITY_UNKNOWN",
+      "reason": "JNI binary architecture is unavailable",
+      "rerunGuidance": "rerun on a compatible host"
+    },
+    {
+      "key": {
+        "backend": "java21",
+        "scenario": "profile",
+        "format": "WEBP",
+        "direction": "decode",
+        "inputSha256": {
+          "value": "36893de3ea32bb037400ec94d39788e230f828780769b5bd68c5802e64e6bc07"
+        }
+      },
+      "status": "N/A",
+      "reasonCode": "CAPABILITY_UNKNOWN",
+      "reason": "JNI binary architecture is unavailable",
+      "rerunGuidance": "rerun on a compatible host"
+    },
+    {
+      "key": {
+        "backend": "java21",
+        "scenario": "profile",
+        "format": "AVIF",
+        "direction": "decode",
+        "inputSha256": {
+          "value": "ec307c5dd261e406167542bff42b914c90e1905429fa3a8bf83d5c44fd0ddc92"
+        }
+      },
+      "status": "N/A",
+      "reasonCode": "CAPABILITY_UNKNOWN",
+      "reason": "JNI binary architecture is unavailable",
+      "rerunGuidance": "rerun on a compatible host"
+    },
+    {
+      "key": {
+        "backend": "java21",
+        "scenario": "profile",
+        "format": "AVIF",
+        "direction": "encode",
+        "inputSha256": {
+          "value": "6bca6f3aa1f7af1cb1096bf87746997404643f84d3e9af862a97741b61aff551"
+        }
+      },
+      "status": "N/A",
+      "reasonCode": "CAPABILITY_UNKNOWN",
+      "reason": "JNI binary architecture is unavailable",
+      "rerunGuidance": "rerun on a compatible host"
+    },
+    {
+      "key": {
+        "backend": "java21",
+        "scenario": "profile",
+        "format": "HEIC",
+        "direction": "decode",
+        "inputSha256": {
+          "value": "b40c8c58764371d0c11d65d9d4b2b8513b85640d87053088b8884bdf78ac0d9c"
+        }
+      },
+      "status": "N/A",
+      "reasonCode": "CAPABILITY_UNKNOWN",
+      "reason": "JNI binary architecture is unavailable",
+      "rerunGuidance": "rerun on a compatible host"
+    },
+    {
+      "key": {
+        "backend": "java21",
+        "scenario": "profile",
+        "format": "HEIC",
+        "direction": "encode",
+        "inputSha256": {
+          "value": "6bca6f3aa1f7af1cb1096bf87746997404643f84d3e9af862a97741b61aff551"
+        }
+      },
+      "status": "N/A",
+      "reasonCode": "CAPABILITY_UNKNOWN",
+      "reason": "JNI binary architecture is unavailable",
+      "rerunGuidance": "rerun on a compatible host"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": {
+        "value": "preflight-java21.json"
+      },
+      "sha256": {
+        "value": "916ebf35493ed3c121fe15be1dad0e8b7ce769ef55d7f1cdc41a8530b38ab0f1"
+      },
+      "byteCount": 696
+    },
+    {
+      "path": {
+        "value": "preflight-java25.json"
+      },
+      "sha256": {
+        "value": "154c0ef2e601c81451896789277665058896b43592df3441c22d9b00136b99ba"
+      },
+      "byteCount": 631
+    },
+    {
+      "path": {
+        "value": "fixtures/manifest.json"
+      },
+      "sha256": {
+        "value": "2666e384f65f6da4cf5d1bccb793956458e8eb5f4e0d7bdfe2df63e9e909a717"
+      },
+      "byteCount": 4756
+    },
+    {
+      "path": {
+        "value": "fixtures/experimental-java25/manifest.json"
+      },
+      "sha256": {
+        "value": "3d7c79b64db871f9a150a66833fad8c6463ef93e539abc63b322e105d9018ecf"
+      },
+      "byteCount": 2319
+    },
+    {
+      "path": {
+        "value": "evidence/latency-java25-codecMatrix.json"
+      },
+      "sha256": {
+        "value": "f199eb42d8e023cac89288fb6e89d51afa23abd85e2fe8b598daa577bd392d75"
+      },
+      "byteCount": 3298
+    },
+    {
+      "path": {
+        "value": "evidence/latency-java25-codecMatrixAvif.json"
+      },
+      "sha256": {
+        "value": "6db38a46531a28a24132b8df9ad69f5ba86518a9bfd802e07b24c103202d637c"
+      },
+      "byteCount": 1694
+    },
+    {
+      "path": {
+        "value": "evidence/latency-java25-codecMatrixHeic.json"
+      },
+      "sha256": {
+        "value": "1ad33d1f54dc56677b3f4d19cf79e8c3edf9e0c4c081945ed4f1730f1a0d579d"
+      },
+      "byteCount": 1702
+    },
+    {
+      "path": {
+        "value": "evidence/allocation-java25-avif.json"
+      },
+      "sha256": {
+        "value": "b13452b7658abf2cbc0f13d818c6076e78c60a791ef2fe7389860ed613833278"
+      },
+      "byteCount": 2232
+    },
+    {
+      "path": {
+        "value": "evidence/allocation-java25-heic.json"
+      },
+      "sha256": {
+        "value": "74a96a9749de47e8c90cf3c3b4647dc0d4476e58f6ac49c93fff474d92e749ef"
+      },
+      "byteCount": 2241
+    },
+    {
+      "path": {
+        "value": "evidence/allocation-java25.json"
+      },
+      "sha256": {
+        "value": "c0b2c7f60a1a0590e18983d60122450260eefe4c3bf9ba506cd218601af5ee17"
+      },
+      "byteCount": 4386
+    },
+    {
+      "path": {
+        "value": "sizes-java25-staged.json"
+      },
+      "sha256": {
+        "value": "ba52e4aefb93f21c8f539a64655442ab898ec876f1ea110527aad320c336ff3c"
+      },
+      "byteCount": 7306
+    }
+  ]
+}
