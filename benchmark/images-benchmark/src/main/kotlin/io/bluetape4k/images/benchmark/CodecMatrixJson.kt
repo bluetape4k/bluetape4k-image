@@ -36,6 +36,12 @@ internal object CodecMatrixJson {
     internal fun encode(manifest: CodecMatrixPreflightManifest): String =
         json.encodeToString(manifest)
 
+    internal fun encode(manifest: CodecMatrixSizeManifest): String =
+        json.encodeToString(manifest)
+
+    internal fun encode(manifest: CodecMatrixExperimentalFixtureManifest): String =
+        json.encodeToString(manifest)
+
     internal fun encode(manifest: CodecMatrixFinalizedManifest): String =
         json.encodeToString(manifest.validateAccepted())
 
@@ -46,6 +52,12 @@ internal object CodecMatrixJson {
         writeBytes(target, encode(manifest).toByteArray(StandardCharsets.UTF_8))
 
     internal fun write(target: Path, manifest: CodecMatrixPreflightManifest): CodecMatrixSha256 =
+        writeBytes(target, encode(manifest).toByteArray(StandardCharsets.UTF_8))
+
+    internal fun write(target: Path, manifest: CodecMatrixSizeManifest): CodecMatrixSha256 =
+        writeBytes(target, encode(manifest).toByteArray(StandardCharsets.UTF_8))
+
+    internal fun write(target: Path, manifest: CodecMatrixExperimentalFixtureManifest): CodecMatrixSha256 =
         writeBytes(target, encode(manifest).toByteArray(StandardCharsets.UTF_8))
 
     internal fun write(target: Path, manifest: CodecMatrixFinalizedManifest): CodecMatrixSha256 =
@@ -96,6 +108,22 @@ internal object CodecMatrixJson {
             throw e
         } catch (e: Exception) {
             throw IllegalArgumentException("invalid codec matrix preflight JSON", e)
+        }
+    }
+
+    internal fun readSizes(
+        source: Path,
+        expectedSha256: CodecMatrixSha256,
+    ): CodecMatrixSizeManifest {
+        val bytes = readVerifiedBytes(source, expectedSha256)
+        val text = bytes.toString(StandardCharsets.UTF_8)
+        StrictJsonScanner(text).validate()
+        return try {
+            json.decodeFromString<CodecMatrixSizeManifest>(text)
+        } catch (e: IllegalArgumentException) {
+            throw e
+        } catch (e: Exception) {
+            throw IllegalArgumentException("invalid codec matrix size JSON", e)
         }
     }
 
