@@ -494,6 +494,12 @@ tasks.register<JavaExec>("finalizeCodecMatrixEvidence") {
     }
 }
 
+tasks.withType<Jar>().configureEach {
+    if (name == "benchmarkBenchmarkJar") {
+        inputs.file(layout.projectDirectory.file("build.gradle.kts"))
+    }
+}
+
 tasks.register("stageCodecMatrixProfilerJar") {
     description = "Stage the exact generated JMH jar for focused GC profiling"
     val benchmarkJar = tasks.named<Jar>("benchmarkBenchmarkJar")
@@ -529,7 +535,7 @@ tasks.register("stageCodecMatrixProfilerJar") {
                     "generated codec matrix profiler jar lacks $className"
                 }
                 require(entries.any { entry ->
-                    entry.startsWith("io/bluetape4k/images/benchmark/${className}_") &&
+                    entry.startsWith("io/bluetape4k/images/benchmark/jmh_generated/${className}_") &&
                             entry.endsWith("_jmhTest.class")
                 }) { "generated codec matrix profiler jar lacks generated JMH classes for $className" }
             }

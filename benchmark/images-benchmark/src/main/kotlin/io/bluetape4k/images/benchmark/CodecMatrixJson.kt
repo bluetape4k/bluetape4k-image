@@ -137,6 +137,22 @@ internal object CodecMatrixJson {
         }
     }
 
+    internal fun readExperimental(
+        source: Path,
+        expectedSha256: CodecMatrixSha256,
+    ): CodecMatrixExperimentalFixtureManifest {
+        val bytes = readVerifiedBytes(source, expectedSha256)
+        val text = bytes.toString(StandardCharsets.UTF_8)
+        StrictJsonScanner(text).validate()
+        return try {
+            json.decodeFromString<CodecMatrixExperimentalFixtureManifest>(text)
+        } catch (e: IllegalArgumentException) {
+            throw e
+        } catch (e: Exception) {
+            throw IllegalArgumentException("invalid experimental codec matrix fixture JSON", e)
+        }
+    }
+
     internal fun readFinalized(
         source: Path,
         expectedSha256: CodecMatrixSha256,
