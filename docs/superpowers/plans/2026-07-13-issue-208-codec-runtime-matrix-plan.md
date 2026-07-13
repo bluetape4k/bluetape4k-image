@@ -97,8 +97,12 @@
 
 - [ ] **Step 1: Add failing invariant tests**
 
-Apply `alias(libs.plugins.kotlin.serialization)` and consume the existing
-`implementation(libs.kotlinx.serialization.json)` alias/version unchanged. Preserve the existing
+Apply `alias(libs.plugins.kotlin.serialization)` and consume
+`implementation(libs.kotlinx.serialization.json)`. Until the governed alias is
+published in a release-train catalog tag, add the documented temporary issue
+#208 version pin to the repo-local alias. Disable the benchmark module's unused
+atomicfu JVM transform so sequential Java 25 then Java 21 verification does not
+load Java 25 classes in a Java 21 transformer. Preserve the existing
 `benchmarkImplementation(project(":bluetape4k-images-vips-api"))`; do not add
 Vips API types to the main source-set dependency graph. Test:
 
@@ -994,7 +998,13 @@ git diff --check
 
 - [ ] **Step 2: Verify hazards and exact spec/plan**
 
-Prove no module/BOM/catalog/API/CI/Nightly/Kover registration change, default task isolation, append-only raw evidence, locale parity, diagram ledger when triggered, and every acceptance row mapped to source/tests/evidence/docs. Return to the owning task on `NEEDS FIX`; reopen approval on `NEEDS REVIEW SCOPE`.
+Prove no module/BOM/API/CI/Nightly/Kover registration change, default task
+isolation, append-only raw evidence, locale parity, diagram ledger when
+triggered, and every acceptance row mapped to source/tests/evidence/docs. The
+only catalog delta is the documented temporary issue #208 serialization pin;
+verify it is not also added to `bluetape4k-dependencies` in this branch and has
+an explicit removal condition. Return to the owning task on `NEEDS FIX`;
+reopen approval on `NEEDS REVIEW SCOPE`.
 
 - [ ] **Step 3: Run six code-review lenses plus integration**
 
@@ -1021,7 +1031,11 @@ Confirm clean branch and full `origin/develop...HEAD` diff. Report issue #208 mi
 - README locales: required and synchronized.
 - CHANGELOG/release notes: N/A here; report and later PR carry the evidence.
 - Chart: conditional; triggered output requires SVG, PNG, audit, and full-size inspection.
-- Module/BOM/catalog/settings/CI/Nightly/Kover: N/A — no module/coordinate/workflow/coverage surface changes.
+- Module/BOM/settings/CI/Nightly/Kover: N/A — no module/coordinate/workflow/coverage surface changes.
+- Catalog: temporary issue #208 local serialization pin only; remove after a
+  release-train central catalog tag publishes the governed alias.
+- Atomicfu: the Java 25 backend setting remains unchanged; the benchmark
+  module disables its unused JVM transform to support sequential toolchains.
 - Coroutines/Testcontainers/network: N/A — no coroutine API, containers, or external fixture fetch.
 - Native concurrency: one JMH thread, libvips concurrency 4, sequential fresh processes.
 - Rollback: code and report/README/chart references can be reverted as one issue

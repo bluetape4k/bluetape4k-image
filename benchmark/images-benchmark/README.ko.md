@@ -195,7 +195,9 @@ raw `kotlinx-benchmark` JSON은
 
 ```bash
 # Java 25 - FFM 전용 large streaming을 포함한 전체 benchmark set (macOS/Linux)
-./gradlew :bluetape4k-images-benchmark:benchmarkBenchmark -Pvips.impl=java25
+RUN_ID="local-$(date +%Y%m%d-%H%M%S)"
+./gradlew :bluetape4k-images-benchmark:benchmarkBenchmark \
+  -Pcodec.matrix.runId="$RUN_ID" -Pvips.impl=java25
 
 # Java 21 - 선택한 JVips JNI 호환 benchmark (Linux 전용, FFM 전용 large streaming 제외)
 ./gradlew :bluetape4k-images-benchmark:benchmarkPipelineAllocationBenchmark :bluetape4k-images-benchmark:benchmarkMemoryProfileBenchmark :bluetape4k-images-benchmark:benchmarkIoBoundaryBenchmark :bluetape4k-images-benchmark:benchmarkIoThroughputBenchmark -Pvips.impl=java21
@@ -276,6 +278,7 @@ identify docs/images/readme-charts/*.png
 
 # 전체 benchmark 실행 없이 문서화된 task 경로 검증
 ./gradlew :bluetape4k-images-benchmark:benchmarkBenchmark \
+  -Pcodec.matrix.runId=local-dry-run-01 \
   -Pvips.impl=java25 --dry-run --console=plain
 ```
 

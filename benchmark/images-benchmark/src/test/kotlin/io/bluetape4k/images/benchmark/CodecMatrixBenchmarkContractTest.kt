@@ -36,6 +36,8 @@ class CodecMatrixBenchmarkContractTest {
 
     @Test
     fun `backend selector and focused benchmark configurations are exact`() {
+        buildScript.shouldContain("atomicfu {")
+        buildScript.shouldContain("transformJvm = false")
         buildScript.shouldContain("providers.gradleProperty(\"vips.impl\").orElse(\"java25\").get()")
         buildScript.shouldContain("vipsImpl == \"java21\" || vipsImpl == \"java25\"")
         buildScript.shouldContain("vips.impl must be java21 or java25")

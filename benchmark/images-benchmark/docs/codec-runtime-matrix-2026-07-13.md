@@ -105,13 +105,13 @@ JMH protocol; do not reinterpret these `N/A` cells as Java 25 wins.
 ## Reproduction protocol
 
 Run native/JNI/FFM steps sequentially from a clean checkout. Use a new run ID;
-accepted evidence directories are immutable. The external dependency catalog
-property below is needed only until the matching catalog release is available.
+accepted evidence directories are immutable. The repo-local serialization pin
+is a temporary issue #208 exception until the governed alias is available in a
+release-train catalog tag.
 
 ```bash
 RUN_ID=issue-208-YYYYMMDD-host-01
 ROOT="$PWD"
-CATALOG=/path/to/bluetape4k-dependencies/gradle/libs.versions.toml
 export DYLD_LIBRARY_PATH=/opt/homebrew/lib${DYLD_LIBRARY_PATH:+:$DYLD_LIBRARY_PATH}
 
 test -z "$(git status --porcelain)"
@@ -125,25 +125,25 @@ test ! -e "benchmark/images-benchmark/docs/raw/$RUN_ID"
 JAVA_HOME=$(/usr/libexec/java_home -v 21) ./gradlew \
   :bluetape4k-images-benchmark:codecMatrixPreflight \
   -Pcodec.matrix.runId="$RUN_ID" -Pvips.impl=java21 \
-  -Pbluetape4kDependenciesCatalogPath="$CATALOG" --console=plain
+  --console=plain
 
 JAVA_HOME=$(/usr/libexec/java_home -v 25) ./gradlew \
   :bluetape4k-images-benchmark:codecMatrixCapabilityReport \
   :bluetape4k-images-benchmark:benchmarkCodecMatrixBenchmark \
   -Pcodec.matrix.runId="$RUN_ID" -Pvips.impl=java25 \
-  -Pbluetape4kDependenciesCatalogPath="$CATALOG" --console=plain
+  --console=plain
 
 # Run each experimental task only when the matching capability cells are ELIGIBLE.
 JAVA_HOME=$(/usr/libexec/java_home -v 25) ./gradlew \
   :bluetape4k-images-benchmark:benchmarkCodecMatrixAvifBenchmark \
   :bluetape4k-images-benchmark:benchmarkCodecMatrixHeicBenchmark \
   -Pcodec.matrix.runId="$RUN_ID" -Pvips.impl=java25 \
-  -Pbluetape4kDependenciesCatalogPath="$CATALOG" --console=plain
+  --console=plain
 
 JAVA_HOME=$(/usr/libexec/java_home -v 25) ./gradlew \
   :bluetape4k-images-benchmark:stageCodecMatrixProfilerJar \
   -Pcodec.matrix.runId="$RUN_ID" -Pvips.impl=java25 \
-  -Pbluetape4kDependenciesCatalogPath="$CATALOG" --console=plain
+  --console=plain
 ```
 
 For allocation, launch the staged JMH jar in one fresh JVM each for stable,
@@ -189,7 +189,7 @@ Finally promote only a complete accepted run:
 ```bash
 ./gradlew :bluetape4k-images-benchmark:finalizeCodecMatrixEvidence \
   -Pcodec.matrix.runId="$RUN_ID" -Pvips.impl=java25 \
-  -Pbluetape4kDependenciesCatalogPath="$CATALOG" --console=plain
+  --console=plain
 ```
 
 ## Evidence ledger

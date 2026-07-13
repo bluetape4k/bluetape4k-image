@@ -435,12 +435,14 @@ benchmark/images-benchmark/docs/codec-runtime-matrix-2026-07-13.md
 Store accepted raw evidence under
 `benchmark/images-benchmark/docs/raw/<run-id>/`. The directory is append-only:
 an interrupted/retried run gets a new ID, accepted evidence is never
-overwritten, and replacement runs declare `supersedes` links. A run manifest
-records git SHA/dirty state, start/end time, exact command and exit status,
-Gradle/JMH settings and JVM arguments, sanitized OS/kernel/architecture and CPU
-identity, JDK and native library versions/probes, fixture/input hashes, actual
-backend identity, artifact SHA-256 values, attempt status, and any superseded
-run. It omits hostname, user name, absolute home/worktree/temp paths,
+overwritten, and replacement runs declare `supersedes` links. The accepted
+evidence ledger consists of the run manifest and its hash-linked preflight,
+fixture, JMH, size, and capability artifacts. Together with the reproduction
+commands in the report, the ledger records git SHA/dirty state, Gradle/JMH
+settings, sanitized OS/kernel/architecture and CPU identity, JDK and native
+library versions/probes, fixture/input hashes, actual backend identity,
+artifact SHA-256 values, terminal cell status, and any superseded run. It omits
+hostname, user name, absolute home/worktree/temp paths,
 environment values, and secrets. Capability, latency, allocation, and size
 artifacts link back to this manifest. The report contains:
 
@@ -548,13 +550,19 @@ any native measurement.
 - No production API or artifact coordinate changes are expected.
 - No module registration or BOM change is expected because the harness remains
   in `bluetape4k-images-benchmark`.
-- Keep `atomicfu transformJvm = false` in the Java 25 backend unchanged.
+- Keep `atomicfu transformJvm = false` in the Java 25 backend unchanged. Also
+  disable the unused atomicfu JVM transform in the benchmark module so a Java
+  21 verification can follow Java 25 output in the same worktree without the
+  Java 21 transformer loading Java 25 class files.
 - Keep Java and Kotlin toolchains selected by `-Pvips.impl`.
 - Keep `--enable-native-access=ALL-UNNAMED` for the FFM benchmark fork.
 - The benchmark source set remains excluded from production coverage.
 - README locale parity, raw evidence paths, chart assets, and benchmark task
   names are required hazard checks.
-- No API/BOM/version coordinate changes are expected. The issue #208 operator
+- No API/BOM/artifact-coordinate changes are expected. Until a release-train
+  `bluetape4k-dependencies` catalog tag contains `kotlinx-serialization-json`,
+  the repo-local catalog carries a temporary issue #208 version pin. Remove the
+  pin when the central tagged alias is consumable. The issue #208 operator
   captures the native run; the implementation reviewer validates manifests and
   report interpretation; PR/merge approval remains with `debop`. Report,
   README/chart, and raw evidence roll back together as one change unit.

@@ -24,6 +24,13 @@ allOpen {
     annotation("kotlinx.benchmark.State")
 }
 
+// This harness switches its Kotlin target between Java 21 and Java 25. The
+// module does not use atomicfu, and its transformer cannot load stale Java 25
+// classes when a Java 21 verification follows in the same worktree.
+atomicfu {
+    transformJvm = false
+}
+
 sourceSets {
     create("benchmark")
 }
@@ -347,7 +354,7 @@ dependencies {
     // core
     implementation(libs.bluetape4k.core)
     implementation(libs.bluetape4k.logging)
-    implementation(bt4k.kotlinx.serialization.json)
+    implementation(libs.kotlinx.serialization.json)
     testImplementation(libs.bluetape4k.junit5)
     testImplementation(gradleTestKit())
 
