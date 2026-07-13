@@ -9,6 +9,7 @@ import java.util.UUID
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
 
 internal object CodecMatrixJson {
 
@@ -45,6 +46,9 @@ internal object CodecMatrixJson {
     internal fun encode(manifest: CodecMatrixFinalizedManifest): String =
         json.encodeToString(manifest.validateAccepted())
 
+    internal fun encode(manifest: CodecMatrixFailedAttemptManifest): String =
+        json.encodeToString(manifest.validateFailedAttempt())
+
     internal fun write(target: Path, manifest: CodecMatrixEligibilityManifest): CodecMatrixSha256 =
         writeBytes(target, encode(manifest).toByteArray(StandardCharsets.UTF_8))
 
@@ -62,6 +66,12 @@ internal object CodecMatrixJson {
 
     internal fun write(target: Path, manifest: CodecMatrixFinalizedManifest): CodecMatrixSha256 =
         writeBytes(target, encode(manifest).toByteArray(StandardCharsets.UTF_8))
+
+    internal fun write(target: Path, manifest: CodecMatrixFailedAttemptManifest): CodecMatrixSha256 =
+        writeBytes(target, encode(manifest).toByteArray(StandardCharsets.UTF_8))
+
+    internal fun writeStrictJson(target: Path, element: JsonElement): CodecMatrixSha256 =
+        writeBytes(target, json.encodeToString(element).toByteArray(StandardCharsets.UTF_8))
 
     internal fun readEligibility(
         source: Path,
@@ -143,9 +153,41 @@ internal object CodecMatrixJson {
         }
     }
 
+    internal fun readFailedAttempt(
+        source: Path,
+        expectedSha256: CodecMatrixSha256,
+    ): CodecMatrixFailedAttemptManifest {
+        val bytes = readVerifiedBytes(source, expectedSha256)
+        val text = bytes.toString(StandardCharsets.UTF_8)
+        StrictJsonScanner(text).validate()
+        return try {
+            json.decodeFromString<CodecMatrixFailedAttemptManifest>(text).validateFailedAttempt()
+        } catch (e: IllegalArgumentException) {
+            throw e
+        } catch (e: Exception) {
+            throw IllegalArgumentException("invalid failed codec matrix attempt JSON", e)
+        }
+    }
+
     internal fun sha256(bytes: ByteArray): CodecMatrixSha256 {
         val digest = MessageDigest.getInstance("SHA-256").digest(bytes)
         return CodecMatrixSha256(digest.joinToString(separator = "") { byte -> "%02x".format(byte) })
+    }
+
+    internal fun readStrictJsonElement(
+        source: Path,
+        expectedSha256: CodecMatrixSha256,
+    ): JsonElement {
+        val bytes = readVerifiedBytes(source, expectedSha256)
+        val text = bytes.toString(StandardCharsets.UTF_8)
+        StrictJsonScanner(text).validate()
+        return try {
+            json.parseToJsonElement(text)
+        } catch (e: IllegalArgumentException) {
+            throw e
+        } catch (e: Exception) {
+            throw IllegalArgumentException("invalid strict JSON evidence", e)
+        }
     }
 
     private fun writeBytes(target: Path, bytes: ByteArray): CodecMatrixSha256 {
