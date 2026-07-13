@@ -82,6 +82,8 @@ class CodecMatrixBenchmarkContractTest {
         buildScript.shouldContain("systemProperty(\"vips.impl\", vipsImpl)")
         buildScript.shouldContain("if (vipsImpl == \"java25\")")
         buildScript.shouldContain("jvmArgs(\"--enable-native-access=ALL-UNNAMED\")")
+        buildScript.shouldContain("tasks.withType<JavaExec>().configureEach")
+        buildScript.shouldContain("environment(\"DYLD_LIBRARY_PATH\", homebrewVipsLibraryDirectory.absolutePath)")
         buildScript.shouldContain("codecMatrixSupersedes.orNull?.let")
         buildScript.shouldContain("listOf(\"--supersedes\", it)")
         buildScript.shouldContain("codecMatrixReplacesFailedAttempt.orNull?.let")

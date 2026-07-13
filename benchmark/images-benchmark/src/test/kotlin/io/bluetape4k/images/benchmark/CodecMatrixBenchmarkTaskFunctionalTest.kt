@@ -172,6 +172,7 @@ class CodecMatrixBenchmarkTaskFunctionalTest {
                     task.actions.add(2, { ignored ->
                         println('CODEC_MATRIX_PROBE_ARGS=' + task.args.join('|'))
                         println('CODEC_MATRIX_PROBE_PROPERTIES=' + task.systemProperties.toString())
+                        println('CODEC_MATRIX_PROBE_ENVIRONMENT=' + task.environment.toString())
                         println('CODEC_MATRIX_PROBE_PARAMETERS=' + new File(task.args[0]).text.replace('\\n', '|'))
                         throw new StopExecutionException('functional probe completed')
                     } as Action)
@@ -192,6 +193,9 @@ class CodecMatrixBenchmarkTaskFunctionalTest {
                 "codec.matrix.fixtureManifest:${runDirectory.resolve("fixtures/manifest.json")}",
                 "codec.matrix.eligibility:${reportDirectory.resolve("eligibility-$testBackend.json")}",
             ).forEach(result.output::shouldContain)
+            if (Files.isDirectory(Path.of("/opt/homebrew/lib"))) {
+                result.output.shouldContain("DYLD_LIBRARY_PATH:/opt/homebrew/lib")
+            }
         } finally {
             runDirectory.toFile().deleteRecursively()
             reportDirectory.toFile().deleteRecursively()

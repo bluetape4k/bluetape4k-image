@@ -55,6 +55,13 @@ val javaToolchains = extensions.getByType<JavaToolchainService>()
 val selectedJavaLauncher = javaToolchains.launcherFor {
     languageVersion.set(JavaLanguageVersion.of(javaVersion))
 }
+val homebrewVipsLibraryDirectory = file("/opt/homebrew/lib")
+
+tasks.withType<JavaExec>().configureEach {
+    if (homebrewVipsLibraryDirectory.isDirectory) {
+        environment("DYLD_LIBRARY_PATH", homebrewVipsLibraryDirectory.absolutePath)
+    }
+}
 
 fun validatedCodecMatrixRunId(): String {
     val runId = codecMatrixRunId.orNull
