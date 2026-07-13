@@ -78,7 +78,7 @@ internal fun writeCodecMatrixBenchmarkParameters(target: Path, content: String) 
 }
 
 internal fun codecMatrixParameterFile(runDirectory: Path, format: CodecMatrixFormat): Path =
-    runDirectory.resolve("staging/parameters-${experimentalConfiguration(format)}.txt")
+    runDirectory.resolve("parameters/parameters-${experimentalConfiguration(format)}.txt")
 
 private fun experimentalConfiguration(format: CodecMatrixFormat): String = when (format) {
     CodecMatrixFormat.AVIF -> "codecMatrixAvif"

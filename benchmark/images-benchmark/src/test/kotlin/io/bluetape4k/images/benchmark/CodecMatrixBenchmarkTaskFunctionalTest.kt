@@ -241,7 +241,7 @@ class CodecMatrixBenchmarkTaskFunctionalTest {
     )
 
     private fun writeParameterFile(runId: String, includes: List<String>): Path {
-        val parameterFile = codecMatrixRunDirectory(runId).resolve("staging/parameters-codecMatrixAvif.txt")
+        val parameterFile = codecMatrixRunDirectory(runId).resolve("parameters/parameters-codecMatrixAvif.txt")
         Files.createDirectories(parameterFile.parent)
         Files.writeString(
             parameterFile,
