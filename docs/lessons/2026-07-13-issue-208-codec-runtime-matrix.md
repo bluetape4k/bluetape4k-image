@@ -54,7 +54,9 @@ the report, immutable evidence, and matching SVG/PNG charts.
 
 If a future run measures both runtime families, generate comparison tables and
 charts from an explicit canonical comparability key rather than joining on
-format name alone. Keep no-op and lazy-row guards so unsupported experimental
-directions cannot silently appear as measured. Remove the local serialization
-version pin as soon as a release-train central catalog tag exposes the governed
-alias, then rerun benchmark-module tests against that tag.
+format name alone. When a chart compares exactly two series, use a
+complementary pastel pair with matching legend swatches; use a categorical
+palette for three or more series. Keep no-op and lazy-row guards so unsupported
+experimental directions cannot silently appear as measured. Remove the local
+serialization version pin as soon as a release-train central catalog tag
+exposes the governed alias, then rerun benchmark-module tests against that tag.

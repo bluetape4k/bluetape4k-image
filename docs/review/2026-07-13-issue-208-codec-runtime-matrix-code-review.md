@@ -46,7 +46,9 @@ passing benchmark-module tests.
 - Accepted raw evidence is added append-only; no accepted file is modified or
   deleted relative to `origin/develop`.
 - Both codec chart SVG files pass `xmllint`; the CairoSVG `-s 2` PNGs are
-  `3120x1880` and `3120x1720` and were inspected at original size.
+  `3120x1880` and `3120x1720` and were inspected at original size. The latency
+  chart uses a complementary blue/orange pair for its two compared series;
+  the four-series output-size chart retains its categorical palette.
 - No settings, BOM, module registration, CI, Nightly, Kover, or public API
   change is present. The Java 25 backend atomicfu setting remains unchanged;
   only the benchmark module disables its unused transformer.
