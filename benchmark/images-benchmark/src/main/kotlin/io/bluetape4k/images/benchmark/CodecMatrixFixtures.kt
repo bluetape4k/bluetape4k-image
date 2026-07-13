@@ -125,7 +125,7 @@ private fun prepareFixture(
     val files = linkedMapOf<CodecMatrixRelativePath, ByteArray>()
     val inputs = encoded.map { (format, bytes) ->
         val path = CodecMatrixRelativePath("fixtures/$scenarioPath/input.${format.extension()}")
-        val magic = validateMagic(format, bytes)
+        val magic = codecMatrixMagic(format, bytes)
         require(magic.valid) { "invalid ${format.name} magic for ${definition.scenario}" }
         require(bytes.isNotEmpty()) { "encoded ${format.name} fixture is empty" }
         val decoded = loader.fromBytes(bytes)
@@ -214,14 +214,13 @@ private fun validateExistingFixtures(
     }
 }
 
-private fun validateMagic(format: CodecMatrixFormat, bytes: ByteArray): CodecMatrixMagic {
+internal fun codecMatrixMagic(format: CodecMatrixFormat, bytes: ByteArray): CodecMatrixMagic {
     val valid = when (format) {
         CodecMatrixFormat.JPEG -> bytes.startsWith(0xFF, 0xD8, 0xFF)
         CodecMatrixFormat.PNG -> bytes.startsWith(0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A)
         CodecMatrixFormat.WEBP -> bytes.startsWithAscii("RIFF") && bytes.hasAsciiAt(8, "WEBP")
-        CodecMatrixFormat.AVIF,
-        CodecMatrixFormat.HEIC,
-        -> false
+        CodecMatrixFormat.AVIF -> bytes.hasIsoBmffBrand("avif") || bytes.hasIsoBmffBrand("avis")
+        CodecMatrixFormat.HEIC -> listOf("heic", "heix", "hevc", "hevx").any(bytes::hasIsoBmffBrand)
     }
     val signature = when (format) {
         CodecMatrixFormat.JPEG -> "FFD8FF"
@@ -232,6 +231,9 @@ private fun validateMagic(format: CodecMatrixFormat, bytes: ByteArray): CodecMat
     }
     return CodecMatrixMagic(signature, valid)
 }
+
+private fun ByteArray.hasIsoBmffBrand(brand: String): Boolean =
+    hasAsciiAt(4, "ftyp") && hasAsciiAt(8, brand)
 
 private fun ImmutableImage.codecDimensions(): CodecMatrixDimensions = CodecMatrixDimensions(width, height)
 
