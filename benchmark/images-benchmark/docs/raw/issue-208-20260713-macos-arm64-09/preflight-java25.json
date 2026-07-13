@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "runId": {
+    "value": "issue-208-20260713-macos-arm64-09"
+  },
+  "requestedBackend": "java25",
+  "requestedSelector": "java25",
+  "status": "ELIGIBLE",
+  "reasonCode": "NONE",
+  "facts": {
+    "osName": "Mac OS X",
+    "kernelVersion": "26.5.1",
+    "architecture": "arm64",
+    "cpuModel": "Apple M5",
+    "jdkVendor": "Oracle Corporation",
+    "jdkVersion": "25.0.3+9-LTS-jvmci-25.1-b19",
+    "jdkMajor": 25,
+    "nativeAccessEnabled": true,
+    "loaderPathAvailable": true,
+    "diskAvailableBytes": 1647364272128,
+    "gitSha": "999b1e87f764a175d9887af9972ed41644e37f9e",
+    "gitDirty": false
+  }
+}

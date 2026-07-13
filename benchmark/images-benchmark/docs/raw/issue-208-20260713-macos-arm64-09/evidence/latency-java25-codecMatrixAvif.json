@@ -1,0 +1,70 @@
+[
+  {
+    "benchmark": "io.bluetape4k.images.benchmark.VipsExperimentalCodecMatrixBenchmark.decodeAvifToJpeg",
+    "params": {
+      "scenario": "web-photo"
+    },
+    "mode": "avgt",
+    "threads": 1,
+    "forks": 1,
+    "warmupIterations": 1,
+    "warmupTime": "1 s",
+    "measurementIterations": 3,
+    "measurementTime": "1 s",
+    "primaryMetric": {
+      "score": 38.75099422981956,
+      "scoreUnit": "ms/op"
+    }
+  },
+  {
+    "benchmark": "io.bluetape4k.images.benchmark.VipsExperimentalCodecMatrixBenchmark.decodeAvifToJpeg",
+    "params": {
+      "scenario": "profile"
+    },
+    "mode": "avgt",
+    "threads": 1,
+    "forks": 1,
+    "warmupIterations": 1,
+    "warmupTime": "1 s",
+    "measurementIterations": 3,
+    "measurementTime": "1 s",
+    "primaryMetric": {
+      "score": 4.338720745464915,
+      "scoreUnit": "ms/op"
+    }
+  },
+  {
+    "benchmark": "io.bluetape4k.images.benchmark.VipsExperimentalCodecMatrixBenchmark.encodeAvifFromJpeg",
+    "params": {
+      "scenario": "web-photo"
+    },
+    "mode": "avgt",
+    "threads": 1,
+    "forks": 1,
+    "warmupIterations": 1,
+    "warmupTime": "1 s",
+    "measurementIterations": 3,
+    "measurementTime": "1 s",
+    "primaryMetric": {
+      "score": 511.2683589444444,
+      "scoreUnit": "ms/op"
+    }
+  },
+  {
+    "benchmark": "io.bluetape4k.images.benchmark.VipsExperimentalCodecMatrixBenchmark.encodeAvifFromJpeg",
+    "params": {
+      "scenario": "profile"
+    },
+    "mode": "avgt",
+    "threads": 1,
+    "forks": 1,
+    "warmupIterations": 1,
+    "warmupTime": "1 s",
+    "measurementIterations": 3,
+    "measurementTime": "1 s",
+    "primaryMetric": {
+      "score": 51.133525,
+      "scoreUnit": "ms/op"
+    }
+  }
+]

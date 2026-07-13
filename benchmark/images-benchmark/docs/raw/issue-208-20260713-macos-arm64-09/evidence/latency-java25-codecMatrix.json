@@ -1,0 +1,138 @@
+[
+  {
+    "benchmark": "io.bluetape4k.images.benchmark.VipsCodecMatrixBenchmark.decodePngToJpeg",
+    "params": {
+      "scenario": "web-photo"
+    },
+    "mode": "avgt",
+    "threads": 1,
+    "forks": 1,
+    "warmupIterations": 1,
+    "warmupTime": "1 s",
+    "measurementIterations": 3,
+    "measurementTime": "1 s",
+    "primaryMetric": {
+      "score": 18.825243820987655,
+      "scoreUnit": "ms/op"
+    }
+  },
+  {
+    "benchmark": "io.bluetape4k.images.benchmark.VipsCodecMatrixBenchmark.decodePngToJpeg",
+    "params": {
+      "scenario": "profile"
+    },
+    "mode": "avgt",
+    "threads": 1,
+    "forks": 1,
+    "warmupIterations": 1,
+    "warmupTime": "1 s",
+    "measurementIterations": 3,
+    "measurementTime": "1 s",
+    "primaryMetric": {
+      "score": 2.155700860495359,
+      "scoreUnit": "ms/op"
+    }
+  },
+  {
+    "benchmark": "io.bluetape4k.images.benchmark.VipsCodecMatrixBenchmark.decodeWebpToJpeg",
+    "params": {
+      "scenario": "web-photo"
+    },
+    "mode": "avgt",
+    "threads": 1,
+    "forks": 1,
+    "warmupIterations": 1,
+    "warmupTime": "1 s",
+    "measurementIterations": 3,
+    "measurementTime": "1 s",
+    "primaryMetric": {
+      "score": 20.019682738562093,
+      "scoreUnit": "ms/op"
+    }
+  },
+  {
+    "benchmark": "io.bluetape4k.images.benchmark.VipsCodecMatrixBenchmark.decodeWebpToJpeg",
+    "params": {
+      "scenario": "profile"
+    },
+    "mode": "avgt",
+    "threads": 1,
+    "forks": 1,
+    "warmupIterations": 1,
+    "warmupTime": "1 s",
+    "measurementIterations": 3,
+    "measurementTime": "1 s",
+    "primaryMetric": {
+      "score": 2.605418811902681,
+      "scoreUnit": "ms/op"
+    }
+  },
+  {
+    "benchmark": "io.bluetape4k.images.benchmark.VipsCodecMatrixBenchmark.encodePngFromJpeg",
+    "params": {
+      "scenario": "web-photo"
+    },
+    "mode": "avgt",
+    "threads": 1,
+    "forks": 1,
+    "warmupIterations": 1,
+    "warmupTime": "1 s",
+    "measurementIterations": 3,
+    "measurementTime": "1 s",
+    "primaryMetric": {
+      "score": 80.13204597435897,
+      "scoreUnit": "ms/op"
+    }
+  },
+  {
+    "benchmark": "io.bluetape4k.images.benchmark.VipsCodecMatrixBenchmark.encodePngFromJpeg",
+    "params": {
+      "scenario": "profile"
+    },
+    "mode": "avgt",
+    "threads": 1,
+    "forks": 1,
+    "warmupIterations": 1,
+    "warmupTime": "1 s",
+    "measurementIterations": 3,
+    "measurementTime": "1 s",
+    "primaryMetric": {
+      "score": 5.944637114189914,
+      "scoreUnit": "ms/op"
+    }
+  },
+  {
+    "benchmark": "io.bluetape4k.images.benchmark.VipsCodecMatrixBenchmark.encodeWebpFromJpeg",
+    "params": {
+      "scenario": "web-photo"
+    },
+    "mode": "avgt",
+    "threads": 1,
+    "forks": 1,
+    "warmupIterations": 1,
+    "warmupTime": "1 s",
+    "measurementIterations": 3,
+    "measurementTime": "1 s",
+    "primaryMetric": {
+      "score": 106.404875,
+      "scoreUnit": "ms/op"
+    }
+  },
+  {
+    "benchmark": "io.bluetape4k.images.benchmark.VipsCodecMatrixBenchmark.encodeWebpFromJpeg",
+    "params": {
+      "scenario": "profile"
+    },
+    "mode": "avgt",
+    "threads": 1,
+    "forks": 1,
+    "warmupIterations": 1,
+    "warmupTime": "1 s",
+    "measurementIterations": 3,
+    "measurementTime": "1 s",
+    "primaryMetric": {
+      "score": 10.415348412797764,
+      "scoreUnit": "ms/op"
+    }
+  }
+]

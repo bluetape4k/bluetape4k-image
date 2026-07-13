@@ -1,0 +1,97 @@
+{
+  "schemaVersion": 1,
+  "runId": {
+    "value": "issue-208-20260713-macos-arm64-09"
+  },
+  "producerBackend": "java25",
+  "producerJdk": 25,
+  "libvipsVersion": "8.18.4",
+  "codecLibraryVersions": {},
+  "command": "prepareExperimentalCodecMatrixFixtures",
+  "entries": [
+    {
+      "scenario": "web-photo",
+      "input": {
+        "format": "AVIF",
+        "path": {
+          "value": "fixtures/experimental-java25/web-photo/input.avif"
+        },
+        "sha256": {
+          "value": "e2a56a0b2929b5ed4701b87d065d074316627e8337d16e940f642fdbb5435584"
+        },
+        "byteCount": 364133,
+        "dimensions": {
+          "width": 1920,
+          "height": 1080
+        },
+        "magic": {
+          "signature": "ftypavif",
+          "valid": true
+        }
+      }
+    },
+    {
+      "scenario": "web-photo",
+      "input": {
+        "format": "HEIC",
+        "path": {
+          "value": "fixtures/experimental-java25/web-photo/input.heic"
+        },
+        "sha256": {
+          "value": "db1629465ae01052ce8f07a4cefb2683a8062db6bdfa765364d50aee107810fe"
+        },
+        "byteCount": 754672,
+        "dimensions": {
+          "width": 1920,
+          "height": 1080
+        },
+        "magic": {
+          "signature": "ftypheic",
+          "valid": true
+        }
+      }
+    },
+    {
+      "scenario": "profile",
+      "input": {
+        "format": "AVIF",
+        "path": {
+          "value": "fixtures/experimental-java25/profile/input.avif"
+        },
+        "sha256": {
+          "value": "ec307c5dd261e406167542bff42b914c90e1905429fa3a8bf83d5c44fd0ddc92"
+        },
+        "byteCount": 23605,
+        "dimensions": {
+          "width": 512,
+          "height": 512
+        },
+        "magic": {
+          "signature": "ftypavif",
+          "valid": true
+        }
+      }
+    },
+    {
+      "scenario": "profile",
+      "input": {
+        "format": "HEIC",
+        "path": {
+          "value": "fixtures/experimental-java25/profile/input.heic"
+        },
+        "sha256": {
+          "value": "b40c8c58764371d0c11d65d9d4b2b8513b85640d87053088b8884bdf78ac0d9c"
+        },
+        "byteCount": 55961,
+        "dimensions": {
+          "width": 512,
+          "height": 512
+        },
+        "magic": {
+          "signature": "ftypheic",
+          "valid": true
+        }
+      }
+    }
+  ]
+}
