@@ -163,5 +163,5 @@ private val NO_NATIVE_OPS = object : CodecMatrixCodecOps {
     override fun open(bytes: ByteArray): CodecMatrixCodecHandle = error("native operations are forbidden by preflight")
 }
 
-private val STABLE_FORMATS = listOf(CodecMatrixFormat.JPEG, CodecMatrixFormat.PNG, CodecMatrixFormat.WEBP)
+private val STABLE_FORMATS = listOf(CodecMatrixFormat.PNG, CodecMatrixFormat.WEBP)
 private val EXPERIMENTAL_FORMATS = listOf(CodecMatrixFormat.AVIF, CodecMatrixFormat.HEIC)

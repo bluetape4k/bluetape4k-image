@@ -419,6 +419,7 @@ internal data class CodecMatrixFinalizedManifest(
     val cells: List<CodecMatrixCell>,
     val artifacts: List<CodecMatrixArtifact> = emptyList(),
     val supersedes: CodecMatrixRunId? = null,
+    val replacesFailedAttempt: CodecMatrixFailedAttemptReference? = null,
 ): Serializable {
     internal fun validateAccepted(): CodecMatrixFinalizedManifest = apply {
         validateManifestShape(schemaVersion, expectedCellCount, cells, artifacts)
@@ -427,6 +428,42 @@ internal data class CodecMatrixFinalizedManifest(
                     cell.status == CodecMatrixCellStatus.FAILED_SMOKE ||
                     cell.status == CodecMatrixCellStatus.ERROR
         }) { "accepted evidence contains a blocking status" }
+        cells.forEach(CodecMatrixCell::validateFinalized)
+    }
+
+    companion object {
+        @JvmField
+        val serialVersionUID: Long = 1L
+    }
+}
+
+@KotlinSerializable
+internal data class CodecMatrixFailedAttemptReference(
+    val runId: CodecMatrixRunId,
+    val manifestSha256: CodecMatrixSha256,
+): Serializable {
+    companion object {
+        @JvmField
+        val serialVersionUID: Long = 1L
+    }
+}
+
+@KotlinSerializable
+internal data class CodecMatrixFailedAttemptManifest(
+    val schemaVersion: Int = CODEC_MATRIX_SCHEMA_VERSION,
+    val runId: CodecMatrixRunId,
+    val expectedCellCount: Int,
+    val cells: List<CodecMatrixCell>,
+    val artifacts: List<CodecMatrixArtifact> = emptyList(),
+): Serializable {
+    internal fun validateFailedAttempt(): CodecMatrixFailedAttemptManifest = apply {
+        validateManifestShape(schemaVersion, expectedCellCount, cells, artifacts)
+        require(cells.any { cell ->
+            cell.status == CodecMatrixCellStatus.FAILED_SMOKE || cell.status == CodecMatrixCellStatus.ERROR
+        }) { "failed attempt evidence requires a blocking status" }
+        require(cells.none { cell ->
+            cell.status == CodecMatrixCellStatus.ELIGIBLE || cell.status == CodecMatrixCellStatus.MEASURED
+        }) { "failed attempt evidence contains a non-terminal status" }
         cells.forEach(CodecMatrixCell::validateFinalized)
     }
 
