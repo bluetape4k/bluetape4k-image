@@ -19,6 +19,12 @@ class CodecMatrixBenchmarkContractTest {
     private val stableBenchmarkSource = repositoryRoot()
         .resolve("benchmark/images-benchmark/src/benchmark/kotlin/io/bluetape4k/images/benchmark/VipsCodecMatrixBenchmark.kt")
         .let { path -> if (Files.isRegularFile(path)) Files.readString(path) else "" }
+    private val experimentalBenchmarkSource = repositoryRoot()
+        .resolve(
+            "benchmark/images-benchmark/src/benchmark/kotlin/io/bluetape4k/images/benchmark/" +
+                    "VipsExperimentalCodecMatrixBenchmark.kt",
+        )
+        .let { path -> if (Files.isRegularFile(path)) Files.readString(path) else "" }
 
     @Test
     fun `backend selector and focused benchmark configurations are exact`() {
@@ -86,9 +92,12 @@ class CodecMatrixBenchmarkContractTest {
     fun `profiler jar staging verifies exact archive freshness classes and hash`() {
         buildScript.shouldContain("tasks.named<Jar>(\"benchmarkBenchmarkJar\")")
         buildScript.shouldContain("benchmarkJar.flatMap(Jar::getArchiveFile)")
+        buildScript.shouldContain("tasks.withType<Jar>().configureEach")
+        buildScript.shouldContain("inputs.file(layout.projectDirectory.file(\"build.gradle.kts\"))")
         buildScript.shouldContain("generated codec matrix profiler jar is stale")
         buildScript.shouldContain("VipsCodecMatrixBenchmark")
         buildScript.shouldContain("VipsExperimentalCodecMatrixBenchmark")
+        buildScript.shouldContain("io/bluetape4k/images/benchmark/jmh_generated/")
         buildScript.shouldContain("_jmhTest.class")
         buildScript.shouldContain("codecMatrixSha256(targetJar)")
         buildScript.shouldContain("copyCodecMatrixInputImmutable(archive, targetJar)")
@@ -126,6 +135,44 @@ class CodecMatrixBenchmarkContractTest {
         stableBenchmarkSource.contains("bh.consume(null)").shouldBeEqualTo(false)
         stableBenchmarkSource.contains("shutdown(").shouldBeEqualTo(false)
         stableBenchmarkSource.contains("catch (").shouldBeEqualTo(false)
+    }
+
+    @Test
+    fun `experimental codec lanes gate each invoked direction and pinned input`() {
+        listOf(
+            "class VipsExperimentalCodecMatrixBenchmark",
+            "class VipsAvifCodecMatrixState",
+            "class VipsHeicCodecMatrixState",
+            "class VipsExperimentalCodecMatrixState",
+            "fun encodeAvifFromJpeg(state: VipsAvifCodecMatrixState",
+            "fun decodeAvifToJpeg(state: VipsAvifCodecMatrixState",
+            "fun encodeHeicFromJpeg(state: VipsHeicCodecMatrixState",
+            "fun decodeHeicToJpeg(state: VipsHeicCodecMatrixState",
+            "@OptIn(VipsIncubatingApi::class)",
+            "BenchmarkParams",
+            "CodecMatrixDirection.ENCODE",
+            "CodecMatrixDirection.DECODE",
+            "CodecMatrixCellStatus.ELIGIBLE",
+            "CodecMatrixJson.readEligibility",
+            "CodecMatrixJson.readExperimental",
+            "codecMatrixCapabilityReport",
+            "jpegInput",
+            "experimentalInput",
+            "VipsImageFormat.AVIF",
+            "VipsImageFormat.HEIC",
+            "VipsImageFormat.JPEG",
+            "bh.consume(image.toBytes",
+            "@Threads(1)",
+            "@Fork(1)",
+            "@Warmup(iterations = 1, time = 1, timeUnit = TimeUnit.SECONDS)",
+            "@Measurement(iterations = 3, time = 1, timeUnit = TimeUnit.SECONDS)",
+        ).forEach(experimentalBenchmarkSource::shouldContain)
+        experimentalBenchmarkSource.windowed("@Benchmark\n".length).count { it == "@Benchmark\n" }
+            .shouldBeEqualTo(4)
+        experimentalBenchmarkSource.contains("vipsAvailable").shouldBeEqualTo(false)
+        experimentalBenchmarkSource.contains("bh.consume(null)").shouldBeEqualTo(false)
+        experimentalBenchmarkSource.contains("catch (").shouldBeEqualTo(false)
+        experimentalBenchmarkSource.contains("?: return").shouldBeEqualTo(false)
     }
 
     @Test
