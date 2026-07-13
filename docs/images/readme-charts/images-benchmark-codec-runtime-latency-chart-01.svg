@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1560" height="940" viewBox="0 0 1560 940" role="img" aria-label="Java 25 codec runtime matrix latency">
   <defs>
     <style>
-      .canvas{fill:#ffffff}.panel{fill:#ffffff;stroke:#bfdbfe;stroke-width:1.7}.title{font-family:"Architects Daughter";font-size:42px;fill:#111827}.subtitle,.axis,.value,.note,.legend{font-family:"Comic Mono";fill:#6b7280}.subtitle{font-size:16px}.panel-title{font-family:"Architects Daughter";font-size:25px;fill:#111827}.axis{font-size:13px}.value{font-size:12px}.note{font-size:13px}.legend{font-size:14px}.grid{stroke:#dbe3ee;stroke-width:1;stroke-dasharray:5 7}.baseline{stroke:#94a3b8;stroke-width:1.2}.track{fill:#f1f5f9;stroke:#dbe3ee;stroke-width:1}.encode{fill:#dbeafe;stroke:#2563eb;stroke-width:1.5}.decode{fill:#dcfce7;stroke:#16a34a;stroke-width:1.5}
+      .canvas{fill:#ffffff}.panel{fill:#ffffff;stroke:#bfdbfe;stroke-width:1.7}.title{font-family:"Architects Daughter";font-size:42px;fill:#111827}.subtitle,.axis,.value,.note,.legend{font-family:"Comic Mono";fill:#6b7280}.subtitle{font-size:16px}.panel-title{font-family:"Architects Daughter";font-size:25px;fill:#111827}.axis{font-size:13px}.value{font-size:12px}.note{font-size:13px}.legend{font-size:14px}.grid{stroke:#dbe3ee;stroke-width:1;stroke-dasharray:5 7}.baseline{stroke:#94a3b8;stroke-width:1.2}.track{fill:#f1f5f9;stroke:#dbe3ee;stroke-width:1}.encode{fill:#dbeafe;stroke:#2563eb;stroke-width:1.5}.decode{fill:#ffedd5;stroke:#ea580c;stroke-width:1.5}
     </style>
   </defs>
   <rect class="canvas" width="1560" height="940"/>
