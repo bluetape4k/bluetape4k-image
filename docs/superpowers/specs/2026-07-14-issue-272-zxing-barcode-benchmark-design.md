@@ -102,14 +102,22 @@ Runtime benchmark setup never regenerates or overwrites these inputs. It loads
 the selected bytes, verifies hash and dimensions, decodes the PNG once, and
 checks the expected barcode result before measurement starts.
 
+The loader accepts exactly the three declared scenario ids, restricts resource
+paths to the fixed `bench/barcode/` classpath prefix, rejects absolute paths and
+`..` segments, and caps each encoded fixture at 1 MiB. These checks keep a
+malformed manifest from turning a benchmark run into an unbounded or unrelated
+resource read.
+
 ## 7. Benchmark Architecture
 
 ### 7.1 Fixture loader
 
 An internal main-source fixture component parses the manifest, validates the
-selected resource, and returns the immutable image plus its expectation. Tests
-exercise success and corrupted/missing/hash-mismatch failure paths without
-exposing a public API.
+selected resource, and returns the immutable image plus its provider-neutral
+expectation. It depends only on the existing image and serialization surfaces;
+it does not depend on the ZXing provider. Tests exercise success and
+corrupted/missing/hash-mismatch/path/size failure paths without exposing a
+public API.
 
 ### 7.2 Benchmark state
 
@@ -140,11 +148,13 @@ before they are used in documentation or evidence collection.
 
 ## 8. Dependency Boundary
 
-The benchmark module adds a project dependency on
-`:bluetape4k-images-barcode-zxing`. Benchmark and fixture-validation code uses
-`ZxingBarcodeReader` plus provider-neutral API models. It does not import
-`com.google.zxing` or add a new external coordinate/version. ZXing dependencies
-remain owned by the provider module.
+The benchmark source set adds `benchmarkImplementation` on
+`:bluetape4k-images-barcode-zxing`; tests add the corresponding
+`testImplementation`. The module's existing main `implementation` and published
+dependency surface do not gain the provider. Benchmark setup and expectation
+tests use `ZxingBarcodeReader` plus provider-neutral API models. They do not
+import `com.google.zxing` or add a new external coordinate/version. ZXing
+dependencies remain owned by the provider module.
 
 ## 9. Failure Handling
 
@@ -154,8 +164,9 @@ remain owned by the provider module.
 | SHA-256 or dimensions differ | fail setup before any measurement |
 | QR/Code 128 payload or format differs | fail setup before any measurement |
 | Blank fixture returns a result | fail setup before any measurement |
+| Manifest path escapes the fixed prefix or fixture exceeds 1 MiB | reject it before image decoding |
 | Configuration scenario or timing contracts diverge | fail the Gradle contract test |
-| Raw output is missing, partial, or would overwrite accepted evidence | reject it and use a new run/output path |
+| Raw output is missing, partial, or would overwrite accepted evidence | reject it and use a new run id |
 | Documentation overstates local evidence | block review until caveats are restored |
 
 No extraction exception is converted into an empty result by the benchmark.
@@ -179,12 +190,17 @@ libvips backend.
 
 ## 11. Evidence and Documentation
 
-The accepted run records:
+Each attempt uses a validated run id and writes only below a fresh build
+directory. Accepted evidence is promoted once to
+`benchmark/images-benchmark/docs/raw/issue-272-<run-id>/`; an existing target is
+never overwritten. The accepted run records:
 
 - exact Gradle commands;
 - macOS/architecture/CPU, JVM vendor/version, and ZXing provider version;
 - fixture ids, dimensions, payload class, and SHA-256 values;
 - raw JSON paths for latency and throughput;
+- a run manifest tying commands, environment, fixture hashes, and both raw
+  files to the same attempt;
 - six result rows: three scenarios in each mode;
 - score error and interpretation caveats.
 
@@ -203,6 +219,8 @@ use a categorical palette.
   unchanged.
 - The existing benchmark module and kotlinx-benchmark plugin are reused; there
   is no module registration change.
+- The provider is confined to benchmark/test configurations, so the published
+  benchmark artifact dependency surface does not change.
 - Benchmark sources remain excluded from production coverage.
 - README locale parity is required.
 - CHANGELOG and WIP updates remain owned by issues #270 and #271 so they are not
