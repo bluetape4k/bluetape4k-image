@@ -109,6 +109,17 @@ class CodecMatrixFixturesTest {
     }
 
     @Test
+    fun `Gradle created empty fixture output directory is populated atomically`() {
+        val runDirectory = tempDir.resolve("gradle-output-run")
+        Files.createDirectories(runDirectory.resolve("fixtures"))
+
+        val manifest = prepare("fixture-gradle-output-0001", runDirectory)
+
+        Files.isRegularFile(runDirectory.resolve("fixtures/manifest.json")).shouldBeEqualTo(true)
+        manifest.fixtures.size.shouldBeEqualTo(CodecMatrixScenario.entries.size)
+    }
+
+    @Test
     fun `missing non regular and symlinked generated inputs are rejected`() {
         Files.delete(generatedSources.resolve("homer.jpg"))
         assertFailsWith<IllegalArgumentException> {

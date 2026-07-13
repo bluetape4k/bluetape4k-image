@@ -1,3 +1,18 @@
+import groovy.json.JsonSlurper
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
+import java.security.MessageDigest
+import java.time.Instant
+import java.util.UUID
+import java.util.concurrent.ConcurrentHashMap
+import java.util.jar.JarFile
+import org.gradle.api.tasks.JavaExec
+import org.gradle.api.tasks.Sync
+import org.gradle.api.tasks.testing.Test
+import org.gradle.jvm.tasks.Jar
+import org.gradle.jvm.toolchain.JavaLanguageVersion
+import org.gradle.jvm.toolchain.JavaToolchainService
+
 plugins {
     kotlin("plugin.allopen")           // allOpen 필수
     alias(libs.plugins.kotlin.serialization)
@@ -13,8 +28,161 @@ sourceSets {
     create("benchmark")
 }
 
-val vipsImpl = project.findProperty("vips.impl")?.toString() ?: "java25"
+val vipsImpl = providers.gradleProperty("vips.impl").orElse("java25").get()
+require(vipsImpl == "java21" || vipsImpl == "java25") {
+    "vips.impl must be java21 or java25: $vipsImpl"
+}
 val javaVersion = if (vipsImpl == "java21") 21 else 25
+val codecMatrixRunId = providers.gradleProperty("codec.matrix.runId")
+val codecMatrixSupersedes = providers.gradleProperty("codec.matrix.supersedes")
+val codecMatrixReplacesFailedAttempt = providers.gradleProperty("codec.matrix.replacesFailedAttempt")
+val codecMatrixRunIdPattern = Regex("[a-z0-9][a-z0-9._-]{7,79}")
+val repositoryDirectory = rootProject.layout.projectDirectory
+val codecMatrixSourceDirectory = layout.buildDirectory.dir("generated/codec-matrix-source-fixtures")
+val codecMatrixRunDirectoryProvider = codecMatrixRunId.flatMap { runId ->
+    require(codecMatrixRunIdPattern.matches(runId)) {
+        "codec.matrix.runId must match ${codecMatrixRunIdPattern.pattern}"
+    }
+    layout.buildDirectory.dir("codec-matrix/$runId")
+}
+val codecMatrixReportDirectoryProvider = codecMatrixRunId.flatMap { runId ->
+    require(codecMatrixRunIdPattern.matches(runId)) {
+        "codec.matrix.runId must match ${codecMatrixRunIdPattern.pattern}"
+    }
+    layout.buildDirectory.dir("reports/benchmarks/codec-matrix/$runId")
+}
+val javaToolchains = extensions.getByType<JavaToolchainService>()
+val selectedJavaLauncher = javaToolchains.launcherFor {
+    languageVersion.set(JavaLanguageVersion.of(javaVersion))
+}
+
+fun validatedCodecMatrixRunId(): String {
+    val runId = codecMatrixRunId.orNull
+    require(runId != null && codecMatrixRunIdPattern.matches(runId)) {
+        "codec.matrix.runId must match ${codecMatrixRunIdPattern.pattern}"
+    }
+    return runId
+}
+
+fun codecMatrixRunDirectory() = codecMatrixRunDirectoryProvider.get().asFile
+
+fun codecMatrixReportDirectory() = codecMatrixReportDirectoryProvider.get().asFile
+
+fun validateCodecMatrixJmhReport(report: File, expectedMethods: Set<String>) {
+    require(report.isFile) { "codec matrix JMH report is missing: $report" }
+    val rows = JsonSlurper().parse(report) as? List<*>
+        ?: throw IllegalArgumentException("codec matrix JMH report must be a JSON array")
+    val expectedRows = expectedMethods.flatMap { method ->
+        listOf("web-photo", "profile").map { scenario -> method to scenario }
+    }.toSet()
+    val actualRows = rows.map { value ->
+        val row = value as? Map<*, *>
+            ?: throw IllegalArgumentException("codec matrix JMH row must be an object")
+        require(row["mode"] == "avgt") { "codec matrix JMH mode must be avgt" }
+        require((row["threads"] as? Number)?.toInt() == 1) { "codec matrix JMH threads must be 1" }
+        require((row["forks"] as? Number)?.toInt() == 1) { "codec matrix JMH forks must be 1" }
+        require((row["warmupIterations"] as? Number)?.toInt() == CODEC_MATRIX_WARMUPS) {
+            "codec matrix JMH warmups differ"
+        }
+        require((row["measurementIterations"] as? Number)?.toInt() == CODEC_MATRIX_ITERATIONS) {
+            "codec matrix JMH iterations differ"
+        }
+        require(row["warmupTime"] == "1 s" && row["measurementTime"] == "1 s") {
+            "codec matrix JMH iteration time differs"
+        }
+        val primaryMetric = row["primaryMetric"] as? Map<*, *>
+            ?: throw IllegalArgumentException("codec matrix JMH primary metric is missing")
+        require(primaryMetric["scoreUnit"] == "ms/op") { "codec matrix JMH score unit must be ms/op" }
+        val benchmark = row["benchmark"] as? String
+            ?: throw IllegalArgumentException("codec matrix JMH benchmark name is missing")
+        val method = benchmark.substringAfterLast('.')
+        val params = row["params"] as? Map<*, *>
+            ?: throw IllegalArgumentException("codec matrix JMH parameters are missing")
+        val scenario = params["scenario"] as? String
+            ?: throw IllegalArgumentException("codec matrix JMH scenario is missing")
+        method to scenario
+    }.toSet()
+    require(actualRows == expectedRows && rows.size == expectedRows.size) {
+        "codec matrix JMH row coverage differs"
+    }
+}
+
+fun requireNoBlockingCodecMatrixEligibility(report: File) {
+    require(report.isFile) { "codec matrix eligibility report is missing: $report" }
+    val root = JsonSlurper().parse(report) as? Map<*, *>
+        ?: throw IllegalArgumentException("codec matrix eligibility report must be an object")
+    val cells = root["cells"] as? List<*>
+        ?: throw IllegalArgumentException("codec matrix eligibility cells are missing")
+    val blocking = cells.map { value ->
+        val cell = value as? Map<*, *>
+            ?: throw IllegalArgumentException("codec matrix eligibility cell must be an object")
+        cell["status"] as? String
+            ?: throw IllegalArgumentException("codec matrix eligibility status is missing")
+    }.filter { status -> status == "FAILED_SMOKE" || status == "ERROR" }
+    require(blocking.isEmpty()) { "codec matrix eligibility contains blocking status: ${blocking.toSet()}" }
+}
+
+fun stageCodecMatrixLatency(source: File, target: File) {
+    require(!target.exists()) { "staged codec matrix latency already exists: $target" }
+    target.parentFile.mkdirs()
+    val temporary = target.parentFile.resolve(".${target.name}.tmp-${UUID.randomUUID()}")
+    try {
+        Files.copy(source.toPath(), temporary.toPath())
+        Files.move(temporary.toPath(), target.toPath(), StandardCopyOption.ATOMIC_MOVE)
+    } finally {
+        Files.deleteIfExists(temporary.toPath())
+    }
+}
+
+fun copyCodecMatrixInputImmutable(source: File, target: File) {
+    require(source.isFile) { "codec matrix input is missing: $source" }
+    if (target.exists()) {
+        require(source.readBytes().contentEquals(target.readBytes())) {
+            "existing staged codec matrix input differs: $target"
+        }
+        return
+    }
+    target.parentFile.mkdirs()
+    val temporary = target.parentFile.resolve(".${target.name}.tmp-${UUID.randomUUID()}")
+    try {
+        Files.copy(source.toPath(), temporary.toPath())
+        Files.move(temporary.toPath(), target.toPath(), StandardCopyOption.ATOMIC_MOVE)
+    } finally {
+        Files.deleteIfExists(temporary.toPath())
+    }
+}
+
+fun writeCodecMatrixTextImmutable(target: File, content: String) {
+    if (target.exists()) {
+        require(target.readText() == content) { "existing staged codec matrix text differs: $target" }
+        return
+    }
+    target.parentFile.mkdirs()
+    val temporary = target.parentFile.resolve(".${target.name}.tmp-${UUID.randomUUID()}")
+    try {
+        temporary.writeText(content)
+        Files.move(temporary.toPath(), target.toPath(), StandardCopyOption.ATOMIC_MOVE)
+    } finally {
+        Files.deleteIfExists(temporary.toPath())
+    }
+}
+
+fun codecMatrixSha256(file: File): String {
+    val digest = MessageDigest.getInstance("SHA-256")
+    file.inputStream().buffered().use { input ->
+        val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
+        while (true) {
+            val read = input.read(buffer)
+            if (read < 0) break
+            digest.update(buffer, 0, read)
+        }
+    }
+    return digest.digest().joinToString("") { byte -> "%02x".format(byte) }
+}
+
+val CODEC_MATRIX_WARMUPS = 1
+val CODEC_MATRIX_ITERATIONS = 3
+val CODEC_MATRIX_ITERATION_SECONDS = 1L
 
 kotlin {
     jvmToolchain(javaVersion)
@@ -42,6 +210,48 @@ configurations {
 
 benchmark {
     configurations {
+        named("main") {
+            exclude(".*VipsExperimentalCodecMatrixBenchmark.*")
+        }
+
+        register("codecMatrix") {
+            include(".*VipsCodecMatrixBenchmark.*")
+            warmups = CODEC_MATRIX_WARMUPS
+            iterations = CODEC_MATRIX_ITERATIONS
+            iterationTime = CODEC_MATRIX_ITERATION_SECONDS
+            iterationTimeUnit = "s"
+            mode = "avgt"
+            outputTimeUnit = "ms"
+            reportFormat = "json"
+            advanced("jvmForks", 1)
+        }
+
+        register("codecMatrixAvif") {
+            include(".*VipsExperimentalCodecMatrixBenchmark.encodeAvifFromJpeg.*")
+            include(".*VipsExperimentalCodecMatrixBenchmark.decodeAvifToJpeg.*")
+            warmups = CODEC_MATRIX_WARMUPS
+            iterations = CODEC_MATRIX_ITERATIONS
+            iterationTime = CODEC_MATRIX_ITERATION_SECONDS
+            iterationTimeUnit = "s"
+            mode = "avgt"
+            outputTimeUnit = "ms"
+            reportFormat = "json"
+            advanced("jvmForks", 1)
+        }
+
+        register("codecMatrixHeic") {
+            include(".*VipsExperimentalCodecMatrixBenchmark.encodeHeicFromJpeg.*")
+            include(".*VipsExperimentalCodecMatrixBenchmark.decodeHeicToJpeg.*")
+            warmups = CODEC_MATRIX_WARMUPS
+            iterations = CODEC_MATRIX_ITERATIONS
+            iterationTime = CODEC_MATRIX_ITERATION_SECONDS
+            iterationTimeUnit = "s"
+            mode = "avgt"
+            outputTimeUnit = "ms"
+            reportFormat = "json"
+            advanced("jvmForks", 1)
+        }
+
         register("pipelineAllocation") {
             include(".*ImagePipelineBenchmark.*")
             warmups = 1
@@ -113,6 +323,7 @@ benchmark {
         register("benchmark") {
             this as kotlinx.benchmark.gradle.JvmBenchmarkTarget
             jmhVersion = libs.versions.jmh.get()
+            workingDir = repositoryDirectory.asFile.absolutePath
         }
     }
 }
@@ -121,8 +332,9 @@ dependencies {
     // core
     implementation(libs.bluetape4k.core)
     implementation(libs.bluetape4k.logging)
-    implementation(libs.kotlinx.serialization.json)
+    implementation(bt4k.kotlinx.serialization.json)
     testImplementation(libs.bluetape4k.junit5)
+    testImplementation(gradleTestKit())
 
     // scrimage (images)
     implementation(project(":bluetape4k-images"))
@@ -141,4 +353,299 @@ dependencies {
     add("benchmarkImplementation", libs.kotlinx.benchmark.runtime.jvm)
     add("benchmarkImplementation", libs.jmh.core)
     add("benchmarkImplementation", libs.jmh.generator.annprocess)
+}
+
+tasks.withType<Test>().configureEach {
+    systemProperty("codec.matrix.testBackend", vipsImpl)
+    providers.gradleProperty("bluetape4kDependenciesCatalogPath").orNull?.let { catalogPath ->
+        systemProperty("codec.matrix.testCatalogPath", catalogPath)
+    }
+}
+
+val syncCodecMatrixSourceFixtures = tasks.register<Sync>("syncCodecMatrixSourceFixtures") {
+    description = "Sync the two hash-pinned codec matrix source images"
+    from("src/main/resources/bench/cafe.jpg")
+    from(repositoryDirectory.file("images/src/test/resources/images/homer.jpg"))
+    into(codecMatrixSourceDirectory)
+}
+
+val codecMatrixPreflight = tasks.register<JavaExec>("codecMatrixPreflight") {
+    description = "Record non-native host and backend eligibility for the codec matrix"
+    dependsOn(tasks.named("classes"))
+    classpath = sourceSets.main.get().runtimeClasspath
+    mainClass.set("io.bluetape4k.images.benchmark.CodecMatrixPreflightMain")
+    javaLauncher.set(selectedJavaLauncher)
+    workingDir(repositoryDirectory)
+    inputs.property("backend", vipsImpl)
+    inputs.property("runId", codecMatrixRunId)
+    outputs.file(codecMatrixRunDirectoryProvider.map { it.file("preflight-$vipsImpl.json") })
+    doFirst {
+        setArgs(listOf("--backend", vipsImpl, "--run-id", validatedCodecMatrixRunId()))
+    }
+}
+
+val prepareCodecMatrixFixtures = tasks.register<JavaExec>("prepareCodecMatrixFixtures") {
+    description = "Prepare immutable JPEG, PNG, and WebP codec matrix fixtures"
+    dependsOn(codecMatrixPreflight, syncCodecMatrixSourceFixtures)
+    classpath = sourceSets.main.get().runtimeClasspath
+    mainClass.set("io.bluetape4k.images.benchmark.CodecMatrixFixtureMain")
+    javaLauncher.set(selectedJavaLauncher)
+    workingDir(repositoryDirectory)
+    inputs.dir(codecMatrixSourceDirectory)
+    inputs.file(codecMatrixRunDirectoryProvider.map { it.file("preflight-$vipsImpl.json") })
+    outputs.dir(codecMatrixRunDirectoryProvider.map { it.dir("fixtures") })
+    doFirst {
+        setArgs(listOf("--run-id", validatedCodecMatrixRunId()))
+    }
+}
+
+val codecMatrixCapabilityReport = tasks.register<JavaExec>("codecMatrixCapabilityReport") {
+    description = "Probe direction-specific codec support and smoke transcodes"
+    dependsOn(prepareCodecMatrixFixtures, tasks.named("benchmarkClasses"))
+    classpath = sourceSets.named("benchmark").get().runtimeClasspath
+    mainClass.set("io.bluetape4k.images.benchmark.CodecMatrixCapabilityMain")
+    javaLauncher.set(selectedJavaLauncher)
+    workingDir(repositoryDirectory)
+    jvmArgs("--enable-native-access=ALL-UNNAMED")
+    inputs.property("backend", vipsImpl)
+    inputs.file(codecMatrixRunDirectoryProvider.map { it.file("preflight-$vipsImpl.json") })
+    inputs.file(codecMatrixRunDirectoryProvider.map { it.file("fixtures/manifest.json") })
+    outputs.file(codecMatrixReportDirectoryProvider.map { it.file("eligibility-$vipsImpl.json") })
+    outputs.file(codecMatrixReportDirectoryProvider.map { it.file("sizes-$vipsImpl.json") })
+    doFirst {
+        setArgs(listOf("--backend", vipsImpl, "--run-id", validatedCodecMatrixRunId()))
+    }
+}
+
+val prepareExperimentalCodecMatrixFixtures = tasks.register<JavaExec>("prepareExperimentalCodecMatrixFixtures") {
+    description = "Prepare manifest-pinned AVIF and HEIC inputs for eligible directions"
+    dependsOn(codecMatrixCapabilityReport)
+    classpath = sourceSets.named("benchmark").get().runtimeClasspath
+    mainClass.set("io.bluetape4k.images.benchmark.CodecMatrixExperimentalFixtureMain")
+    javaLauncher.set(selectedJavaLauncher)
+    workingDir(repositoryDirectory)
+    jvmArgs("--enable-native-access=ALL-UNNAMED")
+    inputs.file(codecMatrixReportDirectoryProvider.map { it.file("eligibility-$vipsImpl.json") })
+    inputs.file(codecMatrixRunDirectoryProvider.map { it.file("fixtures/manifest.json") })
+    outputs.file(codecMatrixRunDirectoryProvider.map { it.file("staging/parameters-codecMatrixAvif.txt") })
+    outputs.file(codecMatrixRunDirectoryProvider.map { it.file("staging/parameters-codecMatrixHeic.txt") })
+    doFirst {
+        setArgs(listOf("--backend", vipsImpl, "--run-id", validatedCodecMatrixRunId()))
+    }
+}
+
+tasks.register<JavaExec>("finalizeCodecMatrixEvidence") {
+    description = "Validate and atomically promote append-only codec matrix evidence"
+    dependsOn(tasks.named("classes"))
+    classpath = sourceSets.main.get().runtimeClasspath
+    mainClass.set("io.bluetape4k.images.benchmark.CodecMatrixFinalizeMain")
+    javaLauncher.set(selectedJavaLauncher)
+    workingDir(repositoryDirectory)
+    inputs.property("runId", codecMatrixRunId)
+    inputs.property("supersedes", codecMatrixSupersedes.orElse(""))
+    inputs.property("replacesFailedAttempt", codecMatrixReplacesFailedAttempt.orElse(""))
+    inputs.dir(codecMatrixRunDirectoryProvider.map { it.dir("staging") })
+    inputs.dir(codecMatrixReportDirectoryProvider)
+    outputs.dirs(codecMatrixRunId.map { runId ->
+        listOf(
+            layout.projectDirectory.dir("docs/raw/$runId").asFile,
+            layout.projectDirectory.dir("docs/raw/failed/$runId").asFile,
+        )
+    })
+    doFirst {
+        val runId = validatedCodecMatrixRunId()
+        val stagingDirectory = codecMatrixRunDirectory().resolve("staging")
+        val reportDirectory = codecMatrixReportDirectory()
+        stagingDirectory.mkdirs()
+        copyCodecMatrixInputImmutable(
+            reportDirectory.resolve("eligibility-$vipsImpl.json"),
+            stagingDirectory.resolve("eligibility.json"),
+        )
+        val stagedSizes = reportDirectory.resolve("sizes-$vipsImpl-staged.json")
+        val sizes = stagedSizes.takeIf(File::isFile) ?: reportDirectory.resolve("sizes-$vipsImpl.json")
+        copyCodecMatrixInputImmutable(sizes, stagingDirectory.resolve(sizes.name))
+
+        codecMatrixSupersedes.orNull?.let { supersedes ->
+            require(codecMatrixRunIdPattern.matches(supersedes) && supersedes != runId) {
+                "codec.matrix.supersedes must name a different valid run ID"
+            }
+            require(layout.projectDirectory.file("docs/raw/$supersedes/run-manifest.json").asFile.isFile) {
+                "codec.matrix.supersedes does not identify accepted evidence: $supersedes"
+            }
+        }
+        codecMatrixReplacesFailedAttempt.orNull?.let { failedRunId ->
+            require(codecMatrixRunIdPattern.matches(failedRunId) && failedRunId != runId) {
+                "codec.matrix.replacesFailedAttempt must name a different valid run ID"
+            }
+            require(layout.projectDirectory.file("docs/raw/failed/$failedRunId/attempt-manifest.json").asFile.isFile) {
+                "codec.matrix.replacesFailedAttempt does not identify failed evidence: $failedRunId"
+            }
+        }
+        val arguments = mutableListOf("--run-id", runId)
+        codecMatrixSupersedes.orNull?.let { arguments += listOf("--supersedes", it) }
+        codecMatrixReplacesFailedAttempt.orNull?.let {
+            arguments += listOf("--replaces-failed-attempt", it)
+        }
+        setArgs(arguments)
+    }
+}
+
+tasks.register("stageCodecMatrixProfilerJar") {
+    description = "Stage the exact generated JMH jar for focused GC profiling"
+    val benchmarkJar = tasks.named<Jar>("benchmarkBenchmarkJar")
+    val archiveFile = benchmarkJar.flatMap(Jar::getArchiveFile)
+    val stagedJar = codecMatrixRunDirectoryProvider.map { directory ->
+        directory.file("staging/codec-matrix-profiler-$vipsImpl.jar")
+    }
+    val stagedHash = codecMatrixRunDirectoryProvider.map { directory ->
+        directory.file("staging/codec-matrix-profiler-$vipsImpl.jar.sha256")
+    }
+    dependsOn(benchmarkJar)
+    inputs.file(archiveFile)
+    inputs.files(fileTree("src/benchmark/kotlin") { include("**/*.kt") })
+    inputs.file(layout.projectDirectory.file("build.gradle.kts"))
+    outputs.files(stagedJar, stagedHash)
+    doLast {
+        validatedCodecMatrixRunId()
+        val archive = archiveFile.get().asFile
+        require(archive.isFile) { "generated codec matrix profiler jar is missing: $archive" }
+        val newestSourceTimestamp = (
+                sequenceOf(layout.projectDirectory.file("build.gradle.kts").asFile) +
+                        fileTree("src/benchmark/kotlin") { include("**/*.kt") }.files.asSequence()
+                )
+            .map(File::lastModified)
+            .maxOrNull() ?: error("codec matrix benchmark sources are missing")
+        require(archive.lastModified() >= newestSourceTimestamp) {
+            "generated codec matrix profiler jar is stale"
+        }
+        JarFile(archive).use { jar ->
+            val entries = jar.entries().asSequence().map { entry -> entry.name }.toSet()
+            listOf("VipsCodecMatrixBenchmark", "VipsExperimentalCodecMatrixBenchmark").forEach { className ->
+                require(entries.contains("io/bluetape4k/images/benchmark/$className.class")) {
+                    "generated codec matrix profiler jar lacks $className"
+                }
+                require(entries.any { entry ->
+                    entry.startsWith("io/bluetape4k/images/benchmark/${className}_") &&
+                            entry.endsWith("_jmhTest.class")
+                }) { "generated codec matrix profiler jar lacks generated JMH classes for $className" }
+            }
+        }
+        val targetJar = stagedJar.get().asFile
+        copyCodecMatrixInputImmutable(archive, targetJar)
+        val hash = codecMatrixSha256(targetJar)
+        writeCodecMatrixTextImmutable(
+            stagedHash.get().asFile,
+            "$hash  ${targetJar.name}\n",
+        )
+    }
+}
+
+afterEvaluate {
+    val codecMatrixExecutionTaskNames = setOf(
+        "benchmarkBenchmark",
+        "benchmarkCodecMatrixBenchmark",
+        "benchmarkCodecMatrixAvifBenchmark",
+        "benchmarkCodecMatrixHeicBenchmark",
+    )
+    tasks.matching { task ->
+        task.name == "benchmarkBenchmark" || task.name == "benchmarkCodecMatrixBenchmark"
+    }.configureEach {
+        dependsOn(prepareCodecMatrixFixtures)
+    }
+
+    val codecMatrixBenchmarkStarts = ConcurrentHashMap<String, Instant>()
+
+    tasks.matching { task -> task.name == "benchmarkCodecMatrixBenchmark" }.configureEach {
+        doFirst {
+            require(!codecMatrixRunDirectory().resolve("staging/latency-$vipsImpl-codecMatrix.json").exists()) {
+                "staged codec matrix latency already exists for this run ID"
+            }
+            codecMatrixBenchmarkStarts[name] = Instant.now()
+        }
+        doLast {
+            val startedAt = requireNotNull(codecMatrixBenchmarkStarts.remove(name))
+            val reportRoot = layout.buildDirectory.dir("reports/benchmarks/codecMatrix").get().asFile
+            val reports = if (reportRoot.isDirectory) {
+                Files.walk(reportRoot.toPath()).use { paths ->
+                    paths.filter { path ->
+                        Files.isRegularFile(path) &&
+                                path.fileName.toString() == "benchmark.json" &&
+                                !Files.getLastModifiedTime(path).toInstant().isBefore(startedAt)
+                    }.map { it.toFile() }.toList()
+                }
+            } else {
+                emptyList()
+            }
+            require(reports.size == 1) { "expected one fresh codec matrix JMH report but found ${reports.size}" }
+            validateCodecMatrixJmhReport(
+                reports.single(),
+                setOf("encodePngFromJpeg", "decodePngToJpeg", "encodeWebpFromJpeg", "decodeWebpToJpeg"),
+            )
+            stageCodecMatrixLatency(
+                reports.single(),
+                codecMatrixRunDirectory().resolve("staging/latency-$vipsImpl-codecMatrix.json"),
+            )
+        }
+    }
+
+    tasks.matching { task ->
+        task.name == "benchmarkCodecMatrixAvifBenchmark" || task.name == "benchmarkCodecMatrixHeicBenchmark"
+    }.configureEach {
+        dependsOn(prepareExperimentalCodecMatrixFixtures)
+        val format = if (name.contains("Avif")) "codecMatrixAvif" else "codecMatrixHeic"
+        val parameterFile = provider {
+            codecMatrixRunDirectory().resolve("staging/parameters-$format.txt")
+        }
+        onlyIf("at least one experimental codec direction is eligible") {
+            val file = parameterFile.get()
+            file.isFile && file.readLines().any { line -> line.startsWith("include:") }
+        }
+        doFirst {
+            codecMatrixBenchmarkStarts[name] = Instant.now()
+            val parameterFileValue = parameterFile.get()
+            require(parameterFileValue.isFile) { "codec matrix parameter file is missing: $parameterFileValue" }
+            val eligibilityFile = codecMatrixReportDirectory().resolve("eligibility-$vipsImpl.json")
+            requireNoBlockingCodecMatrixEligibility(eligibilityFile)
+            val reportLine = parameterFileValue.readLines().single { line -> line.startsWith("reportFile:") }
+            require(!file(reportLine.substringAfter("reportFile:")).exists()) {
+                "experimental codec matrix latency already exists for this run ID"
+            }
+            (this as JavaExec).setArgs(listOf(parameterFileValue.absolutePath))
+            systemProperty(
+                "codec.matrix.eligibility",
+                eligibilityFile.absolutePath,
+            )
+        }
+        doLast {
+            val startedAt = requireNotNull(codecMatrixBenchmarkStarts.remove(name))
+            val parameterLines = parameterFile.get().readLines()
+            val methods = parameterLines.filter { line -> line.startsWith("include:") }.map { line ->
+                line.substringAfter("VipsExperimentalCodecMatrixBenchmark.").substringBefore(".*")
+            }.toSet()
+            val reportLine = parameterLines.single { line -> line.startsWith("reportFile:") }
+            val report = file(reportLine.substringAfter("reportFile:"))
+            require(!Files.getLastModifiedTime(report.toPath()).toInstant().isBefore(startedAt)) {
+                "experimental codec matrix JMH report is stale"
+            }
+            validateCodecMatrixJmhReport(report, methods)
+        }
+    }
+
+    tasks.withType<JavaExec>().matching { task -> task.name in codecMatrixExecutionTaskNames }.configureEach {
+        javaLauncher.set(selectedJavaLauncher)
+        workingDir(repositoryDirectory)
+        jvmArgs("--enable-native-access=ALL-UNNAMED")
+        doFirst {
+            systemProperty("codec.matrix.backend", vipsImpl)
+            systemProperty("codec.matrix.runId", validatedCodecMatrixRunId())
+            systemProperty(
+                "codec.matrix.preflight",
+                codecMatrixRunDirectory().resolve("preflight-$vipsImpl.json").absolutePath,
+            )
+            systemProperty(
+                "codec.matrix.fixtureManifest",
+                codecMatrixRunDirectory().resolve("fixtures/manifest.json").absolutePath,
+            )
+        }
+    }
 }
