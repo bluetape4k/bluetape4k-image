@@ -354,9 +354,9 @@ The Gradle task contract is exact:
 | Task | Type / entrypoint | Declared inputs | Output / dependency |
 |---|---|---|---|
 | `syncCodecMatrixSourceFixtures` | `Sync` | the two checked-in source fixtures | `build/generated/codec-matrix-source-fixtures/` |
-| `codecMatrixPreflight` | `JavaExec` / `CodecMatrixPreflightMain`, main runtime | selector, explicit run ID, git/host/JDK facts | `build/codec-matrix/<run-id>/preflight.json` |
+| `codecMatrixPreflight` | `JavaExec` / `CodecMatrixPreflightMain`, main runtime | selector, explicit run ID, git/host/JDK facts | `build/codec-matrix/<run-id>/preflight-<backend>.json` |
 | `prepareCodecMatrixFixtures` | `JavaExec` / `CodecMatrixFixtureMain`, main runtime | synced sources, preflight, transform/options | stable fixtures plus `fixtures/manifest.json` |
-| `codecMatrixCapabilityReport` | `JavaExec` / `CodecMatrixCapabilityMain`, benchmark runtime | preflight, stable manifest, selected backend | ephemeral `eligibility.json` |
+| `codecMatrixCapabilityReport` | `JavaExec` / `CodecMatrixCapabilityMain`, benchmark runtime | backend-specific preflight, stable manifest, selected backend | ephemeral `eligibility-<backend>.json` and `sizes-<backend>.json` |
 | `prepareExperimentalCodecMatrixFixtures` | `JavaExec` / `CodecMatrixExperimentalFixtureMain`, benchmark runtime | eligibility, stable manifest, producer manifest when supplied | AVIF/HEIC inputs plus updated fixture manifest |
 | focused benchmark tasks | generated JMH tasks | preflight, exact fixture/eligibility manifests, run ID | staged latency JSON; direct calls enforce dependencies |
 | `finalizeCodecMatrixEvidence` | `JavaExec` / `CodecMatrixFinalizeMain`, main runtime | eligibility, staged latency/GC/size/status artifacts and hashes | atomic tracked `docs/raw/<run-id>/` |
