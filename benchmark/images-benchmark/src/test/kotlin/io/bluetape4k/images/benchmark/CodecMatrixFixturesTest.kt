@@ -165,13 +165,17 @@ class CodecMatrixFixturesTest {
 
     @Test
     fun `CLI accepts only run id and derives paths from repository root`() {
-        parseCodecMatrixFixtureRunId(arrayOf("--run-id", "fixture-cli-0001"))
-            .shouldBeEqualTo(CodecMatrixRunId("fixture-cli-0001"))
+        val runId = CodecMatrixRunId("fixture-cli-0001")
+        parseCodecMatrixFixtureRunId(arrayOf("--run-id", runId.value)).shouldBeEqualTo(runId)
+        codecMatrixFixturePaths(repositoryRoot(), runId, CodecMatrixBackend.JAVA21)
+            .backendPreflight
+            .endsWith("codec-matrix/${runId.value}/preflight-java21.json")
+            .shouldBeEqualTo(true)
         assertFailsWith<IllegalArgumentException> {
             parseCodecMatrixFixtureRunId(arrayOf("--source-root", "/tmp", "--run-id", "fixture-cli-0001"))
         }
         assertFailsWith<IllegalArgumentException> {
-            codecMatrixFixturePaths(tempDir, CodecMatrixRunId("fixture-cli-0001"))
+            codecMatrixFixturePaths(tempDir, runId)
         }
     }
 
