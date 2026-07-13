@@ -30,10 +30,16 @@ internal object CodecMatrixJson {
     internal fun encode(manifest: CodecMatrixEligibilityManifest): String =
         json.encodeToString(manifest.validateEligibility())
 
+    internal fun encode(manifest: CodecMatrixFixtureManifest): String =
+        json.encodeToString(manifest)
+
     internal fun encode(manifest: CodecMatrixFinalizedManifest): String =
         json.encodeToString(manifest.validateAccepted())
 
     internal fun write(target: Path, manifest: CodecMatrixEligibilityManifest): CodecMatrixSha256 =
+        writeBytes(target, encode(manifest).toByteArray(StandardCharsets.UTF_8))
+
+    internal fun write(target: Path, manifest: CodecMatrixFixtureManifest): CodecMatrixSha256 =
         writeBytes(target, encode(manifest).toByteArray(StandardCharsets.UTF_8))
 
     internal fun write(target: Path, manifest: CodecMatrixFinalizedManifest): CodecMatrixSha256 =
@@ -52,6 +58,22 @@ internal object CodecMatrixJson {
             throw e
         } catch (e: Exception) {
             throw IllegalArgumentException("invalid codec matrix eligibility JSON", e)
+        }
+    }
+
+    internal fun readFixture(
+        source: Path,
+        expectedSha256: CodecMatrixSha256,
+    ): CodecMatrixFixtureManifest {
+        val bytes = readVerifiedBytes(source, expectedSha256)
+        val text = bytes.toString(StandardCharsets.UTF_8)
+        StrictJsonScanner(text).validate()
+        return try {
+            json.decodeFromString<CodecMatrixFixtureManifest>(text)
+        } catch (e: IllegalArgumentException) {
+            throw e
+        } catch (e: Exception) {
+            throw IllegalArgumentException("invalid codec matrix fixture JSON", e)
         }
     }
 
