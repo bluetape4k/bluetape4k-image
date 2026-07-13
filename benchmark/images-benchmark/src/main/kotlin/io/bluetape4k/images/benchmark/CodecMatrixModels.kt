@@ -43,6 +43,12 @@ internal enum class CodecMatrixFormat {
 }
 
 @KotlinSerializable
+internal enum class CodecMatrixTransformRecipe {
+    @SerialName("cover-center-crop-v1")
+    COVER_CENTER_CROP_V1,
+}
+
+@KotlinSerializable
 internal enum class CodecMatrixBackendId {
     @SerialName("java21")
     JAVA21,
@@ -186,12 +192,54 @@ internal data class CodecMatrixFileRecord(
 }
 
 @KotlinSerializable
+internal data class CodecMatrixMagic(
+    val signature: String,
+    val valid: Boolean,
+): Serializable {
+    init {
+        signature.requireNotBlank("signature")
+        require(signature.length <= 32) { "magic signature exceeds 32 characters" }
+    }
+
+    companion object {
+        @JvmField
+        val serialVersionUID: Long = 1L
+    }
+}
+
+@KotlinSerializable
+internal data class CodecMatrixCodecOptions(
+    val jpegQuality: Int,
+    val jpegProgressive: Boolean,
+    val pngCompression: Int,
+    val webpLosslessLevel: Int,
+    val webpQuality: Int,
+    val webpMethod: Int,
+    val webpLossless: Boolean,
+    val webpNoAlpha: Boolean,
+): Serializable {
+    init {
+        require(jpegQuality in 0..100) { "jpegQuality must be between 0 and 100" }
+        require(pngCompression in 0..9) { "pngCompression must be between 0 and 9" }
+        require(webpLosslessLevel in -1..9) { "webpLosslessLevel must be between -1 and 9" }
+        require(webpQuality in 0..100) { "webpQuality must be between 0 and 100" }
+        require(webpMethod in 0..6) { "webpMethod must be between 0 and 6" }
+    }
+
+    companion object {
+        @JvmField
+        val serialVersionUID: Long = 1L
+    }
+}
+
+@KotlinSerializable
 internal data class CodecMatrixInput(
     val format: CodecMatrixFormat,
     val path: CodecMatrixRelativePath,
     val sha256: CodecMatrixSha256,
     val byteCount: Long,
     val dimensions: CodecMatrixDimensions,
+    val magic: CodecMatrixMagic,
 ): Serializable {
     init {
         byteCount.requirePositiveNumber("byteCount")
@@ -228,6 +276,8 @@ internal data class CodecMatrixFixtureEntry(
 internal data class CodecMatrixFixtureManifest(
     val schemaVersion: Int = CODEC_MATRIX_SCHEMA_VERSION,
     val runId: CodecMatrixRunId,
+    val recipe: CodecMatrixTransformRecipe,
+    val options: CodecMatrixCodecOptions,
     val fixtures: List<CodecMatrixFixtureEntry>,
 ): Serializable {
     init {
