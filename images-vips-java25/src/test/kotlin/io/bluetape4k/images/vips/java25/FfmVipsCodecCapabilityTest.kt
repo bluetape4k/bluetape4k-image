@@ -2,6 +2,7 @@ package io.bluetape4k.images.vips.java25
 
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldContain
+import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.images.vips.VipsIncubatingApi
 import io.bluetape4k.images.vips.VipsCodecDirection
 import io.bluetape4k.images.vips.VipsCodecSupport
@@ -44,6 +45,13 @@ class FfmVipsCodecCapabilityTest {
         report.codec(VipsImageFormat.AVIF).encode.support shouldBeEqualTo VipsCodecSupport.UNAVAILABLE
         report.codec(VipsImageFormat.HEIC).decode.support shouldBeEqualTo VipsCodecSupport.AVAILABLE
         report.codec(VipsImageFormat.HEIC).encode.support shouldBeEqualTo VipsCodecSupport.UNAVAILABLE
+    }
+
+    @Test
+    fun `default probe exposes the native libvips version`() {
+        val version = DefaultFfmVipsCodecProbe.libvipsVersion().shouldNotBeNull()
+
+        version.matches(Regex("\\d+\\.\\d+\\.\\d+")).shouldBeEqualTo(true)
     }
 
     @Test
