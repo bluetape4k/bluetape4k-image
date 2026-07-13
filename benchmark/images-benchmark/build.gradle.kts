@@ -471,13 +471,38 @@ tasks.register<JavaExec>("finalizeCodecMatrixEvidence") {
         val stagingDirectory = codecMatrixRunDirectory().resolve("staging")
         val reportDirectory = codecMatrixReportDirectory()
         stagingDirectory.mkdirs()
-        copyCodecMatrixInputImmutable(
-            reportDirectory.resolve("eligibility-$vipsImpl.json"),
-            stagingDirectory.resolve("eligibility.json"),
-        )
-        val stagedSizes = reportDirectory.resolve("sizes-$vipsImpl-staged.json")
-        val sizes = stagedSizes.takeIf(File::isFile) ?: reportDirectory.resolve("sizes-$vipsImpl.json")
-        copyCodecMatrixInputImmutable(sizes, stagingDirectory.resolve(sizes.name))
+        val preflightFiles = requireNotNull(codecMatrixRunDirectory().listFiles())
+            .filter { file -> file.isFile && file.name.matches(Regex("preflight-java(?:21|25)\\.json")) }
+        require(preflightFiles.map { file -> file.name }.toSet() == setOf("preflight-java21.json", "preflight-java25.json")) {
+            "finalization requires Java 21 and Java 25 preflight evidence"
+        }
+        preflightFiles.forEach { preflight ->
+            copyCodecMatrixInputImmutable(preflight, stagingDirectory.resolve(preflight.name))
+        }
+
+        val eligibilityFiles = requireNotNull(reportDirectory.listFiles())
+            .filter { file -> file.isFile && file.name.matches(Regex("eligibility-java(?:21|25)\\.json")) }
+        require(eligibilityFiles.isNotEmpty()) { "finalization requires backend-keyed eligibility evidence" }
+        eligibilityFiles.forEach { eligibility ->
+            copyCodecMatrixInputImmutable(eligibility, stagingDirectory.resolve(eligibility.name))
+        }
+
+        eligibilityFiles.map { eligibility -> eligibility.name.substringAfter("eligibility-").substringBefore(".json") }
+            .forEach { backend ->
+                val stagedSizes = reportDirectory.resolve("sizes-$backend-staged.json")
+                val sizes = stagedSizes.takeIf(File::isFile) ?: reportDirectory.resolve("sizes-$backend.json")
+                copyCodecMatrixInputImmutable(sizes, stagingDirectory.resolve(sizes.name))
+            }
+
+        listOf(
+            codecMatrixRunDirectory().resolve("fixtures/manifest.json") to
+                    stagingDirectory.resolve("fixtures/manifest.json"),
+            codecMatrixRunDirectory().resolve("fixtures/experimental-java25/manifest.json") to
+                    stagingDirectory.resolve("fixtures/experimental-java25/manifest.json"),
+        ).filter { (source, _) -> source.isFile }.forEach { (source, target) ->
+            target.parentFile.mkdirs()
+            copyCodecMatrixInputImmutable(source, target)
+        }
 
         codecMatrixSupersedes.orNull?.let { supersedes ->
             require(codecMatrixRunIdPattern.matches(supersedes) && supersedes != runId) {

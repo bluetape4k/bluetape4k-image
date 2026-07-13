@@ -116,13 +116,15 @@ internal fun finalizeCodecMatrixEvidence(
             requireAbsent(acceptedTarget, "accepted run")
             requireAbsent(failedTarget, "failed run")
 
-            val eligibilityPath = request.stagingDirectory.resolve(ELIGIBILITY_FILE)
-            requireSafeRegularFile(eligibilityPath, "eligibility evidence")
-            val eligibility = CodecMatrixJson.readEligibility(
-                eligibilityPath,
-                CodecMatrixJson.sha256(Files.readAllBytes(eligibilityPath)),
-            )
-            require(eligibility.runId == request.runId) { "eligibility run ID differs" }
+            val loadedEligibility = loadEligibilityEvidence(request)
+            val preflights = loadPreflightEvidence(request)
+            val provenancePaths = preflights.paths + loadFixtureProvenance(request)
+            val provenanceArtifacts = provenancePaths.map { path -> path.toArtifact(request.stagingDirectory) }
+            val eligibility = mergeBackendPreflights(loadedEligibility.manifest, preflights).let { manifest ->
+                manifest.copy(
+                    artifacts = (manifest.artifacts + provenanceArtifacts).distinctBy(CodecMatrixArtifact::path),
+                ).validateEligibility()
+            }
             validateArtifacts(request.stagingDirectory, eligibility.artifacts)
 
             if (eligibility.cells.any(CodecMatrixCell::hasBlockingStatus)) {
@@ -135,17 +137,143 @@ internal fun finalizeCodecMatrixEvidence(
             val failedReference = validateFailedReplacement(request)
             validateSupersedes(request)
             validateUnavailableBackendArtifacts(request, eligibility)
-            val finalized = mergeMeasurement(request, eligibility).copy(
+            val measurement = mergeMeasurement(request, eligibility)
+            val finalized = measurement.copy(
                 supersedes = request.supersedes,
                 replacesFailedAttempt = failedReference,
             ).validateAccepted()
-            promoteAccepted(request, eligibilityPath, finalized, acceptedTarget, mover)
+            promoteAccepted(request, loadedEligibility.paths, finalized, acceptedTarget, mover)
             return finalized
         }
     } finally {
         lockChannel.close()
         Files.deleteIfExists(lockPath)
     }
+}
+
+private fun loadFixtureProvenance(request: CodecMatrixFinalizeRequest): List<Path> {
+    val fixturePath = request.stagingDirectory.resolve("fixtures/manifest.json")
+    val experimentalPath = request.stagingDirectory.resolve("fixtures/experimental-java25/manifest.json")
+    return buildList {
+        if (Files.exists(fixturePath, LinkOption.NOFOLLOW_LINKS)) {
+            requireSafeRegularFile(fixturePath, "fixture provenance")
+            val manifest = CodecMatrixJson.readFixture(
+                fixturePath,
+                CodecMatrixJson.sha256(Files.readAllBytes(fixturePath)),
+            )
+            require(manifest.runId == request.runId) { "fixture provenance run ID differs" }
+            add(fixturePath)
+        }
+        if (Files.exists(experimentalPath, LinkOption.NOFOLLOW_LINKS)) {
+            requireSafeRegularFile(experimentalPath, "experimental fixture provenance")
+            val manifest = CodecMatrixJson.readExperimental(
+                experimentalPath,
+                CodecMatrixJson.sha256(Files.readAllBytes(experimentalPath)),
+            )
+            require(manifest.runId == request.runId) { "experimental fixture provenance run ID differs" }
+            add(experimentalPath)
+        }
+    }
+}
+
+private fun loadEligibilityEvidence(request: CodecMatrixFinalizeRequest): LoadedEligibilityEvidence {
+    val backendPaths = listEvidenceFiles(request.stagingDirectory, ELIGIBILITY_FILE_PREFIX)
+    val legacyPath = request.stagingDirectory.resolve(ELIGIBILITY_FILE)
+    val paths = if (backendPaths.isNotEmpty()) {
+        require(!Files.exists(legacyPath, LinkOption.NOFOLLOW_LINKS)) {
+            "backend-keyed and legacy eligibility evidence must not be mixed"
+        }
+        backendPaths
+    } else {
+        requireSafeRegularFile(legacyPath, "eligibility evidence")
+        listOf(legacyPath)
+    }
+    val manifests = paths.map { path ->
+        CodecMatrixJson.readEligibility(path, CodecMatrixJson.sha256(Files.readAllBytes(path))).also { manifest ->
+            require(manifest.runId == request.runId) { "eligibility run ID differs" }
+        }
+    }
+    val cells = manifests.flatMap(CodecMatrixEligibilityManifest::cells)
+    require(cells.map(CodecMatrixCell::key).toSet().size == cells.size) {
+        "backend eligibility cell keys must be unique"
+    }
+    return LoadedEligibilityEvidence(
+        manifest = CodecMatrixEligibilityManifest(
+            runId = request.runId,
+            expectedCellCount = cells.size,
+            cells = cells,
+            artifacts = manifests.flatMap(CodecMatrixEligibilityManifest::artifacts)
+                .distinctBy(CodecMatrixArtifact::path),
+        ).validateEligibility(),
+        paths = paths,
+    )
+}
+
+private fun loadPreflightEvidence(request: CodecMatrixFinalizeRequest): LoadedPreflightEvidence {
+    val paths = listEvidenceFiles(request.stagingDirectory, PREFLIGHT_FILE_PREFIX)
+    val manifests = paths.map { path ->
+        CodecMatrixJson.readPreflight(path, CodecMatrixJson.sha256(Files.readAllBytes(path))).also { manifest ->
+            require(manifest.runId == request.runId) { "preflight run ID differs" }
+            require(path.fileName.toString() == "preflight-${manifest.requestedSelector}.json") {
+                "preflight filename differs from requested selector"
+            }
+        }
+    }
+    require(manifests.map(CodecMatrixPreflightManifest::requestedBackend).toSet().size == manifests.size) {
+        "preflight backends must be unique"
+    }
+    return LoadedPreflightEvidence(manifests, paths)
+}
+
+private fun mergeBackendPreflights(
+    eligibility: CodecMatrixEligibilityManifest,
+    preflights: LoadedPreflightEvidence,
+): CodecMatrixEligibilityManifest {
+    if (preflights.manifests.isEmpty()) return eligibility
+    val preflightBackends = preflights.manifests.map(CodecMatrixPreflightManifest::requestedBackend).toSet()
+    require(preflightBackends == CodecMatrixBackendId.entries.toSet()) {
+        "backend-keyed evidence requires preflight for every runtime"
+    }
+    val cellsByBackend = eligibility.cells.groupBy { cell -> cell.key.backend }
+    val referenceCells = eligibility.cells.groupBy { cell ->
+        Triple(cell.key.scenario, cell.key.format, cell.key.direction)
+    }.mapValues { (_, cells) -> cells.first() }
+    require(referenceCells.keys == EXPECTED_N_A_COVERAGE) {
+        "runtime matrix eligibility does not cover every scenario, format, and direction"
+    }
+
+    val terminalCells = preflights.manifests.flatMap { preflight ->
+        val existing = cellsByBackend[preflight.requestedBackend].orEmpty()
+        when (preflight.status) {
+            CodecMatrixCellStatus.ELIGIBLE -> {
+                require(existing.isNotEmpty()) { "eligible preflight requires backend eligibility evidence" }
+                emptyList()
+            }
+
+            CodecMatrixCellStatus.N_A,
+            CodecMatrixCellStatus.ERROR,
+            -> {
+                require(existing.isEmpty()) { "terminal preflight must not have backend eligibility evidence" }
+                referenceCells.values.map { reference ->
+                    CodecMatrixCell(
+                        key = reference.key.copy(backend = preflight.requestedBackend),
+                        status = preflight.status,
+                        reasonCode = preflight.reasonCode,
+                        reason = preflight.reason,
+                        rerunGuidance = if (preflight.status == CodecMatrixCellStatus.N_A) {
+                            "rerun on a compatible host"
+                        } else {
+                            "diagnose preflight and use a new run ID"
+                        },
+                    ).also(CodecMatrixCell::validateEligibility)
+                }
+            }
+
+            else -> throw IllegalArgumentException("invalid terminal preflight status: ${preflight.status}")
+        }
+    }
+    val cells = eligibility.cells + terminalCells
+    return eligibility.copy(expectedCellCount = cells.size, cells = cells).validateEligibility()
 }
 
 private fun mergeMeasurement(
@@ -432,7 +560,7 @@ private fun validateFailedReplacement(request: CodecMatrixFinalizeRequest): Code
 
 private fun promoteAccepted(
     request: CodecMatrixFinalizeRequest,
-    eligibilityPath: Path,
+    eligibilityPaths: List<Path>,
     manifest: CodecMatrixFinalizedManifest,
     target: Path,
     mover: CodecMatrixAtomicDirectoryMover,
@@ -440,7 +568,9 @@ private fun promoteAccepted(
     val promotion = request.acceptedRoot.resolve(".${request.runId.value}.promotion-${UUID.randomUUID()}")
     try {
         Files.createDirectory(promotion)
-        copyRegularFile(eligibilityPath, promotion.resolve(ELIGIBILITY_FILE))
+        eligibilityPaths.forEach { eligibilityPath ->
+            copyRegularFile(eligibilityPath, promotion.resolve(eligibilityPath.fileName.toString()))
+        }
         val measurement = request.stagingDirectory.resolve(MEASUREMENT_FILE)
         if (Files.exists(measurement, LinkOption.NOFOLLOW_LINKS)) {
             copyRegularFile(measurement, promotion.resolve(MEASUREMENT_FILE))
@@ -666,6 +796,16 @@ private class ParsedJmhEvidence(
     val artifacts: List<CodecMatrixArtifact>,
 )
 
+private class LoadedEligibilityEvidence(
+    val manifest: CodecMatrixEligibilityManifest,
+    val paths: List<Path>,
+)
+
+private class LoadedPreflightEvidence(
+    val manifests: List<CodecMatrixPreflightManifest>,
+    val paths: List<Path>,
+)
+
 private class JmhBoundary(
     val format: CodecMatrixFormat,
     val direction: CodecMatrixDirection,
@@ -678,6 +818,8 @@ private enum class JmhMetric {
 
 private val FINALIZE_OPTIONS = setOf("--run-id", "--supersedes", "--replaces-failed-attempt")
 private const val ELIGIBILITY_FILE = "eligibility.json"
+private const val ELIGIBILITY_FILE_PREFIX = "eligibility-"
+private const val PREFLIGHT_FILE_PREFIX = "preflight-"
 private const val MEASUREMENT_FILE = "measurement.json"
 private const val RUN_MANIFEST_FILE = "run-manifest.json"
 private const val ATTEMPT_MANIFEST_FILE = "attempt-manifest.json"

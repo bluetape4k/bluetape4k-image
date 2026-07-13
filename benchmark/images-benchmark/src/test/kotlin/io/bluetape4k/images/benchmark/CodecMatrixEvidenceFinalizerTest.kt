@@ -297,6 +297,51 @@ class CodecMatrixEvidenceFinalizerTest {
     }
 
     @Test
+    fun `backend keyed evidence preserves unavailable runtime preflight and terminal cells`() {
+        val request = request("finalize-runtime-matrix-0001")
+        val java25Cells = CodecMatrixScenario.entries.flatMap { scenario ->
+            listOf(
+                CodecMatrixFormat.PNG,
+                CodecMatrixFormat.WEBP,
+                CodecMatrixFormat.AVIF,
+                CodecMatrixFormat.HEIC,
+            ).flatMap { format ->
+                CodecMatrixDirection.entries.map { direction ->
+                    matrixCell(
+                        status = CodecMatrixCellStatus.UNSUPPORTED,
+                        reasonCode = CodecMatrixReasonCode.CAPABILITY_UNAVAILABLE,
+                        reason = "codec operation is unavailable",
+                        rerunGuidance = "rerun codec capability smoke",
+                        backend = CodecMatrixBackendId.JAVA25,
+                        scenario = scenario,
+                        format = format,
+                        direction = direction,
+                    )
+                }
+            }
+        }
+        writeBackendEligibility(request, CodecMatrixBackend.JAVA25, java25Cells)
+        writePreflight(request, CodecMatrixBackend.JAVA21, CodecMatrixCellStatus.N_A)
+        writePreflight(request, CodecMatrixBackend.JAVA25, CodecMatrixCellStatus.ELIGIBLE)
+
+        val manifest = finalizeCodecMatrixEvidence(request)
+
+        manifest.expectedCellCount.shouldBeEqualTo(32)
+        manifest.cells.count { it.key.backend == CodecMatrixBackendId.JAVA21 }
+            .shouldBeEqualTo(16)
+        manifest.cells.filter { it.key.backend == CodecMatrixBackendId.JAVA21 }
+            .all { it.status == CodecMatrixCellStatus.N_A }
+            .shouldBeEqualTo(true)
+        manifest.artifacts.map { it.path.value }.toSet().shouldBeEqualTo(
+            setOf("preflight-java21.json", "preflight-java25.json"),
+        )
+        Files.isRegularFile(acceptedRoot.resolve("${request.runId.value}/eligibility-java25.json"))
+            .shouldBeEqualTo(true)
+        Files.isRegularFile(acceptedRoot.resolve("${request.runId.value}/preflight-java21.json"))
+            .shouldBeEqualTo(true)
+    }
+
+    @Test
     fun `raw JMH latency allocation and size evidence join by exact cell key`() {
         val request = request("finalize-jmh-run-0001")
         writeEligibility(request, CodecMatrixCellStatus.ELIGIBLE)
@@ -399,6 +444,53 @@ class CodecMatrixEvidenceFinalizerTest {
                 runId = request.runId,
                 expectedCellCount = cells.size,
                 cells = cells,
+            ),
+        )
+    }
+
+    private fun writeBackendEligibility(
+        request: CodecMatrixFinalizeRequest,
+        backend: CodecMatrixBackend,
+        cells: List<CodecMatrixCell>,
+    ) {
+        CodecMatrixJson.write(
+            request.stagingDirectory.resolve("eligibility-${backend.selector}.json"),
+            CodecMatrixEligibilityManifest(
+                runId = request.runId,
+                expectedCellCount = cells.size,
+                cells = cells,
+            ),
+        )
+    }
+
+    private fun writePreflight(
+        request: CodecMatrixFinalizeRequest,
+        backend: CodecMatrixBackend,
+        status: CodecMatrixCellStatus,
+    ) {
+        CodecMatrixJson.write(
+            request.stagingDirectory.resolve("preflight-${backend.selector}.json"),
+            CodecMatrixPreflightManifest(
+                runId = request.runId,
+                requestedBackend = backend.id,
+                requestedSelector = backend.selector,
+                status = status,
+                reasonCode = if (status == CodecMatrixCellStatus.ELIGIBLE) {
+                    CodecMatrixReasonCode.NONE
+                } else {
+                    CodecMatrixReasonCode.CAPABILITY_UNKNOWN
+                },
+                reason = if (status == CodecMatrixCellStatus.ELIGIBLE) {
+                    null
+                } else {
+                    "JNI binary architecture is unavailable"
+                },
+                facts = CodecMatrixPreflightFacts(
+                    architecture = CodecMatrixArchitecture.ARM64,
+                    jdkMajor = backend.expectedJavaMajor,
+                    gitSha = "a".repeat(40),
+                    gitDirty = false,
+                ),
             ),
         )
     }
