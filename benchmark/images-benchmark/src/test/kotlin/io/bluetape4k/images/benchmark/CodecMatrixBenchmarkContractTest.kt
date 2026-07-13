@@ -99,6 +99,8 @@ class CodecMatrixBenchmarkContractTest {
         buildScript.shouldContain("listOf(\"--supersedes\", it)")
         buildScript.shouldContain("codecMatrixReplacesFailedAttempt.orNull?.let")
         buildScript.shouldContain("listOf(\"--replaces-failed-attempt\", it)")
+        buildScript.shouldContain("outputs.upToDateWhen { false }")
+        buildScript.contains("outputs.dirs(codecMatrixRunId.map").shouldBeEqualTo(false)
     }
 
     @Test
