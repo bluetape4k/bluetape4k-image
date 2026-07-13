@@ -512,6 +512,7 @@ tasks.register<JavaExec>("finalizeCodecMatrixEvidence") {
 tasks.withType<Jar>().configureEach {
     if (name == "benchmarkBenchmarkJar") {
         inputs.file(layout.projectDirectory.file("build.gradle.kts"))
+        exclude("META-INF/*.SF", "META-INF/*.RSA", "META-INF/*.DSA", "META-INF/*.EC")
     }
 }
 

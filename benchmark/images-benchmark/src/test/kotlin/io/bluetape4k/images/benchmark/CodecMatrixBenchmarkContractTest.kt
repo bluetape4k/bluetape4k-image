@@ -99,6 +99,7 @@ class CodecMatrixBenchmarkContractTest {
         buildScript.shouldContain("benchmarkJar.flatMap(Jar::getArchiveFile)")
         buildScript.shouldContain("tasks.withType<Jar>().configureEach")
         buildScript.shouldContain("inputs.file(layout.projectDirectory.file(\"build.gradle.kts\"))")
+        buildScript.shouldContain("exclude(\"META-INF/*.SF\", \"META-INF/*.RSA\", \"META-INF/*.DSA\", \"META-INF/*.EC\")")
         buildScript.shouldContain("generated codec matrix profiler jar is stale")
         buildScript.shouldContain("VipsCodecMatrixBenchmark")
         buildScript.shouldContain("VipsExperimentalCodecMatrixBenchmark")
