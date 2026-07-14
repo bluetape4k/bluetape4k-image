@@ -87,19 +87,19 @@
   </g>
 
   <g id="messages">
-    <path data-connector="true" class="callAmber" stroke="#b6812c" d="M 180 350 L 552 350"/>
-    <path data-connector="true" class="callBlue" stroke="#4f83b8" d="M 568 455 L 972 455"/>
-    <path data-connector="true" class="callBlue" stroke="#4f83b8" d="M 988 570 L 1110 570 Q 1135 570 1135 595 L 1135 625 Q 1135 650 1110 650 L 988 650"/>
-    <path data-connector="true" class="callBlue" stroke="#4f83b8" d="M 988 740 L 1372 740"/>
-    <path data-connector="true" class="callAmber" stroke="#b6812c" d="M 988 835 L 1772 835"/>
-    <path data-connector="true" class="return" stroke="#3c8f8a" d="M 1772 915 L 988 915"/>
+    <path data-connector="client-to-controller" class="callAmber" stroke="#b6812c" d="M 180 350 L 552 350"/>
+    <path data-connector="controller-to-service" class="callBlue" stroke="#4f83b8" d="M 568 455 L 972 455"/>
+    <path data-connector="service-validates-input" class="callBlue" stroke="#4f83b8" d="M 988 570 L 1110 570 Q 1135 570 1135 595 L 1135 625 Q 1135 650 1110 650 L 988 650"/>
+    <path data-connector="service-to-images" class="callBlue" stroke="#4f83b8" d="M 988 740 L 1372 740"/>
+    <path data-connector="service-to-reader" class="callAmber" stroke="#b6812c" d="M 988 835 L 1772 835"/>
+    <path data-connector="reader-to-service" class="return" stroke="#3c8f8a" d="M 1772 915 L 988 915"/>
 
-    <path data-connector="true" class="callGreen" stroke="#4b9b72" d="M 972 980 L 568 980"/>
-    <path data-connector="true" class="callGreen" stroke="#4b9b72" d="M 552 1020 L 180 1020"/>
-    <path data-connector="true" class="callGray" stroke="#64748b" d="M 972 1110 L 568 1110"/>
-    <path data-connector="true" class="callGray" stroke="#64748b" d="M 552 1150 L 180 1150"/>
-    <path data-connector="true" class="callRed" stroke="#c65d5d" d="M 972 1265 L 568 1265"/>
-    <path data-connector="true" class="callRed" stroke="#c65d5d" d="M 552 1305 L 180 1305"/>
+    <path data-connector="service-to-controller-found" class="callGreen" stroke="#4b9b72" d="M 972 980 L 568 980"/>
+    <path data-connector="controller-to-client-found" class="callGreen" stroke="#4b9b72" d="M 552 1020 L 180 1020"/>
+    <path data-connector="service-to-controller-empty" class="callGray" stroke="#64748b" d="M 972 1110 L 568 1110"/>
+    <path data-connector="controller-to-client-empty" class="callGray" stroke="#64748b" d="M 552 1150 L 180 1150"/>
+    <path data-connector="service-to-controller-malformed" class="callRed" stroke="#c65d5d" d="M 972 1265 L 568 1265"/>
+    <path data-connector="controller-to-client-malformed" class="callRed" stroke="#c65d5d" d="M 552 1305 L 180 1305"/>
   </g>
 
   <g id="message-labels">

@@ -44,13 +44,13 @@
   <text class="section" x="1410" y="185">HTTP OUTCOMES</text>
 
   <g id="connectors">
-    <path data-connector="true" class="edge-blue" stroke="#3b82c4" d="M 530 255 L 620 255 Q 650 255 650 285 L 650 390 Q 650 420 680 420 L 730 420"/>
-    <path data-connector="true" class="edge-blue" stroke="#3b82c4" d="M 530 400 L 680 400 Q 700 400 700 420 L 700 440 Q 700 460 720 460 L 730 460"/>
-    <path data-connector="true" class="edge-blue" stroke="#3b82c4" d="M 530 545 L 680 545 Q 700 545 700 525 L 700 520 Q 700 500 720 500 L 730 500"/>
-    <path data-connector="true" class="edge-blue" stroke="#3b82c4" d="M 530 690 L 620 690 Q 650 690 650 660 L 650 570 Q 650 540 680 540 L 730 540"/>
-    <path data-connector="true" class="edge-green" stroke="#4b9b72" d="M 1170 420 L 1200 420 Q 1220 420 1220 400 L 1220 310 Q 1220 280 1250 280 L 1400 280"/>
-    <path data-connector="true" class="edge-gray" stroke="#64748b" d="M 1170 490 L 1400 490"/>
-    <path data-connector="true" class="edge-red" stroke="#c65d5d" d="M 1170 560 L 1200 560 Q 1220 560 1220 580 L 1220 670 Q 1220 700 1250 700 L 1400 700"/>
+    <path data-connector="upload-request" class="edge-blue" stroke="#3b82c4" d="M 530 255 L 620 255 Q 650 255 650 285 L 650 360 Q 650 390 680 390 L 730 390"/>
+    <path data-connector="sample-request" class="edge-blue" stroke="#3b82c4" d="M 530 400 L 680 400 Q 700 400 700 420 L 700 430 Q 700 450 720 450 L 730 450"/>
+    <path data-connector="no-result-request" class="edge-blue" stroke="#3b82c4" d="M 530 545 L 680 545 Q 700 545 700 525 Q 700 510 715 510 L 730 510"/>
+    <path data-connector="malformed-request" class="edge-blue" stroke="#3b82c4" d="M 530 690 L 620 690 Q 650 690 650 660 L 650 600 Q 650 570 680 570 L 730 570"/>
+    <path data-connector="found-outcome" class="edge-green" stroke="#4b9b72" d="M 1170 420 L 1200 420 Q 1220 420 1220 400 L 1220 310 Q 1220 280 1250 280 L 1400 280"/>
+    <path data-connector="empty-outcome" class="edge-gray" stroke="#64748b" d="M 1170 490 L 1400 490"/>
+    <path data-connector="malformed-outcome" class="edge-red" stroke="#c65d5d" d="M 1170 560 L 1200 560 Q 1220 560 1220 580 L 1220 670 Q 1220 700 1250 700 L 1400 700"/>
   </g>
 
   <g id="endpoint-cards">

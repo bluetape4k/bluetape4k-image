@@ -45,15 +45,15 @@
   </g>
 
   <g id="connectors">
-    <path data-connector="true" class="edge" stroke="#3b82c4" d="M 360 470 L 430 470 Q 450 470 450 450 L 450 310 Q 450 290 470 290 L 500 290"/>
-    <path data-connector="true" class="edge" stroke="#3b82c4" d="M 360 485 L 430 485 Q 450 485 450 505 L 450 535 Q 450 555 470 555 L 500 555"/>
-    <path data-connector="true" class="edge" stroke="#3b82c4" d="M 360 500 L 430 500 Q 450 500 450 520 L 450 680 Q 450 700 470 700 L 500 700"/>
-    <path data-connector="true" class="edge" stroke="#3b82c4" d="M 675 345 L 675 375"/>
-    <path data-connector="true" class="edge" stroke="#3b82c4" d="M 850 290 L 910 290 Q 930 290 930 310 L 930 430 Q 930 450 950 450 L 980 450"/>
-    <path data-connector="true" class="edge" stroke="#3b82c4" d="M 850 700 L 890 700 Q 910 700 910 680 L 910 560 Q 910 540 930 540 L 980 540"/>
-    <path data-connector="true" class="edge" stroke="#3b82c4" d="M 1300 470 L 1360 470 Q 1380 470 1380 450 L 1380 330 Q 1380 310 1400 310 L 1430 310"/>
-    <path data-connector="true" class="edge" stroke="#3b82c4" d="M 1300 530 L 1360 530 Q 1380 530 1380 550 L 1380 660 Q 1380 680 1400 680 L 1430 680"/>
-    <path data-connector="true" class="edge-static" stroke="#64748b" d="M 1680 620 L 1680 520"/>
+    <path data-connector="spring-to-controller" class="edge" stroke="#3b82c4" d="M 360 485 L 410 485 Q 460 485 460 435 L 460 310 Q 460 290 480 290 L 500 290"/>
+    <path data-connector="spring-to-handler" class="edge" stroke="#3b82c4" d="M 360 485 L 410 485 Q 445 485 445 520 L 445 535 Q 445 555 465 555 L 500 555"/>
+    <path data-connector="spring-to-configuration" class="edge" stroke="#3b82c4" d="M 360 485 L 410 485 Q 425 485 425 500 L 425 680 Q 425 700 445 700 L 500 700"/>
+    <path data-connector="controller-to-fixtures" class="edge" stroke="#3b82c4" d="M 675 345 L 675 375"/>
+    <path data-connector="controller-to-service" class="edge" stroke="#3b82c4" d="M 850 290 L 910 290 Q 930 290 930 310 L 930 430 Q 930 450 950 450 L 980 450"/>
+    <path data-connector="configuration-to-service" class="edge" stroke="#3b82c4" d="M 850 700 L 890 700 Q 910 700 910 680 L 910 560 Q 910 540 930 540 L 980 540"/>
+    <path data-connector="service-to-images" class="edge" stroke="#3b82c4" d="M 1300 470 L 1360 470 Q 1380 470 1380 450 L 1380 330 Q 1380 310 1400 310 L 1430 310"/>
+    <path data-connector="service-to-zxing" class="edge" stroke="#3b82c4" d="M 1300 530 L 1360 530 Q 1380 530 1380 550 L 1380 660 Q 1380 680 1400 680 L 1430 680"/>
+    <path data-connector="zxing-implements-api" class="edge-static" stroke="#64748b" d="M 1680 620 L 1680 520"/>
   </g>
 
   <g id="cards">
