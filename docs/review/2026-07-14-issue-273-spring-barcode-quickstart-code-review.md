@@ -31,7 +31,7 @@ review prompts because the collaboration interface did not expose a native
 | Shared extraction service | POST and all three GET controller methods delegate to one service | PASS |
 | Bounded DTO and sanitized errors | Exact response assertions and forbidden filename/raw/provider-detail checks | PASS |
 | Coroutine dispatcher and cancellation contract | Injected IO/CPU dispatcher tests and explicit `CancellationException` propagation | PASS |
-| Bilingual docs and three rendered diagrams | English/Korean locale pairs, shared English-label SVG/PNG assets, render and geometry audits | PASS |
+| Bilingual docs and three rendered diagrams | English/Korean locale pairs, shared English-label SVG/PNG assets, CairoSVG 2x renders, meaningful connector counts, and asset-by-asset full-size inspection | PASS |
 | Complete non-published registration | Settings, AGENTS, Examples matrix, root/provider links; no publication/BOM/catalog/Kover surface | PASS |
 
 Tasks 1-7 and Task 8's local implementation, review, lesson, and verification
@@ -61,6 +61,7 @@ the remaining delivery gates are listed explicitly above.
 
 | Priority | Finding | Repair and rerun evidence |
 |---|---|---|
+| P1 | The scenarios PNG had two avoidable request-line crossings even though the connector audit reported `crossings=0`. Every path used the same `data-connector="true"` value, so the audit treated distinct paths as the same named connector and skipped pairwise crossing checks. The generic review row then repeated that false pass without asset-specific visual evidence. | Commit `0204e69` gives all 28 related paths unique semantic connector identities, routes the four scenario requests through ordered non-crossing ports, and gives the three Spring Boot architecture links one shared visible departure point before they branch. Each SVG was separately validated, rendered with CairoSVG at 2x, audited with nonzero connector counts, and inspected at full size. |
 | P1 | The first real oversized multipart smoke returned `413` with an empty body. Multipart parsing failed before a controller type was selected, so package-scoped `@RestControllerAdvice(basePackageClasses = ...)` was not applicable. | Added a real random-port RED test, made the example advice global within the small application, then observed GREEN. Full module tests pass, and real HTTP now returns `413` with a 108-byte `payload_too_large` JSON body. Commit `54c1faf`. |
 | P2 | The real HTTP regression test had no client-side deadline and could wait too long if the embedded server stopped responding. | Added a 5-second connect timeout and 10-second request timeout; the focused random-port test passes. Commit `efcd4b0`. |
 | P3 | The review claimed all eight tasks were complete even though Task 8 still includes PR, CI, merge approval, merge, and cleanup gates. | Limited the completed claim to Tasks 1-7 and Task 8's local steps, then listed every pending delivery gate. |
@@ -84,6 +85,11 @@ the repairs:
 The final review result is therefore unblocked at `P0=0`, `P1=0`, while the
 architectural WATCH items remain visible rather than being misreported as
 implemented production controls.
+
+The later diagram P1 was found after those independent lanes, so their verdicts
+are not cited as proof for the diagram repair. That repair is instead covered
+by commit `0204e69`, the blocking diagram checklist ledger below, and the final
+exact-head verification.
 
 ## Performance, Stability, Security, and Hazard Evidence
 
@@ -112,6 +118,49 @@ implemented production controls.
   N/A; the three explanatory diagrams use distinct route/service/provider
   colors and shared English labels.
 
+## Diagram Repair and Checklist Evidence
+
+The rendered PNG is authoritative when it contradicts a helper script. The
+reported scenarios PNG therefore invalidated the earlier generic PASS. The
+repair used the existing Spring example architecture family at
+`docs/images/readme-diagrams/examples-spring-boot-image-api-architecture-01.png`
+as the palette, lane, common-departure, and legend reference.
+
+| Asset | Machine evidence | Full-size PNG evidence |
+|---|---|---|
+| `barcode-api-scenarios` | `markers=4`, `connectors=7`, `intrusions=0`, `crossings=0`, `geometry_failures=0`, endpoint PASS, mixed-corner `paths=7`, `q_bends=12`, `failures=0`; CairoSVG PNG `3800x1960` | Four request routes preserve endpoint order and enter four separated service ports. No route crosses, touches an unrelated route, hugs a card, clips text, or obscures an arrowhead. |
+| `barcode-api-architecture` | `markers=2`, `connectors=9`, `intrusions=0`, `crossings=0`, `geometry_failures=0`, endpoint PASS, mixed-corner `paths=9`, `q_bends=14`, `failures=0`; CairoSVG PNG `4000x2000` | The three Spring Boot links share one right-edge departure and visible trunk, then branch without crossings to Controller, Exception handler, and Configuration. Labels, lane titles, cards, and arrows remain clear. |
+| `barcode-api-sequence` | `markers=6`, `connectors=12`, `intrusions=0`, `crossings=0`, `geometry_failures=0`, endpoint PASS, mixed-corner `paths=12`, `q_bends=2`, `failures=0`, sequence-style PASS; CairoSVG PNG `4000x2960` | Unique connector identities cause no visual regression. Calls, returns, branch frames, activation bars, labels, and arrowheads remain separated and readable. |
+
+Blocking checklist disposition:
+
+- `DIA-COM-01`: PASS. README and Controller/Service/Fixtures/Configuration
+  sources back the diagrams; all three related assets were scanned for the
+  duplicate connector-identity pattern.
+- `DIA-COM-02`: PASS. Architects Daughter and Comic Mono remain readable with
+  no clipping, crowding, or peer-card alignment drift in the three full-size
+  PNGs.
+- `DIA-COM-03`: N/A. These component diagrams use text and generic color chips;
+  no infrastructure icon or invented logo changed.
+- `DIA-COM-04`: PASS. Fixed `userSpaceOnUse` per-color markers render with
+  consistent size, solid color, and correct direction.
+- `DIA-COM-05`: PASS. Endpoint, geometry, and connector audits pass with
+  `connectors=7/9/12`, `intrusions=0`, and `crossings=0`; full-size inspection
+  confirms perpendicular, corner-clear, non-crossing routes.
+- `DIA-COM-06`: PASS. Mixed-corner failures are zero and all visible bends are
+  rounded with adequate pre/post-bend and arrowhead clearance.
+- `DIA-COM-07`: PASS. No card, lane, frame, footer, or viewBox dimensions
+  changed; the rerenders retain balanced whitespace and synchronized ports.
+- `DIA-COM-08`: PASS. XML, CairoSVG 2x render, connector, geometry, endpoint,
+  mixed-corner, sequence-style, and diff checks all pass with meaningful
+  counts.
+- `DIA-COM-09`: N/A. No local diagram review page exists; README links resolve
+  directly to the canonical assets in this worktree.
+- `DIA-ARC-01..04`: PASS. The architecture remains a static responsibility and
+  dependency view, matches the approved Spring example family, keeps the
+  horizontal responsibility lanes and margins, and uses short rounded
+  orthogonal routes with no avoidable crossing or lane-title collision.
+
 ## Verification Available at Review
 
 | Command or check | Result |
@@ -121,7 +170,9 @@ implemented production controls.
 | Quickstart module build and root `detekt` | PASS (`detekt` is `NO-SOURCE`) |
 | `projects` and `actionlint .github/workflows/Examples.yml` | PASS |
 | Real HTTP sample/no-result/malformed/upload/over-limit smoke | PASS: `200/200/400/200/413`, stable JSON, clean process shutdown |
-| Diagram source/render geometry, endpoint, connector, and PNG inspection | PASS for all three SVG/PNG pairs |
+| Diagram XML and CairoSVG 2x source/render checks | PASS for all three SVG/PNG pairs; `3800x1960`, `4000x2000`, and `4000x2960` |
+| Diagram connector/geometry/endpoint/mixed-corner checks | PASS with `connectors=7/9/12`, `intrusions=0`, `crossings=0`, and `geometry_failures=0` |
+| Diagram full-size PNG inspection | PASS with the asset-specific observations recorded above |
 | Unsafe Kotlin, provider-boundary, locale-link, and `git diff --check` audits | PASS |
 
 The final exact-head verification is rerun after committing this review and the
