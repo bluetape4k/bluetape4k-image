@@ -7,10 +7,92 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.4.0] - TBD
+
+### Added
+
+- Added provider-neutral barcode extraction contracts and a pure-JVM ZXing
+  provider with deterministic fixtures and a documented capability matrix
+  ([#244](https://github.com/bluetape4k/bluetape4k-image/issues/244),
+  [#245](https://github.com/bluetape4k/bluetape4k-image/issues/245),
+  [#247](https://github.com/bluetape4k/bluetape4k-image/issues/247)).
+- Added reproducible ZXing extraction benchmarks and a runnable Spring Boot 4
+  barcode API quickstart with bounded multipart and decoded-image inputs
+  ([#272](https://github.com/bluetape4k/bluetape4k-image/issues/272),
+  [#273](https://github.com/bluetape4k/bluetape4k-image/issues/273)).
+- Added backend-neutral image detection and sensitive-content result models,
+  moderation policy decisions, privacy-safe derivative generation, and a
+  deterministic workflow example without adopting a production ML runtime
+  ([#2](https://github.com/bluetape4k/bluetape4k-image/issues/2),
+  [#214](https://github.com/bluetape4k/bluetape4k-image/issues/214),
+  [PR #237](https://github.com/bluetape4k/bluetape4k-image/pull/237),
+  [PR #238](https://github.com/bluetape4k/bluetape4k-image/pull/238),
+  [PR #239](https://github.com/bluetape4k/bluetape4k-image/pull/239)).
+- Added structured OCR page, block, line, and word results while preserving the
+  existing plain-text extraction APIs
+  ([PR #240](https://github.com/bluetape4k/bluetape4k-image/pull/240),
+  [PR #241](https://github.com/bluetape4k/bluetape4k-image/pull/241)).
+- Added public-safe extended image metadata reports with bounded EXIF, IPTC,
+  XMP, and format-specific metadata extraction
+  ([#213](https://github.com/bluetape4k/bluetape4k-image/issues/213)).
+- Added stable and incubating WebP, HEIC, and AVIF codec capability reports for
+  the Java 21 JNI and Java 25 FFM vips backends
+  ([#212](https://github.com/bluetape4k/bluetape4k-image/issues/212)).
+- Added codec/runtime matrix benchmarks that distinguish measured, skipped,
+  unsupported, and experimental combinations with reproducible evidence
+  ([#208](https://github.com/bluetape4k/bluetape4k-image/issues/208)).
+
 ### Changed
 
-- Aligned the local shared catalog with `bluetape4k-bom:1.11.0-SNAPSHOT`
-  and `bluetape4k-aws-bom:0.4.0-SNAPSHOT` for the next development train.
+- Aligned the managed catalog with `bluetape4k-bom:1.11.1-SNAPSHOT`,
+  `bluetape4k-aws-bom:0.5.0-SNAPSHOT`, and catalog ref
+  `catalog/2026-07-08-00` for the development train
+  ([PR #268](https://github.com/bluetape4k/bluetape4k-image/pull/268),
+  [PR #269](https://github.com/bluetape4k/bluetape4k-image/pull/269)).
+- Decoupled the binding-neutral vips API from the scrimage/Java2D
+  implementation stack and documented the consumer migration boundary
+  ([#202](https://github.com/bluetape4k/bluetape4k-image/issues/202)).
+- Made large-streaming benchmarks compare equivalent backend work and refreshed
+  natural-photo results plus reproducible vips benchmark commands
+  ([#197](https://github.com/bluetape4k/bluetape4k-image/issues/197),
+  [#200](https://github.com/bluetape4k/bluetape4k-image/issues/200),
+  [#201](https://github.com/bluetape4k/bluetape4k-image/issues/201)).
+- Corrected vips dependency coordinates and added BOM or explicit-version
+  guidance for Spring Boot consumers
+  ([#198](https://github.com/bluetape4k/bluetape4k-image/issues/198),
+  [#199](https://github.com/bluetape4k/bluetape4k-image/issues/199)).
+- Hardened CI, snapshot, and Maven Central workflows so build-logic changes run
+  affected module tests and publication requires full OCR and vips validation
+  ([#184](https://github.com/bluetape4k/bluetape4k-image/issues/184),
+  [#194](https://github.com/bluetape4k/bluetape4k-image/issues/194),
+  [#195](https://github.com/bluetape4k/bluetape4k-image/issues/195),
+  [#196](https://github.com/bluetape4k/bluetape4k-image/issues/196)).
+- Refreshed the roadmap to separate the unfinished `0.4.0` closeout from
+  deferred Backlog work
+  ([#271](https://github.com/bluetape4k/bluetape4k-image/issues/271)).
+
+### Fixed
+
+- Repaired Java 25 FFM derived-image ownership so native memory remains valid
+  for the lifetime promised by `VipsImage`
+  ([#190](https://github.com/bluetape4k/bluetape4k-image/issues/190)).
+- Made S3 storage fail closed for oversized or unverifiable downloads and fail
+  fast when required `S3Operations` support is absent
+  ([#191](https://github.com/bluetape4k/bluetape4k-image/issues/191),
+  [#192](https://github.com/bluetape4k/bluetape4k-image/issues/192)).
+- Added bounded external-image decode and decoded-dimension guardrails before
+  thumbnail and OCR processing
+  ([#193](https://github.com/bluetape4k/bluetape4k-image/issues/193),
+  [#255](https://github.com/bluetape4k/bluetape4k-image/issues/255)).
+- Hardened local and S3 storage validation, CloudFront configuration, malformed
+  Ktor thumbnail handling, vips path-input snapshots, and in-memory CAPTCHA
+  challenge retention
+  ([#256](https://github.com/bluetape4k/bluetape4k-image/issues/256),
+  [#257](https://github.com/bluetape4k/bluetape4k-image/issues/257),
+  [#258](https://github.com/bluetape4k/bluetape4k-image/issues/258),
+  [#259](https://github.com/bluetape4k/bluetape4k-image/issues/259),
+  [#260](https://github.com/bluetape4k/bluetape4k-image/issues/260),
+  [#261](https://github.com/bluetape4k/bluetape4k-image/issues/261)).
 
 ## [0.3.0] - 2026-06-27
 
