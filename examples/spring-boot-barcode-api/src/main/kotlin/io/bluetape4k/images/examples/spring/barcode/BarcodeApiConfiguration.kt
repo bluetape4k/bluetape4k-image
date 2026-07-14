@@ -47,4 +47,11 @@ internal class BarcodeApiConfiguration {
 
     @Bean
     fun barcodeExampleFixtures(): BarcodeExampleFixtures = BarcodeExampleFixtures()
+
+    @Bean
+    fun barcodeExtractionService(
+        reader: BarcodeReader,
+        properties: BarcodeExampleProperties,
+    ): BarcodeExtractionService =
+        BarcodeExtractionService(reader, properties)
 }
