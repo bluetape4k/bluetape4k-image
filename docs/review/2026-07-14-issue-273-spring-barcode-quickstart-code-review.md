@@ -3,19 +3,19 @@
 ## Scope and Baseline
 
 - Base: `origin/develop` at `e7111d7`
-- Independent review snapshot: `a538e76dcbf3876ec7bd8586cf8a6c8944e211be`
+- Initial reviewed snapshot: `a538e76dcbf3876ec7bd8586cf8a6c8944e211be`
 - Issue: `#273`, milestone `0.4.0`
 - Module slice: `examples/spring-boot-barcode-api`
 - Supporting slices: example registration, root/provider README locale pairs,
   Examples workflow, and source/rendered diagram pairs
 - Review inputs: approved design and plan, current branch diff, fresh module
   tests, real HTTP smoke, diagram audits, documentation parity, and CodeGraph
-  change/impact analysis, and independent code-reviewer and architect lanes
+  change/impact analysis, and six separate main-session review passes
 
-The collaboration interface did not expose a native `agent_type` field, so the
-installed code-reviewer and architect roles were injected explicitly into two
-independent read-only review prompts. The main session integrated their results
-with the six required review lenses below.
+The active collaboration interface does not expose the required native
+`agent_type` field. Per the workflow routing contract, the six perspectives
+were executed as separate read-only main-session passes. The main session then
+integrated and normalized their findings.
 
 ## Step 5 Verifier
 
@@ -33,11 +33,12 @@ with the six required review lenses below.
 | Complete non-published registration | Settings, AGENTS, Examples matrix, root/provider links; no publication/BOM/catalog/Kover surface | PASS |
 
 Tasks 1-7 and Task 8's local implementation, review, lesson, and verification
-steps are complete. Task 8's push, PR, CI, fresh merge approval, merge, and
-cleanup steps remain pending. The implementation stayed inside the approved
-example, registration, documentation, review, and lesson surfaces. No public
-barcode library API, provider implementation, dependency version, BOM,
-benchmark, storage, native/JNI, OCR, Docker, or Testcontainers behavior changed.
+steps are complete. PR #283 is open; the review repairs still require
+exact-head publication and CI, followed by fresh merge approval, merge, and
+cleanup. The implementation stayed inside the approved example, registration,
+documentation, review, and lesson surfaces. No public barcode library API,
+provider implementation, dependency version, BOM, benchmark, storage,
+native/JNI, OCR, Docker, or Testcontainers behavior changed.
 
 Local verifier verdict: `PASS`. No local acceptance row is hidden or deferred;
 the remaining delivery gates are listed explicitly above.
@@ -67,20 +68,6 @@ the remaining delivery gates are listed explicitly above.
 
 Final blocking convergence: `P0=0`, `P1=0`. Accepted example-only residuals:
 `P2=2`, `P3=1` as described in the stability and operator rows.
-
-## Independent Review Rerun
-
-Both independent lanes re-reviewed exact implementation head `037b285` after
-the repairs:
-
-- Code reviewer: `APPROVE`, `P0=0`, `P1=0`, `P2=0`, `P3=0`; the premature
-  Task 8 completion finding is closed, with 37 tests passing.
-- Architect: `APPROVE WITH WATCH`, `P0=0`, `P1=0`; the two P2 and one P3
-  example-only boundaries above are accurately documented and accepted.
-
-The final review result is therefore unblocked at `P0=0`, `P1=0`, while the
-architectural WATCH items remain visible rather than being misreported as
-implemented production controls.
 
 ## Performance, Stability, Security, and Hazard Evidence
 
