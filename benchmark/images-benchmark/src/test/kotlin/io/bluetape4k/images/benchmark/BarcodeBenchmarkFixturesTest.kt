@@ -31,19 +31,21 @@ class BarcodeBenchmarkFixturesTest {
     fun `fixture resource path rejects traversal absolute paths and oversized bytes`() {
         val validBytes = byteArrayOf(1, 2, 3)
 
-        assertFailsWith<IllegalArgumentException> {
-            BarcodeBenchmarkFixtures.loadForTest(
-                manifestJson("../secret.png").toByteArray(),
-                BarcodeBenchmarkScenario.QR,
-                mapOf("../secret.png" to validBytes),
-            )
-        }
-        assertFailsWith<IllegalArgumentException> {
-            BarcodeBenchmarkFixtures.loadForTest(
-                manifestJson("/tmp/secret.png").toByteArray(),
-                BarcodeBenchmarkScenario.QR,
-                mapOf("/tmp/secret.png" to validBytes),
-            )
+        listOf(
+            "../secret.png",
+            "/tmp/secret.png",
+            "bench/barcode/./qr.png",
+            "bench/barcode//qr.png",
+            "bench\\barcode\\qr.png",
+        ).forEach { resource ->
+            val error = assertFailsWith<IllegalArgumentException> {
+                BarcodeBenchmarkFixtures.loadForTest(
+                    manifestJson(resource).toByteArray(),
+                    BarcodeBenchmarkScenario.QR,
+                    mapOf(resource to validBytes),
+                )
+            }
+            error.message.orEmpty().shouldContain("normalized and relative")
         }
         assertFailsWith<IllegalArgumentException> {
             BarcodeBenchmarkFixtures.loadForTest(
@@ -150,15 +152,17 @@ class BarcodeBenchmarkFixturesTest {
     private fun fixtureJson(
         scenario: BarcodeBenchmarkScenario,
         resource: String = "bench/barcode/${scenario.value}.png",
-    ): String =
-        when (scenario) {
+    ): String {
+        val escapedResource = resource.replace("\\", "\\\\").replace("\"", "\\\"")
+        return when (scenario) {
             BarcodeBenchmarkScenario.QR ->
-                """{"scenario":"qr","resource":"$resource","width":1,"height":1,"sha256":"${"0".repeat(64)}","expectedText":"qr","expectedFormat":"QR_CODE","provenance":"test"}"""
+                """{"scenario":"qr","resource":"$escapedResource","width":1,"height":1,"sha256":"${"0".repeat(64)}","expectedText":"qr","expectedFormat":"QR_CODE","provenance":"test"}"""
 
             BarcodeBenchmarkScenario.CODE_128 ->
-                """{"scenario":"code-128","resource":"$resource","width":1,"height":1,"sha256":"${"1".repeat(64)}","expectedText":"code","expectedFormat":"CODE_128","provenance":"test"}"""
+                """{"scenario":"code-128","resource":"$escapedResource","width":1,"height":1,"sha256":"${"1".repeat(64)}","expectedText":"code","expectedFormat":"CODE_128","provenance":"test"}"""
 
             BarcodeBenchmarkScenario.NO_RESULT ->
-                """{"scenario":"no-result","resource":"$resource","width":1,"height":1,"sha256":"${"2".repeat(64)}","expectEmpty":true,"provenance":"test"}"""
+                """{"scenario":"no-result","resource":"$escapedResource","width":1,"height":1,"sha256":"${"2".repeat(64)}","expectEmpty":true,"provenance":"test"}"""
         }
+    }
 }

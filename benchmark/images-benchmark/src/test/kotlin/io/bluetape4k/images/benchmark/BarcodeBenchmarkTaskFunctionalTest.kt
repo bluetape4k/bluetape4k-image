@@ -50,7 +50,7 @@ class BarcodeBenchmarkTaskFunctionalTest {
     }
 
     @Test
-    fun `wrong row set and mode fail without creating accepted evidence`() {
+    fun `wrong row set mode and metric fail without creating accepted evidence`() {
         assertInvalidReport(
             runId = "issue-272-20990101-functional-rows",
             latency = report(mode = "avgt", unit = "ms/op", scenarios = listOf("qr", "code-128")),
@@ -60,6 +60,11 @@ class BarcodeBenchmarkTaskFunctionalTest {
             runId = "issue-272-20990101-functional-mode",
             latency = report(mode = "thrpt", unit = "ops/s"),
             expectedMessage = "barcode benchmark mode must be avgt",
+        )
+        assertInvalidReport(
+            runId = "issue-272-20990101-functional-metric",
+            latency = report(mode = "avgt", unit = "ms/op").replace("\"scoreError\":0.1", "\"scoreError\":null"),
+            expectedMessage = "barcode benchmark score error is missing",
         )
     }
 
