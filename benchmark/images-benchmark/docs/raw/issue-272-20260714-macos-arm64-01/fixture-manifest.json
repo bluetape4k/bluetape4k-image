@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "hashAlgorithm": "SHA-256",
+  "fixtures": [
+    {
+      "scenario": "qr",
+      "resource": "bench/barcode/qr.png",
+      "width": 220,
+      "height": 220,
+      "sha256": "4338ae8e47278b7c2816028e7b40ca1466bae06560b02af708d3ef57f6adef62",
+      "expectedText": "bluetape4k-issue-272-qr",
+      "expectedFormat": "QR_CODE",
+      "provenance": "ZXing MultiFormatWriter 3.5.4 QR_CODE, 220x220; Scrimage PngWriter max compression"
+    },
+    {
+      "scenario": "code-128",
+      "resource": "bench/barcode/code-128.png",
+      "width": 360,
+      "height": 120,
+      "sha256": "df5da2cd0fb3bf17940a3def3bd1fb54d1f851c8a21e071d0316c0d3ef436782",
+      "expectedText": "BLUETAPE4K-272",
+      "expectedFormat": "CODE_128",
+      "provenance": "ZXing MultiFormatWriter 3.5.4 CODE_128, 360x120; Scrimage PngWriter max compression"
+    },
+    {
+      "scenario": "no-result",
+      "resource": "bench/barcode/no-result.png",
+      "width": 220,
+      "height": 220,
+      "sha256": "86aad41769423ad85a979fefe109d00829044a1eba5d891547499413e3d9ff2b",
+      "expectEmpty": true,
+      "provenance": "Deterministic white RGB image, 220x220; Scrimage PngWriter max compression"
+    }
+  ]
+}
