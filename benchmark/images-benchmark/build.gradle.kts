@@ -357,9 +357,11 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     testImplementation(libs.bluetape4k.junit5)
     testImplementation(gradleTestKit())
+    testImplementation(project(":bluetape4k-images-barcode-zxing"))
 
     // scrimage (images)
     implementation(project(":bluetape4k-images"))
+    implementation(project(":bluetape4k-images-barcode-api"))
     implementation(libs.scrimage.webp)
 
     // vips — API 인터페이스는 컴파일 타임에 필요, 구현체는 런타임에만 필요
