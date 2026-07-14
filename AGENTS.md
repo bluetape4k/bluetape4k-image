@@ -122,3 +122,11 @@ when present. Outside Gradle, set it manually if needed.
 - For image module additions or artifact moves, update image-specific benchmark
   evidence and BOM/catalog constraints together.
 - Run libvips/native/JNI, OCR, and Testcontainers-backed checks sequentially.
+
+## Manual Ownership
+
+- `docs/manual/` is the source of truth for versioned, manual-grade documentation; README files remain concise repository overviews.
+- Author release manuals from the exact stable tag and keep `releaseRef`, `releaseCommit`, module inventory, source links, and examples pinned to that release.
+- Consumer setup must name only the `bluetape4k-dependencies` version. Do not ask users to coordinate individual Image artifact versions.
+- Keep English and Korean pages structurally equivalent, and edit Korean text into natural sentences rather than preserving translation-shaped phrasing.
+- Render technical diagrams with `scripts/manual/render_image_diagrams.rb`, validate them with `scripts/manual/validate_diagrams.rb`, and perform a full-size visual review before publishing.

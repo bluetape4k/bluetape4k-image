@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1040" viewBox="0 0 1600 1040" role="img" aria-labelledby="title desc">
+  <title id="title">Web Convenience Must Preserve Image Boundaries</title><desc id="desc">Flow from Spring Boot or Ktor requests to image processing, OCR, storage, and operational boundaries.</desc>
+  <defs>
+  <linearGradient id="canvas" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0b1220"/><stop offset="0.58" stop-color="#152235"/><stop offset="1" stop-color="#213149"/></linearGradient>
+  <linearGradient id="panel" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1f2937"/><stop offset="1" stop-color="#101827"/></linearGradient>
+  <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="9" stdDeviation="10" flood-color="#020617" flood-opacity="0.38"/></filter>
+  <filter id="glow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="0" stdDeviation="3" flood-color="#67e8f9" flood-opacity="0.2"/></filter>
+  <marker id="arrow-cyan" viewBox="0 0 14 14" refX="13" refY="7" markerWidth="14" markerHeight="14" orient="auto" markerUnits="userSpaceOnUse">
+  <path d="M0 0 L14 7 L0 14 Z" fill="#9ed8ff" stroke="#9ed8ff"/>
+</marker>
+<marker id="arrow-teal" viewBox="0 0 14 14" refX="13" refY="7" markerWidth="14" markerHeight="14" orient="auto" markerUnits="userSpaceOnUse">
+  <path d="M0 0 L14 7 L0 14 Z" fill="#5eead4" stroke="#5eead4"/>
+</marker>
+<marker id="arrow-purple" viewBox="0 0 14 14" refX="13" refY="7" markerWidth="14" markerHeight="14" orient="auto" markerUnits="userSpaceOnUse">
+  <path d="M0 0 L14 7 L0 14 Z" fill="#c4b5fd" stroke="#c4b5fd"/>
+</marker>
+<marker id="arrow-amber" viewBox="0 0 14 14" refX="13" refY="7" markerWidth="14" markerHeight="14" orient="auto" markerUnits="userSpaceOnUse">
+  <path d="M0 0 L14 7 L0 14 Z" fill="#f6c96b" stroke="#f6c96b"/>
+</marker>
+<marker id="arrow-rose" viewBox="0 0 14 14" refX="13" refY="7" markerWidth="14" markerHeight="14" orient="auto" markerUnits="userSpaceOnUse">
+  <path d="M0 0 L14 7 L0 14 Z" fill="#fda4af" stroke="#fda4af"/>
+</marker>
+
+</defs>
+
+  <rect width="1600" height="1040" fill="url(#canvas)"/>
+  <rect x="42" y="34" width="1516" height="972" rx="34" fill="url(#panel)" stroke="#536377" stroke-width="4" filter="url(#shadow)"/>
+  <text text-anchor="middle" font-family="Architects Daughter, Comic Sans MS, cursive" font-size="48" font-weight="700" fill="#f8fafc"><tspan x="800" y="96">Web Convenience Must Preserve Image Boundaries</tspan></text>
+  <text text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="18" font-weight="500" fill="#b6c4d6"><tspan x="800" y="137">request validation -&gt; framework adapter -&gt; image -&gt; OCR, storage, and operations</tspan></text>
+  <g id="connectors" filter="url(#glow)">
+  <path id="request-spring" d="M800 270 V335 H370 V390" fill="none" stroke="#9ed8ff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow-cyan)"/>
+  <path id="request-ktor" d="M800 270 V335 H1230 V390" fill="none" stroke="#f6c96b" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow-amber)"/>
+  <path id="spring-image" d="M370 600 V650 H760 V695" fill="none" stroke="#9ed8ff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow-cyan)"/>
+  <path id="ktor-image" d="M1230 600 V650 H840 V695" fill="none" stroke="#f6c96b" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow-amber)"/>
+</g>
+<g filter="url(#shadow)">
+  <rect x="430" y="175" width="740" height="95" rx="22" fill="#172033" stroke="#c4b5fd" stroke-width="4"/>
+
+  <text text-anchor="middle" font-family="Architects Daughter, Comic Sans MS, cursive" font-size="27" font-weight="700" fill="#c4b5fd"><tspan x="800" y="218">Image request enters an application boundary</tspan></text>
+  <text text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="15" font-weight="500" fill="#b6c4d6"><tspan x="800" y="255">validate size, format, authentication, and rate limits first</tspan></text>
+</g>
+
+<g filter="url(#shadow)">
+  <rect x="120" y="390" width="500" height="210" rx="22" fill="#172033" stroke="#9ed8ff" stroke-width="4"/>
+
+  <text text-anchor="middle" font-family="Architects Daughter, Comic Sans MS, cursive" font-size="27" font-weight="700" fill="#9ed8ff"><tspan x="370" y="433">Spring Boot path</tspan></text>
+  <text text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="15" font-weight="500" fill="#b6c4d6"><tspan x="370" y="470">storage abstraction + auto-configuration</tspan><tspan x="370" y="495">local or S3-backed objects</tspan><tspan x="370" y="520">health and Micrometer observations</tspan><tspan x="370" y="545">application owns policy</tspan></text>
+</g>
+
+<g filter="url(#shadow)">
+  <rect x="980" y="390" width="500" height="210" rx="22" fill="#172033" stroke="#f6c96b" stroke-width="4"/>
+
+  <text text-anchor="middle" font-family="Architects Daughter, Comic Sans MS, cursive" font-size="27" font-weight="700" fill="#f6c96b"><tspan x="1230" y="433">Ktor path</tspan></text>
+  <text text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="15" font-weight="500" fill="#b6c4d6"><tspan x="1230" y="470">thumbnail and CAPTCHA routes</tspan><tspan x="1230" y="495">bounded request defaults</tspan><tspan x="1230" y="520">application owns storage and JSON</tspan><tspan x="1230" y="545">no hidden persistence</tspan></text>
+</g>
+
+<g filter="url(#shadow)">
+  <rect x="560" y="695" width="480" height="145" rx="22" fill="#172033" stroke="#5eead4" stroke-width="4"/>
+
+  <text text-anchor="middle" font-family="Architects Daughter, Comic Sans MS, cursive" font-size="27" font-weight="700" fill="#5eead4"><tspan x="800" y="738">ImmutableImage boundary</tspan></text>
+  <text text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="15" font-weight="500" fill="#b6c4d6"><tspan x="800" y="775">decode once, then transform or OCR</tspan><tspan x="800" y="800">recognition failures remain distinct</tspan></text>
+</g>
+
+<g filter="url(#shadow)">
+  <rect x="125" y="865" width="420" height="115" rx="22" fill="#172033" stroke="#fda4af" stroke-width="4"/>
+
+  <text text-anchor="middle" font-family="Architects Daughter, Comic Sans MS, cursive" font-size="27" font-weight="700" fill="#fda4af"><tspan x="335" y="908">Tesseract runtime</tspan></text>
+  <text text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="15" font-weight="500" fill="#b6c4d6"><tspan x="335" y="945">host language data + native libraries</tspan><tspan x="335" y="970">fresh client per recognition</tspan></text>
+</g>
+
+<g filter="url(#shadow)">
+  <rect x="590" y="865" width="420" height="115" rx="22" fill="#172033" stroke="#5eead4" stroke-width="4"/>
+
+  <text text-anchor="middle" font-family="Architects Daughter, Comic Sans MS, cursive" font-size="27" font-weight="700" fill="#5eead4"><tspan x="800" y="908">Storage and delivery</tspan></text>
+  <text text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="15" font-weight="500" fill="#b6c4d6"><tspan x="800" y="945">local or S3 object lifecycle</tspan><tspan x="800" y="970">CDN and cache policy stay explicit</tspan></text>
+</g>
+
+<g filter="url(#shadow)">
+  <rect x="1055" y="865" width="420" height="115" rx="22" fill="#172033" stroke="#c4b5fd" stroke-width="4"/>
+
+  <text text-anchor="middle" font-family="Architects Daughter, Comic Sans MS, cursive" font-size="27" font-weight="700" fill="#c4b5fd"><tspan x="1265" y="908">Operations</tspan></text>
+  <text text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="15" font-weight="500" fill="#b6c4d6"><tspan x="1265" y="945">limits / failures / latency / health</tspan><tspan x="1265" y="970">test native paths in containers</tspan></text>
+</g>
+
+<g id="comparison-flow" filter="url(#glow)">
+  <path id="image-ocr" d="M680 840 V852 H335 V865" fill="none" stroke="#fda4af" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow-rose)"/>
+  <path id="image-storage" d="M800 840 V865" fill="none" stroke="#5eead4" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow-teal)"/>
+  <path id="image-ops" d="M920 840 V852 H1265 V865" fill="none" stroke="#c4b5fd" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow-purple)"/>
+</g>
+
+</svg>

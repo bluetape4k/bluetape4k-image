@@ -1,0 +1,96 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1040" viewBox="0 0 1600 1040" role="img" aria-labelledby="title desc">
+  <title id="title">Benchmark the Work You Actually Ship</title><desc id="desc">Interpretation map for image resize, encode, full-pipeline, I/O, and memory benchmarks.</desc>
+  <defs>
+  <linearGradient id="canvas" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0b1220"/><stop offset="0.58" stop-color="#152235"/><stop offset="1" stop-color="#213149"/></linearGradient>
+  <linearGradient id="panel" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1f2937"/><stop offset="1" stop-color="#101827"/></linearGradient>
+  <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="9" stdDeviation="10" flood-color="#020617" flood-opacity="0.38"/></filter>
+  <filter id="glow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="0" stdDeviation="3" flood-color="#67e8f9" flood-opacity="0.2"/></filter>
+  <marker id="arrow-cyan" viewBox="0 0 14 14" refX="13" refY="7" markerWidth="14" markerHeight="14" orient="auto" markerUnits="userSpaceOnUse">
+  <path d="M0 0 L14 7 L0 14 Z" fill="#9ed8ff" stroke="#9ed8ff"/>
+</marker>
+<marker id="arrow-teal" viewBox="0 0 14 14" refX="13" refY="7" markerWidth="14" markerHeight="14" orient="auto" markerUnits="userSpaceOnUse">
+  <path d="M0 0 L14 7 L0 14 Z" fill="#5eead4" stroke="#5eead4"/>
+</marker>
+<marker id="arrow-purple" viewBox="0 0 14 14" refX="13" refY="7" markerWidth="14" markerHeight="14" orient="auto" markerUnits="userSpaceOnUse">
+  <path d="M0 0 L14 7 L0 14 Z" fill="#c4b5fd" stroke="#c4b5fd"/>
+</marker>
+<marker id="arrow-amber" viewBox="0 0 14 14" refX="13" refY="7" markerWidth="14" markerHeight="14" orient="auto" markerUnits="userSpaceOnUse">
+  <path d="M0 0 L14 7 L0 14 Z" fill="#f6c96b" stroke="#f6c96b"/>
+</marker>
+<marker id="arrow-rose" viewBox="0 0 14 14" refX="13" refY="7" markerWidth="14" markerHeight="14" orient="auto" markerUnits="userSpaceOnUse">
+  <path d="M0 0 L14 7 L0 14 Z" fill="#fda4af" stroke="#fda4af"/>
+</marker>
+
+</defs>
+
+  <rect width="1600" height="1040" fill="url(#canvas)"/>
+  <rect x="42" y="34" width="1516" height="972" rx="34" fill="url(#panel)" stroke="#536377" stroke-width="4" filter="url(#shadow)"/>
+  <text text-anchor="middle" font-family="Architects Daughter, Comic Sans MS, cursive" font-size="48" font-weight="700" fill="#f8fafc"><tspan x="800" y="96">Benchmark the Work You Actually Ship</tspan></text>
+  <text text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="18" font-weight="500" fill="#b6c4d6"><tspan x="800" y="137">question -&gt; representative case -&gt; controlled environment -&gt; decision</tspan></text>
+  <g id="connectors" filter="url(#glow)">
+  <path id="question-resize" d="M800 285 V335 H190 V390" fill="none" stroke="#9ed8ff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow-cyan)"/>
+  <path id="question-encode" d="M800 285 V335 H495 V390" fill="none" stroke="#5eead4" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow-teal)"/>
+  <path id="question-pipeline" d="M800 285 V390" fill="none" stroke="#c4b5fd" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow-purple)"/>
+  <path id="question-io" d="M800 285 V335 H1105 V390" fill="none" stroke="#f6c96b" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow-amber)"/>
+  <path id="question-memory" d="M800 285 V335 H1410 V390" fill="none" stroke="#fda4af" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow-rose)"/>
+  <path id="cases-env" d="M800 610 V675" fill="none" stroke="#c4b5fd" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow-purple)"/>
+  <path id="env-decision" d="M800 795 V850" fill="none" stroke="#5eead4" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow-teal)"/>
+</g>
+<g filter="url(#shadow)">
+  <rect x="500" y="180" width="600" height="105" rx="22" fill="#172033" stroke="#c4b5fd" stroke-width="4"/>
+
+  <text text-anchor="middle" font-family="Architects Daughter, Comic Sans MS, cursive" font-size="27" font-weight="700" fill="#c4b5fd"><tspan x="800" y="223">Which production question matters?</tspan></text>
+  <text text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="15" font-weight="500" fill="#b6c4d6"><tspan x="800" y="260">one benchmark result cannot answer every question</tspan></text>
+</g>
+
+<g filter="url(#shadow)">
+  <rect x="70" y="390" width="240" height="220" rx="22" fill="#172033" stroke="#9ed8ff" stroke-width="4"/>
+
+  <text text-anchor="middle" font-family="Architects Daughter, Comic Sans MS, cursive" font-size="27" font-weight="700" fill="#9ed8ff"><tspan x="190" y="433">Resize</tspan></text>
+  <text text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="15" font-weight="500" fill="#b6c4d6"><tspan x="190" y="470">geometry only?</tspan><tspan x="190" y="495">decoded image?</tspan><tspan x="190" y="520">lazy vips work?</tspan><tspan x="190" y="545">avoid false wins</tspan></text>
+</g>
+
+<g filter="url(#shadow)">
+  <rect x="375" y="390" width="240" height="220" rx="22" fill="#172033" stroke="#5eead4" stroke-width="4"/>
+
+  <text text-anchor="middle" font-family="Architects Daughter, Comic Sans MS, cursive" font-size="27" font-weight="700" fill="#5eead4"><tspan x="495" y="433">Encode</tspan></text>
+  <text text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="15" font-weight="500" fill="#b6c4d6"><tspan x="495" y="470">codec and quality</tspan><tspan x="495" y="495">output size</tspan><tspan x="495" y="520">native capability</tspan><tspan x="495" y="545">destination cost</tspan></text>
+</g>
+
+<g filter="url(#shadow)">
+  <rect x="680" y="390" width="240" height="220" rx="22" fill="#172033" stroke="#c4b5fd" stroke-width="4"/>
+
+  <text text-anchor="middle" font-family="Architects Daughter, Comic Sans MS, cursive" font-size="27" font-weight="700" fill="#c4b5fd"><tspan x="800" y="433">Full pipeline</tspan></text>
+  <text text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="15" font-weight="500" fill="#b6c4d6"><tspan x="800" y="470">load + decode</tspan><tspan x="800" y="495">transform</tspan><tspan x="800" y="520">encode + close</tspan><tspan x="800" y="545">best comparison</tspan></text>
+</g>
+
+<g filter="url(#shadow)">
+  <rect x="985" y="390" width="240" height="220" rx="22" fill="#172033" stroke="#f6c96b" stroke-width="4"/>
+
+  <text text-anchor="middle" font-family="Architects Daughter, Comic Sans MS, cursive" font-size="27" font-weight="700" fill="#f6c96b"><tspan x="1105" y="433">I/O boundary</tspan></text>
+  <text text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="15" font-weight="500" fill="#b6c4d6"><tspan x="1105" y="470">file / stream</tspan><tspan x="1105" y="495">coroutine dispatch</tspan><tspan x="1105" y="520">storage latency</tspan><tspan x="1105" y="545">not CPU alone</tspan></text>
+</g>
+
+<g filter="url(#shadow)">
+  <rect x="1290" y="390" width="240" height="220" rx="22" fill="#172033" stroke="#fda4af" stroke-width="4"/>
+
+  <text text-anchor="middle" font-family="Architects Daughter, Comic Sans MS, cursive" font-size="27" font-weight="700" fill="#fda4af"><tspan x="1410" y="433">Memory</tspan></text>
+  <text text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="15" font-weight="500" fill="#b6c4d6"><tspan x="1410" y="470">managed heap</tspan><tspan x="1410" y="495">native allocation</tspan><tspan x="1410" y="520">peak lifetime</tspan><tspan x="1410" y="545">measure both</tspan></text>
+</g>
+
+<g filter="url(#shadow)">
+  <rect x="470" y="675" width="660" height="120" rx="22" fill="#172033" stroke="#c4b5fd" stroke-width="4"/>
+
+  <text text-anchor="middle" font-family="Architects Daughter, Comic Sans MS, cursive" font-size="27" font-weight="700" fill="#c4b5fd"><tspan x="800" y="718">Environment validity</tspan></text>
+  <text text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="15" font-weight="500" fill="#b6c4d6"><tspan x="800" y="755">same inputs, warmup, codecs, CPU, libvips, JVM, and native-access flags</tspan><tspan x="800" y="780">record unavailable backends instead of inventing a winner</tspan></text>
+</g>
+
+<g filter="url(#shadow)">
+  <rect x="390" y="850" width="820" height="115" rx="22" fill="#172033" stroke="#5eead4" stroke-width="4"/>
+
+  <text text-anchor="middle" font-family="Architects Daughter, Comic Sans MS, cursive" font-size="27" font-weight="700" fill="#5eead4"><tspan x="800" y="893">Decision evidence</tspan></text>
+  <text text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="15" font-weight="500" fill="#b6c4d6"><tspan x="800" y="930">prefer ImageLargeStreamingBenchmark for end-to-end behavior</tspan><tspan x="800" y="955">repeat on the deployment host before choosing JNI, FFM, or pure JVM</tspan></text>
+</g>
+
+
+</svg>
