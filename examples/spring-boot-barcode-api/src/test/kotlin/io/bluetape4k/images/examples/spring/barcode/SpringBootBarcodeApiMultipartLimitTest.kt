@@ -8,6 +8,7 @@ import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
+import java.time.Duration
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class SpringBootBarcodeApiMultipartLimitTest(
@@ -29,11 +30,15 @@ class SpringBootBarcodeApiMultipartLimitTest(
         )
         val request = HttpRequest.newBuilder()
             .uri(URI("http://127.0.0.1:$port/api/barcodes/extract"))
+            .timeout(Duration.ofSeconds(10))
             .header("Content-Type", "multipart/form-data; boundary=$boundary")
             .POST(body)
             .build()
 
-        val response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString())
+        val response = HttpClient.newBuilder()
+            .connectTimeout(Duration.ofSeconds(5))
+            .build()
+            .send(request, HttpResponse.BodyHandlers.ofString())
 
         response.statusCode() shouldBeEqualTo 413
         response.body().contains("\"error\":\"payload_too_large\"") shouldBeEqualTo true
