@@ -1,0 +1,11 @@
+spring:
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 6MB
+
+example:
+  barcode:
+    max-input-bytes: 5242880
+    max-input-pixels: 16777216
+    max-input-side: 8192
