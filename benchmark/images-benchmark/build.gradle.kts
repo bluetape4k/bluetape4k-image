@@ -1,3 +1,4 @@
+import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
@@ -43,7 +44,10 @@ val javaVersion = if (vipsImpl == "java21") 21 else 25
 val codecMatrixRunId = providers.gradleProperty("codec.matrix.runId")
 val codecMatrixSupersedes = providers.gradleProperty("codec.matrix.supersedes")
 val codecMatrixReplacesFailedAttempt = providers.gradleProperty("codec.matrix.replacesFailedAttempt")
+val barcodeBenchmarkRunId = providers.gradleProperty("barcode.benchmark.runId")
+val barcodeBenchmarkCpu = providers.gradleProperty("barcode.benchmark.cpu")
 val codecMatrixRunIdPattern = Regex("[a-z0-9][a-z0-9._-]{7,79}")
+val barcodeBenchmarkRunIdPattern = Regex("issue-272-[0-9]{8}-[a-z0-9-]{3,40}")
 val repositoryDirectory = rootProject.layout.projectDirectory
 val codecMatrixSourceDirectory = layout.buildDirectory.dir("generated/codec-matrix-source-fixtures")
 val codecMatrixRunDirectoryProvider = codecMatrixRunId.flatMap { runId ->
@@ -57,6 +61,12 @@ val codecMatrixReportDirectoryProvider = codecMatrixRunId.flatMap { runId ->
         "codec.matrix.runId must match ${codecMatrixRunIdPattern.pattern}"
     }
     layout.buildDirectory.dir("reports/benchmarks/codec-matrix/$runId")
+}
+val barcodeBenchmarkRunDirectoryProvider = barcodeBenchmarkRunId.flatMap { runId ->
+    require(barcodeBenchmarkRunIdPattern.matches(runId)) {
+        "invalid barcode benchmark run ID: $runId"
+    }
+    layout.buildDirectory.dir("barcode-benchmark/$runId")
 }
 val javaToolchains = extensions.getByType<JavaToolchainService>()
 val selectedJavaLauncher = javaToolchains.launcherFor {
@@ -89,6 +99,91 @@ fun validatedCodecMatrixRunId(): String {
 fun codecMatrixRunDirectory() = codecMatrixRunDirectoryProvider.get().asFile
 
 fun codecMatrixReportDirectory() = codecMatrixReportDirectoryProvider.get().asFile
+
+fun validatedBarcodeBenchmarkRunId(): String {
+    val runId = barcodeBenchmarkRunId.orNull
+    require(runId != null && barcodeBenchmarkRunIdPattern.matches(runId)) {
+        "invalid barcode benchmark run ID: $runId"
+    }
+    return runId
+}
+
+fun barcodeBenchmarkRunDirectory() = barcodeBenchmarkRunDirectoryProvider.get().asFile
+
+fun validateBarcodeBenchmarkReport(report: File, expectedMode: String, expectedUnit: String) {
+    require(report.isFile) { "barcode benchmark report is missing: $report" }
+    val rows = JsonSlurper().parse(report) as? List<*>
+        ?: throw IllegalArgumentException("barcode benchmark report must be a JSON array")
+    val actualScenarios = rows.map { value ->
+        val row = value as? Map<*, *>
+            ?: throw IllegalArgumentException("barcode benchmark row must be an object")
+        require(row["benchmark"] == "io.bluetape4k.images.benchmark.ZxingBarcodeExtractionBenchmark.extractBarcodes") {
+            "barcode benchmark name differs"
+        }
+        require(row["mode"] == expectedMode) {
+            "barcode benchmark mode must be $expectedMode"
+        }
+        require((row["threads"] as? Number)?.toInt() == 1) {
+            "barcode benchmark threads must be 1"
+        }
+        require((row["forks"] as? Number)?.toInt() == 1) {
+            "barcode benchmark forks must be 1"
+        }
+        require((row["warmupIterations"] as? Number)?.toInt() == BARCODE_BENCHMARK_WARMUPS) {
+            "barcode benchmark warmups differ"
+        }
+        require((row["measurementIterations"] as? Number)?.toInt() == BARCODE_BENCHMARK_ITERATIONS) {
+            "barcode benchmark measurements differ"
+        }
+        require(row["warmupTime"] == "1 s" && row["measurementTime"] == "1 s") {
+            "barcode benchmark iteration time differs"
+        }
+        val primaryMetric = row["primaryMetric"] as? Map<*, *>
+            ?: throw IllegalArgumentException("barcode benchmark primary metric is missing")
+        require(primaryMetric["scoreUnit"] == expectedUnit) {
+            "barcode benchmark score unit must be $expectedUnit"
+        }
+        val score = (primaryMetric["score"] as? Number)?.toDouble()
+            ?: throw IllegalArgumentException("barcode benchmark score is missing")
+        require(score.isFinite() && score > 0.0) {
+            "barcode benchmark score must be positive and finite"
+        }
+        val params = row["params"] as? Map<*, *>
+            ?: throw IllegalArgumentException("barcode benchmark parameters are missing")
+        params["scenario"] as? String
+            ?: throw IllegalArgumentException("barcode benchmark scenario is missing")
+    }.toSet()
+    val expectedScenarios = setOf("qr", "code-128", "no-result")
+    require(rows.size == expectedScenarios.size && actualScenarios == expectedScenarios) {
+        "barcode benchmark row coverage differs"
+    }
+}
+
+fun stageBarcodeBenchmarkReport(source: File, target: File) {
+    require(!target.exists()) { "staged barcode benchmark report already exists: $target" }
+    target.parentFile.mkdirs()
+    val temporary = target.parentFile.resolve(".${target.name}.tmp-${UUID.randomUUID()}")
+    try {
+        Files.copy(source.toPath(), temporary.toPath())
+        Files.move(temporary.toPath(), target.toPath(), StandardCopyOption.ATOMIC_MOVE)
+    } finally {
+        Files.deleteIfExists(temporary.toPath())
+    }
+}
+
+fun barcodeBenchmarkSha256(file: File): String {
+    require(file.isFile) { "barcode benchmark input is missing: $file" }
+    val digest = MessageDigest.getInstance("SHA-256")
+    file.inputStream().buffered().use { input ->
+        val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
+        while (true) {
+            val read = input.read(buffer)
+            if (read < 0) break
+            digest.update(buffer, 0, read)
+        }
+    }
+    return digest.digest().joinToString("") { byte -> "%02x".format(byte) }
+}
 
 fun validateCodecMatrixJmhReport(report: File, expectedMethods: Set<String>) {
     require(report.isFile) { "codec matrix JMH report is missing: $report" }
@@ -623,6 +718,108 @@ tasks.register("stageCodecMatrixProfilerJar") {
     }
 }
 
+tasks.register("finalizeBarcodeBenchmarkEvidence") {
+    description = "Promote one validated append-only ZXing barcode benchmark run"
+    group = "verification"
+    inputs.property("runId", barcodeBenchmarkRunId)
+    inputs.property("cpu", barcodeBenchmarkCpu)
+    outputs.upToDateWhen { false }
+    doLast {
+        val runId = validatedBarcodeBenchmarkRunId()
+        val cpu = barcodeBenchmarkCpu.orNull?.trim()
+        require(!cpu.isNullOrEmpty()) { "barcode.benchmark.cpu must not be blank" }
+
+        val runDirectory = barcodeBenchmarkRunDirectory()
+        val latency = runDirectory.resolve("latency.json")
+        val throughput = runDirectory.resolve("throughput.json")
+        require(latency.isFile) { "staged barcode latency report is missing: $latency" }
+        require(throughput.isFile) { "staged barcode throughput report is missing: $throughput" }
+        validateBarcodeBenchmarkReport(latency, "avgt", "ms/op")
+        validateBarcodeBenchmarkReport(throughput, "thrpt", "ops/s")
+
+        val fixtureManifest = layout.projectDirectory.file(
+            "src/main/resources/bench/barcode/manifest.json",
+        ).asFile
+        require(fixtureManifest.isFile) { "barcode fixture manifest is missing: $fixtureManifest" }
+        val fixtureManifestSha256 = barcodeBenchmarkSha256(fixtureManifest)
+        val latencySha256 = barcodeBenchmarkSha256(latency)
+        val throughputSha256 = barcodeBenchmarkSha256(throughput)
+
+        val acceptedRoot = layout.projectDirectory.dir("docs/raw").asFile
+        acceptedRoot.mkdirs()
+        val target = acceptedRoot.resolve(runId)
+        require(!target.exists()) { "accepted barcode benchmark run already exists: $target" }
+        val temporary = acceptedRoot.resolve(".$runId.tmp-${UUID.randomUUID()}")
+        try {
+            Files.createDirectory(temporary.toPath())
+            Files.copy(latency.toPath(), temporary.resolve("latency.json").toPath())
+            Files.copy(throughput.toPath(), temporary.resolve("throughput.json").toPath())
+            Files.copy(fixtureManifest.toPath(), temporary.resolve("fixture-manifest.json").toPath())
+
+            val manifest = linkedMapOf<String, Any>(
+                "schemaVersion" to 1,
+                "runId" to runId,
+                "commands" to listOf(
+                    "./gradlew :bluetape4k-images-benchmark:benchmarkBarcodeLatencyBenchmark " +
+                        "-Pbarcode.benchmark.runId=$runId --console=plain",
+                    "./gradlew :bluetape4k-images-benchmark:benchmarkBarcodeThroughputBenchmark " +
+                        "-Pbarcode.benchmark.runId=$runId --console=plain",
+                    "./gradlew :bluetape4k-images-benchmark:finalizeBarcodeBenchmarkEvidence " +
+                        "-Pbarcode.benchmark.runId=$runId -Pbarcode.benchmark.cpu=<host-cpu> --console=plain",
+                ),
+                "environment" to linkedMapOf(
+                    "osName" to System.getProperty("os.name"),
+                    "osVersion" to System.getProperty("os.version"),
+                    "osArch" to System.getProperty("os.arch"),
+                    "processorCount" to Runtime.getRuntime().availableProcessors(),
+                    "cpu" to cpu,
+                ),
+                "jvm" to linkedMapOf(
+                    "vendor" to System.getProperty("java.vendor"),
+                    "version" to System.getProperty("java.version"),
+                ),
+                "provider" to linkedMapOf(
+                    "name" to "ZXing",
+                    "version" to libs.versions.zxing.get(),
+                ),
+                "fixtures" to linkedMapOf(
+                    "path" to "fixture-manifest.json",
+                    "fixtureManifestSha256" to fixtureManifestSha256,
+                ),
+                "artifacts" to listOf(
+                    linkedMapOf(
+                        "path" to "latency.json",
+                        "latencySha256" to latencySha256,
+                        "mode" to "avgt",
+                        "unit" to "ms/op",
+                    ),
+                    linkedMapOf(
+                        "path" to "throughput.json",
+                        "throughputSha256" to throughputSha256,
+                        "mode" to "thrpt",
+                        "unit" to "ops/s",
+                    ),
+                ),
+                "protocol" to linkedMapOf(
+                    "threads" to 1,
+                    "forks" to 1,
+                    "warmups" to BARCODE_BENCHMARK_WARMUPS,
+                    "measurements" to BARCODE_BENCHMARK_ITERATIONS,
+                    "iterationSeconds" to BARCODE_BENCHMARK_ITERATION_SECONDS,
+                ),
+            )
+            temporary.resolve("run-manifest.json").writeText(
+                JsonOutput.prettyPrint(JsonOutput.toJson(manifest)) + "\n",
+            )
+            Files.move(temporary.toPath(), target.toPath(), StandardCopyOption.ATOMIC_MOVE)
+        } finally {
+            if (temporary.exists()) {
+                temporary.deleteRecursively()
+            }
+        }
+    }
+}
+
 afterEvaluate {
     val codecMatrixExecutionTaskNames = setOf(
         "benchmarkBenchmark",
@@ -637,6 +834,47 @@ afterEvaluate {
     }
 
     val codecMatrixBenchmarkStarts = ConcurrentHashMap<String, Instant>()
+    val barcodeBenchmarkStarts = ConcurrentHashMap<String, Instant>()
+
+    tasks.matching { task ->
+        task.name == "benchmarkBarcodeLatencyBenchmark" ||
+                task.name == "benchmarkBarcodeThroughputBenchmark"
+    }.configureEach {
+        val latencyMode = name == "benchmarkBarcodeLatencyBenchmark"
+        val configurationName = if (latencyMode) "barcodeLatency" else "barcodeThroughput"
+        val stagedName = if (latencyMode) "latency.json" else "throughput.json"
+        val expectedMode = if (latencyMode) "avgt" else "thrpt"
+        val expectedUnit = if (latencyMode) "ms/op" else "ops/s"
+        if (!latencyMode) {
+            mustRunAfter("benchmarkBarcodeLatencyBenchmark")
+        }
+        doFirst {
+            val staged = barcodeBenchmarkRunDirectory().resolve(stagedName)
+            require(!staged.exists()) { "staged barcode benchmark report already exists: $staged" }
+            barcodeBenchmarkStarts[name] = Instant.now()
+        }
+        doLast {
+            val startedAt = requireNotNull(barcodeBenchmarkStarts.remove(name))
+            val reportRoot = layout.buildDirectory.dir("reports/benchmarks/$configurationName").get().asFile
+            val reports = if (reportRoot.isDirectory) {
+                Files.walk(reportRoot.toPath()).use { paths ->
+                    paths.filter { path ->
+                        Files.isRegularFile(path) &&
+                                path.fileName.toString() == "benchmark.json" &&
+                                !Files.getLastModifiedTime(path).toInstant().isBefore(startedAt)
+                    }.map { it.toFile() }.toList()
+                }
+            } else {
+                emptyList()
+            }
+            require(reports.size == 1) {
+                "expected one fresh barcode benchmark report but found ${reports.size}"
+            }
+            val report = reports.single()
+            validateBarcodeBenchmarkReport(report, expectedMode, expectedUnit)
+            stageBarcodeBenchmarkReport(report, barcodeBenchmarkRunDirectory().resolve(stagedName))
+        }
+    }
 
     tasks.matching { task -> task.name == "benchmarkCodecMatrixBenchmark" }.configureEach {
         doFirst {
