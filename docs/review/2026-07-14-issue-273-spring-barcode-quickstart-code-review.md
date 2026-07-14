@@ -68,6 +68,20 @@ the remaining delivery gates are listed explicitly above.
 Final blocking convergence: `P0=0`, `P1=0`. Accepted example-only residuals:
 `P2=2`, `P3=1` as described in the stability and operator rows.
 
+## Independent Review Rerun
+
+Both independent lanes re-reviewed exact implementation head `037b285` after
+the repairs:
+
+- Code reviewer: `APPROVE`, `P0=0`, `P1=0`, `P2=0`, `P3=0`; the premature
+  Task 8 completion finding is closed, with 37 tests passing.
+- Architect: `APPROVE WITH WATCH`, `P0=0`, `P1=0`; the two P2 and one P3
+  example-only boundaries above are accurately documented and accepted.
+
+The final review result is therefore unblocked at `P0=0`, `P1=0`, while the
+architectural WATCH items remain visible rather than being misreported as
+implemented production controls.
+
 ## Performance, Stability, Security, and Hazard Evidence
 
 - CodeGraph analyzed 39 changed files at risk score `0.60`. Its reported bean
