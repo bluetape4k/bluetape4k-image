@@ -57,6 +57,49 @@ class BarcodeBenchmarkContractTest {
         }
     }
 
+    @Test
+    fun `benchmark reports are fresh validated and staged by mode`() {
+        val build = Files.readString(buildScriptPath)
+
+        listOf(
+            "barcode.benchmark.runId",
+            "issue-272-[0-9]{8}-[a-z0-9-]{3,40}",
+            "barcodeBenchmarkStarts",
+            "Instant.now()",
+            "Files.getLastModifiedTime",
+            "validateBarcodeBenchmarkReport",
+            "latency.json",
+            "throughput.json",
+        ).forEach(build::shouldContain)
+        build.shouldContain("expected one fresh barcode benchmark report")
+        build.shouldContain("benchmarkBarcodeThroughputBenchmark")
+        build.shouldContain("mustRunAfter(\"benchmarkBarcodeLatencyBenchmark\")")
+    }
+
+    @Test
+    fun `finalizer records immutable environment fixture and raw provenance`() {
+        val build = Files.readString(buildScriptPath)
+
+        listOf(
+            "finalizeBarcodeBenchmarkEvidence",
+            "barcode.benchmark.cpu",
+            "run-manifest.json",
+            "fixture-manifest.json",
+            "os.name",
+            "os.arch",
+            "java.vendor",
+            "java.version",
+            "availableProcessors",
+            "libs.versions.zxing.get()",
+            "fixtureManifestSha256",
+            "latencySha256",
+            "throughputSha256",
+            "require(!target.exists())",
+            "StandardCopyOption.ATOMIC_MOVE",
+            "outputs.upToDateWhen { false }",
+        ).forEach(build::shouldContain)
+    }
+
     private fun configuration(build: String, name: String): String {
         val start = build.indexOf("register(\"$name\")")
         require(start >= 0) { "benchmark configuration not found: $name" }
