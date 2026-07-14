@@ -80,6 +80,8 @@ jobs:
             gradle_tasks: :ktor-ocr-api:test
           - example: spring-boot-image-api
             gradle_tasks: :spring-boot-image-api:test
+          - example: spring-boot-barcode-api
+            gradle_tasks: :spring-boot-barcode-api:test
           - example: spring-boot-ocr-api
             gradle_tasks: :spring-boot-ocr-api:test
     steps:
