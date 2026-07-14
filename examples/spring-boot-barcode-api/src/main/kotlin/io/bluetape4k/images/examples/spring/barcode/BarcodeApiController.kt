@@ -8,6 +8,12 @@ import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.multipart.MultipartFile
 
+/**
+ * Exposes the multipart extraction endpoint and deterministic fixture scenarios.
+ *
+ * The fixture-backed `GET` routes demonstrate response contracts; they are not
+ * production data APIs.
+ */
 @RestController
 @RequestMapping("/api/barcodes")
 internal class BarcodeApiController(

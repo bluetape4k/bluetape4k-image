@@ -1,6 +1,7 @@
 package io.bluetape4k.images.examples.spring.barcode
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldContain
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.context.SpringBootTest
@@ -38,12 +39,12 @@ class SpringBootBarcodeApiMultipartLimitTest(
         val response = HttpClient.newBuilder()
             .connectTimeout(Duration.ofSeconds(5))
             .build()
-            .send(request, HttpResponse.BodyHandlers.ofString())
+            .use { client -> client.send(request, HttpResponse.BodyHandlers.ofString()) }
 
         response.statusCode() shouldBeEqualTo 413
-        response.body().contains("\"error\":\"payload_too_large\"") shouldBeEqualTo true
-        response.body().contains(
+        response.body().shouldContain("\"error\":\"payload_too_large\"")
+        response.body().shouldContain(
             "\"message\":\"The uploaded file exceeds the configured size limit.\""
-        ) shouldBeEqualTo true
+        )
     }
 }

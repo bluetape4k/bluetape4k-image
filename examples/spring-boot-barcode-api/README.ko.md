@@ -19,6 +19,8 @@ QR 및 barcode 정보를 추출하는 작은 Spring Boot 4 예제입니다.
 이 코드는 local quickstart이며 production upload service는 아닙니다. 실제 서비스에서는
 authentication, rate limiting, request concurrency 제한, request-log 정책, malware
 scanning, observability를 추가해야 합니다.
+여기서 "local"은 사용 목적을 뜻하며 network isolation을 보장하지 않습니다. 적절한
+bind address와 위 production 보호 장치 없이 신뢰할 수 없는 network에 노출하지 마세요.
 
 ## 다이어그램
 
@@ -44,10 +46,22 @@ Repository root에서 예제를 시작합니다.
 
 Application은 `http://localhost:8080`에서 요청을 받습니다.
 
+`8080`을 사용할 수 없으면 port를 변경합니다.
+
+```bash
+./gradlew :spring-boot-barcode-api:bootRun --args='--server.port=18080'
+```
+
+명시적인 loopback-only bind가 필요하면 Spring Boot의
+`--server.address=127.0.0.1` option도 사용할 수 있습니다.
+
 ## Deterministic 시나리오 endpoint
 
 번들 resource를 사용하므로 별도 upload 준비 없이 세 가지 주요 결과를 같은 방식으로
 재현할 수 있습니다.
+
+이 `GET` route들은 deterministic response contract를 보여주기 위한 것이며 production
+data API가 아닙니다.
 
 | Endpoint | Status | 결과 |
 |---|---:|---|
@@ -154,6 +168,8 @@ probe하고 decode합니다. Production service에서는 request timeout과 conc
 caller authentication, upload rate limit를 설정하고, raw input을 제외하는 request-log
 정책과 malware scanning을 적용하며, rejection rate와 provider latency를 모니터링해야
 합니다.
+Coroutine cancellation은 suspension boundary에서 전파되지만, 이미 실행 중인 동기
+image probe, decode, ZXing 호출을 선점해 중단하지는 않습니다.
 
 ## 의존성
 

@@ -2,19 +2,20 @@
 
 ## Scope and Baseline
 
-- Baseline: `origin/develop...efcd4b06ed1ce6405523499e634005f543429248`
+- Base: `origin/develop` at `e7111d7`
+- Independent review snapshot: `a538e76dcbf3876ec7bd8586cf8a6c8944e211be`
 - Issue: `#273`, milestone `0.4.0`
 - Module slice: `examples/spring-boot-barcode-api`
 - Supporting slices: example registration, root/provider README locale pairs,
   Examples workflow, and source/rendered diagram pairs
 - Review inputs: approved design and plan, current branch diff, fresh module
   tests, real HTTP smoke, diagram audits, documentation parity, and CodeGraph
-  change/impact analysis
+  change/impact analysis, and independent code-reviewer and architect lanes
 
-The active collaboration interface does not expose the required native-agent
-`agent_type` field. Per the workflow routing contract, the six perspectives
-were executed as separate read-only main-session passes. The main session then
-integrated and normalized their findings.
+The collaboration interface did not expose a native `agent_type` field, so the
+installed code-reviewer and architect roles were injected explicitly into two
+independent read-only review prompts. The main session integrated their results
+with the six required review lenses below.
 
 ## Step 5 Verifier
 
@@ -31,22 +32,24 @@ integrated and normalized their findings.
 | Bilingual docs and three rendered diagrams | English/Korean locale pairs, shared English-label SVG/PNG assets, render and geometry audits | PASS |
 | Complete non-published registration | Settings, AGENTS, Examples matrix, root/provider links; no publication/BOM/catalog/Kover surface | PASS |
 
-All eight plan tasks are complete. The implementation stayed inside the
-approved example, registration, documentation, review, and lesson surfaces.
-No public barcode library API, provider implementation, dependency version,
-BOM, benchmark, storage, native/JNI, OCR, Docker, or Testcontainers behavior
-changed.
+Tasks 1-7 and Task 8's local implementation, review, lesson, and verification
+steps are complete. Task 8's push, PR, CI, fresh merge approval, merge, and
+cleanup steps remain pending. The implementation stayed inside the approved
+example, registration, documentation, review, and lesson surfaces. No public
+barcode library API, provider implementation, dependency version, BOM,
+benchmark, storage, native/JNI, OCR, Docker, or Testcontainers behavior changed.
 
-Verifier verdict: `PASS`. No hidden or deferred acceptance row remains.
+Local verifier verdict: `PASS`. No local acceptance row is hidden or deferred;
+the remaining delivery gates are listed explicitly above.
 
 ## Six-Lens Review
 
 | Lens | P0 | P1 | P2 | P3 | Final result |
 |---|---:|---:|---:|---:|---|
 | Performance | 0 | 0 | 0 | 0 | Multipart bytes are bounded before and after read, blocking upload I/O uses `Dispatchers.IO`, and probe/decode/provider work uses `Dispatchers.Default`; no benchmark claim is made. |
-| Stability | 0 | 0 | 0 | 0 | Cancellation is rethrown, fixtures are immutable copies, WebP has a bounded metadata fallback, real multipart-limit handling is tested, and the HTTP regression request has connect/request timeouts. |
+| Stability | 0 | 0 | 1 | 0 | Cancellation is rethrown at coroutine boundaries, but synchronous probe/decode/ZXing work is not preempted in flight; fixtures are immutable copies, WebP has a bounded fallback, and the real HTTP regression request has deadlines. |
 | Security | 0 | 0 | 0 | 0 | Declared types are allowlisted, encoded and decoded sizes are bounded before extraction, resource paths are enum-owned, and error DTOs expose no filename, bytes, stack, backend metadata, or result region. |
-| Operator/Ops | 0 | 0 | 0 | 0 | Limits are explicit in configuration and both README locales; stable status/error codes, startup fixture validation, local-only warnings, and real HTTP evidence support diagnosis. |
+| Operator/Ops | 0 | 0 | 1 | 1 | Limits and stable errors are explicit. Local use is an intent rather than an enforced bind boundary, and the global multipart advice would couple future unrelated controllers; both are documented example boundaries. |
 | Developer/API | 0 | 0 | 0 | 0 | The example is non-published, HTTP DTOs and implementation types are internal, provider-neutral contracts remain at the service boundary, and coroutine/exception semantics match repository patterns. |
 | User/caller | 0 | 0 | 0 | 0 | Four runnable endpoints, POST upload examples, success/no-result/error JSON, limits, provider boundaries, and production caveats agree across English and Korean docs. |
 | Integration | 0 | 0 | 0 | 0 | Spec, plan, source, tests, fixtures, registration, workflow matrix, locale pairs, diagrams, and repository-hazard N/A decisions describe the same bounded quickstart. |
@@ -57,8 +60,13 @@ Verifier verdict: `PASS`. No hidden or deferred acceptance row remains.
 |---|---|---|
 | P1 | The first real oversized multipart smoke returned `413` with an empty body. Multipart parsing failed before a controller type was selected, so package-scoped `@RestControllerAdvice(basePackageClasses = ...)` was not applicable. | Added a real random-port RED test, made the example advice global within the small application, then observed GREEN. Full module tests pass, and real HTTP now returns `413` with a 108-byte `payload_too_large` JSON body. Commit `54c1faf`. |
 | P2 | The real HTTP regression test had no client-side deadline and could wait too long if the embedded server stopped responding. | Added a 5-second connect timeout and 10-second request timeout; the focused random-port test passes. Commit `efcd4b0`. |
+| P3 | The review claimed all eight tasks were complete even though Task 8 still includes PR, CI, merge approval, merge, and cleanup gates. | Limited the completed claim to Tasks 1-7 and Task 8's local steps, then listed every pending delivery gate. |
+| P3 | The approved design required a port override and explicit clarification that fixture `GET` routes are demonstrations rather than production data APIs. | Added the override to both README locales and the demonstration boundary to both READMEs and controller KDoc. |
+| P2 | The quickstart wording could imply stronger cancellation and network-isolation guarantees than the implementation provides. | Documented that synchronous decoding is not preempted in flight, that local use is an intent rather than a bind guarantee, and how to request a loopback-only bind. The lack of an aggregate concurrency gate remains an accepted example-only risk. |
+| P3 | The real HTTP test left its Java 21 `HttpClient` lifecycle implicit and used boolean equality for substring assertions. | Closed the client with `use` and replaced boolean comparisons with intent-specific `shouldContain` assertions; the focused test passes. |
 
-Final convergence: `P0=0`, `P1=0`, `P2=0`, `P3=0`.
+Final blocking convergence: `P0=0`, `P1=0`. Accepted example-only residuals:
+`P2=2`, `P3=1` as described in the stability and operator rows.
 
 ## Performance, Stability, Security, and Hazard Evidence
 
@@ -105,6 +113,8 @@ snapshot.
 
 ## Verdict
 
-`PASS` — the integrated implementation review converged at `P0=0`, `P1=0`,
-`P2=0`, `P3=0`. Issue #273 may proceed to lesson commit, exact-head
-verification, and PR/CI validation.
+`PASS WITH WATCH ITEMS` — the integrated implementation review converged at
+`P0=0`, `P1=0`. The accepted P2/P3 items are production-hardening boundaries,
+not defects in the approved local quickstart. Issue #273 may proceed to
+exact-head verification and PR/CI validation; merge still requires fresh
+explicit approval.

@@ -21,6 +21,9 @@ scenarios or multipart image uploads with `bluetape4k-images-barcode-zxing`.
 This is a local quickstart, not a production upload service. Authentication,
 rate limiting, request concurrency limits, a request-log policy, malware
 scanning, and observability must be added by the consuming application.
+"Local" describes the intended use; it is not a network isolation guarantee.
+Do not expose the example to an untrusted network without configuring an
+appropriate bind address and the production controls above.
 
 ## Diagrams
 
@@ -46,10 +49,22 @@ Start the example from the repository root:
 
 The application listens on `http://localhost:8080`.
 
+Override the port when `8080` is unavailable:
+
+```bash
+./gradlew :spring-boot-barcode-api:bootRun --args='--server.port=18080'
+```
+
+Spring Boot also accepts `--server.address=127.0.0.1` when an explicit
+loopback-only bind is required.
+
 ## Deterministic Scenario Endpoints
 
 The bundled resources make the three main outcomes reproducible without
 preparing an upload first.
+
+These `GET` routes demonstrate deterministic response contracts; they are not
+production data APIs.
 
 | Endpoint | Status | Outcome |
 |---|---:|---|
@@ -156,6 +171,8 @@ decodes and probes the actual bytes. A production service should additionally
 set request timeouts and concurrency limits, authenticate callers, rate-limit
 uploads, define a request-log policy that keeps raw inputs out of logs, scan
 uploads for malware, and monitor rejection rates and provider latency.
+Coroutine cancellation is propagated at suspension boundaries, but it does
+not preempt an in-flight synchronous image probe, decode, or ZXing call.
 
 ## Dependencies
 
