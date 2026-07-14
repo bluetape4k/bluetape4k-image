@@ -9,6 +9,8 @@ releaseRef: "0.3.0"
 
 이 매뉴얼에는 선택 기준과 API 설명, 실행 예제, 장애 진단과 운영 조건이 들어 있다. 프로젝트를 이름순으로 훑기보다 아직 결정하지 못한 지점에서 시작하자.
 
+![JVM 기본 처리에서 프레임워크 예제와 네이티브 백엔드로 이어지는 학습 경로](../../assets/overview/repository-learning-map.svg)
+
 ## 1. JVM 기본 처리 완성하기
 
 [시작하기](../getting-started.md), [불변 이미지 모델](../core/immutable-image-model.md), [로드와 저장](../core/loading-and-writing.md)을 읽는다. [기본 이미지 처리 워크숍](../modules/basic-processing.md)을 실행해 이미지 하나를 읽고, 변환하고, 저장하는 경로를 끝까지 확인한다.

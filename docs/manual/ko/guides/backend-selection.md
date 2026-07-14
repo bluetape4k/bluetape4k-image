@@ -9,6 +9,8 @@ releaseRef: "0.3.0"
 
 네이티브 코드가 언제나 빠를 거라는 기대만으로 백엔드를 고르면 안 된다. 배포 조건과 실제 작업을 측정한 결과로 결정한다.
 
+![Scrimage, Java 21 JVips, Java 25 FFM 백엔드 선택 지도](../../assets/backends/backend-decision-map.svg)
+
 | 경로 | 잘 맞는 작업 | 런타임 조건 | 자원 소유 |
 |---|---|---|---|
 | <code>bluetape4k-images</code> | 이식 가능한 필터, 변환, 분석, JVM 서비스 | JDK 21, libvips 불필요 | JVM 값과 호출자가 관리하는 스트림 |
