@@ -119,7 +119,7 @@ internal class BarcodeExtractionService(
     private fun requireEncodedSize(size: Long) {
         if (size > properties.maxInputBytes) {
             throw requestError(
-                status = HttpStatus.PAYLOAD_TOO_LARGE,
+                status = HttpStatus.CONTENT_TOO_LARGE,
                 error = "payload_too_large",
                 message = "The uploaded file exceeds the configured size limit.",
             )
@@ -129,14 +129,14 @@ internal class BarcodeExtractionService(
     private fun requireDecodedSize(dimensions: ImageDimensions) {
         if (dimensions.width > properties.maxInputSide || dimensions.height > properties.maxInputSide) {
             throw requestError(
-                status = HttpStatus.PAYLOAD_TOO_LARGE,
+                status = HttpStatus.CONTENT_TOO_LARGE,
                 error = "payload_too_large",
                 message = "The decoded image exceeds the configured side limit.",
             )
         }
         if (dimensions.pixelCount > properties.maxInputPixels) {
             throw requestError(
-                status = HttpStatus.PAYLOAD_TOO_LARGE,
+                status = HttpStatus.CONTENT_TOO_LARGE,
                 error = "payload_too_large",
                 message = "The decoded image exceeds the configured pixel limit.",
             )

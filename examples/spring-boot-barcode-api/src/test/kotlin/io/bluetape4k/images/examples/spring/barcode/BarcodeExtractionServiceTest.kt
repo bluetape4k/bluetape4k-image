@@ -115,7 +115,7 @@ class BarcodeExtractionServiceTest {
                 )
             )
         }
-        reported.status shouldBeEqualTo HttpStatus.PAYLOAD_TOO_LARGE
+        reported.status shouldBeEqualTo HttpStatus.CONTENT_TOO_LARGE
 
         val actual = assertFailsWith<BarcodeRequestException> {
             service(reader, properties).extract(
@@ -126,7 +126,7 @@ class BarcodeExtractionServiceTest {
                 )
             )
         }
-        actual.status shouldBeEqualTo HttpStatus.PAYLOAD_TOO_LARGE
+        actual.status shouldBeEqualTo HttpStatus.CONTENT_TOO_LARGE
         readerCalls.get() shouldBeEqualTo 0
     }
 
@@ -145,7 +145,7 @@ class BarcodeExtractionServiceTest {
                 properties = BarcodeExampleProperties(maxInputSide = 100),
             ).extract(bytes)
         }
-        sideError.status shouldBeEqualTo HttpStatus.PAYLOAD_TOO_LARGE
+        sideError.status shouldBeEqualTo HttpStatus.CONTENT_TOO_LARGE
 
         val pixelError = assertFailsWith<BarcodeRequestException> {
             service(
@@ -153,7 +153,7 @@ class BarcodeExtractionServiceTest {
                 properties = BarcodeExampleProperties(maxInputPixels = 40_000),
             ).extract(bytes)
         }
-        pixelError.status shouldBeEqualTo HttpStatus.PAYLOAD_TOO_LARGE
+        pixelError.status shouldBeEqualTo HttpStatus.CONTENT_TOO_LARGE
         readerCalls.get() shouldBeEqualTo 0
     }
 
