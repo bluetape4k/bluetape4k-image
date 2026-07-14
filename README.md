@@ -46,6 +46,17 @@ The BOM keeps artifact versions aligned, runnable examples show local API
 shape, and the benchmark module keeps scrimage/libvips trade-offs measurable
 instead of implicit.
 
+## Manual
+
+The [Image 0.3 manual](./docs/manual/en/index.md) is the source of truth for
+learning paths, module contracts, backend selection, native-resource ownership,
+OCR and web integration, runnable workshops, and benchmark interpretation.
+Applications select only the `bluetape4k-dependencies` version; the central BOM
+keeps the individual Image artifacts aligned.
+
+The README summarizes the current repository. The versioned manual instead
+describes the exact `0.3.0` release and links every claim to that release source.
+
 ## What It Provides
 
 - **Pure JVM processing** — load, resize, crop, filter, analyze, batch, and

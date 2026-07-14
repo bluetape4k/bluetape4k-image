@@ -40,6 +40,16 @@ native codec이 중요해질 때 libvips 백엔드로 확장할 수 있는 단�
 BOM은 artifact version을 정렬하고, runnable example은 local API 형태를 보여 주며,
 benchmark module은 scrimage/libvips trade-off를 추측이 아니라 측정 가능한 증거로 남깁니다.
 
+## 매뉴얼
+
+[Image 0.3 매뉴얼](./docs/manual/ko/index.md)은 학습 경로, 모듈별 계약, 백엔드 선택,
+네이티브 자원 수명, OCR·웹 연동, 실행 가능한 예제, 벤치마크 해석을 자세히 설명하는
+기준 문서입니다. 애플리케이션에서는 `bluetape4k-dependencies` 버전 하나만 선택하면 되며,
+개별 Image 라이브러리 버전은 중앙 BOM이 맞춰 줍니다.
+
+README는 현재 저장소의 모습을 요약합니다. 버전별 매뉴얼은 이와 달리 정확한 `0.3.0`
+배포본을 다루며, 각 설명에서 해당 배포 소스로 이동할 수 있습니다.
+
 ## 제공 기능
 
 - **순수 JVM 처리** — scrimage/Java2D 기반 로드, 리사이즈, 크롭, 필터, 분석, 배치, 인코딩
