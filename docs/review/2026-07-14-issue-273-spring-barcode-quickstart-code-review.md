@@ -10,12 +10,14 @@
   Examples workflow, and source/rendered diagram pairs
 - Review inputs: approved design and plan, current branch diff, fresh module
   tests, real HTTP smoke, diagram audits, documentation parity, and CodeGraph
-  change/impact analysis, and six separate main-session review passes
+  change/impact analysis, six separate main-session review passes, and two
+  independent role-injected review lanes
 
-The active collaboration interface does not expose the required native
-`agent_type` field. Per the workflow routing contract, the six perspectives
-were executed as separate read-only main-session passes. The main session then
-integrated and normalized their findings.
+The initial review executed the six required perspectives as separate
+read-only main-session passes. After the review repairs, independent
+code-reviewer and architect roles were injected explicitly into two read-only
+review prompts because the collaboration interface did not expose a native
+`agent_type` field. The main session integrated both layers of evidence.
 
 ## Step 5 Verifier
 
@@ -68,6 +70,20 @@ the remaining delivery gates are listed explicitly above.
 
 Final blocking convergence: `P0=0`, `P1=0`. Accepted example-only residuals:
 `P2=2`, `P3=1` as described in the stability and operator rows.
+
+## Independent Review Rerun
+
+Both independent lanes re-reviewed exact implementation head `037b285` after
+the repairs:
+
+- Code reviewer: `APPROVE`, `P0=0`, `P1=0`, `P2=0`, `P3=0`; the premature
+  Task 8 completion finding is closed, with 37 tests passing.
+- Architect: `APPROVE WITH WATCH`, `P0=0`, `P1=0`; the two P2 and one P3
+  example-only boundaries above are accurately documented and accepted.
+
+The final review result is therefore unblocked at `P0=0`, `P1=0`, while the
+architectural WATCH items remain visible rather than being misreported as
+implemented production controls.
 
 ## Performance, Stability, Security, and Hazard Evidence
 
