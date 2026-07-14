@@ -195,14 +195,15 @@ class CodecMatrixBenchmarkContractTest {
 
     @Test
     fun `focused protocol stays pinned to one warmup three measurements and one fork`() {
-        count("warmups = CODEC_MATRIX_WARMUPS").shouldBeEqualTo(3)
-        count("iterations = CODEC_MATRIX_ITERATIONS").shouldBeEqualTo(3)
-        count("iterationTime = CODEC_MATRIX_ITERATION_SECONDS").shouldBeEqualTo(3)
-        count("advanced(\"jvmForks\", 1)").shouldBeEqualTo(3)
         listOf("codecMatrix", "codecMatrixAvif", "codecMatrixHeic").forEach { name ->
-            configuration(name).shouldContain("mode = \"avgt\"")
-            configuration(name).shouldContain("outputTimeUnit = \"ms\"")
-            configuration(name).shouldContain("reportFormat = \"json\"")
+            val configuration = configuration(name)
+            configuration.shouldContain("warmups = CODEC_MATRIX_WARMUPS")
+            configuration.shouldContain("iterations = CODEC_MATRIX_ITERATIONS")
+            configuration.shouldContain("iterationTime = CODEC_MATRIX_ITERATION_SECONDS")
+            configuration.shouldContain("advanced(\"jvmForks\", 1)")
+            configuration.shouldContain("mode = \"avgt\"")
+            configuration.shouldContain("outputTimeUnit = \"ms\"")
+            configuration.shouldContain("reportFormat = \"json\"")
         }
     }
 
@@ -278,8 +279,6 @@ class CodecMatrixBenchmarkContractTest {
             )
         }
     }
-
-    private fun count(value: String): Int = buildScript.windowed(value.length).count { it == value }
 
     private fun configuration(name: String): String {
         val start = buildScript.indexOf("register(\"$name\")")
