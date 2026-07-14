@@ -9,6 +9,8 @@ releaseRef: "0.3.0"
 
 Choose a backend from deployment constraints and measured workload, not from the expectation that native code is always faster.
 
+![Decision map for choosing Scrimage, Java 21 JVips, or Java 25 FFM](../../assets/backends/backend-decision-map.svg)
+
 | Path | Best fit | Runtime cost | Ownership |
 |---|---|---|---|
 | <code>bluetape4k-images</code> | portable filters, transforms, analysis, JVM services | JDK 21; no libvips | JVM values and caller-owned streams |

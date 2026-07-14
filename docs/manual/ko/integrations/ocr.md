@@ -9,6 +9,8 @@ releaseRef: "0.3.0"
 
 <code>bluetape4k-images-ocr</code>는 핵심 <code>ImmutableImage</code> 모델에 Tesseract 문자 추출을 더한다. OCR에는 일반 이미지 처리에 필요 없는 네이티브 패키지, 언어 데이터, 지연 시간과 운영 실패 유형이 따라오므로 별도 모듈로 분리되어 있다.
 
+![웹 업로드 검증에서 이미지 전처리, 문자 인식과 응답으로 이어지는 OCR 요청 흐름](../../assets/integrations/ocr-web-flow.svg)
+
 ## API 모델
 
 <code>OcrOptions</code>에서 언어와 엔진 동작을 고른다. <code>OcrResult</code>는 인식한 텍스트와 결과 데이터를 담는다. <code>TesseractOcrEngine</code>이 엔진을 구현하며 기존 이미지 값에서는 <code>ImmutableImage.extractText</code>로 바로 호출할 수 있다.

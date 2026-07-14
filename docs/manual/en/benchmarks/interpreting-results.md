@@ -9,6 +9,8 @@ releaseRef: "0.3.0"
 
 The benchmark project is executable evidence, not a published dependency. Its reports compare Scrimage and libvips processing plus I/O and allocation boundaries available in 0.3.0.
 
+![Interpretation path from benchmark question through workload context to a bounded conclusion](../../assets/benchmarks/benchmark-interpretation-map.svg)
+
 ## Know the measured operation
 
 Resize, encode, filter, chained pipeline, file I/O, large streaming, and memory profiles answer different questions. Read the benchmark class and fixture before using a chart. An encode row includes codec work; a resize row may not. Throughput and average-time metrics also point in opposite directions.

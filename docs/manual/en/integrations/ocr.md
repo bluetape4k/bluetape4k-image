@@ -9,6 +9,8 @@ releaseRef: "0.3.0"
 
 <code>bluetape4k-images-ocr</code> adds Tesseract text extraction to the core <code>ImmutableImage</code> model. It is a separate module because OCR brings native packages, language data, latency, and operational failure modes that normal image processing does not need.
 
+![OCR request flow from web upload through validation, image preparation, recognition, and response](../../assets/integrations/ocr-web-flow.svg)
+
 ## API model
 
 <code>OcrOptions</code> selects language and engine behavior. <code>OcrResult</code> carries recognized text and result data. <code>TesseractOcrEngine</code> implements the engine, and <code>ImmutableImage.extractText</code> is the convenient entry point for an existing image value.

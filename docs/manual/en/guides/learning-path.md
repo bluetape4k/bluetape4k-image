@@ -9,6 +9,8 @@ releaseRef: "0.3.0"
 
 The manual includes selection rules, API explanations, runnable examples, failure diagnosis, and operational constraints. Enter at the first unresolved decision instead of reading all projects alphabetically.
 
+![Learning path from portable JVM processing through framework examples and native backends](../../assets/overview/repository-learning-map.svg)
+
 ## 1. Complete portable JVM processing
 
 Read [Getting started](../getting-started.md), [the immutable image model](../core/immutable-image-model.md), and [loading and writing](../core/loading-and-writing.md). Run the [basic processing workshop](../modules/basic-processing.md) and prove one load-transform-write path.

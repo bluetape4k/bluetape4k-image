@@ -9,6 +9,8 @@ releaseRef: "0.3.0"
 
 Image processing crosses heap, file, network, and native-memory boundaries. A successful API call does not prove that these resources are owned correctly.
 
+![Resource ownership across decode, transform, encode, and native processing](../../assets/architecture/processing-lifecycle.svg)
+
 ## JVM image boundary
 
 <code>ImmutableImage</code> operations return new values. Input streams, Okio sources, temporary files, and output sinks still belong to the caller unless the selected helper explicitly documents closure. Bound image dimensions and encoded input size before allocating full pixel buffers.
