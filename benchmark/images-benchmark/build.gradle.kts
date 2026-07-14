@@ -148,6 +148,11 @@ fun validateBarcodeBenchmarkReport(report: File, expectedMode: String, expectedU
         require(score.isFinite() && score > 0.0) {
             "barcode benchmark score must be positive and finite"
         }
+        val scoreError = (primaryMetric["scoreError"] as? Number)?.toDouble()
+            ?: throw IllegalArgumentException("barcode benchmark score error is missing")
+        require(scoreError.isFinite() && scoreError >= 0.0) {
+            "barcode benchmark score error must be non-negative and finite"
+        }
         val params = row["params"] as? Map<*, *>
             ?: throw IllegalArgumentException("barcode benchmark parameters are missing")
         params["scenario"] as? String

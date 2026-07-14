@@ -55,7 +55,12 @@ internal data class BarcodeBenchmarkFixtureEntry(
 ): Serializable {
 
     init {
-        require(!resource.startsWith('/') && ".." !in resource.split('/')) {
+        val pathSegments = resource.split('/')
+        require(
+            resource.isNotEmpty() &&
+                    '\\' !in resource &&
+                    pathSegments.all { segment -> segment.isNotEmpty() && segment != "." && segment != ".." },
+        ) {
             "barcode fixture resource must be normalized and relative: $resource"
         }
         require(resource.startsWith("bench/barcode/")) {
