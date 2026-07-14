@@ -10,7 +10,7 @@ import org.springframework.web.multipart.MaxUploadSizeExceededException
 import org.springframework.web.multipart.support.MissingServletRequestPartException
 import java.util.Locale
 
-@RestControllerAdvice(basePackageClasses = [BarcodeApiController::class])
+@RestControllerAdvice
 internal class BarcodeApiExceptionHandler {
 
     @ExceptionHandler(BarcodeRequestException::class)
