@@ -359,6 +359,11 @@ backend format label을 `BarcodeResult`로 변환하며, barcode가 없으면 �
 반환합니다. ZXing은 순수 JVM Apache-2.0 provider지만, 장기적으로 유일한 provider가
 아니라 첫 OSS provider 경로로 다룹니다.
 
+HTTP로 직접 실행해 보려면
+[`spring-boot-barcode-api` quickstart](examples/spring-boot-barcode-api/README.ko.md)를
+사용하세요. Deterministic found/no-result/malformed 시나리오와 제한이 적용된
+multipart upload endpoint를 제공합니다.
+
 #### Barcode Provider Capability Matrix
 
 | Provider | 모듈 | 상태 | 포맷과 범위 | Fixture와 문서 근거 |
@@ -369,8 +374,9 @@ backend format label을 `BarcodeResult`로 변환하며, barcode가 없으면 �
 | Commercial SDK | — | 보류 | 산업용 decoding 요구를 위한 유료 또는 closed-source 선택 provider | #248은 license, redistribution, support policy 승인 전까지 구현 issue를 만들지 않도록 권고 |
 | Native/JNI SDK | — | 보류 | native packaging, JNI/FFM 설정, platform-specific CI가 필요한 선택 provider | #248은 native runtime과 CI policy 승인 전까지 구현 issue를 만들지 않도록 권고 |
 
-Barcode fixture는 deterministic code로 테스트 실행 시 생성됩니다. 외부 barcode 이미지
-binary는 repository에 포함하지 않습니다.
+Provider module test는 deterministic code로 QR과 Code 128 fixture를 실행 시점에
+생성합니다. Spring Boot quickstart는 HTTP 시나리오를 항상 같은 방식으로 재현할 수
+있도록 QR, no-result, malformed resource를 별도로 번들합니다.
 
 ### OCR 텍스트 추출 (`images-ocr`)
 
@@ -553,6 +559,7 @@ JVipsImageSupport.jvipsImageOf(Path.of("photo.jpg")).use { image ->
 
 - [`images/README.md`](images/README.md) — Scrimage 기반 처리
 - [`images-barcode-api/README.md`](images-barcode-api/README.md) — Provider-neutral barcode contract
+- [`images-barcode-zxing/README.md`](images-barcode-zxing/README.md) — 순수 JVM ZXing barcode provider
 - [`images-captcha/README.md`](images-captcha/README.md) — Java2D CAPTCHA 생성
 - [`images-ocr/README.md`](images-ocr/README.md) — Tess4J/Tesseract OCR 추출
 - [`images-ktor/README.md`](images-ktor/README.md) — Ktor 썸네일 및 CAPTCHA route helper
@@ -573,6 +580,11 @@ Spring Boot 4 local-storage API 예제는
 [`examples/spring-boot-image-api`](examples/spring-boot-image-api/README.ko.md)를
 사용하세요. Multipart upload를 받고, `LocalImageStorage`로 원본을 저장하고, PNG
 thumbnail을 만든 뒤 S3/CDN 설정 없이 storage key와 local read URL을 반환합니다.
+
+Spring Boot 4 barcode API 예제는
+[`examples/spring-boot-barcode-api`](examples/spring-boot-barcode-api/README.ko.md)를
+사용하세요. Deterministic found, no-result, malformed endpoint와 PNG, JPEG, WebP
+이미지용 bounded multipart upload endpoint를 제공합니다.
 
 Spring Boot 4 OCR API 예제는
 [`examples/spring-boot-ocr-api`](examples/spring-boot-ocr-api/README.ko.md)를

@@ -1,0 +1,133 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1900" height="980" viewBox="0 0 1900 980" role="img" aria-label="Spring Boot Barcode API Scenarios">
+  <defs>
+    <marker id="arrow-blue" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" refX="13" refY="7" orient="auto">
+      <polygon points="0,0 14,7 0,14" fill="#3b82c4"/>
+    </marker>
+    <marker id="arrow-green" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" refX="13" refY="7" orient="auto">
+      <polygon points="0,0 14,7 0,14" fill="#4b9b72"/>
+    </marker>
+    <marker id="arrow-gray" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" refX="13" refY="7" orient="auto">
+      <polygon points="0,0 14,7 0,14" fill="#64748b"/>
+    </marker>
+    <marker id="arrow-red" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" refX="13" refY="7" orient="auto">
+      <polygon points="0,0 14,7 0,14" fill="#c65d5d"/>
+    </marker>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#0f172a" flood-opacity="0.08"/>
+    </filter>
+    <style>
+      .canvas{fill:#f8fafc}
+      .frame{fill:#fff;stroke:#475569;stroke-width:2.4}
+      .title{font-family:"Architects Daughter";font-size:44px;fill:#1f2937}
+      .subtitle{font-family:"Comic Mono";font-size:17px;fill:#64748b}
+      .section{font-family:"Comic Mono";font-size:15px;fill:#475569;font-weight:700;letter-spacing:1px}
+      .card{fill:#fff;stroke:#94a3b8;stroke-width:1.8;filter:url(#shadow)}
+      .service{fill:#eff6ff;stroke:#7aa7d8;stroke-width:2.2;filter:url(#shadow)}
+      .node-title{font-family:"Architects Daughter";font-size:23px;fill:#1f2937}
+      .node-detail{font-family:"Comic Mono";font-size:13px;fill:#64748b}
+      .badge{font-family:"Comic Mono";font-size:12px;font-weight:700}
+      .edge-blue{fill:none;stroke:#3b82c4;stroke-width:2.6;marker-end:url(#arrow-blue);stroke-linecap:round;stroke-linejoin:round}
+      .edge-green{fill:none;stroke:#4b9b72;stroke-width:2.6;marker-end:url(#arrow-green);stroke-linecap:round;stroke-linejoin:round}
+      .edge-gray{fill:none;stroke:#64748b;stroke-width:2.6;marker-end:url(#arrow-gray);stroke-linecap:round;stroke-linejoin:round}
+      .edge-red{fill:none;stroke:#c65d5d;stroke-width:2.6;marker-end:url(#arrow-red);stroke-linecap:round;stroke-linejoin:round}
+      .legend{font-family:"Comic Mono";font-size:13px;fill:#475569}
+      .footer{font-family:"Comic Mono";font-size:13px;fill:#64748b}
+    </style>
+  </defs>
+
+  <rect class="canvas" width="1900" height="980"/>
+  <rect class="frame" x="34" y="30" width="1832" height="900" rx="28"/>
+  <text class="title" x="76" y="92">Spring Boot Barcode API Scenarios</text>
+  <text class="subtitle" x="80" y="126">Multipart upload and three deterministic GET endpoints share one bounded extraction service.</text>
+  <text class="section" x="100" y="185">SCENARIO ENDPOINTS</text>
+  <text class="section" x="744" y="185">SHARED SERVICE</text>
+  <text class="section" x="1410" y="185">HTTP OUTCOMES</text>
+
+  <g id="connectors">
+    <path data-connector="upload-request" class="edge-blue" stroke="#3b82c4" d="M 530 255 L 620 255 Q 650 255 650 285 L 650 360 Q 650 390 680 390 L 730 390"/>
+    <path data-connector="sample-request" class="edge-blue" stroke="#3b82c4" d="M 530 400 L 680 400 Q 700 400 700 420 L 700 430 Q 700 450 720 450 L 730 450"/>
+    <path data-connector="no-result-request" class="edge-blue" stroke="#3b82c4" d="M 530 545 L 680 545 Q 700 545 700 525 Q 700 510 715 510 L 730 510"/>
+    <path data-connector="malformed-request" class="edge-blue" stroke="#3b82c4" d="M 530 690 L 620 690 Q 650 690 650 660 L 650 600 Q 650 570 680 570 L 730 570"/>
+    <path data-connector="found-outcome" class="edge-green" stroke="#4b9b72" d="M 1170 420 L 1200 420 Q 1220 420 1220 400 L 1220 310 Q 1220 280 1250 280 L 1400 280"/>
+    <path data-connector="empty-outcome" class="edge-gray" stroke="#64748b" d="M 1170 490 L 1400 490"/>
+    <path data-connector="malformed-outcome" class="edge-red" stroke="#c65d5d" d="M 1170 560 L 1200 560 Q 1220 560 1220 580 L 1220 670 Q 1220 700 1250 700 L 1400 700"/>
+  </g>
+
+  <g id="endpoint-cards">
+    <g id="upload-endpoint">
+      <rect class="card" x="100" y="205" width="430" height="100" rx="12"/>
+      <rect x="122" y="228" width="72" height="30" rx="15" fill="#e8f2fb" stroke="#7aa7d8"/>
+      <text class="badge" x="158" y="248" text-anchor="middle" fill="#2f6f9f">POST</text>
+      <text class="node-title" x="214" y="250">/api/barcodes/extract</text>
+      <text class="node-detail" x="122" y="282">multipart PNG, JPEG, or WebP</text>
+    </g>
+    <g id="sample-endpoint">
+      <rect class="card" x="100" y="350" width="430" height="100" rx="12"/>
+      <rect x="122" y="373" width="72" height="30" rx="15" fill="#e8f2fb" stroke="#7aa7d8"/>
+      <text class="badge" x="158" y="393" text-anchor="middle" fill="#2f6f9f">GET</text>
+      <text class="node-title" x="214" y="395">/api/barcodes/sample</text>
+      <text class="node-detail" x="122" y="427">bundled QR fixture</text>
+    </g>
+    <g id="no-result-endpoint">
+      <rect class="card" x="100" y="495" width="430" height="100" rx="12"/>
+      <rect x="122" y="518" width="72" height="30" rx="15" fill="#e8f2fb" stroke="#7aa7d8"/>
+      <text class="badge" x="158" y="538" text-anchor="middle" fill="#2f6f9f">GET</text>
+      <text class="node-title" x="214" y="540">/api/barcodes/no-result</text>
+      <text class="node-detail" x="122" y="572">valid image without a barcode</text>
+    </g>
+    <g id="malformed-endpoint">
+      <rect class="card" x="100" y="640" width="430" height="100" rx="12"/>
+      <rect x="122" y="663" width="72" height="30" rx="15" fill="#e8f2fb" stroke="#7aa7d8"/>
+      <text class="badge" x="158" y="683" text-anchor="middle" fill="#2f6f9f">GET</text>
+      <text class="node-title" x="214" y="685">/api/barcodes/malformed</text>
+      <text class="node-detail" x="122" y="717">non-image bytes</text>
+    </g>
+  </g>
+
+  <g id="service-card">
+    <rect class="service" x="730" y="360" width="440" height="260" rx="16"/>
+    <text class="node-title" x="950" y="430" text-anchor="middle">BarcodeExtractionService</text>
+    <text class="node-detail" x="950" y="470" text-anchor="middle">encoded byte guard</text>
+    <text class="node-detail" x="950" y="496" text-anchor="middle">dimension and pixel guard</text>
+    <text class="node-detail" x="950" y="522" text-anchor="middle">ImmutableImage + ZxingBarcodeReader</text>
+    <text class="node-detail" x="950" y="548" text-anchor="middle">bounded response mapping</text>
+  </g>
+
+  <g id="outcome-cards">
+    <g id="sample-outcome">
+      <rect class="card" x="1400" y="220" width="380" height="120" rx="12"/>
+      <rect x="1422" y="246" width="72" height="30" rx="15" fill="#edf8f1" stroke="#74b48f"/>
+      <text class="badge" x="1458" y="266" text-anchor="middle" fill="#397554">200</text>
+      <text class="node-title" x="1514" y="268">Barcode found</text>
+      <text class="node-detail" x="1422" y="310">count: 1 | QR_CODE</text>
+    </g>
+    <g id="no-result-outcome">
+      <rect class="card" x="1400" y="430" width="380" height="120" rx="12"/>
+      <rect x="1422" y="456" width="72" height="30" rx="15" fill="#f1f5f9" stroke="#94a3b8"/>
+      <text class="badge" x="1458" y="476" text-anchor="middle" fill="#475569">200</text>
+      <text class="node-title" x="1514" y="478">No barcode</text>
+      <text class="node-detail" x="1422" y="520">count: 0 | empty results</text>
+    </g>
+    <g id="malformed-outcome">
+      <rect class="card" x="1400" y="640" width="380" height="120" rx="12"/>
+      <rect x="1422" y="666" width="72" height="30" rx="15" fill="#fbecec" stroke="#d68a8a"/>
+      <text class="badge" x="1458" y="686" text-anchor="middle" fill="#a64040">400</text>
+      <text class="node-title" x="1514" y="688">Malformed input</text>
+      <text class="node-detail" x="1422" y="730">error: malformed_input</text>
+    </g>
+  </g>
+
+  <g id="legend">
+    <rect x="610" y="790" width="680" height="60" rx="12" fill="#fff" stroke="#cbd5e1"/>
+    <line x1="650" y1="820" x2="690" y2="820" stroke="#3b82c4" stroke-width="4"/>
+    <text class="legend" x="704" y="825">request</text>
+    <line x1="814" y1="820" x2="854" y2="820" stroke="#4b9b72" stroke-width="4"/>
+    <text class="legend" x="868" y="825">found</text>
+    <line x1="974" y1="820" x2="1014" y2="820" stroke="#64748b" stroke-width="4"/>
+    <text class="legend" x="1028" y="825">no result</text>
+    <line x1="1148" y1="820" x2="1188" y2="820" stroke="#c65d5d" stroke-width="4"/>
+    <text class="legend" x="1202" y="825">error</text>
+  </g>
+
+  <text class="footer" x="950" y="900" text-anchor="middle">bluetape4k-image | examples:spring-boot-barcode-api</text>
+</svg>

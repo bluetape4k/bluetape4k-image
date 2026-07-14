@@ -374,6 +374,11 @@ format labels into `BarcodeResult`, and returns an empty list when no barcode is
 found. ZXing is pure JVM and Apache-2.0, but it should be treated as the first
 OSS provider path rather than the only long-term provider option.
 
+For a runnable HTTP example, see the
+[`spring-boot-barcode-api` quickstart](examples/spring-boot-barcode-api/README.md).
+It provides deterministic found/no-result/malformed scenarios plus a bounded
+multipart upload endpoint.
+
 #### Barcode Provider Capability Matrix
 
 | Provider | Module | Status | Formats and scope | Fixture/docs evidence |
@@ -384,8 +389,9 @@ OSS provider path rather than the only long-term provider option.
 | Commercial SDKs | — | Deferred | Optional paid or closed-source providers for industrial decoding requirements | #248 recommends no implementation issue until license, redistribution, and support policy are approved |
 | Native/JNI SDKs | — | Deferred | Optional providers that require native packaging, JNI/FFM setup, or platform-specific CI | #248 recommends no implementation issue until native runtime and CI policy are approved |
 
-The committed barcode fixtures are generated at test runtime from deterministic
-code. No external barcode image binaries are bundled.
+Provider module tests generate QR and Code 128 fixtures at runtime from
+deterministic code. The Spring Boot quickstart separately bundles fixed QR,
+no-result, and malformed resources so its HTTP scenarios stay reproducible.
 
 ### Extracting OCR Text (`images-ocr`)
 
@@ -572,6 +578,7 @@ Each module contains its own detailed README with API reference, architecture di
 
 - [`images/README.md`](images/README.md) — Scrimage-based processing
 - [`images-barcode-api/README.md`](images-barcode-api/README.md) — Provider-neutral barcode contracts
+- [`images-barcode-zxing/README.md`](images-barcode-zxing/README.md) — Pure-JVM ZXing barcode provider
 - [`images-captcha/README.md`](images-captcha/README.md) — Java2D CAPTCHA generation
 - [`images-ocr/README.md`](images-ocr/README.md) — Tess4J/Tesseract OCR extraction
 - [`images-ktor/README.md`](images-ktor/README.md) — Ktor thumbnail and CAPTCHA route helpers
@@ -593,6 +600,11 @@ Use [`examples/spring-boot-image-api`](examples/spring-boot-image-api/README.md)
 for a compact Spring Boot 4 local-storage API. It accepts multipart uploads,
 stores the original image through `LocalImageStorage`, creates a PNG thumbnail,
 and returns storage keys plus local read URLs without S3 or CDN setup.
+
+Use [`examples/spring-boot-barcode-api`](examples/spring-boot-barcode-api/README.md)
+for a compact Spring Boot 4 barcode API. It exposes deterministic found,
+no-result, and malformed scenario endpoints plus a bounded multipart upload
+endpoint for PNG, JPEG, and WebP images.
 
 Use [`examples/spring-boot-ocr-api`](examples/spring-boot-ocr-api/README.md)
 for a compact Spring Boot 4 OCR API. It accepts multipart image uploads, parses

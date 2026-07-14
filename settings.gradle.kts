@@ -117,6 +117,9 @@ project(":basic-processing").projectDir = file("examples/basic-processing")
 include("spring-boot-image-api")
 project(":spring-boot-image-api").projectDir = file("examples/spring-boot-image-api")
 
+include("spring-boot-barcode-api")
+project(":spring-boot-barcode-api").projectDir = file("examples/spring-boot-barcode-api")
+
 include("spring-boot-ocr-api")
 project(":spring-boot-ocr-api").projectDir = file("examples/spring-boot-ocr-api")
 
