@@ -58,6 +58,14 @@ The simple ZXing reader path commonly returns one decoded barcode per image. If
 your workload needs broader multi-barcode detection, compare additional
 providers before standardizing on ZXing alone.
 
+## Spring Boot Quickstart
+
+The runnable
+[`spring-boot-barcode-api` example](../examples/spring-boot-barcode-api/README.md)
+wires this provider into deterministic scenario endpoints and a bounded
+multipart upload endpoint. It also demonstrates provider-neutral response DTOs,
+decoded-image guards, and sanitized HTTP errors.
+
 ## Tests
 
 ```bash

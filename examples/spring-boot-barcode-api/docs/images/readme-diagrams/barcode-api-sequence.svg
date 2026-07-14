@@ -1,0 +1,139 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2000" height="1480" viewBox="0 0 2000 1480" role="img" aria-label="Spring Boot Barcode API Upload Sequence">
+  <defs>
+    <marker id="arrow-blue" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="16" viewBox="0 0 10 10" refX="9" refY="5" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#4f83b8"/>
+    </marker>
+    <marker id="arrow-amber" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="16" viewBox="0 0 10 10" refX="9" refY="5" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#b6812c"/>
+    </marker>
+    <marker id="arrow-teal" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="16" viewBox="0 0 10 10" refX="9" refY="5" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#3c8f8a"/>
+    </marker>
+    <marker id="arrow-green" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="16" viewBox="0 0 10 10" refX="9" refY="5" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#4b9b72"/>
+    </marker>
+    <marker id="arrow-gray" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="16" viewBox="0 0 10 10" refX="9" refY="5" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#64748b"/>
+    </marker>
+    <marker id="arrow-red" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="16" viewBox="0 0 10 10" refX="9" refY="5" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#c65d5d"/>
+    </marker>
+    <style>
+      .canvas{fill:#f8fafc}
+      .frame{fill:#fff;stroke:#475569;stroke-width:2.4}
+      .title{font-family:"Architects Daughter";font-size:44px;fill:#1f2937}
+      .subtitle{font-family:"Comic Mono";font-size:17px;fill:#64748b}
+      .header{fill:#fff;stroke:#60798a;stroke-width:1.9}
+      .participant{font-family:"Architects Daughter";font-size:21px;fill:#1f2937}
+      .role{font-family:"Comic Mono";font-size:13px;fill:#64748b}
+      .lifeline{stroke:#9fb1bd;stroke-width:1.8;stroke-dasharray:8 8}
+      .activation{fill:#edf8f1;stroke:#4b9b72;stroke-width:1.5}
+      .callBlue{fill:none;stroke:#4f83b8;stroke-width:2.5;marker-end:url(#arrow-blue);stroke-linecap:round;stroke-linejoin:round}
+      .callAmber{fill:none;stroke:#b6812c;stroke-width:2.5;marker-end:url(#arrow-amber);stroke-linecap:round;stroke-linejoin:round}
+      .return{fill:none;stroke:#3c8f8a;stroke-width:2.4;stroke-dasharray:8 6;marker-end:url(#arrow-teal);stroke-linecap:round;stroke-linejoin:round}
+      .callGreen{fill:none;stroke:#4b9b72;stroke-width:2.5;marker-end:url(#arrow-green);stroke-linecap:round;stroke-linejoin:round}
+      .callGray{fill:none;stroke:#64748b;stroke-width:2.5;marker-end:url(#arrow-gray);stroke-linecap:round;stroke-linejoin:round}
+      .callRed{fill:none;stroke:#c65d5d;stroke-width:2.5;marker-end:url(#arrow-red);stroke-linecap:round;stroke-linejoin:round}
+      .label{fill:#fff;stroke:#cbd5e1;stroke-width:1.3}
+      .msg{font-family:"Comic Mono";font-size:13px;fill:#334155}
+      .num{font-family:"Comic Mono";font-size:13px;font-weight:700}
+      .alt{fill:none;stroke:#7f96a4;stroke-width:2;stroke-dasharray:9 7}
+      .branchDivider{stroke:#a7b6c0;stroke-width:1.5;stroke-dasharray:6 6}
+      .branch{font-family:"Comic Mono";font-size:13px;font-weight:700;fill:#475569}
+      .footer{font-family:"Comic Mono";font-size:13px;fill:#64748b}
+    </style>
+  </defs>
+
+  <rect class="canvas" width="2000" height="1480"/>
+  <rect class="frame" x="34" y="30" width="1932" height="1400" rx="28"/>
+  <text class="title" x="76" y="92">Spring Boot Barcode API Upload Sequence</text>
+  <text class="subtitle" x="80" y="126">The POST path validates compressed and decoded size before the ZXing provider runs.</text>
+
+  <g id="participants">
+    <rect class="header card" x="70" y="180" width="220" height="88" rx="12"/>
+    <text class="participant" x="180" y="216" text-anchor="middle">Client</text>
+    <text class="role" x="180" y="242" text-anchor="middle">curl / browser</text>
+
+    <rect class="header card" x="430" y="180" width="260" height="88" rx="12"/>
+    <text class="participant" x="560" y="216" text-anchor="middle">Controller</text>
+    <text class="role" x="560" y="242" text-anchor="middle">Spring MVC</text>
+
+    <rect class="header card" x="830" y="180" width="300" height="88" rx="12"/>
+    <text class="participant" x="980" y="216" text-anchor="middle">Extraction Service</text>
+    <text class="role" x="980" y="242" text-anchor="middle">bounded coroutine work</text>
+
+    <rect class="header card" x="1250" y="180" width="260" height="88" rx="12"/>
+    <text class="participant" x="1380" y="216" text-anchor="middle">ImmutableImage</text>
+    <text class="role" x="1380" y="242" text-anchor="middle">scrimage decode</text>
+
+    <rect class="header card" x="1650" y="180" width="260" height="88" rx="12"/>
+    <text class="participant" x="1780" y="216" text-anchor="middle">BarcodeReader</text>
+    <text class="role" x="1780" y="242" text-anchor="middle">ZXing provider</text>
+  </g>
+
+  <g id="lifelines">
+    <line class="lifeline" x1="180" y1="268" x2="180" y2="1360"/>
+    <line class="lifeline" x1="560" y1="268" x2="560" y2="1360"/>
+    <line class="lifeline" x1="980" y1="268" x2="980" y2="1360"/>
+    <line class="lifeline" x1="1380" y1="268" x2="1380" y2="940"/>
+    <line class="lifeline" x1="1780" y1="268" x2="1780" y2="940"/>
+  </g>
+
+  <g id="activations">
+    <rect class="activation" x="552" y="335" width="16" height="1000" rx="6"/>
+    <rect class="activation" x="972" y="435" width="16" height="850" rx="6"/>
+    <rect class="activation" x="1372" y="720" width="16" height="80" rx="6"/>
+    <rect class="activation" x="1772" y="815" width="16" height="120" rx="6"/>
+  </g>
+
+  <g id="messages">
+    <path data-connector="true" class="callAmber" stroke="#b6812c" d="M 180 350 L 552 350"/>
+    <path data-connector="true" class="callBlue" stroke="#4f83b8" d="M 568 455 L 972 455"/>
+    <path data-connector="true" class="callBlue" stroke="#4f83b8" d="M 988 570 L 1110 570 Q 1135 570 1135 595 L 1135 625 Q 1135 650 1110 650 L 988 650"/>
+    <path data-connector="true" class="callBlue" stroke="#4f83b8" d="M 988 740 L 1372 740"/>
+    <path data-connector="true" class="callAmber" stroke="#b6812c" d="M 988 835 L 1772 835"/>
+    <path data-connector="true" class="return" stroke="#3c8f8a" d="M 1772 915 L 988 915"/>
+
+    <path data-connector="true" class="callGreen" stroke="#4b9b72" d="M 972 980 L 568 980"/>
+    <path data-connector="true" class="callGreen" stroke="#4b9b72" d="M 552 1020 L 180 1020"/>
+    <path data-connector="true" class="callGray" stroke="#64748b" d="M 972 1110 L 568 1110"/>
+    <path data-connector="true" class="callGray" stroke="#64748b" d="M 552 1150 L 180 1150"/>
+    <path data-connector="true" class="callRed" stroke="#c65d5d" d="M 972 1265 L 568 1265"/>
+    <path data-connector="true" class="callRed" stroke="#c65d5d" d="M 552 1305 L 180 1305"/>
+  </g>
+
+  <g id="message-labels">
+    <g><rect class="label" x="230" y="300" width="300" height="36" rx="16"/><circle cx="252" cy="318" r="14" fill="#fff7e8" stroke="#b6812c"/><text class="num" x="252" y="323" text-anchor="middle" fill="#8a5d18">1</text><text class="msg" x="276" y="323">POST multipart /extract</text></g>
+    <g><rect class="label" x="625" y="405" width="310" height="36" rx="16"/><circle cx="647" cy="423" r="14" fill="#eef5fb" stroke="#4f83b8"/><text class="num" x="647" y="428" text-anchor="middle" fill="#356d9e">2</text><text class="msg" x="671" y="428">extract(file)</text></g>
+    <g><rect class="label" x="845" y="520" width="300" height="36" rx="16"/><circle cx="867" cy="538" r="14" fill="#eef5fb" stroke="#4f83b8"/><text class="num" x="867" y="543" text-anchor="middle" fill="#356d9e">3</text><text class="msg" x="891" y="543">validate bytes + dimensions</text></g>
+    <g><rect class="label" x="1070" y="690" width="280" height="36" rx="16"/><circle cx="1092" cy="708" r="14" fill="#eef5fb" stroke="#4f83b8"/><text class="num" x="1092" y="713" text-anchor="middle" fill="#356d9e">4</text><text class="msg" x="1116" y="713">decode guarded bytes</text></g>
+    <g><rect class="label" x="1280" y="785" width="300" height="36" rx="16"/><circle cx="1302" cy="803" r="14" fill="#fff7e8" stroke="#b6812c"/><text class="num" x="1302" y="808" text-anchor="middle" fill="#8a5d18">5</text><text class="msg" x="1326" y="808">extractBarcodes(image)</text></g>
+    <g><rect class="label" x="1280" y="865" width="300" height="36" rx="16"/><circle cx="1302" cy="883" r="14" fill="#edf8f7" stroke="#3c8f8a"/><text class="num" x="1302" y="888" text-anchor="middle" fill="#276b67">6</text><text class="msg" x="1326" y="888">bounded results</text></g>
+
+    <g><rect class="label" x="650" y="935" width="280" height="34" rx="15"/><circle cx="671" cy="952" r="13" fill="#edf8f1" stroke="#4b9b72"/><text class="num" x="671" y="957" text-anchor="middle" fill="#397554">7</text><text class="msg" x="694" y="957">count: 1 | QR result</text></g>
+    <g><rect class="label" x="250" y="975" width="260" height="34" rx="15"/><circle cx="271" cy="992" r="13" fill="#edf8f1" stroke="#4b9b72"/><text class="num" x="271" y="997" text-anchor="middle" fill="#397554">8</text><text class="msg" x="294" y="997">200 OK</text></g>
+    <g><rect class="label" x="650" y="1065" width="280" height="34" rx="15"/><circle cx="671" cy="1082" r="13" fill="#f1f5f9" stroke="#64748b"/><text class="num" x="671" y="1087" text-anchor="middle" fill="#475569">9</text><text class="msg" x="694" y="1087">count: 0 | empty results</text></g>
+    <g><rect class="label" x="250" y="1105" width="260" height="34" rx="15"/><circle cx="271" cy="1122" r="13" fill="#f1f5f9" stroke="#64748b"/><text class="num" x="271" y="1127" text-anchor="middle" fill="#475569">10</text><text class="msg" x="294" y="1127">200 OK</text></g>
+    <g><rect class="label" x="650" y="1220" width="280" height="34" rx="15"/><circle cx="671" cy="1237" r="13" fill="#fbecec" stroke="#c65d5d"/><text class="num" x="671" y="1242" text-anchor="middle" fill="#a64040">11</text><text class="msg" x="694" y="1242">malformed_input DTO</text></g>
+    <g><rect class="label" x="250" y="1260" width="260" height="34" rx="15"/><circle cx="271" cy="1277" r="13" fill="#fbecec" stroke="#c65d5d"/><text class="num" x="271" y="1282" text-anchor="middle" fill="#a64040">12</text><text class="msg" x="294" y="1282">400 Bad Request</text></g>
+  </g>
+
+  <g id="branches">
+    <rect class="alt" x="100" y="680" width="1800" height="650" rx="18"/>
+    <line class="branchDivider" x1="100" y1="1200" x2="1900" y2="1200"/>
+    <rect x="118" y="690" width="190" height="30" rx="10" fill="#fff" stroke="#4f83b8"/>
+    <text class="branch" x="213" y="710" text-anchor="middle">alt decode succeeds</text>
+
+    <rect class="alt" x="120" y="925" width="1760" height="255" rx="16"/>
+    <line class="branchDivider" x1="120" y1="1050" x2="1880" y2="1050"/>
+    <rect x="138" y="935" width="178" height="30" rx="10" fill="#fff" stroke="#4b9b72"/>
+    <text class="branch" x="227" y="955" text-anchor="middle">alt barcode found</text>
+    <rect x="138" y="1060" width="178" height="30" rx="10" fill="#fff" stroke="#64748b"/>
+    <text class="branch" x="227" y="1080" text-anchor="middle">else no barcode</text>
+
+    <rect x="118" y="1210" width="206" height="30" rx="10" fill="#fff" stroke="#c65d5d"/>
+    <text class="branch" x="221" y="1230" text-anchor="middle">else malformed input</text>
+  </g>
+
+  <text class="footer" x="1000" y="1392" text-anchor="middle">bluetape4k-image | examples:spring-boot-barcode-api</text>
+</svg>

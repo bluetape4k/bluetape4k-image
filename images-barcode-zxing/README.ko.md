@@ -57,6 +57,14 @@ ZXing 전용 class는 이 모듈 안에 둡니다.
 단순 ZXing reader 경로는 보통 이미지 하나에서 하나의 barcode를 반환합니다. 더 넓은
 multi-barcode detection이 필요하다면 ZXing만 표준화하기 전에 다른 provider도 비교하세요.
 
+## Spring Boot Quickstart
+
+실행 가능한
+[`spring-boot-barcode-api` 예제](../examples/spring-boot-barcode-api/README.ko.md)는
+이 provider를 deterministic 시나리오 endpoint와 bounded multipart upload endpoint에
+연결합니다. Provider-neutral response DTO, decoded-image guard, sanitized HTTP error도
+함께 보여 줍니다.
+
 ## 테스트
 
 ```bash
