@@ -16,6 +16,7 @@ import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.MvcResult
 import org.springframework.test.web.servlet.ResultActions
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.request
@@ -146,6 +147,27 @@ class SpringBootBarcodeApiApplicationTest(
             .andExpect(status().isBadRequest)
             .andExpect(jsonPath("$.error").value("empty_input"))
             .andExpect(jsonPath("$.message").value("The multipart file part is required."))
+    }
+
+    @Test
+    fun `exposes deterministic sample no result and malformed scenarios`() {
+        mockMvc.perform(get("/api/barcodes/sample"))
+            .dispatch()
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.count").value(1))
+            .andExpect(jsonPath("$.results[0].text").value("bluetape4k-barcode-quickstart"))
+
+        mockMvc.perform(get("/api/barcodes/no-result"))
+            .dispatch()
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.count").value(0))
+            .andExpect(jsonPath("$.results").isEmpty)
+
+        mockMvc.perform(get("/api/barcodes/malformed"))
+            .dispatch()
+            .andExpect(status().isBadRequest)
+            .andExpect(jsonPath("$.error").value("malformed_input"))
+            .andExpect(jsonPath("$.reason").value("MALFORMED_INPUT"))
     }
 
     private fun ResultActions.dispatch(): ResultActions {
