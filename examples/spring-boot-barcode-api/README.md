@@ -19,8 +19,8 @@ scenarios or multipart image uploads with `bluetape4k-images-barcode-zxing`.
 - MockMvc coverage without Docker, native libraries, or external services
 
 This is a local quickstart, not a production upload service. Authentication,
-rate limiting, request concurrency limits, audit policy, and observability must
-be added by the consuming application.
+rate limiting, request concurrency limits, a request-log policy, malware
+scanning, and observability must be added by the consuming application.
 
 ## Diagrams
 
@@ -58,9 +58,9 @@ preparing an upload first.
 | `GET /api/barcodes/malformed` | `400` | Sanitized `MALFORMED_INPUT` response |
 
 ```bash
-curl "http://localhost:8080/api/barcodes/sample"
-curl "http://localhost:8080/api/barcodes/no-result"
-curl -i "http://localhost:8080/api/barcodes/malformed"
+curl http://localhost:8080/api/barcodes/sample
+curl http://localhost:8080/api/barcodes/no-result
+curl http://localhost:8080/api/barcodes/malformed
 ```
 
 Sample response:
@@ -101,8 +101,8 @@ curl -F \
 To try your own web image:
 
 ```bash
-curl -F "file=@profile.webp;type=image/webp" \
-  "http://localhost:8080/api/barcodes/extract"
+curl -F 'file=@/path/to/image.webp;type=image/webp' \
+  http://localhost:8080/api/barcodes/extract
 ```
 
 The response deliberately contains only `text`, provider-neutral `format`, and
@@ -154,8 +154,8 @@ Example malformed response:
 The content-type allowlist is only an early request guard. The service still
 decodes and probes the actual bytes. A production service should additionally
 set request timeouts and concurrency limits, authenticate callers, rate-limit
-uploads, keep raw inputs out of logs, and monitor rejection rates and provider
-latency.
+uploads, define a request-log policy that keeps raw inputs out of logs, scan
+uploads for malware, and monitor rejection rates and provider latency.
 
 ## Dependencies
 
@@ -163,6 +163,10 @@ The example depends on `bluetape4k-images-barcode-zxing`, which supplies the
 provider implementation while exposing `bluetape4k-images-barcode-api` result
 contracts. Spring Web handles multipart MVC requests, and coroutine support
 keeps blocking reads and CPU-bound extraction off the request coroutine.
+
+The bundled HTTP success fixture verifies QR Code extraction. The ZXing provider
+module separately verifies QR Code and Code 128, while the provider-neutral API
+keeps decoder-specific types out of this example's response contract.
 
 ## Test
 

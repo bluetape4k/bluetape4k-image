@@ -17,8 +17,8 @@ QR 및 barcode 정보를 추출하는 작은 Spring Boot 4 예제입니다.
 - Docker, native library, 외부 서비스 없이 실행되는 MockMvc test
 
 이 코드는 local quickstart이며 production upload service는 아닙니다. 실제 서비스에서는
-authentication, rate limiting, request concurrency 제한, audit 정책, observability를
-추가해야 합니다.
+authentication, rate limiting, request concurrency 제한, request-log 정책, malware
+scanning, observability를 추가해야 합니다.
 
 ## 다이어그램
 
@@ -56,9 +56,9 @@ Application은 `http://localhost:8080`에서 요청을 받습니다.
 | `GET /api/barcodes/malformed` | `400` | Sanitized `MALFORMED_INPUT` 응답 |
 
 ```bash
-curl "http://localhost:8080/api/barcodes/sample"
-curl "http://localhost:8080/api/barcodes/no-result"
-curl -i "http://localhost:8080/api/barcodes/malformed"
+curl http://localhost:8080/api/barcodes/sample
+curl http://localhost:8080/api/barcodes/no-result
+curl http://localhost:8080/api/barcodes/malformed
 ```
 
 Sample 응답:
@@ -99,8 +99,8 @@ curl -F \
 웹에서 사용하는 자신의 이미지도 같은 방식으로 확인할 수 있습니다.
 
 ```bash
-curl -F "file=@profile.webp;type=image/webp" \
-  "http://localhost:8080/api/barcodes/extract"
+curl -F 'file=@/path/to/image.webp;type=image/webp' \
+  http://localhost:8080/api/barcodes/extract
 ```
 
 응답에는 `text`, provider-neutral `format`, provider name만 포함합니다. Raw provider
@@ -151,8 +151,9 @@ Malformed 응답 예:
 
 Content-type allowlist는 초기 request guard일 뿐입니다. Service는 실제 byte를 다시
 probe하고 decode합니다. Production service에서는 request timeout과 concurrency 제한,
-caller authentication, upload rate limit를 설정하고, raw input을 log에서 제외하며,
-rejection rate와 provider latency를 모니터링해야 합니다.
+caller authentication, upload rate limit를 설정하고, raw input을 제외하는 request-log
+정책과 malware scanning을 적용하며, rejection rate와 provider latency를 모니터링해야
+합니다.
 
 ## 의존성
 
@@ -160,6 +161,10 @@ rejection rate와 provider latency를 모니터링해야 합니다.
 `bluetape4k-images-barcode-api`의 provider-neutral 결과 contract를 사용합니다.
 Spring Web이 multipart MVC request를 받고, coroutine support가 blocking read와
 CPU-bound extraction을 request coroutine에서 분리합니다.
+
+번들 HTTP success fixture는 QR Code extraction을 검증합니다. ZXing provider 모듈은
+QR Code와 Code 128을 별도로 검증하며, provider-neutral API 덕분에 이 예제의 response
+contract에는 decoder 전용 type이 노출되지 않습니다.
 
 ## 테스트
 
