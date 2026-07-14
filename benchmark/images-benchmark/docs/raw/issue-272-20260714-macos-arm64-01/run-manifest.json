@@ -1,0 +1,49 @@
+{
+    "schemaVersion": 1,
+    "runId": "issue-272-20260714-macos-arm64-01",
+    "commands": [
+        "./gradlew :bluetape4k-images-benchmark:benchmarkBarcodeLatencyBenchmark -Pbarcode.benchmark.runId=issue-272-20260714-macos-arm64-01 --console=plain",
+        "./gradlew :bluetape4k-images-benchmark:benchmarkBarcodeThroughputBenchmark -Pbarcode.benchmark.runId=issue-272-20260714-macos-arm64-01 --console=plain",
+        "./gradlew :bluetape4k-images-benchmark:finalizeBarcodeBenchmarkEvidence -Pbarcode.benchmark.runId=issue-272-20260714-macos-arm64-01 -Pbarcode.benchmark.cpu=<host-cpu> --console=plain"
+    ],
+    "environment": {
+        "osName": "Mac OS X",
+        "osVersion": "26.5.1",
+        "osArch": "aarch64",
+        "processorCount": 10,
+        "cpu": "Apple M5"
+    },
+    "jvm": {
+        "vendor": "Oracle Corporation",
+        "version": "25.0.3"
+    },
+    "provider": {
+        "name": "ZXing",
+        "version": "3.5.4"
+    },
+    "fixtures": {
+        "path": "fixture-manifest.json",
+        "fixtureManifestSha256": "5884828942fac724ba18f8c6f0d592e23d74babe24bbaaf8758e086a18273866"
+    },
+    "artifacts": [
+        {
+            "path": "latency.json",
+            "latencySha256": "b3d1dfd32ba1f8fe305a231280908e009609246a35b70050f7a4cc2eb30ab2a8",
+            "mode": "avgt",
+            "unit": "ms/op"
+        },
+        {
+            "path": "throughput.json",
+            "throughputSha256": "5b13dd734579bac730f652de59e565df1dbb22251b73a35d3d7f5b9da1b28b78",
+            "mode": "thrpt",
+            "unit": "ops/s"
+        }
+    ],
+    "protocol": {
+        "threads": 1,
+        "forks": 1,
+        "warmups": 3,
+        "measurements": 5,
+        "iterationSeconds": 1
+    }
+}
