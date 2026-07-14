@@ -80,6 +80,24 @@ size는 시각 품질 순위가 아닙니다. 자세한 조건은
 원본 근거는 [immutable raw evidence](docs/raw/issue-208-20260713-macos-arm64-09/)를
 참고하세요.
 
+### ZXing 바코드 추출
+
+이 Java 25 결과는 JMH trial setup에서 미리 로드하고 디코딩한 불변 이미지를
+대상으로 ZXing 추출 성능을 측정합니다. Latency는 `AverageTime ms/op`이며 낮을수록 좋고,
+throughput은 별도로 관측한 `ops/s` 값이라 높을수록 좋습니다. 한쪽 값을 역수로
+계산해 다른 쪽을 만든 결과가 아닙니다.
+
+| 시나리오 | Latency (ms/op) | Throughput (ops/s) | 예상 결과 |
+|----------|-----------------|--------------------|-----------|
+| QR | 0.174126 ± 0.001086 | 5702.142 ± 37.446 | QR 결과 1개 |
+| Code 128 | 0.112914 ± 0.000715 | 8839.015 ± 135.003 | Code 128 결과 1개 |
+| 결과 없음 | 0.271397 ± 0.009099 | 3690.012 ± 32.832 | 빈 목록 |
+
+이 값은 Apple M5 호스트 한 대에서 고정 PNG fixture 3개와 단일 provider를 측정한
+로컬 snapshot입니다. provider 간 또는 host 간 순위로 해석할 수 없습니다.
+자세한 조건은 [`상세 리포트`](docs/barcode-extraction-2026-07-14.md), 원본 근거는
+[`불변 raw evidence`](docs/raw/issue-272-20260714-macos-arm64-01/)를 참고하세요.
+
 ### 필터 (scrimage 전용, 1240×1754)
 
 ![Filter latency benchmark chart](../../docs/images/readme-charts/images-benchmark-filter-latency-chart-01.png)

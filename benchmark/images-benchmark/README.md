@@ -79,6 +79,24 @@ memory, and output size is not a visual-quality ranking. See the
 [`codec runtime matrix report`](docs/codec-runtime-matrix-2026-07-13.md) and
 the [immutable raw evidence](docs/raw/issue-208-20260713-macos-arm64-09/).
 
+### ZXing Barcode Extraction
+
+This Java 25 snapshot measures ZXing extraction from immutable images that were
+loaded and decoded during JMH trial setup. Latency is `AverageTime ms/op`
+(lower is better); throughput is a separate observed `ops/s` run (higher is
+better), not a reciprocal conversion.
+
+| Scenario | Latency (ms/op) | Throughput (ops/s) | Expected result |
+|----------|-----------------|--------------------|-----------------|
+| QR | 0.174126 ± 0.001086 | 5702.142 ± 37.446 | One QR result |
+| Code 128 | 0.112914 ± 0.000715 | 8839.015 ± 135.003 | One Code 128 result |
+| No result | 0.271397 ± 0.009099 | 3690.012 ± 32.832 | Empty list |
+
+These values are a local Apple M5 snapshot for one provider and three pinned
+PNG fixtures, not a provider or cross-host ranking. See the
+[`detailed report`](docs/barcode-extraction-2026-07-14.md) and
+[`immutable raw evidence`](docs/raw/issue-272-20260714-macos-arm64-01/).
+
 ### Filter (scrimage only, 1240×1754 document image)
 
 ![Filter latency benchmark chart](../../docs/images/readme-charts/images-benchmark-filter-latency-chart-01.png)
