@@ -205,6 +205,9 @@ fun codecMatrixSha256(file: File): String {
 val CODEC_MATRIX_WARMUPS = 1
 val CODEC_MATRIX_ITERATIONS = 3
 val CODEC_MATRIX_ITERATION_SECONDS = 1L
+val BARCODE_BENCHMARK_WARMUPS = 3
+val BARCODE_BENCHMARK_ITERATIONS = 5
+val BARCODE_BENCHMARK_ITERATION_SECONDS = 1L
 
 kotlin {
     jvmToolchain(javaVersion)
@@ -270,6 +273,30 @@ benchmark {
             iterationTimeUnit = "s"
             mode = "avgt"
             outputTimeUnit = "ms"
+            reportFormat = "json"
+            advanced("jvmForks", 1)
+        }
+
+        register("barcodeLatency") {
+            include(".*ZxingBarcodeExtractionBenchmark.*")
+            warmups = BARCODE_BENCHMARK_WARMUPS
+            iterations = BARCODE_BENCHMARK_ITERATIONS
+            iterationTime = BARCODE_BENCHMARK_ITERATION_SECONDS
+            iterationTimeUnit = "s"
+            mode = "avgt"
+            outputTimeUnit = "ms"
+            reportFormat = "json"
+            advanced("jvmForks", 1)
+        }
+
+        register("barcodeThroughput") {
+            include(".*ZxingBarcodeExtractionBenchmark.*")
+            warmups = BARCODE_BENCHMARK_WARMUPS
+            iterations = BARCODE_BENCHMARK_ITERATIONS
+            iterationTime = BARCODE_BENCHMARK_ITERATION_SECONDS
+            iterationTimeUnit = "s"
+            mode = "thrpt"
+            outputTimeUnit = "s"
             reportFormat = "json"
             advanced("jvmForks", 1)
         }
@@ -373,6 +400,7 @@ dependencies {
     }
 
     // Benchmark
+    add("benchmarkImplementation", project(":bluetape4k-images-barcode-zxing"))
     add("benchmarkImplementation", libs.kotlinx.benchmark.runtime)
     add("benchmarkImplementation", libs.kotlinx.benchmark.runtime.jvm)
     add("benchmarkImplementation", libs.jmh.core)
