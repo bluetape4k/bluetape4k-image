@@ -1,5 +1,5 @@
 plugins {
-    alias(libs.plugins.kotlin.serialization)
+    alias(bt4k.plugins.kotlin.serialization)
 }
 
 configurations {
@@ -9,11 +9,11 @@ configurations {
 dependencies {
     api(project(":bluetape4k-images"))
     api(project(":bluetape4k-images-captcha"))
-    api(libs.bluetape4k.ktor.core)
+    api(bt4k.bluetape4k.ktor.core)
     api(libs.ktor.server.core)
 
     implementation(libs.kotlinx.coroutines.core)
 
-    testImplementation(libs.bluetape4k.junit5)
-    testImplementation(libs.bluetape4k.ktor.testing)
+    testImplementation(bt4k.bluetape4k.junit5)
+    testImplementation(bt4k.bluetape4k.ktor.testing)
 }

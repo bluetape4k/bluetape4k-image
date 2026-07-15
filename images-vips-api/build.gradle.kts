@@ -36,20 +36,20 @@ tasks.named<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>("compileOptedVipsOp
 }
 
 dependencies {
-    api(libs.bluetape4k.core)
-    api(libs.bluetape4k.io)
-    api(libs.bluetape4k.okio)
-    api(libs.bluetape4k.coroutines)
+    api(bt4k.bluetape4k.core)
+    api(bt4k.bluetape4k.io)
+    api(bt4k.bluetape4k.okio)
+    api(bt4k.bluetape4k.coroutines)
 
     // Coroutines
     implementation(libs.kotlinx.coroutines.core)
 
     // Test Fixtures — VipsGoldenAssert needs scrimage pixel comparison + JUnit5
     testFixturesApi(project(":bluetape4k-images"))
-    testFixturesImplementation(libs.bluetape4k.junit5)
+    testFixturesImplementation(bt4k.bluetape4k.junit5)
     testFixturesImplementation(libs.junit.jupiter.api)
 
-    testImplementation(libs.bluetape4k.junit5)
+    testImplementation(bt4k.bluetape4k.junit5)
     testImplementation(libs.kotlinx.coroutines.test)
 }
 

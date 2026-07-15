@@ -30,7 +30,7 @@ tasks.withType<Test>().configureEach {
 
 dependencies {
     api(project(":bluetape4k-images-vips-api"))
-    testImplementation(libs.bluetape4k.junit5)
+    testImplementation(bt4k.bluetape4k.junit5)
     testImplementation(testFixtures(project(":bluetape4k-images-vips-api")))
 
     // JVips JNI bindings (Java 8+; Linux: bundled native / macOS: system libvips required)
@@ -38,7 +38,7 @@ dependencies {
     implementation(libs.jvips)
 
     // BoundedInputStream for input size limits
-    implementation(libs.commons.io)
+    implementation(bt4k.commons.io)
 
     // Coroutines
     implementation(libs.kotlinx.coroutines.core)

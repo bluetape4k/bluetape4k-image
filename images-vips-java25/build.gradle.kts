@@ -47,8 +47,8 @@ tasks.withType<Test>().configureEach {
 
 dependencies {
     api(project(":bluetape4k-images-vips-api"))
-    testImplementation(libs.bluetape4k.junit5)
-    testImplementation(libs.bluetape4k.virtualthread.jdk25)
+    testImplementation(bt4k.bluetape4k.junit5)
+    testImplementation(bt4k.bluetape4k.virtualthread.jdk25)
     testImplementation(testFixtures(project(":bluetape4k-images-vips-api")))
 
     // vips-ffm FFM bindings (JDK 23+; system libvips required on all platforms)
@@ -56,7 +56,7 @@ dependencies {
     implementation(libs.vips.ffm)
 
     // BoundedInputStream for input size limits
-    implementation(libs.commons.io)
+    implementation(bt4k.commons.io)
 
     // Coroutines
     implementation(libs.kotlinx.coroutines.core)

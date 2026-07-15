@@ -7,7 +7,7 @@ dependencies {
 
     implementation(libs.kotlinx.coroutines.core)
 
-    testImplementation(libs.bluetape4k.junit5)
+    testImplementation(bt4k.bluetape4k.junit5)
     testImplementation(libs.kotlinx.coroutines.test)
 
     testFixturesApi(project(":bluetape4k-images"))
