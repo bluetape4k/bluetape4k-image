@@ -1,6 +1,6 @@
 plugins {
     application
-    alias(libs.plugins.kotlin.serialization)
+    alias(bt4k.plugins.kotlin.serialization)
 }
 
 dependencies {
@@ -12,7 +12,7 @@ dependencies {
     implementation(libs.ktor.serialization.kotlinx.json)
     runtimeOnly(libs.logback)
 
-    testImplementation(libs.bluetape4k.junit5)
+    testImplementation(bt4k.bluetape4k.junit5)
     testImplementation(libs.ktor.client.content.negotiation)
     testImplementation(libs.ktor.server.test.host)
 }

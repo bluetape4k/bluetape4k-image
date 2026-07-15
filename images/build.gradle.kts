@@ -3,14 +3,14 @@ configurations {
 }
 
 dependencies {
-    api(libs.bluetape4k.core)
-    api(libs.bluetape4k.io)
-    api(libs.bluetape4k.okio)
-    testImplementation(libs.bluetape4k.junit5)
+    api(bt4k.bluetape4k.core)
+    api(bt4k.bluetape4k.io)
+    api(bt4k.bluetape4k.okio)
+    testImplementation(bt4k.bluetape4k.junit5)
 
     // Images
     // https://mvnrepository.com/artifact/com.sksamuel.scrimage/scrimage-core
-    api(libs.scrimage.core)
+    api(bt4k.scrimage.core)
     api(libs.scrimage.filters)
     implementation(libs.scrimage.webp)
 
@@ -28,7 +28,7 @@ dependencies {
     testImplementation(libs.batik.codec)
 
     // Coroutines
-    implementation(libs.bluetape4k.coroutines)
+    implementation(bt4k.bluetape4k.coroutines)
     implementation(libs.kotlinx.coroutines.core)
     testImplementation(libs.kotlinx.coroutines.test)
 }

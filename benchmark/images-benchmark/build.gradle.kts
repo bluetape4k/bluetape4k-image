@@ -16,7 +16,7 @@ import org.gradle.jvm.toolchain.JavaToolchainService
 
 plugins {
     kotlin("plugin.allopen")           // allOpen 필수
-    alias(libs.plugins.kotlin.serialization)
+    alias(bt4k.plugins.kotlin.serialization)
     alias(libs.plugins.kotlinx.benchmark)      // kotlinx-benchmark 플러그인
 }
 
@@ -479,10 +479,10 @@ benchmark {
 
 dependencies {
     // core
-    implementation(libs.bluetape4k.core)
-    implementation(libs.bluetape4k.logging)
-    implementation(libs.kotlinx.serialization.json)
-    testImplementation(libs.bluetape4k.junit5)
+    implementation(bt4k.bluetape4k.core)
+    implementation(bt4k.bluetape4k.logging)
+    implementation(bt4k.kotlinx.serialization.json)
+    testImplementation(bt4k.bluetape4k.junit5)
     testImplementation(gradleTestKit())
     testImplementation(project(":bluetape4k-images-barcode-zxing"))
 

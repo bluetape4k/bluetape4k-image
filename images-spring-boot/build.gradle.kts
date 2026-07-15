@@ -1,7 +1,7 @@
 plugins {
-    alias(libs.plugins.kotlin.jvm)
-    alias(libs.plugins.kotlin.spring)
-    alias(libs.plugins.dependency.management)
+    alias(bt4k.plugins.kotlin.jvm)
+    alias(bt4k.plugins.kotlin.spring)
+    alias(bt4k.plugins.dependency.management)
 }
 
 configurations {
@@ -19,15 +19,15 @@ kotlin {
 dependencyManagement {
     imports {
         // Spring Boot BOM first — controls Spring versions
-        mavenBom(libs.spring.boot.dependencies.get().toString())
+        mavenBom("org.springframework.boot:spring-boot-dependencies:${bt4k.versions.spring.boot.get()}")
         // AWS SDK v2 BOM
-        mavenBom(libs.aws2.bom.get().toString())
+        mavenBom(bt4k.aws2.bom.get().toString())
         // Kotlin BOM — override with our pinned Kotlin version
-        mavenBom(libs.kotlin.bom.get().toString())
+        mavenBom("org.jetbrains.kotlin:kotlin-bom:${bt4k.versions.kotlin.get()}")
         // Kotlinx Coroutines BOM
-        mavenBom(libs.kotlinx.coroutines.bom.get().toString())
+        mavenBom("org.jetbrains.kotlinx:kotlinx-coroutines-bom:${bt4k.versions.kotlinx.coroutines.get()}")
         // bluetape4k BOM
-        mavenBom(libs.bluetape4k.bom.get().toString())
+        mavenBom(bt4k.bluetape4k.bom.get().toString())
     }
 }
 
@@ -48,7 +48,7 @@ dependencies {
     compileOnly(libs.aws2.cloudfront)
 
     // bluetape4k-aws spring-boot integration (compileOnly — optional)
-    compileOnly(libs.bluetape4k.aws.spring.boot)
+    compileOnly(bt4k.bluetape4k.aws.spring.boot)
 
     // Micrometer metrics (compileOnly — optional)
     compileOnly(libs.micrometer.core)
@@ -60,20 +60,20 @@ dependencies {
     annotationProcessor(libs.spring.boot.configuration.processor)
 
     // Logging
-    implementation(libs.bluetape4k.logging)
+    implementation(bt4k.bluetape4k.logging)
     implementation(libs.kotlinx.coroutines.core)
 
     // Test
     testImplementation(libs.spring.boot.starter.test)
-    testImplementation(libs.bluetape4k.junit5)
-    testImplementation(libs.bluetape4k.aws.spring.boot)
+    testImplementation(bt4k.bluetape4k.junit5)
+    testImplementation(bt4k.bluetape4k.aws.spring.boot)
     testImplementation(libs.aws2.s3)
     testImplementation(libs.aws2.cloudfront)
     testImplementation(libs.micrometer.core)
     testImplementation(libs.spring.boot.actuator)
     testImplementation(libs.spring.boot.health)
     testImplementation(libs.kotlinx.coroutines.reactor)
-    testImplementation(libs.bluetape4k.testcontainers)
+    testImplementation(bt4k.bluetape4k.testcontainers)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.mockk)
 }

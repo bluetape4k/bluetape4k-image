@@ -6,7 +6,7 @@ dependencies {
     implementation(project(":bluetape4k-images"))
     implementation(libs.kotlinx.coroutines.core)
 
-    testImplementation(libs.bluetape4k.junit5)
+    testImplementation(bt4k.bluetape4k.junit5)
 }
 
 sourceSets {

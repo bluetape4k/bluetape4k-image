@@ -1,7 +1,7 @@
 plugins {
     application
-    alias(libs.plugins.kotlin.spring)
-    alias(libs.plugins.spring.boot)
+    alias(bt4k.plugins.kotlin.spring)
+    alias(bt4k.plugins.spring.boot)
 }
 
 dependencies {
@@ -12,7 +12,7 @@ dependencies {
 
     testImplementation(libs.spring.boot.starter.test)
     testImplementation(libs.spring.boot.webmvc.test)
-    testImplementation(libs.bluetape4k.junit5)
+    testImplementation(bt4k.bluetape4k.junit5)
 }
 
 application {

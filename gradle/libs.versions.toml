@@ -2,22 +2,13 @@
 # Gradle Version Catalog for bluetape4k-image
 
 [versions]
-bluetape4k-bom = "1.11.1-SNAPSHOT"  # https://mvnrepository.com/artifact/io.github.bluetape4k/bluetape4k-bom
-bluetape4k-aws-bom = "0.5.0-SNAPSHOT"  # https://central.sonatype.com/artifact/io.github.bluetape4k.aws/bluetape4k-aws-bom
 
-spring-boot = "4.1.0"  # https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-dependencies
-aws2 = "2.47.1"  # https://mvnrepository.com/artifact/software.amazon.awssdk/bom
 
-kotlin = "2.4.0"  # https://mvnrepository.com/artifact/org.jetbrains.kotlin/kotlin-bom
 # Temporary issue #208 exception. Remove after the central catalog publishes this alias in a release-train tag.
-kotlinx-serialization = "1.11.0"  # https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-serialization-json
-kotlinx-coroutines = "1.11.0"  # https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-bom
 kotlinx-atomicfu = "0.32.1"  # https://mvnrepository.com/artifact/org.jetbrains.kotlinx/atomicfu
 kotlinx-benchmark = "0.4.17"  # https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-benchmark-runtime
-ktor = "3.5.1"  # https://mvnrepository.com/artifact/io.ktor/ktor-server-core
 
 # Image processing
-scrimage = "4.6.5"  # https://mvnrepository.com/artifact/com.sksamuel.scrimage/scrimage-core
 metadata-extractor = "2.20.0"  # https://mvnrepository.com/artifact/com.drewnoakes/metadata-extractor
 twelvemonkeys-imageio = "3.13.1"  # https://mvnrepository.com/artifact/com.twelvemonkeys.imageio/imageio-tiff
 batik = "1.19"  # https://mvnrepository.com/artifact/org.apache.xmlgraphics/batik-transcoder
@@ -29,54 +20,37 @@ zxing = "3.5.4"  # https://mvnrepository.com/artifact/com.google.zxing/core
 # Benchmark
 jmh = "1.37"  # https://mvnrepository.com/artifact/org.openjdk.jmh/jmh-core
 
-slf4j = "2.0.18"  # https://mvnrepository.com/artifact/org.slf4j/slf4j-api
 logback = "1.5.32"  # https://mvnrepository.com/artifact/ch.qos.logback/logback-classic
 
 
 junit-jupiter = "6.0.3"  # https://mvnrepository.com/artifact/org.junit/junit-bom
 mockk = "1.14.9"  # https://mvnrepository.com/artifact/io.mockk/mockk
-awaitility = "4.3.0"  # https://mvnrepository.com/artifact/org.awaitility/awaitility-kotlin
-testcontainers = "2.0.5"  # https://mvnrepository.com/artifact/org.testcontainers/testcontainers-bom
 
 # Plugin versions
 detekt = "1.23.8"  # https://mvnrepository.com/artifact/io.gitlab.arturbosch.detekt/detekt-gradle-plugin
-dependency-management = "1.1.7"  # https://mvnrepository.com/artifact/io.spring.gradle/dependency-management-plugin
-dokka = "2.2.0"  # https://mvnrepository.com/artifact/org.jetbrains.dokka/dokka-gradle-plugin
-kover = "0.9.8"  # https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kover-gradle-plugin
 test-logger = "4.0.0"  # https://mvnrepository.com/artifact/com.adarshr/gradle-test-logger-plugin
-nmcp = "1.6.1"  # https://mvnrepository.com/artifact/com.gradleup.nmcp/nmcp
 
 # ────────────────────────────────────────────────────────────────────────────
 [plugins]
-kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
-kotlin-spring = { id = "org.jetbrains.kotlin.plugin.spring", version.ref = "kotlin" }
-kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
-spring-boot = { id = "org.springframework.boot", version.ref = "spring-boot" }
-kotlin-allopen = { id = "org.jetbrains.kotlin.plugin.allopen", version.ref = "kotlin" }
 kotlinx-atomicfu = { id = "org.jetbrains.kotlinx.atomicfu", version.ref = "kotlinx-atomicfu" }
 kotlinx-benchmark = { id = "org.jetbrains.kotlinx.benchmark", version.ref = "kotlinx-benchmark" }
 
 detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
-dependency-management = { id = "io.spring.dependency-management", version.ref = "dependency-management" }
-dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
 test-logger = { id = "com.adarshr.test-logger", version.ref = "test-logger" }
-kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
-nmcp = { id = "com.gradleup.nmcp", version.ref = "nmcp" }
-nmcp-aggregation = { id = "com.gradleup.nmcp.aggregation", version.ref = "nmcp" }
 
 # ────────────────────────────────────────────────────────────────────────────
 [libraries]
 jetbrains-annotations = { module = "org.jetbrains:annotations", version = "26.1.0" }  # https://mvnrepository.com/artifact/org.jetbrains/annotations
 
 # Kotlin
-kotlin-bom = { module = "org.jetbrains.kotlin:kotlin-bom", version.ref = "kotlin" }
+kotlin-bom = { module = "org.jetbrains.kotlin:kotlin-bom" }
 kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib" }
 kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect" }
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test" }
 kotlin-test-junit5 = { module = "org.jetbrains.kotlin:kotlin-test-junit5" }
 
 # Kotlinx Coroutines
-kotlinx-coroutines-bom = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-bom", version.ref = "kotlinx-coroutines" }
+kotlinx-coroutines-bom = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-bom" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test" }
 kotlinx-atomicfu = { module = "org.jetbrains.kotlinx:atomicfu", version.ref = "kotlinx-atomicfu" }
@@ -86,38 +60,25 @@ kotlinx-benchmark-runtime = { module = "org.jetbrains.kotlinx:kotlinx-benchmark-
 kotlinx-benchmark-runtime-jvm = { module = "org.jetbrains.kotlinx:kotlinx-benchmark-runtime-jvm", version.ref = "kotlinx-benchmark" }
 
 # Ktor
-ktor-server-core = { module = "io.ktor:ktor-server-core", version.ref = "ktor" }
-ktor-server-content-negotiation = { module = "io.ktor:ktor-server-content-negotiation", version.ref = "ktor" }
-ktor-server-netty = { module = "io.ktor:ktor-server-netty", version.ref = "ktor" }
-ktor-server-status-pages = { module = "io.ktor:ktor-server-status-pages", version.ref = "ktor" }
-ktor-server-test-host = { module = "io.ktor:ktor-server-test-host", version.ref = "ktor" }
-ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
-ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
-kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
+ktor-server-core = { module = "io.ktor:ktor-server-core" }
+ktor-server-content-negotiation = { module = "io.ktor:ktor-server-content-negotiation" }
+ktor-server-netty = { module = "io.ktor:ktor-server-netty" }
+ktor-server-status-pages = { module = "io.ktor:ktor-server-status-pages" }
+ktor-server-test-host = { module = "io.ktor:ktor-server-test-host" }
+ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation" }
+ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json" }
 
 # bluetape4k — consumed from Maven Central snapshots
-bluetape4k-bom = { module = "io.github.bluetape4k:bluetape4k-bom", version.ref = "bluetape4k-bom" }
-bluetape4k-core = { module = "io.github.bluetape4k:bluetape4k-core", version.ref = "bluetape4k-bom" }
-bluetape4k-io = { module = "io.github.bluetape4k:bluetape4k-io", version.ref = "bluetape4k-bom" }
-bluetape4k-okio = { module = "io.github.bluetape4k:bluetape4k-okio", version.ref = "bluetape4k-bom" }
-bluetape4k-coroutines = { module = "io.github.bluetape4k:bluetape4k-coroutines", version.ref = "bluetape4k-bom" }
-bluetape4k-logging = { module = "io.github.bluetape4k:bluetape4k-logging", version.ref = "bluetape4k-bom" }
-bluetape4k-junit5 = { module = "io.github.bluetape4k:bluetape4k-junit5", version.ref = "bluetape4k-bom" }
-bluetape4k-ktor-core = { module = "io.github.bluetape4k:bluetape4k-ktor-core", version.ref = "bluetape4k-bom" }
-bluetape4k-ktor-testing = { module = "io.github.bluetape4k:bluetape4k-ktor-testing", version.ref = "bluetape4k-bom" }
-bluetape4k-virtualthread-jdk25 = { module = "io.github.bluetape4k:bluetape4k-virtualthread-jdk25", version.ref = "bluetape4k-bom" }
 
 # Logging
-slf4j-api = { module = "org.slf4j:slf4j-api" }  # version from bt4k catalog
-jcl-over-slf4j = { module = "org.slf4j:jcl-over-slf4j", version.ref = "slf4j" }
-jul-to-slf4j = { module = "org.slf4j:jul-to-slf4j", version.ref = "slf4j" }
-log4j-over-slf4j = { module = "org.slf4j:log4j-over-slf4j", version.ref = "slf4j" }
+jcl-over-slf4j = { module = "org.slf4j:jcl-over-slf4j" }
+jul-to-slf4j = { module = "org.slf4j:jul-to-slf4j" }
+log4j-over-slf4j = { module = "org.slf4j:log4j-over-slf4j" }
 logback = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
 
 # Image processing
-scrimage-core = { module = "com.sksamuel.scrimage:scrimage-core" }  # version from bt4k catalog
-scrimage-filters = { module = "com.sksamuel.scrimage:scrimage-filters", version.ref = "scrimage" }
-scrimage-webp = { module = "com.sksamuel.scrimage:scrimage-webp", version.ref = "scrimage" }
+scrimage-filters = { module = "com.sksamuel.scrimage:scrimage-filters" }
+scrimage-webp = { module = "com.sksamuel.scrimage:scrimage-webp" }
 metadata-extractor = { module = "com.drewnoakes:metadata-extractor", version.ref = "metadata-extractor" }
 twelvemonkeys-imageio-tiff = { module = "com.twelvemonkeys.imageio:imageio-tiff", version.ref = "twelvemonkeys-imageio" }
 twelvemonkeys-imageio-metadata = { module = "com.twelvemonkeys.imageio:imageio-metadata", version.ref = "twelvemonkeys-imageio" }
@@ -131,14 +92,13 @@ zxing-core = { module = "com.google.zxing:core", version.ref = "zxing" }
 zxing-javase = { module = "com.google.zxing:javase", version.ref = "zxing" }
 
 # Commons
-commons-io = { module = "commons-io:commons-io" }  # version from bt4k catalog
 
 # Benchmark
 jmh-core = { module = "org.openjdk.jmh:jmh-core", version.ref = "jmh" }
 jmh-generator-annprocess = { module = "org.openjdk.jmh:jmh-generator-annprocess", version.ref = "jmh" }
 
 # Spring Boot
-spring-boot-dependencies = { module = "org.springframework.boot:spring-boot-dependencies", version.ref = "spring-boot" }
+spring-boot-dependencies = { module = "org.springframework.boot:spring-boot-dependencies" }
 spring-boot-autoconfigure = { module = "org.springframework.boot:spring-boot-autoconfigure" }
 spring-boot-actuator = { module = "org.springframework.boot:spring-boot-actuator" }
 spring-boot-health = { module = "org.springframework.boot:spring-boot-health" }
@@ -149,13 +109,10 @@ spring-boot-configuration-processor = { module = "org.springframework.boot:sprin
 spring-boot-starter-test = { module = "org.springframework.boot:spring-boot-starter-test" }
 
 # AWS SDK v2
-aws2-bom = { module = "software.amazon.awssdk:bom", version.ref = "aws2" }
-aws2-s3 = { module = "software.amazon.awssdk:s3", version.ref = "aws2" }
-aws2-cloudfront = { module = "software.amazon.awssdk:cloudfront", version.ref = "aws2" }
+aws2-s3 = { module = "software.amazon.awssdk:s3" }
+aws2-cloudfront = { module = "software.amazon.awssdk:cloudfront" }
 
 # bluetape4k-aws
-bluetape4k-aws = { module = "io.github.bluetape4k.aws:bluetape4k-aws-java", version.ref = "bluetape4k-aws-bom" }
-bluetape4k-aws-spring-boot = { module = "io.github.bluetape4k.aws:bluetape4k-aws-spring-boot", version.ref = "bluetape4k-aws-bom" }
 
 # Micrometer (version managed by spring-boot-dependencies BOM)
 micrometer-core = { module = "io.micrometer:micrometer-core" }
@@ -164,7 +121,6 @@ micrometer-core = { module = "io.micrometer:micrometer-core" }
 kotlinx-coroutines-reactor = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-reactor" }
 
 # bluetape4k testcontainers (version managed by bluetape4k BOM)
-bluetape4k-testcontainers = { module = "io.github.bluetape4k:bluetape4k-testcontainers", version.ref = "bluetape4k-bom" }
 
 # Test
 junit-bom = { module = "org.junit:junit-bom", version.ref = "junit-jupiter" }
@@ -172,7 +128,7 @@ junit-jupiter = { module = "org.junit.jupiter:junit-jupiter" }
 junit-jupiter-api = { module = "org.junit.jupiter:junit-jupiter-api" }
 junit-platform-engine = { module = "org.junit.platform:junit-platform-engine" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
-awaitility-kotlin = { module = "org.awaitility:awaitility-kotlin", version.ref = "awaitility" }
-testcontainers-bom = { module = "org.testcontainers:testcontainers-bom", version.ref = "testcontainers" }
+awaitility-kotlin = { module = "org.awaitility:awaitility-kotlin" }
+testcontainers-bom = { module = "org.testcontainers:testcontainers-bom" }
 testcontainers = { module = "org.testcontainers:testcontainers" }
-testcontainers-junit-jupiter = { module = "org.testcontainers:testcontainers-junit-jupiter", version.ref = "testcontainers" }
+testcontainers-junit-jupiter = { module = "org.testcontainers:testcontainers-junit-jupiter" }
