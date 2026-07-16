@@ -11,6 +11,15 @@ releaseRef: "0.3.0"
 
 This manual is organized around decisions and production tasks rather than package names. Start with the runtime and backend choice, complete one runnable workshop, and then open the module reference when you need exact API or configuration details.
 
+## Core capabilities
+
+- **Immutable JVM processing:** The [image model](core/immutable-image-model.md), [loading and writing](core/loading-and-writing.md), and [transforms and filters](core/transforms-and-filters.md) cover safe Scrimage and Java2D pipelines.
+- **Analysis and formats:** [Analysis and similarity](core/analysis-and-similarity.md) plus the [codec guide](guides/codec-and-format-selection.md) explain metadata, comparison, encoding, and format choices.
+- **Barcode, CAPTCHA, and OCR:** The integration guides for [CAPTCHA](integrations/captcha.md) and [OCR](integrations/ocr.md), together with the published barcode modules, provide common extraction and challenge flows.
+- **Native libvips backends:** The binding-neutral [Vips API](native/vips-api.md) supports a [Java 21 JNI](native/java21-jni.md) backend and a [Java 25 FFM](native/java25-ffm.md) backend with explicit native-resource ownership.
+- **Web framework integration:** [Ktor](integrations/ktor.md) and [Spring Boot](integrations/spring-boot.md) connect image processing, upload, CAPTCHA, OCR, health, and metrics to application lifecycles.
+- **Storage and production selection:** [Storage and CDN](integrations/storage-and-cdn.md), [performance selection](guides/performance-selection.md), and [testing and operations](guides/testing-and-operations.md) define the boundaries the application must own.
+
 ## Version baseline
 
 Applications select one central BOM version: <code>io.github.bluetape4k:bluetape4k-dependencies:&lt;version&gt;</code>. They do not need to align the image BOM, Scrimage, Ktor, Spring Boot, or native binding versions independently.

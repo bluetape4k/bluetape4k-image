@@ -11,6 +11,15 @@ releaseRef: "0.3.0"
 
 이 매뉴얼은 패키지 이름을 나열하지 않는다. 런타임과 백엔드를 먼저 고르고, 실행 예제 하나를 끝까지 따라간 뒤, 세부 API나 설정이 필요할 때 모듈 문서를 찾아가는 방식으로 구성했다.
 
+## 핵심 기능
+
+- **불변 JVM 이미지 처리:** [이미지 모델](core/immutable-image-model.md), [로딩과 쓰기](core/loading-and-writing.md), [변환과 필터](core/transforms-and-filters.md)에서 Scrimage와 Java2D를 안전하게 조합하는 흐름을 설명합니다.
+- **분석과 이미지 형식:** [분석과 유사도](core/analysis-and-similarity.md), [codec 선택 가이드](guides/codec-and-format-selection.md)를 이용해 메타데이터, 비교, 인코딩, 이미지 형식을 선택할 수 있습니다.
+- **바코드·CAPTCHA·OCR:** [CAPTCHA](integrations/captcha.md), [OCR](integrations/ocr.md), 바코드 모듈이 웹 애플리케이션에서 자주 쓰는 추출과 인증 흐름을 제공합니다.
+- **네이티브 libvips 백엔드:** 공통 [Vips API](native/vips-api.md)에 [Java 21 JNI](native/java21-jni.md) 또는 [Java 25 FFM](native/java25-ffm.md) 백엔드를 연결하며, 네이티브 자원 소유권을 명시적으로 관리합니다.
+- **웹 프레임워크 연동:** [Ktor](integrations/ktor.md)와 [Spring Boot](integrations/spring-boot.md)가 이미지 처리, 업로드, CAPTCHA, OCR, 상태 점검, 메트릭을 애플리케이션 생명 주기에 연결합니다.
+- **스토리지와 운영 선택:** [스토리지와 CDN](integrations/storage-and-cdn.md), [성능 선택](guides/performance-selection.md), [테스트와 운영](guides/testing-and-operations.md) 문서에서 애플리케이션이 직접 책임질 경계를 정합니다.
+
 ## 버전 기준
 
 애플리케이션은 <code>io.github.bluetape4k:bluetape4k-dependencies:&lt;version&gt;</code> 하나만 선택하면 된다. Image BOM, Scrimage, Ktor, Spring Boot, 네이티브 바인딩 버전을 따로 맞출 필요는 없다.
