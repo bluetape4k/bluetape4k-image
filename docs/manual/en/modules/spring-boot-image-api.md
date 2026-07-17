@@ -107,6 +107,31 @@ The MockMvc integration test uploads an in-memory JPEG, verifies both key prefix
 
 The workshop is a local quickstart. It omits S3/CDN configuration, authentication, lifecycle policy, asynchronous processing, and multi-instance consistency.
 
+<!-- release-readme-diagrams:start -->
+## Release diagrams {#release-diagrams}
+
+These diagrams are copied byte-for-byte from README assets in the `0.3.0` release tag. They describe this manual's released structure and runtime flows, not later Snapshot changes. Select a preview to open the SVG source.
+
+### Spring Boot Image API Architecture
+
+[![Spring Boot Image API Architecture](../../assets/readme-diagrams/examples-spring-boot-image-api-architecture-01.png)](../../assets/readme-diagrams/examples-spring-boot-image-api-architecture-01.svg)
+
+_Release README: [`examples/spring-boot-image-api/README.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/examples/spring-boot-image-api/README.md)_
+
+### Spring Boot Image API Scenario
+
+[![Spring Boot Image API Scenario](../../assets/readme-diagrams/examples-spring-boot-image-api-scenario-01.png)](../../assets/readme-diagrams/examples-spring-boot-image-api-scenario-01.svg)
+
+_Release README: [`examples/spring-boot-image-api/README.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/examples/spring-boot-image-api/README.md)_
+
+### Spring Boot Image API Sequence
+
+[![Spring Boot Image API Sequence](../../assets/readme-diagrams/examples-spring-boot-image-api-sequence-01.png)](../../assets/readme-diagrams/examples-spring-boot-image-api-sequence-01.svg)
+
+_Release README: [`examples/spring-boot-image-api/README.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/examples/spring-boot-image-api/README.md)_
+
+<!-- release-readme-diagrams:end -->
+
 ## Sources {#sources}
 
 - [Release README](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/examples/spring-boot-image-api/README.md)

@@ -89,6 +89,31 @@ First exercise `OcrQuickstartExampleTest`, then tune page segmentation on repres
 
 The module does not bundle Tesseract or language data. Coroutine cancellation before dispatch prevents startup, but an active native OCR call is blocking. Recognition quality is input- and language-pack-dependent.
 
+<!-- release-readme-diagrams:start -->
+## Release diagrams {#release-diagrams}
+
+These diagrams are copied byte-for-byte from README assets in the `0.3.0` release tag. They describe this manual's released structure and runtime flows, not later Snapshot changes. Select a preview to open the SVG source.
+
+### images-ocr Architecture
+
+[![images-ocr Architecture](../../assets/readme-diagrams/images-ocr-architecture-01.png)](../../assets/readme-diagrams/images-ocr-architecture-01.svg)
+
+_Release README: [`images-ocr/README.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/images-ocr/README.md)_
+
+### images-ocr Class Diagram
+
+[![images-ocr Class Diagram](../../assets/readme-diagrams/images-ocr-class-diagram-01.png)](../../assets/readme-diagrams/images-ocr-class-diagram-01.svg)
+
+_Release README: [`images-ocr/README.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/images-ocr/README.md)_
+
+### images-ocr Recognition Sequence
+
+[![images-ocr Recognition Sequence](../../assets/readme-diagrams/images-ocr-sequence-diagram-01.png)](../../assets/readme-diagrams/images-ocr-sequence-diagram-01.svg)
+
+_Release README: [`images-ocr/README.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/images-ocr/README.md)_
+
+<!-- release-readme-diagrams:end -->
+
 ## Sources {#sources}
 
 - [OCR contract and exceptions](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/images-ocr/src/main/kotlin/io/bluetape4k/images/ocr/OcrEngine.kt)

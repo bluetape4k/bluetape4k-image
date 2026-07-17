@@ -94,6 +94,19 @@ Start with `bluetape4k-images`, then add one service adapter or one libvips back
 
 The BOM aligns artifacts; it does not make Java 25 bytecode run on Java 21, provide native codecs, or make optional Spring/AWS classes available. The module list in the release BOM README is incomplete; the release `bom/build.gradle.kts` constraint loop is authoritative.
 
+<!-- release-readme-diagrams:start -->
+## Release diagrams {#release-diagrams}
+
+These diagrams are copied byte-for-byte from README assets in the `0.3.0` release tag. They describe this manual's released structure and runtime flows, not later Snapshot changes. Select a preview to open the SVG source.
+
+### bom Architecture diagram
+
+[![bom Architecture diagram](../../assets/readme-diagrams/bom-architecture-01.png)](../../assets/readme-diagrams/bom-architecture-01.svg)
+
+_Release README: [`bom/README.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/bom/README.md)_
+
+<!-- release-readme-diagrams:end -->
+
 ## Sources {#sources}
 
 - [Release BOM build](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/bom/build.gradle.kts)

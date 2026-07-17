@@ -93,6 +93,19 @@ Java2D 렌더링은 CPU 작업입니다. `generateSuspend`는 렌더링 시작 �
 
 인메모리 저장소는 분산·영속 저장소가 아니며 만료 데이터를 백그라운드에서 정리하지 않습니다. 요청 제한, 사용자 연결, 접근성 대안, 최신 이미지 인식 모델에 대한 보안 보장을 제공하지 않습니다.
 
+<!-- release-readme-diagrams:start -->
+## 배포본 다이어그램 {#release-diagrams}
+
+아래 그림은 현재 개발 브랜치가 아니라 `0.3.0` 배포 태그의 README 자산을 바이트 단위로 그대로 옮긴 것입니다. 따라서 이후 SNAPSHOT 변경이 아니라 이 매뉴얼 버전의 구조와 실행 흐름을 보여 줍니다. 미리보기를 누르면 SVG 원본이 열립니다.
+
+### CAPTCHA challenge preview
+
+[![CAPTCHA challenge preview](../../assets/readme-diagrams/images-captcha-example-01.png)](../../assets/readme-diagrams/images-captcha-example-01.svg)
+
+_배포본 README: [`images-captcha/README.ko.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/images-captcha/README.ko.md)_
+
+<!-- release-readme-diagrams:end -->
+
 ## 근거 자료 {#sources}
 
 - [생성기 계약](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/images-captcha/src/main/kotlin/io/bluetape4k/images/captcha/CaptchaGenerator.kt)

@@ -101,6 +101,31 @@ Ktor `testApplication` verifies language parsing and tessdata propagation, wrong
 
 The workshop does not include authentication, persistence, batch OCR, preprocessing policy, queues, or distributed admission control. OCR quality and supported languages depend on the host installation.
 
+<!-- release-readme-diagrams:start -->
+## Release diagrams {#release-diagrams}
+
+These diagrams are copied byte-for-byte from README assets in the `0.3.0` release tag. They describe this manual's released structure and runtime flows, not later Snapshot changes. Select a preview to open the SVG source.
+
+### Ktor OCR API Architecture
+
+[![Ktor OCR API Architecture](../../assets/readme-diagrams/examples-ktor-ocr-api-architecture-01.png)](../../assets/readme-diagrams/examples-ktor-ocr-api-architecture-01.svg)
+
+_Release README: [`examples/ktor-ocr-api/README.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/examples/ktor-ocr-api/README.md)_
+
+### Ktor OCR API Scenario
+
+[![Ktor OCR API Scenario](../../assets/readme-diagrams/examples-ktor-ocr-api-scenario-01.png)](../../assets/readme-diagrams/examples-ktor-ocr-api-scenario-01.svg)
+
+_Release README: [`examples/ktor-ocr-api/README.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/examples/ktor-ocr-api/README.md)_
+
+### Ktor OCR API Sequence
+
+[![Ktor OCR API Sequence](../../assets/readme-diagrams/examples-ktor-ocr-api-sequence-01.png)](../../assets/readme-diagrams/examples-ktor-ocr-api-sequence-01.svg)
+
+_Release README: [`examples/ktor-ocr-api/README.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/examples/ktor-ocr-api/README.md)_
+
+<!-- release-readme-diagrams:end -->
+
 ## Sources {#sources}
 
 - [Release README](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/examples/ktor-ocr-api/README.md)

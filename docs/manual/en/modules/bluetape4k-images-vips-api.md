@@ -84,6 +84,25 @@ Read the API first, then the lifecycle guide for the chosen backend, then compar
 
 The common API does not discover or instantiate a backend. AVIF/HEIC support depends on both the implementation and host libvips codecs. `shutdown()` is irreversible, and transformed image ownership differs between JNI and FFM—read the backend page before composing nested `use` blocks.
 
+<!-- release-readme-diagrams:start -->
+## Release diagrams {#release-diagrams}
+
+These diagrams are copied byte-for-byte from README assets in the `0.3.0` release tag. They describe this manual's released structure and runtime flows, not later Snapshot changes. Select a preview to open the SVG source.
+
+### Processing Pipeline diagram
+
+[![Processing Pipeline diagram](../../assets/readme-diagrams/images-vips-api-architecture-02.png)](../../assets/readme-diagrams/images-vips-api-architecture-02.svg)
+
+_Release README: [`images-vips-api/README.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/images-vips-api/README.md)_
+
+### images vips api Class Structure diagram
+
+[![images vips api Class Structure diagram](../../assets/readme-diagrams/images-vips-api-class-01.png)](../../assets/readme-diagrams/images-vips-api-class-01.svg)
+
+_Release README: [`images-vips-api/README.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/images-vips-api/README.md)_
+
+<!-- release-readme-diagrams:end -->
+
 ## Sources {#sources}
 
 - [VipsImage contract](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/images-vips-api/src/main/kotlin/io/bluetape4k/images/vips/VipsImage.kt)

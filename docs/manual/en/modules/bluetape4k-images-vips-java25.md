@@ -88,6 +88,25 @@ First prove native startup and parent/child lifetime in unit tests, then smoke-t
 
 Derived images share their root arena and cannot outlive it. Non-path input is buffered under the 50 MiB guard. AVIF/HEIC API availability does not prove host codec support. The backend cannot run on a Java 21 JVM.
 
+<!-- release-readme-diagrams:start -->
+## Release diagrams {#release-diagrams}
+
+These diagrams are copied byte-for-byte from README assets in the `0.3.0` release tag. They describe this manual's released structure and runtime flows, not later Snapshot changes. Select a preview to open the SVG source.
+
+### Performance vs scrimage diagram
+
+[![Performance vs scrimage diagram](../../assets/readme-diagrams/images-vips-java25-architecture-02.png)](../../assets/readme-diagrams/images-vips-java25-architecture-02.svg)
+
+_Release README: [`images-vips-java25/README.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/images-vips-java25/README.md)_
+
+### images vips java25 Class Structure diagram
+
+[![images vips java25 Class Structure diagram](../../assets/readme-diagrams/images-vips-java25-class-01.png)](../../assets/readme-diagrams/images-vips-java25-class-01.svg)
+
+_Release README: [`images-vips-java25/README.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/images-vips-java25/README.md)_
+
+<!-- release-readme-diagrams:end -->
+
 ## Sources {#sources}
 
 - [Factories, direct path load, and guards](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/images-vips-java25/src/main/kotlin/io/bluetape4k/images/vips/java25/FfmVipsImageSupport.kt)

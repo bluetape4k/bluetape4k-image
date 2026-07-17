@@ -105,6 +105,49 @@ Begin with `examples/basic-processing`, then study `ImageProcessingDsl`, `Thumbn
 
 Suspend wrappers still bridge to blocking codecs. AVIF/HEIC types in this module are incubating contracts without a pure-JVM implementation in `0.3.0`. Compressed-byte limits do not replace pixel limits, and ImageIO codec availability can vary with the runtime classpath.
 
+<!-- release-readme-diagrams:start -->
+## Release diagrams {#release-diagrams}
+
+These diagrams are copied byte-for-byte from README assets in the `0.3.0` release tag. They describe this manual's released structure and runtime flows, not later Snapshot changes. Select a preview to open the SVG source.
+
+### Processing Pipeline diagram
+
+[![Processing Pipeline diagram](../../assets/readme-diagrams/images-architecture-01.png)](../../assets/readme-diagrams/images-architecture-01.svg)
+
+_Release README: [`images/README.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/images/README.md)_
+
+### Transform Architecture diagram
+
+[![Transform Architecture diagram](../../assets/readme-diagrams/images-architecture-03.png)](../../assets/readme-diagrams/images-architecture-03.svg)
+
+_Release README: [`images/README.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/images/README.md)_
+
+### Image Analysis diagram
+
+[![Image Analysis diagram](../../assets/readme-diagrams/images-class-04.png)](../../assets/readme-diagrams/images-class-04.svg)
+
+_Release README: [`images/README.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/images/README.md)_
+
+### Images Core API Classes diagram
+
+[![Images Core API Classes diagram](../../assets/readme-diagrams/images-class-core-01.png)](../../assets/readme-diagrams/images-class-core-01.svg)
+
+_Release README: [`images/README.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/images/README.md)_
+
+### Images Filter Classes diagram
+
+[![Images Filter Classes diagram](../../assets/readme-diagrams/images-class-filters-01.png)](../../assets/readme-diagrams/images-class-filters-01.svg)
+
+_Release README: [`images/README.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/images/README.md)_
+
+### Images Writer Classes diagram
+
+[![Images Writer Classes diagram](../../assets/readme-diagrams/images-class-writers-01.png)](../../assets/readme-diagrams/images-class-writers-01.svg)
+
+_Release README: [`images/README.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/images/README.md)_
+
+<!-- release-readme-diagrams:end -->
+
 ## Sources {#sources}
 
 - [Immutable image factories and ownership](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/images/src/main/kotlin/io/bluetape4k/images/ImmutableImageSupport.kt)

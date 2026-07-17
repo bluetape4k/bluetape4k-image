@@ -98,6 +98,19 @@ Start with generation and local one-shot verification, then move the store to sh
 
 The in-memory store is not distributed or durable and performs no background expiry cleanup. The module does not provide throttling, identity binding, accessibility alternatives, or a security guarantee against modern vision models.
 
+<!-- release-readme-diagrams:start -->
+## Release diagrams {#release-diagrams}
+
+These diagrams are copied byte-for-byte from README assets in the `0.3.0` release tag. They describe this manual's released structure and runtime flows, not later Snapshot changes. Select a preview to open the SVG source.
+
+### CAPTCHA challenge preview
+
+[![CAPTCHA challenge preview](../../assets/readme-diagrams/images-captcha-example-01.png)](../../assets/readme-diagrams/images-captcha-example-01.svg)
+
+_Release README: [`images-captcha/README.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/images-captcha/README.md)_
+
+<!-- release-readme-diagrams:end -->
+
 ## Sources {#sources}
 
 - [Generator contract](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/images-captcha/src/main/kotlin/io/bluetape4k/images/captcha/CaptchaGenerator.kt)
