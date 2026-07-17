@@ -104,23 +104,23 @@ OCR은 비용이 큰 네이티브 호출로 취급하세요. 인증, 요청률 �
 <!-- release-readme-diagrams:start -->
 ## 배포본 다이어그램 {#release-diagrams}
 
-아래 그림은 현재 개발 브랜치가 아니라 `0.3.0` 배포 태그의 README 자산을 바이트 단위로 그대로 옮긴 것입니다. 따라서 이후 SNAPSHOT 변경이 아니라 이 매뉴얼 버전의 구조와 실행 흐름을 보여 줍니다. 미리보기를 누르면 SVG 원본이 열립니다.
+아래 그림은 `0.3.0` 배포본의 README 자산을 해당 배포 커밋에서 직접 불러옵니다. 이후 SNAPSHOT이 아니라 이 매뉴얼 버전의 구조와 실행 흐름을 보여 줍니다. 미리보기를 누르면 같은 배포 커밋의 SVG 원본이 열립니다.
 
 ### Ktor OCR API 아키텍처
 
-[![Ktor OCR API 아키텍처](../../assets/readme-diagrams/examples-ktor-ocr-api-architecture-01.png)](../../assets/readme-diagrams/examples-ktor-ocr-api-architecture-01.svg)
+[![Ktor OCR API 아키텍처](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/examples-ktor-ocr-api-architecture-01.png)](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/examples-ktor-ocr-api-architecture-01.svg)
 
 _배포본 README: [`examples/ktor-ocr-api/README.ko.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/examples/ktor-ocr-api/README.ko.md)_
 
 ### Ktor OCR API 실행 시나리오
 
-[![Ktor OCR API 실행 시나리오](../../assets/readme-diagrams/examples-ktor-ocr-api-scenario-01.png)](../../assets/readme-diagrams/examples-ktor-ocr-api-scenario-01.svg)
+[![Ktor OCR API 실행 시나리오](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/examples-ktor-ocr-api-scenario-01.png)](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/examples-ktor-ocr-api-scenario-01.svg)
 
 _배포본 README: [`examples/ktor-ocr-api/README.ko.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/examples/ktor-ocr-api/README.ko.md)_
 
 ### Ktor OCR API 처리 순서
 
-[![Ktor OCR API 처리 순서](../../assets/readme-diagrams/examples-ktor-ocr-api-sequence-01.png)](../../assets/readme-diagrams/examples-ktor-ocr-api-sequence-01.svg)
+[![Ktor OCR API 처리 순서](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/examples-ktor-ocr-api-sequence-01.png)](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/examples-ktor-ocr-api-sequence-01.svg)
 
 _배포본 README: [`examples/ktor-ocr-api/README.ko.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/examples/ktor-ocr-api/README.ko.md)_
 

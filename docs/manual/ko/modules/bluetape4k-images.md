@@ -107,41 +107,41 @@ suspend 함수도 내부 블로킹 코덱을 사용합니다. 이 모듈의 AVIF
 <!-- release-readme-diagrams:start -->
 ## 배포본 다이어그램 {#release-diagrams}
 
-아래 그림은 현재 개발 브랜치가 아니라 `0.3.0` 배포 태그의 README 자산을 바이트 단위로 그대로 옮긴 것입니다. 따라서 이후 SNAPSHOT 변경이 아니라 이 매뉴얼 버전의 구조와 실행 흐름을 보여 줍니다. 미리보기를 누르면 SVG 원본이 열립니다.
+아래 그림은 `0.3.0` 배포본의 README 자산을 해당 배포 커밋에서 직접 불러옵니다. 이후 SNAPSHOT이 아니라 이 매뉴얼 버전의 구조와 실행 흐름을 보여 줍니다. 미리보기를 누르면 같은 배포 커밋의 SVG 원본이 열립니다.
 
 ### images 아키텍처
 
-[![images 아키텍처](../../assets/readme-diagrams/images-architecture-01.png)](../../assets/readme-diagrams/images-architecture-01.svg)
+[![images 아키텍처](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/images-architecture-01.png)](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/images-architecture-01.svg)
 
 _배포본 README: [`images/README.ko.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/images/README.ko.md)_
 
 ### images Transform 아키텍처
 
-[![images Transform 아키텍처](../../assets/readme-diagrams/images-architecture-03.png)](../../assets/readme-diagrams/images-architecture-03.svg)
+[![images Transform 아키텍처](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/images-architecture-03.png)](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/images-architecture-03.svg)
 
 _배포본 README: [`images/README.ko.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/images/README.ko.md)_
 
 ### Bluetape4k Image Analysis 다이어그램
 
-[![Bluetape4k Image Analysis 다이어그램](../../assets/readme-diagrams/images-class-04.png)](../../assets/readme-diagrams/images-class-04.svg)
+[![Bluetape4k Image Analysis 다이어그램](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/images-class-04.png)](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/images-class-04.svg)
 
 _배포본 README: [`images/README.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/images/README.md)_
 
 ### Images Core API 클래스 구성도
 
-[![Images Core API 클래스 구성도](../../assets/readme-diagrams/images-class-core-01.png)](../../assets/readme-diagrams/images-class-core-01.svg)
+[![Images Core API 클래스 구성도](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/images-class-core-01.png)](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/images-class-core-01.svg)
 
 _배포본 README: [`images/README.ko.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/images/README.ko.md)_
 
 ### Images Filter 클래스 구성도
 
-[![Images Filter 클래스 구성도](../../assets/readme-diagrams/images-class-filters-01.png)](../../assets/readme-diagrams/images-class-filters-01.svg)
+[![Images Filter 클래스 구성도](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/images-class-filters-01.png)](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/images-class-filters-01.svg)
 
 _배포본 README: [`images/README.ko.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/images/README.ko.md)_
 
 ### Images Writer 클래스 구성도
 
-[![Images Writer 클래스 구성도](../../assets/readme-diagrams/images-class-writers-01.png)](../../assets/readme-diagrams/images-class-writers-01.svg)
+[![Images Writer 클래스 구성도](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/images-class-writers-01.png)](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/images-class-writers-01.svg)
 
 _배포본 README: [`images/README.ko.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/images/README.ko.md)_
 

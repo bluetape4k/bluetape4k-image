@@ -91,17 +91,17 @@ Derived images share their root arena and cannot outlive it. Non-path input is b
 <!-- release-readme-diagrams:start -->
 ## Release diagrams {#release-diagrams}
 
-These diagrams are copied byte-for-byte from README assets in the `0.3.0` release tag. They describe this manual's released structure and runtime flows, not later Snapshot changes. Select a preview to open the SVG source.
+These diagrams are loaded directly from README assets published with the `0.3.0` release and pinned to its immutable commit. They describe this manual's released structure and runtime flows, not later Snapshot changes. Select a preview to open the SVG at the same release commit.
 
 ### Performance vs scrimage diagram
 
-[![Performance vs scrimage diagram](../../assets/readme-diagrams/images-vips-java25-architecture-02.png)](../../assets/readme-diagrams/images-vips-java25-architecture-02.svg)
+[![Performance vs scrimage diagram](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/images-vips-java25-architecture-02.png)](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/images-vips-java25-architecture-02.svg)
 
 _Release README: [`images-vips-java25/README.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/images-vips-java25/README.md)_
 
 ### images vips java25 Class Structure diagram
 
-[![images vips java25 Class Structure diagram](../../assets/readme-diagrams/images-vips-java25-class-01.png)](../../assets/readme-diagrams/images-vips-java25-class-01.svg)
+[![images vips java25 Class Structure diagram](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/images-vips-java25-class-01.png)](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/images-vips-java25-class-01.svg)
 
 _Release README: [`images-vips-java25/README.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/images-vips-java25/README.md)_
 
