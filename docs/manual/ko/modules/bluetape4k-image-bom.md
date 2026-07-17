@@ -92,6 +92,19 @@ dependency lock이나 해석 테스트로 이미지 아티팩트가 한 버전�
 
 BOM은 버전만 맞춥니다. Java 25 바이트코드를 Java 21에서 실행하게 만들거나 네이티브 코덱을 제공하지 않습니다. `0.3.0`의 BOM README 모듈 표에는 일부 아티팩트가 빠져 있으므로 실제 제약 목록은 `bom/build.gradle.kts`를 기준으로 봐야 합니다.
 
+<!-- release-readme-diagrams:start -->
+## 배포본 다이어그램 {#release-diagrams}
+
+아래 그림은 현재 개발 브랜치가 아니라 `0.3.0` 배포 태그의 README 자산을 바이트 단위로 그대로 옮긴 것입니다. 따라서 이후 SNAPSHOT 변경이 아니라 이 매뉴얼 버전의 구조와 실행 흐름을 보여 줍니다. 미리보기를 누르면 SVG 원본이 열립니다.
+
+### bom 아키텍처
+
+[![bom 아키텍처](../../assets/readme-diagrams/bom-architecture-01.png)](../../assets/readme-diagrams/bom-architecture-01.svg)
+
+_배포본 README: [`bom/README.ko.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/bom/README.ko.md)_
+
+<!-- release-readme-diagrams:end -->
+
 ## 근거 자료 {#sources}
 
 - [0.3.0 BOM 빌드](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/bom/build.gradle.kts)

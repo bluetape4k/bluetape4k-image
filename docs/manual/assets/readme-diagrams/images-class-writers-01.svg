@@ -1,0 +1,123 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1840" height="980" viewBox="0 0 1840 980" role="img" aria-label="Images Writer Classes">
+<defs>
+  <marker id="arrow-blue" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+    <polygon points="0 0, 10 3.5, 0 7" fill="#2563eb"/>
+  </marker>
+  <marker id="arrow-gray" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+    <polygon points="0 0, 10 3.5, 0 7" fill="#6b7280"/>
+  </marker>
+  <marker id="inherit-open" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+    <path d="M 0 0 L 10 3.5 L 0 7 Z" fill="#ffffff" stroke="#2563eb" stroke-width="1.4"/>
+  </marker>
+  <style>
+    .canvas{fill:#ffffff}
+    .title{font-family:"Architects Daughter";font-size:42px;fill:#111827;font-weight:400}
+    .subtitle{font-family:"Comic Mono";font-size:16px;fill:#6b7280;font-weight:400}
+    .class-name{font-family:"Architects Daughter";font-size:22px;fill:#111827;font-weight:400}
+    .stereo{font-family:"Comic Mono";font-size:12px;fill:#6b7280;font-weight:400}
+    .member{font-family:"Comic Mono";font-size:13px;fill:#6b7280;font-weight:400}
+    .edge-label{font-family:"Comic Mono";font-size:12px;fill:#374151;font-weight:400}
+    .footer{font-family:"Comic Mono";font-size:13px;fill:#6b7280;font-weight:400}
+    .card{fill:#ffffff;stroke:#94a3b8;stroke-width:1.9}
+    .divider{stroke-width:1.4}
+    .dependency{stroke:#6b7280;stroke-width:1.8;fill:none;marker-end:url(#arrow-gray);stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:6 4}
+    .inheritance{stroke:#2563eb;stroke-width:2.1;fill:none;marker-end:url(#inherit-open);stroke-linecap:round;stroke-linejoin:round}
+  </style>
+</defs>
+<rect class="canvas" width="1840" height="980"/>
+<text class="title" x="70" y="82">Images Writer Classes</text>
+<text class="subtitle" x="74" y="116">Coroutine writers are grouped by single-image, multi-page, and animated output responsibilities.</text>
+<g id="edges">
+<path class="dependency" d="M 450 264 L 640 264"/>
+<path class="inheritance" d="M 1480 430 L 1480 328"/>
+<path class="inheritance" d="M 290 430 L 290 390 L 840 390 L 840 328"/>
+<path class="inheritance" d="M 280 680 L 280 630 L 840 630 L 840 328"/>
+<path class="inheritance" d="M 700 680 L 700 630 L 840 630 L 840 328"/>
+<path class="inheritance" d="M 1105 680 L 1105 630 L 840 630 L 840 328"/>
+<path class="inheritance" d="M 1530 680 L 1530 630 L 840 630 L 840 328"/>
+</g>
+<g id="classes">
+<g id="context">
+  <rect class="card" x="90" y="180" width="360" height="148" rx="8"/>
+  <rect x="90" y="180" width="360" height="72" rx="8" fill="#fff7ed" stroke="none"/>
+  <line class="divider" x1="90" y1="252" x2="450" y2="252" stroke="#d1d5db"/>
+  <text class="stereo" x="270" y="205" text-anchor="middle">&lt;&lt;value object&gt;&gt;</text>
+  <text class="class-name" x="270" y="232" text-anchor="middle">SuspendWriteContext</text>
+  <text class="member" x="108" y="282">writer + image + metadata</text>
+  <text class="member" x="108" y="304">output helpers</text>
+</g>
+<g id="imageWriter">
+  <rect class="card" x="640" y="180" width="400" height="148" rx="8"/>
+  <rect x="640" y="180" width="400" height="72" rx="8" fill="#eff6ff" stroke="none"/>
+  <line class="divider" x1="640" y1="252" x2="1040" y2="252" stroke="#d1d5db"/>
+  <text class="stereo" x="840" y="205" text-anchor="middle">&lt;&lt;interface&gt;&gt;</text>
+  <text class="class-name" x="840" y="232" text-anchor="middle">SuspendImageWriter</text>
+  <text class="member" x="658" y="282">suspendWrite(image, out)</text>
+  <text class="member" x="658" y="304">write(image, out)</text>
+</g>
+<g id="multi">
+  <rect class="card" x="1250" y="180" width="460" height="148" rx="8"/>
+  <rect x="1250" y="180" width="460" height="72" rx="8" fill="#f0fdf4" stroke="none"/>
+  <line class="divider" x1="1250" y1="252" x2="1710" y2="252" stroke="#d1d5db"/>
+  <text class="stereo" x="1480" y="205" text-anchor="middle">&lt;&lt;interface&gt;&gt;</text>
+  <text class="class-name" x="1480" y="232" text-anchor="middle">SuspendMultiPageImageWriter</text>
+  <text class="member" x="1268" y="282">suspendWrite(images, out)</text>
+  <text class="member" x="1268" y="304">single-page extension</text>
+</g>
+<g id="tiff">
+  <rect class="card" x="90" y="430" width="400" height="148" rx="8"/>
+  <rect x="90" y="430" width="400" height="72" rx="8" fill="#eff6ff" stroke="none"/>
+  <line class="divider" x1="90" y1="502" x2="490" y2="502" stroke="#d1d5db"/>
+  <text class="stereo" x="290" y="455" text-anchor="middle">&lt;&lt;writer&gt;&gt;</text>
+  <text class="class-name" x="290" y="482" text-anchor="middle">SuspendTiffWriter</text>
+  <text class="member" x="108" y="532">TiffCompression, quality</text>
+  <text class="member" x="108" y="554">TwelveMonkeys ImageIO</text>
+</g>
+<g id="tiffMulti">
+  <rect class="card" x="1250" y="430" width="460" height="148" rx="8"/>
+  <rect x="1250" y="430" width="460" height="72" rx="8" fill="#f0fdf4" stroke="none"/>
+  <line class="divider" x1="1250" y1="502" x2="1710" y2="502" stroke="#d1d5db"/>
+  <text class="stereo" x="1480" y="455" text-anchor="middle">&lt;&lt;multi-page writer&gt;&gt;</text>
+  <text class="class-name" x="1480" y="482" text-anchor="middle">SuspendTiffMultiPageWriter</text>
+  <text class="member" x="1268" y="532">ordered image pages</text>
+  <text class="member" x="1268" y="554">DEFLATE/LZW/NONE/JPEG</text>
+</g>
+<g id="jpeg">
+  <rect class="card" x="90" y="680" width="380" height="148" rx="8"/>
+  <rect x="90" y="680" width="380" height="72" rx="8" fill="#fef2f2" stroke="none"/>
+  <line class="divider" x1="90" y1="752" x2="470" y2="752" stroke="#d1d5db"/>
+  <text class="stereo" x="280" y="705" text-anchor="middle">&lt;&lt;writer&gt;&gt;</text>
+  <text class="class-name" x="280" y="732" text-anchor="middle">SuspendJpegWriter</text>
+  <text class="member" x="108" y="782">compression, progressive</text>
+  <text class="member" x="108" y="804">Default, CompressionFromMetaData</text>
+</g>
+<g id="png">
+  <rect class="card" x="520" y="680" width="360" height="148" rx="8"/>
+  <rect x="520" y="680" width="360" height="72" rx="8" fill="#f0fdfa" stroke="none"/>
+  <line class="divider" x1="520" y1="752" x2="880" y2="752" stroke="#d1d5db"/>
+  <text class="stereo" x="700" y="705" text-anchor="middle">&lt;&lt;writer&gt;&gt;</text>
+  <text class="class-name" x="700" y="732" text-anchor="middle">SuspendPngWriter</text>
+  <text class="member" x="538" y="782">compressionLevel</text>
+  <text class="member" x="538" y="804">Max/Min/NoCompression</text>
+</g>
+<g id="gif">
+  <rect class="card" x="930" y="680" width="350" height="148" rx="8"/>
+  <rect x="930" y="680" width="350" height="72" rx="8" fill="#faf5ff" stroke="none"/>
+  <line class="divider" x1="930" y1="752" x2="1280" y2="752" stroke="#d1d5db"/>
+  <text class="stereo" x="1105" y="705" text-anchor="middle">&lt;&lt;writer&gt;&gt;</text>
+  <text class="class-name" x="1105" y="732" text-anchor="middle">SuspendGifWriter</text>
+  <text class="member" x="948" y="782">progressive</text>
+  <text class="member" x="948" y="804">Default, Progressive</text>
+</g>
+<g id="webp">
+  <rect class="card" x="1330" y="680" width="400" height="148" rx="8"/>
+  <rect x="1330" y="680" width="400" height="72" rx="8" fill="#f9fafb" stroke="none"/>
+  <line class="divider" x1="1330" y1="752" x2="1730" y2="752" stroke="#d1d5db"/>
+  <text class="stereo" x="1530" y="705" text-anchor="middle">&lt;&lt;writer&gt;&gt;</text>
+  <text class="class-name" x="1530" y="732" text-anchor="middle">SuspendWebpWriter</text>
+  <text class="member" x="1348" y="782">lossless, quality, method</text>
+  <text class="member" x="1348" y="804">MaxLosslessCompression</text>
+</g>
+</g>
+<text class="footer" x="920.0" y="930" text-anchor="middle">https://github.com/bluetape4k/bluetape4k-image | project: bluetape4k-image | module: images</text>
+</svg>

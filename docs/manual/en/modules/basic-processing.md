@@ -96,6 +96,31 @@ The test invokes the same generator, asserts five non-empty files, decodes every
 
 This example is a single-process file generator. It does not cover upload validation, storage policy, native codecs, backpressure, authentication, or public delivery URLs.
 
+<!-- release-readme-diagrams:start -->
+## Release diagrams {#release-diagrams}
+
+These diagrams are copied byte-for-byte from README assets in the `0.3.0` release tag. They describe this manual's released structure and runtime flows, not later Snapshot changes. Select a preview to open the SVG source.
+
+### Basic Processing Architecture
+
+[![Basic Processing Architecture](../../assets/readme-diagrams/examples-basic-processing-architecture-01.png)](../../assets/readme-diagrams/examples-basic-processing-architecture-01.svg)
+
+_Release README: [`examples/basic-processing/README.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/examples/basic-processing/README.md)_
+
+### Basic Processing Scenario
+
+[![Basic Processing Scenario](../../assets/readme-diagrams/examples-basic-processing-scenario-01.png)](../../assets/readme-diagrams/examples-basic-processing-scenario-01.svg)
+
+_Release README: [`examples/basic-processing/README.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/examples/basic-processing/README.md)_
+
+### Basic Processing Sequence
+
+[![Basic Processing Sequence](../../assets/readme-diagrams/examples-basic-processing-sequence-01.png)](../../assets/readme-diagrams/examples-basic-processing-sequence-01.svg)
+
+_Release README: [`examples/basic-processing/README.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/examples/basic-processing/README.md)_
+
+<!-- release-readme-diagrams:end -->
+
 ## Sources {#sources}
 
 - [Release README](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/examples/basic-processing/README.md)

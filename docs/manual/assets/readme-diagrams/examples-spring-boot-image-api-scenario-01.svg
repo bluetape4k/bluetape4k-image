@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1900" height="900" viewBox="0 0 1900 900" role="img" aria-label="Spring Boot Image API Scenario">
+<defs>
+  <marker id="arrow-blue" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#2563eb"/></marker>
+  <marker id="arrow-gray" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#6b7280"/></marker>
+  <style>
+    .canvas{fill:#ffffff}
+    .title{font-family:"Architects Daughter";font-size:42px;fill:#111827;font-weight:400}
+    .subtitle{font-family:"Comic Mono";font-size:16px;fill:#6b7280;font-weight:400}
+    .node-title{font-family:"Architects Daughter";font-size:22px;fill:#111827;font-weight:400}
+    .node-detail{font-family:"Comic Mono";font-size:13px;fill:#6b7280;font-weight:400}
+    .panel-title{font-family:"Comic Mono";font-size:16px;fill:#4b5563;font-weight:700;letter-spacing:0.8px}
+    .layer{fill:#f3f6fa;stroke:#cbd5e1;stroke-width:1.4;stroke-dasharray:8 6}
+    .layer-title{font-family:"Comic Mono";font-size:16px;fill:#4b5563;font-weight:700;letter-spacing:0.8px}
+    .label{font-family:"Comic Mono";font-size:12px;fill:#374151;font-weight:400}
+    .footer{font-family:"Comic Mono";font-size:13px;fill:#6b7280;font-weight:400}
+    .footer-pill{fill:#ffffff;stroke:#d1d5db;stroke-width:1}
+    .card{fill:#ffffff;stroke:#94a3b8;stroke-width:1.9}
+    .edge{stroke:#2563eb;stroke-width:2.1;fill:none;marker-end:url(#arrow-blue);stroke-linecap:round;stroke-linejoin:round}
+    .edge-dashed{stroke:#6b7280;stroke-width:1.8;fill:none;marker-end:url(#arrow-gray);stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:6 4}
+    .lifeline{stroke:#d1d5db;stroke-width:1.5;stroke-dasharray:7 7}
+  </style>
+</defs>
+<rect class="canvas" width="1900" height="900"/>
+<text class="title" x="70" y="82">Spring Boot Image API Scenario</text>
+<text class="subtitle" x="74" y="116">Multipart upload creates a local original object and a PNG thumbnail.</text>
+<g id="edges" transform="translate(0 70)">
+<path class="edge" d="M 430 355 L 500 355" stroke="#758297"/>
+<path class="edge" d="M 900 358 L 970 358" stroke="#758297"/>
+<path class="edge" d="M 1360 358 L 1405 358 L 1405 205 L 1450 205" stroke="#758297"/>
+<path class="edge" d="M 1360 358 L 1405 358 L 1405 505 L 1450 505" stroke="#758297"/>
+<path class="edge-dashed" d="M 500 405 L 465 405 L 465 375 L 430 375" stroke="#758297"/>
+</g>
+<g id="nodes" transform="translate(0 70)">
+<g id="client">
+  <rect class="card" x="90" y="300" width="340" height="110" rx="8"/>
+  <rect x="104" y="335" width="40" height="40" rx="8" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1.2"/>
+  <text class="node-title" x="158" y="346.0" dominant-baseline="middle">Local client</text>
+  <text class="node-detail" x="158" y="364.0" dominant-baseline="middle">curl or MockMvc</text>
+</g>
+<g id="controller">
+  <rect class="card" x="500" y="300" width="400" height="116" rx="8"/>
+  <rect x="514" y="338" width="40" height="40" rx="8" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1.2"/>
+  <text class="node-title" x="568" y="340.0" dominant-baseline="middle">ImageApiController</text>
+  <text class="node-detail" x="568" y="358.0" dominant-baseline="middle">POST /api/images</text>
+  <text class="node-detail" x="568" y="376.0" dominant-baseline="middle">GET /api/images/{key}</text>
+</g>
+<g id="service">
+  <rect class="card" x="970" y="300" width="390" height="116" rx="8"/>
+  <rect x="984" y="338" width="40" height="40" rx="8" fill="#fff7ed" stroke="#fed7aa" stroke-width="1.2"/>
+  <text class="node-title" x="1038" y="349.0" dominant-baseline="middle">LocalImageApiService</text>
+  <text class="node-detail" x="1038" y="367.0" dominant-baseline="middle">validate, resize, store</text>
+</g>
+<g id="original">
+  <rect class="card" x="1450" y="150" width="360" height="110" rx="8"/>
+  <rect x="1464" y="185" width="40" height="40" rx="8" fill="#fef2f2" stroke="#fecaca" stroke-width="1.2"/>
+  <text class="node-title" x="1518" y="196.0" dominant-baseline="middle">Original object</text>
+  <text class="node-detail" x="1518" y="214.0" dominant-baseline="middle">originals/{id}.jpg</text>
+</g>
+<g id="thumbnail">
+  <rect class="card" x="1450" y="450" width="360" height="110" rx="8"/>
+  <rect x="1464" y="485" width="40" height="40" rx="8" fill="#f0fdfa" stroke="#ccfbf1" stroke-width="1.2"/>
+  <text class="node-title" x="1518" y="496.0" dominant-baseline="middle">Thumbnail object</text>
+  <text class="node-detail" x="1518" y="514.0" dominant-baseline="middle">thumbnails/{id}.png</text>
+</g>
+</g>
+<g id="edge-labels" transform="translate(0 70)">
+<rect x="411.0" y="240.0" width="108" height="24" rx="8" fill="#ffffff" stroke="#d1d5db" opacity="0.96"/>
+<text class="label" x="465.0" y="252.0" text-anchor="middle" dominant-baseline="middle">multipart</text>
+<rect x="889.0" y="240.0" width="92" height="24" rx="8" fill="#ffffff" stroke="#d1d5db" opacity="0.96"/>
+<text class="label" x="935.0" y="252.0" text-anchor="middle" dominant-baseline="middle">suspend</text>
+<rect x="1256.0" y="240.0" width="88" height="24" rx="8" fill="#ffffff" stroke="#d1d5db" opacity="0.96"/>
+<text class="label" x="1300.0" y="252.0" text-anchor="middle" dominant-baseline="middle">upload</text>
+<rect x="1254.0" y="435.0" width="92" height="24" rx="8" fill="#ffffff" stroke="#d1d5db" opacity="0.96"/>
+<text class="label" x="1300.0" y="447.0" text-anchor="middle" dominant-baseline="middle">fit+png</text>
+<rect x="407.0" y="435.0" width="116" height="24" rx="8" fill="#ffffff" stroke="#d1d5db" opacity="0.96"/>
+<text class="label" x="465.0" y="447.0" text-anchor="middle" dominant-baseline="middle">local urls</text>
+</g>
+<text class="footer" x="950.0" y="850" text-anchor="middle">https://github.com/bluetape4k/bluetape4k-image | project: bluetape4k-image | module: examples:spring-boot-image-api</text>
+</svg>

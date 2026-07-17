@@ -102,6 +102,19 @@ Run `examples/spring-boot-image-api`, then inspect local storage, switch to an e
 
 S3 path uploads are read into a byte array because `S3Operations` has no streaming upload in this release. `UploadOptions.cacheControl` and metadata are not forwarded by `S3ImageStorage`. Its size precheck uses listing because no HEAD operation is exposed. Use the lower-level AWS SDK for large streams or required headers.
 
+<!-- release-readme-diagrams:start -->
+## Release diagrams {#release-diagrams}
+
+These diagrams are copied byte-for-byte from README assets in the `0.3.0` release tag. They describe this manual's released structure and runtime flows, not later Snapshot changes. Select a preview to open the SVG source.
+
+### Images Spring Boot Architecture diagram
+
+[![Images Spring Boot Architecture diagram](../../assets/readme-diagrams/images-spring-boot-architecture-01.png)](../../assets/readme-diagrams/images-spring-boot-architecture-01.svg)
+
+_Release README: [`images-spring-boot/README.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/images-spring-boot/README.md)_
+
+<!-- release-readme-diagrams:end -->
+
 ## Sources {#sources}
 
 - [Storage contract](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/images-spring-boot/src/main/kotlin/io/bluetape4k/images/spring/storage/ImageStorage.kt)

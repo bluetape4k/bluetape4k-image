@@ -83,6 +83,25 @@ libvips 설치와 JVM/네이티브 아키텍처를 함께 확인하세요. JNI �
 
 `0.3.0`의 Java 21 백엔드는 HEIC 인코딩을 지원하지 않습니다. AVIF/HEIF 디코딩과 AVIF 인코딩도 호스트 코덱에 따라 달라집니다. 경로 로딩은 50MiB 제한 안에서 전체 압축 파일을 메모리에 올립니다.
 
+<!-- release-readme-diagrams:start -->
+## 배포본 다이어그램 {#release-diagrams}
+
+아래 그림은 현재 개발 브랜치가 아니라 `0.3.0` 배포 태그의 README 자산을 바이트 단위로 그대로 옮긴 것입니다. 따라서 이후 SNAPSHOT 변경이 아니라 이 매뉴얼 버전의 구조와 실행 흐름을 보여 줍니다. 미리보기를 누르면 SVG 원본이 열립니다.
+
+### JVips 다이어그램
+
+[![JVips 다이어그램](../../assets/readme-diagrams/images-vips-java21-architecture-01.png)](../../assets/readme-diagrams/images-vips-java21-architecture-01.svg)
+
+_배포본 README: [`images-vips-java21/README.ko.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/images-vips-java21/README.ko.md)_
+
+### images vips java21 클래스 구조도 2
+
+[![images vips java21 클래스 구조도 2](../../assets/readme-diagrams/images-vips-java21-class-02.png)](../../assets/readme-diagrams/images-vips-java21-class-02.svg)
+
+_배포본 README: [`images-vips-java21/README.ko.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/images-vips-java21/README.ko.md)_
+
+<!-- release-readme-diagrams:end -->
+
 ## 근거 자료 {#sources}
 
 - [팩토리와 입력 검증](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/images-vips-java21/src/main/kotlin/io/bluetape4k/images/vips/java21/JVipsImageSupport.kt)

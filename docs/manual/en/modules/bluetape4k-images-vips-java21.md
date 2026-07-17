@@ -83,6 +83,25 @@ Start with the runtime/image tests on the deployment architecture, add a small e
 
 HEIC encoding is explicitly unsupported by this backend in `0.3.0`. AVIF and HEIF decoding/AVIF encoding still depend on host codec capability. Path loads read the complete compressed file after enforcing the 50 MiB bound.
 
+<!-- release-readme-diagrams:start -->
+## Release diagrams {#release-diagrams}
+
+These diagrams are copied byte-for-byte from README assets in the `0.3.0` release tag. They describe this manual's released structure and runtime flows, not later Snapshot changes. Select a preview to open the SVG source.
+
+### JVips Processing Pipeline diagram
+
+[![JVips Processing Pipeline diagram](../../assets/readme-diagrams/images-vips-java21-architecture-01.png)](../../assets/readme-diagrams/images-vips-java21-architecture-01.svg)
+
+_Release README: [`images-vips-java21/README.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/images-vips-java21/README.md)_
+
+### images vips java21 Class Structure 2 diagram
+
+[![images vips java21 Class Structure 2 diagram](../../assets/readme-diagrams/images-vips-java21-class-02.png)](../../assets/readme-diagrams/images-vips-java21-class-02.svg)
+
+_Release README: [`images-vips-java21/README.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/images-vips-java21/README.md)_
+
+<!-- release-readme-diagrams:end -->
+
 ## Sources {#sources}
 
 - [Factories and guards](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/images-vips-java21/src/main/kotlin/io/bluetape4k/images/vips/java21/JVipsImageSupport.kt)

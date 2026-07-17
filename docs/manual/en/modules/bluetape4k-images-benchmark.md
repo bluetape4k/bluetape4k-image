@@ -115,6 +115,19 @@ For publishable evidence, retain generated JSON, record the exact command/enviro
 - IO API convenience, latency, throughput, and backend selection are separate questions.
 - No benchmark proves production behavior under different data, concurrency, hardware, JVM, codecs, or storage.
 
+<!-- release-readme-diagrams:start -->
+## Release diagrams {#release-diagrams}
+
+These diagrams are copied byte-for-byte from README assets in the `0.3.0` release tag. They describe this manual's released structure and runtime flows, not later Snapshot changes. Select a preview to open the SVG source.
+
+### images benchmark Architecture diagram
+
+[![images benchmark Architecture diagram](../../assets/readme-diagrams/images-benchmark-architecture-01.png)](../../assets/readme-diagrams/images-benchmark-architecture-01.svg)
+
+_Release README: [`benchmark/images-benchmark/README.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/benchmark/images-benchmark/README.md)_
+
+<!-- release-readme-diagrams:end -->
+
 ## Sources {#sources}
 
 - [Benchmark README](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/benchmark/images-benchmark/README.md)

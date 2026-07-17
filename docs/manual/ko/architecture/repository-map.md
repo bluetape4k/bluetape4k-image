@@ -35,6 +35,25 @@ releaseRef: "0.3.0"
 
 프로젝트를 이름순으로 읽기보다 [학습 경로](../guides/learning-path.md)에서 목적에 맞는 순서를 고르는 편이 빠르다.
 
+<!-- release-readme-diagrams:start -->
+## 배포본 다이어그램 {#release-diagrams}
+
+아래 그림은 현재 개발 브랜치가 아니라 `0.3.0` 배포 태그의 README 자산을 바이트 단위로 그대로 옮긴 것입니다. 따라서 이후 SNAPSHOT 변경이 아니라 이 매뉴얼 버전의 구조와 실행 흐름을 보여 줍니다. 미리보기를 누르면 SVG 원본이 열립니다.
+
+### Bluetape4k Image 아키텍처
+
+[![Bluetape4k Image 아키텍처](../../assets/readme-diagrams/bluetape4k-image-architecture-01.png)](../../assets/readme-diagrams/bluetape4k-image-architecture-01.svg)
+
+_배포본 README: [`README.ko.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/README.ko.md)_
+
+### Bluetape4k Image 개요
+
+[![Bluetape4k Image 개요](../../assets/readme-diagrams/root-readme-overview-01.png)](../../assets/readme-diagrams/root-readme-overview-01.svg)
+
+_배포본 README: [`README.ko.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/README.ko.md)_
+
+<!-- release-readme-diagrams:end -->
+
 ## 근거 소스
 
 - [0.3.0 프로젝트 등록부](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/settings.gradle.kts#L84-L123)

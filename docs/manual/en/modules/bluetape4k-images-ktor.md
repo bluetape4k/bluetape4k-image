@@ -89,6 +89,19 @@ Start with the route tests, run the `examples/ktor-image-api` and `examples/ktor
 
 The thumbnail endpoint is not a streaming transform: it buffers at most `maxInputBytes + 1` and uses Scrimage. It creates one thumbnail, stores nothing, and performs no MIME sniffing beyond image decode. CAPTCHA routes do not install JSON or abuse controls.
 
+<!-- release-readme-diagrams:start -->
+## Release diagrams {#release-diagrams}
+
+These diagrams are copied byte-for-byte from README assets in the `0.3.0` release tag. They describe this manual's released structure and runtime flows, not later Snapshot changes. Select a preview to open the SVG source.
+
+### Images Ktor Architecture diagram
+
+[![Images Ktor Architecture diagram](../../assets/readme-diagrams/images-ktor-architecture-01.png)](../../assets/readme-diagrams/images-ktor-architecture-01.svg)
+
+_Release README: [`images-ktor/README.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/images-ktor/README.md)_
+
+<!-- release-readme-diagrams:end -->
+
 ## Sources {#sources}
 
 - [CAPTCHA routes](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/images-ktor/src/main/kotlin/io/bluetape4k/images/ktor/CaptchaKtorRoutes.kt)

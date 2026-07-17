@@ -101,6 +101,19 @@ S3 401/403은 권한 오류, 404는 없음, 409는 충돌, 나머지는 일시 �
 
 `S3Operations`에 스트리밍 업로드가 없어 경로 업로드도 바이트 배열로 읽습니다. `UploadOptions.cacheControl`과 metadata도 S3 구현에서 전달하지 않습니다. HEAD API가 없어 크기 확인에는 목록 조회를 사용합니다. 큰 스트림이나 필수 헤더가 있으면 AWS SDK를 직접 사용하세요.
 
+<!-- release-readme-diagrams:start -->
+## 배포본 다이어그램 {#release-diagrams}
+
+아래 그림은 현재 개발 브랜치가 아니라 `0.3.0` 배포 태그의 README 자산을 바이트 단위로 그대로 옮긴 것입니다. 따라서 이후 SNAPSHOT 변경이 아니라 이 매뉴얼 버전의 구조와 실행 흐름을 보여 줍니다. 미리보기를 누르면 SVG 원본이 열립니다.
+
+### Images Spring Boot 아키텍처
+
+[![Images Spring Boot 아키텍처](../../assets/readme-diagrams/images-spring-boot-architecture-01.png)](../../assets/readme-diagrams/images-spring-boot-architecture-01.svg)
+
+_배포본 README: [`images-spring-boot/README.ko.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/images-spring-boot/README.ko.md)_
+
+<!-- release-readme-diagrams:end -->
+
 ## 근거 자료 {#sources}
 
 - [저장소 계약](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/images-spring-boot/src/main/kotlin/io/bluetape4k/images/spring/storage/ImageStorage.kt)

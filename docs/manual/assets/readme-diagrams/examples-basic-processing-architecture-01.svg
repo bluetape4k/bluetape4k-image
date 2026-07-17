@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="850" viewBox="0 0 1500 850" role="img" aria-label="Basic Processing Architecture">
+<defs>
+  <marker id="arrow-blue" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#2563eb"/></marker>
+  <marker id="arrow-gray" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#6b7280"/></marker>
+  <style>
+    .canvas{fill:#ffffff}
+    .title{font-family:"Architects Daughter";font-size:42px;fill:#111827;font-weight:400}
+    .subtitle{font-family:"Comic Mono";font-size:16px;fill:#6b7280;font-weight:400}
+    .node-title{font-family:"Architects Daughter";font-size:22px;fill:#111827;font-weight:400}
+    .node-detail{font-family:"Comic Mono";font-size:13px;fill:#6b7280;font-weight:400}
+    .panel-title{font-family:"Comic Mono";font-size:16px;fill:#4b5563;font-weight:700;letter-spacing:0.8px}
+    .layer{fill:#f3f6fa;stroke:#cbd5e1;stroke-width:1.4;stroke-dasharray:8 6}
+    .layer-title{font-family:"Comic Mono";font-size:16px;fill:#4b5563;font-weight:700;letter-spacing:0.8px}
+    .label{font-family:"Comic Mono";font-size:12px;fill:#374151;font-weight:400}
+    .footer{font-family:"Comic Mono";font-size:13px;fill:#6b7280;font-weight:400}
+    .footer-pill{fill:#ffffff;stroke:#d1d5db;stroke-width:1}
+    .card{fill:#ffffff;stroke:#94a3b8;stroke-width:1.9}
+    .edge{stroke:#2563eb;stroke-width:2.1;fill:none;marker-end:url(#arrow-blue);stroke-linecap:round;stroke-linejoin:round}
+    .edge-dashed{stroke:#6b7280;stroke-width:1.8;fill:none;marker-end:url(#arrow-gray);stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:6 4}
+    .lifeline{stroke:#d1d5db;stroke-width:1.5;stroke-dasharray:7 7}
+  </style>
+</defs>
+<rect class="canvas" width="1500" height="850"/>
+<text class="title" x="70" y="82">Basic Processing Architecture</text>
+<text class="subtitle" x="74" y="116">Pure JVM image transformations with suspend-aware writers.</text>
+<g id="edges" transform="translate(0 70)">
+<path class="edge" d="M 410 275 L 500 275" stroke="#758297"/>
+<path class="edge" d="M 920 275 L 1000 275" stroke="#758297"/>
+<path class="edge" d="M 1180 330 L 1180 380 L 710 380 L 710 450" stroke="#758297"/>
+<path class="edge" d="M 920 511 L 960 511 L 960 455 L 1000 455" stroke="#758297"/>
+<path class="edge" d="M 920 511 L 960 511 L 960 625 L 1000 625" stroke="#758297"/>
+</g>
+<g id="nodes" transform="translate(0 70)">
+<g id="cli">
+  <rect class="card" x="90" y="220" width="320" height="110" rx="8"/>
+  <rect x="104" y="255" width="40" height="40" rx="8" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1.2"/>
+  <text class="node-title" x="158" y="257.0" dominant-baseline="middle">CLI entrypoint</text>
+  <text class="node-detail" x="158" y="275.0" dominant-baseline="middle">main(args)</text>
+  <text class="node-detail" x="158" y="293.0" dominant-baseline="middle">runBlocking</text>
+</g>
+<g id="quickstart">
+  <rect class="card" x="500" y="220" width="420" height="110" rx="8"/>
+  <rect x="514" y="255" width="40" height="40" rx="8" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1.2"/>
+  <text class="node-title" x="568" y="257.0" dominant-baseline="middle">BasicImageProcessingQuick</text>
+  <text class="node-title" x="568" y="275.0" dominant-baseline="middle">start</text>
+  <text class="node-detail" x="568" y="293.0" dominant-baseline="middle">generate(outputDirectory)</text>
+</g>
+<g id="loader">
+  <rect class="card" x="1000" y="220" width="360" height="110" rx="8"/>
+  <rect x="1014" y="255" width="40" height="40" rx="8" fill="#fff7ed" stroke="#fed7aa" stroke-width="1.2"/>
+  <text class="node-title" x="1068" y="266.0" dominant-baseline="middle">suspendLoadImage</text>
+  <text class="node-detail" x="1068" y="284.0" dominant-baseline="middle">file-backed resources</text>
+</g>
+<g id="transforms">
+  <rect class="card" x="500" y="450" width="420" height="122" rx="8"/>
+  <rect x="514" y="491" width="40" height="40" rx="8" fill="#fef2f2" stroke="#fecaca" stroke-width="1.2"/>
+  <text class="node-title" x="568" y="493.0" dominant-baseline="middle">ImmutableImage transforms</text>
+  <text class="node-detail" x="568" y="511.0" dominant-baseline="middle">fit, smartCropTo</text>
+  <text class="node-detail" x="568" y="529.0" dominant-baseline="middle">withGraphics watermark</text>
+</g>
+<g id="writers">
+  <rect class="card" x="1000" y="400" width="360" height="110" rx="8"/>
+  <rect x="1014" y="435" width="40" height="40" rx="8" fill="#f0fdfa" stroke="#ccfbf1" stroke-width="1.2"/>
+  <text class="node-title" x="1068" y="437.0" dominant-baseline="middle">Suspend writers</text>
+  <text class="node-detail" x="1068" y="455.0" dominant-baseline="middle">JPEG progressive</text>
+  <text class="node-detail" x="1068" y="473.0" dominant-baseline="middle">PNG max compression</text>
+</g>
+<g id="outputs">
+  <rect class="card" x="1000" y="570" width="360" height="110" rx="8"/>
+  <rect x="1014" y="605" width="40" height="40" rx="8" fill="#faf5ff" stroke="#e9d5ff" stroke-width="1.2"/>
+  <text class="node-title" x="1068" y="607.0" dominant-baseline="middle">Output directory</text>
+  <text class="node-detail" x="1068" y="625.0" dominant-baseline="middle">build/tmp/basic-processing</text>
+  <text class="node-detail" x="1068" y="643.0" dominant-baseline="middle">five generated files</text>
+</g>
+</g>
+<g id="edge-labels" transform="translate(0 70)">
+<rect x="411.0" y="165.0" width="88" height="24" rx="8" fill="#ffffff" stroke="#d1d5db" opacity="0.96"/>
+<text class="label" x="455.0" y="177.0" text-anchor="middle" dominant-baseline="middle">invoke</text>
+<rect x="916.0" y="165.0" width="88" height="24" rx="8" fill="#ffffff" stroke="#d1d5db" opacity="0.96"/>
+<text class="label" x="960.0" y="177.0" text-anchor="middle" dominant-baseline="middle">load</text>
+<rect x="506.0" y="400.0" width="88" height="24" rx="8" fill="#ffffff" stroke="#d1d5db" opacity="0.96"/>
+<text class="label" x="550.0" y="412.0" text-anchor="middle" dominant-baseline="middle">images</text>
+<rect x="1256.0" y="345.0" width="88" height="24" rx="8" fill="#ffffff" stroke="#d1d5db" opacity="0.96"/>
+<text class="label" x="1300.0" y="357.0" text-anchor="middle" dominant-baseline="middle">encode</text>
+<rect x="1136.0" y="695.0" width="88" height="24" rx="8" fill="#ffffff" stroke="#d1d5db" opacity="0.96"/>
+<text class="label" x="1180.0" y="707.0" text-anchor="middle" dominant-baseline="middle">write</text>
+</g>
+<text class="footer" x="750.0" y="800" text-anchor="middle">https://github.com/bluetape4k/bluetape4k-image | project: bluetape4k-image | module: examples:basic-processing</text>
+</svg>
