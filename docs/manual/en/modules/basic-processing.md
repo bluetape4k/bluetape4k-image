@@ -99,23 +99,23 @@ This example is a single-process file generator. It does not cover upload valida
 <!-- release-readme-diagrams:start -->
 ## Release diagrams {#release-diagrams}
 
-These diagrams are copied byte-for-byte from README assets in the `0.3.0` release tag. They describe this manual's released structure and runtime flows, not later Snapshot changes. Select a preview to open the SVG source.
+These diagrams are loaded directly from README assets published with the `0.3.0` release and pinned to its immutable commit. They describe this manual's released structure and runtime flows, not later Snapshot changes. Select a preview to open the SVG at the same release commit.
 
 ### Basic Processing Architecture
 
-[![Basic Processing Architecture](../../assets/readme-diagrams/examples-basic-processing-architecture-01.png)](../../assets/readme-diagrams/examples-basic-processing-architecture-01.svg)
+[![Basic Processing Architecture](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/examples-basic-processing-architecture-01.png)](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/examples-basic-processing-architecture-01.svg)
 
 _Release README: [`examples/basic-processing/README.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/examples/basic-processing/README.md)_
 
 ### Basic Processing Scenario
 
-[![Basic Processing Scenario](../../assets/readme-diagrams/examples-basic-processing-scenario-01.png)](../../assets/readme-diagrams/examples-basic-processing-scenario-01.svg)
+[![Basic Processing Scenario](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/examples-basic-processing-scenario-01.png)](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/examples-basic-processing-scenario-01.svg)
 
 _Release README: [`examples/basic-processing/README.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/examples/basic-processing/README.md)_
 
 ### Basic Processing Sequence
 
-[![Basic Processing Sequence](../../assets/readme-diagrams/examples-basic-processing-sequence-01.png)](../../assets/readme-diagrams/examples-basic-processing-sequence-01.svg)
+[![Basic Processing Sequence](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/examples-basic-processing-sequence-01.png)](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/examples-basic-processing-sequence-01.svg)
 
 _Release README: [`examples/basic-processing/README.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/examples/basic-processing/README.md)_
 

@@ -118,11 +118,11 @@ For publishable evidence, retain generated JSON, record the exact command/enviro
 <!-- release-readme-diagrams:start -->
 ## Release diagrams {#release-diagrams}
 
-These diagrams are copied byte-for-byte from README assets in the `0.3.0` release tag. They describe this manual's released structure and runtime flows, not later Snapshot changes. Select a preview to open the SVG source.
+These diagrams are loaded directly from README assets published with the `0.3.0` release and pinned to its immutable commit. They describe this manual's released structure and runtime flows, not later Snapshot changes. Select a preview to open the SVG at the same release commit.
 
 ### images benchmark Architecture diagram
 
-[![images benchmark Architecture diagram](../../assets/readme-diagrams/images-benchmark-architecture-01.png)](../../assets/readme-diagrams/images-benchmark-architecture-01.svg)
+[![images benchmark Architecture diagram](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/images-benchmark-architecture-01.png)](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/images-benchmark-architecture-01.svg)
 
 _Release README: [`benchmark/images-benchmark/README.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/benchmark/images-benchmark/README.md)_
 

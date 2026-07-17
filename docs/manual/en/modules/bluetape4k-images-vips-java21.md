@@ -86,17 +86,17 @@ HEIC encoding is explicitly unsupported by this backend in `0.3.0`. AVIF and HEI
 <!-- release-readme-diagrams:start -->
 ## Release diagrams {#release-diagrams}
 
-These diagrams are copied byte-for-byte from README assets in the `0.3.0` release tag. They describe this manual's released structure and runtime flows, not later Snapshot changes. Select a preview to open the SVG source.
+These diagrams are loaded directly from README assets published with the `0.3.0` release and pinned to its immutable commit. They describe this manual's released structure and runtime flows, not later Snapshot changes. Select a preview to open the SVG at the same release commit.
 
 ### JVips Processing Pipeline diagram
 
-[![JVips Processing Pipeline diagram](../../assets/readme-diagrams/images-vips-java21-architecture-01.png)](../../assets/readme-diagrams/images-vips-java21-architecture-01.svg)
+[![JVips Processing Pipeline diagram](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/images-vips-java21-architecture-01.png)](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/images-vips-java21-architecture-01.svg)
 
 _Release README: [`images-vips-java21/README.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/images-vips-java21/README.md)_
 
 ### images vips java21 Class Structure 2 diagram
 
-[![images vips java21 Class Structure 2 diagram](../../assets/readme-diagrams/images-vips-java21-class-02.png)](../../assets/readme-diagrams/images-vips-java21-class-02.svg)
+[![images vips java21 Class Structure 2 diagram](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/images-vips-java21-class-02.png)](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/images-vips-java21-class-02.svg)
 
 _Release README: [`images-vips-java21/README.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/images-vips-java21/README.md)_
 
