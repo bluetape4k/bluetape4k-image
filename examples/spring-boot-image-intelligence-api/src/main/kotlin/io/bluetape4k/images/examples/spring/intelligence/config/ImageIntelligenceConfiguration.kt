@@ -23,6 +23,7 @@ import io.bluetape4k.images.ocr.TesseractOcrEngine
 import io.bluetape4k.support.requirePositiveNumber
 import kotlinx.coroutines.Dispatchers
 import org.springframework.beans.factory.SmartInitializingSingleton
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
@@ -126,6 +127,11 @@ internal class ImageIntelligenceConfiguration {
         GuardedAnalysisRunner()
 
     @Bean
+    @ConditionalOnBean(
+        OcrAnalysisProvider::class,
+        DetectionAnalysisProvider::class,
+        BarcodeAnalysisProvider::class,
+    )
     fun imageIntelligenceWorkflow(
         ocrProvider: OcrAnalysisProvider,
         detectionProvider: DetectionAnalysisProvider,
@@ -150,6 +156,7 @@ internal class ImageIntelligenceConfiguration {
         VisitorPassPolicy()
 
     @Bean
+    @ConditionalOnBean(ImageIntelligenceWorkflow::class)
     fun imageIntelligenceService(
         qualifier: ImageUploadQualifier,
         workflow: ImageIntelligenceWorkflow,
