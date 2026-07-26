@@ -18,6 +18,7 @@ dependencies {
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.scrimage.webp)
     testImplementation(libs.zxing.core)
+    testImplementation(libs.zxing.javase)
 }
 
 application {
