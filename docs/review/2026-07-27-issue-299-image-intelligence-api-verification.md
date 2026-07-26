@@ -95,17 +95,19 @@
     영향 모듈 791개 failure 0, `projects`, `detekt`, `actionlint`, diagram,
     link와 diff checks.
   - **Failure:** blocker가 남으면 PR을 만들지 않는다.
-- [ ] **CG-11 — PR 권한 검증**
+- [x] **CG-11 — PR 권한 검증**
   - **Action:** repo/base/head와 PR 생성 권한을 최신 상태로 확인한다.
-  - **Evidence:** 승인된 계획의 PR-only 범위와 CG-01–10 PASS.
+  - **Evidence:** 승인된 계획의 PR-only 범위, open Issue #299,
+    `bluetape4k/bluetape4k-image`, base `develop`, approved head를 재확인했다.
   - **Failure:** PR 생성 전 중단한다.
-- [ ] **CG-12 — 정확한 head 게시**
+- [x] **CG-12 — 정확한 head 게시**
   - **Action:** force 없이 head를 push하고 remote SHA를 읽는다.
-  - **Evidence:** local/remote SHA 일치.
+  - **Evidence:** force 없이 upstream을 만들고 local/remote SHA 일치를 확인했다.
   - **Failure:** 불일치 상태로 PR을 만들지 않는다.
-- [ ] **CG-13 — PR 생성·검증**
+- [x] **CG-13 — PR 생성·검증**
   - **Action:** 영어 PR, assignee/labels/milestone, 마지막 `## DoD Status`를 적용한다.
-  - **Evidence:** live `gh pr view`.
+  - **Evidence:** PR #300 live 조회에서 base/head, assignee `debop`, labels
+    `documentation`/`enhancement`, milestone `0.4.0`, final H2 `DoD Status` 일치.
   - **Failure:** metadata를 수리한다.
 - [ ] **CG-14 — CI와 live review 통과**
   - **Action:** 정확한 head의 CI와 최신 review/thread를 확인한다.
@@ -268,8 +270,8 @@
 
 ## Current count
 
-Required checks: 42/53; N/A: 3; Blocked: 0.
-Unchecked: CG-11–18, A-10–12.
+Required checks: 45/53; N/A: 3; Blocked: 0.
+Unchecked: CG-14–18, A-10–12.
 
 ## Implementation evidence
 
