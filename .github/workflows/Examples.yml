@@ -84,6 +84,8 @@ jobs:
             gradle_tasks: :spring-boot-barcode-api:test
           - example: spring-boot-ocr-api
             gradle_tasks: :spring-boot-ocr-api:test
+          - example: spring-boot-image-intelligence-api
+            gradle_tasks: :spring-boot-image-intelligence-api:test
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-java@v5

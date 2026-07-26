@@ -602,6 +602,12 @@ Spring Boot 4 OCR API 예제는
 `images-ocr`를 호출하며, 실제 OCR 실행에 필요한 local Tesseract와 traineddata
 설정을 문서화합니다.
 
+Spring Boot 4 통합 이미지 분석 예제는
+[`examples/spring-boot-image-intelligence-api`](examples/spring-boot-image-intelligence-api/README.ko.md)를
+사용하세요. 한 이미지를 한 번 검증하고 디코딩한 뒤 OCR, 객체 검출, 실제 ZXing
+바코드 분석을 병렬로 실행하고, 부분 실패를 보존해 교체 가능한 방문증 정책에
+전달합니다.
+
 Ktor quickstart는 [`examples/ktor-image-api`](examples/ktor-image-api/README.ko.md)를
 사용하세요. `images-ktor`의 CAPTCHA와 thumbnail route helper를 하나의 local-only
 API로 묶고, challenge 발급과 multipart thumbnail 생성 curl 예제를 제공합니다.

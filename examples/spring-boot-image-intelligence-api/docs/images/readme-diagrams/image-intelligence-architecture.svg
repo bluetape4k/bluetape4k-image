@@ -1,0 +1,162 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1080" viewBox="0 0 1800 1080" role="img" aria-label="Image Intelligence API architecture">
+  <defs>
+    <marker id="arrow-blue" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" refX="13" refY="7" orient="auto">
+      <polygon points="0,0 14,7 0,14" fill="#75a7d9"/>
+    </marker>
+    <marker id="arrow-green" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" refX="13" refY="7" orient="auto">
+      <polygon points="0,0 14,7 0,14" fill="#7fb68f"/>
+    </marker>
+    <filter id="shadow" x="-12%" y="-12%" width="124%" height="136%">
+      <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#020617" flood-opacity="0.5"/>
+    </filter>
+    <style>
+      .canvas{fill:#08111f}
+      .frame{fill:#0d1728;stroke:#52647a;stroke-width:2.5}
+      .title{font-family:"Architects Daughter";font-size:48px;fill:#f8fafc}
+      .subtitle{font-family:"Comic Mono";font-size:18px;fill:#9fb0c5}
+      .lane{fill:#111c2f;stroke:#34465d;stroke-width:1.6;stroke-dasharray:9 7}
+      .lane-title{font-family:"Comic Mono";font-size:16px;fill:#a8b8ca;font-weight:700;letter-spacing:1px}
+      .card{fill:#1b293d;stroke:#6f8299;stroke-width:2;filter:url(#shadow)}
+      .card-blue{fill:#172b43;stroke:#75a7d9}
+      .card-green{fill:#173328;stroke:#7fb68f}
+      .node-title{font-family:"Architects Daughter";font-size:25px;fill:#f8fafc}
+      .node-detail{font-family:"Comic Mono";font-size:14px;fill:#b8c5d4}
+      .edge{fill:none;stroke:#75a7d9;stroke-width:3;marker-end:url(#arrow-blue);stroke-linecap:round;stroke-linejoin:round}
+      .edge-green{fill:none;stroke:#7fb68f;stroke-width:3;marker-end:url(#arrow-green);stroke-linecap:round;stroke-linejoin:round}
+      .label-box{fill:#0d1728;stroke:#536a86;stroke-width:1.4}
+      .label{font-family:"Comic Mono";font-size:13px;fill:#d8e2ee}
+      .legend{font-family:"Comic Mono";font-size:14px;fill:#c4d0de}
+      .footer{font-family:"Comic Mono";font-size:14px;fill:#8293a8}
+    </style>
+  </defs>
+
+  <rect class="canvas" width="1800" height="1080"/>
+  <rect class="frame" x="32" y="28" width="1736" height="1018" rx="30"/>
+  <text class="title" x="78" y="96">Image Intelligence API Architecture</text>
+  <text class="subtitle" x="82" y="132">Qualify and decode once, then preserve independent OCR, detection, and barcode outcomes.</text>
+
+  <g id="lanes">
+    <rect class="lane" x="74" y="190" width="250" height="690" rx="18"/>
+    <text class="lane-title" x="98" y="226">HTTP INPUT</text>
+
+    <rect class="lane" x="354" y="190" width="430" height="690" rx="18"/>
+    <text class="lane-title" x="378" y="226">QUALIFICATION + ONE DECODE</text>
+
+    <rect class="lane" x="814" y="190" width="390" height="690" rx="18"/>
+    <text class="lane-title" x="838" y="226">PARALLEL ANALYSIS LANES</text>
+
+    <rect class="lane" x="1234" y="190" width="490" height="690" rx="18"/>
+    <text class="lane-title" x="1258" y="226">AGGREGATE + BUSINESS POLICY</text>
+  </g>
+
+  <g id="connectors">
+    <path data-connector="multipart-to-boundary" class="edge" stroke="#75a7d9" d="M 284 345 L 398 345"/>
+    <path data-connector="boundary-to-dimensions" class="edge" stroke="#75a7d9" d="M 564 390 L 564 445"/>
+    <path data-connector="dimensions-to-decode" class="edge" stroke="#75a7d9" d="M 564 535 L 564 590"/>
+
+    <path data-connector="decode-to-ocr" class="edge" stroke="#75a7d9" d="M 730 620 L 770 620 Q 794 620 794 596 L 794 320 Q 794 296 818 296 L 850 296"/>
+    <path data-connector="decode-to-detection" class="edge" stroke="#75a7d9" d="M 730 635 L 790 635 Q 814 635 814 611 L 814 496 Q 814 472 838 472 L 850 472"/>
+    <path data-connector="decode-to-barcode" class="edge" stroke="#75a7d9" d="M 730 650 L 770 650 Q 794 650 794 674 L 794 696 Q 794 720 818 720 L 850 720"/>
+
+    <path data-connector="ocr-to-aggregate" class="edge-green" stroke="#7fb68f" d="M 1168 296 L 1180 296 Q 1190 296 1190 306 L 1190 355 Q 1190 365 1200 365 L 1280 365"/>
+    <path data-connector="detection-to-aggregate" class="edge-green" stroke="#7fb68f" d="M 1168 472 L 1205 472 Q 1215 472 1215 462 L 1215 405 Q 1215 395 1225 395 L 1280 395"/>
+    <path data-connector="barcode-to-aggregate" class="edge-green" stroke="#7fb68f" d="M 1168 720 L 1230 720 Q 1240 720 1240 710 L 1240 435 Q 1240 425 1250 425 L 1280 425"/>
+
+    <path data-connector="aggregate-to-policy" class="edge-green" stroke="#7fb68f" d="M 1472 465 L 1472 535"/>
+    <path data-connector="policy-to-response" class="edge-green" stroke="#7fb68f" d="M 1472 655 L 1472 725"/>
+  </g>
+
+  <g id="cards">
+    <g id="multipart-input">
+      <rect class="card card-blue" x="104" y="285" width="180" height="120" rx="16"/>
+      <text class="node-title" x="194" y="329" text-anchor="middle">Multipart image</text>
+      <text class="node-detail" x="194" y="361" text-anchor="middle">PNG | JPEG | WebP</text>
+      <text class="node-detail" x="194" y="384" text-anchor="middle">POST /api/images/intelligence</text>
+    </g>
+
+    <g id="upload-boundary">
+      <rect class="card" x="398" y="300" width="332" height="90" rx="16"/>
+      <text class="node-title" x="564" y="334" text-anchor="middle">Upload qualification</text>
+      <text class="node-detail" x="564" y="364" text-anchor="middle">type | signature | encoded bytes</text>
+    </g>
+
+    <g id="dimension-probe">
+      <rect class="card" x="398" y="445" width="332" height="90" rx="16"/>
+      <text class="node-title" x="564" y="479" text-anchor="middle">Dimension probe</text>
+      <text class="node-detail" x="564" y="509" text-anchor="middle">side length | decoded pixel budget</text>
+    </g>
+
+    <g id="one-decode">
+      <rect class="card card-blue" x="398" y="590" width="332" height="120" rx="16"/>
+      <text class="node-title" x="564" y="632" text-anchor="middle">One ImmutableImage</text>
+      <text class="node-detail" x="564" y="664" text-anchor="middle">decode guarded bytes once</text>
+      <text class="node-detail" x="564" y="688" text-anchor="middle">share immutable value with all lanes</text>
+    </g>
+
+    <g id="ocr-lane">
+      <rect class="card" x="850" y="250" width="318" height="92" rx="16"/>
+      <text class="node-title" x="1009" y="285" text-anchor="middle">OCR lane</text>
+      <text class="node-detail" x="1009" y="316" text-anchor="middle">fixture | disabled | Tesseract</text>
+    </g>
+
+    <g id="detection-lane">
+      <rect class="card" x="850" y="426" width="318" height="92" rx="16"/>
+      <text class="node-title" x="1009" y="461" text-anchor="middle">Detection lane</text>
+      <text class="node-detail" x="1009" y="492" text-anchor="middle">fixture | disabled | custom provider</text>
+    </g>
+
+    <g id="barcode-lane">
+      <rect class="card" x="850" y="674" width="318" height="92" rx="16"/>
+      <text class="node-title" x="1009" y="709" text-anchor="middle">Barcode lane</text>
+      <text class="node-detail" x="1009" y="740" text-anchor="middle">real ZxingBarcodeReader</text>
+    </g>
+
+    <g id="aggregate">
+      <rect class="card card-green" x="1280" y="345" width="384" height="120" rx="16"/>
+      <text class="node-title" x="1472" y="388" text-anchor="middle">Aggregate independent outcomes</text>
+      <text class="node-detail" x="1472" y="420" text-anchor="middle">COMPLETED | PARTIAL | FAILED</text>
+      <text class="node-detail" x="1472" y="444" text-anchor="middle">preserve Completed / Empty / Unavailable / Failed</text>
+    </g>
+
+    <g id="visitor-policy">
+      <rect class="card card-green" x="1280" y="535" width="384" height="120" rx="16"/>
+      <text class="node-title" x="1472" y="578" text-anchor="middle">VisitorPassPolicy</text>
+      <text class="node-detail" x="1472" y="610" text-anchor="middle">ALLOW | REVIEW | REJECT | QUARANTINE</text>
+      <text class="node-detail" x="1472" y="634" text-anchor="middle">replace for shipping or product labels</text>
+    </g>
+
+    <g id="http-response">
+      <rect class="card card-blue" x="1280" y="725" width="384" height="110" rx="16"/>
+      <text class="node-title" x="1472" y="767" text-anchor="middle">Stable response envelope</text>
+      <text class="node-detail" x="1472" y="799" text-anchor="middle">request ID | per-lane status | decision</text>
+      <text class="node-detail" x="1472" y="823" text-anchor="middle">no workflow internals or raw exceptions</text>
+    </g>
+  </g>
+
+  <g id="labels">
+    <rect class="label-box" x="292" y="306" width="98" height="30" rx="10"/>
+    <text class="label" x="341" y="326" text-anchor="middle">qualify</text>
+
+    <rect class="label-box" x="574" y="552" width="120" height="30" rx="10"/>
+    <text class="label" x="634" y="572" text-anchor="middle">decode once</text>
+
+    <rect class="label-box" x="742" y="248" width="100" height="30" rx="10"/>
+    <text class="label" x="792" y="268" text-anchor="middle">fan out</text>
+
+    <rect class="label-box" x="1192" y="330" width="90" height="30" rx="10"/>
+    <text class="label" x="1237" y="350" text-anchor="middle">collect</text>
+
+    <rect class="label-box" x="1490" y="484" width="118" height="30" rx="10"/>
+    <text class="label" x="1549" y="504" text-anchor="middle">apply policy</text>
+  </g>
+
+  <g id="legend">
+    <rect x="425" y="920" width="950" height="66" rx="14" fill="#101b2c" stroke="#34465d"/>
+    <line x1="485" y1="953" x2="555" y2="953" stroke="#75a7d9" stroke-width="4"/>
+    <text class="legend" x="575" y="959">qualification and analysis call</text>
+    <line x1="890" y1="953" x2="960" y2="953" stroke="#7fb68f" stroke-width="4"/>
+    <text class="legend" x="980" y="959">outcome aggregation and policy</text>
+  </g>
+
+  <text class="footer" x="900" y="1020" text-anchor="middle">bluetape4k-image | examples:spring-boot-image-intelligence-api</text>
+</svg>

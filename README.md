@@ -622,6 +622,12 @@ for a compact Spring Boot 4 OCR API. It accepts multipart image uploads, parses
 Tesseract language codes, calls `images-ocr`, and documents local Tesseract plus
 traineddata setup for real OCR runs.
 
+Use
+[`examples/spring-boot-image-intelligence-api`](examples/spring-boot-image-intelligence-api/README.md)
+for an integrated Spring Boot 4 workflow. It qualifies and decodes one image
+once, runs OCR, detection, and real ZXing barcode analysis in parallel, preserves
+partial failures, and applies a replaceable visitor-pass policy.
+
 Use [`examples/ktor-image-api`](examples/ktor-image-api/README.md) for a
 compact Ktor quickstart. It wires the `images-ktor` CAPTCHA and thumbnail route
 helpers into one local-only API, with curl examples for challenge issuance and

@@ -69,9 +69,10 @@
   - **Evidence:** 승인된 spec/plan의 source anchor와 실제 local dependency alias 확인.
     CodeGraph는 files=0으로 미구축 상태여서 현재 소스 검색으로 보완한다.
   - **Failure:** 기존 계약을 중복 구현하지 않는다.
-- [ ] **CG-06 — 공개·문서 계약 증명**
+- [x] **CG-06 — 공개·문서 계약 증명**
   - **Action:** 영어·한국어 README, diagram, registration을 동등하게 갱신한다.
-  - **Evidence:** Task 8 결과.
+  - **Evidence:** Task 8의 bilingual README, dark SVG/PNG 2쌍, root README와
+    Examples CI 등록, 상대 링크와 공개 블로그 링크 검증.
   - **Failure:** 문서/등록 누락 시 PR을 만들지 않는다.
 - [ ] **CG-07 — RED/GREEN과 targeted proof**
   - **Action:** 각 동작을 실패 테스트부터 구현한다.
@@ -144,9 +145,9 @@
   - **Action:** decode, timeout/cancellation, semaphore, partial result, logging, diagram 위험을 기록한다.
   - **Evidence:** plan `Predicted risks and controls`.
   - **Failure:** 위험 제어 없는 hot path를 구현하지 않는다.
-- [ ] **A-06 — 테스트 우선 구현**
+- [x] **A-06 — 테스트 우선 구현**
   - **Action:** Task 1–8을 RED/GREEN으로 구현한다.
-  - **Evidence:** task commits와 targeted tests.
+  - **Evidence:** Task 1–7의 RED/GREEN 기록과 Task 8 문서·다이어그램 검증.
   - **Failure:** 실패한 동작으로 돌아간다.
 - [ ] **A-07 — spec/plan/hazard 검증**
   - **Action:** acceptance mapping과 module/workflow hazard를 검증한다.
@@ -196,9 +197,10 @@
   - **Action:** completion 시 전체 Kotlin checklist를 렌더링한다.
   - **Evidence:** Required checks count와 P0=0/P1=0.
   - **Failure:** 미확인 row 공개·복구.
-- [ ] **KT-MOD-01 — module 등록 동기화**
+- [x] **KT-MOD-01 — module 등록 동기화**
   - **Action:** settings, README, AGENTS, test resources, Examples CI를 갱신한다.
-  - **Evidence:** registration search와 `./gradlew projects`.
+  - **Evidence:** registration search가 settings, AGENTS, 영어·한국어 README,
+    Examples CI를 확인했고 `./gradlew projects`가 module을 한 번 나열하며 성공했다.
   - **Failure:** 누락 link가 module 완료를 차단한다.
 - [x] **KT-MOD-02 — dependency governance**
   - **Action:** 관리된 alias와 local project를 사용하고 publish surface를 추가하지 않는다.
@@ -255,9 +257,9 @@
 
 ## Current count
 
-Required checks: 17/52; N/A: 3; Blocked: 0.
-Unchecked: WF-05, WF-06, CG-06–18, A-06–12, KT-03–05, KT-MOD-01,
-KT-MOD-04, KT-TEST-01–02, KT-TEST-04–05, KT-SPR-02–05.
+Required checks: 20/52; N/A: 3; Blocked: 0.
+Unchecked: WF-05, WF-06, CG-07–18, A-07–12, KT-03–05, KT-MOD-04,
+KT-TEST-01–02, KT-TEST-04–05, KT-SPR-02–05.
 
 ## Implementation evidence
 
@@ -347,3 +349,33 @@ KT-MOD-04, KT-TEST-01–02, KT-TEST-04–05, KT-SPR-02–05.
   OCR 본문, native path, 원본 exception message, stack trace는 남지 않는다.
 - **Clean example gate:** `cleanTest test --no-build-cache`에서 47/47 passed,
   `BUILD SUCCESSFUL`.
+
+### Task 8 — 독자 중심 문서·다이어그램·CI 등록
+
+- **Reader contract:** 영어·한국어 README가 방문증 사례, 입력 검증, 단일 디코딩,
+  세 분석 lane의 병렬 실행, 부분 실패, 외부 취소, 정책 교체, 운영 한계를 같은
+  순서와 의미로 설명한다.
+- **Source anchors:** upload qualifier, workflow, provider adapter, visitor policy,
+  HTTP/cancellation test로 바로 이동하는 상대 링크와 관련 공개 블로그 링크를 제공한다.
+  모든 상대 링크가 현재 worktree에 존재하고 영어·한국어 공개 링크 4개가 HTTP 200을
+  반환했다.
+- **Diagram references:** 기존
+  `examples/spring-boot-ocr-api/docs/images/readme-diagrams/examples-spring-boot-ocr-api-sequence-01.png`,
+  `examples/spring-boot-barcode-api/docs/images/readme-diagrams/barcode-api-sequence.png`,
+  `examples/spring-boot-barcode-api/docs/images/readme-diagrams/barcode-api-architecture.png`
+  구조를 참고하고, 승인 계획에 따라 dark palette로 재구성했다.
+- **Architecture diagram:** upload에서 qualification, dimension probe, 단일
+  `ImmutableImage`, OCR/detection/ZXing, aggregate, `VisitorPassPolicy`, response까지
+  현재 구현 경계를 표현한다.
+- **Interaction diagram:** participant 6, lifeline 6, activation 10, message 19,
+  branch frame 3으로 정상 완료, 한 공급자 실패, 외부 취소를 표현한다.
+- **Automated diagram checks:** SVG text hazard 0, code highlight omission 0,
+  connector intrusion/crossing/shared segment/label collision 0, geometry failure 0,
+  endpoint check PASS, mixed-corner check PASS. SVG 2개는 `xmllint --noout`,
+  PNG pair 존재 검사를 통과했다.
+- **Visual inspection:** 두 PNG를 원본 크기로 열어 glyph 누락, clipping, 잘못된
+  화살촉, label/line 겹침이 없음을 확인했다. icon을 사용하지 않아 icon source
+  검사는 N/A다.
+- **Registration:** root 영어·한국어 README에서 OCR quickstart 다음에 예제를
+  소개하고, Examples workflow에 정확히 한 개의 module test row를 추가했다.
+  `actionlint`와 `git diff --check`가 통과했다.
