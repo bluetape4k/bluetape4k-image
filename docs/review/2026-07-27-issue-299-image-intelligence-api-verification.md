@@ -306,3 +306,18 @@ KT-MOD-04, KT-TEST-01–02, KT-TEST-04–05, KT-SPR-02–05.
   생성하며 외부 binary fixture를 추가하지 않았다.
 - **Native boundary:** 기본 테스트는 Tesseract를 호출하거나 모델·traineddata를
   내려받지 않는다.
+
+### Task 5 — 병렬 분석과 방문증 정책 분리
+
+- **RED:** 병렬 workflow, 전체 상태 집계, 방문증 정책 타입이 없어 test compilation이
+  실패했다.
+- **GREEN:** `ImageIntelligenceWorkflowTest` 4/4,
+  `VisitorPassPolicyTest` 5/5 passed.
+- **Parallelism proved:** 세 분석 lane의 최대 동시 실행 수가 3이며, 각 lane은
+  `analysis.ocr`, `analysis.detection`, `analysis.barcode` 고유 키에만 결과를 쓴다.
+- **Partial result proved:** OCR 공급자 예외가 `Failed(provider_failure)`로 남아도
+  객체 탐지와 바코드 결과를 보존하고 workflow 단계는 완료된다.
+- **Cancellation proved:** 외부 job 취소가 실행 중인 세 공급자 모두의 `finally`
+  경계까지 전파된다.
+- **Policy boundary:** `Empty`와 `Failed`를 구분하고, 민감 영역·잘못된 QR·공급자
+  저하·사실 개수 조건을 고정된 우선순위와 reason code로 판정한다.
