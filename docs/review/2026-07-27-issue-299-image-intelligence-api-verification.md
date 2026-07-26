@@ -291,3 +291,18 @@ KT-MOD-04, KT-TEST-01–02, KT-TEST-04–05, KT-SPR-02–05.
   바꾸고 외부 cancellation은 원래 message와 함께 재전파했다.
 - **Sanitization proved:** 예상하지 못한 exception text는 결과에 들어가지 않고
   `provider_failure` reason code만 남는다.
+
+### Task 4 — OCR·객체 탐지·바코드 공급자 경계
+
+- **RED:** 공급자 계약, 프로필별 구현체, 생성형 QR fixture가 없어 test compilation이
+  실패했다.
+- **GREEN:** `ImageAnalysisProvidersTest` 5/5,
+  `ImageIntelligenceConfigurationTest` 4/4 passed.
+- **Default boundary:** 기본 프로필은 OCR·객체 탐지를 `Unavailable`로 결과화하고
+  ZXing만 실제 로컬 공급자로 사용한다.
+- **Profile ownership:** `demo`, `native-ocr`, 기본 프로필에서 OCR·객체 탐지 공급자가
+  각각 하나만 등록되며, `demo,native-ocr` 동시 사용은 고정 메시지로 시작을 거부한다.
+- **Fixture provenance:** QR 이미지는 테스트 실행 시 `visitor:PASS-001` payload로
+  생성하며 외부 binary fixture를 추가하지 않았다.
+- **Native boundary:** 기본 테스트는 Tesseract를 호출하거나 모델·traineddata를
+  내려받지 않는다.
