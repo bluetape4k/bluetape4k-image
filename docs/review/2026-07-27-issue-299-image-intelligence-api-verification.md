@@ -258,3 +258,14 @@
 Required checks: 17/52; N/A: 3; Blocked: 0.
 Unchecked: WF-05, WF-06, CG-06–18, A-06–12, KT-03–05, KT-MOD-01,
 KT-MOD-04, KT-TEST-01–02, KT-TEST-04–05, KT-SPR-02–05.
+
+## Implementation evidence
+
+### Task 1 — 예제 등록과 설정 계약
+
+- **RED:** `:spring-boot-image-intelligence-api:compileTestKotlin` failed only
+  with unresolved `ImageIntelligenceProperties`.
+- **GREEN:** `ImageIntelligencePropertiesTest` 5/5 passed.
+- **Registration:** `./gradlew projects` listed
+  `:spring-boot-image-intelligence-api` exactly once and completed successfully.
+- **Heavy checks:** N/A; this task used no native, container, JNI, or external service.
