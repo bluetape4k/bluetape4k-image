@@ -99,18 +99,21 @@ PNG fixtures, not a provider or cross-host ranking. See the
 
 ### 0.4.0 Benchmark Additions
 
-The remaining `0.4.0` benchmark lanes are independently filterable:
+The `0.4.0` benchmark lanes are independently filterable:
 
 | Issue | Configuration | Scope |
 |------:|---------------|-------|
 | #204 | `storageLocal`, `storageS3` | `ImageStorage` upload/download/list and max-size guards |
+| #205 | `ktorRoute`, `ktorRouteConcurrency` | single and concurrent multipart thumbnail routes, mixed traffic, oversize rejection |
 | #206 | `batchPipeline` | thumbnail fan-out, sequential versus bounded coroutine batches |
 | #207 | `algorithmicHotPaths` | crop, tiling, dominant colors, SVG rasterization, similarity |
 
-Run the local storage, batch, and algorithmic lanes with:
+Run the local storage, Ktor route, batch, and algorithmic lanes with:
 
 ```bash
 ./gradlew :bluetape4k-images-benchmark:benchmarkStorageLocalBenchmark
+./gradlew :bluetape4k-images-benchmark:benchmarkKtorRouteBenchmark
+./gradlew :bluetape4k-images-benchmark:benchmarkKtorRouteConcurrencyBenchmark
 ./gradlew :bluetape4k-images-benchmark:benchmarkBatchPipelineBenchmark
 ./gradlew :bluetape4k-images-benchmark:benchmarkAlgorithmicHotPathsBenchmark
 ```
@@ -118,6 +121,7 @@ Run the local storage, batch, and algorithmic lanes with:
 The S3 lane is an opt-in in-memory adapter benchmark and requires
 `-Pstorage.s3.enabled=true`; it does not claim live network performance. See
 [`storage backend`](docs/storage-backend-benchmark.md),
+[`Ktor thumbnail route`](docs/ktor-thumbnail-route-benchmark.md),
 [`batch and thumbnail`](docs/batch-thumbnail-benchmark.md), and
 [`algorithmic hot paths`](docs/algorithmic-hot-paths-2026-07.md) for fixture,
 object-count, cleanup, and interpretation details.
@@ -130,6 +134,25 @@ and list operations because it removes network and durable-filesystem effects;
 the chart must not be read as a production S3 throughput claim. The over-limit
 guard is intentionally near-zero for both backends because rejection happens
 before payload persistence.
+
+![Ktor multipart thumbnail route benchmark chart](../../docs/images/readme-charts/images-benchmark-ktor-thumbnail-route-chart-01.png)
+
+The Ktor test host adds about `2.3-3.9 ms/op` over direct decode, resize, and
+PNG encoding for accepted inputs on this host. Image work therefore dominates
+the `16.9-102.6 ms/op` full-route latency as dimensions grow. Multipart parsing
+alone stays below `0.4 ms/op`, and a one-byte-over-limit upload fails before
+decode at about `0.35 ms/op`. These are in-process route costs without sockets,
+TLS, proxies, or network IO.
+
+![Ktor accepted-route concurrency chart](../../docs/images/readme-charts/images-benchmark-ktor-concurrency-chart-01.png)
+
+The closed-loop concurrency run peaks at 10 requests for both accepted fixtures:
+about `157.4 derived req/s` for `medium` and `58.8 derived req/s` for `photo4k`.
+At 30, throughput falls to `128.7` and `52.2 derived req/s`, while p95 batch
+completion grows to `290.8` and `687.9 ms`. Thus 30 is a useful saturation
+probe, not a default capacity target. Expected-rejection and 90/10 mixed batches
+show the same 10-to-30 degradation. These in-process derived rates are not
+open-loop production throughput.
 
 ![Batch and thumbnail scaling benchmark chart](../../docs/images/readme-charts/images-benchmark-batch-pipeline-chart-01.png)
 
@@ -323,7 +346,7 @@ Fresh report workflow:
    as `benchmark-results-YYYY-MM-DD-macos-java25.json`.
 4. Update the matching Markdown report under `benchmark/images-benchmark/docs/` with the
    measured command, host/JVM/libvips conditions, raw JSON link, and result
-   tables. Every latency table uses `AverageTime ms/op`; lower is better.
+   tables. Every latency table states its JMH mode and unit.
 5. Update the benchmark chart SVG sources under `docs/images/readme-charts/`,
    then render the matching PNG files. README files embed PNGs only; keep SVG
    sources beside them for review and regeneration.
@@ -338,6 +361,8 @@ Chart assets currently referenced by this module:
 | Vips backend comparison | `../../docs/images/readme-charts/images-benchmark-vips-backend-comparison-chart-01.svg` | `../../docs/images/readme-charts/images-benchmark-vips-backend-comparison-chart-01.png` |
 | Large streaming pipeline | `../../docs/images/readme-charts/images-benchmark-large-streaming-chart-01.svg` | `../../docs/images/readme-charts/images-benchmark-large-streaming-chart-01.png` |
 | Storage backend | `../../docs/images/readme-charts/images-benchmark-storage-backend-chart-01.svg` | `../../docs/images/readme-charts/images-benchmark-storage-backend-chart-01.png` |
+| Ktor multipart thumbnail route | `../../docs/images/readme-charts/images-benchmark-ktor-thumbnail-route-chart-01.svg` | `../../docs/images/readme-charts/images-benchmark-ktor-thumbnail-route-chart-01.png` |
+| Ktor accepted-route concurrency | `../../docs/images/readme-charts/images-benchmark-ktor-concurrency-chart-01.svg` | `../../docs/images/readme-charts/images-benchmark-ktor-concurrency-chart-01.png` |
 | Batch and thumbnail scaling | `../../docs/images/readme-charts/images-benchmark-batch-pipeline-chart-01.svg` | `../../docs/images/readme-charts/images-benchmark-batch-pipeline-chart-01.png` |
 | Algorithmic hot paths | `../../docs/images/readme-charts/images-benchmark-algorithmic-hot-paths-chart-01.svg` | `../../docs/images/readme-charts/images-benchmark-algorithmic-hot-paths-chart-01.png` |
 

@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1480" height="761" viewBox="0 0 1480 761" role="img" aria-label="Ktor Multipart Thumbnail Route">
+<defs>
+  <marker id="arrow-blue" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#2563eb"/></marker>
+  <marker id="arrow-green" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#16a34a"/></marker>
+  <marker id="arrow-orange" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#ea580c"/></marker>
+  <marker id="arrow-purple" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#9333ea"/></marker>
+  <marker id="arrow-gray" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#6b7280"/></marker>
+  <style>
+    .canvas{fill:#ffffff}.panel{fill:#f3f6fa;stroke:#cbd5e1;stroke-width:1.4;stroke-dasharray:8 6}.chart-panel{fill:#ffffff;stroke:#bfdbfe;stroke-width:1.7}.card{fill:#ffffff;stroke:#94a3b8;stroke-width:1.9}.badge-text{font-family:"Comic Mono";font-size:11px;fill:#374151;font-weight:700}
+    .edge-blue{stroke:#2563eb;stroke-width:2.1;fill:none;marker-end:url(#arrow-blue);stroke-linecap:round;stroke-linejoin:round}.edge-green{stroke:#16a34a;stroke-width:2.1;fill:none;marker-end:url(#arrow-green);stroke-linecap:round;stroke-linejoin:round}.edge-orange{stroke:#ea580c;stroke-width:2;fill:none;marker-end:url(#arrow-orange);stroke-linecap:round;stroke-linejoin:round}.edge-purple{stroke:#9333ea;stroke-width:2;fill:none;marker-end:url(#arrow-purple);stroke-linecap:round;stroke-linejoin:round}.edge-gray{stroke:#6b7280;stroke-width:1.8;fill:none;marker-end:url(#arrow-gray);stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:6 4}.dashed{stroke-dasharray:6 4}
+    .title{font-family:"Architects Daughter";font-size:42px;fill:#111827;font-weight:400}.subtitle{font-family:"Comic Mono";font-size:16px;fill:#6b7280;font-weight:400}.card-title{font-family:"Architects Daughter";font-size:23px;fill:#111827;font-weight:400}.detail,.label,.note,.axis,.value{font-family:"Comic Mono";fill:#6b7280;font-weight:400}.detail{font-size:13px}.label{font-size:12px}.note{font-size:13px}.axis{font-size:14px}.value{font-size:14px}.panel-title{font-family:"Comic Mono";font-size:16px;fill:#4b5563;font-weight:700;letter-spacing:0.8px}
+  </style>
+</defs>
+<rect class="canvas" width="1480" height="761"/>
+<text class="title" x="70" y="82">Ktor Multipart Thumbnail Route</text>
+<text class="subtitle" x="74" y="116">Issue #205 accepted-route latency; log scale keeps parsing and image work visible.</text>
+<desc>Source: docs/raw/issue-205-20260726-macos-java25/ktor-route.json. Unit: ms/op. Direction: lower is better.</desc>
+<rect class="chart-panel" x="56" y="146" width="1368" height="511" rx="12"/>
+<text class="note" x="88" y="190">Measured ranking</text>
+<text class="axis" x="303" y="190">ms/op - lower is better</text>
+<text class="axis" x="1330.0" y="214" text-anchor="end">0 to 102.588 (log scale)</text>
+<text class="note" x="740.0" y="709" text-anchor="middle">https://github.com/bluetape4k/bluetape4k-image | project: bluetape4k-image | module: images-benchmark</text>
+<rect x="850" y="174" width="22" height="14" rx="4" fill="#dbeafe" stroke="#2563eb" stroke-width="1.4"/>
+<text class="axis" x="882" y="186">multipart parse</text>
+<rect x="1010" y="174" width="22" height="14" rx="4" fill="#ffedd5" stroke="#ea580c" stroke-width="1.4"/>
+<text class="axis" x="1042" y="186">image work</text>
+<rect x="1170" y="174" width="22" height="14" rx="4" fill="#dcfce7" stroke="#16a34a" stroke-width="1.4"/>
+<text class="axis" x="1202" y="186">full route</text>
+<line x1="303.0" y1="226" x2="303.0" y2="597" stroke="#dbe3ee" stroke-width="1" stroke-dasharray="5 7"/>
+<text class="axis" x="303.0" y="625" text-anchor="middle">0</text>
+<line x1="559.8" y1="226" x2="559.8" y2="597" stroke="#dbe3ee" stroke-width="1" stroke-dasharray="5 7"/>
+<text class="axis" x="559.8" y="625" text-anchor="middle">2.19027</text>
+<line x1="816.5" y1="226" x2="816.5" y2="597" stroke="#dbe3ee" stroke-width="1" stroke-dasharray="5 7"/>
+<text class="axis" x="816.5" y="625" text-anchor="middle">9.17782</text>
+<line x1="1073.2" y1="226" x2="1073.2" y2="597" stroke="#dbe3ee" stroke-width="1" stroke-dasharray="5 7"/>
+<text class="axis" x="1073.2" y="625" text-anchor="middle">31.47</text>
+<line x1="1330.0" y1="226" x2="1330.0" y2="597" stroke="#dbe3ee" stroke-width="1" stroke-dasharray="5 7"/>
+<text class="axis" x="1330.0" y="625" text-anchor="middle">102.588</text>
+<line x1="303" y1="597" x2="1330" y2="597" stroke="#94a3b8" stroke-width="1.2"/>
+<text class="axis" x="275" y="283.0" text-anchor="end">avatar 256x256</text>
+<rect x="303" y="238" width="1027.0" height="20" rx="6" fill="#edf2f7" stroke="#dbe3ee" stroke-width="1"/>
+<rect x="303" y="238" width="25.5" height="20" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+<text class="value" x="340.5" y="252" text-anchor="start">0.122</text>
+<rect x="303" y="265" width="1027.0" height="20" rx="6" fill="#edf2f7" stroke="#dbe3ee" stroke-width="1"/>
+<rect x="303" y="265" width="607.9" height="20" rx="6" fill="#ffedd5" stroke="#ea580c" stroke-width="1.5"/>
+<text class="value" x="922.9" y="279" text-anchor="start">14.589</text>
+<rect x="303" y="292" width="1027.0" height="20" rx="6" fill="#edf2f7" stroke="#dbe3ee" stroke-width="1"/>
+<rect x="303" y="292" width="638.5" height="20" rx="6" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5"/>
+<text class="value" x="953.5" y="306" text-anchor="start">16.9</text>
+<text class="axis" x="275" y="400.0" text-anchor="end">medium 1920x1080</text>
+<rect x="303" y="355" width="1027.0" height="20" rx="6" fill="#edf2f7" stroke="#dbe3ee" stroke-width="1"/>
+<rect x="303" y="355" width="39.6" height="20" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+<text class="value" x="354.6" y="369" text-anchor="start">0.196</text>
+<rect x="303" y="382" width="1027.0" height="20" rx="6" fill="#edf2f7" stroke="#dbe3ee" stroke-width="1"/>
+<rect x="303" y="382" width="790.4" height="20" rx="6" fill="#ffedd5" stroke="#ea580c" stroke-width="1.5"/>
+<text class="value" x="1105.4" y="396" text-anchor="start">34.572</text>
+<rect x="303" y="409" width="1027.0" height="20" rx="6" fill="#edf2f7" stroke="#dbe3ee" stroke-width="1"/>
+<rect x="303" y="409" width="805.5" height="20" rx="6" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5"/>
+<text class="value" x="1120.5" y="423" text-anchor="start">37.07</text>
+<text class="axis" x="275" y="517.0" text-anchor="end">photo4k 3840x2160</text>
+<rect x="303" y="472" width="1027.0" height="20" rx="6" fill="#edf2f7" stroke="#dbe3ee" stroke-width="1"/>
+<rect x="303" y="472" width="69.5" height="20" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+<text class="value" x="384.5" y="486" text-anchor="start">0.369</text>
+<rect x="303" y="499" width="1027.0" height="20" rx="6" fill="#edf2f7" stroke="#dbe3ee" stroke-width="1"/>
+<rect x="303" y="499" width="1018.4" height="20" rx="6" fill="#ffedd5" stroke="#ea580c" stroke-width="1.5"/>
+<text class="value" x="1309.4" y="513" text-anchor="end">98.645</text>
+<rect x="303" y="526" width="1027.0" height="20" rx="6" fill="#edf2f7" stroke="#dbe3ee" stroke-width="1"/>
+<rect x="303" y="526" width="1027.0" height="20" rx="6" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5"/>
+<text class="value" x="1318.0" y="540" text-anchor="end">102.588</text>
+</svg>
