@@ -98,20 +98,47 @@ throughput은 별도로 관측한 `ops/s` 값이라 높을수록 좋습니다. �
 자세한 조건은 [`상세 리포트`](docs/barcode-extraction-2026-07-14.md), 원본 근거는
 [`불변 raw evidence`](docs/raw/issue-272-20260714-macos-arm64-01/)를 참고하세요.
 
+### Tesseract OCR 추출
+
+이 Java 25/macOS snapshot은 clean, noisy, rotated, multilingual hash-pinned PNG
+문서에서 Tess4J 기반 공개 API `ImmutableImage.extractText`를 측정합니다. 매 호출의
+native engine 설정을 포함하며 fixture 로드, 디코드, 예상 token 검증은 trial setup에서
+수행합니다. latency는 `AverageTime ms/op`으로 낮을수록 좋고 throughput은 별도로
+관측한 `ops/s`로 높을수록 좋습니다.
+
+| 시나리오 | 직접 추출 latency | 전처리 + 추출 | 직접 추출 throughput | 전처리 + 추출 |
+|----------|-------------------|---------------|----------------------|---------------|
+| clean text | 217.921 ms/op | 194.128 ms/op | 4.607 ops/s | 5.111 ops/s |
+| noisy scan | 367.810 ms/op | 282.790 ms/op | 2.727 ops/s | 3.418 ops/s |
+| rotated document | 168.593 ms/op | 186.895 ms/op | 5.875 ops/s | 5.189 ops/s |
+| multilingual | 370.003 ms/op | 394.922 ms/op | 2.704 ops/s | 2.518 ops/s |
+
+![Tesseract OCR extraction benchmark chart](../../docs/images/readme-charts/images-benchmark-ocr-extraction-chart-01.png)
+
+GC profiler는 direct clean text 추출에서 managed allocation `1,417,421 B/op`을
+기록했으며 Tesseract native/model memory는 포함하지 않습니다. `tesseract`, tessdata,
+fixture language prerequisite을 명시적으로 확인하므로 OCR task는 기본 CI lane에서
+실행하지 않습니다. 자세한 조건은
+[`상세 리포트`](docs/ocr-extraction-benchmark.md), 원본 근거는
+[`불변 raw evidence`](docs/raw/issue-203-20260726-macos-java25/)를 참고하세요.
+
 ### 0.4.0 Benchmark 추가
 
 `0.4.0` benchmark lane은 다음 configuration으로 독립 실행할 수 있습니다.
 
 | 이슈 | Configuration | 범위 |
 |------:|---------------|-------|
+| #203 | `ocrLatency`, `ocrThroughput` | Tesseract 추출, 전처리, multilingual traineddata, GC addendum |
 | #204 | `storageLocal`, `storageS3` | `ImageStorage` upload/download/list와 크기 제한 |
 | #205 | `ktorRoute`, `ktorRouteConcurrency` | 단일/동시 multipart thumbnail route, mixed traffic, 크기 초과 거부 |
 | #206 | `batchPipeline` | thumbnail fan-out, 순차 처리와 제한된 coroutine 병렬 처리 |
 | #207 | `algorithmicHotPaths` | crop, tiling, dominant colors, SVG rasterization, similarity |
 
-로컬 storage, Ktor route, batch, algorithmic lane 실행:
+로컬 OCR, storage, Ktor route, batch, algorithmic lane 실행:
 
 ```bash
+./gradlew :bluetape4k-images-benchmark:benchmarkOcrLatencyBenchmark
+./gradlew :bluetape4k-images-benchmark:benchmarkOcrThroughputBenchmark
 ./gradlew :bluetape4k-images-benchmark:benchmarkStorageLocalBenchmark
 ./gradlew :bluetape4k-images-benchmark:benchmarkKtorRouteBenchmark
 ./gradlew :bluetape4k-images-benchmark:benchmarkKtorRouteConcurrencyBenchmark
@@ -123,6 +150,7 @@ S3 lane은 credential 없이 동작하는 in-memory adapter benchmark이며
 `-Pstorage.s3.enabled=true`를 명시해야 합니다. 실제 네트워크 성능을 의미하지
 않습니다. fixture, object 수, cleanup, 해석 범위는
 [`storage backend`](docs/storage-backend-benchmark.md),
+[`OCR extraction`](docs/ocr-extraction-benchmark.md),
 [`Ktor thumbnail route`](docs/ktor-thumbnail-route-benchmark.md),
 [`batch and thumbnail`](docs/batch-thumbnail-benchmark.md),
 [`algorithmic hot paths`](docs/algorithmic-hot-paths-2026-07.md)를 참조하세요.
@@ -366,6 +394,7 @@ Gradle `kotlinx-benchmark` task를 기본 실행 경로로 사용하세요. benc
 | Storage backend | `../../docs/images/readme-charts/images-benchmark-storage-backend-chart-01.svg` | `../../docs/images/readme-charts/images-benchmark-storage-backend-chart-01.png` |
 | Ktor multipart thumbnail route | `../../docs/images/readme-charts/images-benchmark-ktor-thumbnail-route-chart-01.svg` | `../../docs/images/readme-charts/images-benchmark-ktor-thumbnail-route-chart-01.png` |
 | Ktor accepted-route concurrency | `../../docs/images/readme-charts/images-benchmark-ktor-concurrency-chart-01.svg` | `../../docs/images/readme-charts/images-benchmark-ktor-concurrency-chart-01.png` |
+| Tesseract OCR extraction | `../../docs/images/readme-charts/images-benchmark-ocr-extraction-chart-01.svg` | `../../docs/images/readme-charts/images-benchmark-ocr-extraction-chart-01.png` |
 | Batch and thumbnail scaling | `../../docs/images/readme-charts/images-benchmark-batch-pipeline-chart-01.svg` | `../../docs/images/readme-charts/images-benchmark-batch-pipeline-chart-01.png` |
 | Algorithmic hot paths | `../../docs/images/readme-charts/images-benchmark-algorithmic-hot-paths-chart-01.svg` | `../../docs/images/readme-charts/images-benchmark-algorithmic-hot-paths-chart-01.png` |
 

@@ -97,20 +97,48 @@ PNG fixtures, not a provider or cross-host ranking. See the
 [`detailed report`](docs/barcode-extraction-2026-07-14.md) and
 [`immutable raw evidence`](docs/raw/issue-272-20260714-macos-arm64-01/).
 
+### Tesseract OCR Extraction
+
+This Java 25/macOS snapshot measures the public Tess4J-backed
+`ImmutableImage.extractText` path against clean, noisy, rotated, and
+multilingual hash-pinned PNG documents. It includes per-call native engine
+setup; fixture loading, decoding, and expected-token validation stay in trial
+setup. Latency is `AverageTime ms/op` (lower is better) and throughput is a
+separate observed `ops/s` run (higher is better).
+
+| Scenario | Direct latency | Preprocess + extract | Direct throughput | Preprocess + extract |
+|----------|----------------|----------------------|-------------------|----------------------|
+| clean text | 217.921 ms/op | 194.128 ms/op | 4.607 ops/s | 5.111 ops/s |
+| noisy scan | 367.810 ms/op | 282.790 ms/op | 2.727 ops/s | 3.418 ops/s |
+| rotated document | 168.593 ms/op | 186.895 ms/op | 5.875 ops/s | 5.189 ops/s |
+| multilingual | 370.003 ms/op | 394.922 ms/op | 2.704 ops/s | 2.518 ops/s |
+
+![Tesseract OCR extraction benchmark chart](../../docs/images/readme-charts/images-benchmark-ocr-extraction-chart-01.png)
+
+The GC profiler reports `1,417,421 B/op` managed allocation for direct clean
+text extraction; it excludes Tesseract native/model memory. Host prerequisites
+are explicit (`tesseract`, tessdata, and fixture languages), so the OCR tasks
+do not run in the default CI lane. See the
+[`detailed report`](docs/ocr-extraction-benchmark.md) and
+[`immutable raw evidence`](docs/raw/issue-203-20260726-macos-java25/).
+
 ### 0.4.0 Benchmark Additions
 
 The `0.4.0` benchmark lanes are independently filterable:
 
 | Issue | Configuration | Scope |
 |------:|---------------|-------|
+| #203 | `ocrLatency`, `ocrThroughput` | Tesseract extraction, preprocessing, multilingual traineddata, GC addendum |
 | #204 | `storageLocal`, `storageS3` | `ImageStorage` upload/download/list and max-size guards |
 | #205 | `ktorRoute`, `ktorRouteConcurrency` | single and concurrent multipart thumbnail routes, mixed traffic, oversize rejection |
 | #206 | `batchPipeline` | thumbnail fan-out, sequential versus bounded coroutine batches |
 | #207 | `algorithmicHotPaths` | crop, tiling, dominant colors, SVG rasterization, similarity |
 
-Run the local storage, Ktor route, batch, and algorithmic lanes with:
+Run the local OCR, storage, Ktor route, batch, and algorithmic lanes with:
 
 ```bash
+./gradlew :bluetape4k-images-benchmark:benchmarkOcrLatencyBenchmark
+./gradlew :bluetape4k-images-benchmark:benchmarkOcrThroughputBenchmark
 ./gradlew :bluetape4k-images-benchmark:benchmarkStorageLocalBenchmark
 ./gradlew :bluetape4k-images-benchmark:benchmarkKtorRouteBenchmark
 ./gradlew :bluetape4k-images-benchmark:benchmarkKtorRouteConcurrencyBenchmark
@@ -121,6 +149,7 @@ Run the local storage, Ktor route, batch, and algorithmic lanes with:
 The S3 lane is an opt-in in-memory adapter benchmark and requires
 `-Pstorage.s3.enabled=true`; it does not claim live network performance. See
 [`storage backend`](docs/storage-backend-benchmark.md),
+[`OCR extraction`](docs/ocr-extraction-benchmark.md),
 [`Ktor thumbnail route`](docs/ktor-thumbnail-route-benchmark.md),
 [`batch and thumbnail`](docs/batch-thumbnail-benchmark.md), and
 [`algorithmic hot paths`](docs/algorithmic-hot-paths-2026-07.md) for fixture,
@@ -363,6 +392,7 @@ Chart assets currently referenced by this module:
 | Storage backend | `../../docs/images/readme-charts/images-benchmark-storage-backend-chart-01.svg` | `../../docs/images/readme-charts/images-benchmark-storage-backend-chart-01.png` |
 | Ktor multipart thumbnail route | `../../docs/images/readme-charts/images-benchmark-ktor-thumbnail-route-chart-01.svg` | `../../docs/images/readme-charts/images-benchmark-ktor-thumbnail-route-chart-01.png` |
 | Ktor accepted-route concurrency | `../../docs/images/readme-charts/images-benchmark-ktor-concurrency-chart-01.svg` | `../../docs/images/readme-charts/images-benchmark-ktor-concurrency-chart-01.png` |
+| Tesseract OCR extraction | `../../docs/images/readme-charts/images-benchmark-ocr-extraction-chart-01.svg` | `../../docs/images/readme-charts/images-benchmark-ocr-extraction-chart-01.png` |
 | Batch and thumbnail scaling | `../../docs/images/readme-charts/images-benchmark-batch-pipeline-chart-01.svg` | `../../docs/images/readme-charts/images-benchmark-batch-pipeline-chart-01.png` |
 | Algorithmic hot paths | `../../docs/images/readme-charts/images-benchmark-algorithmic-hot-paths-chart-01.svg` | `../../docs/images/readme-charts/images-benchmark-algorithmic-hot-paths-chart-01.png` |
 

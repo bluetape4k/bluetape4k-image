@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "hashAlgorithm": "SHA-256",
+  "fixtures": [
+    {
+      "scenario": "clean-text",
+      "resource": "bench/ocr/clean-text.png",
+      "width": 1600,
+      "height": 1000,
+      "sha256": "f036a0ec994554fa6c214fe883603bea79c399c934b4674d84f77737ea0322b8",
+      "languages": ["eng"],
+      "expectedTokens": ["BLUETAPE", "OCR", "203"],
+      "provenance": "ImageMagick 7.1.2-27 with /Library/Fonts/Arial Unicode.ttf; clean synthetic document"
+    },
+    {
+      "scenario": "noisy-scan",
+      "resource": "bench/ocr/noisy-scan.png",
+      "width": 1600,
+      "height": 1000,
+      "sha256": "caa9520bb2e01711a87463a69f4267e6f329c42018793f13322b801e988d177f",
+      "languages": ["eng"],
+      "expectedTokens": ["BLUETAPE", "OCR", "203"],
+      "provenance": "ImageMagick 7.1.2-27 clean fixture with deterministic Gaussian scan noise and ruled artifacts"
+    },
+    {
+      "scenario": "rotated-document",
+      "resource": "bench/ocr/rotated-document.png",
+      "width": 1000,
+      "height": 1600,
+      "sha256": "1b7865690f6882782593d0be46ff7564fe6d91b444797f665ac5a2fa9f1fcc76",
+      "languages": ["eng"],
+      "expectedTokens": ["BLUETAPE", "OCR", "203"],
+      "provenance": "ImageMagick 7.1.2-27 clean fixture rotated 90 degrees clockwise"
+    },
+    {
+      "scenario": "multilingual-text",
+      "resource": "bench/ocr/multilingual-text.png",
+      "width": 1600,
+      "height": 1000,
+      "sha256": "a3b5cba05b847e8ab996edf7df820e13013850f9e2089c3e898e1cfacfe238f2",
+      "languages": ["eng", "kor", "jpn"],
+      "expectedTokens": ["BLUETAPE", "OCR", "203"],
+      "provenance": "ImageMagick 7.1.2-27 with /Library/Fonts/Arial Unicode.ttf; English, Korean, and Japanese text"
+    }
+  ]
+}
