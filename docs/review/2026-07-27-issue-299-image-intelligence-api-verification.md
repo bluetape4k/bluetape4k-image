@@ -269,3 +269,13 @@ KT-MOD-04, KT-TEST-01–02, KT-TEST-04–05, KT-SPR-02–05.
 - **Registration:** `./gradlew projects` listed
   `:spring-boot-image-intelligence-api` exactly once and completed successfully.
 - **Heavy checks:** N/A; this task used no native, container, JNI, or external service.
+
+### Task 2 — 업로드 검증과 단일 디코딩
+
+- **RED:** qualifier, upload exception, qualified-image 계약이 없어 test compilation이 실패했다.
+  WebP test fixture에는 기존 catalog의 `libs.scrimage.webp` test dependency를 재사용했다.
+- **GREEN:** `ImageUploadQualifierTest` 8/8 passed.
+- **Boundaries proved:** PNG/JPEG/WebP magic 일치, MIME 위장 차단, reported/actual byte
+  한계, side/pixel 한계의 decode 이전 차단, probe fallback, malformed 정제,
+  upload-read cancellation 재전파, 정상 입력당 decode 1회.
+- **Heavy checks:** N/A; pure JVM generated images only.

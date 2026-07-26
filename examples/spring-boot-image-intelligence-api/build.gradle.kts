@@ -16,6 +16,7 @@ dependencies {
     testImplementation(libs.spring.boot.webmvc.test)
     testImplementation(bt4k.bluetape4k.junit5)
     testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.scrimage.webp)
     testImplementation(libs.zxing.core)
 }
 
