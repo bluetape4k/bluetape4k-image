@@ -279,3 +279,15 @@ KT-MOD-04, KT-TEST-01–02, KT-TEST-04–05, KT-SPR-02–05.
   한계, side/pixel 한계의 decode 이전 차단, probe fallback, malformed 정제,
   upload-read cancellation 재전파, 정상 입력당 decode 1회.
 - **Heavy checks:** N/A; pure JVM generated images only.
+
+### Task 3 — 분석 결과와 공급자 실행 보호
+
+- **RED:** `AnalysisResult`, `GuardedAnalysisRunner`, provider-unavailable 계약 부재로
+  test compilation이 실패했다.
+- **GREEN:** `GuardedAnalysisRunnerTest` 6/6 passed.
+- **Concurrency proved:** permit 상한 2, failure/timeout/cancellation 뒤 permit 복구,
+  subsequent request 성공.
+- **Cancellation proved:** 내부 `TimeoutCancellationException`만 `Failed(timeout)`으로
+  바꾸고 외부 cancellation은 원래 message와 함께 재전파했다.
+- **Sanitization proved:** 예상하지 못한 exception text는 결과에 들어가지 않고
+  `provider_failure` reason code만 남는다.
