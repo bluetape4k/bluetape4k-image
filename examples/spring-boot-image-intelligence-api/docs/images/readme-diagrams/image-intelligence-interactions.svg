@@ -1,0 +1,168 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2000" height="2280" viewBox="0 0 2000 2280" role="img" aria-label="Image Intelligence API interactions">
+  <defs>
+    <marker id="arrow-blue" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="16" viewBox="0 0 10 10" refX="9" refY="5" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#75a7d9"/>
+    </marker>
+    <marker id="arrow-amber" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="16" viewBox="0 0 10 10" refX="9" refY="5" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#c69a4b"/>
+    </marker>
+    <marker id="arrow-teal" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="16" viewBox="0 0 10 10" refX="9" refY="5" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#65b8b3"/>
+    </marker>
+    <marker id="arrow-green" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="16" viewBox="0 0 10 10" refX="9" refY="5" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#7fb68f"/>
+    </marker>
+    <marker id="arrow-red" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="16" viewBox="0 0 10 10" refX="9" refY="5" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#d77777"/>
+    </marker>
+    <style>
+      .canvas{fill:#08111f}
+      .frame{fill:#0d1728;stroke:#52647a;stroke-width:2.5}
+      .title{font-family:"Architects Daughter";font-size:48px;fill:#f8fafc}
+      .subtitle{font-family:"Comic Mono";font-size:18px;fill:#9fb0c5}
+      .header{fill:#1b293d;stroke:#71849b;stroke-width:2}
+      .participant{font-family:"Architects Daughter";font-size:23px;fill:#f8fafc}
+      .role{font-family:"Comic Mono";font-size:14px;fill:#b8c5d4}
+      .lifeline{stroke:#50647b;stroke-width:2;stroke-dasharray:9 9}
+      .activation{fill:#183426;stroke:#7fb68f;stroke-width:1.7}
+      .callBlue{fill:none;stroke:#75a7d9;stroke-width:3;marker-end:url(#arrow-blue);stroke-linecap:round;stroke-linejoin:round}
+      .callAmber{fill:none;stroke:#c69a4b;stroke-width:3;marker-end:url(#arrow-amber);stroke-linecap:round;stroke-linejoin:round}
+      .return{fill:none;stroke:#65b8b3;stroke-width:3;stroke-dasharray:9 7;marker-end:url(#arrow-teal);stroke-linecap:round;stroke-linejoin:round}
+      .callGreen{fill:none;stroke:#7fb68f;stroke-width:3;marker-end:url(#arrow-green);stroke-linecap:round;stroke-linejoin:round}
+      .callRed{fill:none;stroke:#d77777;stroke-width:3;marker-end:url(#arrow-red);stroke-linecap:round;stroke-linejoin:round}
+      .label{fill:#101b2c;stroke:#536a86;stroke-width:1.5}
+      .msg{font-family:"Comic Mono";font-size:14px;fill:#d8e2ee}
+      .num{font-family:"Comic Mono";font-size:14px;font-weight:700}
+      .alt{fill:none;stroke:#63778e;stroke-width:2;stroke-dasharray:10 8}
+      .branch{font-family:"Comic Mono";font-size:14px;font-weight:700;fill:#d8e2ee}
+      .note{fill:#111f33;stroke:#536a86;stroke-width:1.5}
+      .note-text{font-family:"Comic Mono";font-size:14px;fill:#aebdd0}
+      .footer{font-family:"Comic Mono";font-size:14px;fill:#8293a8}
+    </style>
+  </defs>
+
+  <rect class="canvas" width="2000" height="2280"/>
+  <rect class="frame" x="32" y="28" width="1936" height="2210" rx="30"/>
+  <text class="title" x="78" y="96">Image Intelligence Workflow Interactions</text>
+  <text class="subtitle" x="82" y="132">Normal completion, one provider failure, and external cancellation have different meanings.</text>
+
+  <g id="participants">
+    <rect class="header card" x="40" y="180" width="220" height="92" rx="14"/>
+    <text class="participant" x="150" y="217" text-anchor="middle">Client</text>
+    <text class="role" x="150" y="245" text-anchor="middle">curl / browser</text>
+
+    <rect class="header card" x="350" y="180" width="260" height="92" rx="14"/>
+    <text class="participant" x="480" y="217" text-anchor="middle">Service</text>
+    <text class="role" x="480" y="245" text-anchor="middle">qualify + response</text>
+
+    <rect class="header card" x="670" y="180" width="280" height="92" rx="14"/>
+    <text class="participant" x="810" y="217" text-anchor="middle">Parallel workflow</text>
+    <text class="role" x="810" y="245" text-anchor="middle">suspendParallelFlow</text>
+
+    <rect class="header card" x="1015" y="180" width="250" height="92" rx="14"/>
+    <text class="participant" x="1140" y="217" text-anchor="middle">OCR lane</text>
+    <text class="role" x="1140" y="245" text-anchor="middle">bounded provider</text>
+
+    <rect class="header card" x="1345" y="180" width="250" height="92" rx="14"/>
+    <text class="participant" x="1470" y="217" text-anchor="middle">Detection lane</text>
+    <text class="role" x="1470" y="245" text-anchor="middle">bounded provider</text>
+
+    <rect class="header card" x="1675" y="180" width="250" height="92" rx="14"/>
+    <text class="participant" x="1800" y="217" text-anchor="middle">Barcode lane</text>
+    <text class="role" x="1800" y="245" text-anchor="middle">real ZXing reader</text>
+  </g>
+
+  <g id="lifelines">
+    <line class="lifeline" x1="150" y1="272" x2="150" y2="2110"/>
+    <line class="lifeline" x1="480" y1="272" x2="480" y2="2110"/>
+    <line class="lifeline" x1="810" y1="272" x2="810" y2="2110"/>
+    <line class="lifeline" x1="1140" y1="272" x2="1140" y2="2110"/>
+    <line class="lifeline" x1="1470" y1="272" x2="1470" y2="2110"/>
+    <line class="lifeline" x1="1800" y1="272" x2="1800" y2="2110"/>
+  </g>
+
+  <g id="activations">
+    <rect class="activation" x="472" y="340" width="16" height="1280" rx="6"/>
+    <rect class="activation" x="802" y="555" width="16" height="1065" rx="6"/>
+    <rect class="activation" x="1132" y="710" width="16" height="400" rx="6"/>
+    <rect class="activation" x="1462" y="800" width="16" height="310" rx="6"/>
+    <rect class="activation" x="1792" y="890" width="16" height="220" rx="6"/>
+
+    <rect class="activation" x="472" y="1790" width="16" height="110" rx="6"/>
+    <rect class="activation" x="802" y="1850" width="16" height="230" rx="6"/>
+    <rect class="activation" x="1132" y="1920" width="16" height="60" rx="6"/>
+    <rect class="activation" x="1462" y="1990" width="16" height="60" rx="6"/>
+    <rect class="activation" x="1792" y="2060" width="16" height="50" rx="6"/>
+  </g>
+
+  <g id="messages">
+    <path data-connector="client-to-service" class="callAmber" stroke="#c69a4b" d="M 150 350 L 472 350"/>
+    <path data-connector="service-qualifies-once" class="callBlue" stroke="#75a7d9" d="M 488 450 L 620 450 Q 645 450 645 475 Q 645 500 620 500 L 488 500"/>
+    <path data-connector="service-to-workflow" class="callBlue" stroke="#75a7d9" d="M 488 570 L 802 570"/>
+
+    <path data-connector="workflow-to-ocr" class="callBlue" stroke="#75a7d9" d="M 818 720 L 1132 720"/>
+    <path data-connector="workflow-to-detection" class="callBlue" stroke="#75a7d9" d="M 818 810 L 1462 810"/>
+    <path data-connector="workflow-to-barcode" class="callBlue" stroke="#75a7d9" d="M 818 900 L 1792 900"/>
+    <path data-connector="ocr-to-workflow-completed" class="return" stroke="#65b8b3" d="M 1132 980 L 818 980"/>
+    <path data-connector="detection-to-workflow-completed" class="return" stroke="#65b8b3" d="M 1462 1040 L 818 1040"/>
+    <path data-connector="barcode-to-workflow-completed" class="return" stroke="#65b8b3" d="M 1792 1100 L 818 1100"/>
+    <path data-connector="workflow-to-service-completed" class="callGreen" stroke="#7fb68f" d="M 802 1190 L 488 1190"/>
+
+    <path data-connector="ocr-to-workflow-failed" class="callRed" stroke="#d77777" d="M 1132 1370 L 818 1370"/>
+    <path data-connector="detection-to-workflow-partial" class="return" stroke="#65b8b3" d="M 1462 1450 L 818 1450"/>
+    <path data-connector="barcode-to-workflow-partial" class="return" stroke="#65b8b3" d="M 1792 1530 L 818 1530"/>
+    <path data-connector="workflow-to-service-partial" class="callGreen" stroke="#7fb68f" d="M 802 1610 L 488 1610"/>
+
+    <path data-connector="client-cancels-request" class="callRed" stroke="#d77777" d="M 150 1800 L 472 1800"/>
+    <path data-connector="service-propagates-cancellation" class="callRed" stroke="#d77777" d="M 488 1860 L 802 1860"/>
+    <path data-connector="workflow-cancels-ocr" class="callRed" stroke="#d77777" d="M 818 1930 L 1132 1930"/>
+    <path data-connector="workflow-cancels-detection" class="callRed" stroke="#d77777" d="M 818 2000 L 1462 2000"/>
+    <path data-connector="workflow-cancels-barcode" class="callRed" stroke="#d77777" d="M 818 2070 L 1792 2070"/>
+  </g>
+
+  <g id="message-labels">
+    <g><rect class="label" x="180" y="300" width="286" height="36" rx="16"/><circle cx="202" cy="318" r="14" fill="#2d2517" stroke="#c69a4b"/><text class="num" x="202" y="323" text-anchor="middle" fill="#e5bd73">1</text><text class="msg" x="226" y="323">POST multipart image</text></g>
+    <g><rect class="label" x="510" y="400" width="300" height="36" rx="16"/><circle cx="532" cy="418" r="14" fill="#172b43" stroke="#75a7d9"/><text class="num" x="532" y="423" text-anchor="middle" fill="#9ec4e8">2</text><text class="msg" x="556" y="423">qualify + decode exactly once</text></g>
+    <g><rect class="label" x="525" y="520" width="270" height="36" rx="16"/><circle cx="547" cy="538" r="14" fill="#172b43" stroke="#75a7d9"/><text class="num" x="547" y="543" text-anchor="middle" fill="#9ec4e8">3</text><text class="msg" x="571" y="543">execute parallel flow</text></g>
+
+    <g><rect class="label" x="855" y="670" width="250" height="36" rx="16"/><circle cx="877" cy="688" r="14" fill="#172b43" stroke="#75a7d9"/><text class="num" x="877" y="693" text-anchor="middle" fill="#9ec4e8">4</text><text class="msg" x="901" y="693">run OCR lane</text></g>
+    <g><rect class="label" x="1010" y="760" width="280" height="36" rx="16"/><circle cx="1032" cy="778" r="14" fill="#172b43" stroke="#75a7d9"/><text class="num" x="1032" y="783" text-anchor="middle" fill="#9ec4e8">5</text><text class="msg" x="1056" y="783">run detection lane</text></g>
+    <g><rect class="label" x="1170" y="850" width="280" height="36" rx="16"/><circle cx="1192" cy="868" r="14" fill="#172b43" stroke="#75a7d9"/><text class="num" x="1192" y="873" text-anchor="middle" fill="#9ec4e8">6</text><text class="msg" x="1216" y="873">run ZXing lane</text></g>
+    <g><rect class="label" x="850" y="930" width="250" height="36" rx="16"/><circle cx="872" cy="948" r="14" fill="#173332" stroke="#65b8b3"/><text class="num" x="872" y="953" text-anchor="middle" fill="#93d3cf">7</text><text class="msg" x="896" y="953">OCR Completed</text></g>
+    <g><rect class="label" x="1010" y="990" width="280" height="36" rx="16"/><circle cx="1032" cy="1008" r="14" fill="#173332" stroke="#65b8b3"/><text class="num" x="1032" y="1013" text-anchor="middle" fill="#93d3cf">8</text><text class="msg" x="1056" y="1013">Detection Completed</text></g>
+    <g><rect class="label" x="1170" y="1050" width="280" height="36" rx="16"/><circle cx="1192" cy="1068" r="14" fill="#173332" stroke="#65b8b3"/><text class="num" x="1192" y="1073" text-anchor="middle" fill="#93d3cf">9</text><text class="msg" x="1216" y="1073">Barcode Completed</text></g>
+    <g><rect class="label" x="520" y="1140" width="280" height="36" rx="16"/><circle cx="542" cy="1158" r="14" fill="#173328" stroke="#7fb68f"/><text class="num" x="542" y="1163" text-anchor="middle" fill="#a9d2b4">10</text><text class="msg" x="566" y="1163">COMPLETED + ALLOW</text></g>
+
+    <g><rect class="label" x="850" y="1320" width="250" height="36" rx="16"/><circle cx="872" cy="1338" r="14" fill="#321c24" stroke="#d77777"/><text class="num" x="872" y="1343" text-anchor="middle" fill="#efa0a0">11</text><text class="msg" x="896" y="1343">OCR Failed(timeout)</text></g>
+    <g><rect class="label" x="1010" y="1400" width="280" height="36" rx="16"/><circle cx="1032" cy="1418" r="14" fill="#173332" stroke="#65b8b3"/><text class="num" x="1032" y="1423" text-anchor="middle" fill="#93d3cf">12</text><text class="msg" x="1056" y="1423">Detection Completed</text></g>
+    <g><rect class="label" x="1170" y="1480" width="280" height="36" rx="16"/><circle cx="1192" cy="1498" r="14" fill="#173332" stroke="#65b8b3"/><text class="num" x="1192" y="1503" text-anchor="middle" fill="#93d3cf">13</text><text class="msg" x="1216" y="1503">Barcode Completed</text></g>
+    <g><rect class="label" x="500" y="1560" width="300" height="36" rx="16"/><circle cx="522" cy="1578" r="14" fill="#173328" stroke="#7fb68f"/><text class="num" x="522" y="1583" text-anchor="middle" fill="#a9d2b4">14</text><text class="msg" x="546" y="1583">WorkReport.Success + PARTIAL</text></g>
+
+    <g><rect class="label" x="175" y="1750" width="290" height="36" rx="16"/><circle cx="197" cy="1768" r="14" fill="#321c24" stroke="#d77777"/><text class="num" x="197" y="1773" text-anchor="middle" fill="#efa0a0">15</text><text class="msg" x="221" y="1773">client disconnects</text></g>
+    <g><rect class="label" x="505" y="1810" width="300" height="36" rx="16"/><circle cx="527" cy="1828" r="14" fill="#321c24" stroke="#d77777"/><text class="num" x="527" y="1833" text-anchor="middle" fill="#efa0a0">16</text><text class="msg" x="551" y="1833">propagate CancellationException</text></g>
+    <g><rect class="label" x="850" y="1880" width="250" height="36" rx="16"/><circle cx="872" cy="1898" r="14" fill="#321c24" stroke="#d77777"/><text class="num" x="872" y="1903" text-anchor="middle" fill="#efa0a0">17</text><text class="msg" x="896" y="1903">cancel OCR lane</text></g>
+    <g><rect class="label" x="1010" y="1950" width="280" height="36" rx="16"/><circle cx="1032" cy="1968" r="14" fill="#321c24" stroke="#d77777"/><text class="num" x="1032" y="1973" text-anchor="middle" fill="#efa0a0">18</text><text class="msg" x="1056" y="1973">cancel detection lane</text></g>
+    <g><rect class="label" x="1170" y="2020" width="280" height="36" rx="16"/><circle cx="1192" cy="2038" r="14" fill="#321c24" stroke="#d77777"/><text class="num" x="1192" y="2043" text-anchor="middle" fill="#efa0a0">19</text><text class="msg" x="1216" y="2043">cancel barcode lane</text></g>
+  </g>
+
+  <g id="branches">
+    <rect class="alt" x="90" y="610" width="1820" height="620" rx="18"/>
+    <rect x="112" y="622" width="258" height="32" rx="10" fill="#101b2c" stroke="#7fb68f"/>
+    <text class="branch" x="241" y="644" text-anchor="middle">alt normal completion</text>
+
+    <rect class="alt" x="90" y="1260" width="1820" height="400" rx="18"/>
+    <rect x="112" y="1272" width="318" height="32" rx="10" fill="#101b2c" stroke="#d77777"/>
+    <text class="branch" x="271" y="1294" text-anchor="middle">else one provider fails</text>
+
+    <rect class="alt" x="90" y="1695" width="1820" height="415" rx="18"/>
+    <rect x="112" y="1707" width="318" height="32" rx="10" fill="#101b2c" stroke="#d77777"/>
+    <text class="branch" x="271" y="1729" text-anchor="middle">else external cancellation</text>
+  </g>
+
+  <g id="cancellation-note">
+    <rect class="note" x="610" y="2130" width="780" height="42" rx="12"/>
+    <text class="note-text" x="1000" y="2157" text-anchor="middle">Already-running non-cooperative native calls may outlive coroutine cancellation.</text>
+  </g>
+
+  <text class="footer" x="1000" y="2214" text-anchor="middle">bluetape4k-image | examples:spring-boot-image-intelligence-api</text>
+</svg>
