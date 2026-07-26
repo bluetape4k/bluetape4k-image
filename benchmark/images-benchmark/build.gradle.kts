@@ -165,6 +165,73 @@ fun validateBarcodeBenchmarkReport(report: File, expectedMode: String, expectedU
     }
 }
 
+fun validateKtorRouteConcurrencyReport(report: File) {
+    require(report.isFile) { "Ktor route concurrency report is missing: $report" }
+    val rows = JsonSlurper().parse(report) as? List<*>
+        ?: throw IllegalArgumentException("Ktor route concurrency report must be a JSON array")
+    val expectedRows = buildSet {
+        listOf("1", "10", "30").forEach { concurrency ->
+            add("KtorThumbnailConcurrentRejectedBenchmark|$concurrency|-")
+        }
+        listOf("1", "5", "10", "30").forEach { concurrency ->
+            listOf("medium", "photo4k").forEach { fixture ->
+                add("KtorThumbnailConcurrentRouteBenchmark|$concurrency|$fixture")
+            }
+        }
+        listOf("10", "30").forEach { concurrency ->
+            listOf("medium", "photo4k").forEach { fixture ->
+                add("KtorThumbnailMixedConcurrencyBenchmark|$concurrency|$fixture")
+            }
+        }
+    }
+    val actualRows = rows.map { value ->
+        val row = value as? Map<*, *>
+            ?: throw IllegalArgumentException("Ktor route concurrency row must be an object")
+        require(row["mode"] == "sample") { "Ktor route concurrency mode must be sample" }
+        require((row["threads"] as? Number)?.toInt() == 1) {
+            "Ktor route concurrency threads must be 1"
+        }
+        require((row["forks"] as? Number)?.toInt() == 1) {
+            "Ktor route concurrency forks must be 1"
+        }
+        require((row["warmupIterations"] as? Number)?.toInt() == 3) {
+            "Ktor route concurrency warmups must be 3"
+        }
+        require((row["measurementIterations"] as? Number)?.toInt() == 5) {
+            "Ktor route concurrency measurements must be 5"
+        }
+        require(row["warmupTime"] == "3 s" && row["measurementTime"] == "3 s") {
+            "Ktor route concurrency iteration time must be 3 s"
+        }
+        val primaryMetric = row["primaryMetric"] as? Map<*, *>
+            ?: throw IllegalArgumentException("Ktor route concurrency primary metric is missing")
+        require(primaryMetric["scoreUnit"] == "ms/op") {
+            "Ktor route concurrency score unit must be ms/op"
+        }
+        val score = (primaryMetric["score"] as? Number)?.toDouble()
+            ?: throw IllegalArgumentException("Ktor route concurrency score is missing")
+        require(score.isFinite() && score > 0.0) {
+            "Ktor route concurrency score must be positive and finite"
+        }
+        val percentiles = primaryMetric["scorePercentiles"] as? Map<*, *>
+            ?: throw IllegalArgumentException("Ktor route concurrency percentiles are missing")
+        require(listOf("50.0", "95.0", "99.0").all(percentiles::containsKey)) {
+            "Ktor route concurrency p50, p95, and p99 must be present"
+        }
+        val benchmark = row["benchmark"] as? String
+            ?: throw IllegalArgumentException("Ktor route concurrency benchmark name is missing")
+        val benchmarkClass = benchmark.substringBeforeLast('.').substringAfterLast('.')
+        val params = row["params"] as? Map<*, *>
+            ?: throw IllegalArgumentException("Ktor route concurrency parameters are missing")
+        val concurrency = params["concurrency"] as? String
+            ?: throw IllegalArgumentException("Ktor route concurrency parameter is missing")
+        "$benchmarkClass|$concurrency|${params["fixture"] ?: "-"}"
+    }.toSet()
+    require(rows.size == expectedRows.size && actualRows == expectedRows) {
+        "Ktor route concurrency row coverage differs"
+    }
+}
+
 fun stageBarcodeBenchmarkReport(source: File, target: File) {
     require(!target.exists()) { "staged barcode benchmark report already exists: $target" }
     target.parentFile.mkdirs()
@@ -492,6 +559,32 @@ benchmark {
             advanced("jvmForks", 1)
         }
 
+        register("ktorRoute") {
+            include(".*KtorThumbnailRouteBenchmark.*")
+            include(".*KtorThumbnailRejectedRouteBenchmark.*")
+            warmups = 1
+            iterations = 3
+            iterationTime = 1
+            iterationTimeUnit = "s"
+            mode = "avgt"
+            outputTimeUnit = "ms"
+            reportFormat = "json"
+            advanced("jvmForks", 1)
+        }
+
+        register("ktorRouteConcurrency") {
+            include(".*KtorThumbnailConcurrentRouteBenchmark.*")
+            include(".*KtorThumbnailConcurrentRejectedBenchmark.*")
+            include(".*KtorThumbnailMixedConcurrencyBenchmark.*")
+            warmups = 3
+            iterations = 5
+            iterationTime = 3
+            iterationTimeUnit = "s"
+            outputTimeUnit = "ms"
+            reportFormat = "json"
+            advanced("jvmForks", 1)
+        }
+
         register("storageLocal") {
             include(".*ImageStorageBenchmark.local_.*")
             warmups = 1
@@ -543,6 +636,7 @@ dependencies {
     testImplementation(bt4k.bluetape4k.junit5)
     testImplementation(gradleTestKit())
     testImplementation(project(":bluetape4k-images-barcode-zxing"))
+    testImplementation(project(":bluetape4k-images-ktor"))
 
     // scrimage (images)
     implementation(project(":bluetape4k-images"))
@@ -559,9 +653,11 @@ dependencies {
 
     // Benchmark
     add("benchmarkImplementation", project(":bluetape4k-images-barcode-zxing"))
+    add("benchmarkImplementation", project(":bluetape4k-images-ktor"))
     add("benchmarkImplementation", project(":bluetape4k-images-spring-boot"))
     add("benchmarkImplementation", bt4k.bluetape4k.aws.spring.boot)
     add("benchmarkImplementation", libs.aws2.s3)
+    add("benchmarkImplementation", libs.ktor.server.test.host)
     add("benchmarkImplementation", "org.springframework:spring-core")
     add("benchmarkImplementation", libs.batik.transcoder)
     add("benchmarkImplementation", libs.batik.codec)
@@ -904,6 +1000,32 @@ afterEvaluate {
 
     val codecMatrixBenchmarkStarts = ConcurrentHashMap<String, Instant>()
     val barcodeBenchmarkStarts = ConcurrentHashMap<String, Instant>()
+    val ktorRouteConcurrencyStarts = ConcurrentHashMap<String, Instant>()
+
+    tasks.matching { task -> task.name == "benchmarkKtorRouteConcurrencyBenchmark" }.configureEach {
+        doFirst {
+            ktorRouteConcurrencyStarts[name] = Instant.now()
+        }
+        doLast {
+            val startedAt = requireNotNull(ktorRouteConcurrencyStarts.remove(name))
+            val reportRoot = layout.buildDirectory.dir("reports/benchmarks/ktorRouteConcurrency").get().asFile
+            val reports = if (reportRoot.isDirectory) {
+                Files.walk(reportRoot.toPath()).use { paths ->
+                    paths.filter { path ->
+                        Files.isRegularFile(path) &&
+                                path.fileName.toString() == "benchmark.json" &&
+                                !Files.getLastModifiedTime(path).toInstant().isBefore(startedAt)
+                    }.map { it.toFile() }.toList()
+                }
+            } else {
+                emptyList()
+            }
+            require(reports.size == 1) {
+                "expected one fresh Ktor route concurrency report but found ${reports.size}"
+            }
+            validateKtorRouteConcurrencyReport(reports.single())
+        }
+    }
 
     tasks.matching { task ->
         task.name == "benchmarkBarcodeLatencyBenchmark" ||

@@ -28,5 +28,7 @@ images-benchmark-file-io-throughput-chart-01: chartRows=4 series=2 unit=MB/s dir
 images-benchmark-large-streaming-chart-01: chartRows=5 series=2 unit=ms/op direction=lower is better fontFallback=0 sourceEvidence=large-streaming-2026-06-05.md
 images-benchmark-storage-backend-chart-01: chartRows=5 series=4 unit=ms/op direction=lower is better fontFallback=0 sourceEvidence=docs/raw/issue-204-20260726-macos-java25/*.json
 images-benchmark-batch-pipeline-chart-01: chartRows=3 series=4 unit=ms/op direction=lower is better fontFallback=0 sourceEvidence=docs/raw/issue-206-20260726-macos-java25/batch-pipeline.json
+images-benchmark-ktor-thumbnail-route-chart-01: chartRows=3 series=3 unit=ms/op direction=lower is better fontFallback=0 sourceEvidence=docs/raw/issue-205-20260726-macos-java25/ktor-route.json
+images-benchmark-ktor-concurrency-chart-01: chartRows=4 series=2 unit=derived req/s direction=higher is better until saturation fontFallback=0 sourceEvidence=docs/raw/issue-205-20260726-macos-java25/ktor-route-concurrency.json
 images-benchmark-algorithmic-hot-paths-chart-01: chartRows=6 series=2 unit=ms/op direction=lower is better fontFallback=0 sourceEvidence=docs/raw/issue-207-20260726-macos-java25/algorithmic-hot-paths.json
 images-benchmark-memory-profile-chart-01: chartRows=6 series=2 unit=MB/op or ms/op direction=lower is better fontFallback=0 sourceEvidence=memory-profile-2026-05-29.md

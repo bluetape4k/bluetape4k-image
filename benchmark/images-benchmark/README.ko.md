@@ -100,18 +100,21 @@ throughput은 별도로 관측한 `ops/s` 값이라 높을수록 좋습니다. �
 
 ### 0.4.0 Benchmark 추가
 
-남은 `0.4.0` benchmark lane은 다음 configuration으로 독립 실행할 수 있습니다.
+`0.4.0` benchmark lane은 다음 configuration으로 독립 실행할 수 있습니다.
 
 | 이슈 | Configuration | 범위 |
 |------:|---------------|-------|
 | #204 | `storageLocal`, `storageS3` | `ImageStorage` upload/download/list와 크기 제한 |
+| #205 | `ktorRoute`, `ktorRouteConcurrency` | 단일/동시 multipart thumbnail route, mixed traffic, 크기 초과 거부 |
 | #206 | `batchPipeline` | thumbnail fan-out, 순차 처리와 제한된 coroutine 병렬 처리 |
 | #207 | `algorithmicHotPaths` | crop, tiling, dominant colors, SVG rasterization, similarity |
 
-로컬 storage, batch, algorithmic lane 실행:
+로컬 storage, Ktor route, batch, algorithmic lane 실행:
 
 ```bash
 ./gradlew :bluetape4k-images-benchmark:benchmarkStorageLocalBenchmark
+./gradlew :bluetape4k-images-benchmark:benchmarkKtorRouteBenchmark
+./gradlew :bluetape4k-images-benchmark:benchmarkKtorRouteConcurrencyBenchmark
 ./gradlew :bluetape4k-images-benchmark:benchmarkBatchPipelineBenchmark
 ./gradlew :bluetape4k-images-benchmark:benchmarkAlgorithmicHotPathsBenchmark
 ```
@@ -120,6 +123,7 @@ S3 lane은 credential 없이 동작하는 in-memory adapter benchmark이며
 `-Pstorage.s3.enabled=true`를 명시해야 합니다. 실제 네트워크 성능을 의미하지
 않습니다. fixture, object 수, cleanup, 해석 범위는
 [`storage backend`](docs/storage-backend-benchmark.md),
+[`Ktor thumbnail route`](docs/ktor-thumbnail-route-benchmark.md),
 [`batch and thumbnail`](docs/batch-thumbnail-benchmark.md),
 [`algorithmic hot paths`](docs/algorithmic-hot-paths-2026-07.md)를 참조하세요.
 
@@ -130,6 +134,26 @@ storage chart는 sub-millisecond adapter 비용부터 filesystem 비용까지 �
 것은 네트워크와 durable filesystem 비용을 제거했기 때문이며, 실제 운영 S3
 throughput 순위로 해석하면 안 됩니다. 크기 제한 초과 행은 payload 저장 전에
 거절되므로 두 backend 모두 거의 0에 가깝습니다.
+
+![Ktor multipart thumbnail route benchmark chart](../../docs/images/readme-charts/images-benchmark-ktor-thumbnail-route-chart-01.png)
+
+이 host에서 Ktor test host를 통과한 전체 route는 직접 decode, resize, PNG
+encode보다 약 `2.3-3.9 ms/op` 더 걸렸습니다. 입력 크기가 커질 때 전체 route
+latency가 `16.9-102.6 ms/op`로 증가하는 주된 원인은 image 처리입니다.
+Multipart parsing만 측정하면 `0.4 ms/op` 미만이고, 제한보다 1 byte 큰 upload는
+decode 전에 약 `0.35 ms/op`로 거부됩니다. socket, TLS, proxy, network IO는
+포함하지 않은 in-process route 비용입니다.
+
+![Ktor accepted-route concurrency chart](../../docs/images/readme-charts/images-benchmark-ktor-concurrency-chart-01.png)
+
+closed-loop 동시 요청 측정에서 두 accepted fixture 모두 concurrency 10이
+정점이었습니다. `medium`은 약 `157.4 derived req/s`, `photo4k`는
+`58.8 derived req/s`였고, concurrency 30에서는 각각 `128.7`, `52.2 derived
+req/s`로 하락하면서 p95 batch 완료 시간은 `290.8`, `687.9 ms`로 증가했습니다.
+따라서 30은 포화 상태를 확인하는 stress point이지 기본 capacity 목표가 아닙니다.
+expected rejection과 90/10 mixed batch도 10에서 30으로 갈 때 같은 하락을
+보였습니다. 이 값은 in-process closed-loop 파생치이며 운영 open-loop
+throughput이 아닙니다.
 
 ![Batch and thumbnail scaling benchmark chart](../../docs/images/readme-charts/images-benchmark-batch-pipeline-chart-01.png)
 
@@ -324,8 +348,8 @@ Gradle `kotlinx-benchmark` task를 기본 실행 경로로 사용하세요. benc
    `benchmark/images-benchmark/docs/raw/`로 복사하고,
    `benchmark-results-YYYY-MM-DD-macos-java25.json`처럼 환경이 드러나는 이름을 사용합니다.
 4. `benchmark/images-benchmark/docs/`의 해당 Markdown report에 실행 명령, host/JVM/libvips 조건,
-   raw JSON 링크, 결과 표를 기록합니다. 모든 latency 표는 `AverageTime ms/op`이며
-   낮을수록 좋습니다.
+   raw JSON 링크, 결과 표를 기록합니다. 모든 latency 표에는 JMH mode와 단위를
+   명시합니다.
 5. `docs/images/readme-charts/` 아래 benchmark chart SVG source를 갱신한 뒤 matching PNG를
    렌더링합니다. README에는 PNG만 embed하고, SVG source는 검토와 재생성을 위해 같은 위치에
    보관합니다.
@@ -340,6 +364,8 @@ Gradle `kotlinx-benchmark` task를 기본 실행 경로로 사용하세요. benc
 | Vips backend comparison | `../../docs/images/readme-charts/images-benchmark-vips-backend-comparison-chart-01.svg` | `../../docs/images/readme-charts/images-benchmark-vips-backend-comparison-chart-01.png` |
 | Large streaming pipeline | `../../docs/images/readme-charts/images-benchmark-large-streaming-chart-01.svg` | `../../docs/images/readme-charts/images-benchmark-large-streaming-chart-01.png` |
 | Storage backend | `../../docs/images/readme-charts/images-benchmark-storage-backend-chart-01.svg` | `../../docs/images/readme-charts/images-benchmark-storage-backend-chart-01.png` |
+| Ktor multipart thumbnail route | `../../docs/images/readme-charts/images-benchmark-ktor-thumbnail-route-chart-01.svg` | `../../docs/images/readme-charts/images-benchmark-ktor-thumbnail-route-chart-01.png` |
+| Ktor accepted-route concurrency | `../../docs/images/readme-charts/images-benchmark-ktor-concurrency-chart-01.svg` | `../../docs/images/readme-charts/images-benchmark-ktor-concurrency-chart-01.png` |
 | Batch and thumbnail scaling | `../../docs/images/readme-charts/images-benchmark-batch-pipeline-chart-01.svg` | `../../docs/images/readme-charts/images-benchmark-batch-pipeline-chart-01.png` |
 | Algorithmic hot paths | `../../docs/images/readme-charts/images-benchmark-algorithmic-hot-paths-chart-01.svg` | `../../docs/images/readme-charts/images-benchmark-algorithmic-hot-paths-chart-01.png` |
 
