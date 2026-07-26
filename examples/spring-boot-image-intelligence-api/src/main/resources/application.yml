@@ -1,0 +1,17 @@
+spring:
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 5MB
+
+example:
+  image-intelligence:
+    max-input-bytes: 5242880
+    max-input-pixels: 16777216
+    max-input-side: 8192
+    ocr-timeout: 3s
+    detection-timeout: 2s
+    barcode-timeout: 2s
+    ocr-concurrency: 1
+    detection-concurrency: 2
+    barcode-concurrency: 4
