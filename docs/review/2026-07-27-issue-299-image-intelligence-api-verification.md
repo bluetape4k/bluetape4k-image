@@ -1,11 +1,11 @@
 # Issue #299 구현·검증 체크리스트
 
-**Workflow:** Type A Full Feature  
-**Repository:** `bluetape4k/bluetape4k-image`  
-**Base:** `develop`  
-**Head:** `feat/issue-299-image-intelligence-api`  
-**Worktree:** `bluetape4k-image/.worktrees/feat-issue-299-image-intelligence-api`  
-**Machine run:** `20260726T183134Z-2b6b242f`  
+**Workflow:** Type A Full Feature
+**Repository:** `bluetape4k/bluetape4k-image`
+**Base:** `develop`
+**Head:** `feat/issue-299-image-intelligence-api`
+**Worktree:** `bluetape4k-image/.worktrees/feat-issue-299-image-intelligence-api`
+**Machine run:** `20260726T183134Z-2b6b242f`
 **Stop condition:** PR의 정확한 head에서 CI와 리뷰를 통과한 merge-ready 상태
 
 이 문서는 승인된 계획을 실행하면서 증거를 즉시 기록한다. `[ ]` 항목은 아직
@@ -347,7 +347,7 @@ KT-TEST-01–02, KT-TEST-04–05, KT-SPR-02–05.
   두 lane은 `Empty` 결과를 정상적으로 반환한다.
 - **Observability:** request ID, provider ID, 상태, 경과 시간이 로그에 남고 QR payload,
   OCR 본문, native path, 원본 exception message, stack trace는 남지 않는다.
-- **Clean example gate:** `cleanTest test --no-build-cache`에서 47/47 passed,
+- **Clean example gate:** 최초 `cleanTest test --no-build-cache`에서 47/47 passed,
   `BUILD SUCCESSFUL`.
 
 ### Task 8 — 독자 중심 문서·다이어그램·CI 등록
@@ -379,3 +379,49 @@ KT-TEST-01–02, KT-TEST-04–05, KT-SPR-02–05.
 - **Registration:** root 영어·한국어 README에서 OCR quickstart 다음에 예제를
   소개하고, Examples workflow에 정확히 한 개의 module test row를 추가했다.
   `actionlint`와 `git diff --check`가 통과했다.
+
+### Task 9 — 요구사항 추적과 최종 검증
+
+| 수용 기준 | 구현 | 테스트·문서·명령 근거 |
+| --- | --- | --- |
+| 실행 가능한 비배포 Spring Boot 예제 | `build.gradle.kts`, application main, settings 등록 | `./gradlew projects`, Examples CI row |
+| local image/OCR/barcode와 관리된 workflow 재사용 | module project dependencies와 `bt4k.bluetape4k.workflow` | 영향 모듈 7개 테스트 |
+| 한 번 검증·한 번 디코딩·세 작업 공유 | `ImageUploadQualifier`, `QualifiedImage`, `ImageIntelligenceWorkflow` | `ImageUploadQualifierTest`의 decode count와 decode 이전 거부 |
+| 제한된 병렬 OCR·검출·바코드 | 공급자별 `Semaphore`, `suspendParallelFlow` | `GuardedAnalysisRunnerTest`, `ImageIntelligenceWorkflowTest` |
+| 네 분석 결과를 독립 표현 | `AnalysisResult` sealed interface | runner/provider/policy tests |
+| 워크플로 완료와 업무 성공 분리 | 각 작업이 결과를 기록한 뒤 `WorkReport.success` | workflow test와 bilingual README |
+| 한 작업 실패 뒤 형제 결과 보존 | 공급자 예외를 `Failed`로 정규화 | workflow/service/cancellation tests |
+| 작업 timeout과 외부 cancellation 구분 | `GuardedAnalysisRunner`의 catch 순서 | runner와 cancellation tests |
+| 분석 사실과 방문증 정책 분리 | `ImageAnalysisResults`, `VisitorPassPolicy` | 정책 결정표 5개 |
+| 기본 테스트에 네이티브·운영 모델 불필요 | disabled/demo provider profiles | configuration/application tests와 README |
+| ZXing·빈 결과·부분 실패·입력 오류·취소 | 실제 `ZxingBarcodeReader`와 생성형 QR fixture | 최종 example clean test 48개 |
+| 영어·한국어 README와 dark SVG/PNG | module README 2개, diagram 2쌍 | 링크·SVG·geometry·PNG 원본 검사 |
+| settings·AGENTS·root README·Examples CI | 저장소 등록 파일 5개 | registration search, `actionlint` |
+| targeted/full example tests | 새 예제와 영향 모듈 | 최종 clean 48/48, 영향 모듈 실패 0 |
+| 정적·문서 검증 | detekt, actionlint, diagram scripts | 모든 명령 exit 0 |
+| manual/BOM 미변경 | branch changed-file 목록 | 금지 범위 검색 결과 `none` |
+
+#### 성능·안정성 집중 증거
+
+- `ImageUploadQualifierTest`, `GuardedAnalysisRunnerTest`,
+  `ImageIntelligenceWorkflowTest`, `ImageIntelligenceCancellationTest` 20개를
+  `--rerun-tasks`로 실행해 실패 0건을 확인했다.
+- 단일 디코딩, 픽셀 한도의 디코딩 전 거부, 세 lane의 겹친 실행, 공급자별 동시
+  실행 상한, 실패·timeout·취소 뒤 permit 반환, 한 공급자 실패 뒤 형제 결과 보존을
+  검증했다.
+- `QualifiedImage`는 media type, dimensions, `ImmutableImage`만 보관하며 업로드
+  `ByteArray`를 필드로 유지하지 않는다.
+- production coroutine quick scan에서 `GlobalScope`, `runBlocking`,
+  `Thread.sleep`, `delay`, monitor synchronization, `runCatching` 사용은 0건이었다.
+
+#### 리뷰에서 보강한 운영 경계
+
+- **RED:** multipart 파일 한도와 전체 요청 한도가 모두 5 MB여서
+  `maxRequestSize > maxFileSize` 테스트가 `false`로 실패했다.
+- **GREEN:** 전체 요청 한도를 6 MB로 조정한 뒤 같은 테스트가 통과했다.
+- **Review:** 여섯 관점과 통합 검토의 최종 결과는 P0=0, P1=0, P2=0, P3=0이다.
+  자세한 근거는
+  `docs/review/2026-07-27-issue-299-image-intelligence-api-code-review.md`에 있다.
+- **Known gap:** `native-ocr` 실호출은 Tesseract와 traineddata가 필요한 선택 검증이라
+  현재 호스트에서 실행하지 않았다. 기본 경로의 완료를 차단하지 않으며 README에
+  설치 조건과 강제 종료 한계를 명시했다.

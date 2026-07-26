@@ -1,11 +1,11 @@
 # Issue #299 통합 이미지 인텔리전스 API 설계 검토
 
-**Artifact kind**: spec  
+**Artifact kind**: spec
 **Reviewed spec**:
-`docs/superpowers/specs/2026-07-27-issue-299-image-intelligence-api-design.md`  
+`docs/superpowers/specs/2026-07-27-issue-299-image-intelligence-api-design.md`
 **Research basis**: issue #299, transferred workshop issue #578, current
 `develop`, existing Spring Boot OCR·바코드 examples, image detection contracts,
-and `bluetape4k-workflow` source  
+and `bluetape4k-workflow` source
 **Review method**: 현재 작업의 inline 실행 원칙에 따라 main session에서 여섯 관점을
 서로 섞지 않은 순차 pass로 검토하고 마지막에 통합했다.
 
