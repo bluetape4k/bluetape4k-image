@@ -334,3 +334,16 @@ KT-MOD-04, KT-TEST-01–02, KT-TEST-04–05, KT-SPR-02–05.
   이미지·압축 크기·한 변·픽셀 한계를 안정된 `ProblemDetail.reasonCode`로 구분한다.
 - **Leakage boundary:** 응답과 정제된 `500`에는 `WorkContext`, `WorkReport`, raw bytes,
   stack trace, native path와 원본 workflow exception message가 없다.
+
+### Task 7 — 생명주기·복구·관측성 통합 검증
+
+- **Application boundary:** 기본 Spring context는 disabled OCR·disabled detector·ZXing을
+  구성하고, 유효한 빈 이미지를 `PARTIAL`·`MANUAL_REVIEW`로 fail-closed 처리한다.
+- **Cancellation recovery:** 실행 중인 세 lane이 모두 외부 취소를 관찰한 뒤 같은
+  workflow의 후속 요청이 성공해 semaphore permit 반환을 증명한다.
+- **Timeout isolation:** 한 lane의 내부 timeout은 `Failed(timeout)`으로 남고 다른
+  두 lane은 `Empty` 결과를 정상적으로 반환한다.
+- **Observability:** request ID, provider ID, 상태, 경과 시간이 로그에 남고 QR payload,
+  OCR 본문, native path, 원본 exception message, stack trace는 남지 않는다.
+- **Clean example gate:** `cleanTest test --no-build-cache`에서 47/47 passed,
+  `BUILD SUCCESSFUL`.

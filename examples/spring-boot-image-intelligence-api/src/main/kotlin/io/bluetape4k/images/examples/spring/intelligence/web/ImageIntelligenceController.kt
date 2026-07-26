@@ -2,6 +2,7 @@ package io.bluetape4k.images.examples.spring.intelligence.web
 
 import io.bluetape4k.images.examples.spring.intelligence.model.ImageIntelligenceResponse
 import io.bluetape4k.images.examples.spring.intelligence.service.ImageIntelligenceOperations
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
 import org.springframework.http.MediaType
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestParam
@@ -9,6 +10,7 @@ import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.multipart.MultipartFile
 
 @RestController
+@ConditionalOnBean(ImageIntelligenceOperations::class)
 internal class ImageIntelligenceController(
     private val service: ImageIntelligenceOperations,
 ) {
