@@ -15,6 +15,7 @@ import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.boot.servlet.autoconfigure.MultipartProperties
 import org.springframework.http.MediaType
 import org.springframework.mock.web.MockMultipartFile
 
@@ -29,6 +30,9 @@ class ImageIntelligenceApplicationTest {
 
     @Autowired
     private lateinit var detectionProvider: DetectionAnalysisProvider
+
+    @Autowired
+    private lateinit var multipartProperties: MultipartProperties
 
     @Test
     fun `default application fails closed without native providers`(): Unit = runBlocking {
@@ -49,5 +53,11 @@ class ImageIntelligenceApplicationTest {
         response.ocr.status shouldBeEqualTo AnalysisStatus.UNAVAILABLE
         response.detection.status shouldBeEqualTo AnalysisStatus.UNAVAILABLE
         response.barcodes.status shouldBeEqualTo AnalysisStatus.EMPTY
+    }
+
+    @Test
+    fun `multipart request limit leaves room for envelope overhead`() {
+        (multipartProperties.maxRequestSize.toBytes() > multipartProperties.maxFileSize.toBytes())
+            .shouldBeEqualTo(true)
     }
 }
