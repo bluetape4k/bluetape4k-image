@@ -97,6 +97,57 @@ PNG fixtures, not a provider or cross-host ranking. See the
 [`detailed report`](docs/barcode-extraction-2026-07-14.md) and
 [`immutable raw evidence`](docs/raw/issue-272-20260714-macos-arm64-01/).
 
+### 0.4.0 Benchmark Additions
+
+The remaining `0.4.0` benchmark lanes are independently filterable:
+
+| Issue | Configuration | Scope |
+|------:|---------------|-------|
+| #204 | `storageLocal`, `storageS3` | `ImageStorage` upload/download/list and max-size guards |
+| #206 | `batchPipeline` | thumbnail fan-out, sequential versus bounded coroutine batches |
+| #207 | `algorithmicHotPaths` | crop, tiling, dominant colors, SVG rasterization, similarity |
+
+Run the local storage, batch, and algorithmic lanes with:
+
+```bash
+./gradlew :bluetape4k-images-benchmark:benchmarkStorageLocalBenchmark
+./gradlew :bluetape4k-images-benchmark:benchmarkBatchPipelineBenchmark
+./gradlew :bluetape4k-images-benchmark:benchmarkAlgorithmicHotPathsBenchmark
+```
+
+The S3 lane is an opt-in in-memory adapter benchmark and requires
+`-Pstorage.s3.enabled=true`; it does not claim live network performance. See
+[`storage backend`](docs/storage-backend-benchmark.md),
+[`batch and thumbnail`](docs/batch-thumbnail-benchmark.md), and
+[`algorithmic hot paths`](docs/algorithmic-hot-paths-2026-07.md) for fixture,
+object-count, cleanup, and interpretation details.
+
+![Storage backend benchmark chart](../../docs/images/readme-charts/images-benchmark-storage-backend-chart-01.png)
+
+The storage chart uses a log scale because the adapter rows span sub-millisecond
+to multi-format filesystem costs. The in-memory S3 adapter is faster for byte
+and list operations because it removes network and durable-filesystem effects;
+the chart must not be read as a production S3 throughput claim. The over-limit
+guard is intentionally near-zero for both backends because rejection happens
+before payload persistence.
+
+![Batch and thumbnail scaling benchmark chart](../../docs/images/readme-charts/images-benchmark-batch-pipeline-chart-01.png)
+
+The batch chart shows the main scaling decision: Scrimage sequential work grows
+from about `78` to `616 ms/op` between one and eight inputs, while bounded
+concurrency stays near `92 ms/op` at eight. The libvips thumbnail-only rows
+scale roughly linearly from `33` to `261-269 ms/op`; they are a different
+pipeline boundary from Scrimage's resize-plus-JPEG rows and should not be
+treated as a direct backend ranking.
+
+![Algorithmic hot paths benchmark chart](../../docs/images/readme-charts/images-benchmark-algorithmic-hot-paths-chart-01.png)
+
+The algorithmic chart uses a log scale to keep document and photo fixtures
+visible together. Photo `dominantColors` and `histogramSimilarity` are the
+largest measured hot paths at roughly `140` and `158 ms/op`, while document
+fixtures stay below `10 ms/op` for those operations. This is fixture-sensitive
+evidence for prioritizing photo analysis work, not a cross-host guarantee.
+
 ### Filter (scrimage only, 1240×1754 document image)
 
 ![Filter latency benchmark chart](../../docs/images/readme-charts/images-benchmark-filter-latency-chart-01.png)
@@ -226,6 +277,14 @@ JAVA_HOME=$(/usr/libexec/java_home -v 25) ./gradlew :bluetape4k-images-benchmark
 # Managed heap allocation addendum for large streaming rows
 ./gradlew :bluetape4k-images-benchmark:benchmarkBenchmarkJar --console=plain
 
+# 0.4.0 focused lanes
+./gradlew :bluetape4k-images-benchmark:benchmarkStorageLocalBenchmark --console=plain
+./gradlew :bluetape4k-images-benchmark:benchmarkBatchPipelineBenchmark --console=plain
+./gradlew :bluetape4k-images-benchmark:benchmarkAlgorithmicHotPathsBenchmark --console=plain
+# S3 adapter-only lane (no credentials; explicitly opt in)
+./gradlew :bluetape4k-images-benchmark:benchmarkStorageS3Benchmark \
+  -Pstorage.s3.enabled=true --console=plain
+
 JAVA25=$(/usr/libexec/java_home -v 25)
 "$JAVA25/bin/java" --enable-native-access=ALL-UNNAMED \
   -jar benchmark/images-benchmark/build/benchmarks/benchmark/jars/bluetape4k-images-benchmark-benchmark-jmh-0.3.0-JMH.jar \
@@ -278,6 +337,9 @@ Chart assets currently referenced by this module:
 | Filter latency | `../../docs/images/readme-charts/images-benchmark-filter-latency-chart-01.svg` | `../../docs/images/readme-charts/images-benchmark-filter-latency-chart-01.png` |
 | Vips backend comparison | `../../docs/images/readme-charts/images-benchmark-vips-backend-comparison-chart-01.svg` | `../../docs/images/readme-charts/images-benchmark-vips-backend-comparison-chart-01.png` |
 | Large streaming pipeline | `../../docs/images/readme-charts/images-benchmark-large-streaming-chart-01.svg` | `../../docs/images/readme-charts/images-benchmark-large-streaming-chart-01.png` |
+| Storage backend | `../../docs/images/readme-charts/images-benchmark-storage-backend-chart-01.svg` | `../../docs/images/readme-charts/images-benchmark-storage-backend-chart-01.png` |
+| Batch and thumbnail scaling | `../../docs/images/readme-charts/images-benchmark-batch-pipeline-chart-01.svg` | `../../docs/images/readme-charts/images-benchmark-batch-pipeline-chart-01.png` |
+| Algorithmic hot paths | `../../docs/images/readme-charts/images-benchmark-algorithmic-hot-paths-chart-01.svg` | `../../docs/images/readme-charts/images-benchmark-algorithmic-hot-paths-chart-01.png` |
 
 Render and validate chart updates:
 

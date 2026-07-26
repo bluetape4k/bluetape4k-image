@@ -772,15 +772,18 @@ def render_chart(spec: ChartSpec) -> str:
     bar_h = 20
     series_gap = 27
     row_h = max(70, 36 + len(spec.series) * series_gap)
+    legend_columns = 2 if len(spec.series) >= 4 else len(spec.series)
+    legend_rows = math.ceil(len(spec.series) / legend_columns)
+    legend_extra = (legend_rows - 1) * 32
     panel_x = 56
     panel_y = 146
     panel_w = width - panel_x * 2
-    panel_h = 160 + len(spec.rows) * row_h
+    panel_h = 160 + legend_extra + len(spec.rows) * row_h
     height = panel_y + panel_h + 104
     out = header(width, height, spec.title, spec.subtitle)
     out.append(f'<desc>Source: {esc(spec.source)}. Unit: {esc(spec.unit)}. Direction: {esc(spec.direction)}.</desc>')
     legend_y = panel_y + 28
-    chart_top = panel_y + 92
+    chart_top = panel_y + 92 + legend_extra
     axis_y = chart_top + len(spec.rows) * row_h + 8
     values = [value for _, row in spec.rows for value in row if value > 0]
     max_value = max(values)
@@ -795,18 +798,26 @@ def render_chart(spec: ChartSpec) -> str:
         f'<rect class="chart-panel" x="{panel_x}" y="{panel_y}" width="{panel_w}" height="{panel_h}" rx="12"/>',
         f'<text class="note" x="{panel_x + 32}" y="{panel_y + 44}">Measured ranking</text>',
         f'<text class="axis" x="{left}" y="{panel_y + 44}">{esc(spec.unit)} - {esc(spec.direction)}</text>',
-        f'<text class="axis" x="{left + plot_w:.1f}" y="{panel_y + 68}" text-anchor="end">0 to {max_value:g}{(" (log scale)" if spec.log_scale else "")}</text>',
+        f'<text class="axis" x="{left + plot_w:.1f}" y="{panel_y + 68 + legend_extra}" text-anchor="end">0 to {max_value:g}{(" (log scale)" if spec.log_scale else "")}</text>',
         f'<text class="note" x="{width / 2:.1f}" y="{height - 52}" text-anchor="middle">{esc(footer_text(spec.base))}</text>',
     ])
     for i, name in enumerate(spec.series):
         fill, stroke = colors[i % len(colors)]
-        x = width - right_margin - (len(spec.series) - i) * 160
-        out.append(f'<rect x="{x}" y="{legend_y}" width="22" height="14" rx="4" fill="{fill}" stroke="{stroke}" stroke-width="1.4"/>')
-        out.append(f'<text class="axis" x="{x + 32}" y="{legend_y + 12}">{esc(name)}</text>')
+        if legend_rows > 1:
+            legend_column_width = 280
+            column = i % legend_columns
+            row = i // legend_columns
+            x = width - right_margin - legend_columns * legend_column_width + column * legend_column_width
+            y = legend_y + row * 28
+        else:
+            x = width - right_margin - (len(spec.series) - i) * 160
+            y = legend_y
+        out.append(f'<rect x="{x}" y="{y}" width="22" height="14" rx="4" fill="{fill}" stroke="{stroke}" stroke-width="1.4"/>')
+        out.append(f'<text class="axis" x="{x + 32}" y="{y + 12}">{esc(name)}</text>')
     for tick in range(5):
         x = left + plot_w * tick / 4
         out.append(f'<line x1="{x:.1f}" y1="{chart_top - 12}" x2="{x:.1f}" y2="{axis_y}" stroke="#dbe3ee" stroke-width="1" stroke-dasharray="5 7"/>')
-        raw_tick = max_value * tick / 4
+        raw_tick = (10 ** (scaled_max * tick / 4) - 1) if spec.log_scale else max_value * tick / 4
         out.append(f'<text class="axis" x="{x:.1f}" y="{axis_y + 28}" text-anchor="middle">{raw_tick:g}</text>')
     out.append(f'<line x1="{left}" y1="{axis_y}" x2="{left + plot_w}" y2="{axis_y}" stroke="#94a3b8" stroke-width="1.2"/>')
     for row_index, (label, row) in enumerate(spec.rows):
@@ -853,6 +864,9 @@ def chart_specs() -> tuple[ChartSpec, ...]:
         ChartSpec("images-benchmark-io-boundary-chart-01", "IO Boundary Latency", "Compressed-file IO boundary overhead.", "ms/op", "lower is better", (("homer load", (7.70, 8.23, 10.81)), ("landscape load", (152.22, 0, 216.62)), ("homer write", (6.90, 7.40, 14.03))), ("ByteArray/Path", "Okio", "Suspended"), "benchmark-io-boundary README table", True),
         ChartSpec("images-benchmark-file-io-throughput-chart-01", "File IO Throughput", "Compressed file channel throughput snapshot.", "MB/s", "higher is better", (("read Path", (422.0, 386.0)), ("write Path", (338.0, 291.0)), ("suspended read", (301.0, 275.0)), ("suspended write", (246.0, 218.0))), ("java25", "java21"), "file-io-throughput-2026-05-29.md"),
         ChartSpec("images-benchmark-large-streaming-chart-01", "Large Streaming Pipeline", "Color-preserving decode -> resize -> JPEG encode latency.", "ms/op", "lower is better", (("Scrimage Path", (187.44, 114.77)), ("Scrimage Okio", (183.37, 115.41)), ("Scrimage suspended", (215.61, 136.77)), ("vips Path", (27.34, 16.76)), ("vips stream", (25.76, 16.61))), ("large-photo", "ocr-document"), "large-streaming-2026-07-10.md", False),
+        ChartSpec("images-benchmark-storage-backend-chart-01", "Storage Backend Latency", "Issue #204 adapter latency snapshot for local files and in-memory S3.", "ms/op", "lower is better", (("upload bytes", (0.079995, 0.240581, 0.010292, 0.021147)), ("download bytes", (0.029879, 0.050093, 0.010313, 0.022595)), ("download to path", (0.112391, 0.305890, 0.098830, 0.236566)), ("list", (0.081062, 0.079263, 0.011484, 0.014198)), ("over-limit guard", (0.009616, 0.010278, 0.009589, 0.009532))), ("local JPEG", "local PNG", "S3 mem JPEG", "S3 mem PNG"), "docs/raw/issue-204-20260726-macos-java25/*.json", True),
+        ChartSpec("images-benchmark-batch-pipeline-chart-01", "Batch and Thumbnail Scaling", "Issue #206 AverageTime by fixture count on the local Java 25/macOS host.", "ms/op", "lower is better", (("fixture 1", (77.660, 76.739, 32.879, 33.698)), ("fixture 4", (311.849, 78.147, 128.913, 135.815)), ("fixture 8", (615.779, 92.031, 260.598, 269.307))), ("Scrimage sequential", "Scrimage bounded", "vips cafe", "vips landscape"), "docs/raw/issue-206-20260726-macos-java25/batch-pipeline.json"),
+        ChartSpec("images-benchmark-algorithmic-hot-paths-chart-01", "Algorithmic Hot Paths", "Issue #207 focused utility latency by fixture; log scale keeps small rows visible.", "ms/op", "lower is better", (("crop", (5.141, 4.576)), ("tile split", (81.826, 5.804)), ("dominant colors", (140.299, 4.907)), ("histogram similarity", (157.830, 9.820)), ("pHash distance", (57.507, 5.604)), ("SVG rasterize", (22.297, 22.917))), ("photo", "document"), "docs/raw/issue-207-20260726-macos-java25/algorithmic-hot-paths.json", True),
         ChartSpec("images-benchmark-memory-profile-chart-01", "Memory Profile", "Managed heap allocation and latency for representative workloads.", "MB/op or ms/op", "lower is better", (("scrimage encodeJpeg", (96.34, 146.09)), ("scrimage scaleTo", (24.04, 115.34)), ("vips encodeJpeg", (0.26, 44.16)), ("vips resize", (0.004, 0.246)), ("vips crop", (0.005, 0.085)), ("vips thumbnail", (0.004, 0.266))), ("MB/op", "ms/op"), "memory-profile-2026-05-29.md", True),
     )
 

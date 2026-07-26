@@ -80,6 +80,7 @@ val codecMatrixNativeTaskNames = setOf(
     "benchmarkCodecMatrixBenchmark",
     "benchmarkCodecMatrixAvifBenchmark",
     "benchmarkCodecMatrixHeicBenchmark",
+    "benchmarkBatchPipelineBenchmark",
 )
 
 tasks.withType<JavaExec>().matching { task -> task.name in codecMatrixNativeTaskNames }.configureEach {
@@ -466,6 +467,54 @@ benchmark {
             reportFormat = "json"
             advanced("jvmForks", "definedByJmh")
         }
+
+        register("algorithmicHotPaths") {
+            include(".*ImageAlgorithmBenchmark.*")
+            warmups = 1
+            iterations = 3
+            iterationTime = 1
+            iterationTimeUnit = "s"
+            mode = "avgt"
+            outputTimeUnit = "ms"
+            reportFormat = "json"
+            advanced("jvmForks", 1)
+        }
+
+        register("batchPipeline") {
+            include(".*ImageBatchBenchmark.*")
+            warmups = 1
+            iterations = 3
+            iterationTime = 1
+            iterationTimeUnit = "s"
+            mode = "avgt"
+            outputTimeUnit = "ms"
+            reportFormat = "json"
+            advanced("jvmForks", 1)
+        }
+
+        register("storageLocal") {
+            include(".*ImageStorageBenchmark.local_.*")
+            warmups = 1
+            iterations = 3
+            iterationTime = 1
+            iterationTimeUnit = "s"
+            mode = "avgt"
+            outputTimeUnit = "ms"
+            reportFormat = "json"
+            advanced("jvmForks", 1)
+        }
+
+        register("storageS3") {
+            include(".*ImageStorageBenchmark.s3_.*")
+            warmups = 1
+            iterations = 3
+            iterationTime = 1
+            iterationTimeUnit = "s"
+            mode = "avgt"
+            outputTimeUnit = "ms"
+            reportFormat = "json"
+            advanced("jvmForks", 1)
+        }
     }
 
     targets {
@@ -474,6 +523,15 @@ benchmark {
             jmhVersion = libs.versions.jmh.get()
             workingDir = repositoryDirectory.asFile.absolutePath
         }
+    }
+}
+
+dependencyManagement {
+    imports {
+        mavenBom("org.springframework.boot:spring-boot-dependencies:${bt4k.versions.spring.boot.get()}")
+        mavenBom(bt4k.aws2.bom.get().toString())
+        mavenBom("org.jetbrains.kotlin:kotlin-bom:${bt4k.versions.kotlin.get()}")
+        mavenBom("org.jetbrains.kotlinx:kotlinx-coroutines-bom:${bt4k.versions.kotlinx.coroutines.get()}")
     }
 }
 
@@ -501,6 +559,12 @@ dependencies {
 
     // Benchmark
     add("benchmarkImplementation", project(":bluetape4k-images-barcode-zxing"))
+    add("benchmarkImplementation", project(":bluetape4k-images-spring-boot"))
+    add("benchmarkImplementation", bt4k.bluetape4k.aws.spring.boot)
+    add("benchmarkImplementation", libs.aws2.s3)
+    add("benchmarkImplementation", "org.springframework:spring-core")
+    add("benchmarkImplementation", libs.batik.transcoder)
+    add("benchmarkImplementation", libs.batik.codec)
     add("benchmarkImplementation", libs.kotlinx.benchmark.runtime)
     add("benchmarkImplementation", libs.kotlinx.benchmark.runtime.jvm)
     add("benchmarkImplementation", libs.jmh.core)
@@ -954,6 +1018,14 @@ afterEvaluate {
                 "experimental codec matrix JMH report is stale"
             }
             validateCodecMatrixJmhReport(report, methods)
+        }
+    }
+
+    tasks.matching { task -> task.name == "benchmarkStorageS3Benchmark" }.configureEach {
+        doFirst {
+            require(providers.gradleProperty("storage.s3.enabled").orNull == "true") {
+                "S3 storage benchmark is opt-in: pass -Pstorage.s3.enabled=true"
+            }
         }
     }
 
