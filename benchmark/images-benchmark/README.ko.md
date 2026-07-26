@@ -98,6 +98,55 @@ throughput은 별도로 관측한 `ops/s` 값이라 높을수록 좋습니다. �
 자세한 조건은 [`상세 리포트`](docs/barcode-extraction-2026-07-14.md), 원본 근거는
 [`불변 raw evidence`](docs/raw/issue-272-20260714-macos-arm64-01/)를 참고하세요.
 
+### 0.4.0 Benchmark 추가
+
+남은 `0.4.0` benchmark lane은 다음 configuration으로 독립 실행할 수 있습니다.
+
+| 이슈 | Configuration | 범위 |
+|------:|---------------|-------|
+| #204 | `storageLocal`, `storageS3` | `ImageStorage` upload/download/list와 크기 제한 |
+| #206 | `batchPipeline` | thumbnail fan-out, 순차 처리와 제한된 coroutine 병렬 처리 |
+| #207 | `algorithmicHotPaths` | crop, tiling, dominant colors, SVG rasterization, similarity |
+
+로컬 storage, batch, algorithmic lane 실행:
+
+```bash
+./gradlew :bluetape4k-images-benchmark:benchmarkStorageLocalBenchmark
+./gradlew :bluetape4k-images-benchmark:benchmarkBatchPipelineBenchmark
+./gradlew :bluetape4k-images-benchmark:benchmarkAlgorithmicHotPathsBenchmark
+```
+
+S3 lane은 credential 없이 동작하는 in-memory adapter benchmark이며
+`-Pstorage.s3.enabled=true`를 명시해야 합니다. 실제 네트워크 성능을 의미하지
+않습니다. fixture, object 수, cleanup, 해석 범위는
+[`storage backend`](docs/storage-backend-benchmark.md),
+[`batch and thumbnail`](docs/batch-thumbnail-benchmark.md),
+[`algorithmic hot paths`](docs/algorithmic-hot-paths-2026-07.md)를 참조하세요.
+
+![Storage backend benchmark chart](../../docs/images/readme-charts/images-benchmark-storage-backend-chart-01.png)
+
+storage chart는 sub-millisecond adapter 비용부터 filesystem 비용까지 범위가
+넓어 log scale을 사용합니다. in-memory S3 adapter가 byte/list 작업에서 더 빠른
+것은 네트워크와 durable filesystem 비용을 제거했기 때문이며, 실제 운영 S3
+throughput 순위로 해석하면 안 됩니다. 크기 제한 초과 행은 payload 저장 전에
+거절되므로 두 backend 모두 거의 0에 가깝습니다.
+
+![Batch and thumbnail scaling benchmark chart](../../docs/images/readme-charts/images-benchmark-batch-pipeline-chart-01.png)
+
+batch chart의 핵심은 scaling 차이입니다. Scrimage 순차 처리는 입력 1개에서
+8개로 늘 때 약 `78`에서 `616 ms/op`로 증가하지만, bounded concurrency는
+8개에서도 약 `92 ms/op`입니다. libvips thumbnail-only 행은 약 `33`에서
+`261-269 ms/op`로 거의 선형 증가합니다. Scrimage의 resize+JPEG 행과 다른
+pipeline boundary이므로 backend 직접 순위로 비교하지 않습니다.
+
+![Algorithmic hot paths benchmark chart](../../docs/images/readme-charts/images-benchmark-algorithmic-hot-paths-chart-01.png)
+
+algorithmic chart는 document와 photo fixture를 함께 보이기 위해 log scale을
+사용합니다. photo의 `dominantColors`와 `histogramSimilarity`가 각각 약
+`140`, `158 ms/op`로 가장 크고, document fixture에서는 두 작업 모두
+`10 ms/op` 아래입니다. 이는 photo 분석 작업의 우선순위를 판단하기 위한
+fixture 기반 근거이며 host 간 보편적 보장은 아닙니다.
+
 ### 필터 (scrimage 전용, 1240×1754)
 
 ![Filter latency benchmark chart](../../docs/images/readme-charts/images-benchmark-filter-latency-chart-01.png)
@@ -230,6 +279,14 @@ JAVA_HOME=$(/usr/libexec/java_home -v 25) ./gradlew :bluetape4k-images-benchmark
 # 대용량 streaming 행 managed heap allocation addendum
 ./gradlew :bluetape4k-images-benchmark:benchmarkBenchmarkJar --console=plain
 
+# 0.4.0 focused lanes
+./gradlew :bluetape4k-images-benchmark:benchmarkStorageLocalBenchmark --console=plain
+./gradlew :bluetape4k-images-benchmark:benchmarkBatchPipelineBenchmark --console=plain
+./gradlew :bluetape4k-images-benchmark:benchmarkAlgorithmicHotPathsBenchmark --console=plain
+# S3 adapter-only lane (credential 불필요, 명시적 opt-in)
+./gradlew :bluetape4k-images-benchmark:benchmarkStorageS3Benchmark \
+  -Pstorage.s3.enabled=true --console=plain
+
 JAVA25=$(/usr/libexec/java_home -v 25)
 "$JAVA25/bin/java" --enable-native-access=ALL-UNNAMED \
   -jar benchmark/images-benchmark/build/benchmarks/benchmark/jars/bluetape4k-images-benchmark-benchmark-jmh-0.3.0-JMH.jar \
@@ -282,6 +339,9 @@ Gradle `kotlinx-benchmark` task를 기본 실행 경로로 사용하세요. benc
 | Filter latency | `../../docs/images/readme-charts/images-benchmark-filter-latency-chart-01.svg` | `../../docs/images/readme-charts/images-benchmark-filter-latency-chart-01.png` |
 | Vips backend comparison | `../../docs/images/readme-charts/images-benchmark-vips-backend-comparison-chart-01.svg` | `../../docs/images/readme-charts/images-benchmark-vips-backend-comparison-chart-01.png` |
 | Large streaming pipeline | `../../docs/images/readme-charts/images-benchmark-large-streaming-chart-01.svg` | `../../docs/images/readme-charts/images-benchmark-large-streaming-chart-01.png` |
+| Storage backend | `../../docs/images/readme-charts/images-benchmark-storage-backend-chart-01.svg` | `../../docs/images/readme-charts/images-benchmark-storage-backend-chart-01.png` |
+| Batch and thumbnail scaling | `../../docs/images/readme-charts/images-benchmark-batch-pipeline-chart-01.svg` | `../../docs/images/readme-charts/images-benchmark-batch-pipeline-chart-01.png` |
+| Algorithmic hot paths | `../../docs/images/readme-charts/images-benchmark-algorithmic-hot-paths-chart-01.svg` | `../../docs/images/readme-charts/images-benchmark-algorithmic-hot-paths-chart-01.png` |
 
 차트 갱신 후 렌더링과 검증:
 
