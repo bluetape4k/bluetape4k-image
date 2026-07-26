@@ -35,13 +35,14 @@
     `ac698f0b68dfbe22feda17decdc150f11f3153d8d04bfc43ef36b8031c43a365`,
     `ok=true`.
   - **Failure:** receipt 오류 시 구현을 중단하고 진단한다.
-- [ ] **WF-05 — 의존 순서대로 게이트 실행**
+- [x] **WF-05 — 의존 순서대로 게이트 실행**
   - **Action:** CG, A, Kotlin 항목을 위에서 아래로 실행한다.
-  - **Evidence:** 아래 체크와 최신 명령 결과.
+  - **Evidence:** Tasks 1–9의 순차 RED/GREEN, 검증, 리뷰와 아래 완료 체크.
   - **Failure:** 앞 항목 실패 시 뒤 항목을 실행하지 않는다.
-- [ ] **WF-06 — 누락 게이트 복구**
+- [x] **WF-06 — 누락 게이트 복구**
   - **Action:** 누락이나 약한 증거 발견 시 복구하고 하위 검증을 다시 수행한다.
-  - **Evidence:** 복구 기록 또는 최종 `N/A`.
+  - **Evidence:** multipart request headroom P1과 branch Markdown trailing
+    whitespace를 수정하고 관련 테스트와 전체 검증을 다시 실행했다.
   - **Failure:** 미복구 상태로 완료하지 않는다.
 
 ## Common gates
@@ -74,21 +75,25 @@
   - **Evidence:** Task 8의 bilingual README, dark SVG/PNG 2쌍, root README와
     Examples CI 등록, 상대 링크와 공개 블로그 링크 검증.
   - **Failure:** 문서/등록 누락 시 PR을 만들지 않는다.
-- [ ] **CG-07 — RED/GREEN과 targeted proof**
+- [x] **CG-07 — RED/GREEN과 targeted proof**
   - **Action:** 각 동작을 실패 테스트부터 구현한다.
-  - **Evidence:** Task별 RED/GREEN 명령.
+  - **Evidence:** Tasks 1–7과 multipart headroom 보강의 RED/GREEN 기록.
   - **Failure:** 즉시 통과한 테스트를 증거로 인정하지 않는다.
-- [ ] **CG-08 — heavyweight 검증 직렬화**
+- [x] **CG-08 — heavyweight 검증 직렬화**
   - **Action:** native OCR 등 선택 검증을 다른 heavy check와 병렬 실행하지 않는다.
-  - **Evidence:** 최종 명령 순서 또는 default suite만 실행한 환경 근거.
+  - **Evidence:** Gradle 검증을 clean example → 영향 모듈 → projects/detekt
+    순으로 실행했다. 선택적 native OCR은 환경 의존 gap으로 분리했다.
   - **Failure:** 모호한 병렬 증거를 폐기하고 다시 실행한다.
-- [ ] **CG-09 — lesson 게이트**
+- [x] **CG-09 — lesson 게이트**
   - **Action:** 구현에서 얻은 재사용 가능한 교훈을 커밋한다.
-  - **Evidence:** `docs/lessons/2026-07-27-issue-299-image-intelligence-api.md`.
+  - **Evidence:** `docs/lessons/2026-07-27-issue-299-image-intelligence-api.md`,
+    commit `e063336`.
   - **Failure:** lesson 커밋 전 PR을 만들지 않는다.
-- [ ] **CG-10 — pre-PR 증거 수렴**
+- [x] **CG-10 — pre-PR 증거 수렴**
   - **Action:** 최종 diff, 테스트, 검토를 P0=0/P1=0으로 수렴한다.
-  - **Evidence:** 최종 review artifact와 local head SHA.
+  - **Evidence:** code review artifact 최종 P0=0/P1=0, clean example 48/48,
+    영향 모듈 791개 failure 0, `projects`, `detekt`, `actionlint`, diagram,
+    link와 diff checks.
   - **Failure:** blocker가 남으면 PR을 만들지 않는다.
 - [ ] **CG-11 — PR 권한 검증**
   - **Action:** repo/base/head와 PR 생성 권한을 최신 상태로 확인한다.
@@ -149,17 +154,18 @@
   - **Action:** Task 1–8을 RED/GREEN으로 구현한다.
   - **Evidence:** Task 1–7의 RED/GREEN 기록과 Task 8 문서·다이어그램 검증.
   - **Failure:** 실패한 동작으로 돌아간다.
-- [ ] **A-07 — spec/plan/hazard 검증**
+- [x] **A-07 — spec/plan/hazard 검증**
   - **Action:** acceptance mapping과 module/workflow hazard를 검증한다.
-  - **Evidence:** Task 9 verification.
+  - **Evidence:** Task 9의 16개 수용 기준 추적표와 repository hazard 검사.
   - **Failure:** 누락 task로 돌아간다.
-- [ ] **A-08 — pre-PR review 수렴**
+- [x] **A-08 — pre-PR review 수렴**
   - **Action:** 6관점 code review와 integration review를 수행한다.
-  - **Evidence:** P0=0/P1=0.
+  - **Evidence:** code review artifact에서 P1 1건을 수정하고 최종
+    P0=0/P1=0/P2=0/P3=0으로 수렴했다.
   - **Failure:** blocker 수정·재검증.
-- [ ] **A-09 — durable lesson**
+- [x] **A-09 — durable lesson**
   - **Action:** lesson을 커밋한다.
-  - **Evidence:** lesson path와 commit.
+  - **Evidence:** lesson path와 commit `e063336`.
   - **Failure:** PR 생성 차단.
 - [ ] **A-10 — PR·CI·review**
   - **Action:** CG-11–14를 완료한다.
@@ -185,17 +191,19 @@
   - **Action:** existing quickstart와 local module API를 우선 사용한다.
   - **Evidence:** barcode/ocr examples, suspend extraction extensions, version catalog aliases.
   - **Failure:** raw fallback 근거 없이는 새 utility를 추가하지 않는다.
-- [ ] **KT-03 — Kotlin 계약 적용**
+- [x] **KT-03 — Kotlin 계약 적용**
   - **Action:** validation, cancellation, dispatcher, logging, DTO 불변식을 검토한다.
-  - **Evidence:** current diff review.
+  - **Evidence:** 여섯 관점 review와 production coroutine quick scan.
   - **Failure:** P0/P1 수정 전 진행 차단.
-- [ ] **KT-04 — Kotlin 검증**
+- [x] **KT-04 — Kotlin 검증**
   - **Action:** diagnostics, compile, targeted/full tests, diff check를 수행한다.
-  - **Evidence:** Task 1–9 명령.
+  - **Evidence:** clean example 48/48, 영향 모듈 791개 failure 0,
+    `projects`, `detekt`, diff checks.
   - **Failure:** fresh proof 없이 PASS 금지.
-- [ ] **KT-05 — Kotlin 최종 체크리스트**
+- [x] **KT-05 — Kotlin 최종 체크리스트**
   - **Action:** completion 시 전체 Kotlin checklist를 렌더링한다.
-  - **Evidence:** Required checks count와 P0=0/P1=0.
+  - **Evidence:** 아래 Kotlin trigger gate 전체를 PASS/N/A로 판정했고
+    code review P0=0/P1=0이다.
   - **Failure:** 미확인 row 공개·복구.
 - [x] **KT-MOD-01 — module 등록 동기화**
   - **Action:** settings, README, AGENTS, test resources, Examples CI를 갱신한다.
@@ -210,56 +218,58 @@
   - **Action:** benchmark trigger 여부를 판단한다.
   - **Evidence:** 실행 예제이며 benchmark module을 만들지 않으므로 N/A.
   - **Failure:** benchmark가 추가되면 재분류한다.
-- [ ] **KT-MOD-04 — 최종 module surface**
+- [x] **KT-MOD-04 — 최종 module surface**
   - **Action:** compile/test와 old/new name search를 실행한다.
-  - **Evidence:** Task 9 결과.
+  - **Evidence:** `projects`, registration search, clean/affected tests 통과.
   - **Failure:** surface 불일치 수정.
-- [ ] **KT-TEST-01 — 프로젝트 테스트 관례**
+- [x] **KT-TEST-01 — 프로젝트 테스트 관례**
   - **Action:** JUnit, MockK, bluetape4k assertions, suspend-aware API를 사용한다.
-  - **Evidence:** touched test review.
+  - **Evidence:** 13개 test class와 imports/assertions 검토, `detekt` 통과.
   - **Failure:** 호환되지 않는 assertion 교체.
-- [ ] **KT-TEST-02 — concurrency·cancellation 증명**
+- [x] **KT-TEST-02 — concurrency·cancellation 증명**
   - **Action:** virtual time과 실제 job cancellation, permit 복구를 검증한다.
-  - **Evidence:** runner/workflow/cancellation tests.
+  - **Evidence:** 집중 20개 중 runner/workflow/cancellation tests 통과.
   - **Failure:** 가짜 cancellation proof 교체.
 - [x] **KT-TEST-03 — infrastructure fixture (N/A)**
   - **Action:** Testcontainers 사용 여부를 판단한다.
   - **Evidence:** default suite는 생성 이미지와 local providers만 사용하므로 N/A.
   - **Failure:** container 도입 시 launcher/serialization 게이트를 연다.
-- [ ] **KT-TEST-04 — HTTP lifecycle**
+- [x] **KT-TEST-04 — HTTP lifecycle**
   - **Action:** input, timeout, cancellation, sanitized failure를 검증한다.
-  - **Evidence:** controller와 cancellation tests.
+  - **Evidence:** controller, exception handler, application, cancellation,
+    observability tests 통과.
   - **Failure:** 누락 lifecycle case 보강.
-- [ ] **KT-TEST-05 — targeted→module 검증**
+- [x] **KT-TEST-05 — targeted→module 검증**
   - **Action:** 개별 test class부터 clean module test까지 실행한다.
-  - **Evidence:** fresh Gradle outputs.
+  - **Evidence:** 집중 20개, multipart RED/GREEN, clean example 48개,
+    영향 모듈 791개 순서로 통과.
   - **Failure:** stale cache 결과를 인정하지 않는다.
 - [x] **KT-SPR-01 — optional type guard (N/A)**
   - **Action:** compileOnly optional bean type 여부를 확인한다.
   - **Evidence:** example은 implementation local projects만 사용하므로 N/A.
   - **Failure:** compileOnly type 추가 시 조건을 적용한다.
-- [ ] **KT-SPR-02 — registration·ordering**
+- [x] **KT-SPR-02 — registration·ordering**
   - **Action:** profile bean과 startup guard를 명시적으로 검증한다.
-  - **Evidence:** ApplicationContextRunner/profile tests.
+  - **Evidence:** `ImageIntelligenceConfigurationTest` 4개 통과.
   - **Failure:** bean ordering 의존 제거.
-- [ ] **KT-SPR-03 — configuration semantics**
+- [x] **KT-SPR-03 — configuration semantics**
   - **Action:** immutable properties와 default/invalid 값을 검증한다.
-  - **Evidence:** properties tests.
+  - **Evidence:** properties 5개와 multipart request headroom test 통과.
   - **Failure:** mutable/ambiguous property 수정.
-- [ ] **KT-SPR-04 — Spring test isolation**
+- [x] **KT-SPR-04 — Spring test isolation**
   - **Action:** context runner와 좁은 application test를 사용한다.
-  - **Evidence:** profile tests.
+  - **Evidence:** profile은 `ApplicationContextRunner`, HTTP는 좁은
+    `SpringBootTest`/standalone MockMvc로 검증했다.
   - **Failure:** broad scan으로 숨겨진 계약 제거.
-- [ ] **KT-SPR-05 — lifecycle**
+- [x] **KT-SPR-05 — lifecycle**
   - **Action:** suspend controller와 provider cancellation을 보존한다.
-  - **Evidence:** cancellation integration tests.
+  - **Evidence:** async MockMvc, 실제 job cancellation, 다음 요청 복구 tests 통과.
   - **Failure:** cancellation wrapping 수정.
 
 ## Current count
 
-Required checks: 20/52; N/A: 3; Blocked: 0.
-Unchecked: WF-05, WF-06, CG-07–18, A-07–12, KT-03–05, KT-MOD-04,
-KT-TEST-01–02, KT-TEST-04–05, KT-SPR-02–05.
+Required checks: 42/53; N/A: 3; Blocked: 0.
+Unchecked: CG-11–18, A-10–12.
 
 ## Implementation evidence
 
