@@ -165,6 +165,58 @@ fun validateBarcodeBenchmarkReport(report: File, expectedMode: String, expectedU
     }
 }
 
+fun validateOcrBenchmarkReport(report: File, expectedMode: String, expectedUnit: String) {
+    require(report.isFile) { "OCR benchmark report is missing: $report" }
+    val rows = JsonSlurper().parse(report) as? List<*>
+        ?: throw IllegalArgumentException("OCR benchmark report must be a JSON array")
+    val expectedRows = setOf(
+        "clean-text",
+        "noisy-scan",
+        "rotated-document",
+        "multilingual-text",
+    ).flatMap { scenario ->
+        listOf("extractText", "preprocessAndExtract").map { method -> "$method|$scenario" }
+    }.toSet()
+    val actualRows = rows.map { value ->
+        val row = value as? Map<*, *>
+            ?: throw IllegalArgumentException("OCR benchmark row must be an object")
+        require(row["mode"] == expectedMode) { "OCR benchmark mode must be $expectedMode" }
+        require((row["threads"] as? Number)?.toInt() == 1) { "OCR benchmark threads must be 1" }
+        require((row["forks"] as? Number)?.toInt() == 1) { "OCR benchmark forks must be 1" }
+        require((row["warmupIterations"] as? Number)?.toInt() == OCR_BENCHMARK_WARMUPS) {
+            "OCR benchmark warmups differ"
+        }
+        require((row["measurementIterations"] as? Number)?.toInt() == OCR_BENCHMARK_ITERATIONS) {
+            "OCR benchmark measurements differ"
+        }
+        require(row["warmupTime"] == "1 s" && row["measurementTime"] == "1 s") {
+            "OCR benchmark iteration time differs"
+        }
+        val primaryMetric = row["primaryMetric"] as? Map<*, *>
+            ?: throw IllegalArgumentException("OCR benchmark primary metric is missing")
+        require(primaryMetric["scoreUnit"] == expectedUnit) {
+            "OCR benchmark score unit must be $expectedUnit"
+        }
+        val score = (primaryMetric["score"] as? Number)?.toDouble()
+            ?: throw IllegalArgumentException("OCR benchmark score is missing")
+        require(score.isFinite() && score > 0.0) { "OCR benchmark score must be positive and finite" }
+        val benchmark = row["benchmark"] as? String
+            ?: throw IllegalArgumentException("OCR benchmark name is missing")
+        val method = benchmark.substringAfterLast('.')
+        require(method in setOf("extractText", "preprocessAndExtract")) {
+            "OCR benchmark method differs: $method"
+        }
+        val params = row["params"] as? Map<*, *>
+            ?: throw IllegalArgumentException("OCR benchmark parameters are missing")
+        val scenario = params["scenario"] as? String
+            ?: throw IllegalArgumentException("OCR benchmark scenario is missing")
+        "$method|$scenario"
+    }.toSet()
+    require(rows.size == expectedRows.size && actualRows == expectedRows) {
+        "OCR benchmark row coverage differs"
+    }
+}
+
 fun validateKtorRouteConcurrencyReport(report: File) {
     require(report.isFile) { "Ktor route concurrency report is missing: $report" }
     val rows = JsonSlurper().parse(report) as? List<*>
@@ -376,6 +428,9 @@ val CODEC_MATRIX_ITERATION_SECONDS = 1L
 val BARCODE_BENCHMARK_WARMUPS = 3
 val BARCODE_BENCHMARK_ITERATIONS = 5
 val BARCODE_BENCHMARK_ITERATION_SECONDS = 1L
+val OCR_BENCHMARK_WARMUPS = 3
+val OCR_BENCHMARK_ITERATIONS = 5
+val OCR_BENCHMARK_ITERATION_SECONDS = 1L
 
 kotlin {
     jvmToolchain(javaVersion)
@@ -462,6 +517,30 @@ benchmark {
             warmups = BARCODE_BENCHMARK_WARMUPS
             iterations = BARCODE_BENCHMARK_ITERATIONS
             iterationTime = BARCODE_BENCHMARK_ITERATION_SECONDS
+            iterationTimeUnit = "s"
+            mode = "thrpt"
+            outputTimeUnit = "s"
+            reportFormat = "json"
+            advanced("jvmForks", 1)
+        }
+
+        register("ocrLatency") {
+            include(".*TesseractOcrExtractionBenchmark.*")
+            warmups = OCR_BENCHMARK_WARMUPS
+            iterations = OCR_BENCHMARK_ITERATIONS
+            iterationTime = OCR_BENCHMARK_ITERATION_SECONDS
+            iterationTimeUnit = "s"
+            mode = "avgt"
+            outputTimeUnit = "ms"
+            reportFormat = "json"
+            advanced("jvmForks", 1)
+        }
+
+        register("ocrThroughput") {
+            include(".*TesseractOcrExtractionBenchmark.*")
+            warmups = OCR_BENCHMARK_WARMUPS
+            iterations = OCR_BENCHMARK_ITERATIONS
+            iterationTime = OCR_BENCHMARK_ITERATION_SECONDS
             iterationTimeUnit = "s"
             mode = "thrpt"
             outputTimeUnit = "s"
@@ -654,6 +733,7 @@ dependencies {
     // Benchmark
     add("benchmarkImplementation", project(":bluetape4k-images-barcode-zxing"))
     add("benchmarkImplementation", project(":bluetape4k-images-ktor"))
+    add("benchmarkImplementation", project(":bluetape4k-images-ocr"))
     add("benchmarkImplementation", project(":bluetape4k-images-spring-boot"))
     add("benchmarkImplementation", bt4k.bluetape4k.aws.spring.boot)
     add("benchmarkImplementation", libs.aws2.s3)
@@ -1000,6 +1080,7 @@ afterEvaluate {
 
     val codecMatrixBenchmarkStarts = ConcurrentHashMap<String, Instant>()
     val barcodeBenchmarkStarts = ConcurrentHashMap<String, Instant>()
+    val ocrBenchmarkStarts = ConcurrentHashMap<String, Instant>()
     val ktorRouteConcurrencyStarts = ConcurrentHashMap<String, Instant>()
 
     tasks.matching { task -> task.name == "benchmarkKtorRouteConcurrencyBenchmark" }.configureEach {
@@ -1064,6 +1145,41 @@ afterEvaluate {
             val report = reports.single()
             validateBarcodeBenchmarkReport(report, expectedMode, expectedUnit)
             stageBarcodeBenchmarkReport(report, barcodeBenchmarkRunDirectory().resolve(stagedName))
+        }
+    }
+
+    tasks.matching { task ->
+        task.name == "benchmarkOcrLatencyBenchmark" ||
+                task.name == "benchmarkOcrThroughputBenchmark"
+    }.configureEach {
+        val latencyMode = name == "benchmarkOcrLatencyBenchmark"
+        val configurationName = if (latencyMode) "ocrLatency" else "ocrThroughput"
+        val expectedMode = if (latencyMode) "avgt" else "thrpt"
+        val expectedUnit = if (latencyMode) "ms/op" else "ops/s"
+        if (!latencyMode) {
+            mustRunAfter("benchmarkOcrLatencyBenchmark")
+        }
+        doFirst {
+            ocrBenchmarkStarts[name] = Instant.now()
+        }
+        doLast {
+            val startedAt = requireNotNull(ocrBenchmarkStarts.remove(name))
+            val reportRoot = layout.buildDirectory.dir("reports/benchmarks/$configurationName").get().asFile
+            val reports = if (reportRoot.isDirectory) {
+                Files.walk(reportRoot.toPath()).use { paths ->
+                    paths.filter { path ->
+                        Files.isRegularFile(path) &&
+                                path.fileName.toString() == "benchmark.json" &&
+                                !Files.getLastModifiedTime(path).toInstant().isBefore(startedAt)
+                    }.map { it.toFile() }.toList()
+                }
+            } else {
+                emptyList()
+            }
+            require(reports.size == 1) {
+                "expected one fresh OCR benchmark report but found ${reports.size}"
+            }
+            validateOcrBenchmarkReport(reports.single(), expectedMode, expectedUnit)
         }
     }
 
