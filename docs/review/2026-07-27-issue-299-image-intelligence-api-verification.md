@@ -321,3 +321,16 @@ KT-MOD-04, KT-TEST-01–02, KT-TEST-04–05, KT-SPR-02–05.
   경계까지 전파된다.
 - **Policy boundary:** `Empty`와 `Failed`를 구분하고, 민감 영역·잘못된 QR·공급자
   저하·사실 개수 조건을 고정된 우선순위와 reason code로 판정한다.
+
+### Task 6 — 안정된 부분 결과 HTTP API
+
+- **RED:** `/api/images/intelligence` endpoint가 없어 요청이 `404`로 실패했다.
+- **GREEN:** controller 3/3, service envelope 2/2, sanitized exception mapping 1/1 passed.
+- **Transport boundary:** 생성형 방문증 QR은 HTTP `200`, 전체 `COMPLETED`, 정책
+  `ALLOW`와 세 provider 식별자를 반환한다.
+- **Partial/failed envelopes:** 한 lane 실패는 `PARTIAL`, 사용 가능한 lane이 없으면
+  `FAILED`를 반환하며 둘 다 분석 envelope를 생성한 정상 HTTP 결과다.
+- **Input boundary:** multipart 누락·빈 파일·지원하지 않는 형식·MIME 불일치·손상
+  이미지·압축 크기·한 변·픽셀 한계를 안정된 `ProblemDetail.reasonCode`로 구분한다.
+- **Leakage boundary:** 응답과 정제된 `500`에는 `WorkContext`, `WorkReport`, raw bytes,
+  stack trace, native path와 원본 workflow exception message가 없다.

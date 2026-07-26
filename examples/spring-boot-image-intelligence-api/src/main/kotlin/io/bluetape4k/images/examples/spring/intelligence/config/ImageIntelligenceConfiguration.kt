@@ -7,9 +7,15 @@ import io.bluetape4k.images.examples.spring.intelligence.service.DisabledDetecti
 import io.bluetape4k.images.examples.spring.intelligence.service.DisabledOcrAnalysisProvider
 import io.bluetape4k.images.examples.spring.intelligence.service.FixtureDetectionAnalysisProvider
 import io.bluetape4k.images.examples.spring.intelligence.service.FixtureOcrAnalysisProvider
+import io.bluetape4k.images.examples.spring.intelligence.service.GuardedAnalysisRunner
+import io.bluetape4k.images.examples.spring.intelligence.service.ImageIntelligenceAggregator
 import io.bluetape4k.images.examples.spring.intelligence.service.ImageIntelligenceProfileGuard
+import io.bluetape4k.images.examples.spring.intelligence.service.ImageIntelligenceService
+import io.bluetape4k.images.examples.spring.intelligence.service.ImageIntelligenceWorkflow
+import io.bluetape4k.images.examples.spring.intelligence.service.ImageUploadQualifier
 import io.bluetape4k.images.examples.spring.intelligence.service.OcrAnalysisProvider
 import io.bluetape4k.images.examples.spring.intelligence.service.TesseractOcrAnalysisProvider
+import io.bluetape4k.images.examples.spring.intelligence.service.VisitorPassPolicy
 import io.bluetape4k.images.examples.spring.intelligence.service.ZxingBarcodeAnalysisProvider
 import io.bluetape4k.images.ocr.OcrOptions
 import io.bluetape4k.images.ocr.OcrStructuredDetail
@@ -109,5 +115,51 @@ internal class ImageIntelligenceConfiguration {
         ZxingBarcodeAnalysisProvider(
             reader = ZxingBarcodeReader(),
             dispatcher = Dispatchers.IO,
+        )
+
+    @Bean
+    fun imageUploadQualifier(properties: ImageIntelligenceProperties): ImageUploadQualifier =
+        ImageUploadQualifier(properties)
+
+    @Bean
+    fun guardedAnalysisRunner(): GuardedAnalysisRunner =
+        GuardedAnalysisRunner()
+
+    @Bean
+    fun imageIntelligenceWorkflow(
+        ocrProvider: OcrAnalysisProvider,
+        detectionProvider: DetectionAnalysisProvider,
+        barcodeProvider: BarcodeAnalysisProvider,
+        runner: GuardedAnalysisRunner,
+        properties: ImageIntelligenceProperties,
+    ): ImageIntelligenceWorkflow =
+        ImageIntelligenceWorkflow(
+            ocrProvider = ocrProvider,
+            detectionProvider = detectionProvider,
+            barcodeProvider = barcodeProvider,
+            runner = runner,
+            properties = properties,
+        )
+
+    @Bean
+    fun imageIntelligenceAggregator(): ImageIntelligenceAggregator =
+        ImageIntelligenceAggregator()
+
+    @Bean
+    fun visitorPassPolicy(): VisitorPassPolicy =
+        VisitorPassPolicy()
+
+    @Bean
+    fun imageIntelligenceService(
+        qualifier: ImageUploadQualifier,
+        workflow: ImageIntelligenceWorkflow,
+        aggregator: ImageIntelligenceAggregator,
+        policy: VisitorPassPolicy,
+    ): ImageIntelligenceService =
+        ImageIntelligenceService(
+            qualifier = qualifier,
+            workflow = workflow,
+            aggregator = aggregator,
+            policy = policy,
         )
 }
