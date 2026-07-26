@@ -1,0 +1,1326 @@
+# Integrated Image Intelligence API Example Implementation Plan
+
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+
+**Goal:** Add a runnable Spring Boot example that qualifies and decodes one uploaded image once, executes OCR, detection, and real ZXing barcode analysis concurrently, preserves partial outcomes, and applies a separate visitor-pass policy.
+
+**Architecture:** `ImageUploadQualifier` creates one `QualifiedImage`; three provider adapters run through guarded `SuspendParallelFlow` lanes and record domain `AnalysisResult` values in distinct `WorkContext` keys. The workflow output is aggregated and interpreted by `VisitorPassPolicy`, then mapped to stable HTTP DTOs without exposing workflow library types.
+
+**Tech Stack:** Kotlin 2.4, Spring Boot 4 Web MVC, Kotlin Coroutines, `bluetape4k-images`, `bluetape4k-images-ocr`, `bluetape4k-images-barcode-zxing`, `bluetape4k-workflow`, JUnit 6, MockK, bluetape4k assertions, ZXing test fixture generation.
+
+**Status:** Six-perspective plan review complete; awaiting user approval for implementation.
+
+---
+
+## 1. Execution contract
+
+- Execute inline in the existing isolated worktree:
+  `/Users/debop/work/bluetape4k/bluetape4k-image/.worktrees/feat-issue-299-image-intelligence-api`.
+- Base branch: `develop`.
+- Feature branch: `feat/issue-299-image-intelligence-api`.
+- Use `test-driven-development` and `bluetape-kotlin-patterns` for every Kotlin behavior.
+- Use `bluetape-diagram` before creating or changing SVG/PNG diagrams.
+- Keep native OCR, container, JNI, and other heavyweight checks sequential.
+- Commit after each task using the Lore commit protocol.
+- Do not merge. Stop after PR CI, review, and merge-ready evidence for a fresh user decision.
+
+## 2. File map
+
+Create focused files under:
+
+`examples/spring-boot-image-intelligence-api/src/main/kotlin/io/bluetape4k/images/examples/spring/intelligence/`
+
+| File | Responsibility |
+|---|---|
+| `ImageIntelligenceApiApplication.kt` | Spring Boot application entry point |
+| `config/ImageIntelligenceConfiguration.kt` | validated properties, profile-specific providers, ZXing, service beans |
+| `model/AnalysisModels.kt` | `AnalysisResult`, lane payloads, aggregate status |
+| `model/ApiModels.kt` | stable HTTP response and policy DTOs |
+| `service/ImageUploadQualifier.kt` | bounded multipart read, MIME/magic checks, dimension probe, one decode |
+| `service/GuardedAnalysisRunner.kt` | semaphore, timeout, cancellation, elapsed time, sanitized failure mapping |
+| `service/ImageAnalysisProviders.kt` | OCR, detector, and barcode provider adapter contracts and implementations |
+| `service/ImageIntelligenceWorkflow.kt` | `SuspendParallelFlow`, separate context keys, typed result extraction |
+| `service/ImageIntelligenceAggregator.kt` | `COMPLETED`, `PARTIAL`, `FAILED` calculation |
+| `service/VisitorPassPolicy.kt` | `ALLOW`, `MANUAL_REVIEW`, `REJECT`, `QUARANTINE` |
+| `service/ImageIntelligenceService.kt` | qualify → analyze → aggregate → policy → response |
+| `web/ImageIntelligenceController.kt` | multipart endpoint |
+| `web/ImageIntelligenceExceptionHandler.kt` | stable `ProblemDetail` mapping |
+
+Mirror each responsibility under `src/test/kotlin`. Put deterministic test helpers in:
+
+`src/test/kotlin/io/bluetape4k/images/examples/spring/intelligence/support/ImageIntelligenceFixtures.kt`.
+
+No production binary fixture is required. Tests generate a deterministic QR image with ZXing,
+encode it as PNG, and pin the resulting payload and dimensions.
+
+## 3. Acceptance traceability
+
+| Spec acceptance criterion | Plan task |
+|---|---|
+| Runnable non-published Spring Boot example and local project dependencies | Task 1 |
+| Bounded input, dimension probe before full decode, one `ImmutableImage` | Task 2 |
+| Separate `Completed`, `Empty`, `Unavailable`, `Failed` outcomes | Task 3 |
+| Bounded concurrency, timeout, cancellation distinction | Task 3 |
+| Local OCR/detection adapters and actual ZXing provider | Task 4 |
+| `WorkReport.Success` means step completion, not domain success | Task 5 |
+| Preserve sibling results after one lane failure | Task 5 |
+| Separate aggregate status and visitor-pass policy | Task 5 |
+| Stable multipart HTTP contract and sanitized errors | Task 6 |
+| Full success, empty, unavailable, failure, timeout, cancellation tests | Tasks 2–7 |
+| Bilingual README and dark SVG/PNG diagrams | Task 8 |
+| settings, AGENTS, root README, Examples workflow registration | Tasks 1 and 8 |
+| Targeted/full validation, actionlint, diagram checks, review, lesson, PR | Task 9 |
+| Versioned manual and publish BOM unchanged | Tasks 8 and 9 |
+
+## 4. Predicted risks and controls
+
+| Risk | Signal | Control | Rerun or rollback point |
+|---|---|---|---|
+| Compressed and decoded images retained together | heap growth during concurrent requests | `QualifiedImage` does not retain upload bytes | Task 2 qualification tests |
+| Full decode before rejecting excessive dimensions | large allocation before validation | `probeImageDimensions` and metadata fallback precede `immutableImageOf` | Task 2 oversized fixture test |
+| Provider timeout mistaken for external cancellation | caller cancellation returned as lane failure | catch local `TimeoutCancellationException`, rethrow other `CancellationException` | Task 3 cancellation tests |
+| In-process native OCR ignores interruption | timeout expires but native call keeps running | document best-effort interruption; require process/remote isolation for strict SLA | Tasks 3, 4, 8 |
+| One lane failure cancels siblings | missing successful partial results | normalize expected provider failures into `AnalysisResult`, return `WorkReport.Success` | Task 5 partial-result test |
+| Shared context key collision | nondeterministic result replacement | one constant key per lane, write once, extract only after workflow completion | Task 5 context tests |
+| Failed detector treated as empty detector result | unsafe automatic `ALLOW` | retain `Failed`/`Unavailable`; policy decision-table test | Task 5 policy tests |
+| Test uses fake barcode reader only | integration contract not proven | generate QR and execute real `ZxingBarcodeReader` | Tasks 4 and 7 |
+| New example omitted from CI or docs | local success but repository drift | registration search, `./gradlew projects`, `actionlint` | Tasks 8 and 9 |
+| Diagram SVG looks correct but PNG is broken | unreadable README asset | render both, inspect PNG at full size, run diagram validators | Task 8 |
+
+## Task 1: Register the example and lock configuration contracts
+
+**Complexity:** Medium
+**Depends on:** committed design
+**Pattern skills:** `bluetape-kotlin-patterns`, `test-driven-development`
+**Rollback point:** remove only the new settings entry and example directory before later tasks depend on them.
+
+**Files:**
+
+- Modify: `settings.gradle.kts`
+- Modify: `AGENTS.md`
+- Create: `examples/spring-boot-image-intelligence-api/build.gradle.kts`
+- Create: `examples/spring-boot-image-intelligence-api/src/main/kotlin/io/bluetape4k/images/examples/spring/intelligence/ImageIntelligenceApiApplication.kt`
+- Create: `examples/spring-boot-image-intelligence-api/src/main/kotlin/io/bluetape4k/images/examples/spring/intelligence/config/ImageIntelligenceConfiguration.kt`
+- Create: `examples/spring-boot-image-intelligence-api/src/main/resources/application.yml`
+- Create: `examples/spring-boot-image-intelligence-api/src/test/kotlin/io/bluetape4k/images/examples/spring/intelligence/config/ImageIntelligencePropertiesTest.kt`
+- Create: `examples/spring-boot-image-intelligence-api/src/test/resources/junit-platform.properties`
+- Create: `examples/spring-boot-image-intelligence-api/src/test/resources/logback-test.xml`
+
+- [ ] **Step 1: Register the empty Gradle project and add the failing property test**
+
+Add to `settings.gradle.kts` beside the other Spring Boot examples:
+
+```kotlin
+include("spring-boot-image-intelligence-api")
+project(":spring-boot-image-intelligence-api").projectDir =
+    file("examples/spring-boot-image-intelligence-api")
+```
+
+Create `build.gradle.kts`:
+
+```kotlin
+plugins {
+    application
+    alias(bt4k.plugins.kotlin.spring)
+    alias(bt4k.plugins.spring.boot)
+}
+
+dependencies {
+    implementation(project(":bluetape4k-images"))
+    implementation(project(":bluetape4k-images-ocr"))
+    implementation(project(":bluetape4k-images-barcode-zxing"))
+    implementation(bt4k.bluetape4k.workflow)
+    implementation(libs.spring.boot.starter.web)
+    implementation(libs.kotlinx.coroutines.reactor)
+
+    testImplementation(libs.spring.boot.starter.test)
+    testImplementation(libs.spring.boot.webmvc.test)
+    testImplementation(bt4k.bluetape4k.junit5)
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.zxing.core)
+}
+
+application {
+    mainClass.set(
+        "io.bluetape4k.images.examples.spring.intelligence.ImageIntelligenceApiApplicationKt"
+    )
+}
+
+springBoot {
+    mainClass.set(
+        "io.bluetape4k.images.examples.spring.intelligence.ImageIntelligenceApiApplicationKt"
+    )
+}
+```
+
+Write tests that construct `ImageIntelligenceProperties` and reject:
+
+```kotlin
+@Test
+fun `rejects non-positive upload and provider limits`() {
+    assertFailsWith<IllegalArgumentException> {
+        ImageIntelligenceProperties(maxInputBytes = 0)
+    }
+    assertFailsWith<IllegalArgumentException> {
+        ImageIntelligenceProperties(ocrTimeout = Duration.ZERO)
+    }
+    assertFailsWith<IllegalArgumentException> {
+        ImageIntelligenceProperties(ocrTimeout = Duration.ofNanos(1))
+    }
+    assertFailsWith<IllegalArgumentException> {
+        ImageIntelligenceProperties(barcodeConcurrency = 0)
+    }
+}
+```
+
+- [ ] **Step 2: Run the focused test and observe RED**
+
+Run:
+
+```bash
+./gradlew :spring-boot-image-intelligence-api:test \
+  --tests '*ImageIntelligencePropertiesTest' --no-daemon
+```
+
+Expected: Kotlin compilation fails because `ImageIntelligenceProperties` does not exist.
+
+- [ ] **Step 3: Implement the application and validated properties**
+
+Use `java.time.Duration` so Spring configuration binding remains direct:
+
+```kotlin
+@ConfigurationProperties(prefix = "example.image-intelligence")
+data class ImageIntelligenceProperties(
+    val maxInputBytes: Long = 5L * 1024L * 1024L,
+    val maxInputPixels: Long = 16_777_216L,
+    val maxInputSide: Int = 8_192,
+    val ocrTimeout: Duration = Duration.ofSeconds(3),
+    val detectionTimeout: Duration = Duration.ofSeconds(2),
+    val barcodeTimeout: Duration = Duration.ofSeconds(2),
+    val ocrConcurrency: Int = 1,
+    val detectionConcurrency: Int = 2,
+    val barcodeConcurrency: Int = 4,
+    val tessdataPath: String? = null,
+) : Serializable {
+    init {
+        maxInputBytes.requirePositiveNumber("maxInputBytes")
+        require(maxInputBytes <= Int.MAX_VALUE) { "maxInputBytes must fit Int" }
+        maxInputPixels.requirePositiveNumber("maxInputPixels")
+        maxInputSide.requirePositiveNumber("maxInputSide")
+        require(ocrTimeout.toMillis() > 0L) { "ocrTimeout must be at least 1 ms" }
+        require(detectionTimeout.toMillis() > 0L) { "detectionTimeout must be at least 1 ms" }
+        require(barcodeTimeout.toMillis() > 0L) { "barcodeTimeout must be at least 1 ms" }
+        ocrConcurrency.requirePositiveNumber("ocrConcurrency")
+        detectionConcurrency.requirePositiveNumber("detectionConcurrency")
+        barcodeConcurrency.requirePositiveNumber("barcodeConcurrency")
+    }
+
+    private companion object {
+        private const val serialVersionUID: Long = 1L
+    }
+}
+```
+
+Create the application entry point with `@SpringBootApplication`. Register properties through
+`@EnableConfigurationProperties(ImageIntelligenceProperties::class)` on a
+`@Configuration(proxyBeanMethods = false)` class.
+
+Set matching Spring multipart and example defaults in `application.yml`; Spring multipart size
+must not be lower than `max-input-bytes`.
+
+- [ ] **Step 4: Add required test resources and repository module map**
+
+Use the same JUnit parallel-disable and Logback test configuration as
+`examples/spring-boot-barcode-api`. Add this row to `AGENTS.md`:
+
+```markdown
+| `examples/spring-boot-image-intelligence-api` | Non-published Spring Boot OCR, detection, and barcode orchestration example |
+```
+
+Add `./gradlew :spring-boot-image-intelligence-api:test` to the command section.
+
+- [ ] **Step 5: Run GREEN and project registration proof**
+
+Run:
+
+```bash
+./gradlew :spring-boot-image-intelligence-api:test \
+  --tests '*ImageIntelligencePropertiesTest' --no-daemon
+./gradlew projects --no-daemon | rg ':spring-boot-image-intelligence-api'
+```
+
+Expected: property tests pass and the project appears exactly once.
+
+- [ ] **Step 6: Commit**
+
+```bash
+git add settings.gradle.kts AGENTS.md examples/spring-boot-image-intelligence-api
+git commit -m "Establish the integrated image example boundary" \
+  -m "Constraint: The example remains non-published and uses local image projects." \
+  -m "Confidence: high" \
+  -m "Scope-risk: narrow" \
+  -m "Tested: property contract test and Gradle project listing"
+```
+
+## Task 2: Qualify and decode each upload exactly once
+
+**Complexity:** Medium
+**Depends on:** Task 1
+**Pattern skills:** `bluetape-kotlin-patterns`, `test-driven-development`
+**Rollback point:** revert qualifier and tests without affecting provider or workflow code.
+
+**Files:**
+
+- Create: `examples/spring-boot-image-intelligence-api/src/main/kotlin/io/bluetape4k/images/examples/spring/intelligence/service/ImageUploadQualifier.kt`
+- Create: `examples/spring-boot-image-intelligence-api/src/test/kotlin/io/bluetape4k/images/examples/spring/intelligence/service/ImageUploadQualifierTest.kt`
+- Create: `examples/spring-boot-image-intelligence-api/src/test/kotlin/io/bluetape4k/images/examples/spring/intelligence/support/ImageIntelligenceFixtures.kt`
+
+- [ ] **Step 1: Write qualification boundary tests**
+
+Cover:
+
+```kotlin
+@Test
+fun `probes limits before decoding and returns one qualified image`() = runTest {
+    val qualified = qualifier.qualify(
+        TestMultipartFile("file", "pass.png", "image/png", pngBytes(40, 30))
+    )
+
+    qualified.mediaType shouldBeEqualTo "image/png"
+    qualified.dimensions shouldBeEqualTo ImageDimensions(40, 30)
+    qualified.image.width shouldBeEqualTo 40
+    decodeCalls.get() shouldBeEqualTo 1
+}
+
+@Test
+fun `rejects MIME mismatch before decode`() = runTest {
+    assertFailsWith<InvalidImageUploadException> {
+        qualifier.qualify(
+            TestMultipartFile("file", "pass.png", "image/png", jpegBytes(40, 30))
+        )
+    }
+    decodeCalls.get() shouldBeEqualTo 0
+}
+
+@Test
+fun `rejects pixel overflow before decode`() = runTest {
+    assertFailsWith<ImagePayloadTooLargeException> {
+        qualifier.qualify(
+            TestMultipartFile("file", "large.png", "image/png", pngBytes(101, 100))
+        )
+    }
+    decodeCalls.get() shouldBeEqualTo 0
+}
+```
+
+Also test missing content type, empty bytes, reported-size overflow, actual-size overflow,
+unsupported GIF, malformed bytes, maximum side, and caller cancellation while reading bytes.
+
+- [ ] **Step 2: Run the focused test and observe RED**
+
+```bash
+./gradlew :spring-boot-image-intelligence-api:test \
+  --tests '*ImageUploadQualifierTest' --no-daemon
+```
+
+Expected: compilation fails because qualifier types are absent.
+
+- [ ] **Step 3: Implement the bounded qualification sequence**
+
+Use these contracts:
+
+```kotlin
+internal data class QualifiedImage(
+    val mediaType: String,
+    val dimensions: ImageDimensions,
+    val image: ImmutableImage,
+)
+
+internal open class InvalidImageUploadException(
+    val reasonCode: String,
+    message: String,
+    cause: Throwable? = null,
+) : IllegalArgumentException(message, cause)
+
+internal class ImagePayloadTooLargeException(
+    reasonCode: String,
+    message: String,
+) : InvalidImageUploadException(reasonCode, message)
+```
+
+`ImageUploadQualifier.qualify(file)` must execute in this exact order:
+
+1. reject empty input and unsupported declared content type;
+2. reject `MultipartFile.size` overflow;
+3. read bytes on `Dispatchers.IO`, rethrowing `CancellationException`;
+4. reject actual byte overflow;
+5. identify PNG, JPEG, or WebP from magic bytes and compare with declared type;
+6. call `probeImageDimensions`, falling back to bounded metadata parsing;
+7. reject maximum side and pixel count before full decode;
+8. call `immutableImageOf(bytes)` once on `Dispatchers.Default`;
+9. return only media type, dimensions, and decoded image—never retain the source bytes.
+
+Catch unexpected decode exceptions and expose only:
+
+```kotlin
+InvalidImageUploadException(
+    reasonCode = "image_not_decodable",
+    message = "The uploaded file is not a decodable image.",
+    cause = exception,
+)
+```
+
+- [ ] **Step 4: Run GREEN**
+
+```bash
+./gradlew :spring-boot-image-intelligence-api:test \
+  --tests '*ImageUploadQualifierTest' --no-daemon
+```
+
+Expected: all qualification and cancellation tests pass.
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add examples/spring-boot-image-intelligence-api/src/main \
+  examples/spring-boot-image-intelligence-api/src/test
+git commit -m "Reject unsafe image input before full decoding" \
+  -m "Constraint: Pixel and side budgets must be checked before immutableImageOf." \
+  -m "Confidence: high" \
+  -m "Scope-risk: narrow" \
+  -m "Tested: ImageUploadQualifier boundary and cancellation tests"
+```
+
+## Task 3: Model domain outcomes and guard provider execution
+
+**Complexity:** High
+**Depends on:** Task 1
+**Pattern skills:** `bluetape-kotlin-patterns`, `kotlin-coroutines-skill`, `test-driven-development`
+**Rollback point:** runner and models are internal and can be reverted before provider adapters use them.
+
+**Files:**
+
+- Create: `examples/spring-boot-image-intelligence-api/src/main/kotlin/io/bluetape4k/images/examples/spring/intelligence/model/AnalysisModels.kt`
+- Create: `examples/spring-boot-image-intelligence-api/src/main/kotlin/io/bluetape4k/images/examples/spring/intelligence/service/GuardedAnalysisRunner.kt`
+- Create: `examples/spring-boot-image-intelligence-api/src/test/kotlin/io/bluetape4k/images/examples/spring/intelligence/service/GuardedAnalysisRunnerTest.kt`
+
+- [ ] **Step 1: Write RED tests for the four outcomes**
+
+Write tests proving:
+
+```kotlin
+runner.run("fixture", timeout, semaphore) { "value" }
+    .shouldBeInstanceOf<AnalysisResult.Completed<String>>()
+
+runner.run("fixture", timeout, semaphore, isEmpty = { it.isEmpty() }) { "" }
+    .shouldBeInstanceOf<AnalysisResult.Empty>()
+
+runner.run<String>("disabled", timeout, semaphore) {
+    throw ProviderUnavailableException("provider_not_configured")
+}.shouldBeInstanceOf<AnalysisResult.Unavailable>()
+
+runner.run<String>("broken", timeout, semaphore) {
+    error("raw-secret")
+}.shouldBeInstanceOf<AnalysisResult.Failed>()
+```
+
+Assert elapsed time is non-negative and `Failed.reasonCode` does not contain
+`raw-secret`.
+
+- [ ] **Step 2: Write RED timeout, semaphore, and cancellation tests**
+
+Use `runTest` and a real cancellation job where appropriate:
+
+- local timeout becomes only `Failed("timeout")`;
+- external parent cancellation is rethrown and cancels the child;
+- maximum concurrent entries never exceed the configured permit count;
+- permits are released after success, failure, timeout, and cancellation;
+- one waiting caller cancellation does not consume a permit.
+
+- [ ] **Step 3: Run RED**
+
+```bash
+./gradlew :spring-boot-image-intelligence-api:test \
+  --tests '*GuardedAnalysisRunnerTest' --no-daemon
+```
+
+Expected: compilation fails because the runner and models are absent.
+
+- [ ] **Step 4: Implement immutable domain outcomes**
+
+```kotlin
+internal sealed interface AnalysisResult<out T> {
+    val provider: String
+    val elapsedMillis: Long
+
+    data class Completed<T>(
+        override val provider: String,
+        override val elapsedMillis: Long,
+        val value: T,
+    ) : AnalysisResult<T>
+
+    data class Empty(
+        override val provider: String,
+        override val elapsedMillis: Long,
+    ) : AnalysisResult<Nothing>
+
+    data class Unavailable(
+        override val provider: String,
+        override val elapsedMillis: Long,
+        val reasonCode: String,
+    ) : AnalysisResult<Nothing>
+
+    data class Failed(
+        override val provider: String,
+        override val elapsedMillis: Long,
+        val reasonCode: String,
+    ) : AnalysisResult<Nothing>
+}
+```
+
+Add:
+
+```kotlin
+internal class ProviderUnavailableException(
+    val reasonCode: String,
+) : RuntimeException(reasonCode)
+```
+
+Do not expose original exception messages through domain results.
+
+- [ ] **Step 5: Implement `GuardedAnalysisRunner`**
+
+Use `Semaphore.withPermit`, `withTimeout`, and `TimeSource.Monotonic`.
+Fix the public-to-example execution contract to this exact internal signature:
+
+```kotlin
+internal suspend fun <T : Any> run(
+    provider: String,
+    timeout: Duration,
+    semaphore: Semaphore,
+    isEmpty: (T) -> Boolean = { false },
+    block: suspend () -> T,
+): AnalysisResult<T>
+```
+
+Here `Duration` is `java.time.Duration`; convert it with `timeout.toMillis()` only at
+the `withTimeout` boundary. Reject a blank provider, a non-positive timeout, and a
+semaphore configured with fewer than one permit when the runner beans are created.
+Catch in this order:
+
+```kotlin
+try {
+    semaphore.withPermit {
+        withTimeout(timeout.toMillis()) {
+            val value = block()
+            if (isEmpty(value)) empty(provider, elapsed()) else completed(provider, elapsed(), value)
+        }
+    }
+} catch (exception: TimeoutCancellationException) {
+    failed(provider, elapsed(), "timeout")
+} catch (exception: CancellationException) {
+    throw exception
+} catch (exception: ProviderUnavailableException) {
+    unavailable(provider, elapsed(), exception.reasonCode)
+} catch (exception: Exception) {
+    log.warn { "Image analysis provider failed. provider=$provider reason=provider_failure" }
+    failed(provider, elapsed(), "provider_failure")
+}
+```
+
+Validate provider, timeout, and concurrency configuration before execution.
+Logging may include provider and reason code but not raw exception messages, stack traces,
+image, OCR, barcode, or detection payloads.
+
+- [ ] **Step 6: Run GREEN**
+
+```bash
+./gradlew :spring-boot-image-intelligence-api:test \
+  --tests '*GuardedAnalysisRunnerTest' --no-daemon
+```
+
+Expected: outcome, permit, timeout, and real cancellation tests pass.
+
+- [ ] **Step 7: Commit**
+
+```bash
+git add examples/spring-boot-image-intelligence-api/src/main \
+  examples/spring-boot-image-intelligence-api/src/test
+git commit -m "Separate provider execution from analysis outcomes" \
+  -m "Constraint: External cancellation must never be normalized as a business failure." \
+  -m "Confidence: high" \
+  -m "Scope-risk: moderate" \
+  -m "Tested: guarded runner outcome, semaphore, timeout, and cancellation tests"
+```
+
+## Task 4: Reuse OCR, detection, and real ZXing through provider adapters
+
+**Complexity:** High
+**Depends on:** Tasks 2 and 3
+**Pattern skills:** `bluetape-kotlin-patterns`, `kotlin-coroutines-skill`, `test-driven-development`
+**Rollback point:** remove profile/provider beans while retaining generic runner and models.
+
+**Files:**
+
+- Create: `examples/spring-boot-image-intelligence-api/src/main/kotlin/io/bluetape4k/images/examples/spring/intelligence/service/ImageAnalysisProviders.kt`
+- Modify: `examples/spring-boot-image-intelligence-api/src/main/kotlin/io/bluetape4k/images/examples/spring/intelligence/config/ImageIntelligenceConfiguration.kt`
+- Create: `examples/spring-boot-image-intelligence-api/src/test/kotlin/io/bluetape4k/images/examples/spring/intelligence/service/ImageAnalysisProvidersTest.kt`
+- Modify: `examples/spring-boot-image-intelligence-api/src/test/kotlin/io/bluetape4k/images/examples/spring/intelligence/support/ImageIntelligenceFixtures.kt`
+
+- [ ] **Step 1: Write provider contract tests**
+
+Prove:
+
+- default OCR returns `Unavailable("provider_not_configured")`;
+- default detector returns `Unavailable("provider_not_configured")`;
+- demo OCR returns structured text with page metadata;
+- demo detector returns one face fact and no policy action;
+- blank image produces barcode `Empty`;
+- generated QR image produces barcode `Completed` with `QR_CODE` and payload
+  `visitor:PASS-001`;
+- provider exceptions become sanitized `Failed`;
+- provider cancellation is propagated.
+
+- [ ] **Step 2: Run RED**
+
+```bash
+./gradlew :spring-boot-image-intelligence-api:test \
+  --tests '*ImageAnalysisProvidersTest' --no-daemon
+```
+
+Expected: compilation fails because provider adapters do not exist.
+
+- [ ] **Step 3: Implement narrow provider contracts**
+
+```kotlin
+internal interface OcrAnalysisProvider {
+    val id: String
+    suspend fun analyze(image: ImmutableImage): OcrStructuredResult
+}
+
+internal interface DetectionAnalysisProvider {
+    val id: String
+    suspend fun analyze(image: ImmutableImage): List<DetectionResult>
+}
+
+internal interface BarcodeAnalysisProvider {
+    val id: String
+    suspend fun analyze(image: ImmutableImage): List<BarcodeResult>
+}
+```
+
+Implement:
+
+- `DisabledOcrAnalysisProvider`
+- `FixtureOcrAnalysisProvider`
+- `TesseractOcrAnalysisProvider`
+- `DisabledDetectionAnalysisProvider`
+- `FixtureDetectionAnalysisProvider`
+- `ZxingBarcodeAnalysisProvider`
+
+Reuse the existing suspend adapters instead of wrapping providers again:
+
+```kotlin
+image.suspendExtractOcr(options, engine, ocrDispatcher)
+image.suspendDetectRegions(detector, options, detectionDispatcher)
+image.suspendExtractBarcodes(reader, options, barcodeDispatcher)
+```
+
+Those adapters dispatch blocking work with `withContext`. README must later state that
+dispatch prevents work from starting after cancellation, but an already-running native
+call may ignore cancellation.
+
+- [ ] **Step 4: Configure profile ownership explicitly**
+
+Use `@Profile("demo")`, `@Profile("native-ocr")`, and negated profile conditions so exactly
+one OCR provider and one detector provider exist:
+
+```text
+default         disabled OCR + disabled detector + ZXing
+demo            fixture OCR + fixture detector + ZXing
+native-ocr      Tesseract OCR + disabled detector + ZXing
+demo,native-ocr invalid combination rejected by a configuration test
+```
+
+Add a startup guard rather than depending on bean ordering:
+
+```kotlin
+internal class ImageIntelligenceProfileGuard(
+    private val environment: Environment,
+) : SmartInitializingSingleton {
+    override fun afterSingletonsInstantiated() {
+        val active = environment.activeProfiles.toSet()
+        require(!active.containsAll(setOf("demo", "native-ocr"))) {
+            "Profiles 'demo' and 'native-ocr' cannot be active together."
+        }
+    }
+}
+```
+
+Register the guard unconditionally and use these exact profile expressions:
+
+```text
+fixture OCR                  @Profile("demo & !native-ocr")
+Tesseract OCR                @Profile("native-ocr & !demo")
+disabled OCR                 @Profile("!demo & !native-ocr")
+fixture detector             @Profile("demo")
+disabled detector            @Profile("!demo")
+ZXing barcode                no profile restriction
+```
+
+The conflicting-profile test must assert context startup failure and the stable
+configuration message above.
+
+Do not auto-download models or traineddata. Pass optional `tessdataPath` only from validated
+configuration.
+
+- [ ] **Step 5: Generate the QR fixture at test runtime**
+
+Use ZXing `QRCodeWriter` in test support to render `visitor:PASS-001` into a
+`BufferedImage`, then encode with the existing image utilities. Pin:
+
+- payload;
+- format `QR_CODE`;
+- dimensions;
+- generated-source note.
+
+No external image license or binary fixture is introduced.
+
+- [ ] **Step 6: Run GREEN**
+
+```bash
+./gradlew :spring-boot-image-intelligence-api:test \
+  --tests '*ImageAnalysisProvidersTest' --no-daemon
+```
+
+Expected: default/demo adapters and actual ZXing extraction pass without Tesseract.
+
+- [ ] **Step 7: Commit**
+
+```bash
+git add examples/spring-boot-image-intelligence-api/src/main \
+  examples/spring-boot-image-intelligence-api/src/test
+git commit -m "Compose image capabilities through explicit providers" \
+  -m "Constraint: Default tests must not require native OCR or a production ML model." \
+  -m "Rejected: Bundle an ML detector | The example owns orchestration, not model selection." \
+  -m "Confidence: high" \
+  -m "Scope-risk: moderate" \
+  -m "Tested: provider profile, unavailable, fixture, cancellation, and real ZXing tests"
+```
+
+## Task 5: Orchestrate parallel lanes and apply a separate policy
+
+**Complexity:** High
+**Depends on:** Tasks 3 and 4
+**Pattern skills:** `bluetape-kotlin-patterns`, `kotlin-coroutines-skill`, `test-driven-development`
+**Rollback point:** workflow, aggregator, and policy are internal and can be reverted together.
+
+**Files:**
+
+- Create: `examples/spring-boot-image-intelligence-api/src/main/kotlin/io/bluetape4k/images/examples/spring/intelligence/service/ImageIntelligenceWorkflow.kt`
+- Create: `examples/spring-boot-image-intelligence-api/src/main/kotlin/io/bluetape4k/images/examples/spring/intelligence/service/ImageIntelligenceAggregator.kt`
+- Create: `examples/spring-boot-image-intelligence-api/src/main/kotlin/io/bluetape4k/images/examples/spring/intelligence/service/VisitorPassPolicy.kt`
+- Create: `examples/spring-boot-image-intelligence-api/src/test/kotlin/io/bluetape4k/images/examples/spring/intelligence/service/ImageIntelligenceWorkflowTest.kt`
+- Create: `examples/spring-boot-image-intelligence-api/src/test/kotlin/io/bluetape4k/images/examples/spring/intelligence/service/VisitorPassPolicyTest.kt`
+
+- [ ] **Step 1: Write RED workflow tests**
+
+Prove:
+
+- three controlled lanes overlap in time rather than executing sequentially;
+- each lane writes one unique context key;
+- a provider `Failed` result still yields workflow `WorkReport.Success`;
+- OCR failure preserves detection and barcode outcomes;
+- a missing context key becomes `ImageWorkflowException`;
+- an unexpected programming exception yields workflow failure and a sanitized service error;
+- external job cancellation reaches all active provider adapters.
+
+- [ ] **Step 2: Write RED aggregate and policy decision-table tests**
+
+Aggregate rules:
+
+```text
+all Completed/Empty       -> COMPLETED
+available + degraded      -> PARTIAL
+no available result       -> FAILED
+```
+
+Policy order:
+
+```text
+sensitive detection fact                     -> QUARANTINE
+invalid completed visitor QR                  -> REJECT
+Failed or Unavailable required lane           -> MANUAL_REVIEW
+missing/multiple face or missing/multiple QR   -> MANUAL_REVIEW
+valid OCR + one face + one visitor QR          -> ALLOW
+```
+
+Explicitly prove `Detection Empty` and `Detection Failed` are not equivalent.
+
+- [ ] **Step 3: Run RED**
+
+```bash
+./gradlew :spring-boot-image-intelligence-api:test \
+  --tests '*ImageIntelligenceWorkflowTest' \
+  --tests '*VisitorPassPolicyTest' --no-daemon
+```
+
+Expected: compilation fails because workflow and policy types are absent.
+
+- [ ] **Step 4: Implement the workflow with separate keys**
+
+Use:
+
+```kotlin
+private const val OCR_RESULT = "analysis.ocr"
+private const val DETECTION_RESULT = "analysis.detection"
+private const val BARCODE_RESULT = "analysis.barcode"
+```
+
+Each `execute` block records its `AnalysisResult` and returns:
+
+```kotlin
+WorkReport.success(context)
+```
+
+After `flow.execute(context)`, require `WorkReport.Success`, then read all three typed values.
+Do not expose or return `WorkContext` outside `ImageIntelligenceWorkflow`.
+Use one checked extraction helper so a missing key or wrong value type becomes a stable
+orchestration defect rather than a later null failure:
+
+```kotlin
+private inline fun <reified T : Any> WorkContext.requireResult(key: String): T =
+    this[key]
+        ?: throw ImageWorkflowException(
+            reasonCode = "missing_workflow_result",
+            message = "Workflow result is missing for key=$key.",
+        )
+```
+
+- [ ] **Step 5: Implement aggregate status and policy**
+
+Keep `ImageIntelligenceAggregator` purely deterministic. Keep `VisitorPassPolicy` free of
+provider execution and HTTP types. Return:
+
+```kotlin
+internal data class VisitorPassDecision(
+    val action: VisitorPassAction,
+    val reasons: List<String>,
+)
+```
+
+Use stable reason codes such as:
+
+- `SENSITIVE_REGION_DETECTED`
+- `INVALID_VISITOR_QR`
+- `OCR_UNAVAILABLE`
+- `DETECTION_FAILED`
+- `FACE_COUNT_REQUIRES_REVIEW`
+- `QR_COUNT_REQUIRES_REVIEW`
+
+- [ ] **Step 6: Run GREEN and repeat the cancellation test**
+
+```bash
+./gradlew :spring-boot-image-intelligence-api:test \
+  --tests '*ImageIntelligenceWorkflowTest' \
+  --tests '*VisitorPassPolicyTest' --no-daemon
+```
+
+Expected: concurrency, partial results, missing-key failure, cancellation, aggregate, and policy
+tests pass.
+
+- [ ] **Step 7: Commit**
+
+```bash
+git add examples/spring-boot-image-intelligence-api/src/main \
+  examples/spring-boot-image-intelligence-api/src/test
+git commit -m "Preserve partial analysis before applying visitor policy" \
+  -m "Constraint: WorkReport.Success records step completion, not provider success." \
+  -m "Confidence: high" \
+  -m "Scope-risk: moderate" \
+  -m "Tested: parallel workflow, partial outcome, cancellation, aggregate, and policy tests"
+```
+
+## Task 6: Expose stable HTTP responses without workflow leakage
+
+**Complexity:** Medium
+**Depends on:** Tasks 2 and 5
+**Pattern skills:** `bluetape-kotlin-patterns`, `test-driven-development`
+**Rollback point:** remove web/service DTO layer while retaining tested domain orchestration.
+
+**Files:**
+
+- Create: `examples/spring-boot-image-intelligence-api/src/main/kotlin/io/bluetape4k/images/examples/spring/intelligence/model/ApiModels.kt`
+- Create: `examples/spring-boot-image-intelligence-api/src/main/kotlin/io/bluetape4k/images/examples/spring/intelligence/service/ImageIntelligenceService.kt`
+- Create: `examples/spring-boot-image-intelligence-api/src/main/kotlin/io/bluetape4k/images/examples/spring/intelligence/web/ImageIntelligenceController.kt`
+- Create: `examples/spring-boot-image-intelligence-api/src/main/kotlin/io/bluetape4k/images/examples/spring/intelligence/web/ImageIntelligenceExceptionHandler.kt`
+- Modify: `examples/spring-boot-image-intelligence-api/src/main/kotlin/io/bluetape4k/images/examples/spring/intelligence/config/ImageIntelligenceConfiguration.kt`
+- Create: `examples/spring-boot-image-intelligence-api/src/test/kotlin/io/bluetape4k/images/examples/spring/intelligence/web/ImageIntelligenceControllerTest.kt`
+
+- [ ] **Step 1: Write RED HTTP tests**
+
+With MockMvc or the repository Spring test pattern, prove:
+
+- `POST /api/images/intelligence` with generated QR under `demo` returns HTTP 200,
+  aggregate `COMPLETED`, decision `ALLOW`, and provider identifiers;
+- one injected lane failure returns HTTP 200 and aggregate `PARTIAL`;
+- all required lanes unavailable/failed returns HTTP 200 and aggregate `FAILED`;
+- missing part, empty file, unsupported type, MIME mismatch, malformed image, side overflow,
+  and pixel overflow return stable 4xx `ProblemDetail`;
+- unexpected workflow corruption returns sanitized 500 without raw exception text;
+- JSON contains no `WorkContext`, `WorkReport`, stack trace, raw image bytes, or native path.
+
+- [ ] **Step 2: Run RED**
+
+```bash
+./gradlew :spring-boot-image-intelligence-api:test \
+  --tests '*ImageIntelligenceControllerTest' --no-daemon
+```
+
+Expected: compilation or context startup fails because the web layer is absent.
+
+- [ ] **Step 3: Implement serializable API DTOs**
+
+Use dedicated response types:
+
+```kotlin
+internal enum class AnalysisStatus {
+    COMPLETED,
+    EMPTY,
+    UNAVAILABLE,
+    FAILED,
+}
+
+internal data class OcrAnalysisResponse(
+    val status: AnalysisStatus,
+    val provider: String,
+    val elapsedMillis: Long,
+    val result: OcrResponse? = null,
+    val reasonCode: String? = null,
+) : Serializable
+
+internal data class DetectionAnalysisResponse(
+    val status: AnalysisStatus,
+    val provider: String,
+    val elapsedMillis: Long,
+    val regions: List<DetectionResponse> = emptyList(),
+    val reasonCode: String? = null,
+) : Serializable
+
+internal data class BarcodeAnalysisResponse(
+    val status: AnalysisStatus,
+    val provider: String,
+    val elapsedMillis: Long,
+    val items: List<BarcodeResponse> = emptyList(),
+    val reasonCode: String? = null,
+) : Serializable
+
+internal data class ImageIntelligenceResponse(
+    val requestId: String,
+    val status: AggregateStatus,
+    val decision: VisitorPassAction,
+    val reasons: List<String>,
+    val image: QualifiedImageResponse,
+    val ocr: OcrAnalysisResponse,
+    val detection: DetectionAnalysisResponse,
+    val barcodes: BarcodeAnalysisResponse,
+) : Serializable
+```
+
+All data classes implement `Serializable` and define `serialVersionUID`. Do not serialize
+raw OCR engine objects, raw bytes, `Throwable`, `WorkContext`, or `WorkReport`.
+The mapper must enforce these invariants:
+
+```text
+OCR COMPLETED -> result != null, reasonCode == null
+OCR EMPTY     -> result == null, reasonCode == null
+detection/barcode COMPLETED -> collection contains the mapped results
+detection/barcode EMPTY     -> collection is empty, reasonCode == null
+UNAVAILABLE or FAILED       -> payload is absent/empty, reasonCode != null
+```
+
+- [ ] **Step 4: Implement service, controller, and advice**
+
+Controller:
+
+```kotlin
+@PostMapping(
+    "/api/images/intelligence",
+    consumes = [MediaType.MULTIPART_FORM_DATA_VALUE],
+)
+suspend fun analyze(
+    @RequestParam("file") file: MultipartFile,
+): ImageIntelligenceResponse =
+    service.analyze(file)
+```
+
+`ImageIntelligenceService` receives
+`requestIdProvider: () -> String = { UUID.randomUUID().toString() }` so production gets a
+generated identifier and tests remain deterministic. It qualifies the file once, invokes
+workflow, aggregates, applies policy, and maps DTOs.
+
+Advice maps:
+
+- `InvalidImageUploadException` → `400` or `413` based on exception subtype;
+- missing multipart part → `400`;
+- Spring multipart overflow → `413`;
+- `ImageWorkflowException` → sanitized `500`;
+- no raw exception message in response.
+
+- [ ] **Step 5: Run GREEN**
+
+```bash
+./gradlew :spring-boot-image-intelligence-api:test \
+  --tests '*ImageIntelligenceControllerTest' --no-daemon
+```
+
+Expected: success, partial, failed-envelope, input rejection, and sanitized error tests pass.
+
+- [ ] **Step 6: Commit**
+
+```bash
+git add examples/spring-boot-image-intelligence-api/src/main \
+  examples/spring-boot-image-intelligence-api/src/test
+git commit -m "Expose image analysis as a stable partial-result API" \
+  -m "Constraint: HTTP success reports envelope creation, not guaranteed business success." \
+  -m "Confidence: high" \
+  -m "Scope-risk: moderate" \
+  -m "Tested: multipart success, partial, failed-envelope, input, and sanitized 500 tests"
+```
+
+## Task 7: Prove lifecycle, profile, and full example behavior
+
+**Complexity:** High
+**Depends on:** Tasks 1–6
+**Pattern skills:** `bluetape-kotlin-patterns`, `kotlin-coroutines-skill`, `test-driven-development`
+**Rollback point:** integration fixtures/tests can be reverted independently; production behavior remains covered by focused tests.
+
+**Files:**
+
+- Create: `examples/spring-boot-image-intelligence-api/src/test/kotlin/io/bluetape4k/images/examples/spring/intelligence/ImageIntelligenceApplicationTest.kt`
+- Create: `examples/spring-boot-image-intelligence-api/src/test/kotlin/io/bluetape4k/images/examples/spring/intelligence/ImageIntelligenceCancellationTest.kt`
+- Create: `examples/spring-boot-image-intelligence-api/src/test/kotlin/io/bluetape4k/images/examples/spring/intelligence/ImageIntelligenceObservabilityTest.kt`
+- Modify: `examples/spring-boot-image-intelligence-api/src/test/kotlin/io/bluetape4k/images/examples/spring/intelligence/support/ImageIntelligenceFixtures.kt`
+
+- [ ] **Step 1: Add application profile tests**
+
+Prove the Spring context provides exactly:
+
+```text
+default       disabled OCR, disabled detector, ZXing
+demo          fixture OCR, fixture detector, ZXing
+native-ocr    Tesseract OCR, disabled detector, ZXing
+```
+
+Do not execute native OCR in the default test suite. Verify conflicting `demo,native-ocr`
+profiles fail closed rather than relying on bean ordering.
+
+- [ ] **Step 2: Add end-to-end generated-image tests**
+
+Generate:
+
+- a QR visitor pass producing `ALLOW`;
+- a blank valid image producing policy `MANUAL_REVIEW`;
+- a valid image with injected OCR failure preserving detection/barcode;
+- a valid image with unavailable OCR/detector;
+- malformed and oversized uploads rejected before providers.
+
+Pin generated QR payload and dimensions and call actual `ZxingBarcodeReader`.
+
+- [ ] **Step 3: Add real cancellation and concurrency proof**
+
+Start a request/service coroutine with three controllable providers, cancel the parent, and assert:
+
+- all provider jobs observe cancellation;
+- no response DTO is produced;
+- permits return to their initial count;
+- a subsequent request completes;
+- internal lane timeout still produces a response and does not cancel siblings.
+
+- [ ] **Step 4: Add structured-log redaction proof**
+
+Capture application logs for one completed request and one provider failure. Assert logs contain:
+
+- request ID;
+- provider ID;
+- outcome status;
+- timeout or elapsed milliseconds.
+
+Assert logs do not contain the generated QR payload, OCR text, image bytes, native path,
+exception message, or stack trace at the API boundary.
+
+- [ ] **Step 5: Run targeted lifecycle tests**
+
+```bash
+./gradlew :spring-boot-image-intelligence-api:test \
+  --tests '*ImageIntelligenceApplicationTest' \
+  --tests '*ImageIntelligenceCancellationTest' \
+  --tests '*ImageIntelligenceObservabilityTest' --no-daemon
+```
+
+Expected: all profile, end-to-end, cancellation, permit-recovery, subsequent-request, and
+log-redaction tests pass.
+
+- [ ] **Step 6: Run the whole example test task from clean test outputs**
+
+```bash
+./gradlew :spring-boot-image-intelligence-api:cleanTest \
+  :spring-boot-image-intelligence-api:test --no-build-cache --no-daemon
+```
+
+Expected: all example tests pass with zero skipped default-path behavior and no native runtime.
+
+- [ ] **Step 7: Commit**
+
+```bash
+git add examples/spring-boot-image-intelligence-api/src/test
+git commit -m "Prove the integrated image example across failure boundaries" \
+  -m "Constraint: Default CI remains deterministic and host independent." \
+  -m "Confidence: high" \
+  -m "Scope-risk: moderate" \
+  -m "Tested: profile, generated QR, partial failure, cancellation, log redaction, and clean full example suite"
+```
+
+## Task 8: Add bilingual learning material, diagrams, and repository registration
+
+**Complexity:** High
+**Depends on:** Tasks 1–7
+**Pattern skills:** `bluetape-writer`, `bluetape-diagram`
+**Rollback point:** docs and workflow registration are independently reversible; do not remove tested implementation.
+
+**Files:**
+
+- Create: `examples/spring-boot-image-intelligence-api/README.md`
+- Create: `examples/spring-boot-image-intelligence-api/README.ko.md`
+- Create: `examples/spring-boot-image-intelligence-api/docs/images/readme-diagrams/image-intelligence-architecture.svg`
+- Create: `examples/spring-boot-image-intelligence-api/docs/images/readme-diagrams/image-intelligence-architecture.png`
+- Create: `examples/spring-boot-image-intelligence-api/docs/images/readme-diagrams/image-intelligence-interactions.svg`
+- Create: `examples/spring-boot-image-intelligence-api/docs/images/readme-diagrams/image-intelligence-interactions.png`
+- Modify: `README.md`
+- Modify: `README.ko.md`
+- Modify: `.github/workflows/Examples.yml`
+
+- [ ] **Step 1: Load diagram and writer contracts**
+
+Read `bluetape-diagram` and `bluetape-writer` fully. Instantiate every required diagram
+checklist row before creating visual assets.
+
+- [ ] **Step 2: Write equivalent English and Korean READMEs**
+
+Both files must cover:
+
+- visitor-pass scenario and non-goals;
+- one qualification and one decode before fan-out;
+- `WorkReport.Success` versus domain `Completed`;
+- default, `demo`, and optional `native-ocr` profiles;
+- request and `COMPLETED`, `PARTIAL`, `FAILED` response examples;
+- provider timeout and concurrency properties;
+- non-cooperative native timeout limitation;
+- policy replacement for shipping and product labels;
+- production gaps: auth, malware scanning, storage/deletion, privacy, retry/circuit breaker;
+- source links to OCR, detection, barcode, workflow, tests, and relevant public articles.
+
+Use natural Korean technical prose, not word-for-word translation.
+
+- [ ] **Step 3: Create two dark technical diagrams**
+
+Architecture diagram:
+
+```text
+multipart -> qualification -> dimension probe -> one decode
+          -> OCR / detection / ZXing lanes
+          -> aggregate -> visitor policy -> response
+```
+
+Interaction diagram:
+
+```text
+normal lane completion
+one lane Failed while siblings complete
+external cancellation propagated to every lane
+```
+
+Use card-and-connector style, readable arrowheads, enough vertical spacing, and no label crossing.
+Keep SVG source and same-basename PNG. README displays PNG and links to SVG.
+
+- [ ] **Step 4: Visually inspect SVG and PNG**
+
+Run SVG validation and PNG conversion from the diagram skill. Inspect both PNGs at full size.
+Reject:
+
+- clipped labels;
+- missing or reversed arrowheads;
+- overlapping call labels and connector lines;
+- fonts smaller than the diagram checklist minimum;
+- SVG-only correctness that breaks after PNG conversion.
+
+- [ ] **Step 5: Register root learning paths and Examples CI**
+
+Add the new example after the existing OCR and barcode quickstarts in both root READMEs.
+Add exactly one workflow matrix row:
+
+```yaml
+- example: spring-boot-image-intelligence-api
+  gradle_tasks: :spring-boot-image-intelligence-api:test
+```
+
+Do not add BOM/catalog publication entries. Do not edit `docs/manual/manifest.yaml` or
+release-pinned manual pages before the 0.4.0 manual cycle.
+
+- [ ] **Step 6: Validate docs and workflow**
+
+```bash
+rg -n 'spring-boot-image-intelligence-api' \
+  settings.gradle.kts AGENTS.md README.md README.ko.md .github/workflows/Examples.yml
+actionlint .github/workflows/Examples.yml
+find examples/spring-boot-image-intelligence-api/docs/images/readme-diagrams \
+  -name '*.svg' -print0 | xargs -0 -n1 xmllint --noout
+find examples/spring-boot-image-intelligence-api/docs/images/readme-diagrams \
+  -name '*.svg' -exec sh -c 'test -f "${1%.svg}.png"' sh {} \;
+git diff --check
+```
+
+Expected: every registration surface contains the example, workflow lint passes, SVG parses,
+each SVG has a PNG peer, and diff check is clean.
+
+- [ ] **Step 7: Commit**
+
+```bash
+git add AGENTS.md README.md README.ko.md .github/workflows/Examples.yml \
+  examples/spring-boot-image-intelligence-api
+git commit -m "Teach the integrated image workflow from runnable examples" \
+  -m "Constraint: English and Korean docs and SVG/PNG assets must remain equivalent." \
+  -m "Confidence: high" \
+  -m "Scope-risk: moderate" \
+  -m "Tested: actionlint, diagram validators, PNG inspection, registration search, and diff check"
+```
+
+## Task 9: Converge verification, review, lesson, and PR delivery
+
+**Complexity:** High
+**Depends on:** Tasks 1–8
+**Pattern skills:** `verification-before-completion`, Type A review references
+**Rollback point:** repair the failing task and rerun all dependent proof; do not create PR on stale evidence.
+
+**Files:**
+
+- Create: `docs/review/2026-07-27-issue-299-image-intelligence-api-verification.md`
+- Create: `docs/review/2026-07-27-issue-299-image-intelligence-api-code-review.md`
+- Create: `docs/lessons/2026-07-27-issue-299-image-intelligence-api.md`
+- Modify if findings require repair: only files already named in Tasks 1–8
+
+- [ ] **Step 1: Verify spec-to-implementation traceability**
+
+Read the committed design, this plan, current diff, and tests. Build a table mapping every
+acceptance criterion to source, test, docs, and command evidence. Any missing row returns to the
+owning task.
+
+- [ ] **Step 2: Run targeted and affected-module validation sequentially**
+
+```bash
+./gradlew :spring-boot-image-intelligence-api:cleanTest \
+  :spring-boot-image-intelligence-api:test --no-build-cache --no-daemon
+./gradlew :bluetape4k-images:test \
+  :bluetape4k-images-ocr:test \
+  :bluetape4k-images-barcode-api:test \
+  :bluetape4k-images-barcode-zxing:test \
+  :spring-boot-barcode-api:test \
+  :spring-boot-ocr-api:test \
+  :spring-boot-image-intelligence-api:test --no-daemon
+./gradlew projects --no-daemon
+./gradlew detekt --no-daemon
+actionlint .github/workflows/Examples.yml
+git diff --check
+```
+
+Expected: all commands pass. Do not run optional native OCR in parallel with anything else.
+If an optional native proof is unavailable, record it as an explicit environment-dependent gap;
+default behavior must already be covered.
+
+- [ ] **Step 3: Run performance/stability proof**
+
+Use focused tests to record:
+
+- only one full decode per request;
+- dimension rejection before decode;
+- three provider lanes overlap;
+- concurrency never exceeds configured permits;
+- permits recover after failure, timeout, and cancellation;
+- successful sibling results survive one provider failure;
+- source bytes are not retained by `QualifiedImage`.
+
+No production throughput claim or benchmark ranking is required. This is a bounded behavior proof.
+
+- [ ] **Step 4: Complete six-perspective code review and integration**
+
+Review current branch diff for:
+
+- performance;
+- stability;
+- security;
+- operator/Ops;
+- developer/API;
+- user/caller;
+- main-session integration, documentation, release, and evidence.
+
+Fix all P0/P1 findings, rerun affected tests and review passes, and record final `P0=0`, `P1=0`.
+P2/P3 must be fixed, explicitly deferred with rationale, or filed as follow-up.
+
+- [ ] **Step 5: Commit the durable lesson**
+
+The lesson must include:
+
+- why the example moved from workshop to the image producer repository;
+- why workflow completion and business outcome are different axes;
+- why expected provider failure is data but external cancellation is control flow;
+- why dimension probing precedes decode;
+- why strict native timeout needs process or remote isolation;
+- verification evidence and future guard.
+
+Commit the lesson before PR creation.
+
+- [ ] **Step 6: Verify authorized PR metadata and publish exact head**
+
+Authority is the approved plan for:
+
+- repository: `bluetape4k/bluetape4k-image`;
+- base: `develop`;
+- head: `feat/issue-299-image-intelligence-api`;
+- action: create PR only, not merge.
+
+Push without force, read back the remote SHA, and verify it matches local HEAD.
+
+- [ ] **Step 7: Create and verify the PR**
+
+Create an English PR linked to #299. Assign `debop`; mirror milestone `0.4.0` and labels
+`enhancement`, `documentation`. The final Markdown `##` heading must be:
+
+```markdown
+## DoD Status
+```
+
+Verify live with:
+
+```bash
+gh pr view --json number,url,headRefName,baseRefName,headRefOid,assignees,labels,milestone,body
+```
+
+- [ ] **Step 8: Wait for CI and re-read live review state**
+
+Use live check conclusions on the exact PR head. After green CI, re-read reviews and unresolved
+threads. Any new blocker returns to the owning task and reopens verification.
+
+- [ ] **Step 9: Report merge-ready and stop**
+
+Report:
+
+- exact PR URL and head SHA;
+- CI and current review evidence;
+- tests and diagrams;
+- P0=0/P1=0;
+- lesson commit;
+- remaining risks;
+- checklist counts;
+- `CG-16`, `CG-17`, and `CG-18` still pending.
+
+Do not merge until the user provides a fresh explicit approval for that exact merge-ready head.

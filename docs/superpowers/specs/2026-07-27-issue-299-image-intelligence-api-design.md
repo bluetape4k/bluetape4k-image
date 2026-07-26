@@ -6,7 +6,7 @@
 **Target example**: `examples/spring-boot-image-intelligence-api`
 (`:spring-boot-image-intelligence-api`)  
 **Workflow lane**: Type A Full Feature  
-**Status**: Written spec awaiting user review
+**Status**: Approved for implementation planning
 
 ## 1. 목적과 독자
 
@@ -318,8 +318,9 @@ val flow = suspendParallelFlow("image-intelligence") {
 - OCR, 감지, 바코드에 서로 다른 제한 시간을 둔다.
 - 네이티브 또는 비용이 큰 공급자에는 공급자별 `Semaphore`를 둔다.
 - 각 공급자 동시 실행 수는 양의 정수 설정으로 제한한다.
-- 분석 adapter는 `suspend` 계약을 제공하고, blocking JVM 공급자는
-  `runInterruptible`과 지정 dispatcher로 감싼다.
+- 분석 adapter는 `suspend` 계약을 제공하고, blocking JVM 공급자는 기존
+  `suspendExtractOcr`, `suspendDetectRegions`, `suspendExtractBarcodes` 확장을 통해
+  지정 dispatcher에서 실행한다.
 - 내부 `withTimeout`의 `TimeoutCancellationException`만 해당 작업의
   `Failed(TIMEOUT)`으로 변환한다.
 - 그 밖의 `CancellationException`은 잡아 두지 않고 다시 던진다.
@@ -372,8 +373,8 @@ CI는 Tesseract, tessdata, 운영체제 native library를 요구하지 않는다
 - consumes: `multipart/form-data`
 - required part: `file`
 - 유효한 이미지가 분석 경계에 들어간 뒤의 일부·전체 분석 실패: HTTP `200`
-- 빈 파일, 크기 초과, 형식 불일치, 디코딩 불가, 픽셀 한계 초과:
-  HTTP `400` `ProblemDetail`
+- 빈 파일, 형식 불일치, 디코딩 불가: HTTP `400` `ProblemDetail`
+- 압축 바이트, 한 변 길이, 픽셀 한계 초과: HTTP `413` `ProblemDetail`
 - 요청 취소: 코루틴 취소 전파
 - 예상하지 못한 workflow 결함: HTTP `500` `ProblemDetail`
 
