@@ -1,48 +1,44 @@
-# bluetape4k-image 7-Tier Code Review
+# bluetape4k-image 7계층 코드 검토
 
-Date: 2026-07-03
-Scope: repository-wide Kotlin code, README/README.ko parity, README diagram assets
-Branch: `review/image-repo-quality-docs-diagrams`
+날짜: 2026-07-03
+범위: repository-wide Kotlin code, README/README.ko parity, README diagram assets
+브랜치: `review/image-repo-quality-docs-diagrams`
 
-## Executive Summary
+## 요약
 
-7-Tier review found no release-blocking P0 issue. The pass closed two scoped
-quality defects in this branch:
+7계층 검토에서 release-blocking P0 issue는 발견되지 않았다. 이 pass는 이 branch 안의 좁은 quality defect 두 개를 닫았다:
 
 - SVG rasterization now validates positive dimensions, DPI, timeout, and maximum
   bounds at `SvgRasterizeOptions` construction time.
-- The SSRF regression test now proves `allowExternalResources=false` performs
-  zero loopback HTTP requests instead of accepting either success or exception.
+- SSRF regression test는 이제 success나 exception을 모두 허용하지 않고 `allowExternalResources=false`가 loopback HTTP request 0회를 수행함을 증명한다.
 
-The repository still has broad cleanup debt that should be handled in separate,
-small PRs rather than hidden inside this review PR.
+repository에는 여전히 넓은 cleanup debt가 있다. 이는 이 review PR 안에 숨기지 말고 별도의 작은 PR로 처리해야 한다.
 
 ## Tier 1: API Boundary
 
-Status: PASS with follow-up.
+상태: 후속 작업 포함 PASS.
 
-- Fixed: `SvgRasterizeOptions` now rejects zero or negative `width`, `height`,
+- 수정: `SvgRasterizeOptions` now rejects zero or negative `width`, `height`,
   `dpi`, `timeoutMillis`, `maxWidthPx`, and `maxHeightPx`.
-- Fixed: `SvgRasterizeOptions` now implements `Serializable` with
+- 수정: `SvgRasterizeOptions` now implements `Serializable` with
   `serialVersionUID`, matching bluetape4k value-object rules for public data
   classes.
-- Follow-up: `allowedSchemes` is part of the public options model, but the Batik
+- 후속: `allowedSchemes` is part of the public options model, but the Batik
   path currently only applies `KEY_ALLOW_EXTERNAL_RESOURCES`. A future API PR
   should either wire scheme-level filtering explicitly or deprecate the option.
 
 ## Tier 2: Security
 
-Status: PASS for touched security surface.
+상태: 변경된 security surface에 대해 PASS.
 
-- Fixed: `BatikSvgRasterizerSecurityTest` now starts a local loopback server,
+- 수정: `BatikSvgRasterizerSecurityTest` now starts a local loopback server,
   embeds its URL in the SVG, rasterizes with `allowExternalResources=false`, and
   asserts request count is exactly zero.
-- Existing XXE test still verifies that DOCTYPE/file entity input is rejected or
-  does not leak `/etc/passwd` markers.
+- 기존 XXE test는 DOCTYPE/file entity input이 거부되거나 `/etc/passwd` marker를 leak하지 않음을 계속 검증한다.
 
 ## Tier 3: Correctness
 
-Status: PASS for changed code.
+상태: 변경 코드 기준 PASS.
 
 - `SvgRasterizeOptions` now fails before invalid values reach `withTimeout` or
   Batik DPI conversion.
@@ -51,28 +47,28 @@ Status: PASS for changed code.
 
 ## Tier 4: Concurrency and Resource Lifecycle
 
-Status: PASS for changed code.
+상태: 변경 코드 기준 PASS.
 
 - SVG rasterization continues to use `withTimeout` and `runInterruptible` on
   `Dispatchers.IO`.
-- The loopback server in the SSRF test is stopped in `finally`.
+- SSRF test의 loopback server는 `finally`에서 중지된다.
 
 ## Tier 5: Tests
 
-Status: PASS with repository-level cleanup debt.
+상태: repository-level cleanup debt가 있지만 PASS.
 
-- Targeted verification: `./gradlew :bluetape4k-images:test --tests '*BatikSvgRasterizer*' --warning-mode all`
+- 대상 검증: `./gradlew :bluetape4k-images:test --tests '*BatikSvgRasterizer*' --warning-mode all`
   passed with 10 tests.
-- Follow-up: older tests still contain mixed assertion idioms such as
+- 후속: older tests still contain mixed assertion idioms such as
   `kotlin.test.assertFailsWith` and JUnit assertions. Convert them gradually
   when touching those files; do not mix this broad migration into unrelated
   feature PRs.
 
 ## Tier 6: Documentation
 
-Status: PASS for README parity.
+상태: README parity 기준 PASS.
 
-- Root `README.md` and `README.ko.md` now explain the root overview diagram
+- Root `README.md`와 `README.ko.md`는 이제 root overview diagram을 설명한다
   color semantics.
 - Barcode provider capability matrix now separates `Commercial SDK` and
   `Native/JNI SDK` concerns instead of combining license and runtime policy in
@@ -84,7 +80,7 @@ Status: PASS for README parity.
 
 ## Tier 7: Diagram and Visual Assets
 
-Status: PASS.
+상태: PASS.
 
 Evidence ledger:
 
@@ -96,7 +92,7 @@ Evidence ledger:
   `docs/scripts/generate-readme-visual-assets.py` now emit the muted
   best-practices frame, participant card, lifeline, activation, label, line,
   badge, and marker palette for sequence assets.
-- Scope: `svg_files=52`, `png_files=52`, `connector_files=41`,
+- 범위: `svg_files=52`, `png_files=52`, `connector_files=41`,
   `connectors=310`, `cards=335`, `zero_connector_files=11`.
 - Zero-connector exceptions: the 10 README chart SVGs and
   `images-captcha-example-01.svg`, which is a static decorative sample image.
@@ -135,12 +131,12 @@ Evidence ledger:
   `root-readme-module-chart-01.png`, and
   `images-benchmark-vips-backend-comparison-chart-01.png`.
 
-## Remaining Watch Items
+## 남은 관찰 항목
 
-- Public KDoc language is still mixed across the repository. New and touched
-  public APIs should use English KDoc, but a repo-wide conversion should be a
-  dedicated documentation PR.
-- Public data classes outside the touched SVG options model still need a
-  separate Serializable audit.
-- `allowedSchemes` should be reconciled with Batik's resource-loading behavior
-  before any feature enables external SVG resources for untrusted input.
+- Public KDoc language는 repository 전체에서 아직 섞여 있다. 새 public API와 수정되는
+  public API는 English KDoc을 사용해야 하지만, repo-wide conversion은 dedicated
+  documentation PR로 처리해야 한다.
+- 수정된 SVG options model 밖의 public data class는 별도 Serializable audit이 아직
+  필요하다.
+- untrusted input에 대해 external SVG resource를 활성화하는 기능을 추가하기 전에
+  `allowedSchemes`를 Batik resource-loading behavior와 조정해야 한다.

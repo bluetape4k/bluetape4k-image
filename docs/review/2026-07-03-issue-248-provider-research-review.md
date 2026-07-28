@@ -1,31 +1,30 @@
-# Issue #248 Commercial and Native Provider Research Review
+# Issue #248 Commercial and Native Provider 조사 검토
 
-## Scope
+## 범위
 
-Review #248 research conclusions for Dynamsoft, Aspose.BarCode, OpenCV, and
-ZBar as future barcode provider candidates.
+future barcode provider candidate인 Dynamsoft, Aspose.BarCode, OpenCV, ZBar에 대한 #248 research conclusion을 검토한다.
 
-## Findings
+## 발견 사항
 
-No P0/P1 findings.
+P0/P1 발견 사항 없음.
 
-## Checks
+## 점검
 
-| Lens | Result | Evidence |
+| 관점 | 결과 | 근거 |
 | --- | --- | --- |
-| License and pricing | PASS | Dynamsoft and Aspose are commercial; OpenCV is Apache-2.0; ZBar is LGPL-2.1. |
-| Runtime and CI impact | PASS | Dynamsoft and ZBar require native/runtime handling; Aspose requires commercial license handling for unrestricted CI; OpenCV server JVM packaging remains native/AAR-shaped. |
-| Symbology scope | PASS | Dynamsoft and Aspose have broad coverage; OpenCV barcode coverage is narrow; ZBar coverage is useful but native. |
-| API boundary | PASS | Recommendation keeps every candidate out of `images-barcode-api` and `bluetape4k-images`. |
-| Follow-up hygiene | PASS | No implementation issue is created without license/CI/runtime approval. |
+| license와 pricing | PASS | Dynamsoft and Aspose are commercial; OpenCV is Apache-2.0; ZBar is LGPL-2.1. |
+| runtime과 CI 영향 | PASS | Dynamsoft and ZBar require native/runtime handling; Aspose requires commercial license handling for unrestricted CI; OpenCV server JVM packaging remains native/AAR-shaped. |
+| symbology 범위 | PASS | Dynamsoft and Aspose have broad coverage; OpenCV barcode coverage is narrow; ZBar coverage is useful but native. |
+| API 경계 | PASS | recommendation은 모든 candidate를 다음 범위 밖에 둔다: `images-barcode-api` and `bluetape4k-images`. |
+| 후속 위생 | PASS | license/CI/runtime approval 없이는 implementation issue를 만들지 않는다. |
 
-## P0/P1 Gate
+## P0/P1 게이트
 
 - P0 (CRITICAL): 0
 - P1 (HIGH): 0
-- P2/P3: none
+- P2/P3: 없음
 
-## Verification Plan
+## 검증 계획
 
 - Preserve research note in `bluetape4k-wiki`.
 - Run `git diff --check`.
