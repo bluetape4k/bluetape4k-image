@@ -1,86 +1,78 @@
-# Issue #208 Codec/Runtime Matrix Benchmark Design
+# Issue #208 Codec/Runtime Matrix Benchmark 설계
 
-- Date: 2026-07-13
-- Issue: [#208](https://github.com/bluetape4k/bluetape4k-image/issues/208)
-- Milestone: `0.4.0`
-- Work type: Type A - Full Feature
-- Scope: `bluetape4k-images-benchmark` harness and benchmark evidence
+- 날짜: 2026-07-13
+- 이슈: [#208](https://github.com/bluetape4k/bluetape4k-image/issues/208)
+- 마일스톤: `0.4.0`
+- 작업 유형: Type A - Full Feature
+- 범위: `bluetape4k-images-benchmark` harness와 benchmark evidence
 
-## 1. Problem
+## 1. 문제
 
-The current benchmark module provides JPEG-oriented encode evidence and geometry
-comparisons for the Java 21 JVips/JNI and Java 25 vips-ffm backends. It does not
-provide a reproducible codec matrix for the stable PNG/WebP paths or explicit
-evidence for the incubating AVIF/HEIC paths.
+현재 benchmark module은 Java 21 JVips/JNI와 Java 25 vips-ffm backend에 대해 JPEG 중심 encode evidence와
+geometry comparison을 제공한다. 그러나 stable PNG/WebP path에 대한 reproducible codec matrix나 incubating
+AVIF/HEIC path에 대한 explicit evidence는 제공하지 않는다.
 
-The missing evidence makes three questions difficult to answer:
+누락된 evidence 때문에 다음 세 질문에 답하기 어렵다.
 
-1. How do the stable PNG and WebP codec pipelines behave for common web-photo
-   and profile-image workloads?
-2. Which AVIF/HEIC and runtime combinations were measured, unsupported, or
-   skipped because the backend could not prove capability?
-3. What latency, managed allocation, and byte-size trade-offs were observed on
-   the measured host without presenting a local snapshot as a universal ranking?
+1. stable PNG/WebP codec pipeline은 일반적인 web-photo와 profile-image workload에서 어떻게 동작하는가?
+2. 어떤 AVIF/HEIC와 runtime 조합이 측정되었고, 어떤 조합이 unsupported였으며, backend가 capability를 증명하지
+   못해 skipped된 조합은 무엇인가?
+3. local snapshot을 universal ranking처럼 제시하지 않으면서, 측정 host에서 관측한 latency, managed allocation,
+   byte-size trade-off는 무엇인가?
 
-## 2. Goals
+## 2. 목표
 
-- Add a default, reproducible PNG/WebP codec matrix to the existing benchmark
-  module.
-- Measure codec boundaries that force pixel evaluation instead of mistaking
-  lazy image opening or header parsing for full decode work.
-- Keep AVIF/HEIC measurements opt-in and absent from the default benchmark path.
-- Record latency, managed allocation, input/output bytes, fixture dimensions,
-  backend, JVM, libvips version, and capability status.
-- Keep Java 21 JNI and Java 25 FFM measurements sequential and compare them only
-  when the workload semantics and fixture bytes are equivalent.
+- 기존 benchmark module에 default reproducible PNG/WebP codec matrix를 추가한다.
+- lazy image opening 또는 header parsing을 full decode work로 오인하지 않도록 pixel evaluation을 강제하는
+  codec boundary를 측정한다.
+- AVIF/HEIC measurement는 opt-in으로 유지하고 default benchmark path에서는 제외한다.
+- latency, managed allocation, input/output bytes, fixture dimension, backend, JVM, libvips version,
+  capability status를 기록한다.
+- Java 21 JNI와 Java 25 FFM measurement는 sequential하게 유지하고, workload semantics와 fixture bytes가
+  equivalent할 때만 비교한다.
 
-## 3. Non-goals
+## 3. 비목표
 
-- Do not change published image or Vips APIs.
-- Do not add a new backend, codec dependency, or benchmark module.
-- Do not benchmark browser delivery, network transfer, CDN behavior, visual
-  quality, SSIM, PSNR, or perceptual quality.
-- Do not claim cross-host or production-wide rankings from the local result.
-- Do not force AVIF/HEIC into CI or the default benchmark smoke path.
-- Do not replace the historical `vips_encodeJpeg` result.
+- published image 또는 Vips API를 변경하지 않는다.
+- 새 backend, codec dependency, benchmark module을 추가하지 않는다.
+- browser delivery, network transfer, CDN behavior, visual quality, SSIM, PSNR, perceptual quality를
+  benchmark하지 않는다.
+- local result에서 cross-host 또는 production-wide ranking을 주장하지 않는다.
+- AVIF/HEIC를 CI 또는 default benchmark smoke path에 강제하지 않는다.
+- historical `vips_encodeJpeg` result를 대체하지 않는다.
 
-## 4. Current Evidence
+## 4. 현재 증거
 
-### 4.1 Repository anchors
+### 4.1 Repository anchor
 
-- `VipsBackendEncodeBenchmark` currently exposes only `vips_encodeJpeg`.
-- `VipsBenchmarkState` selects the backend with `-Pvips.impl=java21|java25`,
-  owns runtime initialization, and creates binding-neutral `VipsImage` values by
-  reflection.
-- `VipsRuntime.codecCapabilityReport()` reports PNG/WebP as stable and reports
-  AVIF/HEIC with backend-specific `AVAILABLE`, `UNAVAILABLE`, or `UNKNOWN`
-  states.
-- Java 21 JVips cannot inspect native HEIF operations and cannot encode HEIC.
-- Java 25 FFM probes `heifload_buffer` and `heifsave_buffer` through libvips.
-- The benchmark plugin is `kotlinx-benchmark` 0.4.17. Its named configurations
-  support both `include(pattern)` and `exclude(pattern)`, so experimental JMH
-  classes can be excluded from the default `main` configuration.
-- Existing allocation reports use a generated JMH jar with `-prof gc` and read
-  `gc.alloc.rate.norm` as managed bytes per operation.
+- `VipsBackendEncodeBenchmark`는 현재 `vips_encodeJpeg`만 노출한다.
+- `VipsBenchmarkState`는 `-Pvips.impl=java21|java25`로 backend를 선택하고 runtime initialization을 소유하며,
+  reflection으로 binding-neutral `VipsImage` 값을 만든다.
+- `VipsRuntime.codecCapabilityReport()`는 PNG/WebP를 stable로 보고하고, AVIF/HEIC는 backend-specific
+  `AVAILABLE`, `UNAVAILABLE`, `UNKNOWN` state로 보고한다.
+- Java 21 JVips는 native HEIF operation을 inspect할 수 없고 HEIC를 encode할 수 없다.
+- Java 25 FFM은 libvips를 통해 `heifload_buffer`와 `heifsave_buffer`를 probe한다.
+- benchmark plugin은 `kotlinx-benchmark` 0.4.17이다. named configuration은 `include(pattern)`과
+  `exclude(pattern)`을 모두 지원하므로 experimental JMH class를 default `main` configuration에서 제외할 수 있다.
+- 기존 allocation report는 generated JMH jar와 `-prof gc`를 사용하고 `gc.alloc.rate.norm`을 operation당
+  managed bytes로 읽는다.
 
 ### 4.2 Baseline environment
 
-- Worktree base: `feb75001a35fceb53f976a982e7d44a1eb28e204`
-- Benchmark compilation:
+- worktree base: `feb75001a35fceb53f976a982e7d44a1eb28e204`
+- benchmark compilation:
   `./gradlew :bluetape4k-images-benchmark:benchmarkBenchmarkCompile --console=plain`
-  passes in the isolated worktree.
-- Available local JDKs: Java 21.0.11 and Java 25.0.3.
-- Local native stack: libvips 8.18.4, WebP 1.6.0, libavif 1.4.2,
-  libheif 1.23.1, and aom 3.14.1.
-- Prior repository evidence records that the bundled JVips dylib is x86_64 and
-  cannot produce Java 21 JNI measurements on this macOS arm64 host. This is an
-  environment limitation, not a synthetic benchmark row.
+  이 isolated worktree에서 통과한다.
+- 사용 가능한 local JDK: Java 21.0.11, Java 25.0.3.
+- local native stack: libvips 8.18.4, WebP 1.6.0, libavif 1.4.2, libheif 1.23.1, aom 3.14.1.
+- prior repository evidence는 bundled JVips dylib가 x86_64라서 이 macOS arm64 host에서 Java 21 JNI
+  measurement를 만들 수 없다고 기록한다. 이는 environment limitation이지 synthetic benchmark row가 아니다.
 
 ### 4.3 Upstream basis
 
-- JMH is the JVM microbenchmark execution surface used by kotlinx-benchmark:
+- JMH는 kotlinx-benchmark가 사용하는 JVM microbenchmark execution surface다.
   <https://github.com/openjdk/jmh>
-- libvips exposes buffer-based WebP and HEIF load/save operations:
+- libvips는 buffer-based WebP와 HEIF load/save operation을 노출한다.
   <https://libvips.github.io/pyvips/vimage.html>
 
 ## 5. Considered Approaches
