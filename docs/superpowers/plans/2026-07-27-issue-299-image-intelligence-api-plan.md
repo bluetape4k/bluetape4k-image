@@ -1046,14 +1046,14 @@ git commit -m "Prove the integrated image example across failure boundaries" \
   -m "Tested: profile, generated QR, partial failure, cancellation, log redaction, and clean full example suite"
 ```
 
-## Task 8: Add bilingual learning material, diagrams, and repository registration
+## Task 8: bilingual learning material, diagram, repository registration 추가
 
-**Complexity:** High
-**Depends on:** Tasks 1–7
+**복잡도:** High
+**의존성:** Tasks 1-7
 **Pattern skills:** `bluetape-writer`, `bluetape-diagram`
-**Rollback point:** docs and workflow registration are independently reversible; do not remove tested implementation.
+**Rollback 지점:** docs와 workflow registration은 독립적으로 되돌릴 수 있다. 검증된 implementation은 제거하지 않는다.
 
-**Files:**
+**파일:**
 
 - Create: `examples/spring-boot-image-intelligence-api/README.md`
 - Create: `examples/spring-boot-image-intelligence-api/README.ko.md`
@@ -1065,29 +1065,28 @@ git commit -m "Prove the integrated image example across failure boundaries" \
 - Modify: `README.ko.md`
 - Modify: `.github/workflows/Examples.yml`
 
-- [ ] **Step 1: Load diagram and writer contracts**
+- [ ] **Step 1: diagram 및 writer 계약 load**
 
-Read `bluetape-diagram` and `bluetape-writer` fully. Instantiate every required diagram
-checklist row before creating visual assets.
+`bluetape-diagram`과 `bluetape-writer`를 끝까지 읽는다. visual asset을 만들기 전에 필요한 모든 diagram checklist row를 만든다.
 
-- [ ] **Step 2: Write equivalent English and Korean READMEs**
+- [ ] **Step 2: 동등한 English/Korean README 작성**
 
-Both files must cover:
+두 파일은 모두 다음 내용을 다뤄야 한다:
 
-- visitor-pass scenario and non-goals;
-- one qualification and one decode before fan-out;
-- `WorkReport.Success` versus domain `Completed`;
-- default, `demo`, and optional `native-ocr` profiles;
-- request and `COMPLETED`, `PARTIAL`, `FAILED` response examples;
-- provider timeout and concurrency properties;
-- non-cooperative native timeout limitation;
-- policy replacement for shipping and product labels;
-- production gaps: auth, malware scanning, storage/deletion, privacy, retry/circuit breaker;
-- source links to OCR, detection, barcode, workflow, tests, and relevant public articles.
+- visitor-pass scenario와 non-goal
+- fan-out 전 한 번의 qualification과 한 번의 decode
+- `WorkReport.Success`와 domain `Completed`의 차이
+- default, `demo`, optional `native-ocr` profile
+- request 및 `COMPLETED`, `PARTIAL`, `FAILED` response example
+- provider timeout과 concurrency property
+- non-cooperative native timeout 제한
+- shipping 및 product label용 policy replacement
+- production gap: auth, malware scanning, storage/deletion, privacy, retry/circuit breaker
+- OCR, detection, barcode, workflow, test, 관련 public article의 source link
 
-Use natural Korean technical prose, not word-for-word translation.
+한국어는 직역이 아니라 자연스러운 기술 문장으로 작성한다.
 
-- [ ] **Step 3: Create two dark technical diagrams**
+- [ ] **Step 3: dark technical diagram 두 개 생성**
 
 Architecture diagram:
 
@@ -1105,34 +1104,30 @@ one lane Failed while siblings complete
 external cancellation propagated to every lane
 ```
 
-Use card-and-connector style, readable arrowheads, enough vertical spacing, and no label crossing.
-Keep SVG source and same-basename PNG. README displays PNG and links to SVG.
+card-and-connector style, 읽기 쉬운 arrowhead, 충분한 vertical spacing, label crossing 없음 조건을 지킨다. SVG source와 같은 basename의 PNG를 유지한다. README는 PNG를 표시하고 SVG로 link한다.
 
-- [ ] **Step 4: Visually inspect SVG and PNG**
+- [ ] **Step 4: SVG와 PNG visual inspection**
 
-Run SVG validation and PNG conversion from the diagram skill. Inspect both PNGs at full size.
-Reject:
+diagram skill의 SVG validation과 PNG conversion을 실행한다. 두 PNG를 full size로 inspect한다. 다음 상태는 reject한다:
 
-- clipped labels;
-- missing or reversed arrowheads;
-- overlapping call labels and connector lines;
-- fonts smaller than the diagram checklist minimum;
-- SVG-only correctness that breaks after PNG conversion.
+- clipped label
+- 누락되거나 방향이 반대인 arrowhead
+- call label과 connector line overlap
+- diagram checklist minimum보다 작은 font
+- SVG에서는 맞지만 PNG conversion 후 깨지는 상태
 
-- [ ] **Step 5: Register root learning paths and Examples CI**
+- [ ] **Step 5: root learning path와 Examples CI 등록**
 
-Add the new example after the existing OCR and barcode quickstarts in both root READMEs.
-Add exactly one workflow matrix row:
+두 root README에서 기존 OCR 및 barcode quickstart 뒤에 새 example을 추가한다. workflow matrix row는 정확히 하나만 추가한다:
 
 ```yaml
 - example: spring-boot-image-intelligence-api
   gradle_tasks: :spring-boot-image-intelligence-api:test
 ```
 
-Do not add BOM/catalog publication entries. Do not edit `docs/manual/manifest.yaml` or
-release-pinned manual pages before the 0.4.0 manual cycle.
+BOM/catalog publication entry를 추가하지 않는다. 0.4.0 manual cycle 전에는 `docs/manual/manifest.yaml` 또는 release-pinned manual page를 수정하지 않는다.
 
-- [ ] **Step 6: Validate docs and workflow**
+- [ ] **Step 6: docs와 workflow 검증**
 
 ```bash
 rg -n 'spring-boot-image-intelligence-api' \
@@ -1145,8 +1140,7 @@ find examples/spring-boot-image-intelligence-api/docs/images/readme-diagrams \
 git diff --check
 ```
 
-Expected: every registration surface contains the example, workflow lint passes, SVG parses,
-each SVG has a PNG peer, and diff check is clean.
+예상 결과: 모든 registration surface가 example을 포함하고, workflow lint가 통과하며, SVG가 parse되고, 각 SVG에 PNG peer가 있으며, diff check가 clean이다.
 
 - [ ] **Step 7: Commit**
 
