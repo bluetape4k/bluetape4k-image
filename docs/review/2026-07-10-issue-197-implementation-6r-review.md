@@ -1,75 +1,73 @@
-# Issue #197 Implementation Review (6-R)
+# Issue #197 구현 검토 (6-R)
 
-Date: 2026-07-10
-Scope: `origin/develop...perf/issue-197-large-streaming-parity`, including the
-final documentation and generated-chart repairs in the worktree.
+날짜: 2026-07-10
+범위: `origin/develop...perf/issue-197-large-streaming-parity`, worktree의
+최종 documentation 및 generated-chart repair 포함.
 
-## Result
+## 결과
 
 **PASS — P0: 0, P1: 0**
 
-The large-streaming comparison now measures the same color-preserving
-decode-resize-JPEG-encode contract for Scrimage and Java 25 FFM libvips.
-`ImageLargeStreamingBenchmark` requires FFM and fails fast rather than silently
-substituting JNI or emitting null rows.
+large-streaming comparison은 이제 Scrimage와 Java 25 FFM libvips에 대해 같은 color-preserving decode-resize-JPEG-encode contract를 측정한다.
+`ImageLargeStreamingBenchmark`는 FFM을 요구하고, JNI로 조용히 대체하거나 null
+row를 내보내는 대신 fail fast한다.
 
-## Independent review lenses
+## 독립 검토 관점
 
-| Lens | P0 | P1 | P2 | Verdict |
+| 관점 | P0 | P1 | P2 | 판정 |
 | --- | ---: | ---: | ---: | --- |
-| Performance / benchmark | 0 | 0 | 1 | PASS |
-| Stability / lifecycle | 0 | 0 | 1 | PASS |
-| Security / evidence handling | 0 | 0 | 0 | PASS |
-| Operations / runbook | 0 | 0 | 0 | PASS |
-| Developer / API | 0 | 0 | 1 | PASS |
-| Library user / documentation | 0 | 0 | 0 | PASS |
+| 성능 / benchmark | 0 | 0 | 1 | PASS |
+| 안정성 / lifecycle | 0 | 0 | 1 | PASS |
+| 보안 / evidence handling | 0 | 0 | 0 | PASS |
+| 운영 / runbook | 0 | 0 | 0 | PASS |
+| 개발자 / API | 0 | 0 | 1 | PASS |
+| 라이브러리 사용자 / documentation | 0 | 0 | 0 | PASS |
 
-## Blockers found and repaired
+## 발견하고 수정한 차단 사항
 
-1. The rebased large-streaming SVG was stale and rendered a middle-dot glyph as
-   tofu in CairoSVG output. Regenerated only the target SVG/PNG from the
-   current chart generator; the published PNG was inspected at 3120x1720 and
-   now uses the ASCII `ms/op - lower is better` label.
-2. README text incorrectly promoted vips `Path` as the universal strongest
-   large-file throughput/memory option. The committed short Java 25 snapshot
-   does not establish that rule. EN/KO docs now describe `Path` as an
-   API/lifecycle boundary only.
-3. The Java 21 full-suite command would include the FFM-only
-   `ImageLargeStreamingBenchmark`. EN/KO runbooks now use named JNI-compatible
-   benchmark tasks and explicitly exclude FFM-only large streaming; the Java
-   25 full-suite command explicitly includes it.
-4. The first documentation wording implied that only non-`Path` vips loads were
-   bounded. Source inspection confirms every current vips input overload,
-   including `Path`, validates and buffers compressed input inside the 50 MiB
-   guard. EN/KO root and benchmark documentation now state that invariant.
+1. rebase된 large-streaming SVG가 stale 상태였고 CairoSVG output에서 middle-dot
+   glyph가 tofu로 렌더링됐다. 현재 chart generator에서 target SVG/PNG만 다시
+   생성했다. published PNG는 3120x1720에서 확인했고 이제 ASCII
+   `ms/op - lower is better` label을 사용한다.
+2. README text가 vips `Path`를 범용 최강 large-file throughput/memory option으로
+   잘못 홍보했다. commit된 짧은 Java 25 snapshot은 그 규칙을 입증하지 않는다.
+   EN/KO docs는 이제 `Path`를 API/lifecycle boundary로만 설명한다.
+3. Java 21 full-suite command가 FFM 전용 `ImageLargeStreamingBenchmark`를 포함할
+   수 있었다. EN/KO runbook은 이제 이름이 지정된 JNI-compatible benchmark task를
+   사용하고 FFM 전용 large streaming을 명시적으로 제외한다. Java 25 full-suite
+   command는 이를 명시적으로 포함한다.
+4. 첫 documentation wording은 non-`Path` vips load만 bounded라고 암시했다.
+   source inspection 결과 `Path`를 포함한 모든 현재 vips input overload가 50 MiB
+   guard 안에서 compressed input을 validate하고 buffer한다. EN/KO root 및
+   benchmark documentation은 이제 이 invariant를 명시한다.
 
-## Verification evidence
+## 검증 근거
 
-- `:bluetape4k-images-benchmark:test --tests '*ImageLargeStreamingBenchmarkContractTest'` passed.
-- `:bluetape4k-images-benchmark:benchmarkBenchmarkCompile -Pvips.impl=java25` passed.
-- A fresh Java 25 `benchmarkLargeStreamingBenchmark -Pvips.impl=java25` run
-  completed all 16 rows and produced a local raw JSON artifact. Its normal
-  short-run score variance was not copied into the committed evidence snapshot.
-- A controlled invalid FFM library override produced the expected fail-fast
-  benchmark error rows without leaving temporary-run residue.
-- Primary and GC JSON artifacts passed structural, metadata, method/scenario,
-  and sensitive-string gates; the SVG is XML-valid and the target PNG is valid.
-- Java 21 named-task documentation was checked with Gradle `--dry-run`.
-- `git diff --check` passed.
+- `:bluetape4k-images-benchmark:test --tests '*ImageLargeStreamingBenchmarkContractTest'` 통과.
+- `:bluetape4k-images-benchmark:benchmarkBenchmarkCompile -Pvips.impl=java25` 통과.
+- 새 Java 25 `benchmarkLargeStreamingBenchmark -Pvips.impl=java25` run이 16개
+  row를 모두 완료하고 local raw JSON artifact를 생성했다. 정상적인 short-run
+  score variance는 committed evidence snapshot에 복사하지 않았다.
+- 통제된 invalid FFM library override가 예상한 fail-fast benchmark error row를
+  만들었고 temporary-run residue를 남기지 않았다.
+- Primary 및 GC JSON artifact는 structural, metadata, method/scenario,
+  sensitive-string gate를 통과했다. SVG는 XML-valid이고 target PNG도 valid이다.
+- Java 21 named-task documentation은 Gradle `--dry-run`으로 확인했다.
+- `git diff --check` 통과.
 
-## Non-blocking follow-ups
+## 비차단 후속 작업
 
-- The committed raw evidence does not record compressed fixture byte sizes; a
-  future evidence refresh can add them when they are relevant to comparison.
-- The source contract test does not execute reflective FFM initialization. The
-  fresh success/failure benchmark runs cover this release candidate, but an
-  isolated automated startup/cleanup regression test would improve repeatable
-  coverage.
-- `Path` and stream paths currently both buffer bounded compressed input; future
-  API work must not infer native streaming behavior from the benchmark boundary
-  names alone.
+- commit된 raw evidence는 compressed fixture byte size를 기록하지 않는다. 향후
+  evidence refresh에서 comparison에 필요해지면 추가할 수 있다.
+- source contract test는 reflective FFM initialization을 실행하지 않는다. 새
+  success/failure benchmark run이 이 release candidate를 cover하지만, 격리된
+  automated startup/cleanup regression test가 있으면 반복 가능한 coverage가
+  좋아진다.
+- `Path`와 stream path는 현재 모두 bounded compressed input을 buffer한다. 향후
+  API 작업은 benchmark boundary name만 보고 native streaming behavior를 추론하면
+  안 된다.
 
-## Handoff
+## 인계
 
-Step 6-R is complete. The implementation is eligible for the pre-PR lesson,
-commit, PR review, and CI gates; merge remains subject to explicit user approval.
+Step 6-R은 완료됐다. 구현은 pre-PR lesson, commit, PR review, CI gate로 진행할
+수 있다. merge는 여전히 명시적인 사용자 승인 대상이다.
