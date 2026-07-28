@@ -1,13 +1,13 @@
-# Issue #273 Spring Boot Barcode Quickstart Design
+# Issue #273 Spring Boot Barcode Quickstart 설계
 
 ## 1. 배경
 
-- Issue: [#273](https://github.com/bluetape4k/bluetape4k-image/issues/273)
-- Milestone: `0.4.0`
+- 이슈: [#273](https://github.com/bluetape4k/bluetape4k-image/issues/273)
+- 마일스톤: `0.4.0`
 - 작업 유형: Type A - Full Feature
-- Repository: `bluetape4k/bluetape4k-image`
-- Base: `origin/develop`
-- Branch: `feat/issue-273-barcode-quickstart`
+- repository: `bluetape4k/bluetape4k-image`
+- base: `origin/develop`
+- branch: `feat/issue-273-barcode-quickstart`
 
 `bluetape4k-images-barcode-api`와
 `bluetape4k-images-barcode-zxing`은 provider-neutral barcode contract와 순수 JVM
@@ -120,8 +120,8 @@ image validation과 extraction은 service에 위임한다. Endpoint는 모두
 | `GET` | `/no-result` | 고정 blank PNG의 빈 결과 재현 | `200 OK` |
 | `GET` | `/malformed` | 고정 invalid bytes의 오류 정규화 재현 | `400 Bad Request` |
 
-GET endpoint는 production data API가 아니라 deterministic contract demonstration임을
-README와 KDoc에 명시한다.
+GET endpoint는 production data API가 아니라 deterministic contract demonstration임을 README와 KDoc에
+한국어로 명시한다.
 
 ### 6.3 Extraction service
 
@@ -301,22 +301,22 @@ Native/JNI, libvips, OCR, Docker, Testcontainers는 이 pure-JVM Spring/ZXing ex
 - Default port는 Spring Boot 기본 `8080`을 사용하고 README에서 override 방법을
   안내한다.
 
-## 13. Acceptance criteria
+## 13. 인수 기준
 
 - `./gradlew :spring-boot-barcode-api:bootRun`으로 app이 시작된다.
 - `POST /api/barcodes/extract`가 PNG/JPEG/WebP multipart upload를 제한된 크기로 받는다.
 - QR upload와 `/sample`은 expected QR payload와 provider-neutral ZXing result를 반환한다.
-- Valid blank image upload와 `/no-result`는 `200`, count 0, empty results를 반환한다.
-- Malformed upload와 `/malformed`는 sanitized `400 MALFORMED_INPUT`을 반환한다.
-- Size, dimensions, media type, empty input negative contract가 test로 고정된다.
-- 네 endpoint가 동일 `BarcodeExtractionService`를 사용한다.
-- Settings, AGENTS, Examples workflow, root/provider/example README locale가 등록된다.
-- Diagram asset이 render 검증되고 영어·한국어 README가 같은 asset을 사용한다.
-- Targeted tests, example workflow-equivalent test, repository static checks와
+- valid blank image upload와 `/no-result`는 `200`, count 0, empty results를 반환한다.
+- malformed upload와 `/malformed`는 sanitized `400 MALFORMED_INPUT`을 반환한다.
+- size, dimension, media type, empty input negative contract가 test로 고정된다.
+- 네 endpoint가 동일한 `BarcodeExtractionService`를 사용한다.
+- settings, AGENTS, Examples workflow, root/provider/example README locale가 등록된다.
+- diagram asset이 render 검증되고 영어/한국어 README가 같은 asset을 사용한다.
+- targeted test, example workflow-equivalent test, repository static check와
   `git diff --check`가 통과한다.
 - 최신 spec review가 P0=0, P1=0으로 수렴한다.
 
-## 14. Definition of Done
+## 14. 완료 정의
 
 - 승인된 spec과 implementation plan이 review 후 commit되어 있다.
 - TDD evidence와 module registration evidence가 남아 있다.
