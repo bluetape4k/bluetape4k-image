@@ -9,10 +9,9 @@ import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.multipart.MultipartFile
 
 /**
- * Exposes the multipart extraction endpoint and deterministic fixture scenarios.
+ * multipart extraction endpoint와 deterministic fixture scenario를 노출합니다.
  *
- * The fixture-backed `GET` routes demonstrate response contracts; they are not
- * production data APIs.
+ * fixture-backed `GET` route는 response contract를 보여주는 용도이며 production data API가 아닙니다.
  */
 @RestController
 @RequestMapping("/api/barcodes")

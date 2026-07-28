@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Configuration
 import java.io.Serializable
 
 /**
- * Upload safety limits for the quickstart image API.
+ * quickstart image API의 upload safety limit입니다.
  */
 @ConfigurationProperties(prefix = "example.image")
 data class ImageApiProperties(
@@ -30,7 +30,7 @@ data class ImageApiProperties(
 }
 
 /**
- * Wires the quickstart service to the auto-configured [ImageStorage] bean.
+ * quickstart service를 auto-configured [ImageStorage] bean에 연결합니다.
  */
 @Configuration(proxyBeanMethods = false)
 @EnableConfigurationProperties(ImageApiProperties::class)

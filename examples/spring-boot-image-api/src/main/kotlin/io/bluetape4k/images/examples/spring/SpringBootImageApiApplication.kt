@@ -32,13 +32,13 @@ fun main(args: Array<String>) {
 }
 
 /**
- * Spring Boot quickstart application for a local-storage image API.
+ * local-storage image API용 Spring Boot quickstart application입니다.
  */
 @SpringBootApplication
 class SpringBootImageApiApplication
 
 /**
- * Exposes upload and local download endpoints for the quickstart image API.
+ * quickstart image API의 upload 및 local download endpoint를 노출합니다.
  */
 @RestController
 @RequestMapping("/api/images")
@@ -77,7 +77,7 @@ class ImageApiController(
 }
 
 /**
- * Stores original uploads and generated thumbnails through [ImageStorage].
+ * original upload와 generated thumbnail을 [ImageStorage]에 저장합니다.
  */
 class LocalImageApiService(
     private val storage: ImageStorage,
@@ -138,7 +138,7 @@ class LocalImageApiService(
 }
 
 /**
- * Upload result with local object keys and read URLs.
+ * local object key와 read URL을 포함한 upload result입니다.
  */
 data class ImageUploadResponse(
     val original: StoredImageResponse,
@@ -153,7 +153,7 @@ data class ImageUploadResponse(
 }
 
 /**
- * Local storage object reference returned by the quickstart API.
+ * quickstart API가 반환하는 local storage object reference입니다.
  */
 data class StoredImageResponse(
     val key: String,
@@ -172,7 +172,7 @@ data class StoredImageResponse(
 }
 
 /**
- * Error response for invalid quickstart API requests.
+ * invalid quickstart API request에 대한 error response입니다.
  */
 data class ApiErrorResponse(
     val error: String,

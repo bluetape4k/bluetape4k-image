@@ -34,7 +34,7 @@ import java.io.Serializable
 import java.time.Duration
 
 /**
- * Input and provider execution limits for the image-intelligence example.
+ * image-intelligence example의 input 및 provider execution limit입니다.
  */
 @ConfigurationProperties(prefix = "example.image-intelligence")
 data class ImageIntelligenceProperties(

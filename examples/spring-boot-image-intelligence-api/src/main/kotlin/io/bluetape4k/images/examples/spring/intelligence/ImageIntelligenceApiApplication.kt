@@ -8,7 +8,7 @@ fun main(args: Array<String>) {
 }
 
 /**
- * Spring Boot example that composes OCR, detection, and barcode analysis.
+ * OCR, detection, barcode analysis를 조합하는 Spring Boot example입니다.
  */
 @SpringBootApplication
 class ImageIntelligenceApiApplication

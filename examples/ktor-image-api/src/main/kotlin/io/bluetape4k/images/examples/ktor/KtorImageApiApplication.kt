@@ -15,7 +15,7 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
 
 /**
- * Runs the local-only Ktor image API quickstart.
+ * local-only Ktor image API quickstart를 실행합니다.
  */
 fun main() {
     embeddedServer(
@@ -27,7 +27,7 @@ fun main() {
 }
 
 /**
- * Installs JSON support and the bluetape4k Ktor image routes used by the quickstart.
+ * quickstart에서 사용하는 JSON support와 bluetape4k Ktor image route를 설치합니다.
  */
 fun Application.configureKtorImageApi() {
     installBluetape4kKtorCore(
