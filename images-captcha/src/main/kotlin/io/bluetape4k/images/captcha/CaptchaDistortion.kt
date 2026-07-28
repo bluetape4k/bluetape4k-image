@@ -4,7 +4,7 @@ import io.bluetape4k.support.requireInRange
 import java.io.Serializable
 
 /**
- * Optional bounded distortion applied after text and noise rendering.
+ * text와 noise rendering 후 적용되는 선택적 bounded distortion입니다.
  */
 sealed interface CaptchaDistortion: Serializable {
 
@@ -13,9 +13,9 @@ sealed interface CaptchaDistortion: Serializable {
     }
 
     /**
-     * Horizontal wave distortion.
+     * 수평 wave distortion입니다.
      *
-     * @property strength distortion strength in `0.0f..1.0f`
+     * @property strength `0.0f..1.0f` 범위의 distortion strength입니다.
      */
     data class Wave(
         val strength: Float,

@@ -4,15 +4,15 @@ import com.sksamuel.scrimage.ImmutableImage
 import java.time.Instant
 
 /**
- * Generated CAPTCHA text and image.
+ * 생성된 CAPTCHA text와 image입니다.
  *
- * This class intentionally is not a data class and is not serializable because
- * [ImmutableImage] is not a stable Java serialization payload. Persist encoded
- * image bytes and application-owned metadata when a challenge must be stored.
+ * [ImmutableImage]는 안정적인 Java serialization payload가 아니므로 이 class는 의도적으로
+ * data class도 아니고 serializable도 아닙니다. challenge를 저장해야 한다면 인코딩된
+ * image byte와 application-owned metadata를 저장합니다.
  *
- * @property text answer text that the user must provide
- * @property image rendered challenge image
- * @property expiresAt advisory expiration instant for application storage
+ * @property text 사용자가 입력해야 하는 정답 text입니다.
+ * @property image rendering된 challenge image입니다.
+ * @property expiresAt application storage가 참고할 만료 시각입니다.
  */
 class CaptchaChallenge(
     val text: String,

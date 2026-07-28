@@ -5,72 +5,72 @@ import io.bluetape4k.support.requireNotEmpty
 import java.io.Serializable
 
 /**
- * Stable barcode symbology understood by bluetape4k barcode providers.
+ * bluetape4k barcode provider가 이해하는 안정적인 barcode symbology입니다.
  *
- * ## Contract
- * Providers should map backend-specific format names into this enum and keep
- * the original backend format on [BarcodeResult.rawBackendFormat] when useful.
- * Unknown or provider-specific formats should use [UNKNOWN].
+ * ## 동작/계약
+ * provider는 backend-specific format name을 이 enum으로 매핑하고, 필요하면 원본 backend
+ * format을 [BarcodeResult.rawBackendFormat]에 보존해야 합니다. 알 수 없거나 provider
+ * 전용 format은 [UNKNOWN]을 사용합니다.
  */
 enum class BarcodeFormat {
-    /** QR Code two-dimensional barcode. */
+    /** QR Code 2차원 barcode입니다. */
     QR_CODE,
 
-    /** Code 128 one-dimensional barcode. */
+    /** Code 128 1차원 barcode입니다. */
     CODE_128,
 
-    /** Code 39 one-dimensional barcode. */
+    /** Code 39 1차원 barcode입니다. */
     CODE_39,
 
-    /** EAN-13 retail barcode. */
+    /** EAN-13 retail barcode입니다. */
     EAN_13,
 
-    /** EAN-8 retail barcode. */
+    /** EAN-8 retail barcode입니다. */
     EAN_8,
 
-    /** UPC-A retail barcode. */
+    /** UPC-A retail barcode입니다. */
     UPC_A,
 
-    /** UPC-E retail barcode. */
+    /** UPC-E retail barcode입니다. */
     UPC_E,
 
-    /** Data Matrix two-dimensional barcode. */
+    /** Data Matrix 2차원 barcode입니다. */
     DATA_MATRIX,
 
-    /** Aztec two-dimensional barcode. */
+    /** Aztec 2차원 barcode입니다. */
     AZTEC,
 
-    /** PDF417 stacked barcode. */
+    /** PDF417 stacked barcode입니다. */
     PDF_417,
 
-    /** Codabar one-dimensional barcode. */
+    /** Codabar 1차원 barcode입니다. */
     CODABAR,
 
-    /** Interleaved 2 of 5 one-dimensional barcode. */
+    /** Interleaved 2 of 5 1차원 barcode입니다. */
     ITF,
 
-    /** Backend-specific or unknown format. */
+    /** backend-specific 또는 알 수 없는 format입니다. */
     UNKNOWN,
 }
 
 /**
- * Coordinate system for barcode localization data.
+ * barcode localization data에 사용하는 coordinate system입니다.
  */
 enum class BarcodeCoordinateSpace {
-    /** Pixel coordinates in the original image coordinate space. */
+    /** 원본 이미지 coordinate space의 pixel coordinate입니다. */
     PIXEL,
 
-    /** Normalized coordinates where both axes are in `0.0..1.0`. */
+    /** 두 축이 모두 `0.0..1.0` 범위인 normalized coordinate입니다. */
     NORMALIZED,
 }
 
 /**
- * Provider identity copied into every barcode result.
+ * 모든 barcode result에 복사되는 provider identity입니다.
  *
- * ## Contract
- * [name] is the stable provider name, such as `ZXing` or `BoofCV`. [version],
- * [backend], and [metadata] are optional string-only diagnostics and must not
- * expose provider-specific mutable objects.
+ * ## 동작/계약
+ * [name]은 `ZXing` 또는 `BoofCV` 같은 안정적인 provider name입니다. [version],
+ * [backend], [metadata]는 선택적 string-only diagnostic이며 provider-specific mutable
+ * object를 노출하면 안 됩니다.
  *
  * ```kotlin
  * val provider = BarcodeProviderIdentity(name = "ZXing", version = "3.5.4")
@@ -105,11 +105,11 @@ data class BarcodeProviderIdentity private constructor(
 }
 
 /**
- * Point used by barcode localization results.
+ * barcode localization result에서 사용하는 point입니다.
  *
- * ## Contract
- * Values must be finite. Coordinate-space-specific bounds are checked when the
- * point is placed inside a [BarcodeRegion].
+ * ## 동작/계약
+ * 값은 finite여야 합니다. coordinate-space-specific bound는 point가 [BarcodeRegion]에
+ * 배치될 때 확인합니다.
  */
 @ConsistentCopyVisibility
 data class BarcodePoint private constructor(
@@ -145,11 +145,11 @@ data class BarcodePoint private constructor(
 }
 
 /**
- * Axis-aligned barcode bounding box.
+ * 축에 정렬된 barcode bounding box입니다.
  *
- * ## Contract
- * Pixel boxes require non-negative origin and positive dimensions. Normalized
- * boxes must fit in the inclusive `0.0..1.0` source image plane.
+ * ## 동작/계약
+ * pixel box는 non-negative origin과 양수 dimension이 필요합니다. normalized box는
+ * source image plane의 `0.0..1.0` inclusive 범위 안에 들어가야 합니다.
  */
 @ConsistentCopyVisibility
 data class BarcodeBoundingBox private constructor(
@@ -197,12 +197,11 @@ data class BarcodeBoundingBox private constructor(
 }
 
 /**
- * Barcode localization data returned by a provider.
+ * provider가 반환하는 barcode localization data입니다.
  *
- * ## Contract
- * [points] may contain the provider's finder/result points and does not need to
- * be a closed polygon. [boundingBox] is optional because some providers return
- * points only.
+ * ## 동작/계약
+ * [points]는 provider의 finder/result point를 담을 수 있으며 닫힌 polygon일 필요는
+ * 없습니다. 일부 provider는 point만 반환하므로 [boundingBox]는 선택값입니다.
  */
 @ConsistentCopyVisibility
 data class BarcodeRegion private constructor(
@@ -232,12 +231,12 @@ data class BarcodeRegion private constructor(
 }
 
 /**
- * Provider-neutral barcode extraction options.
+ * provider-neutral barcode 추출 option입니다.
  *
- * ## Contract
- * Empty [formats] means all provider-supported formats. [minimumConfidence]
- * filters only results that carry confidence; results with `null` confidence
- * are retained because many barcode libraries do not expose score data.
+ * ## 동작/계약
+ * [formats]가 비어 있으면 provider가 지원하는 모든 format을 의미합니다.
+ * [minimumConfidence]는 confidence가 있는 결과만 필터링합니다. 많은 barcode library가
+ * score data를 노출하지 않으므로 confidence가 `null`인 결과는 유지합니다.
  *
  * ```kotlin
  * val options = BarcodeOptions(formats = setOf(BarcodeFormat.QR_CODE), tryHarder = true)
@@ -258,14 +257,14 @@ data class BarcodeOptions private constructor(
     }
 
     /**
-     * Returns true when [result] matches this format and confidence filter.
+     * [result]가 이 format 및 confidence filter와 match되면 `true`를 반환합니다.
      */
     fun accepts(result: BarcodeResult): Boolean =
         (formats.isEmpty() || result.format in formats) &&
             (minimumConfidence == null || result.confidence == null || result.confidence >= minimumConfidence)
 
     /**
-     * Applies [accepts] to [results] while preserving provider order.
+     * provider order를 보존하면서 [results]에 [accepts]를 적용합니다.
      */
     fun filter(results: List<BarcodeResult>): List<BarcodeResult> =
         results.filter(::accepts)
@@ -285,12 +284,12 @@ data class BarcodeOptions private constructor(
 }
 
 /**
- * Decoded barcode result.
+ * 디코딩된 barcode result입니다.
  *
- * ## Contract
- * [text] is the decoded payload. [format] is the bluetape4k normalized format
- * and [rawBackendFormat] may carry the provider-native format string. [rawBytes]
- * is optional and must be provided only when requested and available.
+ * ## 동작/계약
+ * [text]는 디코딩된 payload입니다. [format]은 bluetape4k normalized format이고,
+ * [rawBackendFormat]은 provider-native format string을 담을 수 있습니다. [rawBytes]는
+ * 선택값이며 요청되었고 사용 가능한 경우에만 제공해야 합니다.
  */
 @ConsistentCopyVisibility
 data class BarcodeResult private constructor(

@@ -6,12 +6,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 /**
- * Extracts barcodes from this image with [reader].
+ * [reader]로 이 이미지에서 barcode를 추출합니다.
  *
- * ## Contract
- * This is the blocking extraction surface. It delegates directly to
- * [BarcodeReader.readBarcodes] and applies [BarcodeOptions.filter] so provider
- * modules can return raw provider order while callers get the requested view.
+ * ## 동작/계약
+ * 이 함수는 blocking 추출 surface입니다. [BarcodeReader.readBarcodes]에 직접 위임한 뒤
+ * [BarcodeOptions.filter]를 적용하므로, provider module은 raw provider order를 반환하고
+ * caller는 요청한 view를 받을 수 있습니다.
  *
  * ```kotlin
  * val results = image.extractBarcodes(reader, BarcodeOptions(formats = setOf(BarcodeFormat.QR_CODE)))
@@ -24,12 +24,11 @@ fun ImmutableImage.extractBarcodes(
     options.filter(reader.readBarcodes(this, options))
 
 /**
- * Extracts barcodes from this image on [dispatcher].
+ * [dispatcher] 위에서 이 이미지의 barcode를 추출합니다.
  *
- * ## Contract
- * The provider call runs inside [withContext]. Cancellation before dispatch
- * prevents the reader from starting, and provider-thrown cancellation is
- * propagated unchanged.
+ * ## 동작/계약
+ * provider 호출은 [withContext] 안에서 실행됩니다. dispatch 전에 취소되면 reader가
+ * 시작되지 않고, provider가 던진 cancellation은 변경 없이 전파됩니다.
  */
 suspend fun ImmutableImage.suspendExtractBarcodes(
     reader: BarcodeReader,

@@ -4,47 +4,47 @@ import com.sksamuel.scrimage.ImmutableImage
 import java.io.Serializable
 
 /**
- * Recognizes text from an [ImmutableImage].
+ * [ImmutableImage]에서 text를 인식합니다.
  *
- * ## Contract
- * Implementations may call blocking native OCR libraries. Callers that need a
- * coroutine boundary should use `ImmutableImage.suspendExtractText`.
+ * ## 동작/계약
+ * 구현체는 blocking native OCR library를 호출할 수 있습니다. coroutine boundary가 필요한
+ * caller는 `ImmutableImage.suspendExtractText`를 사용해야 합니다.
  */
 fun interface OcrEngine {
 
     /**
-     * Recognizes text from [image] using [options].
+     * [options]를 사용해 [image]에서 text를 인식합니다.
      *
-     * @param image image to inspect
-     * @param options OCR options
-     * @return recognized OCR text and effective options
+     * @param image 검사할 image입니다.
+     * @param options OCR option입니다.
+     * @return 인식된 OCR text와 실제 적용 option입니다.
      */
     fun recognize(image: ImmutableImage, options: OcrOptions): OcrResult
 }
 
 /**
- * Recognizes plain text plus structured OCR entries from an [ImmutableImage].
+ * [ImmutableImage]에서 plain text와 structured OCR entry를 함께 인식합니다.
  *
- * ## Contract
- * - [recognize] remains the source-compatible plain-text surface.
- * - [recognizeStructured] returns page metadata and optional block, line, and
- *   word entries according to [OcrOptions.structuredDetail].
- * - Missing confidence or bounding-box data must remain `null`.
+ * ## 동작/계약
+ * - [recognize]는 source-compatible plain-text surface로 유지됩니다.
+ * - [recognizeStructured]는 [OcrOptions.structuredDetail]에 따라 page metadata와 선택적
+ *   block, line, word entry를 반환합니다.
+ * - confidence 또는 bounding-box data가 없으면 `null`로 유지해야 합니다.
  */
 interface StructuredOcrEngine: OcrEngine {
 
     /**
-     * Recognizes structured OCR content from [image] using [options].
+     * [options]를 사용해 [image]에서 structured OCR content를 인식합니다.
      *
-     * @param image image to inspect
-     * @param options OCR options, including structured detail and source regions
-     * @return structured OCR result
+     * @param image 검사할 image입니다.
+     * @param options structured detail과 source region을 포함한 OCR option입니다.
+     * @return structured OCR result입니다.
      */
     fun recognizeStructured(image: ImmutableImage, options: OcrOptions): OcrStructuredResult
 }
 
 /**
- * Base exception for OCR failures.
+ * OCR failure의 base exception입니다.
  */
 open class OcrException(
     message: String,
@@ -56,7 +56,7 @@ open class OcrException(
 }
 
 /**
- * OCR failure caused by native library, tessdata, or language-pack setup.
+ * native library, tessdata, language-pack 설정 때문에 발생한 OCR failure입니다.
  */
 class OcrConfigurationException(
     message: String,
