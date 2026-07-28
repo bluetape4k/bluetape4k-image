@@ -218,14 +218,14 @@ git add benchmark/images-benchmark/src/main/kotlin/io/bluetape4k/images/benchmar
 git commit -m "feat: prepare canonical codec fixtures"
 ```
 
-### Task 3: Add Strict Runtime Selection and Host Preflight
+### Task 3: Strict Runtime Selection과 Host Preflight 추가
 
 **Complexity:** High
 **Depends on:** Task 1
 **Pattern skills:** `bluetape-kotlin-patterns`, `references/testing.md`
-**Files:** create `CodecMatrixPreflight.kt`, `CodecMatrixPreflightMain.kt`, and `CodecMatrixRuntimeTest.kt`.
+**Files:** `CodecMatrixPreflight.kt`, `CodecMatrixPreflightMain.kt`, `CodecMatrixRuntimeTest.kt`를 만든다.
 
-- [ ] **Step 1: Write failing selector/preflight/sanitizer tests**
+- [ ] **Step 1: 실패하는 selector/preflight/sanitizer test를 작성한다.**
 
 ```kotlin
 @Test
@@ -243,12 +243,9 @@ fun `arm64 host and x86 JNI binary becomes N A without initialization`() {
 }
 ```
 
-Also prove malformed selector/run ID, dirty/git probe errors, and sanitization of
-absolute home paths, control/Markdown metacharacters, secret-like keys, and text
-beyond the fixed bound. Runtime identity is deliberately absent here because
-this task is non-native.
+Malformed selector/run ID, dirty/git probe error, absolute home path, control/Markdown metacharacter, secret-like key, fixed bound를 넘는 text의 sanitization도 증명한다. 이 task는 non-native이므로 runtime identity는 의도적으로 포함하지 않는다.
 
-- [ ] **Step 2: Observe RED**
+- [ ] **Step 2: RED를 관찰한다.**
 
 ```bash
 ./gradlew :bluetape4k-images-benchmark:test \
@@ -256,20 +253,13 @@ this task is non-native.
   -Pvips.impl=java25 --console=plain
 ```
 
-- [ ] **Step 3: Implement injected non-native preflight**
+- [ ] **Step 3: Injected non-native preflight를 구현한다.**
 
-`CodecMatrixBackend` is the exact `java21|java25` allowlist and carries only
-vips-free identifiers plus expected JDK/runtime metadata. Inject host, JDK, JNI
-binary, git, disk, and native-access probes. `CodecMatrixPreflightMain` writes
-`build/codec-matrix/<run-id>/preflight-<backend>.json`; a known
-architecture/JDK/binary
-incompatibility produces structured `N_A` without loading a Vips class. Record
-only allowlisted facts and fixed reason codes; omit hostname, user, absolute
-home/worktree/temp paths, environment values, and raw tool/native messages.
+`CodecMatrixBackend`는 정확히 `java21|java25` allowlist이며 vips-free identifier와 expected JDK/runtime metadata만 가진다. Host, JDK, JNI binary, git, disk, native-access probe를 주입한다. `CodecMatrixPreflightMain`은 `build/codec-matrix/<run-id>/preflight-<backend>.json`을 쓴다. 알려진 architecture/JDK/binary incompatibility는 Vips class를 load하지 않고 structured `N_A`를 만든다. Allowlisted fact와 fixed reason code만 기록한다. Hostname, user, absolute home/worktree/temp path, environment value, raw tool/native message는 생략한다.
 
-- [ ] **Step 4: Observe GREEN and commit**
+- [ ] **Step 4: GREEN을 관찰하고 commit한다.**
 
-Rerun the focused test, then:
+Focused test를 다시 실행한 뒤:
 
 ```bash
 git add benchmark/images-benchmark/src/main/kotlin/io/bluetape4k/images/benchmark/CodecMatrixPreflight.kt \
@@ -278,21 +268,16 @@ git add benchmark/images-benchmark/src/main/kotlin/io/bluetape4k/images/benchmar
 git commit -m "feat: add codec runtime preflight"
 ```
 
-### Task 4: Build Directional Capability and Smoke Evidence
+### Task 4: Directional Capability와 Smoke Evidence 구성
 
 **Complexity:** High
 **Depends on:** Tasks 1-3
 **Pattern skills:** `bluetape-kotlin-patterns`, `references/testing.md`
-**Files:** create main-source `CodecMatrixCapability.kt`; create benchmark-source `CodecMatrixRuntimeAdapter.kt`, `CodecMatrixCapabilityMain.kt`, `CodecMatrixExperimentalFixtureMain.kt`; create `CodecMatrixCapabilityTest.kt`.
+**Files:** Main-source `CodecMatrixCapability.kt`를 만들고, benchmark-source `CodecMatrixRuntimeAdapter.kt`, `CodecMatrixCapabilityMain.kt`, `CodecMatrixExperimentalFixtureMain.kt`를 만들며, `CodecMatrixCapabilityTest.kt`를 만든다.
 
-- [ ] **Step 1: Write failing capability/smoke tests**
+- [ ] **Step 1: 실패하는 capability/smoke test를 작성한다.**
 
-With hand-written vips-free fakes, prove encode/decode gates are independent;
-decode requires a pinned target input; `UNAVAILABLE -> UNSUPPORTED`; `UNKNOWN ->
-SKIPPED`; known incompatibility -> `N_A` without native calls; available
-malformed/failed smoke -> blocking `FAILED_SMOKE`; unexpected failure ->
-`ERROR`; operation handles close on success and exception. Do not import
-`VipsRuntime`, `VipsImage`, `VipsImageFormat`, or a backend exception in tests.
+Hand-written vips-free fake로 encode/decode gate가 독립적임을 증명한다. Decode는 pinned target input을 요구한다. `UNAVAILABLE -> UNSUPPORTED`, `UNKNOWN -> SKIPPED`, known incompatibility -> native call 없는 `N_A`, available malformed/failed smoke -> blocking `FAILED_SMOKE`, unexpected failure -> `ERROR`를 검증한다. Operation handle은 success와 exception 모두에서 close되어야 한다. Test에서는 `VipsRuntime`, `VipsImage`, `VipsImageFormat`, backend exception을 import하지 않는다.
 
 ```kotlin
 @Test
@@ -304,7 +289,7 @@ fun `available smoke failure remains blocking`() {
 }
 ```
 
-- [ ] **Step 2: Observe RED**
+- [ ] **Step 2: RED를 관찰한다.**
 
 ```bash
 ./gradlew :bluetape4k-images-benchmark:test \
@@ -312,32 +297,13 @@ fun `available smoke failure remains blocking`() {
   -Pvips.impl=java25 --console=plain
 ```
 
-- [ ] **Step 3: Implement exact-boundary smoke**
+- [ ] **Step 3: Exact-boundary smoke를 구현한다.**
 
-The main-source evaluator calls only the vips-free `CodecMatrixCodecOps`
-interface. `CodecMatrixRuntimeAdapter` lives under `src/benchmark`, loads only
-the class named by the exact selector, calls `init(concurrency = 4)`, verifies
-requested versus reported backend identity, maps format/options, opens one
-image, calls `toBytes`, and closes it with `use`; it never falls back.
-`CodecMatrixExperimentalFixtureMain` prepares only eligible target inputs,
-validates magic/dimensions/size, hashes them, and records producer
-backend/JDK/libvips/codec-library versions, command, and run ID. Decode smoke
-consumes that exact pinned input and forces JPEG. A decode-only cell requires an
-explicit compatible producer manifest. Supplemental public round-trip smoke is
-recorded only when both directions are available.
+Main-source evaluator는 vips-free `CodecMatrixCodecOps` interface만 호출한다. `CodecMatrixRuntimeAdapter`는 `src/benchmark` 아래에 두고 exact selector가 지정한 class만 load하며, `init(concurrency = 4)`를 호출하고 requested backend identity와 reported backend identity를 검증한다. Format/option을 mapping하고 image 하나를 열어 `toBytes`를 호출한 뒤 `use`로 닫는다. Fallback은 없다. `CodecMatrixExperimentalFixtureMain`은 eligible target input만 준비하고, magic/dimension/size를 검증하며 hash를 계산하고, producer backend/JDK/libvips/codec-library version, command, run ID를 기록한다. Decode smoke는 그 exact pinned input을 사용하고 JPEG를 강제한다. Decode-only cell은 explicit compatible producer manifest를 요구한다. Supplemental public round-trip smoke는 양방향이 모두 available일 때만 기록한다.
 
-`CodecMatrixCapabilityMain` writes backend-specific
-`eligibility-<backend>.json` and stable `sizes-<backend>.json` under
-`build/reports/benchmarks/codec-matrix/<run-id>/` by performing each stable
-transcode once outside JMH with the same inputs/options.
-`CodecMatrixExperimentalFixtureMain` prepares eligible target inputs, then
-appends experimental encode/decode size observations to a staged backend size
-artifact using the same boundary and options. Both artifacts are immutable
-inputs to finalization.
-`UNSUPPORTED/SKIPPED/N_A` exit successfully;
-`FAILED_SMOKE/ERROR` write sanitized evidence and exit nonzero.
+`CodecMatrixCapabilityMain`은 같은 input/option으로 각 stable transcode를 JMH 밖에서 한 번 수행해 `build/reports/benchmarks/codec-matrix/<run-id>/` 아래에 backend-specific `eligibility-<backend>.json`과 stable `sizes-<backend>.json`을 쓴다. `CodecMatrixExperimentalFixtureMain`은 eligible target input을 준비한 뒤, 같은 boundary와 option으로 experimental encode/decode size observation을 staged backend size artifact에 append한다. 두 artifact는 finalization의 immutable input이다. `UNSUPPORTED/SKIPPED/N_A`는 성공 exit이고, `FAILED_SMOKE/ERROR`는 sanitized evidence를 쓴 뒤 nonzero로 exit한다.
 
-- [ ] **Step 4: Observe GREEN and commit**
+- [ ] **Step 4: GREEN을 관찰하고 commit한다.**
 
 ```bash
 ./gradlew :bluetape4k-images-benchmark:test \
@@ -351,30 +317,18 @@ git add benchmark/images-benchmark/src/main/kotlin/io/bluetape4k/images/benchmar
 git commit -m "feat: gate experimental codec benchmarks"
 ```
 
-### Task 5: Finalize Append-Only Evidence
+### Task 5: Append-Only Evidence Finalize
 
 **Complexity:** High
 **Depends on:** Tasks 1 and 4
 **Pattern skills:** `bluetape-kotlin-patterns`, `references/testing.md`
-**Files:** create `CodecMatrixFinalizeMain.kt` and `CodecMatrixEvidenceFinalizerTest.kt`.
+**Files:** `CodecMatrixFinalizeMain.kt`와 `CodecMatrixEvidenceFinalizerTest.kt`를 만든다.
 
-- [ ] **Step 1: Write failing finalizer tests**
+- [ ] **Step 1: 실패하는 finalizer test를 작성한다.**
 
-Prove rejection of measured cells missing latency/allocation/size artifacts,
-pre-benchmark `MEASURED`, `FAILED_SMOKE/ERROR`, missing/duplicate cells, hash
-mismatch, local-path/secret leakage, and overwrite. Prove complete atomic
-promotion and that a valid `supersedes` run ID records lineage without replacing
-either accepted directory. Add races between two finalizers for one run,
-symlink ancestors/tree entries, atomic-move-unavailable, oversized/strict-JSON
-failures, and Java 21 `N_A` expansion with forbidden numeric/native artifacts.
-Also prove `FAILED_SMOKE/ERROR` atomically creates a sanitized bounded failure
-ledger before nonzero exit; the same failed run ID cannot be rewritten,
-deleted, or mutated; nonexistent/mismatched `--replaces-failed-attempt` is
-rejected; and a valid replacement's new accepted manifest references the
-immutable failed ledger by run ID and manifest hash. The old ledger is never
-updated to point forward.
+Latency/allocation/size artifact가 없는 measured cell, pre-benchmark `MEASURED`, `FAILED_SMOKE/ERROR`, missing/duplicate cell, hash mismatch, local-path/secret leakage, overwrite를 거부하는지 증명한다. Complete atomic promotion과 valid `supersedes` run ID가 accepted directory를 교체하지 않고 lineage를 기록하는지도 증명한다. 한 run에 대한 두 finalizer race, symlink ancestor/tree entry, atomic-move-unavailable, oversized/strict-JSON failure, forbidden numeric/native artifact가 붙은 Java 21 `N_A` expansion을 추가한다. 또한 `FAILED_SMOKE/ERROR`가 nonzero exit 전에 sanitized bounded failure ledger를 atomic하게 만드는지 증명한다. 같은 failed run ID는 rewrite/delete/mutate할 수 없다. Nonexistent/mismatched `--replaces-failed-attempt`는 거부된다. Valid replacement의 새 accepted manifest는 immutable failed ledger를 run ID와 manifest hash로 참조한다. Old ledger는 forward pointer로 업데이트하지 않는다.
 
-- [ ] **Step 2: Observe RED**
+- [ ] **Step 2: RED를 관찰한다.**
 
 ```bash
 ./gradlew :bluetape4k-images-benchmark:test \
@@ -382,34 +336,13 @@ updated to point forward.
   -Pvips.impl=java25 --console=plain
 ```
 
-- [ ] **Step 3: Implement validation and promotion**
+- [ ] **Step 3: Validation과 promotion을 구현한다.**
 
-The command accepts only `--run-id` plus optional `--supersedes` and
-`--replaces-failed-attempt` run IDs. It derives the exact staging and accepted
-roots from the pinned repository working directory. Resolve every ancestor
-with `NOFOLLOW_LINKS`, reject symlinks/non-regular tree entries, hold an
-exclusive sibling lock for the run, recheck that the target is absent under
-that lock, and require a no-replace atomic directory move; if the filesystem cannot provide the atomic guarantee,
-fail without a copy fallback. Parse latency and
-GC-profiler JMH JSON, join cells by exact benchmark/scenario/backend key, attach
-output sizes collected outside timing, validate protocol, hashes, terminal
-coverage, leakage, and comparability metadata, write `run-manifest.json`, and
-atomically move a complete staged directory. A `supersedes` value links runs;
-it never permits replacement. Never delete, rewrite, or replace accepted
-evidence. For a backend preflighted as `N_A`, expand all expected cells to
-`N_A` and reject any latency, allocation, size, capability, or native-init
-artifact for that backend.
+Command는 `--run-id`와 optional `--supersedes`, `--replaces-failed-attempt` run ID만 받는다. Pinned repository working directory에서 정확한 staging root와 accepted root를 파생한다. 모든 ancestor를 `NOFOLLOW_LINKS`로 resolve하고, symlink/non-regular tree entry를 거부하며, run에 대한 exclusive sibling lock을 잡고, lock 아래에서 target absence를 다시 확인한다. No-replace atomic directory move를 요구하고, filesystem이 atomic guarantee를 제공하지 않으면 copy fallback 없이 실패한다. Latency와 GC-profiler JMH JSON을 parse하고 exact benchmark/scenario/backend key로 cell을 join하며, timing 밖에서 수집한 output size를 붙인다. Protocol, hash, terminal coverage, leakage, comparability metadata를 검증하고 `run-manifest.json`을 쓴 뒤 complete staged directory를 atomic하게 move한다. `supersedes` 값은 run을 연결할 뿐 replacement를 허용하지 않는다. Accepted evidence는 delete/rewrite/replace하지 않는다. Backend가 preflight에서 `N_A`이면 모든 expected cell을 `N_A`로 확장하고, 해당 backend의 latency/allocation/size/capability/native-init artifact를 거부한다.
 
-If capability, smoke, or measurement ends in `FAILED_SMOKE`/`ERROR`, the same
-task atomically records a bounded sanitized failure ledger at
-`benchmark/images-benchmark/docs/raw/failed/<run-id>/attempt-manifest.json`
-before exiting nonzero; it never places that attempt in an accepted run. The
-operator commits the immutable failure ledger before retrying with a new run
-ID. A replacement run must name it with `--replaces-failed-attempt`, and the
-finalizer validates the referenced ledger's run ID, terminal status, and
-manifest hash before writing the one-way link into the new accepted manifest.
+Capability, smoke, measurement가 `FAILED_SMOKE`/`ERROR`로 끝나면 같은 task는 nonzero exit 전에 `benchmark/images-benchmark/docs/raw/failed/<run-id>/attempt-manifest.json`에 bounded sanitized failure ledger를 atomic하게 기록한다. 해당 attempt를 accepted run에 넣지 않는다. Operator는 새 run ID로 retry하기 전에 immutable failure ledger를 commit한다. Replacement run은 `--replaces-failed-attempt`로 해당 ledger를 명명해야 한다. Finalizer는 새 accepted manifest에 one-way link를 쓰기 전에 참조된 ledger의 run ID, terminal status, manifest hash를 검증한다.
 
-- [ ] **Step 4: Observe GREEN and commit**
+- [ ] **Step 4: GREEN을 관찰하고 commit한다.**
 
 ```bash
 ./gradlew :bluetape4k-images-benchmark:test \
