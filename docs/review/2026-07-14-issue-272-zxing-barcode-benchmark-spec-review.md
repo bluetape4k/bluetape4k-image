@@ -1,44 +1,38 @@
-# Issue #272 ZXing Barcode Benchmark Spec Review
+# Issue #272 ZXing Barcode Benchmark Spec 검토
 
-## Scope
+## 범위
 
 - Artifact: `docs/superpowers/specs/2026-07-14-issue-272-zxing-barcode-benchmark-design.md`
-- Artifact kind: spec
-- Research basis: issue #272, barcode API/provider source and tests, issue #247
-  fixture decisions, existing `images-benchmark` configurations and reports
-- Lenses: performance, stability, security, operator/Ops, developer/API,
-  user/caller, followed by main-session integration
+- Artifact 종류: spec
+- Research basis: issue #272, barcode API/provider source와 tests, issue #247 fixture decision, 기존 `images-benchmark` configuration과 report
+- 관점: performance, stability, security, operator/Ops, developer/API, user/caller, 이후 main-session integration
 
-The active native-agent interface does not expose the required `agent_type`
-field. Per `model-routing.md`, each required lens was therefore executed as a
-separate read-only main-session pass rather than inventing agent roles.
+active native-agent interface는 필수 `agent_type` field를 노출하지 않는다. `model-routing.md`에 따라 각 필수 lens는 agent role을 지어내지 않고 별도 read-only main-session pass로 실행했다.
 
-## Initial Findings
+## 초기 발견 사항
 
-| Priority | Lens | Evidence | Required edit | Resolution |
+| Priority | 관점 | 근거 | 필요한 수정 | 해결 |
 |---|---|---|---|---|
-| P1 | Developer/API | Sections 7-8 did not constrain the new provider dependency configuration. | Keep ZXing on `benchmarkImplementation` and `testImplementation`; preserve the main/published dependency surface. | Fixed in sections 7.1, 8, and 12. |
-| P1 | Operator/Ops | Sections 9 and 11 required raw JSON but did not define collision-safe accepted-run ownership. | Use a validated run id, fresh build staging, append-only accepted directory, and one run manifest. | Fixed in sections 9 and 11. |
-| P2 | Security | The manifest-controlled resource path and encoded input size had no explicit bounds. | Restrict the classpath prefix, reject traversal/absolute paths, and cap each fixture at 1 MiB. | Fixed in sections 6, 7.1, 9, and 10. |
+| P1 | Developer/API | Sections 7-8이 새 provider dependency configuration을 제한하지 않았다. | ZXing을 `benchmarkImplementation`과 `testImplementation`에만 두고 main/published dependency surface를 보존한다. | Sections 7.1, 8, 12에서 수정. |
+| P1 | Operator/Ops | Sections 9와 11이 raw JSON을 요구했지만 collision-safe accepted-run ownership을 정의하지 않았다. | validated run id, fresh build staging, append-only accepted directory, 하나의 run manifest를 사용한다. | Sections 9와 11에서 수정. |
+| P2 | Security | manifest-controlled resource path와 encoded input size에 explicit bound가 없었다. | classpath prefix를 제한하고 traversal/absolute path를 거부하며 fixture마다 1 MiB cap을 둔다. | Sections 6, 7.1, 9, 10에서 수정. |
 
-## Rerun Verdicts
+## 재실행 판정
 
-| Lens | Verdict | Evidence |
+| 관점 | 판정 | 근거 |
 |---|---|---|
-| Performance | PASS | Sections 7.2-7.3 isolate `readBarcodes`, use identical scenarios for both modes, and pin thread/fork/warmup/measurement conditions. |
-| Stability | PASS | Sections 6, 9, and 11 fail before measurement on fixture/expectation errors and prevent accepted-evidence overwrite. |
-| Security | PASS | Sections 6 and 9 bound manifest resource paths and bytes; there are no external inputs, secrets, or network calls. |
-| Operator/Ops | PASS | Sections 9 and 11 define run identity, staging, immutable promotion, environment capture, and rerun behavior. |
-| Developer/API | PASS | Section 8 keeps ZXing imports in the provider and provider dependencies out of the benchmark module's main/published surface. |
-| User/caller | PASS | Sections 11-13 require runnable commands, metric directions, bilingual README parity, and conservative interpretation. |
+| Performance | PASS | Sections 7.2-7.3은 `readBarcodes`를 isolate하고 두 mode에 같은 scenario를 사용하며 thread/fork/warmup/measurement condition을 고정한다. |
+| Stability | PASS | Sections 6, 9, 11은 fixture/expectation error에서 measurement 전에 실패하고 accepted-evidence overwrite를 방지한다. |
+| Security | PASS | Sections 6과 9는 manifest resource path와 byte를 제한한다. external input, secret, network call은 없다. |
+| Operator/Ops | PASS | Sections 9와 11은 run identity, staging, immutable promotion, environment capture, rerun behavior를 정의한다. |
+| Developer/API | PASS | Section 8은 ZXing import를 provider에 두고 provider dependency를 benchmark module의 main/published surface 밖에 둔다. |
+| User/caller | PASS | Sections 11-13은 runnable command, metric direction, bilingual README parity, conservative interpretation을 요구한다. |
 
-## Integration Verdict
+## 통합 판정
 
-- Alternatives, boundaries, compatibility, failure modes, testability, and
-  acceptance criteria are explicit.
-- Chart N/A is evidence-backed: one provider, three workload shapes, and two
-  metrics with incompatible units and directions.
-- CHANGELOG/WIP remain correctly deferred to #270/#271.
-- Latest convergence: **P0=0, P1=0**. The P2 manifest-bound finding is fixed.
+- alternative, boundary, compatibility, failure mode, testability, acceptance criteria가 명시적이다.
+- Chart N/A는 evidence-backed이다. provider 하나, workload shape 세 개, unit과 direction이 맞지 않는 metric 두 개가 있기 때문이다.
+- CHANGELOG/WIP는 #270/#271로 defer된 상태가 맞다.
+- Latest convergence: **P0=0, P1=0**. P2 manifest-bound finding은 수정됐다.
 
 Required checks: 7/7; N/A: 0; Blocked: 0.
