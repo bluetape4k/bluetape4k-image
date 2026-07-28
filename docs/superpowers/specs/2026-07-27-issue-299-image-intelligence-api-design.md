@@ -233,8 +233,8 @@ OCR 품질, 감지 confidence, 바코드 존재 여부는 공통 입력 검증�
 
 ```text
 WorkReport.Success
-  = workflow step completed and result recorded
-  != OCR, detection, or barcode business success
+  = 워크플로 단계가 끝까지 실행되고 결과가 기록됨
+  != OCR, 감지, 바코드 업무 성공
 ```
 
 공급자가 없거나 분석이 실패해도 해당 사실을 `AnalysisResult`로 기록했다면
@@ -303,7 +303,7 @@ val flow = suspendParallelFlow("image-intelligence") {
 }
 ```
 
-각 작업은 공유 객체를 변경하거나 read-modify-write하지 않는다. Workflow 종료 뒤에만
+각 작업은 공유 객체를 변경하거나 읽기-수정-쓰기를 수행하지 않는다. Workflow 종료 뒤에만
 세 키를 읽어 응답을 집계한다.
 
 일반적인 공급자 실패와 작업별 제한 시간은 `AnalysisResult.Failed`로 정규화하므로
@@ -326,10 +326,10 @@ val flow = suspendParallelFlow("image-intelligence") {
 - 그 밖의 `CancellationException`은 잡아 두지 않고 다시 던진다.
 - 전체 HTTP 요청 제한 시간은 서버 운영 설정의 책임이며 작업별 제한 시간과 구분한다.
 
-in-process native 호출이 thread interruption에 반응하지 않으면 `withTimeout`만으로
+프로세스 내부 네이티브 호출이 스레드 중단에 반응하지 않으면 `withTimeout`만으로
 실행을 강제 종료할 수 없다. 선택적 Tesseract 실행은 이 한계를 README에 명시한다.
-엄격한 종료 시간이 필요한 운영 공급자는 별도 process 또는 원격 worker로 격리해야
-한다. 기본·demo 테스트는 cooperative adapter의 timeout과 cancellation만 보장한다.
+엄격한 종료 시간이 필요한 운영 공급자는 별도 프로세스 또는 원격 worker로 격리해야
+한다. 기본·demo 테스트는 협력적 adapter의 timeout과 cancellation만 보장한다.
 
 ## 11. 공급자 구성
 
@@ -354,7 +354,7 @@ in-process native 호출이 thread interruption에 반응하지 않으면 `withT
 | 바코드·QR | 실제 `zxing` |
 
 fixture OCR과 감지는 해당 모듈의 계약을 구현하되 운영 공급자로 오해되지 않도록
-package, bean 이름, 응답의 provider 식별자에 `fixture`를 명시한다.
+패키지, bean 이름, 응답의 provider 식별자에 `fixture`를 명시한다.
 
 ### 선택적 native OCR
 
