@@ -1,78 +1,78 @@
-# ZXing Barcode Extraction Benchmark Implementation Plan
+# ZXing Barcode Extraction Benchmark 구현 계획
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **Agentic worker 필수 지침:** 이 계획은 task 단위로 구현한다. 구현 표면은 superpowers:subagent-driven-development(권장) 또는 superpowers:executing-plans를 사용한다. 진행 추적에는 checkbox(`- [ ]`) 문법을 사용한다.
 
-**Goal:** Add reproducible ZXing barcode extraction latency and throughput evidence for immutable QR, Code 128, and no-result PNG fixtures.
+**목표:** Immutable QR, Code 128, no-result PNG fixture에 대해 재현 가능한 ZXing barcode extraction latency와 throughput evidence를 추가한다.
 
-**Architecture:** The existing benchmark module owns a provider-neutral, strict fixture manifest loader in its main source set and a ZXing-backed benchmark class in its benchmark source set. Two kotlinx-benchmark configurations execute the same parameterized extraction method, stage one fresh JSON report each, and promote one append-only accepted run with environment and fixture provenance.
+**아키텍처:** 기존 benchmark module이 main source set에서 provider-neutral strict fixture manifest loader를 소유하고, benchmark source set에서 ZXing-backed benchmark class를 소유한다. 두 kotlinx-benchmark configuration은 같은 parameterized extraction method를 실행하고, 각각 fresh JSON report 하나를 staging한 뒤 environment와 fixture provenance가 포함된 append-only accepted run 하나를 승격한다.
 
-**Tech Stack:** Kotlin 2.4, Java 25, Gradle 9.6, kotlinx-benchmark/JMH, kotlinx.serialization JSON, Scrimage `ImmutableImage`, ZXing provider, JUnit 5, bluetape4k assertions, Gradle TestKit.
+**기술 스택:** Kotlin 2.4, Java 25, Gradle 9.6, kotlinx-benchmark/JMH, kotlinx.serialization JSON, Scrimage `ImmutableImage`, ZXing provider, JUnit 5, bluetape4k assertion, Gradle TestKit.
 
 ---
 
-## Approved Contract
+## 승인된 계약
 
 - Issue: [#272](https://github.com/bluetape4k/bluetape4k-image/issues/272)
 - Spec: `docs/superpowers/specs/2026-07-14-issue-272-zxing-barcode-benchmark-design.md`
 - Repository: `bluetape4k/bluetape4k-image`
 - Base: `origin/develop`
 - Head: `perf/issue-272-zxing-barcode-benchmark`
-- PR creation is authorized after all pre-PR gates pass.
-- Merge requires a fresh merge-ready approval.
-- Heavy commands and the two benchmark modes run sequentially.
+- 모든 pre-PR gate가 통과한 뒤 PR 생성을 허용한다.
+- Merge에는 fresh merge-ready approval이 필요하다.
+- Heavy command와 두 benchmark mode는 sequential로 실행한다.
 
-## File Responsibility Map
+## 파일 Responsibility Map
 
-| Path | Responsibility |
+| Path | 책임 |
 |---|---|
-| `benchmark/images-benchmark/src/main/kotlin/io/bluetape4k/images/benchmark/BarcodeBenchmarkModels.kt` | Strict serializable manifest/scenario/expectation models |
-| `benchmark/images-benchmark/src/main/kotlin/io/bluetape4k/images/benchmark/BarcodeBenchmarkFixtures.kt` | Classpath path/size/hash/dimension validation and immutable image loading |
-| `benchmark/images-benchmark/src/main/resources/bench/barcode/manifest.json` | Exact three-fixture provenance and expectation contract |
-| `benchmark/images-benchmark/src/main/resources/bench/barcode/*.png` | Immutable QR, Code 128, and blank inputs |
-| `benchmark/images-benchmark/src/benchmark/kotlin/io/bluetape4k/images/benchmark/ZxingBarcodeExtractionBenchmark.kt` | Trial setup and timed provider extraction only |
-| `benchmark/images-benchmark/src/test/kotlin/io/bluetape4k/images/benchmark/BarcodeBenchmarkFixturesTest.kt` | Manifest, resource, security-boundary, and provider expectation tests |
+| `benchmark/images-benchmark/src/main/kotlin/io/bluetape4k/images/benchmark/BarcodeBenchmarkModels.kt` | Strict serializable manifest/scenario/expectation model |
+| `benchmark/images-benchmark/src/main/kotlin/io/bluetape4k/images/benchmark/BarcodeBenchmarkFixtures.kt` | Classpath path/size/hash/dimension validation과 immutable image loading |
+| `benchmark/images-benchmark/src/main/resources/bench/barcode/manifest.json` | 정확한 세 fixture provenance와 expectation contract |
+| `benchmark/images-benchmark/src/main/resources/bench/barcode/*.png` | Immutable QR, Code 128, blank input |
+| `benchmark/images-benchmark/src/benchmark/kotlin/io/bluetape4k/images/benchmark/ZxingBarcodeExtractionBenchmark.kt` | Trial setup과 timed provider extraction만 담당 |
+| `benchmark/images-benchmark/src/test/kotlin/io/bluetape4k/images/benchmark/BarcodeBenchmarkFixturesTest.kt` | Manifest, resource, security-boundary, provider expectation test |
 | `benchmark/images-benchmark/src/test/kotlin/io/bluetape4k/images/benchmark/BarcodeBenchmarkContractTest.kt` | Source/configuration/task/evidence lifecycle contract |
-| `benchmark/images-benchmark/build.gradle.kts` | Provider configuration, latency/throughput configs, fresh report staging, immutable promotion |
-| `benchmark/images-benchmark/docs/barcode-extraction-2026-07-14.md` | Detailed run, result, and interpretation report |
-| `benchmark/images-benchmark/docs/raw/issue-272-20260714-macos-arm64-01/` | Accepted latency, throughput, fixture manifest, and run manifest |
-| `benchmark/images-benchmark/README.md` / `README.ko.md` | Equivalent concise user-facing benchmark summary |
-| `docs/review/2026-07-14-issue-272-zxing-barcode-benchmark-*.md` | Plan and code review convergence evidence |
+| `benchmark/images-benchmark/build.gradle.kts` | Provider configuration, latency/throughput config, fresh report staging, immutable promotion |
+| `benchmark/images-benchmark/docs/barcode-extraction-2026-07-14.md` | 상세 run, result, interpretation report |
+| `benchmark/images-benchmark/docs/raw/issue-272-20260714-macos-arm64-01/` | Accepted latency, throughput, fixture manifest, run manifest |
+| `benchmark/images-benchmark/README.md` / `README.ko.md` | 동등하고 간결한 user-facing benchmark summary |
+| `docs/review/2026-07-14-issue-272-zxing-barcode-benchmark-*.md` | Plan/code review convergence evidence |
 | `docs/lessons/2026-07-14-issue-272-zxing-barcode-benchmark.md` | Durable benchmark-fixture/evidence lesson |
 
 ## Acceptance Traceability
 
 | Issue/spec requirement | Tasks | Proof |
 |---|---|---|
-| Repository-supported benchmark tasks | 2, 3 | `tasks --all`, TestKit contract, task execution |
-| Immutable deterministic fixtures | 1 | fixed PNGs, strict manifest, SHA/dimension/provider tests |
-| QR, linear, success, and no-result cases | 1, 2 | exact scenario set and six accepted rows |
-| Decode separated from loading/setup | 2 | benchmark source contract and `@Setup` boundary |
-| Latency plus throughput | 2, 4 | `avgt ms/op` and `thrpt ops/s` raw JSON |
-| Command/environment/raw/table/caveats | 3, 4, 5 | accepted run manifest, detailed report, README locales |
-| No provider ranking/generalization | 5 | report and README language review |
+| Repository-supported benchmark task | 2, 3 | `tasks --all`, TestKit contract, task execution |
+| Immutable deterministic fixture | 1 | fixed PNG, strict manifest, SHA/dimension/provider test |
+| QR, linear, success, no-result case | 1, 2 | 정확한 scenario set과 accepted row 여섯 개 |
+| Loading/setup과 분리된 decode | 2 | benchmark source contract와 `@Setup` boundary |
+| Latency와 throughput | 2, 4 | `avgt ms/op`와 `thrpt ops/s` raw JSON |
+| Command/environment/raw/table/caveat | 3, 4, 5 | accepted run manifest, detailed report, README locale |
+| Provider ranking/generalization 금지 | 5 | report와 README language review |
 
 ## Risk Prediction
 
 | Risk | Signal | Mitigation | Rollback/rerun point |
 |---|---|---|---|
-| Loading leaks into timed operation | benchmark method references resource/bytes/image factory | source contract permits only reader/image/options fields and extraction call | return to Task 2 RED test and rerun both modes |
-| Fixture drifts | hash/dimension/payload mismatch | fail loader/provider setup before measurement | regenerate a new reviewed fixture set; never edit accepted raw evidence |
-| Provider dependency leaks into published main surface | `implementation(project(":bluetape4k-images-barcode-zxing"))` appears | exact configuration contract permits only benchmark/test dependencies | revert build change and rerun publication dependency inspection |
-| Stale JMH report is promoted | report timestamp predates task start or row contract differs | fresh-start timestamp, exact single report, mode/unit/row validator | delete only failed build staging and rerun with a new run id |
-| Accepted evidence is overwritten | target run directory already exists | append-only finalizer refuses existing target | choose the next sequence run id; never replace accepted files |
-| Short run is overinterpreted | docs omit host/mode/caveat wording | documentation contract tests plus review lens | repair docs; measurement need not rerun if bytes remain unchanged |
+| Timed operation에 loading이 섞임 | benchmark method가 resource/bytes/image factory를 참조 | source contract가 reader/image/options field와 extraction call만 허용 | Task 2 RED test로 돌아가 두 mode를 다시 실행 |
+| Fixture drift 발생 | hash/dimension/payload mismatch | measurement 전에 loader/provider setup을 fail 처리 | review된 새 fixture set을 다시 생성하고 accepted raw evidence는 절대 편집하지 않음 |
+| Provider dependency가 published main surface로 누출 | `implementation(project(":bluetape4k-images-barcode-zxing"))` 등장 | exact configuration contract가 benchmark/test dependency만 허용 | build change를 되돌리고 publication dependency inspection 재실행 |
+| Stale JMH report가 승격됨 | report timestamp가 task start보다 이르거나 row contract가 다름 | fresh-start timestamp, exact single report, mode/unit/row validator | failed build staging만 삭제하고 새 run id로 재실행 |
+| Accepted evidence 덮어쓰기 | target run directory가 이미 존재 | append-only finalizer가 기존 target을 거부 | 다음 sequence run id를 선택하고 accepted file은 절대 교체하지 않음 |
+| 짧은 run을 과해석 | docs가 host/mode/caveat wording을 누락 | documentation contract test와 review lens | docs를 보수하며 bytes가 그대로면 measurement rerun은 불필요 |
 
-### Task 1: Lock the Immutable Fixture Contract
+### Task 1: Immutable Fixture Contract 고정
 
 **Complexity:** High  
-**Depends on:** approved spec and clean baseline  
+**Depends on:** approved spec과 clean baseline
 **Pattern skills:** `test-driven-development`, `bluetape-kotlin-patterns`, `references/testing.md`  
-**Files:** create the two model/loader files, fixture test, manifest, and three PNGs  
-**Expected DoD:** strict loader tests prove exactly three immutable fixtures, path/size/hash/dimension bounds, QR/Code 128 expectations, and blank no-result behavior.
+**Files:** model/loader file 두 개, fixture test, manifest, PNG 세 개 생성
+**Expected DoD:** strict loader test가 정확히 세 immutable fixture, path/size/hash/dimension bounds, QR/Code 128 expectation, blank no-result behavior를 증명한다.
 
-- [ ] **Step 1: Write the failing manifest and fixture tests**
+- [ ] **Step 1: Failing manifest와 fixture test 작성**
 
-Create `BarcodeBenchmarkFixturesTest.kt` with focused tests using bluetape4k assertions:
+bluetape4k assertion을 사용하는 focused test로 `BarcodeBenchmarkFixturesTest.kt`를 작성한다:
 
 ```kotlin
 class BarcodeBenchmarkFixturesTest {
@@ -138,13 +138,11 @@ class BarcodeBenchmarkFixturesTest {
 }
 ```
 
-Keep synthetic manifest helpers private to the test and cover duplicate ids,
-unknown scenario, wrong hash, wrong dimensions, missing resource, and malformed
-strict JSON in separate descriptive tests.
+Synthetic manifest helper는 test 내부 private로 유지하고, duplicate id, unknown scenario, wrong hash, wrong dimension, missing resource, malformed strict JSON을 각각 설명적인 별도 test로 다룬다.
 
-- [ ] **Step 2: Run the focused test and capture RED**
+- [ ] **Step 2: Focused test를 실행하고 RED 기록**
 
-Run:
+다음을 실행한다:
 
 ```bash
 ./gradlew :bluetape4k-images-benchmark:test \
@@ -152,13 +150,11 @@ Run:
   --console=plain
 ```
 
-Expected: FAIL because `BarcodeBenchmarkFixtures`, manifest models, and canonical
-resources do not exist. A syntax/import failure unrelated to those missing
-contracts must be fixed before accepting RED.
+예상 결과는 FAIL이다. `BarcodeBenchmarkFixtures`, manifest model, canonical resource가 아직 없기 때문이다. 이 missing contract와 무관한 syntax/import failure는 RED로 인정하기 전에 먼저 고친다.
 
-- [ ] **Step 3: Implement strict serializable manifest models**
+- [ ] **Step 3: Strict serializable manifest model 구현**
 
-Create `BarcodeBenchmarkModels.kt` with:
+`BarcodeBenchmarkModels.kt`를 다음 형태로 생성한다:
 
 ```kotlin
 @Serializable
@@ -221,13 +217,11 @@ internal data class BarcodeBenchmarkFixtureEntry(
 }
 ```
 
-Add init validation for positive dimensions, 64 lowercase hex hash, nonblank
-provenance, success expectation XOR `expectEmpty`, and matching scenario/format.
+Positive dimension, 64자리 lowercase hex hash, nonblank provenance, success expectation XOR `expectEmpty`, matching scenario/format에 대한 init validation을 추가한다.
 
-- [ ] **Step 4: Implement the bounded fixture loader**
+- [ ] **Step 4: Bounded fixture loader 구현**
 
-Create `BarcodeBenchmarkFixtures.kt`. Use strict `Json`, `MessageDigest`,
-`immutableImageOf(bytes)`, and an injectable resource reader for negative tests:
+`BarcodeBenchmarkFixtures.kt`를 생성한다. Strict `Json`, `MessageDigest`, `immutableImageOf(bytes)`, 그리고 negative test용 injectable resource reader를 사용한다:
 
 ```kotlin
 internal object BarcodeBenchmarkFixtures {
@@ -277,8 +271,7 @@ internal object BarcodeBenchmarkFixtures {
 }
 ```
 
-Define `BarcodeBenchmarkFixture` as a normal internal class because it owns a
-non-serializable `ImmutableImage` runtime value:
+`BarcodeBenchmarkFixture`는 non-serializable `ImmutableImage` runtime value를 소유하므로 일반 internal class로 정의한다:
 
 ```kotlin
 internal class BarcodeBenchmarkFixture(
@@ -303,17 +296,11 @@ internal class BarcodeBenchmarkFixture(
 }
 ```
 
-Implement `BarcodeBenchmarkFixture.options()` and `verify(results)` so success
-parses the pinned string with `BarcodeFormat.valueOf`, requires exactly one
-matching text/format, and `NO_RESULT` requires an empty list. Use raw
-`MessageDigest` only because the existing hash helper is
-codec-matrix-specific and cannot validate classpath bytes without coupling the
-two harnesses.
+`BarcodeBenchmarkFixture.options()`와 `verify(results)`는 success case에서 pinned string을 `BarcodeFormat.valueOf`로 parsing하고, text/format이 일치하는 result가 정확히 하나만 있도록 요구하며, `NO_RESULT`에서는 empty list를 요구하도록 구현한다. 기존 hash helper는 codec-matrix 전용이라 두 harness를 coupling하지 않고 classpath byte를 검증할 수 없으므로 raw `MessageDigest`만 사용한다.
 
-- [ ] **Step 5: Generate immutable PNG inputs through the existing provider test fixture**
+- [ ] **Step 5: 기존 provider test fixture로 immutable PNG input 생성**
 
-Temporarily create
-`images-barcode-zxing/src/test/kotlin/io/bluetape4k/images/barcode/zxing/GenerateBarcodeBenchmarkFixturesTest.kt` with one generator test:
+`images-barcode-zxing/src/test/kotlin/io/bluetape4k/images/barcode/zxing/GenerateBarcodeBenchmarkFixturesTest.kt`를 임시로 만들고 generator test 하나를 둔다:
 
 ```kotlin
 class GenerateBarcodeBenchmarkFixturesTest {
@@ -379,9 +366,7 @@ class GenerateBarcodeBenchmarkFixturesTest {
 }
 ```
 
-Run it once with the output property targeting
-`benchmark/images-benchmark/src/main/resources/bench/barcode`, then delete the
-temporary test before staging any final diff:
+Output property가 `benchmark/images-benchmark/src/main/resources/bench/barcode`를 가리키도록 한 번 실행한 뒤, final diff를 staging하기 전에 temporary test를 삭제한다:
 
 ```bash
 ./gradlew :bluetape4k-images-barcode-zxing:test \
@@ -390,21 +375,15 @@ temporary test before staging any final diff:
   --console=plain
 ```
 
-Expected: three PNG files plus the generated strict manifest. Record `file`,
-`identify`, and `shasum -a 256` outputs and verify they equal the generated
-manifest. The final branch must contain no generator test or provider-module
-diff.
+예상 결과는 PNG file 세 개와 generated strict manifest이다. `file`, `identify`, `shasum -a 256` 출력을 기록하고 generated manifest와 일치하는지 검증한다. 최종 branch에는 generator test나 provider-module diff가 남으면 안 된다.
 
-- [ ] **Step 6: Audit the generated strict canonical manifest**
+- [ ] **Step 6: Generated strict canonical manifest audit**
 
-Parse `manifest.json` and independently recompute each referenced file's
-SHA-256 and dimensions. Confirm the scenario set and expectations exactly match
-the generator code above. Any mismatch discards all four generated files and
-reruns Step 5; do not hand-edit an individual hash or PNG.
+`manifest.json`을 parsing하고 각 referenced file의 SHA-256과 dimension을 독립적으로 다시 계산한다. Scenario set과 expectation이 위 generator code와 정확히 일치하는지 확인한다. Mismatch가 있으면 generated file 네 개를 모두 폐기하고 Step 5를 다시 실행하며, 개별 hash나 PNG를 손으로 고치지 않는다.
 
-- [ ] **Step 7: Run GREEN and commit the fixture contract**
+- [ ] **Step 7: GREEN 실행 후 fixture contract commit**
 
-Run the focused test, provider tests, and main compilation:
+Focused test, provider test, main compilation을 실행한다:
 
 ```bash
 ./gradlew :bluetape4k-images-benchmark:test \
@@ -415,8 +394,7 @@ Run the focused test, provider tests, and main compilation:
 git diff --check
 ```
 
-Expected: PASS, no temporary generator file, and no provider-module diff.
-Commit:
+예상 결과는 PASS, temporary generator file 없음, provider-module diff 없음이다. 다음처럼 commit한다:
 
 ```bash
 git add benchmark/images-benchmark/src/main benchmark/images-benchmark/src/test
