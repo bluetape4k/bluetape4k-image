@@ -1,40 +1,39 @@
-# Image Workload Memory Profile (2026-05-29)
+# 이미지 워크로드 메모리 프로필 (2026-05-29)
 
-This report adds allocation-oriented evidence for representative resize, crop,
-encode, and thumbnail workloads.
+이 보고서는 대표적인 리사이즈, 자르기, 인코딩, 썸네일 워크로드의 할당량 근거를
+추가한다.
 
-## Environment
+## 실행 환경
 
-| Item | Value |
+| 항목 | 값 |
 |------|-------|
-| Host | macOS arm64 |
+| 호스트 | macOS arm64 |
 | JVM | GraalVM Java 25.0.3 |
-| Primary command | `JAVA_HOME=$(/usr/libexec/java_home -v 25) ./gradlew :bluetape4k-images-benchmark:benchmarkMemoryProfileBenchmark --console=plain` |
-| Primary raw JSON | [`raw/benchmark-memory-profile-2026-05-29-macos-java25.json`](raw/benchmark-memory-profile-2026-05-29-macos-java25.json) |
-| Allocation addendum | [`raw/benchmark-memory-profile-jmh-gc-2026-05-29-macos-java25.json`](raw/benchmark-memory-profile-jmh-gc-2026-05-29-macos-java25.json) |
+| 기본 실행 명령 | `JAVA_HOME=$(/usr/libexec/java_home -v 25) ./gradlew :bluetape4k-images-benchmark:benchmarkMemoryProfileBenchmark --console=plain` |
+| 기본 원본 JSON | [`raw/benchmark-memory-profile-2026-05-29-macos-java25.json`](raw/benchmark-memory-profile-2026-05-29-macos-java25.json) |
+| 할당량 부록 | [`raw/benchmark-memory-profile-jmh-gc-2026-05-29-macos-java25.json`](raw/benchmark-memory-profile-jmh-gc-2026-05-29-macos-java25.json) |
 
 ```bash
 JAVA_HOME=$(/usr/libexec/java_home -v 25) \
   ./gradlew :bluetape4k-images-benchmark:benchmarkMemoryProfileBenchmark --console=plain
 ```
 
-> The benchmark source and primary execution path use `kotlinx-benchmark`.
-> On JVM, `kotlinx-benchmark` uses JMH as its backend. The Gradle DSL does not
-> expose JMH profilers, so allocation values are recorded in the separate JMH GC
-> profiler addendum.
+> 벤치마크 소스와 기본 실행 경로는 `kotlinx-benchmark`를 사용한다. JVM에서
+> `kotlinx-benchmark`는 JMH를 백엔드로 사용한다. Gradle DSL이 JMH 프로파일러를
+> 제공하지 않으므로 할당량 값은 별도의 JMH GC 프로파일러 부록에 기록한다.
 
-## Fixtures
+## 픽스처
 
-| Fixture | Source | Dimensions | Role |
+| 픽스처 | 원본 | 크기 | 역할 |
 |---------|--------|------------|------|
-| `landscape.jpg` | `images/src/test/resources/images/landscape.jpg` | 4032x3024 | Photo resize/encode/vips input |
-| `homer.jpg` | `images/src/test/resources/images/homer.jpg` | 1248x702 | Thumbnail fixture |
+| `landscape.jpg` | `images/src/test/resources/images/landscape.jpg` | 4032x3024 | 사진 리사이즈/인코딩/vips 입력 |
+| `homer.jpg` | `images/src/test/resources/images/homer.jpg` | 1248x702 | 썸네일 픽스처 |
 
-## Results
+## 결과
 
-AverageTime is lower-is-better. Allocation is `gc.alloc.rate.norm`.
+AverageTime은 낮을수록 좋다. 할당량은 `gc.alloc.rate.norm`이다.
 
-| Benchmark | Resolution | AverageTime | Allocation |
+| 벤치마크 | 해상도 | AverageTime | 할당량 |
 |-----------|------------|-------------|------------|
 | `scrimage_encodeJpeg` | N/A | 146.09 ms/op | 101,017,430 B/op (96.34 MB/op) |
 | `scrimage_encodePng` | N/A | 832.79 ms/op | 268,386 B/op (0.26 MB/op) |
@@ -48,17 +47,17 @@ AverageTime is lower-is-better. Allocation is `gc.alloc.rate.norm`.
 | `vips_thumbnail` | 1280x720 | 0.274 ms/op | 4,052 B/op (3.96 KB/op) |
 | `vips_encodeJpeg` | N/A | 44.16 ms/op | 271,075 B/op (0.26 MB/op) |
 
-![Image workload memory profile chart](../../../docs/images/readme-charts/images-benchmark-memory-profile-chart-01.png)
+![이미지 워크로드 메모리 프로필 차트](../../../docs/images/readme-charts/images-benchmark-memory-profile-chart-01.png)
 
-## Notes
+## 참고 사항
 
-- JMH GC profiler reports managed heap allocation, not total native memory
-  retained by libvips during an operation.
-- The vips transform rows still matter because they verify that wrapper objects
-  and Java-side lifecycle code stay in the single-digit KB/op range.
-- Native lifetime regressions should be investigated with OS/native memory tools
-  in addition to this managed allocation profile.
-- The coroutine `Path` load/write helpers now stream directly through Scrimage
-  instead of materializing whole compressed files as intermediate `ByteArray`
-  values. `bluetape4k-okio` `BufferedSource`/`BufferedSink` overloads now cover
-  caller-owned Okio streaming boundaries.
+- JMH GC 프로파일러는 작업 중 libvips가 유지하는 전체 네이티브 메모리가 아니라
+  관리 힙 할당량을 보고한다.
+- vips 변환 행은 래퍼 객체와 Java 측 생명주기 코드가 한 자릿수 KB/op 범위를
+  유지하는지 확인하므로 여전히 의미가 있다.
+- 네이티브 생명주기 회귀는 이 관리 힙 할당 프로필과 함께 OS/네이티브 메모리
+  도구로 조사해야 한다.
+- 코루틴 `Path` 로드/쓰기 도우미는 압축 파일 전체를 중간 `ByteArray` 값으로
+  구체화하지 않고 Scrimage를 통해 직접 스트리밍한다. `bluetape4k-okio`
+  `BufferedSource`/`BufferedSink` 오버로드는 호출자가 소유한 Okio 스트리밍
+  경계를 지원한다.

@@ -1,31 +1,30 @@
 # Vips Backend Comparison Benchmark
 
-Issue #104 adds a dedicated JMH class for comparing the two libvips backends:
+Issue #104는 두 libvips 백엔드를 비교하기 위한 전용 JMH 클래스를 추가한다.
 
-- `vips-java21`: JVips JNI backend, Java 21 toolchain.
-- `vips-java25`: Panama FFM backend, Java 25 toolchain.
+- `vips-java21`: JVips JNI 백엔드, Java 21 toolchain.
+- `vips-java25`: Panama FFM 백엔드, Java 25 toolchain.
 
-The benchmark classes are `VipsBackendBenchmark` for geometry operations and
-`VipsBackendEncodeBenchmark` for encode operations. They keep the same method
-names across both backends so result JSON files can be joined by benchmark name
-and parameter:
+벤치마크 클래스는 geometry 작업용 `VipsBackendBenchmark`와 encode 작업용
+`VipsBackendEncodeBenchmark`이다. 두 백엔드에서 같은 method 이름을 유지하므로
+결과 JSON 파일을 benchmark 이름과 parameter 기준으로 결합할 수 있다.
 
 | Benchmark | Workload | Input |
 |-----------|----------|-------|
-| `vips_resize` | resize to `1920x1080` and `1280x720` | 4K JPEG bytes |
-| `vips_thumbnail` | thumbnail with matching max dimension | 4K JPEG bytes |
-| `vips_crop` | crop top-left region to matching size | 4K JPEG bytes |
-| `vips_encodeJpeg` | encode original image to JPEG | 4K JPEG bytes |
+| `vips_resize` | `1920x1080`, `1280x720` 크기로 resize | 4K JPEG bytes |
+| `vips_thumbnail` | max dimension에 맞춘 thumbnail 생성 | 4K JPEG bytes |
+| `vips_crop` | 왼쪽 위 영역을 지정 크기로 crop | 4K JPEG bytes |
+| `vips_encodeJpeg` | 원본 이미지를 JPEG로 encode | 4K JPEG bytes |
 
-Lower `ms/op` is better.
+`ms/op` 값이 낮을수록 좋다.
 
-## Current Comparable Results
+## 현재 비교 가능한 결과
 
-These values use the Java 25 FFM full run captured on 2026-05-28 with committed
-natural photo fixtures, summarized in
+아래 값은 committed natural photo fixture로 2026-05-28에 수집한 Java 25 FFM
+전체 실행 결과를 사용한다. 상세 요약은
 [`benchmark-results-2026-05-28-natural-photos.md`](benchmark-results-2026-05-28-natural-photos.md).
-Java 21 JNI is reported as `N/A` on this macOS arm64 host because the bundled
-JVips dylib is x86_64 and cannot produce native measurements here.
+이 macOS arm64 host에서는 bundled JVips dylib가 x86_64라서 native 측정값을 만들 수
+없으므로 Java 21 JNI를 `N/A`로 기록한다.
 
 ![Vips backend comparison benchmark chart](../../../docs/images/readme-charts/images-benchmark-vips-backend-comparison-chart-01.png)
 
@@ -40,19 +39,18 @@ JVips dylib is x86_64 and cannot produce native measurements here.
 | encode JPEG | cafe | original | 137.95 ± 2.42 | N/A | 41.71 ± 0.50 |
 | encode JPEG | landscape | original | 144.96 ± 5.51 | N/A | 43.88 ± 1.81 |
 
-Raw Java 25 FFM result:
+원본 Java 25 FFM 결과:
 [`raw/benchmark-results-2026-05-28-macos-java25-natural-photos.json`](raw/benchmark-results-2026-05-28-macos-java25-natural-photos.json).
 
-Historical Linux CI rows from
-[`benchmark-results-2026-04-29.md`](benchmark-results-2026-04-29.md) remain
-useful for release archaeology, but the #104 chart intentionally marks Java 21
-JNI as `N/A` for the current measured host instead of mixing old Linux numbers
-with current macOS values.
+[`benchmark-results-2026-04-29.md`](benchmark-results-2026-04-29.md)의 과거 Linux
+CI row는 release archaeology에는 여전히 유용하다. 다만 #104 chart는 오래된 Linux
+수치와 현재 macOS 값을 섞지 않기 위해 현재 측정 host의 Java 21 JNI를 의도적으로
+`N/A`로 표시한다.
 
-## Full Run
+## 전체 실행
 
-Run the two backends sequentially. Do not run them in parallel on the same host;
-libvips native initialization and CPU contention make the comparison noisy.
+두 백엔드는 순차 실행한다. 같은 host에서 병렬 실행하지 않는다. libvips native
+초기화와 CPU contention 때문에 비교값이 noisy해진다.
 
 ```bash
 # Java 21 / JVips JNI
@@ -66,10 +64,9 @@ JAVA_HOME=$(/usr/libexec/java_home -v 25) \
   -Pvips.impl=java25 --console=plain
 ```
 
-The Gradle tasks above are the normal benchmark execution surface. Use the
-direct JMH jar only for focused/debug evidence that needs the `VipsBackend` JMH
-regex filter and a narrow raw JSON output. Resolve the jar produced by the
-preceding Gradle task instead of copying a versioned artifact name:
+위 Gradle task가 일반적인 benchmark 실행 surface이다. `VipsBackend` JMH regex filter와
+좁은 raw JSON 출력이 필요한 focused/debug 증거에만 direct JMH jar를 사용한다. 버전이
+박힌 artifact 이름을 복사하지 말고 직전 Gradle task가 만든 jar를 찾아 사용한다.
 
 ```bash
 JAVA_HOME=$(/usr/libexec/java_home -v 25) \
@@ -90,12 +87,12 @@ JAVA_HOME=$(/usr/libexec/java_home -v 25) \
   -rff benchmark/images-benchmark/docs/raw/benchmark-vips-backend-java25.json
 ```
 
-Repeat the same jar build/run with `-Pvips.impl=java21` and Java 21.
+`-Pvips.impl=java21`과 Java 21로 같은 jar build/run을 반복한다.
 
 ## Reporting
 
-Store raw JMH JSON under `benchmark/images-benchmark/docs/raw/` and summarize the stable
-full-run values in this shape:
+raw JMH JSON은 `benchmark/images-benchmark/docs/raw/` 아래에 저장하고, stable full-run
+값을 다음 형태로 요약한다.
 
 | Operation | Parameter | Java 21 JNI (ms/op) | Java 25 FFM (ms/op) | Faster backend |
 |-----------|-----------|---------------------|---------------------|----------------|
@@ -106,11 +103,10 @@ full-run values in this shape:
 
 ## Local Validation Notes
 
-On 2026-05-28, `VipsBackendBenchmark` was tested on macOS arm64:
+2026-05-28에 `VipsBackendBenchmark`를 macOS arm64에서 검증했다.
 
-- Java 25 / FFM ran the JMH class successfully with `cafe` and `landscape`
-  natural photo fixtures and Homebrew libvips paths auto-detected.
-- Java 21 / JVips compiled and the JMH class launched, but native JNI execution
-  skipped on this host because the bundled JVips dylib is x86_64 while the JVM is
-  arm64. Use Linux CI or an architecture-compatible Java 21 host for real JNI
-  measurements.
+- Java 25 / FFM은 `cafe`, `landscape` natural photo fixture와 자동 감지된 Homebrew
+  libvips path로 JMH class를 성공적으로 실행했다.
+- Java 21 / JVips는 compile과 JMH class launch까지 성공했지만, bundled JVips dylib가
+  x86_64이고 JVM은 arm64라서 이 host의 native JNI 실행은 skip되었다. 실제 JNI
+  측정은 Linux CI 또는 architecture가 맞는 Java 21 host에서 수행한다.
