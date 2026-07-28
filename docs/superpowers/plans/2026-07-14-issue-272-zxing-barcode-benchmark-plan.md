@@ -560,33 +560,31 @@ git add benchmark/images-benchmark/build.gradle.kts \
 git commit -m "perf: add ZXing barcode benchmarks"
 ```
 
-### Task 3: Add Fresh-Report Validation and Append-only Promotion
+### Task 3: Fresh-report Validation과 Append-only Promotion 추가
 
 **Complexity:** High  
 **Depends on:** Task 2  
 **Pattern skills:** `test-driven-development`, benchmark hazard gate  
-**Files:** extend contract test and `build.gradle.kts`  
-**Expected DoD:** both tasks stage one fresh exact-three-row report and finalization promotes one immutable run with environment and fixture provenance.
+**Files:** contract test와 `build.gradle.kts` 확장
+**Expected DoD:** 두 task가 각각 fresh exact-three-row report 하나를 staging하고, finalization이 environment와 fixture provenance를 포함한 immutable run 하나만 승격한다.
 
-- [ ] **Step 1: Add failing lifecycle contract tests**
+- [ ] **Step 1: Failing lifecycle contract test 추가**
 
-Extend `BarcodeBenchmarkContractTest` to require:
+`BarcodeBenchmarkContractTest`를 확장해 다음을 요구한다:
 
-- run-id property `barcode.benchmark.runId` with the existing safe pattern;
-- CPU property `barcode.benchmark.cpu` required only by finalization;
-- fresh report timestamp captured separately for both generated tasks;
-- exact row validation for benchmark name, scenarios, mode, unit, threads,
-  forks, warmups, measurements, and positive finite score;
-- staged filenames `latency.json` and `throughput.json` under the run directory;
-- final target `docs/raw/{validatedRunId}` rejected when it already exists;
-- run manifest fields for commands, host, JVM, ZXing version, fixture manifest
-  hash, and raw JSON hashes.
+- 기존 safe pattern을 따르는 run-id property `barcode.benchmark.runId`
+- Finalization에만 필요한 CPU property `barcode.benchmark.cpu`
+- 두 generated task가 각각 별도로 기록하는 fresh report timestamp
+- Benchmark name, scenario, mode, unit, thread, fork, warmup, measurement, positive finite score에 대한 exact row validation
+- Run directory 아래 staged filename `latency.json`과 `throughput.json`
+- 이미 존재하는 final target `docs/raw/{validatedRunId}` 거부
+- Command, host, JVM, ZXing version, fixture manifest hash, raw JSON hash를 담는 run manifest field
 
-Run the class and accept RED only from the missing lifecycle implementation.
+Class를 실행하고, missing lifecycle implementation에서 발생한 실패만 RED로 인정한다.
 
-- [ ] **Step 2: Add validated run and report directories**
+- [ ] **Step 2: Validated run/report directory 추가**
 
-Add Gradle providers modeled on the existing codec-matrix safety pattern:
+기존 codec-matrix safety pattern을 따른 Gradle provider를 추가한다:
 
 ```kotlin
 val barcodeBenchmarkRunId = providers.gradleProperty("barcode.benchmark.runId")
@@ -598,51 +596,35 @@ val barcodeBenchmarkRunDirectory = barcodeBenchmarkRunId.flatMap { runId ->
 }
 ```
 
-Use providers and task inputs; do not resolve the properties during unrelated
-Gradle configuration.
+Provider와 task input을 사용한다. 관련 없는 Gradle configuration 중에는 property를 resolve하지 않는다.
 
-- [ ] **Step 3: Validate and stage one fresh report per mode**
+- [ ] **Step 3: Mode별 fresh report 하나를 validate하고 stage**
 
-Implement a local `validateBarcodeBenchmarkReport(report, mode, unit)` function
-using `JsonSlurper`. It must require a JSON array of exactly three rows and the
-scenario set `qr`, `code-128`, `no-result`; every row must have the expected
-benchmark class/method, JMH mode/unit, thread 1, fork 1, warmup 3, measurement 5,
-and finite positive score.
+`JsonSlurper`를 사용하는 local `validateBarcodeBenchmarkReport(report, mode, unit)` function을 구현한다. 이 함수는 JSON array가 정확히 세 row이고 scenario set이 `qr`, `code-128`, `no-result`인지 요구해야 한다. 모든 row는 expected benchmark class/method, JMH mode/unit, thread 1, fork 1, warmup 3, measurement 5, finite positive score를 가져야 한다.
 
-In `afterEvaluate`, configure the two generated tasks sequentially. `doFirst`
-rejects an existing staged file and records `Instant.now()`. `doLast` finds
-exactly one `benchmark.json` whose modified time is not before the recorded
-start, validates it, and atomically copies it to the run directory as
-`latency.json` or `throughput.json`.
+`afterEvaluate`에서 두 generated task를 sequential로 구성한다. `doFirst`는 이미 존재하는 staged file을 거부하고 `Instant.now()`를 기록한다. `doLast`는 modified time이 기록된 start보다 이르지 않은 `benchmark.json`을 정확히 하나만 찾고, 이를 validate한 뒤 run directory에 `latency.json` 또는 `throughput.json`으로 atomic copy한다.
 
-- [ ] **Step 4: Add append-only finalization**
+- [ ] **Step 4: Append-only finalization 추가**
 
-Register `finalizeBarcodeBenchmarkEvidence`. It must:
+`finalizeBarcodeBenchmarkEvidence`를 등록한다. 이 task는 다음을 수행해야 한다:
 
-1. require the validated run id and nonblank CPU description;
-2. require both staged JSON files and validate them again;
-3. require the canonical fixture manifest and compute all SHA-256 values;
-4. reject an existing `docs/raw/{validatedRunId}` target;
-5. create a temporary sibling directory;
-6. copy `latency.json`, `throughput.json`, and `fixture-manifest.json`;
-7. write pretty strict `run-manifest.json` using Groovy `JsonOutput` with exact
-   commands, OS/arch, Java vendor/version, processor count/CPU description,
-   ZXing catalog version, fixture-manifest hash, raw hashes, modes, units, and
-   timing contract;
-8. atomically move the completed temporary directory to the accepted target;
-9. delete the temporary directory on failure without touching accepted runs.
+1. Validated run id와 nonblank CPU description을 요구한다.
+2. 두 staged JSON file을 요구하고 다시 validate한다.
+3. Canonical fixture manifest를 요구하고 모든 SHA-256 값을 계산한다.
+4. 이미 존재하는 `docs/raw/{validatedRunId}` target을 거부한다.
+5. Temporary sibling directory를 만든다.
+6. `latency.json`, `throughput.json`, `fixture-manifest.json`을 복사한다.
+7. Exact command, OS/arch, Java vendor/version, processor count/CPU description, ZXing catalog version, fixture-manifest hash, raw hash, mode, unit, timing contract를 포함하는 pretty strict `run-manifest.json`을 Groovy `JsonOutput`으로 작성한다.
+8. 완성된 temporary directory를 accepted target으로 atomically move한다.
+9. 실패 시 accepted run은 건드리지 않고 temporary directory만 삭제한다.
 
-Mark the task `outputs.upToDateWhen { false }` because append-only collision
-checking must execute on every explicit finalization attempt.
+Append-only collision checking은 explicit finalization attempt마다 실행되어야 하므로 task에 `outputs.upToDateWhen { false }`를 지정한다.
 
-- [ ] **Step 5: Run GREEN and failure-path checks**
+- [ ] **Step 5: GREEN과 failure-path check 실행**
 
-Run the contract test and `tasks --all`. Use a synthetic TestKit fixture to
-prove invalid run id, missing raw file, duplicate target, wrong row set, and
-wrong mode/unit fail. Expected: all PASS; no file under `docs/raw/` is created by
-tests because TestKit uses a temporary project copy.
+Contract test와 `tasks --all`을 실행한다. Synthetic TestKit fixture로 invalid run id, missing raw file, duplicate target, wrong row set, wrong mode/unit이 실패하는지 증명한다. 예상 결과는 모두 PASS이며, TestKit이 temporary project copy를 사용하므로 test가 `docs/raw/` 아래 file을 만들면 안 된다.
 
-- [ ] **Step 6: Commit evidence lifecycle support**
+- [ ] **Step 6: Evidence lifecycle support commit**
 
 ```bash
 git add benchmark/images-benchmark/build.gradle.kts \
@@ -650,17 +632,17 @@ git add benchmark/images-benchmark/build.gradle.kts \
 git commit -m "test: guard barcode benchmark evidence"
 ```
 
-### Task 4: Execute and Accept the Benchmark Evidence
+### Task 4: Benchmark Evidence 실행과 승인
 
 **Complexity:** Medium  
-**Depends on:** Task 3 and clean targeted tests  
+**Depends on:** Task 3과 clean targeted test
 **Pattern skills:** benchmark hazard gate, `verification-before-completion` for evidence claims  
-**Files:** create accepted raw directory only through the finalizer  
-**Expected DoD:** one Java 25 run produces exactly three latency and three throughput rows tied to the same immutable fixture/environment manifest.
+**Files:** finalizer를 통해서만 accepted raw directory 생성
+**Expected DoD:** Java 25 run 하나가 같은 immutable fixture/environment manifest에 묶인 latency row 세 개와 throughput row 세 개를 생성한다.
 
-- [ ] **Step 1: Capture the host contract**
+- [ ] **Step 1: Host contract 기록**
 
-Record:
+다음을 기록한다:
 
 ```bash
 sw_vers
@@ -671,11 +653,9 @@ JAVA25=$(/usr/libexec/java_home -v 25)
 ./gradlew --version
 ```
 
-Use run id `issue-272-20260714-macos-arm64-01`. If accepted evidence with that
-id already exists, increment only the final numeric sequence and update the
-report path; never overwrite.
+Run id는 `issue-272-20260714-macos-arm64-01`을 사용한다. 해당 id의 accepted evidence가 이미 존재하면 마지막 numeric sequence만 증가시키고 report path를 업데이트한다. 기존 evidence는 절대 덮어쓰지 않는다.
 
-- [ ] **Step 2: Run latency sequentially**
+- [ ] **Step 2: Latency를 sequential로 실행**
 
 ```bash
 JAVA_HOME=$(/usr/libexec/java_home -v 25) \
@@ -684,9 +664,9 @@ JAVA_HOME=$(/usr/libexec/java_home -v 25) \
   --console=plain
 ```
 
-Expected: one staged `latency.json` with `avgt`, `ms/op`, and three scenarios.
+예상 결과는 `avgt`, `ms/op`, 세 scenario를 담은 staged `latency.json` 하나이다.
 
-- [ ] **Step 3: Run throughput only after latency exits**
+- [ ] **Step 3: Latency 종료 후에만 throughput 실행**
 
 ```bash
 JAVA_HOME=$(/usr/libexec/java_home -v 25) \
@@ -695,10 +675,9 @@ JAVA_HOME=$(/usr/libexec/java_home -v 25) \
   --console=plain
 ```
 
-Expected: one staged `throughput.json` with `thrpt`, `ops/s`, and three
-scenarios. Investigate any retry-only pass before continuing.
+예상 결과는 `thrpt`, `ops/s`, 세 scenario를 담은 staged `throughput.json` 하나이다. Retry-only pass가 있으면 계속 진행하기 전에 원인을 조사한다.
 
-- [ ] **Step 4: Finalize the accepted run once**
+- [ ] **Step 4: Accepted run을 한 번만 finalize**
 
 ```bash
 CPU="$(sysctl -n machdep.cpu.brand_string)"
@@ -709,14 +688,11 @@ JAVA_HOME=$(/usr/libexec/java_home -v 25) \
   --console=plain
 ```
 
-Expected: accepted directory with exactly four files and internally matching
-hashes. A second finalization with the same id must fail without changing them.
+예상 결과는 정확히 네 file을 가진 accepted directory와 내부적으로 일치하는 hash이다. 같은 id로 두 번째 finalization을 실행하면 해당 file을 변경하지 않고 실패해야 한다.
 
-- [ ] **Step 5: Audit the six rows and commit raw evidence**
+- [ ] **Step 5: 여섯 row를 audit하고 raw evidence commit**
 
-Parse both raw JSON files and print scenario, score, error, mode, and unit.
-Verify `git diff --check`, fixture-manifest equality, run-manifest hashes, and no
-absolute user paths or secret-like values. Commit:
+두 raw JSON file을 parsing하고 scenario, score, error, mode, unit을 출력한다. `git diff --check`, fixture-manifest equality, run-manifest hash, absolute user path 또는 secret-like value 부재를 검증한다. 다음처럼 commit한다:
 
 ```bash
 git add benchmark/images-benchmark/docs/raw/issue-272-20260714-macos-arm64-01
