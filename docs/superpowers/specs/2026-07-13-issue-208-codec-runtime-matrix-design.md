@@ -336,108 +336,85 @@ measurement를 버리며, failure를 진단한 뒤에만 새 process에서 compl
 `ERROR` 또는 `FAILED_SMOKE`, diagnosis, mitigation, run ID, replacement attempt link를 유지한다. unexplained retry는
 accepted되지 않는다.
 
-## 8. Failure Handling
+## 8. 실패 처리
 
-1. **Missing fixture:** fail setup with the attempted path; never synthesize a
-   replacement.
-2. **Runtime initialization failure:** fail the selected stable task; do not
-   emit a no-op row.
-3. **Experimental codec unavailable:** record `UNSUPPORTED` with the sanitized
-   capability reason.
-4. **Experimental capability unknown:** record `SKIPPED`; do not run by
-   assumption.
-5. **Capability available but smoke fails:** record blocking `FAILED_SMOKE`
-   with decode or encode stage and keep the long benchmark unexecuted.
-6. **Java 21 host incompatibility:** record the JVM, architecture, and native
-   binding limitation as `N/A`; compilation alone is not a measurement.
-7. **Backend runs overlap:** invalidate the evidence and rerun Java 21 and Java
-   25 sequentially.
-8. **Retry-only success:** investigate native lifecycle or timing behavior
-   before accepting the rerun.
+1. **Missing fixture:** attempted path와 함께 setup을 실패시킨다. replacement를 synthesize하지 않는다.
+2. **Runtime initialization failure:** 선택된 stable task를 실패시킨다. no-op row를 내지 않는다.
+3. **Experimental codec unavailable:** sanitized capability reason과 함께 `UNSUPPORTED`를 기록한다.
+4. **Experimental capability unknown:** `SKIPPED`를 기록한다. 추정으로 실행하지 않는다.
+5. **Capability available but smoke fails:** decode 또는 encode stage와 함께 blocking `FAILED_SMOKE`를 기록하고
+   long benchmark는 실행하지 않는다.
+6. **Java 21 host incompatibility:** JVM, architecture, native binding limitation을 `N/A`로 기록한다.
+   compilation만으로는 measurement가 아니다.
+7. **Backend runs overlap:** evidence를 invalidate하고 Java 21과 Java 25를 sequential하게 다시 실행한다.
+8. **Retry-only success:** rerun을 수용하기 전에 native lifecycle 또는 timing behavior를 조사한다.
 
-## 9. Documentation and Result Artifacts
+## 9. 문서화와 result artifact
 
-Add an English detailed report under:
+English detailed report를 다음 경로에 추가한다.
 
 ```text
 benchmark/images-benchmark/docs/codec-runtime-matrix-2026-07-13.md
 ```
 
-Store accepted raw evidence under
-`benchmark/images-benchmark/docs/raw/<run-id>/`. The directory is append-only:
-an interrupted/retried run gets a new ID, accepted evidence is never
-overwritten, and replacement runs declare `supersedes` links. The accepted
-evidence ledger consists of the run manifest and its hash-linked preflight,
-fixture, JMH, size, and capability artifacts. Together with the reproduction
-commands in the report, the ledger records git SHA/dirty state, Gradle/JMH
-settings, sanitized OS/kernel/architecture and CPU identity, JDK and native
-library versions/probes, fixture/input hashes, actual backend identity,
-artifact SHA-256 values, terminal cell status, and any superseded run. It omits
-hostname, user name, absolute home/worktree/temp paths,
-environment values, and secrets. Capability, latency, allocation, and size
-artifacts link back to this manifest. The report contains:
+accepted raw evidence는 `benchmark/images-benchmark/docs/raw/<run-id>/` 아래에 저장한다. 이 directory는
+append-only다. interrupted/retried run은 새 ID를 받고, accepted evidence는 overwrite되지 않으며, replacement run은
+`supersedes` link를 선언한다. accepted evidence ledger는 run manifest와 hash-linked preflight, fixture, JMH,
+size, capability artifact로 구성된다. report의 reproduction command와 함께 ledger는 git SHA/dirty state,
+Gradle/JMH setting, sanitized OS/kernel/architecture와 CPU identity, JDK/native library version/probe,
+fixture/input hash, actual backend identity, artifact SHA-256 value, terminal cell status, superseded run을
+기록한다. hostname, user name, absolute home/worktree/temp path, environment value, secret은 생략한다.
+capability, latency, allocation, size artifact는 이 manifest로 link back한다. report는 다음을 포함한다.
 
-- exact commands and metric direction;
-- fixture source and derived dimensions;
-- runtime and native dependency versions;
-- measured, unsupported, skipped, and N/A combinations;
-- latency, managed allocation, input bytes, and output bytes;
-- interpretation limits and non-comparable rows.
+- exact command와 metric direction.
+- fixture source와 derived dimension.
+- runtime과 native dependency version.
+- measured, unsupported, skipped, N/A 조합.
+- latency, managed allocation, input bytes, output bytes.
+- interpretation limit와 non-comparable row.
 
-The report and both README locales use the same status legend. Every matrix cell
-contains either measured values or one scoped status, sanitized reason, and
-rerun guidance. Sanitization maps failures to fixed reason codes/allowlisted
-messages, strips control/Markdown metacharacters and absolute paths, and bounds
-message length. A pre-commit scan rejects raw exception text, local path
-prefixes, or secret-like values in raw JSON, reports, README files, and command
-examples.
+report와 두 README locale은 같은 status legend를 사용한다. 모든 matrix cell은 measured value 또는 scoped
+status 하나, sanitized reason, rerun guidance를 포함한다. sanitization은 failure를 fixed reason code/allowlisted
+message로 mapping하고 control/Markdown metacharacter와 absolute path를 제거하며 message length를 제한한다.
+pre-commit scan은 raw JSON, report, README file, command example에서 raw exception text, local path prefix,
+secret-like value를 거부한다.
 
-Update both benchmark README locales with a concise table and a link to the
-detailed report. When at least two comparable rows are measured for the same
-scenario and host, generate matching latency/output-size SVG and PNG assets
-through `bluetape-diagram`, embed the PNG, and validate both formats. If fewer
-than two comparable rows exist, keep a table and record the evidence-backed
-chart N/A. Do not create a chart that combines non-comparable scenarios or
-hosts.
+두 benchmark README locale을 concise table과 detailed report link로 업데이트한다. 같은 scenario와 host에 대해 최소
+두 comparable row가 측정되면 `bluetape-diagram`으로 matching latency/output-size SVG/PNG asset을 생성하고 PNG를
+embed하며 두 format을 검증한다. comparable row가 두 개 미만이면 table을 유지하고 evidence-backed chart N/A를
+기록한다. non-comparable scenario 또는 host를 결합하는 chart를 만들지 않는다.
 
-## 10. Test and Validation Strategy
+## 10. 테스트와 검증 전략
 
-### 10.1 Contract tests
+### 10.1 Contract test
 
-- Verify the stable matrix contains the four named transcode boundaries.
-- Verify the default benchmark configuration excludes the experimental class.
-- Verify the focused configuration names and one-warmup/three-measurement
-  timing profile.
-- Verify the codec matrix contains no unavailable-runtime no-op branch.
-- Verify `web-photo` derives 1920x1080 and `profile` derives 512x512.
-- Verify the derived rasters use deterministic cover-and-center-crop semantics.
-- Verify missing fixtures fail instead of using a synthetic fallback.
-- Verify prepared PNG/WebP/JPEG inputs have valid magic bytes and positive
-  sizes.
-- Verify eligibility and finalized cell states map to `MEASURED`,
-  `UNSUPPORTED`, `SKIPPED`, or `N/A` without raw native exception leakage.
-- Verify `FAILED_SMOKE` and `ERROR` block acceptance and cannot become
-  `SKIPPED`.
-- Verify exact `vips.impl` validation, requested/actual backend equality, known
-  host `N/A`, and unexpected initialization `ERROR` with injected fakes.
-- Verify canonical fixture and run manifests, hashes, append-only run IDs,
-  supersession links, and atomic promotion into tracked raw evidence.
-- Verify stable fixture preparation and benchmark tasks depend on the shared
-  preflight/run ID and fail before native initialization when it is missing,
-  mismatched, or incompatible.
-- Verify eligibility manifests cannot contain `MEASURED`, and finalization
-  requires either complete numeric artifacts or one terminal unmeasured status
-  for every cell.
-- Verify experimental row direction gates, exact-boundary smoke bytes,
-  direct-task fail-fast behavior, and close tracking on success and exception
-  paths.
-- Verify `build`, `check`, `test`, the default `benchmark` task, and CI task
-  graphs do not depend on capability or AVIF/HEIC tasks; experimental work runs
-  only through explicit focused task names.
-- Verify the capability task produces the required JSON fields, treats
-  unsupported/unknown as observations, and fails malformed evidence.
+- stable matrix가 네 named transcode boundary를 포함하는지 검증한다.
+- default benchmark configuration이 experimental class를 제외하는지 검증한다.
+- focused configuration name과 one-warmup/three-measurement timing profile을 검증한다.
+- codec matrix에 unavailable-runtime no-op branch가 없는지 검증한다.
+- `web-photo`가 1920x1080으로, `profile`이 512x512로 derive되는지 검증한다.
+- derived raster가 deterministic cover-and-center-crop semantics를 사용하는지 검증한다.
+- missing fixture가 synthetic fallback 대신 실패하는지 검증한다.
+- prepared PNG/WebP/JPEG input이 valid magic bytes와 positive size를 가지는지 검증한다.
+- eligibility와 finalized cell state가 raw native exception leakage 없이 `MEASURED`, `UNSUPPORTED`,
+  `SKIPPED`, `N/A`로 mapping되는지 검증한다.
+- `FAILED_SMOKE`와 `ERROR`가 acceptance를 block하고 `SKIPPED`가 될 수 없는지 검증한다.
+- injected fake로 exact `vips.impl` validation, requested/actual backend equality, known host `N/A`,
+  unexpected initialization `ERROR`를 검증한다.
+- canonical fixture/run manifest, hash, append-only run ID, supersession link, tracked raw evidence로의
+  atomic promotion을 검증한다.
+- stable fixture preparation과 benchmark task가 shared preflight/run ID에 의존하며, missing/mismatched/incompatible이면
+  native initialization 전에 실패하는지 검증한다.
+- eligibility manifest가 `MEASURED`를 포함할 수 없고, finalization이 모든 cell에 대해 complete numeric artifact 또는
+  하나의 terminal unmeasured status를 요구하는지 검증한다.
+- experimental row direction gate, exact-boundary smoke bytes, direct-task fail-fast behavior,
+  success/exception path close tracking을 검증한다.
+- `build`, `check`, `test`, default `benchmark` task, CI task graph가 capability 또는 AVIF/HEIC task에
+  의존하지 않는지 검증한다. experimental work는 explicit focused task name으로만 실행된다.
+- capability task가 required JSON field를 만들고 unsupported/unknown을 observation으로 취급하며 malformed evidence를
+  실패시키는지 검증한다.
 
-### 10.2 Compile and task validation
+### 10.2 Compile과 task validation
 
 ```text
 ./gradlew :bluetape4k-images-benchmark:test --console=plain
@@ -450,31 +427,27 @@ hosts.
 ./gradlew :bluetape4k-images-benchmark:prepareExperimentalCodecMatrixFixtures -Pvips.impl=java25 --console=plain
 ```
 
-Dry-run the default and focused tasks to prove experimental isolation before
-any native measurement.
+native measurement 전에 default/focused task를 dry-run해 experimental isolation을 증명한다.
 
 ### 10.3 Native benchmark validation
 
-- Run the shared non-native preflight and fixture preparation, then the Java 25
-  stable codec matrix with the same run ID.
-- Run Java 25 capability/smoke checks, followed only by supported experimental
-  tasks.
-- Build the focused JMH jar and run the matching rows with `-prof gc`.
-- Attempt Java 21 native measurement only on a compatible host. On this macOS
-  arm64 host, preserve `N/A` rather than inventing a row.
-- Run all native/JNI/FFM commands sequentially.
-- Compare Java 21 and Java 25 only when commit, dirty state, OS/kernel/CPU/arch,
-  libvips and codec-library versions, fixture and producer-manifest hashes,
-  option profile, benchmark threads, runtime concurrency, and JMH protocol
-  match. Otherwise publish separate non-comparable rows.
+- shared non-native preflight와 fixture preparation을 실행한 뒤, 같은 run ID로 Java 25 stable codec matrix를 실행한다.
+- Java 25 capability/smoke check를 실행하고, 그 뒤 supported experimental task만 실행한다.
+- focused JMH jar를 build하고 matching row를 `-prof gc`로 실행한다.
+- Java 21 native measurement는 compatible host에서만 시도한다. 이 macOS arm64 host에서는 row를 invent하지 않고
+  `N/A`를 보존한다.
+- 모든 native/JNI/FFM command를 sequential하게 실행한다.
+- commit, dirty state, OS/kernel/CPU/arch, libvips/codec-library version, fixture/producer-manifest hash,
+  option profile, benchmark thread, runtime concurrency, JMH protocol이 일치할 때만 Java 21과 Java 25를 비교한다.
+  그렇지 않으면 separate non-comparable row를 publish한다.
 
 ### 10.4 Documentation validation
 
-- Parse every raw JSON file with `jq`.
-- Cross-check every manifest/artifact hash and reject leakage patterns.
-- Verify README English/Korean parity and report links.
-- Validate any SVG with `xmllint` and PNG with `identify`.
-- Run `git diff --check`.
+- 모든 raw JSON file을 `jq`로 parse한다.
+- 모든 manifest/artifact hash를 cross-check하고 leakage pattern을 거부한다.
+- README English/Korean parity와 report link를 검증한다.
+- 모든 SVG는 `xmllint`로, PNG는 `identify`로 검증한다.
+- `git diff --check`를 실행한다.
 
 ## 11. Compatibility and Repository Hazards
 
