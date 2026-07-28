@@ -25,7 +25,7 @@ import java.nio.file.Path
 
 private val MAX_INPUT_BYTES = VipsLimits.MAX_INPUT_BYTES
 
-// JPEG: FF D8 FF, PNG: 89 50 4E 47, WebP: 52 49 46 46 .. 57 45 42 50, HEIF-family: .... ftyp brand
+// magic byte 허용 목록: JPEG FF D8 FF, PNG 89 50 4E 47, WebP 52 49 46 46 .. 57 45 42 50, HEIF-family .... ftyp brand
 private val JPEG_MAGIC = byteArrayOf(0xFF.toByte(), 0xD8.toByte(), 0xFF.toByte())
 private val PNG_MAGIC = byteArrayOf(0x89.toByte(), 0x50.toByte(), 0x4E.toByte(), 0x47.toByte())
 private val WEBP_RIFF = byteArrayOf(0x52.toByte(), 0x49.toByte(), 0x46.toByte(), 0x46.toByte())
@@ -89,19 +89,18 @@ fun vipsImageOf(stream: InputStream): VipsImageApi {
 }
 
 /**
- * Creates a [VipsImageApi] from a caller-owned [BufferedSource].
+ * caller-owned [BufferedSource]에서 [VipsImageApi]를 생성합니다.
  *
- * The caller owns [source] and this function does not close it. Input is still
- * bounded by the existing [InputStream] path.
+ * caller가 [source]를 소유하며 이 함수는 close하지 않습니다. 입력은 기존 [InputStream] 경로와 같은 제한을 받습니다.
  */
 fun vipsImageOf(source: BufferedSource): VipsImageApi =
     vipsImageOf(source.inputStream())
 
 /**
- * Creates a [VipsImageApi] from an Okio [Source].
+ * Okio [Source]에서 [VipsImageApi]를 생성합니다.
  *
- * This overload buffers and closes [source]. Use the [BufferedSource] overload
- * when the caller must keep source ownership.
+ * 이 overload는 [source]를 buffer하고 close합니다. caller가 source ownership을 유지해야 하면 [BufferedSource]
+ * overload를 사용해야 합니다.
  */
 fun vipsImageOf(source: Source): VipsImageApi =
     source.buffered().use { bufferedSource ->
@@ -133,27 +132,26 @@ suspend fun suspendVipsImageOf(path: Path): VipsImageApi =
     withContext(Dispatchers.IO) { vipsImageOf(path) }
 
 /**
- * Creates a [VipsImageApi] from a caller-owned [BufferedSource] on
- * [Dispatchers.IO].
+ * [Dispatchers.IO]에서 caller-owned [BufferedSource]로부터 [VipsImageApi]를 생성합니다.
  *
- * The caller owns [source] and must close it.
+ * caller가 [source]를 소유하며 직접 close해야 합니다.
  */
 suspend fun suspendVipsImageOf(source: BufferedSource): VipsImageApi =
     withContext(Dispatchers.IO) { vipsImageOf(source) }
 
 /**
- * Creates a [VipsImageApi] from an Okio [Source] on [Dispatchers.IO].
+ * [Dispatchers.IO]에서 Okio [Source]로부터 [VipsImageApi]를 생성합니다.
  *
- * This overload buffers and closes [source].
+ * 이 overload는 [source]를 buffer하고 close합니다.
  */
 suspend fun suspendVipsImageOf(source: Source): VipsImageApi =
     withContext(Dispatchers.IO) { vipsImageOf(source) }
 
 /**
- * Creates a [VipsImageApi] from a caller-owned [BufferedSuspendedSource].
+ * caller-owned [BufferedSuspendedSource]에서 [VipsImageApi]를 생성합니다.
  *
- * JVips decoding is blocking, so this overload uses the `bluetape4k-okio`
- * blocking bridge. The caller owns [source] and must close it.
+ * JVips decoding은 blocking이므로 이 overload는 `bluetape4k-okio` blocking bridge를 사용합니다.
+ * caller가 [source]를 소유하며 직접 close해야 합니다.
  */
 suspend fun suspendVipsImageOf(source: BufferedSuspendedSource): VipsImageApi =
     withContext(Dispatchers.IO) {
@@ -162,9 +160,9 @@ suspend fun suspendVipsImageOf(source: BufferedSuspendedSource): VipsImageApi =
     }
 
 /**
- * Creates a [VipsImageApi] from a [SuspendedSource].
+ * [SuspendedSource]에서 [VipsImageApi]를 생성합니다.
  *
- * This overload buffers and closes [source].
+ * 이 overload는 [source]를 buffer하고 close합니다.
  */
 suspend fun suspendVipsImageOf(source: SuspendedSource): VipsImageApi {
     val bufferedSource = source.bufferedSuspended()
@@ -175,7 +173,7 @@ suspend fun suspendVipsImageOf(source: SuspendedSource): VipsImageApi {
     }
 }
 
-// ─── internal helpers ───────────────────────────────────────────────────────
+// ─── 내부 helper ───────────────────────────────────────────────────────────────
 
 private fun readBounded(stream: InputStream): ByteArray {
     val bounded = BoundedInputStream.builder()

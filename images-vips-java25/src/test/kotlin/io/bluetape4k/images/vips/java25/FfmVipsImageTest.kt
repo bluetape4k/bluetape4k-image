@@ -41,7 +41,7 @@ class FfmVipsImageTest : AbstractFfmVipsTest() {
         private val FTYP_MARKER = byteArrayOf(0x66, 0x74, 0x79, 0x70)
     }
 
-    // ─── 1: load + dimensions ─────────────────────────────────────────────
+    // ─── 1: load와 dimension 검증 ─────────────────────────────────────────
 
     @Test
     fun `ffmVipsImageOf bytes returns correct dimensions`() {
@@ -52,7 +52,7 @@ class FfmVipsImageTest : AbstractFfmVipsTest() {
         }
     }
 
-    // ─── 2: resize ────────────────────────────────────────────────────────
+    // ─── 2: resize 검증 ──────────────────────────────────────────────────
 
     @Test
     fun `resize to 800x600 produces expected dimensions`() {
@@ -65,7 +65,7 @@ class FfmVipsImageTest : AbstractFfmVipsTest() {
         }
     }
 
-    // ─── 3: thumbnail ─────────────────────────────────────────────────────
+    // ─── 3: thumbnail 검증 ───────────────────────────────────────────────
 
     @Test
     fun `thumbnail 300 longest side is at most 300`() {
@@ -77,7 +77,7 @@ class FfmVipsImageTest : AbstractFfmVipsTest() {
         }
     }
 
-    // ─── 4: toBytes JPEG ──────────────────────────────────────────────────
+    // ─── 4: JPEG toBytes 검증 ────────────────────────────────────────────
 
     @Test
     fun `toBytes JPEG starts with JPEG magic bytes`() {
@@ -89,7 +89,7 @@ class FfmVipsImageTest : AbstractFfmVipsTest() {
         }
     }
 
-    // ─── 5: toBytes PNG ───────────────────────────────────────────────────
+    // ─── 5: PNG toBytes 검증 ─────────────────────────────────────────────
 
     @Test
     fun `toBytes PNG starts with PNG magic bytes`() {
@@ -101,7 +101,7 @@ class FfmVipsImageTest : AbstractFfmVipsTest() {
         }
     }
 
-    // ─── 6: toBytes WebP ──────────────────────────────────────────────────
+    // ─── 6: WebP toBytes 검증 ────────────────────────────────────────────
 
     @Test
     fun `toBytes WebP has RIFF and WEBP markers`() {
@@ -130,7 +130,7 @@ class FfmVipsImageTest : AbstractFfmVipsTest() {
         }
     }
 
-    // ─── 7: suspendToBytes ────────────────────────────────────────────────
+    // ─── 7: suspendToBytes 검증 ─────────────────────────────────────────
 
     @Test
     fun `suspendToBytes JPEG produces non-empty bytes with JPEG magic`() = runTest {
@@ -142,7 +142,7 @@ class FfmVipsImageTest : AbstractFfmVipsTest() {
         }
     }
 
-    // ─── 8: close idempotency ─────────────────────────────────────────────
+    // ─── 8: close idempotency 검증 ──────────────────────────────────────
 
     @Test
     fun `close called twice does not throw`() {
@@ -152,7 +152,7 @@ class FfmVipsImageTest : AbstractFfmVipsTest() {
         img.close() // must not throw
     }
 
-    // ─── 9: use-after-close throws ────────────────────────────────────────
+    // ─── 9: use-after-close exception 검증 ──────────────────────────────
 
     @Test
     fun `operations after close throw IllegalStateException`(@TempDir tmpDir: Path) {
@@ -170,7 +170,7 @@ class FfmVipsImageTest : AbstractFfmVipsTest() {
         }
     }
 
-    // ─── 10: crop exact dimensions ────────────────────────────────────────
+    // ─── 10: crop exact dimension 검증 ──────────────────────────────────
 
     @Test
     fun `crop 0 0 100 100 returns 100x100`() {
@@ -247,7 +247,7 @@ class FfmVipsImageTest : AbstractFfmVipsTest() {
         }
     }
 
-    // ─── 11: writeTo Path ─────────────────────────────────────────────────
+    // ─── 11: Path writeTo 검증 ──────────────────────────────────────────
 
     @Test
     fun `writeTo path creates valid JPEG file`(@TempDir tmpDir: Path) {
@@ -261,7 +261,7 @@ class FfmVipsImageTest : AbstractFfmVipsTest() {
         }
     }
 
-    // ─── 12: writeTo OutputStream ─────────────────────────────────────────
+    // ─── 12: OutputStream writeTo 검증 ──────────────────────────────────
 
     @Test
     fun `writeTo OutputStream produces bytes with JPEG magic`() {
@@ -305,7 +305,7 @@ class FfmVipsImageTest : AbstractFfmVipsTest() {
         }
     }
 
-    // ─── 13: invalid resize args ──────────────────────────────────────────
+    // ─── 13: invalid resize args 검증 ───────────────────────────────────
 
     @Test
     fun `resize with zero width throws`() {
@@ -315,7 +315,7 @@ class FfmVipsImageTest : AbstractFfmVipsTest() {
         }
     }
 
-    // ─── 14: out-of-bounds crop ───────────────────────────────────────────
+    // ─── 14: out-of-bounds crop 검증 ────────────────────────────────────
 
     @Test
     fun `crop beyond image bounds throws`() {
@@ -350,7 +350,7 @@ class FfmVipsImageTest : AbstractFfmVipsTest() {
         }
     }
 
-    // ─── 15: owned arena failure cleanup ──────────────────────────────────
+    // ─── 15: owned arena failure cleanup 검증 ───────────────────────────
 
     @Test
     fun `owned arena closes when native load fails`() {
@@ -385,7 +385,7 @@ class FfmVipsImageTest : AbstractFfmVipsTest() {
         }
     }
 
-    // ─── 16: corrupt data ─────────────────────────────────────────────────
+    // ─── 16: corrupt data 검증 ──────────────────────────────────────────
 
     @Test
     fun `corrupt bytes throw VipsDecodeException on load`() {
@@ -393,7 +393,7 @@ class FfmVipsImageTest : AbstractFfmVipsTest() {
         assertFailsWith<Exception> { ffmVipsImageOf(corrupt) }
     }
 
-    // ─── helpers ──────────────────────────────────────────────────────────
+    // ─── 헬퍼 ────────────────────────────────────────────────────────────
 
     private fun ByteArray.startsWith(prefix: ByteArray): Boolean {
         if (size < prefix.size) return false

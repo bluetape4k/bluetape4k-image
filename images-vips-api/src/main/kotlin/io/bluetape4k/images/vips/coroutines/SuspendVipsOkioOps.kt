@@ -15,9 +15,9 @@ import okio.BufferedSink
 import okio.Sink
 
 /**
- * Writes this [VipsImage] to a caller-owned [BufferedSink] on [Dispatchers.IO].
+ * 이 [VipsImage]를 [Dispatchers.IO]에서 caller-owned [BufferedSink]에 씁니다.
  *
- * The sink is flushed but not closed.
+ * sink는 flush하지만 close하지 않습니다.
  */
 suspend fun VipsImage.suspendWriteTo(
     sink: BufferedSink,
@@ -28,9 +28,9 @@ suspend fun VipsImage.suspendWriteTo(
 }
 
 /**
- * Writes this [VipsImage] to an Okio [Sink] on [Dispatchers.IO].
+ * 이 [VipsImage]를 [Dispatchers.IO]에서 Okio [Sink]에 씁니다.
  *
- * This overload buffers and closes [sink].
+ * 이 overload는 [sink]를 buffer하고 close합니다.
  */
 suspend fun VipsImage.suspendWriteTo(
     sink: Sink,
@@ -43,11 +43,10 @@ suspend fun VipsImage.suspendWriteTo(
 }
 
 /**
- * Writes this [VipsImage] to a caller-owned [BufferedSuspendedSink].
+ * 이 [VipsImage]를 caller-owned [BufferedSuspendedSink]에 씁니다.
  *
- * The vips encoder remains blocking, so this bridge uses
- * `bluetape4k-okio`'s [BufferedSuspendedSink.asBlocking] adapter and flushes
- * the bridged sink without closing the caller-owned suspended sink.
+ * vips encoder는 여전히 blocking이므로 이 bridge는 `bluetape4k-okio`의 [BufferedSuspendedSink.asBlocking]
+ * adapter를 사용합니다. bridged sink는 flush하지만 caller-owned suspended sink는 close하지 않습니다.
  */
 suspend fun VipsImage.suspendWriteTo(
     sink: BufferedSuspendedSink,
@@ -59,10 +58,10 @@ suspend fun VipsImage.suspendWriteTo(
 }
 
 /**
- * Writes this [VipsImage] to a [SuspendedSink].
+ * 이 [VipsImage]를 [SuspendedSink]에 씁니다.
  *
- * This overload buffers and closes [sink]. Use the [BufferedSuspendedSink]
- * overload when the caller must keep sink ownership.
+ * 이 overload는 [sink]를 buffer하고 close합니다. caller가 sink ownership을 유지해야 하면
+ * [BufferedSuspendedSink] overload를 사용해야 합니다.
  */
 suspend fun VipsImage.suspendWriteTo(
     sink: SuspendedSink,

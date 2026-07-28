@@ -246,8 +246,8 @@ object FfmVipsRuntime : VipsRuntime, KLogging() {
         }
 
     private fun checkNativeAccessEnabled() {
-        // ManagementFactory.inputArguments is canonical: covers -javaagent, JDK_JAVA_OPTIONS, _JAVA_OPTIONS.
-        // ProcessHandle.commandLine() is fragile (truncation, env var args invisible).
+        // ManagementFactory.inputArguments가 canonical입니다. -javaagent, JDK_JAVA_OPTIONS, _JAVA_OPTIONS를 모두 포괄합니다.
+        // ProcessHandle.commandLine()은 truncation과 env var args 비가시성 때문에 fragile합니다.
         val jvmArgs = java.lang.management.ManagementFactory.getRuntimeMXBean().inputArguments
         // 두 조건 모두 같은 arg에서 확인: --add-opens=...=ALL-UNNAMED 같은 arg가 두 번째 절만 일치하는 오탐 방지
         val hasNativeAccess = jvmArgs.any { arg ->

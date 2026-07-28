@@ -1,11 +1,11 @@
 package io.bluetape4k.images.vips
 
 /**
- * Marks a Vips codec capability API that is still incubating.
+ * 아직 incubating 상태인 Vips codec capability API를 표시합니다.
  *
- * ## Contract
- * - Marked declarations may change without binary-compatibility guarantees.
- * - Stable Vips report containers remain available without this opt-in.
+ * ## 계약
+ * - 표시된 declaration은 binary-compatibility 보장 없이 변경될 수 있습니다.
+ * - stable Vips report container는 이 opt-in 없이도 계속 사용할 수 있습니다.
  *
  * ```kotlin
  * @OptIn(VipsIncubatingApi::class)

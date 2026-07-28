@@ -22,7 +22,7 @@ internal object JVipsPngWriter {
      */
     fun writeToBytes(image: VipsImage, options: VipsEncodeOptions): ByteArray {
         return try {
-            // writePNGToArray(compression, interlace, palette, dither, stripMetadata)
+            // writePNGToArray 인자 순서: compression, interlace, palette, dither, stripMetadata
             // effort(1-9)는 libvips PNG compression level(0-9)로 매핑
             image.writePNGToArray(options.effort, false, 0, options.stripMetadata)
         } catch (e: VipsException) {

@@ -52,7 +52,7 @@ object JVipsRuntime : VipsRuntime, KLogging() {
     val maxPixels: Long get() = _maxPixels
 
     override fun init(concurrency: Int, maxPixels: Long) {
-        // Fast path
+        // 빠른 경로
         when (state.get()) {
             RuntimeState.INITIALIZED -> return
             RuntimeState.SHUTDOWN -> throw VipsInitializationException(

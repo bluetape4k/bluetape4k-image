@@ -22,7 +22,7 @@ internal object JVipsWebpWriter {
      */
     fun writeToBytes(image: VipsImage, options: VipsEncodeOptions): ByteArray {
         return try {
-            // writeToArray(VipsImageFormat, quality, strip)
+            // writeToArray 인자 순서: VipsImageFormat, quality, strip
             image.writeToArray(VipsImageFormat.WEBP, options.quality, options.stripMetadata)
         } catch (e: VipsException) {
             throw VipsEncodeException("WebP encoding failed", e)

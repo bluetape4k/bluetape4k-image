@@ -10,7 +10,7 @@ import io.bluetape4k.images.vips.VipsEncodeOptions
 import io.bluetape4k.images.vips.VipsImageFormat
 
 /**
- * vips-ffm HEIF-family encoder for AVIF and HEIC.
+ * AVIF와 HEIC용 vips-ffm HEIF-family encoder입니다.
  */
 @OptIn(VipsIncubatingApi::class)
 internal object FfmVipsHeifWriter {

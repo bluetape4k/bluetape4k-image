@@ -25,7 +25,7 @@ internal interface FfmVipsNativeRuntime {
 internal object DefaultFfmVipsNativeRuntime : FfmVipsNativeRuntime, KLogging() {
     override fun nativeInit(concurrency: Int) {
         Vips.init()
-        // vips-ffm 1.9.6 does not expose a concurrency API; libvips uses its internal default.
+        // vips-ffm 1.9.6은 concurrency API를 노출하지 않으므로 libvips internal default를 사용합니다.
         if (concurrency != 4) {
             log.warn("vips-ffm does not support concurrency tuning in 1.9.6; concurrency=$concurrency parameter ignored")
         }
