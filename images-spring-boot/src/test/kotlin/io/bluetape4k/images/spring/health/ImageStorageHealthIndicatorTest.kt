@@ -35,8 +35,8 @@ class ImageStorageHealthIndicatorTest {
 
     @Test
     fun `returns Health up even when exists returns false`() {
-        // The indicator checks reachability by calling exists(), not by requiring the object to exist.
-        // A false return means the health-probe object is absent, but the storage IS reachable.
+        // indicator는 object 존재 자체를 요구하지 않고 exists() 호출 가능성으로 reachability를 확인합니다.
+        // false return은 health-probe object가 없다는 뜻이며 storage는 reachable한 상태입니다.
         coEvery { storage.exists(any()) } returns false
 
         val health = indicator.health().block()!!

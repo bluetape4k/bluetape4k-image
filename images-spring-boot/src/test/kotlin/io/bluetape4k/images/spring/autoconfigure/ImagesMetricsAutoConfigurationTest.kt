@@ -39,10 +39,10 @@ class ImagesMetricsAutoConfigurationTest {
 
     @Test
     fun `context fails when Micrometer is on classpath but no MeterRegistry bean is registered`() {
-        // MeterRegistry class is on the classpath (testImplementation) so @ConditionalOnClass
-        // passes and MetricsDecorationConfiguration activates. The @Bean factory requires a
-        // MeterRegistry bean; without one Spring raises UnsatisfiedDependencyException.
-        // This is the expected sharp edge: consumers must supply a MeterRegistry.
+        // testImplementation 때문에 MeterRegistry class가 classpath에 있어 @ConditionalOnClass가 통과하고
+        // MetricsDecorationConfiguration이 활성화됩니다. @Bean factory는 MeterRegistry bean을 요구하므로,
+        // bean이 없으면 Spring은 UnsatisfiedDependencyException을 발생시킵니다.
+        // consumer가 MeterRegistry를 제공해야 한다는 의도된 sharp edge입니다.
         contextRunner.run { ctx ->
             assertThat(ctx).hasFailed()
         }
@@ -50,7 +50,7 @@ class ImagesMetricsAutoConfigurationTest {
 
     @Test
     fun `disabled when metrics enabled=false`() {
-        // Even with a MeterRegistry present, disabling metrics skips the BPP entirely.
+        // MeterRegistry가 있어도 metrics를 끄면 BPP 전체를 건너뜁니다.
         contextRunner
             .withPropertyValues("bluetape4k.images.metrics.enabled=false")
             .withBean(MeterRegistry::class.java, { SimpleMeterRegistry() })
@@ -63,7 +63,7 @@ class ImagesMetricsAutoConfigurationTest {
 
     @Test
     fun `does not double-wrap a pre-existing MetricImageStorage bean`() {
-        // Supply a MetricImageStorage bean directly; the BPP must skip it (checks bean !is MetricImageStorage).
+        // MetricImageStorage bean을 직접 제공합니다. BPP는 bean !is MetricImageStorage 조건으로 이를 건너뛰어야 합니다.
         val registry = SimpleMeterRegistry()
         val inner = LocalImageStorage(tempDir, 10 * 1024 * 1024L)
         val alreadyWrapped = MetricImageStorage(delegate = inner, registry = registry)
@@ -74,7 +74,7 @@ class ImagesMetricsAutoConfigurationTest {
             .run { ctx ->
                 val storage = ctx.getBean(ImageStorage::class.java)
                 assertThat(storage).isInstanceOf(MetricImageStorage::class.java)
-                // Confirm the delegate is LocalImageStorage, not another MetricImageStorage.
+                // delegate가 또 다른 MetricImageStorage가 아니라 LocalImageStorage인지 확인합니다.
                 val delegate = MetricImageStorage::class.java
                     .getDeclaredField("delegate")
                     .also { it.isAccessible = true }

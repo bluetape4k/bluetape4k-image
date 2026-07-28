@@ -6,16 +6,16 @@ import io.micrometer.core.instrument.MeterRegistry
 import org.springframework.beans.factory.config.BeanPostProcessor
 
 /**
- * Wraps every [ImageStorage] bean with [MetricImageStorage] during context initialization.
+ * context initialization 중 모든 [ImageStorage] bean을 [MetricImageStorage]로 감쌉니다.
  *
- * ## Behavior / Contract
- * - Only beans that are not already a [MetricImageStorage] are wrapped — preventing double
- *   instrumentation when an [ImageStorage] bean is replaced or proxied.
- * - Non-[ImageStorage] beans pass through unchanged.
- * - The wrapper is created lazily — the same [MeterRegistry] is shared across all wrapped
- *   instances, which is correct because Micrometer registries are thread-safe by design.
+ * ## 동작/계약
+ * - 아직 [MetricImageStorage]가 아닌 bean만 wrap합니다. [ImageStorage] bean이 교체되거나
+ *   proxy되어도 double instrumentation을 방지합니다.
+ * - [ImageStorage]가 아닌 bean은 변경 없이 통과합니다.
+ * - wrapper는 lazily 생성됩니다. 같은 [MeterRegistry]가 모든 wrapped instance에 공유되며,
+ *   Micrometer registry는 설계상 thread-safe이므로 올바른 동작입니다.
  *
- * This post-processor is registered by [io.bluetape4k.images.spring.autoconfigure.ImagesMetricsAutoConfiguration].
+ * 이 post-processor는 [io.bluetape4k.images.spring.autoconfigure.ImagesMetricsAutoConfiguration]에서 등록됩니다.
  */
 class ImageStorageMetricsBeanPostProcessor(
     private val registry: MeterRegistry,

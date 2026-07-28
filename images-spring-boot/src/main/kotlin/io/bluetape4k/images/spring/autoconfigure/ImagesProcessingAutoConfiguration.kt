@@ -5,16 +5,16 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 
 /**
- * Phase 1 — image processing auto-configuration.
+ * Phase 1 image processing auto-configuration입니다.
  *
- * ## Behavior / Contract
- * - Enables [ImageProcessingProperties] binding under the `bluetape4k.images.processing` prefix.
- * - Toggled by `bluetape4k.images.processing.enabled` (default `true`).
- * - Currently a placeholder phase: it owns the property bean only and does not register
- *   `ImageProcessor`/`ImagePipeline` beans. Those will be added in a subsequent phase.
+ * ## 동작 / 계약
+ * - `bluetape4k.images.processing` prefix 아래 [ImageProcessingProperties] binding을 활성화합니다.
+ * - `bluetape4k.images.processing.enabled`로 toggle됩니다(default `true`).
+ * - 현재는 placeholder phase입니다. property bean만 소유하며 `ImageProcessor`/`ImagePipeline` bean은 등록하지 않습니다.
+ *   해당 bean은 후속 phase에서 추가합니다.
  *
- * This class is the first phase in the auto-configuration chain — later phases (`Storage`, `Cdn`,
- * `Health`, `Metrics`) reference it via `afterName` to guarantee ordering.
+ * 이 class는 auto-configuration chain의 첫 phase입니다. 이후 phase(`Storage`, `Cdn`, `Health`, `Metrics`)는
+ * ordering 보장을 위해 `afterName`으로 이 class를 참조합니다.
  */
 @AutoConfiguration
 @ConditionalOnProperty(

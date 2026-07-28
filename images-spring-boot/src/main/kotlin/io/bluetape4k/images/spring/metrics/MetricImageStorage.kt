@@ -11,26 +11,23 @@ import kotlinx.coroutines.CancellationException
 import java.nio.file.Path
 
 /**
- * Decorates an [ImageStorage] with Micrometer metrics.
+ * [ImageStorage]에 Micrometer metric을 입히는 decorator입니다.
  *
- * ## Behavior / Contract
- * - Wraps `upload(bytes)`, `upload(Path)` and `download(key)` operations with a [Timer] and an
- *   error [io.micrometer.core.instrument.Counter].
- * - Delegates every other [ImageStorage] method to the wrapped instance via Kotlin's class
- *   delegation (`by delegate`).
- * - Uses `Timer.start(registry)` + `Sample.stop(registry.timer(...))` (instead of the
- *   `recordSuspend` extension shipped in `micrometer-core-kotlin`, which is not a transitive
- *   dependency).
- * - `CancellationException` is rethrown immediately to honour structured concurrency
- *   (CLAUDE.md). The timer sample is stopped before propagation so a cancelled upload still
- *   emits a duration.
- * - Errors increment the error counter and stop the timer; the original exception is rethrown.
+ * ## 동작/계약
+ * - `upload(bytes)`, `upload(Path)`, `download(key)` operation을 [Timer]와
+ *   error [io.micrometer.core.instrument.Counter]로 감쌉니다.
+ * - 나머지 [ImageStorage] method는 Kotlin class delegation(`by delegate`)으로 wrapped instance에 위임합니다.
+ * - transitive dependency가 아닌 `micrometer-core-kotlin`의 `recordSuspend` extension 대신
+ *   `Timer.start(registry)` + `Sample.stop(registry.timer(...))`를 사용합니다.
+ * - structured concurrency(CLAUDE.md)를 지키기 위해 `CancellationException`은 즉시 다시 던집니다.
+ *   propagation 전에 timer sample을 stop하므로 취소된 upload도 duration을 emit합니다.
+ * - error는 error counter를 증가시키고 timer를 stop한 뒤 원래 exception을 다시 던집니다.
  *
- * Metric names:
- * - `images.storage.upload.duration` — Timer for successful and failed uploads.
- * - `images.storage.upload.errors`   — Counter incremented on any upload failure.
- * - `images.storage.download.duration` — Timer for successful and failed downloads.
- * - `images.storage.download.errors`  — Counter incremented on any download failure.
+ * metric name:
+ * - `images.storage.upload.duration` — 성공/실패 upload의 Timer입니다.
+ * - `images.storage.upload.errors`   — upload failure마다 증가하는 Counter입니다.
+ * - `images.storage.download.duration` — 성공/실패 download의 Timer입니다.
+ * - `images.storage.download.errors`  — download failure마다 증가하는 Counter입니다.
  */
 class MetricImageStorage(
     private val delegate: ImageStorage,

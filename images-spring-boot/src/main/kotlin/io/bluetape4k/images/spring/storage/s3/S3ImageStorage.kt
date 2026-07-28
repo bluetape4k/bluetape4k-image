@@ -26,25 +26,24 @@ import java.nio.file.Path
 import java.time.Instant
 
 /**
- * S3-backed [ImageStorage] implementation.
+ * S3를 backend로 사용하는 [ImageStorage] 구현체입니다.
  *
- * ## Behavior / Contract
- * - Delegates all S3 calls to [S3Operations] from `bluetape4k-aws-spring-boot`.
- * - All suspend methods hop to [Dispatchers.IO].
- * - All catch blocks rethrow [CancellationException] first; SDK exceptions are mapped to
- *   [ImageStorageException] subclasses via the file-local `toImageStorageException` extension.
- * - [bucket] resolves once at construction from [ImageStorageProperties.bucket]; absence or blank
- *   value raises [IllegalArgumentException].
- * - Upload is rejected (with [ImageStorageException.ValidationException]) when the payload size
- *   exceeds [ImageStorageProperties.maxSizeBytes]. Download fails closed when the object size
- *   cannot be verified before download, then checks the downloaded byte count again before
- *   returning bytes or writing a destination file.
- * - SDK timeout/retry knobs from [ImageStorageProperties.S3] are intended to be applied at the
- *   `S3Client` construction site (see [toClientOverrideConfig]); the current [S3Operations] API does
- *   not expose a per-request override hook, so this class does not pass override config at call time.
- * - [UploadOptions.cacheControl] and [UploadOptions.metadata] are accepted for API compatibility but
- *   are not forwarded — the underlying [S3Operations.upload] does not expose them. Use the
- *   lower-level AWS S3 client directly when these headers are required.
+ * ## 동작 / 계약
+ * - 모든 S3 호출은 `bluetape4k-aws-spring-boot`의 [S3Operations]에 위임합니다.
+ * - 모든 suspend method는 blocking SDK 경로를 격리하기 위해 [Dispatchers.IO]에서 실행합니다.
+ * - 모든 catch block은 [CancellationException]을 먼저 다시 던집니다. SDK exception은 file-local
+ *   `toImageStorageException` extension을 통해 [ImageStorageException] 하위 type으로 매핑합니다.
+ * - [bucket]은 생성 시 [ImageStorageProperties.bucket]에서 한 번만 해석합니다. 값이 없거나 blank이면
+ *   [IllegalArgumentException]을 던집니다.
+ * - payload size가 [ImageStorageProperties.maxSizeBytes]를 초과하면 upload는
+ *   [ImageStorageException.ValidationException]으로 거부됩니다. download는 시작 전에 object size를 확인할 수
+ *   없으면 실패로 닫고, byte를 반환하거나 destination file에 쓰기 전에 downloaded byte count를 다시 검사합니다.
+ * - [ImageStorageProperties.S3]의 SDK timeout/retry knob은 `S3Client` 생성 지점에서 적용되어야 합니다
+ *   ([toClientOverrideConfig] 참고). 현재 [S3Operations] API는 per-request override hook을 노출하지 않으므로,
+ *   이 class는 호출 시점에 override config를 전달하지 않습니다.
+ * - [UploadOptions.cacheControl]과 [UploadOptions.metadata]는 API 호환성을 위해 받지만 전달하지 않습니다.
+ *   내부 [S3Operations.upload]가 해당 값을 노출하지 않기 때문입니다. 이 header가 필요하면 lower-level AWS S3
+ *   client를 직접 사용해야 합니다.
  */
 class S3ImageStorage(
     private val operations: S3Operations,
@@ -73,7 +72,7 @@ class S3ImageStorage(
         }
     }
 
-    /** Joins the optional [ImageStorageProperties.keyPrefix] with the key's [ImageObjectKey.fullKey]. */
+    /** 선택 사항인 [ImageStorageProperties.keyPrefix]와 key의 [ImageObjectKey.fullKey]를 하나의 S3 object key로 결합합니다. */
     private fun objectKey(key: ImageObjectKey): String {
         val prefix = properties.keyPrefix
         if (prefix.isBlank()) return key.fullKey
@@ -130,8 +129,8 @@ class S3ImageStorage(
                 message = "Upload file exceeds maxSizeBytes (${properties.maxSizeBytes}): $size",
             )
         }
-        // S3Operations.upload only accepts ByteArray. For very large files, callers should bypass
-        // this storage and use the lower-level AWS S3 transfer manager.
+        // S3Operations.upload는 ByteArray만 받습니다. 매우 큰 file은 이 storage를 우회하고
+        // lower-level AWS S3 transfer manager를 직접 사용해야 합니다.
         val bytes = try {
             Files.readAllBytes(source)
         } catch (e: CancellationException) {
@@ -192,7 +191,7 @@ class S3ImageStorage(
         } catch (e: CancellationException) {
             throw e
         } catch (e: NoSuchKeyException) {
-            // idempotent — missing key is not an error
+            // idempotent: 없는 key 삭제는 오류가 아닙니다.
             log.debug(e) { "delete: ${key.fullKey} not found" }
         } catch (e: S3Exception) {
             if (e.statusCode() == STATUS_NOT_FOUND) {
@@ -243,7 +242,7 @@ class S3ImageStorage(
         }
     }.flowOn(Dispatchers.IO)
 
-    /** Verifies object size through `listPage` before starting a byte-array download. */
+    /** byte-array download를 시작하기 전에 `listPage`로 object size를 검증합니다. */
     private suspend fun verifiedObjectSize(key: ImageObjectKey): Long {
         val fullKey = objectKey(key)
         return try {
@@ -261,7 +260,7 @@ class S3ImageStorage(
         }
     }
 
-    /** Enforces [ImageStorageProperties.maxSizeBytes] before and after S3 byte-array downloads. */
+    /** S3 byte-array download 전후에 [ImageStorageProperties.maxSizeBytes] 제한을 적용합니다. */
     private fun validateDownloadSize(key: ImageObjectKey, size: Long) {
         if (size > properties.maxSizeBytes) {
             throw ImageStorageException.ValidationException(
@@ -272,11 +271,11 @@ class S3ImageStorage(
     }
 
     /**
-     * Maps SDK [Throwable]s to [ImageStorageException] subclasses. Keeps SDK types confined to this
-     * file so [ImageStorageException] itself stays SDK-free.
+     * SDK [Throwable]을 [ImageStorageException] 하위 type으로 변환합니다. SDK type을 이 file 안에 가둬
+     * [ImageStorageException] 자체가 SDK-free contract로 남도록 합니다.
      *
-     * SDK error messages may contain the object key; we sanitize by exposing only [ImageObjectKey.fullKey]
-     * in the wrapped message and routing the original throwable to [Throwable.cause].
+     * SDK error message에는 object key가 포함될 수 있습니다. wrapping message에는 [ImageObjectKey.fullKey]만
+     * 노출하고 원본 throwable은 [Throwable.cause]로 연결해 외부 노출면을 제한합니다.
      */
     private fun Throwable.toImageStorageException(key: ImageObjectKey): ImageStorageException =
         when (this) {

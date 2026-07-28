@@ -70,7 +70,7 @@ class MetricImageStorageTest {
         val timer = registry.find("images.storage.upload.duration").timer()
         assertTrue(timer != null && timer.count() == 1L)
         val counter = registry.find("images.storage.upload.errors").counter()
-        // counter should not be incremented on CancellationException
+        // CancellationException에서는 counter를 증가시키면 안 됩니다.
         assertTrue(counter == null || counter.count() == 0.0)
     }
 

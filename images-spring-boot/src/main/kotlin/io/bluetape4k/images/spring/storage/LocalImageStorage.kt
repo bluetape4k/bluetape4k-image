@@ -21,19 +21,20 @@ import java.nio.file.StandardCopyOption
 import java.time.Instant
 
 /**
- * Local filesystem-backed [ImageStorage].
+ * local filesystem 기반 [ImageStorage]입니다.
  *
- * ## Behavior / Contract
- * - All suspend methods hop to [Dispatchers.IO].
- * - Path traversal is prevented: every key is resolved under [rootDir] and the resolved path must
- *   start with the normalized [rootDir]. Otherwise [ImageStorageException.ValidationException] is thrown.
- * - Uploads larger than [maxSizeBytes] are rejected before any bytes are written.
- * - Downloads of objects larger than [maxSizeBytes] are rejected before bytes are read.
- * - [delete] is idempotent — missing keys do not raise.
- * - [list] returns a cold [Flow] of [ImageObjectKey] resolved relative to [rootDir]; cancellation
- *   stops the underlying directory walk.
- * - All catch blocks rethrow [CancellationException] first; [IOException] is wrapped as
- *   [ImageStorageException.TransientException]; [NoSuchFileException] as [ImageStorageException.NotFoundException].
+ * ## 동작/계약
+ * - 모든 suspend method는 [Dispatchers.IO]로 이동합니다.
+ * - path traversal을 방지합니다. 모든 key는 [rootDir] 아래로 resolve되고 resolved path는
+ *   normalized [rootDir]로 시작해야 합니다. 그렇지 않으면 [ImageStorageException.ValidationException]을 던집니다.
+ * - [maxSizeBytes]보다 큰 upload는 byte를 쓰기 전에 거부합니다.
+ * - [maxSizeBytes]보다 큰 object download는 byte를 읽기 전에 거부합니다.
+ * - [delete]는 idempotent입니다. missing key는 예외를 일으키지 않습니다.
+ * - [list]는 [rootDir] 기준 상대 경로로 resolve된 [ImageObjectKey]의 cold [Flow]를 반환합니다.
+ *   cancellation은 underlying directory walk를 중단합니다.
+ * - 모든 catch block은 [CancellationException]을 먼저 다시 던집니다. [IOException]은
+ *   [ImageStorageException.TransientException]으로, [NoSuchFileException]은
+ *   [ImageStorageException.NotFoundException]으로 wrap합니다.
  */
 class LocalImageStorage(
     private val rootDir: Path,
@@ -52,9 +53,9 @@ class LocalImageStorage(
     }
 
     /**
-     * Resolves [key] under [rootDir] and asserts the resolved path stays within the root.
+     * [key]를 [rootDir] 아래로 resolve하고 resolved path가 root 안에 머무는지 확인합니다.
      *
-     * Throws [ImageStorageException.ValidationException] on traversal attempts.
+     * traversal attempt에서는 [ImageStorageException.ValidationException]을 던집니다.
      */
     private fun resolveKey(key: ImageObjectKey): Path {
         val resolved = normalizedRoot.resolve(key.fullKey).normalize()
@@ -90,7 +91,7 @@ class LocalImageStorage(
                 uploadedAt = Instant.now(),
             )
         } catch (e: CancellationException) {
-            // best-effort partial cleanup before propagating cancellation
+            // cancellation을 전파하기 전에 best-effort partial cleanup을 수행합니다.
             deletePartialQuietly(target)
             throw e
         } catch (e: IOException) {
@@ -238,7 +239,7 @@ class LocalImageStorage(
         }
     }
 
-    /** Best-effort cleanup of a partially-written file. Never raises. */
+    /** partially-written file을 best-effort로 정리합니다. 예외를 일으키지 않습니다. */
     private fun deletePartialQuietly(target: Path) {
         try {
             Files.deleteIfExists(target)
