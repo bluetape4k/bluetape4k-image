@@ -1,23 +1,29 @@
-# README Class/ERD Routing
+# README 클래스/ERD 라우팅
 
-## Context
+## 배경
 
-README class and ERD images were regenerated across the bluetape4k workspace for reuse in documentation, blog posts, and presentations.
+문서, 블로그 글, 발표 자료에서 재사용할 수 있도록 bluetape4k 워크스페이스
+전반의 README 클래스 및 ERD 이미지를 다시 생성했다.
 
-## Decision
+## 결정
 
-Use orthogonal connector routing with blocker-aware lane selection for class and ERD diagrams. Keep pastel colors and existing typography, but avoid cubic curves and connector paths that cross component interiors.
+클래스 및 ERD 다이어그램에는 방해물을 고려해 경로를 선택하는 직교 연결선
+라우팅을 사용한다. 파스텔 색상과 기존 타이포그래피는 유지하되, 3차 곡선과
+컴포넌트 내부를 가로지르는 연결선 경로는 피한다.
 
-## Outcome
+## 결과
 
-The regenerated class/ERD SVGs use relation-aware component placement, straight horizontal/vertical lanes, smaller arrow markers, and top/bottom ports with vertical first and final segments, and horizontal lanes placed near row midlines instead of component edges.
+다시 생성한 클래스/ERD SVG는 관계를 고려한 컴포넌트 배치, 직선 수평/수직 경로,
+더 작은 화살표 마커를 사용한다. 처음과 마지막 구간은 상단/하단 포트에서 수직으로
+연결하고, 수평 경로는 컴포넌트 가장자리 대신 행 중앙선 가까이에 배치했다.
 
-## Verification
+## 검증
 
 - `node --check .omx/scripts/refine-readme-diagrams.mjs`
-- Changed class/ERD SVGs: cubic connector count `0`
-- Changed class/ERD SVGs: card-interior crossing candidates `0`
+- 변경한 클래스/ERD SVG: 3차 곡선 연결선 수 `0`
+- 변경한 클래스/ERD SVG: 카드 내부 교차 후보 수 `0`
 
-## Future Guidance
+## 향후 지침
 
-When diagrams are regenerated, preserve the blocker-aware route scoring and inspect contact sheets before accepting broad image churn.
+다이어그램을 다시 생성할 때 방해물을 고려한 경로 점수 계산을 유지하고, 대규모
+이미지 변경을 수용하기 전에 콘택트 시트를 검사한다.

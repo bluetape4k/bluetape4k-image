@@ -1,18 +1,18 @@
-# Dependency Catalog Upgrades
+# 의존성 카탈로그 갱신
 
-## Context
+## 배경
 
-`bluetape4k-dependencies` folded the AWS SDK Java Dependabot PR into the
-central dependency upgrade batch.
+`bluetape4k-dependencies`는 AWS SDK Java Dependabot PR을 중앙 의존성 갱신
+작업에 포함했다.
 
-## Decision
+## 결정
 
-Materialize the central AWS SDK Java catalog version in this repository.
+중앙 AWS SDK Java 카탈로그 버전을 이 저장소에 반영한다.
 
-## Outcome
+## 결과
 
-`gradle/libs.versions.toml` now carries AWS SDK Java `2.44.9`.
+`gradle/libs.versions.toml`이 AWS SDK Java `2.44.9`를 사용한다.
 
-## Verification
+## 검증
 
 - `./gradlew build -x test --no-daemon`

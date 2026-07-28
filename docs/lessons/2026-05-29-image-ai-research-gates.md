@@ -1,31 +1,28 @@
-# 2026-05-29 - Image AI Research Gates
+# 2026-05-29 - 이미지 AI 조사 게이트
 
-## Context
+## 배경
 
-Issues #83, #84, and #85 needed dependency and model-packaging decisions before
-starting OCR, detection, or classification implementation work.
+Issues #83, #84, #85에서 OCR, 감지, 분류 구현을 시작하기 전에 의존성과 모델
+패키징을 결정해야 했다.
 
-## Decision
+## 결정
 
-Keep AI/image-intelligence dependencies out of the core `bluetape4k-images`
-module. Use optional modules for OCR, classification, and detection, and keep
-large native/model assets external unless a separate license and artifact-size
-review approves bundling.
+AI/이미지 인텔리전스 의존성을 핵심 `bluetape4k-images` 모듈에 넣지 않는다.
+OCR, 분류, 감지에는 선택 모듈을 사용한다. 별도의 라이선스 및 아티팩트 크기
+검토에서 번들링을 승인하지 않는 한 대형 네이티브/모델 자산은 외부에 둔다.
 
-## Outcome
+## 결과
 
-Research handoff documents now define recommended runtimes, rejected
-alternatives, module boundaries, model packaging, CI strategy, and acceptance
-criteria for issues #1, #2, and #3.
+조사 인계 문서에 issues #1, #2, #3의 권장 런타임, 기각한 대안, 모듈 경계,
+모델 패키징, CI 전략, 인수 기준을 정의했다.
 
-## Verification
+## 검증
 
 - `git diff --check`
-- Source evidence from official Tesseract, ONNX Runtime, DJL, TensorFlow,
-  OpenCV, Bytedeco, and Maven Central metadata.
+- 공식 Tesseract, ONNX Runtime, DJL, TensorFlow, OpenCV, Bytedeco 및
+  Maven Central 메타데이터의 근거 자료.
 
-## Future Note
+## 향후 참고
 
-When implementing image AI modules, start from the research document tied to the
-issue and update the document if dependency versions, native-platform support,
-or license constraints change.
+이미지 AI 모듈을 구현할 때 해당 이슈에 연결된 조사 문서에서 시작한다. 의존성
+버전, 네이티브 플랫폼 지원 또는 라이선스 제약이 바뀌면 문서도 갱신한다.

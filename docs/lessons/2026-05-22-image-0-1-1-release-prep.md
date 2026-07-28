@@ -1,26 +1,26 @@
-# Image 0.1.1 Release Prep
+# Image 0.1.1 릴리스 준비
 
-## Context
+## 배경
 
-The 0.1.1 milestone has no open issues after the pre-stabilization API cleanup.
-The release line needs to consume the published bluetape4k 1.9.0 ecosystem
-artifacts before tagging.
+안정화 전 API 정리를 마친 뒤 0.1.1 마일스톤에 열린 이슈가 남지 않았다.
+태그를 만들기 전에 릴리스 라인이 게시된 bluetape4k 1.9.0 생태계 아티팩트를
+사용해야 한다.
 
-## Decision
+## 결정
 
-Prepare `bluetape4k-image` 0.1.1 as a release, not a snapshot, and align its
-catalog with `bluetape4k-bom:1.9.0` and `bluetape4k-aws-bom:0.2.0`.
+`bluetape4k-image` 0.1.1을 스냅샷이 아닌 릴리스로 준비하고, 카탈로그를
+`bluetape4k-bom:1.9.0` 및 `bluetape4k-aws-bom:0.2.0`과 일치시킨다.
 
-## Outcome
+## 결과
 
-Release metadata, CHANGELOG, and WIP were updated for the 0.1.1 release gate.
+0.1.1 릴리스 게이트에 맞게 릴리스 메타데이터, CHANGELOG, WIP를 갱신했다.
 
-## Verification
+## 검증
 
-Pending release validation must include Gradle version checks, POM generation,
-POM scans for snapshots/example artifacts, actionlint, and CI before tagging.
+태그를 만들기 전에 진행할 릴리스 검증에는 Gradle 버전 검사, POM 생성,
+스냅샷/예제 아티팩트 POM 검사, actionlint, CI가 포함되어야 한다.
 
-## Future Notes
+## 향후 참고
 
-Do not tag image releases while dependent ecosystem artifacts are still absent
-from Maven Central public metadata.
+의존하는 생태계 아티팩트가 Maven Central 공개 메타데이터에 아직 없으면
+이미지 릴리스 태그를 만들지 않는다.

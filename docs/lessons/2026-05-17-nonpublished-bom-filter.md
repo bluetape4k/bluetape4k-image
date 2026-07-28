@@ -1,22 +1,22 @@
-# Non-published module BOM filter
+# 비공개 모듈 BOM 필터
 
-## Context
+## 배경
 
-The image benchmark module should remain a local performance tool, not a BOM
-constraint or Central Portal artifact.
+이미지 벤치마크 모듈은 BOM 제약이나 Central Portal 아티팩트가 아니라
+로컬 성능 측정 도구로 유지해야 한다.
 
-## Decision
+## 결정
 
-Use a normalized non-published module filter for examples, demos, and
-benchmarks. Also keep Spring dependency-management POM customization enabled so
-Central validation receives explicit dependency versions.
+예제, 데모, 벤치마크에는 정규화한 비공개 모듈 필터를 적용한다. 또한 Central
+검증에 명시적인 의존성 버전이 전달되도록 Spring 의존성 관리 POM 사용자 정의를
+계속 활성화한다.
 
-## Outcome
+## 결과
 
-`bluetape4k-images-benchmark` is excluded from BOM constraints, NMCP
-aggregation, publication/signing setup, and coverage aggregation.
+`bluetape4k-images-benchmark`를 BOM 제약, NMCP 집계, 게시/서명 설정,
+커버리지 집계에서 제외했다.
 
-## Verification
+## 검증
 
 - `./gradlew clean generatePomFileForBluetapeImagePublication --no-daemon --no-configuration-cache --no-build-cache`
-- Generated BOM POM scan found no `examples`, `demo`, or `benchmark` entries.
+- 생성한 BOM POM을 검사한 결과 `examples`, `demo`, `benchmark` 항목이 없었다.
