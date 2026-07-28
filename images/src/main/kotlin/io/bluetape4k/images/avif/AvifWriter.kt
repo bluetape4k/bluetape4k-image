@@ -33,12 +33,12 @@ data class AvifEncodeOptions(
 }
 
 /**
- * Writes an image in AVIF format.
+ * 이미지를 AVIF 형식으로 씁니다.
  *
- * ## Contract
- * - This interface is incubating ([IncubatingImageApi]).
- * - The core `images` module declares the encoding contract only.
- * - A compatible backend supplies runtime AVIF support.
+ * ## 동작/계약
+ * - 이 interface는 incubating API입니다([IncubatingImageApi]).
+ * - core `images` module은 인코딩 계약만 선언합니다.
+ * - 호환되는 backend가 runtime AVIF 지원을 제공합니다.
  *
  * @see AvifEncodeOptions
  * @see IncubatingImageApi
@@ -47,7 +47,7 @@ data class AvifEncodeOptions(
 interface AvifWriter {
 
     /**
-     * Writes [image] as AVIF to [out].
+     * [image]를 AVIF로 인코딩해 [out]에 씁니다.
      *
      * @param image   쓸 이미지
      * @param out     쓰기 대상 [OutputStream]

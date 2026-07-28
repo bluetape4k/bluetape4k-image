@@ -45,16 +45,16 @@ fun immutableImageOf(bytes: ByteArray): ImmutableImage =
     ImmutableImage.loader().fromBytes(bytes)
 
 /**
- * Loads an [ImmutableImage] from encoded bytes after applying resource limits.
+ * 리소스 한계를 적용한 뒤 인코딩 바이트에서 [ImmutableImage]를 읽습니다.
  *
- * ## Contract
- * - [ImageDecodeLimits.maxEncodedBytes] is checked before any decode work.
- * - Header-derived dimensions are checked before full pixel decode when an
- *   ImageIO reader can identify the payload.
- * - Decoded dimensions are checked again after Scrimage returns the image.
+ * ## 동작/계약
+ * - 어떤 디코딩 작업보다 먼저 [ImageDecodeLimits.maxEncodedBytes]를 확인합니다.
+ * - ImageIO reader가 payload를 식별할 수 있으면 전체 픽셀 디코딩 전에 헤더 기반
+ *   크기를 확인합니다.
+ * - Scrimage가 이미지를 반환한 뒤 디코딩된 크기를 다시 확인합니다.
  *
- * Use this overload at external input boundaries. The one-argument overload is
- * preserved for source compatibility and trusted in-process payloads.
+ * 외부 입력 경계에서는 이 overload를 사용합니다. 인자 하나만 받는 overload는
+ * source compatibility와 신뢰된 in-process payload를 위해 유지됩니다.
  */
 fun immutableImageOf(
     bytes: ByteArray,
@@ -86,11 +86,11 @@ fun immutableImageOf(inputStream: InputStream): ImmutableImage =
     ImmutableImage.loader().fromStream(inputStream.buffered())
 
 /**
- * Loads an [ImmutableImage] from an [InputStream] after applying resource limits.
+ * 리소스 한계를 적용한 뒤 [InputStream]에서 [ImmutableImage]를 읽습니다.
  *
- * This overload reads at most [ImageDecodeLimits.maxEncodedBytes] plus one byte
- * from the caller-owned stream, then delegates to the bounded byte-array
- * overload. The stream lifecycle remains caller-owned.
+ * 호출자가 소유한 stream에서 최대 [ImageDecodeLimits.maxEncodedBytes]보다 한 바이트
+ * 많은 양까지만 읽은 뒤, 한계가 적용되는 byte-array overload에 위임합니다.
+ * stream lifecycle은 계속 호출자가 소유합니다.
  */
 fun immutableImageOf(
     inputStream: InputStream,
@@ -99,11 +99,11 @@ fun immutableImageOf(
     immutableImageOf(inputStream.readBoundedImageBytes(limits), limits)
 
 /**
- * Loads an [ImmutableImage] from a caller-owned [BufferedSource].
+ * 호출자가 소유한 [BufferedSource]에서 [ImmutableImage]를 읽습니다.
  *
- * ## Contract
- * - The source is adapted to Scrimage through [BufferedSource.inputStream].
- * - The caller owns source closing.
+ * ## 동작/계약
+ * - [BufferedSource.inputStream]을 통해 source를 Scrimage에 맞게 연결합니다.
+ * - source를 닫는 책임은 호출자에게 있습니다.
  *
  * ```kotlin
  * File("image.jpg").inputStream().asSource().buffered().use { source ->
@@ -111,22 +111,22 @@ fun immutableImageOf(
  * }
  * ```
  *
- * @param source buffered image source
- * @return decoded [ImmutableImage]
+ * @param source 버퍼링된 이미지 source
+ * @return 디코딩된 [ImmutableImage]
  */
 fun immutableImageOf(source: BufferedSource): ImmutableImage =
     ImmutableImage.loader().fromStream(source.inputStream())
 
 /**
- * Loads an [ImmutableImage] from an Okio [Source].
+ * Okio [Source]에서 [ImmutableImage]를 읽습니다.
  *
- * ## Contract
- * - This function buffers and closes [source].
- * - Use [immutableImageOf] with [BufferedSource] when the caller must keep
- *   ownership of the source lifecycle.
+ * ## 동작/계약
+ * - 이 함수는 [source]를 buffer하고 닫습니다.
+ * - 호출자가 source lifecycle을 계속 소유해야 한다면 [BufferedSource]를 받는
+ *   [immutableImageOf]를 사용합니다.
  *
- * @param source image source
- * @return decoded [ImmutableImage]
+ * @param source 이미지 source
+ * @return 디코딩된 [ImmutableImage]
  */
 fun immutableImageOf(source: Source): ImmutableImage =
     source.buffered().use { bufferedSource ->
@@ -151,7 +151,7 @@ fun immutableImageOf(file: File): ImmutableImage =
     ImmutableImage.loader().fromFile(file)
 
 /**
- * Loads an [ImmutableImage] from a [File] after applying resource limits.
+ * 리소스 한계를 적용한 뒤 [File]에서 [ImmutableImage]를 읽습니다.
  */
 fun immutableImageOf(
     file: File,
@@ -177,7 +177,7 @@ fun immutableImageOf(path: Path): ImmutableImage =
     ImmutableImage.loader().fromPath(path)
 
 /**
- * Loads an [ImmutableImage] from a [Path] after applying resource limits.
+ * 리소스 한계를 적용한 뒤 [Path]에서 [ImmutableImage]를 읽습니다.
  */
 fun immutableImageOf(
     path: Path,
@@ -230,11 +230,10 @@ suspend fun suspendImmutableImageOf(path: Path): ImmutableImage =
     }
 
 /**
- * Loads an [ImmutableImage] from a caller-owned [BufferedSource] on
- * [Dispatchers.IO].
+ * 호출자가 소유한 [BufferedSource]에서 [Dispatchers.IO] 위로 [ImmutableImage]를 읽습니다.
  *
- * @param source buffered image source
- * @return decoded [ImmutableImage]
+ * @param source 버퍼링된 이미지 source
+ * @return 디코딩된 [ImmutableImage]
  */
 suspend fun suspendImmutableImageOf(source: BufferedSource): ImmutableImage =
     withContext(Dispatchers.IO) {
@@ -242,12 +241,12 @@ suspend fun suspendImmutableImageOf(source: BufferedSource): ImmutableImage =
     }
 
 /**
- * Loads an [ImmutableImage] from an Okio [Source] on [Dispatchers.IO].
+ * Okio [Source]에서 [Dispatchers.IO] 위로 [ImmutableImage]를 읽습니다.
  *
- * This overload buffers and closes [source].
+ * 이 overload는 [source]를 buffer하고 닫습니다.
  *
- * @param source image source
- * @return decoded [ImmutableImage]
+ * @param source 이미지 source
+ * @return 디코딩된 [ImmutableImage]
  */
 suspend fun suspendImmutableImageOf(source: Source): ImmutableImage =
     withContext(Dispatchers.IO) {
@@ -255,14 +254,14 @@ suspend fun suspendImmutableImageOf(source: Source): ImmutableImage =
     }
 
 /**
- * Loads an [ImmutableImage] from a caller-owned [BufferedSuspendedSource] on
- * [Dispatchers.IO].
+ * 호출자가 소유한 [BufferedSuspendedSource]에서 [Dispatchers.IO] 위로
+ * [ImmutableImage]를 읽습니다.
  *
- * Scrimage decoders are blocking, so this overload bridges the suspended source
- * to a blocking Okio source while preserving the caller-owned source lifecycle.
+ * Scrimage decoder는 blocking 방식이므로, 이 overload는 호출자가 source lifecycle을
+ * 소유한 상태를 보존하면서 suspended source를 blocking Okio source로 연결합니다.
  *
- * @param source buffered suspended image source
- * @return decoded [ImmutableImage]
+ * @param source 버퍼링된 suspended 이미지 source
+ * @return 디코딩된 [ImmutableImage]
  */
 suspend fun suspendImmutableImageOf(source: BufferedSuspendedSource): ImmutableImage =
     withContext(Dispatchers.IO) {
@@ -271,12 +270,12 @@ suspend fun suspendImmutableImageOf(source: BufferedSuspendedSource): ImmutableI
     }
 
 /**
- * Loads an [ImmutableImage] from a [SuspendedSource] on [Dispatchers.IO].
+ * [SuspendedSource]에서 [Dispatchers.IO] 위로 [ImmutableImage]를 읽습니다.
  *
- * This overload buffers and closes [source].
+ * 이 overload는 [source]를 buffer하고 닫습니다.
  *
- * @param source suspended image source
- * @return decoded [ImmutableImage]
+ * @param source suspend 기반 이미지 source 입력
+ * @return 디코딩된 [ImmutableImage]
  */
 suspend fun suspendImmutableImageOf(source: SuspendedSource): ImmutableImage {
     val bufferedSource = source.bufferedSuspended()
@@ -324,43 +323,42 @@ suspend fun suspendLoadImage(path: Path): ImmutableImage =
     }
 
 /**
- * Loads an [ImmutableImage] from a caller-owned [BufferedSource] on
- * [Dispatchers.IO].
+ * 호출자가 소유한 [BufferedSource]에서 [Dispatchers.IO] 위로 [ImmutableImage]를 읽습니다.
  *
- * @param source buffered image source
- * @return decoded [ImmutableImage]
+ * @param source 버퍼링된 이미지 source
+ * @return 디코딩된 [ImmutableImage]
  */
 suspend fun suspendLoadImage(source: BufferedSource): ImmutableImage =
     suspendImmutableImageOf(source)
 
 /**
- * Loads an [ImmutableImage] from an Okio [Source] on [Dispatchers.IO].
+ * Okio [Source]에서 [Dispatchers.IO] 위로 [ImmutableImage]를 읽습니다.
  *
- * This overload buffers and closes [source].
+ * 이 overload는 [source]를 buffer하고 닫습니다.
  *
- * @param source image source
- * @return decoded [ImmutableImage]
+ * @param source 이미지 source
+ * @return 디코딩된 [ImmutableImage]
  */
 suspend fun suspendLoadImage(source: Source): ImmutableImage =
     suspendImmutableImageOf(source)
 
 /**
- * Loads an [ImmutableImage] from a caller-owned [BufferedSuspendedSource] on
- * [Dispatchers.IO].
+ * 호출자가 소유한 [BufferedSuspendedSource]에서 [Dispatchers.IO] 위로
+ * [ImmutableImage]를 읽습니다.
  *
- * @param source buffered suspended image source
- * @return decoded [ImmutableImage]
+ * @param source 버퍼링된 suspended 이미지 source
+ * @return 디코딩된 [ImmutableImage]
  */
 suspend fun suspendLoadImage(source: BufferedSuspendedSource): ImmutableImage =
     suspendImmutableImageOf(source)
 
 /**
- * Loads an [ImmutableImage] from a [SuspendedSource] on [Dispatchers.IO].
+ * [SuspendedSource]에서 [Dispatchers.IO] 위로 [ImmutableImage]를 읽습니다.
  *
- * This overload buffers and closes [source].
+ * 이 overload는 [source]를 buffer하고 닫습니다.
  *
- * @param source suspended image source
- * @return decoded [ImmutableImage]
+ * @param source suspend 기반 이미지 source 입력
+ * @return 디코딩된 [ImmutableImage]
  */
 suspend fun suspendLoadImage(source: SuspendedSource): ImmutableImage =
     suspendImmutableImageOf(source)
@@ -412,14 +410,14 @@ suspend fun ImmutableImage.suspendWrite(writer: SuspendImageWriter, destPath: Pa
 }
 
 /**
- * Writes this [ImmutableImage] to a caller-owned [BufferedSink].
+ * 이 [ImmutableImage]를 호출자가 소유한 [BufferedSink]에 씁니다.
  *
- * ## Contract
- * - The sink is adapted to [java.io.OutputStream] for the underlying writer.
- * - The sink is flushed, but not closed.
+ * ## 동작/계약
+ * - 내부 writer가 사용할 수 있도록 sink를 [java.io.OutputStream]으로 연결합니다.
+ * - sink는 flush하지만 닫지 않습니다.
  *
- * @param writer image writer
- * @param sink buffered output sink
+ * @param writer 이미지 writer
+ * @param sink 버퍼링된 출력 sink
  */
 suspend fun ImmutableImage.suspendWrite(writer: SuspendImageWriter, sink: BufferedSink) {
     writer.suspendWrite(this, this.metadata, sink.outputStream())
@@ -427,13 +425,13 @@ suspend fun ImmutableImage.suspendWrite(writer: SuspendImageWriter, sink: Buffer
 }
 
 /**
- * Writes this [ImmutableImage] to an Okio [Sink].
+ * 이 [ImmutableImage]를 Okio [Sink]에 씁니다.
  *
- * This overload buffers and closes [sink]. Use the [BufferedSink] overload when
- * the caller must keep ownership of the sink lifecycle.
+ * 이 overload는 [sink]를 buffer하고 닫습니다. 호출자가 sink lifecycle을 계속
+ * 소유해야 한다면 [BufferedSink] overload를 사용합니다.
  *
- * @param writer image writer
- * @param sink output sink
+ * @param writer 이미지 writer
+ * @param sink 출력 sink
  */
 suspend fun ImmutableImage.suspendWrite(writer: SuspendImageWriter, sink: Sink) {
     sink.buffered().use { bufferedSink ->
@@ -442,13 +440,13 @@ suspend fun ImmutableImage.suspendWrite(writer: SuspendImageWriter, sink: Sink) 
 }
 
 /**
- * Writes this [ImmutableImage] to a caller-owned [BufferedSuspendedSink].
+ * 이 [ImmutableImage]를 호출자가 소유한 [BufferedSuspendedSink]에 씁니다.
  *
- * Scrimage encoders are blocking, so this overload bridges the suspended sink to
- * a blocking Okio sink while preserving the caller-owned sink lifecycle.
+ * Scrimage encoder는 blocking 방식이므로, 이 overload는 호출자가 sink lifecycle을
+ * 소유한 상태를 보존하면서 suspended sink를 blocking Okio sink로 연결합니다.
  *
- * @param writer image writer
- * @param sink buffered suspended output sink
+ * @param writer 이미지 writer
+ * @param sink 버퍼링된 suspended 출력 sink
  */
 suspend fun ImmutableImage.suspendWrite(writer: SuspendImageWriter, sink: BufferedSuspendedSink) {
     val blockingSink = sink.asBlocking().buffered()
@@ -457,13 +455,13 @@ suspend fun ImmutableImage.suspendWrite(writer: SuspendImageWriter, sink: Buffer
 }
 
 /**
- * Writes this [ImmutableImage] to a [SuspendedSink].
+ * 이 [ImmutableImage]를 [SuspendedSink]에 씁니다.
  *
- * This overload buffers and closes [sink]. Use the [BufferedSuspendedSink]
- * overload when the caller must keep ownership of the sink lifecycle.
+ * 이 overload는 [sink]를 buffer하고 닫습니다. 호출자가 sink lifecycle을 계속
+ * 소유해야 한다면 [BufferedSuspendedSink] overload를 사용합니다.
  *
- * @param writer image writer
- * @param sink suspended output sink
+ * @param writer 이미지 writer
+ * @param sink suspend 기반 출력 sink
  */
 suspend fun ImmutableImage.suspendWrite(writer: SuspendImageWriter, sink: SuspendedSink) {
     val bufferedSink = sink.bufferedSuspended()
@@ -486,7 +484,7 @@ suspend fun ImmutableImage.suspendWrite(writer: SuspendImageWriter, sink: Suspen
  * ```
  *
  * @param writer 이미지를 쓰기 위한 [SuspendImageWriter]
- * @return [SuspendWriteContext] instance
+ * @return [SuspendWriteContext] 인스턴스
  */
 fun ImmutableImage.forSuspendWriter(writer: SuspendImageWriter): SuspendWriteContext =
     SuspendWriteContext(writer, this, this.metadata)

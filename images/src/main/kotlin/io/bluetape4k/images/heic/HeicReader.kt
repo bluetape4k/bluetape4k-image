@@ -33,13 +33,13 @@ data class HeicReadOptions(
 }
 
 /**
- * Reads an image in HEIC/HEIF format.
+ * HEIC/HEIF 형식의 이미지를 읽습니다.
  *
- * ## Contract
- * - This interface is incubating ([IncubatingImageApi]).
- * - The core `images` module declares the decoding contract only.
- * - A compatible backend supplies runtime HEIC support.
- * - The caller is responsible for closing [input].
+ * ## 동작/계약
+ * - 이 interface는 incubating API입니다([IncubatingImageApi]).
+ * - core `images` module은 디코딩 계약만 선언합니다.
+ * - 호환되는 backend가 runtime HEIC 지원을 제공합니다.
+ * - [input]을 닫는 책임은 호출자에게 있습니다.
  *
  * @see HeicReadOptions
  * @see IncubatingImageApi
@@ -48,7 +48,7 @@ data class HeicReadOptions(
 interface HeicReader {
 
     /**
-     * Reads an image from a HEIC/HEIF [input] stream.
+     * HEIC/HEIF [input] stream에서 이미지를 읽습니다.
      *
      * @param input   HEIC/HEIF 데이터를 담은 [InputStream]
      * @param options HEIC 읽기 옵션 (기본값: [HeicReadOptions.Default])
