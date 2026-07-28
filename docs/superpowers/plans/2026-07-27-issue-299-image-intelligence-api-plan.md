@@ -1154,27 +1154,25 @@ git commit -m "Teach the integrated image workflow from runnable examples" \
   -m "Tested: actionlint, diagram validators, PNG inspection, registration search, and diff check"
 ```
 
-## Task 9: Converge verification, review, lesson, and PR delivery
+## Task 9: verification, review, lesson, PR delivery 수렴
 
-**Complexity:** High
-**Depends on:** Tasks 1–8
+**복잡도:** High
+**의존성:** Tasks 1-8
 **Pattern skills:** `verification-before-completion`, Type A review references
-**Rollback point:** repair the failing task and rerun all dependent proof; do not create PR on stale evidence.
+**Rollback 지점:** 실패한 task를 수정하고 모든 dependent proof를 다시 실행한다. stale evidence로 PR을 만들지 않는다.
 
-**Files:**
+**파일:**
 
 - Create: `docs/review/2026-07-27-issue-299-image-intelligence-api-verification.md`
 - Create: `docs/review/2026-07-27-issue-299-image-intelligence-api-code-review.md`
 - Create: `docs/lessons/2026-07-27-issue-299-image-intelligence-api.md`
-- Modify if findings require repair: only files already named in Tasks 1–8
+- finding repair가 필요할 때만 수정: Tasks 1-8에서 이미 이름이 나온 파일만
 
-- [ ] **Step 1: Verify spec-to-implementation traceability**
+- [ ] **Step 1: spec-to-implementation traceability 검증**
 
-Read the committed design, this plan, current diff, and tests. Build a table mapping every
-acceptance criterion to source, test, docs, and command evidence. Any missing row returns to the
-owning task.
+committed design, 이 계획, current diff, test를 읽는다. 모든 acceptance criterion을 source, test, docs, command evidence에 mapping하는 표를 만든다. 누락된 row가 있으면 owning task로 되돌린다.
 
-- [ ] **Step 2: Run targeted and affected-module validation sequentially**
+- [ ] **Step 2: targeted 및 affected-module validation 순차 실행**
 
 ```bash
 ./gradlew :spring-boot-image-intelligence-api:cleanTest \
@@ -1192,94 +1190,89 @@ actionlint .github/workflows/Examples.yml
 git diff --check
 ```
 
-Expected: all commands pass. Do not run optional native OCR in parallel with anything else.
-If an optional native proof is unavailable, record it as an explicit environment-dependent gap;
-default behavior must already be covered.
+예상 결과: 모든 command가 통과한다. optional native OCR은 어떤 작업과도 병렬로 실행하지 않는다. optional native proof를 사용할 수 없으면 명시적인 environment-dependent gap으로 기록한다. default behavior는 이미 cover되어 있어야 한다.
 
-- [ ] **Step 3: Run performance/stability proof**
+- [ ] **Step 3: performance/stability proof 실행**
 
-Use focused tests to record:
+focused test로 다음을 기록한다:
 
-- only one full decode per request;
-- dimension rejection before decode;
-- three provider lanes overlap;
-- concurrency never exceeds configured permits;
-- permits recover after failure, timeout, and cancellation;
-- successful sibling results survive one provider failure;
-- source bytes are not retained by `QualifiedImage`.
+- request마다 full decode는 한 번만 수행된다.
+- dimension rejection은 decode 전에 발생한다.
+- provider lane 세 개가 overlap된다.
+- concurrency는 configured permit을 절대 넘지 않는다.
+- failure, timeout, cancellation 후 permit이 recover된다.
+- successful sibling result는 provider failure 하나 이후에도 유지된다.
+- source byte는 `QualifiedImage`에 보관되지 않는다.
 
-No production throughput claim or benchmark ranking is required. This is a bounded behavior proof.
+production throughput claim이나 benchmark ranking은 필요하지 않다. 이는 제한된 behavior proof다.
 
-- [ ] **Step 4: Complete six-perspective code review and integration**
+- [ ] **Step 4: six-perspective code review와 integration 완료**
 
-Review current branch diff for:
+current branch diff를 다음 관점으로 review한다:
 
-- performance;
-- stability;
-- security;
-- operator/Ops;
-- developer/API;
-- user/caller;
-- main-session integration, documentation, release, and evidence.
+- performance
+- stability
+- security
+- operator/Ops
+- developer/API
+- user/caller
+- main-session integration, documentation, release, evidence
 
-Fix all P0/P1 findings, rerun affected tests and review passes, and record final `P0=0`, `P1=0`.
-P2/P3 must be fixed, explicitly deferred with rationale, or filed as follow-up.
+모든 P0/P1 finding을 수정하고 affected test와 review pass를 다시 실행한 뒤 최종 `P0=0`, `P1=0`을 기록한다. P2/P3는 수정하거나, 근거와 함께 명시적으로 defer하거나, follow-up으로 등록해야 한다.
 
-- [ ] **Step 5: Commit the durable lesson**
+- [ ] **Step 5: durable lesson commit**
 
-The lesson must include:
+lesson에는 다음 내용을 포함해야 한다:
 
-- why the example moved from workshop to the image producer repository;
-- why workflow completion and business outcome are different axes;
-- why expected provider failure is data but external cancellation is control flow;
-- why dimension probing precedes decode;
-- why strict native timeout needs process or remote isolation;
-- verification evidence and future guard.
+- example이 workshop에서 image producer repository로 이동한 이유
+- workflow completion과 business outcome이 서로 다른 축인 이유
+- expected provider failure는 data지만 external cancellation은 control flow인 이유
+- dimension probing이 decode보다 먼저 오는 이유
+- strict native timeout에 process 또는 remote isolation이 필요한 이유
+- verification evidence와 future guard
 
-Commit the lesson before PR creation.
+PR 생성 전에 lesson을 commit한다.
 
-- [ ] **Step 6: Verify authorized PR metadata and publish exact head**
+- [ ] **Step 6: authorized PR metadata 검증과 exact head publish**
 
-Authority is the approved plan for:
+권한 범위는 승인된 계획의 다음 항목이다:
 
-- repository: `bluetape4k/bluetape4k-image`;
-- base: `develop`;
-- head: `feat/issue-299-image-intelligence-api`;
-- action: create PR only, not merge.
+- repository: `bluetape4k/bluetape4k-image`
+- base: `develop`
+- head: `feat/issue-299-image-intelligence-api`
+- action: PR 생성만, merge 아님
 
-Push without force, read back the remote SHA, and verify it matches local HEAD.
+force 없이 push하고 remote SHA를 다시 읽어 local HEAD와 일치하는지 검증한다.
 
-- [ ] **Step 7: Create and verify the PR**
+- [ ] **Step 7: PR 생성 및 검증**
 
-Create an English PR linked to #299. Assign `debop`; mirror milestone `0.4.0` and labels
-`enhancement`, `documentation`. The final Markdown `##` heading must be:
+#299에 연결된 English PR을 만든다. `debop`을 assign하고 milestone `0.4.0` 및 label `enhancement`, `documentation`을 반영한다. 마지막 Markdown `##` heading은 다음 값이어야 한다:
 
 ```markdown
 ## DoD Status
 ```
 
-Verify live with:
+다음으로 live 상태를 검증한다:
 
 ```bash
 gh pr view --json number,url,headRefName,baseRefName,headRefOid,assignees,labels,milestone,body
 ```
 
-- [ ] **Step 8: Wait for CI and re-read live review state**
+- [ ] **Step 8: CI 대기와 live review state 재확인**
 
-Use live check conclusions on the exact PR head. After green CI, re-read reviews and unresolved
-threads. Any new blocker returns to the owning task and reopens verification.
+exact PR head의 live check conclusion을 사용한다. green CI 이후 review와 unresolved thread를 다시 읽는다. 새 blocker가 있으면 owning task로 돌아가 verification을 다시 연다.
 
-- [ ] **Step 9: Report merge-ready and stop**
+- [ ] **Step 9: merge-ready 보고 후 중지**
 
-Report:
+다음을 보고한다:
 
-- exact PR URL and head SHA;
-- CI and current review evidence;
-- tests and diagrams;
-- P0=0/P1=0;
-- lesson commit;
-- remaining risks;
-- checklist counts;
-- `CG-16`, `CG-17`, and `CG-18` still pending.
+- exact PR URL과 head SHA
+- CI와 current review evidence
+- tests와 diagrams
+- P0=0/P1=0
+- lesson commit
+- remaining risks
+- checklist counts
+- `CG-16`, `CG-17`, `CG-18` still pending
 
-Do not merge until the user provides a fresh explicit approval for that exact merge-ready head.
+사용자가 해당 exact merge-ready head에 대해 새롭고 명시적인 승인을 제공하기 전에는 merge하지 않는다.
