@@ -169,7 +169,7 @@ data class ImageObjectKey private constructor(
         /**
          * Creates a validated [ImageObjectKey].
          *
-         * Validation runs in the `init` block so `copy()` is also protected.
+         * `init` 블록에서 검증하므로 `copy()` 경로도 보호된다.
          * @throws IllegalArgumentException if prefix or name is blank, contains `..`, or
          *   contains characters outside `[A-Za-z0-9._/-]`.
          */
@@ -930,7 +930,7 @@ dependencies {
     compileOnly(libs.aws2.s3)
     compileOnly(libs.aws2.cloudfront)
 
-    // Test
+    // 테스트
     testImplementation(libs.spring.boot.starter.test)
     testImplementation(libs.bluetape4k.aws.spring.boot)
     testImplementation(libs.bluetape4k.aws)
@@ -1304,7 +1304,7 @@ Codex P1 반영:
 
 ---
 
-## Appendix B — 3-R Plan Review Iteration Log (2026-05-17)
+## 부록 B — 3-R 계획 리뷰 반복 기록 (2026-05-17)
 
 > 적용 gate: Step 3-R (Plan Review)
 
@@ -1320,7 +1320,7 @@ Codex P1 반영:
 | Codex CLI | 0 | 2 | 6 | 0 |
 | **Critic 통합** | **0** | **13 (중복 제거)** | — | — |
 
-Round 1 HIGH 13건 → plan + spec 반영:
+Round 1 HIGH 13건 → plan과 spec에 반영:
 - C-1: FQCN 수정 (`aws.spring.boot.*` → `aws.spring.s3.*`)
 - C-2: ReactiveHealthIndicator + Mono<Health> via mono { }
 - C-3: LocalImageStorage 2-param constructor
@@ -1355,7 +1355,7 @@ Round 2 HIGH 2건 → 반영:
 |----------|---------|------|--------|-----|
 | 6-tier Advisor (전체) | 0 | 0 | 1 | 0 |
 
-Round 3 MEDIUM 1건 (polish):
+Round 3 MEDIUM 1건 (마무리):
 - M-1: spec §5.1.2에 `healthProbeKey` 필드 선언 누락 → 추가
 
 CRITICAL=0, HIGH=0 → **수렴 달성**
