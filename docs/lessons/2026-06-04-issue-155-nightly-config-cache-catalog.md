@@ -1,21 +1,25 @@
-# 2026-06-04 Issue 155 Nightly Config Cache And Catalog
+# 2026-06-04 Issue 155 Nightly configuration cache와 카탈로그
 
-## Context
+## 배경
 
-Nightly workflows use snapshot and BOM-managed dependencies, so stale Gradle/configuration state can surface versionless dependency coordinates.
+Nightly 워크플로는 snapshot과 BOM 관리 의존성을 사용하므로 오래된 Gradle 또는
+configuration 상태가 버전 없는 의존성 좌표를 만들 수 있다.
 
-## Decision
+## 결정
 
-Keep Nightly Gradle commands on `--no-configuration-cache` and keep local bluetape4k aliases versioned through their BOM ref.
+Nightly Gradle 명령에 `--no-configuration-cache`를 유지하고 로컬 bluetape4k 별칭의
+버전은 BOM 참조를 통해 지정한다.
 
-## Outcome
+## 결과
 
-Nightly commands no longer rely on configuration cache during dependency refresh, and repo-local catalog aliases avoid `group:artifact:.` coordinates.
+Nightly 명령은 의존성을 새로 고칠 때 configuration cache에 의존하지 않으며 저장소
+로컬 카탈로그 별칭은 `group:artifact:.` 좌표를 만들지 않는다.
 
-## Verification
+## 검증
 
-- Planned: `actionlint`, `git diff --check`, command audit, catalog alias audit.
+- 예정된 검증: `actionlint`, `git diff --check`, 명령 점검, 카탈로그 별칭 점검.
 
-## Future Rule
+## 이후 규칙
 
-For Nightly jobs that refresh snapshots, disable both Gradle action cache and configuration cache unless a repo-specific proof says otherwise.
+snapshot을 새로 고치는 Nightly 작업에서는 저장소별 근거로 안전함을 입증하지 않는 한
+Gradle action cache와 configuration cache를 모두 비활성화한다.

@@ -1,27 +1,24 @@
-# Lessons Learned - OCR Architecture Diagram Repair (2026-06-06)
+# OCR architecture diagram 수리 교훈 (2026-06-06)
 
-## Context
+## 배경
 
-The `images-ocr` architecture diagram had two visual defects: the result label
-overflowed its card, and the engine-to-result connector crossed the Tess4J
-card. The first repair also showed that merely avoiding the card interior is not
-enough when a route collides with a layer label or takes a visually excessive
-detour.
+`images-ocr` architecture diagram에는 두 가지 시각적 결함이 있었다. result label이
+card 밖으로 넘쳤고, engine-to-result connector가 Tess4J card를 가로질렀다. 첫 번째
+수리는 route가 layer label과 충돌하거나 시각적으로 과도하게 우회하면 card 내부만
+피하는 것으로는 충분하지 않다는 점도 보여줬다.
 
-## Decision
+## 결정
 
-Keep the route on the left side, but use the tighter `x=370` lane between the
-layer label and the Tess4J card. Widen the result card to fit
-`OcrResult or OcrException`.
+route는 왼쪽에 유지하되 layer label과 Tess4J card 사이의 더 좁은 `x=370` lane을
+사용한다. `OcrResult or OcrException`이 들어가도록 result card를 넓힌다.
 
-## Outcome
+## 결과
 
-The rendered PNG now keeps text inside the result card and routes the
-engine-to-result connector without crossing the Tess4J card or the layer label.
+렌더링된 PNG는 이제 text를 result card 안에 유지하고, engine-to-result connector를
+Tess4J card나 layer label과 교차하지 않게 배치한다.
 
-## Future Guard
+## 향후 방지책
 
-For diagram repair, inspect the rendered PNG after every route adjustment and
-optimize the route visually, not just for non-overlap. A route that technically
-passes geometry but takes a visibly excessive detour is not review-ready.
-
+diagram repair에서는 route 조정 후마다 렌더링된 PNG를 확인하고, 단순 non-overlap만이
+아니라 시각적으로 route를 최적화한다. geometry상 통과하더라도 눈에 띄게 과도한
+우회를 하는 route는 review-ready가 아니다.

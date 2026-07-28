@@ -1,44 +1,44 @@
-# Issue #166 Large Streaming Benchmark
+# Issue #166 대용량 streaming benchmark
 
-## Context
+## 배경
 
-Issue #166 needed benchmark evidence for milestone `0.3.0` before deciding how
-to position large-file Okio APIs and OCR preprocessing work.
+Issue #166에서는 대용량 파일 Okio API와 OCR 전처리 작업의 방향을 정하기 전에
+마일스톤 `0.3.0`의 benchmark 근거가 필요했다.
 
-## Decision
+## 결정
 
-Analyze `develop` first, then write a spec before treating the worktree
-implementation as authoritative. CodeGraph did not resolve the current symbols,
-so the durable evidence came from direct source inspection plus the spec.
+먼저 `develop`을 분석하고 spec을 작성한 뒤 worktree 구현을 기준으로 삼는다.
+CodeGraph가 현재 symbol을 해석하지 못했으므로 직접 소스를 검사한 결과와 spec을 지속
+가능한 근거로 사용했다.
 
-The benchmark uses `kotlinx-benchmark` as the primary execution path and a
-separate JMH GC-profiler addendum for managed heap allocation because the
-Gradle DSL does not expose profiler flags.
+benchmark의 기본 실행 경로는 `kotlinx-benchmark`를 사용한다. Gradle DSL이 profiler
+flag를 노출하지 않으므로 managed heap allocation은 별도의 JMH GC profiler 보충
+실행으로 측정한다.
 
-## Outcome
+## 결과
 
-Added `ImageLargeStreamingBenchmark`, a focused `benchmarkLargeStreamingBenchmark`
-task, raw latency JSON, raw GC-profiler JSON, README/README.ko summaries, a
-detailed report, and a rendered chart.
+`ImageLargeStreamingBenchmark`, 대상 `benchmarkLargeStreamingBenchmark` task,
+원시 latency JSON, 원시 GC profiler JSON, README/README.ko 요약, 상세 보고서,
+렌더링한 차트를 추가했다.
 
-Scrimage `Path`, Okio, and stream boundaries are similar for managed heap:
-about 216-218 MiB/op for the large photo and 164-166 MiB/op for the OCR-like
-document. vips `Path` stays under 1 MiB/op managed heap and is also the fastest
-large-file row in the Java 25 FFM run.
+Scrimage `Path`, Okio, stream 경계의 managed heap 사용량은 비슷하다. 대형 사진은
+약 216~218 MiB/op, OCR 형태 문서는 164~166 MiB/op였다. vips `Path`는 managed heap
+사용량이 1 MiB/op 미만이며 Java 25 FFM 실행에서 가장 빠른 대용량 파일 항목이기도
+했다.
 
-## Verification
+## 검증
 
 - `./gradlew :bluetape4k-images-benchmark:benchmarkBenchmarkCompile --console=plain`
 - `./gradlew :bluetape4k-images-benchmark:benchmarkLargeStreamingBenchmark -Pvips.impl=java25 --console=plain`
-- JMH jar GC profiler addendum with `-prof gc`
+- `-prof gc`를 사용한 JMH jar GC profiler 보충 실행
 - `xmllint --noout docs/images/readme-charts/images-benchmark-large-streaming-chart-01.svg`
 - `identify docs/images/readme-charts/images-benchmark-large-streaming-chart-01.png`
-- `jq empty` on both raw JSON files
+- 원시 JSON 파일 두 개에 `jq empty` 실행
 - `git diff --check`
 
-## Future Guidance
+## 이후 지침
 
-For benchmark-backed API work, keep develop-branch analysis and spec approval
-ahead of worktree implementation. Treat Scrimage Okio/suspended boundaries as
-lifecycle/integration boundaries unless a future workload shows a measured
-latency, throughput, or managed-allocation win.
+benchmark를 근거로 API를 작업할 때는 worktree 구현보다 `develop` branch 분석과 spec
+승인을 먼저 수행한다. 이후 workload에서 latency, throughput, managed allocation의
+측정 가능한 개선을 입증하기 전까지 Scrimage Okio/suspended 경계는 성능 최적화가 아닌
+lifecycle/integration 경계로 취급한다.

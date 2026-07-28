@@ -1,36 +1,34 @@
-# Image 0.2.0 Release Prep
+# Image 0.2.0 릴리스 준비
 
-## Context
+## 배경
 
-The `0.2.0` milestone has no open issues, but `CHANGELOG.md` did not contain
-the already released `0.1.2` section. The release line also still referenced an
-internal `bluetape4k-aws-bom:0.2.2-SNAPSHOT` artifact.
+`0.2.0` 마일스톤에는 열린 이슈가 없었지만 `CHANGELOG.md`에는 이미 릴리스된
+`0.1.2` 항목이 없었다. 릴리스 계열도 여전히 내부
+`bluetape4k-aws-bom:0.2.2-SNAPSHOT` 아티팩트를 참조하고 있었다.
 
-## Decision
+## 결정
 
-Backfill the missing `0.1.2` changelog section, add the `0.2.0` release notes,
-set `baseVersion=0.2.0`, and use the public stable `bluetape4k-aws-bom:0.3.0`
-artifact before any stable tag is created.
+누락된 `0.1.2` 변경 기록을 보완하고 `0.2.0` 릴리스 노트를 추가한다.
+안정 태그를 만들기 전에 `baseVersion=0.2.0`을 설정하고 공개 안정 아티팩트인
+`bluetape4k-aws-bom:0.3.0`을 사용한다.
 
-## Outcome
+## 결과
 
-Release metadata and changelog coverage now match the completed milestone. The
-`0.2.0` API cleanup also removes compatibility shims that were explicitly
-deprecated for this minor release. GitHub Release `0.2.0` and all published
-artifacts were available from Maven Central after the release workflow completed.
+릴리스 메타데이터와 변경 기록이 완료된 마일스톤과 일치한다. `0.2.0` API 정리에서는
+이번 마이너 릴리스에서 제거하기로 명시했던 호환성 shim도 삭제했다. 릴리스 워크플로가
+끝난 뒤 GitHub Release `0.2.0`과 게시한 아티팩트 8개를 모두 Maven Central에서
+확인했다.
 
-## Verification
+## 검증
 
-Verified dependency resolution, targeted image module tests, release-prep PR CI,
-fresh Nightly, the tag-triggered `Publish Release` workflow, GitHub Release
-creation, and Maven Central HTTP 200 responses for all eight published
-artifacts.
+의존성 해석, 대상 image 모듈 테스트, 릴리스 준비 PR CI, 새 Nightly 실행, 태그로
+시작된 `Publish Release` 워크플로, GitHub Release 생성, 게시 아티팩트 8개에 대한
+Maven Central HTTP 200 응답을 검증했다.
 
-## Future Notes
+## 이후 참고 사항
 
-Do not prepare a stable image tag while any internal bluetape4k dependency still
-uses a `*-SNAPSHOT` version.
+내부 bluetape4k 의존성 중 하나라도 `*-SNAPSHOT` 버전을 사용한다면 image 안정 태그를
+준비하지 않는다.
 
-After each feature release, reopen `develop` on the next minor line so snapshot
-publishing does not reuse the released version. Reserve patch versions for bug
-fixes only.
+기능 릴리스가 끝날 때마다 `develop`을 다음 마이너 버전 계열로 열어 snapshot 게시가
+릴리스된 버전을 재사용하지 않게 한다. 패치 버전은 버그 수정에만 사용한다.
