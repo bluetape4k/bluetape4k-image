@@ -1,16 +1,16 @@
-# Issue #244 Barcode API Implementation Plan
+# Issue #244 Barcode API 구현 계획
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **Agentic worker 필수 지침:** 이 계획은 task 단위로 구현한다. 구현 표면은 superpowers:subagent-driven-development(권장) 또는 superpowers:executing-plans를 사용한다. 진행 추적에는 checkbox(`- [ ]`) 문법을 사용한다.
 
-**Goal:** Add a provider-neutral `bluetape4k-images-barcode-api` module for barcode extraction.
+**목표:** barcode 추출을 위한 provider-neutral `bluetape4k-images-barcode-api` module을 추가한다.
 
-**Architecture:** The API module depends on `bluetape4k-images` for `ImmutableImage` and exposes pure contracts, models, exceptions, and sync/suspend helpers. Concrete providers such as ZXing and BoofCV remain separate modules.
+**아키텍처:** API module은 `ImmutableImage`를 사용하기 위해 `bluetape4k-images`에 의존하고, 순수 contract, model, exception, sync/suspend helper만 노출한다. ZXing, BoofCV 같은 concrete provider는 별도 module에 둔다.
 
-**Tech Stack:** Kotlin/JVM, Gradle Kotlin DSL, `ImmutableImage`, Okio `Source`, Kotlin coroutines, bluetape4k validation helpers, bluetape4k assertions, JUnit 5.
+**기술 스택:** Kotlin/JVM, Gradle Kotlin DSL, `ImmutableImage`, Okio `Source`, Kotlin coroutine, bluetape4k validation helper, bluetape4k assertion, JUnit 5.
 
 ---
 
-## Task 1: Register Module Skeleton
+## Task 1: Module Skeleton 등록
 
 **complexity:** medium
 
@@ -21,24 +21,24 @@
 - Create: `images-barcode-api/src/test/resources/junit-platform.properties`
 - Create: `images-barcode-api/src/test/resources/logback-test.xml`
 
-- [ ] Add `bluetape4k-images-barcode-api` to `settings.gradle.kts` include/projectDir near `images-ocr`.
-- [ ] Add the module to `AGENTS.md` module list and command list.
-- [ ] Create `images-barcode-api/build.gradle.kts` with `api(project(":bluetape4k-images"))`, coroutine implementation, and test dependencies.
-- [ ] Add test resources copied from existing module conventions.
-- [ ] Verify with `./gradlew projects --console=plain`.
+- [ ] `settings.gradle.kts`의 `images-ocr` 주변에 `bluetape4k-images-barcode-api` include/projectDir를 추가한다.
+- [ ] `AGENTS.md`의 module list와 command list에 module을 추가한다.
+- [ ] `api(project(":bluetape4k-images"))`, coroutine implementation, test dependency를 포함한 `images-barcode-api/build.gradle.kts`를 만든다.
+- [ ] 기존 module convention에서 test resource를 복사해 추가한다.
+- [ ] `./gradlew projects --console=plain`으로 등록 상태를 검증한다.
 
-## Task 2: Write RED Tests for API Models
+## Task 2: API Model RED Test 작성
 
 **complexity:** medium
 
 **Files:**
 - Create: `images-barcode-api/src/test/kotlin/io/bluetape4k/images/barcode/BarcodeModelsTest.kt`
 
-- [ ] Add tests for `BarcodeProviderIdentity`, `BarcodePoint`, `BarcodeBoundingBox`, `BarcodeRegion`, `BarcodeOptions`, and `BarcodeResult`.
-- [ ] Use `io.bluetape4k.assertions` only.
-- [ ] Verify RED with `./gradlew :bluetape4k-images-barcode-api:test --tests 'io.bluetape4k.images.barcode.BarcodeModelsTest'`.
+- [ ] `BarcodeProviderIdentity`, `BarcodePoint`, `BarcodeBoundingBox`, `BarcodeRegion`, `BarcodeOptions`, `BarcodeResult` test를 추가한다.
+- [ ] assertion은 `io.bluetape4k.assertions`만 사용한다.
+- [ ] `./gradlew :bluetape4k-images-barcode-api:test --tests 'io.bluetape4k.images.barcode.BarcodeModelsTest'`로 RED 상태를 검증한다.
 
-## Task 3: Implement API Models
+## Task 3: API Model 구현
 
 **complexity:** high
 
@@ -46,26 +46,26 @@
 - Create: `images-barcode-api/src/main/kotlin/io/bluetape4k/images/barcode/BarcodeModels.kt`
 - Create: `images-barcode-api/src/main/kotlin/io/bluetape4k/images/barcode/BarcodeExceptions.kt`
 
-- [ ] Implement enums, serializable value models, validation helpers, and sanitized exception types.
-- [ ] Use private constructors plus companion `invoke` when validation is needed.
-- [ ] Add English KDoc to all public types.
-- [ ] Verify GREEN with the Task 2 targeted test.
+- [ ] enum, serializable value model, validation helper, sanitized exception type을 구현한다.
+- [ ] validation이 필요한 type은 private constructor와 companion `invoke`를 사용한다.
+- [ ] 모든 public type에 English KDoc을 추가한다.
+- [ ] Task 2 targeted test로 GREEN 상태를 검증한다.
 
-## Task 4: Write RED Tests for Reader Extensions
+## Task 4: Reader Extension RED Test 작성
 
 **complexity:** medium
 
 **Files:**
 - Create: `images-barcode-api/src/test/kotlin/io/bluetape4k/images/barcode/BarcodeReaderExtensionsTest.kt`
 
-- [ ] Add fake `BarcodeReader` field variables in the test class if a mock-like seam is needed; reset field state in `@BeforeEach`.
-- [ ] Test `ImmutableImage.extractBarcodes`.
-- [ ] Test `ImmutableImage.suspendExtractBarcodes`.
-- [ ] Test that `CancellationException` from a provider is propagated by the suspend helper.
-- [ ] Test `ByteArray`, `Path`, `InputStream`, and Okio `Source` reader helpers.
-- [ ] Verify RED with targeted Gradle test.
+- [ ] mock-like seam이 필요하면 test class에 fake `BarcodeReader` field variable을 두고 `@BeforeEach`에서 상태를 초기화한다.
+- [ ] `ImmutableImage.extractBarcodes`를 test한다.
+- [ ] `ImmutableImage.suspendExtractBarcodes`를 test한다.
+- [ ] provider가 던진 `CancellationException`을 suspend helper가 전파하는지 test한다.
+- [ ] `ByteArray`, `Path`, `InputStream`, Okio `Source` reader helper를 test한다.
+- [ ] targeted Gradle test로 RED 상태를 검증한다.
 
-## Task 5: Implement Reader Extensions
+## Task 5: Reader Extension 구현
 
 **complexity:** high
 
@@ -74,12 +74,12 @@
 - Create: `images-barcode-api/src/main/kotlin/io/bluetape4k/images/barcode/ImmutableImageBarcodeExtensions.kt`
 - Create: `images-barcode-api/src/main/kotlin/io/bluetape4k/images/barcode/BarcodeInputExtensions.kt`
 
-- [ ] Implement `BarcodeReader`.
-- [ ] Implement `ImmutableImage` sync and suspend helpers with dispatcher parameter and cancellation-safe behavior.
-- [ ] Implement byte/path/input-stream/source helpers through existing `immutableImageOf(...)` factories.
-- [ ] Verify GREEN with Task 4 tests.
+- [ ] `BarcodeReader`를 구현한다.
+- [ ] dispatcher parameter와 cancellation-safe behavior를 갖춘 `ImmutableImage` sync/suspend helper를 구현한다.
+- [ ] 기존 `immutableImageOf(...)` factory를 통해 byte/path/input-stream/source helper를 구현한다.
+- [ ] Task 4 test로 GREEN 상태를 검증한다.
 
-## Task 6: Documentation and Workflow Registration
+## Task 6: Documentation과 Workflow 등록
 
 **complexity:** medium
 
@@ -94,15 +94,15 @@
 - Modify: `.github/workflows/publish-snapshot.yml`
 - Modify: `.github/workflows/Examples.yml`
 
-- [ ] Document API/provider split and dependency snippet in English and Korean.
-- [ ] Add module to root README module table, requirements, installation, usage, and module links.
-- [ ] Add CI path filter, test job, status needs/env, and summary requirement.
-- [ ] Add Nightly test/coverage job and summary needs/artifacts.
-- [ ] Add release and publish-snapshot validation labels.
-- [ ] Add Examples path filters if needed for module path awareness.
-- [ ] Run `actionlint`.
+- [ ] API/provider 분리와 dependency snippet을 English와 Korean으로 문서화한다.
+- [ ] root README module table, requirements, installation, usage, module link에 module을 추가한다.
+- [ ] CI path filter, test job, status needs/env, summary requirement를 추가한다.
+- [ ] Nightly test/coverage job과 summary needs/artifact를 추가한다.
+- [ ] release와 publish-snapshot validation label을 추가한다.
+- [ ] module path 인지가 필요하면 Examples path filter를 추가한다.
+- [ ] `actionlint`를 실행한다.
 
-## Task 7: Verification, Review, and PR
+## Task 7: Verification, Review, PR
 
 **complexity:** medium
 
@@ -110,13 +110,13 @@
 - Create: `docs/review/2026-07-03-issue-244-barcode-api-review.md`
 - Create: `docs/lessons/2026-07-03-issue-244-barcode-api.md`
 
-- [ ] Run `./gradlew :bluetape4k-images-barcode-api:test --configuration-cache --build-cache`.
-- [ ] Run `./gradlew :bluetape4k-images-barcode-api:compileTestKotlin --warning-mode all --configuration-cache --build-cache`.
-- [ ] Run `./gradlew projects --console=plain`.
-- [ ] Run `actionlint`.
-- [ ] Run `git diff --check`.
-- [ ] Perform local-equivalent Step 2-R/3-R review before implementation because native subagents are unavailable in this tool surface; record P0/P1 = 0.
-- [ ] Perform local 7-Tier implementation review and record P0/P1 = 0.
-- [ ] Commit with Lore protocol.
-- [ ] Push branch and create PR closing #244 with final `## DoD Status`.
-- [ ] Verify PR body, labels, assignee, milestone, and CI.
+- [ ] `./gradlew :bluetape4k-images-barcode-api:test --configuration-cache --build-cache`를 실행한다.
+- [ ] `./gradlew :bluetape4k-images-barcode-api:compileTestKotlin --warning-mode all --configuration-cache --build-cache`를 실행한다.
+- [ ] `./gradlew projects --console=plain`을 실행한다.
+- [ ] `actionlint`를 실행한다.
+- [ ] `git diff --check`를 실행한다.
+- [ ] 이 tool surface에서 native subagent를 사용할 수 없으면 구현 전 local-equivalent Step 2-R/3-R review를 수행하고 P0/P1 = 0을 기록한다.
+- [ ] local 7-Tier implementation review를 수행하고 P0/P1 = 0을 기록한다.
+- [ ] Lore protocol로 commit한다.
+- [ ] branch를 push하고 final `## DoD Status`가 있는 PR을 만들어 #244를 닫는다.
+- [ ] PR body, label, assignee, milestone, CI를 검증한다.
