@@ -38,12 +38,11 @@ import java.util.concurrent.TimeUnit
 private const val STREAM_BUFFER_SIZE = 128 * 1024L
 
 /**
- * Compares compressed image file IO boundaries under concurrent many-file load.
+ * concurrent many-file load에서 compressed image file IO boundary를 비교합니다.
  *
- * This benchmark intentionally excludes Scrimage decode/encode. It measures
- * how file boundary choices behave when many already-compressed image files are
- * read or written concurrently. Scores are batch operations per second; multiply
- * by the scenario file count for file operations per second.
+ * 이 benchmark는 의도적으로 Scrimage decode/encode를 제외합니다. 이미 compressed된 image file 여러 개를 동시에
+ * 읽거나 쓸 때 file boundary 선택이 어떻게 동작하는지 측정합니다. score는 초당 batch operation 수이며,
+ * 초당 file operation 수는 scenario file count를 곱해 계산합니다.
  */
 @BenchmarkMode(Mode.Throughput)
 @OutputTimeUnit(TimeUnit.SECONDS)

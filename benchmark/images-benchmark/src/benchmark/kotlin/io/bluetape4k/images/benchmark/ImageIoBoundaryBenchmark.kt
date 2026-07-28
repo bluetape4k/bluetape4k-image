@@ -35,10 +35,10 @@ import java.nio.file.StandardOpenOption.WRITE
 import java.util.concurrent.TimeUnit
 
 /**
- * Compares image load/write boundary choices for the same source image.
+ * 같은 source image에 대한 image load/write boundary 선택을 비교합니다.
  *
- * This benchmark is intentionally about boundary overhead and compressed-file
- * staging, not about changing Scrimage's internal decode/encode cost.
+ * 이 benchmark는 Scrimage 내부 decode/encode cost 변경이 아니라 boundary overhead와 compressed-file staging을
+ * 의도적으로 측정합니다.
  */
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.MILLISECONDS)

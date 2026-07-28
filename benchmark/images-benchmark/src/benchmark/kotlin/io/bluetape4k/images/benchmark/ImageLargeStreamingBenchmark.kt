@@ -49,11 +49,10 @@ import javax.imageio.ImageIO
 import javax.imageio.ImageWriteParam
 
 /**
- * Measures load-transform-write pipelines for large generated image files.
+ * large generated image file의 load-transform-write pipeline을 측정합니다.
  *
- * The benchmark keeps fixture generation deterministic and local to JMH setup
- * so the repository does not need to commit huge binary assets. Scores are
- * latency snapshots for complete image pipelines; lower ms/op is better.
+ * repository에 큰 binary asset을 commit하지 않아도 되도록 fixture generation은 deterministic하게 유지하고 JMH setup
+ * 내부에서만 수행합니다. score는 전체 image pipeline의 latency snapshot이며, ms/op가 낮을수록 좋습니다.
  */
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.MILLISECONDS)

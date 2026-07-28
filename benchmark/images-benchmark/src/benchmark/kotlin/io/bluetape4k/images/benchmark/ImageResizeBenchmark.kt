@@ -16,16 +16,16 @@ import kotlinx.benchmark.Blackhole
 import java.util.concurrent.TimeUnit
 
 /**
- * Compares scrimage and vips resize throughput.
+ * scrimage와 vips resize throughput을 비교합니다.
  *
- * ## Run
+ * ## 실행
  * ```bash
  * ./gradlew :bluetape4k-images-benchmark:benchmark
  * ```
  *
- * ## Metrics
- * - scrimage: average [ImmutableImage.scaleTo] call time
- * - vips: average [VipsImage.resize] call time, skipped when vips is unavailable
+ * ## 지표
+ * - scrimage: [ImmutableImage.scaleTo] 호출 평균 시간
+ * - vips: [VipsImage.resize] 호출 평균 시간. vips를 사용할 수 없으면 skip합니다.
  */
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
@@ -38,9 +38,9 @@ class ImageResizeBenchmark {
     companion object : KLogging()
 
     /**
-     * Target resize resolution in WxH form.
+     * target resize resolution입니다. WxH form을 사용합니다.
      *
-     * A single parameter keeps width and height paired instead of creating a cross product.
+     * width/height cross product를 만들지 않고 pair를 유지하기 위해 단일 parameter를 사용합니다.
      */
     @Param("1920x1080", "1280x720")
     var resolution: String = "1920x1080"
@@ -56,7 +56,7 @@ class ImageResizeBenchmark {
     }
 
     /**
-     * Measures scrimage [ImmutableImage.scaleTo] resize throughput for a natural photo fixture.
+     * natural photo fixture에 대한 scrimage [ImmutableImage.scaleTo] resize throughput을 측정합니다.
      */
     @Benchmark
     fun scrimage_scaleTo(state: VipsBenchmarkState, bh: Blackhole) {
@@ -65,9 +65,9 @@ class ImageResizeBenchmark {
     }
 
     /**
-     * Measures vips [VipsImage.resize] throughput.
+     * vips [VipsImage.resize] throughput을 측정합니다.
      *
-     * Returns immediately when vips is unavailable on the current host.
+     * 현재 host에서 vips를 사용할 수 없으면 즉시 반환합니다.
      */
     @Benchmark
     fun vips_resize(state: VipsBenchmarkState, bh: Blackhole) {

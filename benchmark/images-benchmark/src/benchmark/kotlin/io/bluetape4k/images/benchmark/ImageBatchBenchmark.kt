@@ -20,7 +20,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.runBlocking
 import java.util.concurrent.TimeUnit
 
-/** Batch thumbnail and fan-out measurements for CPU-bound image pipelines. */
+/** CPU-bound image pipeline의 batch thumbnail 및 fan-out measurement입니다. */
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
 @Warmup(iterations = 1, time = 1, timeUnit = TimeUnit.SECONDS)

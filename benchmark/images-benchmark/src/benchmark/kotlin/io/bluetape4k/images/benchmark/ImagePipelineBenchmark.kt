@@ -19,11 +19,10 @@ import kotlinx.benchmark.Blackhole
 import java.util.concurrent.TimeUnit
 
 /**
- * Benchmarks representative high-level scrimage operation chains.
+ * 대표적인 high-level scrimage operation chain을 benchmark합니다.
  *
- * The goal is to keep an allocation-sensitive baseline for APIs that create
- * intermediate [com.sksamuel.scrimage.ImmutableImage] values between resize,
- * filter, and encode stages.
+ * resize, filter, encode stage 사이에 intermediate [com.sksamuel.scrimage.ImmutableImage] 값을 만드는 API에 대해
+ * allocation-sensitive baseline을 유지하는 것이 목적입니다.
  */
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
@@ -42,7 +41,7 @@ class ImagePipelineBenchmark {
     }
 
     /**
-     * 4K photo preview path: resize, grayscale, then JPEG encode.
+     * 4K photo preview path입니다. resize, grayscale, JPEG encode 순서로 실행합니다.
      */
     @Benchmark
     fun scrimage_photoPreviewJpeg(bh: Blackhole) {
@@ -55,7 +54,7 @@ class ImagePipelineBenchmark {
     }
 
     /**
-     * Document preview path: resize, blur, sepia, then PNG encode.
+     * document preview path입니다. resize, blur, sepia, PNG encode 순서로 실행합니다.
      */
     @Benchmark
     fun scrimage_documentPreviewPng(bh: Blackhole) {

@@ -11,12 +11,11 @@ import java.nio.file.Files
 import java.nio.file.Path
 
 /**
- * Shared image set loader for benchmark fixtures.
+ * benchmark fixture용 shared image set loader입니다.
  *
- * Prefer checked-in image fixtures under `images/src/test/resources/images` so
- * allocation and throughput evidence reflects real compressed images. Classpath
- * resources remain as a fallback, and synthetic images are used only when an
- * optional fixture is unavailable.
+ * allocation 및 throughput evidence가 실제 compressed image를 반영하도록 `images/src/test/resources/images` 아래의
+ * checked-in image fixture를 선호합니다. classpath resource는 fallback으로 남기며, optional fixture를 사용할 수 없을 때만
+ * synthetic image를 사용합니다.
  */
 object BenchmarkImageSets : KLogging() {
 
@@ -58,39 +57,39 @@ object BenchmarkImageSets : KLogging() {
             Path.of("../images/src/test/resources/images", fixtureName),
         ).firstOrNull(Files::isRegularFile)
 
-    /** Natural photo image used by resize, encode, and vips benchmarks. */
+    /** resize, encode, vips benchmark에 사용하는 natural photo image입니다. */
     fun naturalPhoto(name: String): ImmutableImage = when (name) {
         "cafe"      -> cafe
         "landscape" -> landscape
         else        -> error("Unknown natural photo benchmark image: $name")
     }
 
-    /** Natural cafe photo fixture (4032x3024). */
+    /** natural cafe photo fixture입니다(4032x3024). */
     val cafe: ImmutableImage by lazy {
         loadOrSynthesize("cafe.jpg", "/bench/cafe.jpg", 4032, 3024)
     }
 
-    /** Natural landscape photo fixture (4032x3024). */
+    /** natural landscape photo fixture입니다(4032x3024). */
     val landscape: ImmutableImage by lazy {
         loadOrSynthesize("landscape.jpg", "/bench/landscape.jpg", 4032, 3024)
     }
 
-    /** Backward-compatible 4K photo alias used by allocation benchmarks. */
+    /** allocation benchmark가 사용하는 backward-compatible 4K photo alias입니다. */
     val photo4k: ImmutableImage by lazy { landscape }
 
-    /** Landscape fixture path when available on disk. */
+    /** disk에서 사용할 수 있을 때의 landscape fixture path입니다. */
     val photo4kPath: Path? by lazy { fixturePath("landscape.jpg") }
 
-    /** Homer illustration PNG fixture (1248x702). */
+    /** Homer illustration PNG fixture입니다(1248x702). */
     val document: ImmutableImage by lazy {
         loadOrSynthesize("homer.png", "/bench/document.png", 1248, 702)
     }
 
-    /** Homer JPEG thumbnail fixture (1248x702). */
+    /** Homer JPEG thumbnail fixture입니다(1248x702). */
     val thumbnail: ImmutableImage by lazy {
         loadOrSynthesize("homer.jpg", "/bench/thumbnail.jpg", 1248, 702)
     }
 
-    /** Homer JPEG fixture path when available on disk. */
+    /** disk에서 사용할 수 있을 때의 Homer JPEG fixture path입니다. */
     val thumbnailPath: Path? by lazy { fixturePath("homer.jpg") }
 }

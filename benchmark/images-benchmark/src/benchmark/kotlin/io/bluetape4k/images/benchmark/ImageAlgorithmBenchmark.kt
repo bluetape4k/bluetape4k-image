@@ -22,7 +22,7 @@ import kotlinx.coroutines.runBlocking
 import java.io.ByteArrayInputStream
 import java.util.concurrent.TimeUnit
 
-/** Focused measurements for image utilities outside the resize/encode path. */
+/** resize/encode path 밖의 image utility를 대상으로 한 focused measurement입니다. */
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
 @Warmup(iterations = 1, time = 1, timeUnit = TimeUnit.SECONDS)

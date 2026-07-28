@@ -17,20 +17,20 @@ import kotlinx.benchmark.Blackhole
 import java.util.concurrent.TimeUnit
 
 /**
- * Compares scrimage and vips encode throughput for JPEG and PNG.
+ * JPEG와 PNG에 대한 scrimage/vips encode throughput을 비교합니다.
  *
- * Natural photo fixtures are encoded to JPEG and PNG.
+ * natural photo fixture를 JPEG와 PNG로 encode합니다.
  *
- * ## Run
+ * ## 실행
  * ```bash
  * ./gradlew :bluetape4k-images-benchmark:benchmark
  * ```
  *
- * ## Metrics
- * - scrimage_encodeJpeg: average JPEG encode time with [JpegWriter]
- * - scrimage_encodePng: average PNG encode time with [PngWriter]
- * - vips_encodeJpeg: average vips JPEG encode time, skipped when vips is unavailable
- * - vips_encodePng: average vips PNG encode time, skipped when vips is unavailable
+ * ## 지표
+ * - scrimage_encodeJpeg: [JpegWriter]를 사용한 JPEG encode 평균 시간
+ * - scrimage_encodePng: [PngWriter]를 사용한 PNG encode 평균 시간
+ * - vips_encodeJpeg: vips JPEG encode 평균 시간. vips를 사용할 수 없으면 skip합니다.
+ * - vips_encodePng: vips PNG encode 평균 시간. vips를 사용할 수 없으면 skip합니다.
  */
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
@@ -46,7 +46,7 @@ class ImageEncodeBenchmark {
     }
 
     /**
-     * Measures scrimage JPEG encode throughput for a natural photo fixture at quality=80.
+     * quality=80에서 natural photo fixture의 scrimage JPEG encode throughput을 측정합니다.
      */
     @Benchmark
     fun scrimage_encodeJpeg(state: VipsBenchmarkState, bh: Blackhole) {
@@ -55,7 +55,7 @@ class ImageEncodeBenchmark {
     }
 
     /**
-     * Measures scrimage PNG encode throughput for a natural photo fixture at compression=6.
+     * compression=6에서 natural photo fixture의 scrimage PNG encode throughput을 측정합니다.
      */
     @Benchmark
     fun scrimage_encodePng(state: VipsBenchmarkState, bh: Blackhole) {
@@ -64,9 +64,9 @@ class ImageEncodeBenchmark {
     }
 
     /**
-     * Measures vips JPEG encode throughput.
+     * vips JPEG encode throughput을 측정합니다.
      *
-     * Returns immediately when vips is unavailable on the current host.
+     * 현재 host에서 vips를 사용할 수 없으면 즉시 반환합니다.
      */
     @Benchmark
     fun vips_encodeJpeg(state: VipsBenchmarkState, bh: Blackhole) {
@@ -81,9 +81,9 @@ class ImageEncodeBenchmark {
     }
 
     /**
-     * Measures vips PNG encode throughput.
+     * vips PNG encode throughput을 측정합니다.
      *
-     * Returns immediately when vips is unavailable on the current host.
+     * 현재 host에서 vips를 사용할 수 없으면 즉시 반환합니다.
      */
     @Benchmark
     fun vips_encodePng(state: VipsBenchmarkState, bh: Blackhole) {
