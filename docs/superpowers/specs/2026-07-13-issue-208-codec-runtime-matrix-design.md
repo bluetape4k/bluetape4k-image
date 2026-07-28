@@ -449,51 +449,43 @@ native measurement 전에 default/focused task를 dry-run해 experimental isolat
 - 모든 SVG는 `xmllint`로, PNG는 `identify`로 검증한다.
 - `git diff --check`를 실행한다.
 
-## 11. Compatibility and Repository Hazards
+## 11. 호환성과 repository hazard
 
-- No production API or artifact coordinate changes are expected.
-- No module registration or BOM change is expected because the harness remains
-  in `bluetape4k-images-benchmark`.
-- Keep `atomicfu transformJvm = false` in the Java 25 backend unchanged. Also
-  disable the unused atomicfu JVM transform in the benchmark module so a Java
-  21 verification can follow Java 25 output in the same worktree without the
-  Java 21 transformer loading Java 25 class files.
-- Keep Java and Kotlin toolchains selected by `-Pvips.impl`.
-- Keep `--enable-native-access=ALL-UNNAMED` for the FFM benchmark fork.
-- The benchmark source set remains excluded from production coverage.
-- README locale parity, raw evidence paths, chart assets, and benchmark task
-  names are required hazard checks.
-- No API/BOM/artifact-coordinate changes are expected. Until a release-train
-  `bluetape4k-dependencies` catalog tag contains `kotlinx-serialization-json`,
-  the repo-local catalog carries a temporary issue #208 version pin. Remove the
-  pin when the central tagged alias is consumable. The issue #208 operator
-  captures the native run; the implementation reviewer validates manifests and
-  report interpretation; PR/merge approval remains with `debop`. Report,
-  README/chart, and raw evidence roll back together as one change unit.
+- production API 또는 artifact coordinate 변경은 예상하지 않는다.
+- harness가 `bluetape4k-images-benchmark`에 남으므로 module registration 또는 BOM 변경은 예상하지 않는다.
+- Java 25 backend의 `atomicfu transformJvm = false`는 변경하지 않는다. 또한 benchmark module에서 사용하지 않는
+  atomicfu JVM transform을 disable해, 같은 worktree에서 Java 25 output 뒤 Java 21 verification을 실행할 때
+  Java 21 transformer가 Java 25 class file을 load하지 않게 한다.
+- Java와 Kotlin toolchain은 `-Pvips.impl`로 선택된 상태를 유지한다.
+- FFM benchmark fork에는 `--enable-native-access=ALL-UNNAMED`를 유지한다.
+- benchmark source set은 production coverage에서 계속 제외한다.
+- README locale parity, raw evidence path, chart asset, benchmark task name은 필수 hazard check다.
+- API/BOM/artifact-coordinate 변경은 예상하지 않는다. release-train `bluetape4k-dependencies` catalog tag가
+  `kotlinx-serialization-json`을 포함하기 전까지 repo-local catalog는 temporary issue #208 version pin을 가진다.
+  central tagged alias를 소비할 수 있게 되면 pin을 제거한다. issue #208 operator는 native run을 capture하고,
+  implementation reviewer는 manifest와 report interpretation을 검증한다. PR/merge approval은 계속 `debop`에게 있다.
+  report, README/chart, raw evidence는 하나의 change unit으로 함께 rollback한다.
 
-## 12. Acceptance Criteria Traceability
+## 12. 인수 기준 traceability
 
-| Issue criterion | Design proof |
+| 이슈 기준 | 설계 증거 |
 |---|---|
-| Distinguish measured, skipped, and unsupported combinations | Experimental capability/smoke gate and explicit status table |
-| Include latency, allocation, output bytes, dimensions, backend, JVM, and libvips | Raw latency/GC JSON plus result metadata and byte-size capture |
-| Keep experimental codecs from making default paths flaky | Default `main` exclusion plus opt-in experimental configurations |
-| Link README to the codec matrix report | English/Korean README updates and detailed report path |
-| Compare Java 21 and Java 25 only when semantics match | Binding-neutral transcode boundaries, identical fixture bytes, sequential runs |
+| measured, skipped, unsupported 조합 구분 | experimental capability/smoke gate와 explicit status table |
+| latency, allocation, output bytes, dimension, backend, JVM, libvips 포함 | raw latency/GC JSON, result metadata, byte-size capture |
+| experimental codec이 default path를 flaky하게 만들지 않음 | default `main` exclusion과 opt-in experimental configuration |
+| README가 codec matrix report로 link됨 | English/Korean README update와 detailed report path |
+| semantics가 일치할 때만 Java 21과 Java 25 비교 | binding-neutral transcode boundary, identical fixture bytes, sequential run |
 
-## 13. Definition of Done
+## 13. 완료 정의
 
-- The approved stable and experimental task boundaries compile under the
-  selected Java 21 and Java 25 toolchains.
-- PNG/WebP stable rows run for both approved fixture scenarios on Java 25.
-- Experimental rows run only after direction-specific capability and smoke
-  gates; every omitted combination has an evidence-backed status and reason,
-  and no accepted run contains `FAILED_SMOKE` or `ERROR`.
-- Latency, managed allocation, input/output size, dimensions, environment, and
-  limitations are committed in raw and human-readable evidence.
-- Default benchmark execution excludes experimental codecs.
-- Targeted tests, benchmark compile, applicable native runs, JSON validation,
-  documentation parity, asset validation when triggered, and
-  `git diff --check` pass.
-- Spec review and later implementation review converge at P0=0 and P1=0.
-- The PR remains unmerged until explicit user approval.
+- approved stable/experimental task boundary가 선택된 Java 21과 Java 25 toolchain에서 compile된다.
+- PNG/WebP stable row가 Java 25에서 두 approved fixture scenario 모두에 대해 실행된다.
+- experimental row는 direction-specific capability와 smoke gate 이후에만 실행된다. omit된 모든 조합은 evidence-backed
+  status와 reason을 가지며, accepted run에는 `FAILED_SMOKE` 또는 `ERROR`가 없다.
+- latency, managed allocation, input/output size, dimension, environment, limitation이 raw evidence와 human-readable
+  evidence에 commit된다.
+- default benchmark execution은 experimental codec을 제외한다.
+- targeted test, benchmark compile, applicable native run, JSON validation, documentation parity,
+  asset validation when triggered, `git diff --check`가 통과한다.
+- spec review와 이후 implementation review가 P0=0, P1=0으로 수렴한다.
+- PR은 explicit user approval 전까지 merge하지 않는다.
