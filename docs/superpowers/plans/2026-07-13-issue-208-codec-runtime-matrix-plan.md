@@ -550,19 +550,16 @@ git add benchmark/images-benchmark/src/benchmark/kotlin/io/bluetape4k/images/ben
 git commit -m "perf: add experimental codec benchmark lanes"
 ```
 
-### Task 9: Run Sequential Native Evidence
+### Task 9: Sequential Native Evidence 실행
 
 **Complexity:** High
 **Depends on:** Tasks 1-8 committed and clean
 **Pattern skills:** `bluetape-kotlin-patterns`, benchmark hazards
-**Files:** generate `benchmark/images-benchmark/docs/raw/<run-id>/` through finalization only.
+**Files:** Finalization을 통해서만 `benchmark/images-benchmark/docs/raw/<run-id>/`를 생성한다.
 
-- [ ] **Step 1: Prepare one clean accepted run**
+- [ ] **Step 1: 깨끗한 accepted run 하나를 준비한다.**
 
-Use `issue-208-20260713-macos-arm64` only after fail-closed workspace and host
-prerequisite checks. Missing command/JDK/libvips prerequisites stop before
-native work; architecture incompatibility remains the structured preflight
-`N_A` path:
+Fail-closed workspace와 host prerequisite check 후에만 `issue-208-20260713-macos-arm64`를 사용한다. Command/JDK/libvips prerequisite가 없으면 native work 전에 중단한다. Architecture incompatibility는 structured preflight `N_A` path로 남긴다.
 
 ```bash
 test -z "$(git status --porcelain)"
@@ -579,7 +576,7 @@ test ! -e benchmark/images-benchmark/docs/raw/issue-208-20260713-macos-arm64
 test ! -e benchmark/images-benchmark/docs/raw/failed/issue-208-20260713-macos-arm64
 ```
 
-- [ ] **Step 2: Run Java 21 preflight first**
+- [ ] **Step 2: Java 21 preflight를 먼저 실행한다.**
 
 ```bash
 JAVA_HOME=$(/usr/libexec/java_home -v 21) \
@@ -588,9 +585,9 @@ JAVA_HOME=$(/usr/libexec/java_home -v 21) \
   -Pvips.impl=java21 --console=plain
 ```
 
-Expected on current macOS arm64: structured `N_A` for x86_64 JNI without initialization. Do not invoke Java 21 capability or native JMH unless preflight proves compatibility.
+Expected on current macOS arm64: initialization 없이 x86_64 JNI에 대해 structured `N_A`가 나온다. Preflight가 compatibility를 증명하기 전에는 Java 21 capability나 native JMH를 호출하지 않는다.
 
-- [ ] **Step 3: Prepare fixtures, then run Java 25 capability and stable latency**
+- [ ] **Step 3: Fixture를 준비한 뒤 Java 25 capability와 stable latency를 실행한다.**
 
 ```bash
 JAVA_HOME=$(/usr/libexec/java_home -v 25) \
@@ -607,12 +604,11 @@ JAVA_HOME=$(/usr/libexec/java_home -v 25) \
   -Pvips.impl=java25 --console=plain
 ```
 
-Expected: no blocking stable status and exactly 8 latency rows.
+Expected: blocking stable status가 없고 latency row가 정확히 8개다.
 
-- [ ] **Step 4: Run only eligible experimental tasks**
+- [ ] **Step 4: Eligible experimental task만 실행한다.**
 
-Inspect capability JSON with `jq`. Run each command only when its matching
-cells are `ELIGIBLE`; otherwise retain the terminal status:
+Capability JSON을 `jq`로 점검한다. Matching cell이 `ELIGIBLE`일 때만 각 command를 실행한다. 그렇지 않으면 terminal status를 유지한다.
 
 ```bash
 JAVA_HOME=$(/usr/libexec/java_home -v 25) \
@@ -625,7 +621,7 @@ JAVA_HOME=$(/usr/libexec/java_home -v 25) \
   -Pvips.impl=java25 --console=plain
 ```
 
-- [ ] **Step 5: Run the focused GC profiler**
+- [ ] **Step 5: Focused GC profiler를 실행한다.**
 
 ```bash
 JAVA_HOME=$(/usr/libexec/java_home -v 25) \
@@ -649,15 +645,11 @@ jar tf "$jmh_jar" | rg 'VipsCodecMatrixBenchmark|VipsExperimentalCodecMatrixBenc
   -rff benchmark/images-benchmark/build/codec-matrix/issue-208-20260713-macos-arm64/staging/allocation-java25.json
 ```
 
-Expected: the same 8 stable rows include `gc.alloc.rate.norm`.
+Expected: 같은 8개 stable row가 `gc.alloc.rate.norm`을 포함한다.
 
-- [ ] **Step 6: Run profiler addenda for eligible experimental formats**
+- [ ] **Step 6: Eligible experimental format의 profiler addendum을 실행한다.**
 
-For each format whose timed task ran, derive the method alternation from that
-format's `ELIGIBLE` cells; never hard-code both directions. Skip an empty
-alternation, execute the exact eligible regex in a fresh JVM, and write a
-distinct staging artifact. The finalizer requires the profiler cell keys to
-equal the corresponding latency cell keys exactly:
+Timed task가 실행된 각 format에 대해 해당 format의 `ELIGIBLE` cell에서 method alternation을 파생한다. 두 direction을 hard-code하지 않는다. Empty alternation은 skip하고, fresh JVM에서 exact eligible regex를 실행하며, 별도 staging artifact를 쓴다. Finalizer는 profiler cell key가 대응하는 latency cell key와 정확히 같아야 한다고 요구한다.
 
 ```bash
 eligibility=benchmark/images-benchmark/build/reports/benchmarks/codec-matrix/issue-208-20260713-macos-arm64/eligibility-java25.json
@@ -696,7 +688,7 @@ test -z "$heic_methods" || \
   -rff benchmark/images-benchmark/build/codec-matrix/issue-208-20260713-macos-arm64/staging/allocation-java25-heic.json
 ```
 
-- [ ] **Step 7: Finalize and commit only complete evidence**
+- [ ] **Step 7: Complete evidence만 finalize하고 commit한다.**
 
 ```bash
 ./gradlew :bluetape4k-images-benchmark:finalizeCodecMatrixEvidence \
@@ -708,51 +700,28 @@ git add benchmark/images-benchmark/docs/raw/issue-208-20260713-macos-arm64
 git commit -m "perf: record codec runtime benchmark evidence"
 ```
 
-If `FAILED_SMOKE/ERROR` exists, finalization records
-`docs/raw/failed/<run-id>/attempt-manifest.json` and then fails. Verify the
-ledger contains only fixed reason codes, bounded sanitized diagnostics,
-commands/protocol facts, hashes, and the original run ID; commit it before
-diagnosis. Record mitigation, restart with a new run ID, and pass
-`-Pcodec.matrix.replacesFailedAttempt=<old-run-id>` so the replacement lineage
-is validated. Never reuse or delete the failed run ID.
+`FAILED_SMOKE/ERROR`가 있으면 finalization은 `docs/raw/failed/<run-id>/attempt-manifest.json`을 기록한 뒤 실패한다. Ledger가 fixed reason code, bounded sanitized diagnostic, command/protocol fact, hash, original run ID만 포함하는지 검증한다. 진단 전에 이 ledger를 commit한다. Mitigation을 기록하고 새 run ID로 재시작하며, replacement lineage가 검증되도록 `-Pcodec.matrix.replacesFailedAttempt=<old-run-id>`를 넘긴다. Failed run ID는 재사용하거나 삭제하지 않는다.
 
-### Task 10: Publish Evidence in Docs and Charts
+### Task 10: Evidence를 Docs와 Chart에 게시
 
 **Complexity:** Medium
 **Depends on:** Task 9
 **Pattern skills:** `bluetape-writer`, `bluetape-diagram` with `common.md` and `chart.md`
-**Files:** create detailed report; modify both README locales; conditionally create canonical SVG/PNG chart.
+**Files:** Detailed report를 만들고 두 README locale을 수정하며, 조건이 충족되면 canonical SVG/PNG chart를 만든다.
 
-- [ ] **Step 1: Write the English report**
+- [ ] **Step 1: English report를 작성한다.**
 
-Include commands, manifest links, fixture hashes/dimensions, runtime versions,
-common status legend, full cell matrix, latency, `gc.alloc.rate.norm`,
-input/output bytes, metric direction, native-allocation limitation,
-comparability keys, reasons, rerun guidance, and supersession. State explicitly:
-“local evidence only; no cross-host or production-wide ranking.” Do not claim
-PNG and lossy WebP have equivalent visual quality.
+Command, manifest link, fixture hash/dimension, runtime version, common status legend, full cell matrix, latency, `gc.alloc.rate.norm`, input/output byte, metric direction, native-allocation limitation, comparability key, reason, rerun guidance, supersession을 포함한다. “local evidence only; no cross-host or production-wide ranking.”이라고 명시한다. PNG와 lossy WebP가 동등한 visual quality를 가진다고 claim하지 않는다.
 
-- [ ] **Step 2: Add equivalent README summaries**
+- [ ] **Step 2: 동등한 README summary를 추가한다.**
 
-Keep English and natural Korean summaries aligned in numbers, statuses,
-commands, report link, and chart link. Separate the recorded-run commands from
-a rerun template that requires a fresh run ID; if correcting accepted evidence,
-show `-Pcodec.matrix.supersedes=<accepted-run-id>`. Explicitly forbid reusing an
-accepted or failed run ID.
+English summary와 자연스러운 Korean summary가 number, status, command, report link, chart link에서 일치하게 한다. Recorded-run command와 fresh run ID를 요구하는 rerun template을 분리한다. Accepted evidence를 수정할 때는 `-Pcodec.matrix.supersedes=<accepted-run-id>`를 보여 준다. Accepted 또는 failed run ID 재사용을 명시적으로 금지한다.
 
-- [ ] **Step 3: Apply the chart trigger**
+- [ ] **Step 3: Chart trigger를 적용한다.**
 
-Use the same canonical comparability-key implementation as the finalizer. A
-group is comparable only when commit and dirty state, OS/kernel/CPU/arch, JDK,
-libvips and codec-library versions, scenario, source/derived/input hashes,
-experimental producer manifest, codec options, thread count, libvips
-concurrency, forks, warmup/measurement counts and durations, benchmark mode,
-time unit, profiler protocol, and metric all match. When one exact group has at
-least two rows, create grouped latency/output-size SVG and PNG with English
-labels, units, legend, truthful scale, and separate scenario panels. Otherwise
-record the complete differing keys, exact comparable-row count, and chart N/A.
+Finalizer와 같은 canonical comparability-key implementation을 사용한다. Commit/dirty state, OS/kernel/CPU/arch, JDK, libvips 및 codec-library version, scenario, source/derived/input hash, experimental producer manifest, codec option, thread count, libvips concurrency, fork, warmup/measurement count/duration, benchmark mode, time unit, profiler protocol, metric이 모두 일치할 때만 group은 comparable이다. Exact group 하나에 최소 2 row가 있으면 English label, unit, legend, truthful scale, separate scenario panel을 가진 grouped latency/output-size SVG와 PNG를 만든다. 그렇지 않으면 모든 differing key, exact comparable-row count, chart N/A를 기록한다.
 
-- [ ] **Step 4: Validate assets and docs**
+- [ ] **Step 4: Asset과 docs를 검증한다.**
 
 ```bash
 xmllint --noout docs/images/readme-charts/images-benchmark-codec-runtime-matrix-chart-01.svg
@@ -768,13 +737,9 @@ rg -ni '/Users/|/home/|[A-Z]:\\|file:/{2,}|https?://[^/@[:space:]]+:[^/@[:space:
 git diff --check
 ```
 
-Build a parity ledger extracting every result number/unit, status, recorded and
-rerun command, report link, and chart link from each README; compare the two
-sets and record zero unexplained differences in the review artifact. Token-only
-presence is insufficient. For a chart, run the chart audit and inspect full-size
-PNG after the final coordinate change. Leakage scan must return no matches.
+각 README에서 모든 result number/unit, status, recorded/rerun command, report link, chart link를 추출해 parity ledger를 만든다. 두 set을 비교하고 unexplained difference가 0임을 review artifact에 기록한다. Token 존재만으로는 부족하다. Chart가 있으면 final coordinate change 후 chart audit을 실행하고 full-size PNG를 inspection한다. Leakage scan은 match가 없어야 한다.
 
-- [ ] **Step 5: Commit docs and triggered assets**
+- [ ] **Step 5: Docs와 triggered asset을 commit한다.**
 
 ```bash
 git add benchmark/images-benchmark/docs/codec-runtime-matrix-2026-07-13.md \
@@ -784,16 +749,16 @@ git add docs/images/readme-charts/images-benchmark-codec-runtime-matrix-chart-01
 git commit -m "docs: publish codec runtime benchmark matrix"
 ```
 
-Omit the two asset paths when the chart trigger is N/A.
+Chart trigger가 N/A이면 두 asset path는 생략한다.
 
-### Task 11: Final Verification, Review, and Lesson
+### Task 11: Final Verification, Review, Lesson
 
 **Complexity:** High
 **Depends on:** Tasks 1-10
 **Pattern skills:** `verification-before-completion`, Kotlin final checklist, full-feature verifier/performance/review references
-**Files:** create code-review artifact and `docs/lessons/2026-07-13-issue-208-codec-runtime-matrix.md`.
+**Files:** Code-review artifact와 `docs/lessons/2026-07-13-issue-208-codec-runtime-matrix.md`를 만든다.
 
-- [ ] **Step 1: Run fresh validation**
+- [ ] **Step 1: Fresh validation을 실행한다.**
 
 ```bash
 ./gradlew :bluetape4k-images-benchmark:test -Pvips.impl=java25 --console=plain
@@ -805,23 +770,17 @@ Omit the two asset paths when the chart trigger is N/A.
 git diff --check
 ```
 
-- [ ] **Step 2: Verify hazards and exact spec/plan**
+- [ ] **Step 2: Hazard와 exact spec/plan을 검증한다.**
 
-Prove no module/BOM/API/CI/Nightly/Kover registration change, default task
-isolation, append-only raw evidence, locale parity, diagram ledger when
-triggered, and every acceptance row mapped to source/tests/evidence/docs. The
-only catalog delta is the documented temporary issue #208 serialization pin;
-verify it is not also added to `bluetape4k-dependencies` in this branch and has
-an explicit removal condition. Return to the owning task on `NEEDS FIX`;
-reopen approval on `NEEDS REVIEW SCOPE`.
+Module/BOM/API/CI/Nightly/Kover registration change가 없고, default task isolation, append-only raw evidence, locale parity, triggered diagram ledger, 모든 acceptance row가 source/test/evidence/docs에 mapping됨을 증명한다. 유일한 catalog delta는 문서화된 temporary issue #208 serialization pin이다. 이 branch에서 `bluetape4k-dependencies`에도 추가되지 않았고 explicit removal condition이 있는지 검증한다. `NEEDS FIX`면 owning task로 돌아가고, `NEEDS REVIEW SCOPE`면 approval을 다시 연다.
 
-- [ ] **Step 3: Run six code-review lenses plus integration**
+- [ ] **Step 3: 여섯 code-review lens와 integration을 실행한다.**
 
-Review performance, stability, security, operator/Ops, developer/API, and user/caller against the exact branch diff. Record `docs/review/2026-07-13-issue-208-codec-runtime-matrix-code-review.md`; fix/revalidate all P0/P1; close only at `P0=0, P1=0`.
+Exact branch diff에 대해 performance, stability, security, operator/Ops, developer/API, user/caller를 review한다. `docs/review/2026-07-13-issue-208-codec-runtime-matrix-code-review.md`에 기록한다. 모든 P0/P1을 fix/revalidate하고 `P0=0, P1=0`일 때만 닫는다.
 
-- [ ] **Step 4: Write and commit the lesson**
+- [ ] **Step 4: Lesson을 작성하고 commit한다.**
 
-Record context, canonical manifest decision, directional smoke result, runtime N/A handling, measurement outcome, verification, review misses, and future no-op/lazy-row guard.
+Context, canonical manifest decision, directional smoke result, runtime N/A handling, measurement outcome, verification, review miss, future no-op/lazy-row guard를 기록한다.
 
 ```bash
 git add docs/review/2026-07-13-issue-208-codec-runtime-matrix-code-review.md \
@@ -829,33 +788,28 @@ git add docs/review/2026-07-13-issue-208-codec-runtime-matrix-code-review.md \
 git commit -m "docs: record codec benchmark lessons"
 ```
 
-- [ ] **Step 5: Stop at the PR boundary**
+- [ ] **Step 5: PR boundary에서 중단한다.**
 
-Confirm clean branch and full `origin/develop...HEAD` diff. Report issue #208 milestone/labels/assignee and DoD. Do not create or merge a PR without explicit authorization.
+Clean branch와 full `origin/develop...HEAD` diff를 확인한다. Issue #208 milestone/label/assignee와 DoD를 보고한다. 명시적 authorization 없이 PR을 만들거나 merge하지 않는다.
 
-## Documentation, Compatibility, and Hazard Decisions
+## Documentation, Compatibility, Hazard 결정
 
-- Public KDoc: N/A — all new Kotlin types are internal benchmark harness components.
-- Production API: N/A — no published API/backend implementation changes.
-- README locales: required and synchronized.
-- CHANGELOG/release notes: N/A here; report and later PR carry the evidence.
-- Chart: conditional; triggered output requires SVG, PNG, audit, and full-size inspection.
-- Module/BOM/settings/CI/Nightly/Kover: N/A — no module/coordinate/workflow/coverage surface changes.
-- Catalog: temporary issue #208 local serialization pin only; remove after a
-  release-train central catalog tag publishes the governed alias.
-- Atomicfu: the Java 25 backend setting remains unchanged; the benchmark
-  module disables its unused JVM transform to support sequential toolchains.
-- Coroutines/Testcontainers/network: N/A — no coroutine API, containers, or external fixture fetch.
-- Native concurrency: one JMH thread, libvips concurrency 4, sequential fresh processes.
-- Rollback: code and report/README/chart references can be reverted as one issue
-  unit, but an accepted raw directory is never deleted or rewritten. Correct
-  evidence by adding a fresh run whose manifest names the prior accepted run in
-  `supersedes`, then update documentation references.
+- Public KDoc: N/A. 새 Kotlin type은 모두 internal benchmark harness component다.
+- Production API: N/A. Published API/backend implementation 변경이 없다.
+- README locales: 필요하며 동기화한다.
+- CHANGELOG/release notes: 여기서는 N/A. Report와 later PR이 evidence를 담는다.
+- Chart: 조건부다. Triggered output은 SVG, PNG, audit, full-size inspection을 요구한다.
+- Module/BOM/settings/CI/Nightly/Kover: N/A. Module/coordinate/workflow/coverage surface 변경이 없다.
+- Catalog: temporary issue #208 local serialization pin만 허용한다. Release-train central catalog tag가 governed alias를 게시하면 제거한다.
+- Atomicfu: Java 25 backend setting은 변경하지 않는다. Benchmark module은 sequential toolchain을 지원하기 위해 사용하지 않는 JVM transform을 비활성화한다.
+- Coroutines/Testcontainers/network: N/A. Coroutine API, container, external fixture fetch가 없다.
+- Native concurrency: JMH thread 1개, libvips concurrency 4, sequential fresh process.
+- Rollback: Code와 report/README/chart reference는 하나의 issue unit으로 revert할 수 있다. 그러나 accepted raw directory는 delete/rewrite하지 않는다. Evidence correction은 prior accepted run을 `supersedes`로 명명하는 fresh run을 추가한 뒤 documentation reference를 업데이트한다.
 
 ## Plan Completion Gate
 
-- map every spec acceptance item;
-- pass placeholder/type/path/task/command consistency scans;
-- converge six plan-review perspectives plus integration at `P0=0, P1=0`;
-- obtain explicit user approval;
-- commit reviewed spec, plan, and review artifacts before implementation.
+- 모든 spec acceptance item을 mapping한다.
+- Placeholder/type/path/task/command consistency scan을 통과한다.
+- 여섯 plan-review perspective와 integration을 `P0=0, P1=0`으로 수렴한다.
+- 명시적 user approval을 받는다.
+- Implementation 전에 reviewed spec, plan, review artifact를 commit한다.
