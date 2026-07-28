@@ -1,23 +1,23 @@
-# Issue #184 Gitleaks Install Review
+# Issue #184 Gitleaks Install 검토
 
-## Scope
+## 범위
 
-- Issue: #184 `ci: harden gitleaks release asset install`
-- File reviewed: `.github/workflows/ci.yml`
-- Change type: CI maintenance
+- 이슈: #184 `ci: harden gitleaks release asset install`
+- 검토 파일: `.github/workflows/ci.yml`
+- 변경 유형: CI maintenance
 
-## Findings
+## 발견 사항
 
-- P0: none.
-- P1: none.
+- P0: 없음.
+- P1: 없음.
 
-## Review Notes
+## 검토 메모
 
-- The install step now resolves the Linux x64 archive from the latest GitHub release asset metadata instead of reconstructing the latest download URL from `tag_name`.
-- The fallback remains pinned to the known-good `v8.30.1` archive, so an API outage does not silently skip secret scanning.
-- The step prints `gitleaks version` after installation, which gives the GitHub Actions log a direct installation proof before `gitleaks detect` runs.
+- install step은 이제 `tag_name`에서 latest download URL을 재구성하지 않고 latest GitHub release asset metadata에서 Linux x64 archive를 찾는다.
+- fallback은 known-good `v8.30.1` archive에 고정되어 있어 API outage가 secret scanning을 조용히 건너뛰게 만들지 않는다.
+- 해당 step은 설치 후 `gitleaks version`을 출력해 `gitleaks detect` 실행 전에 GitHub Actions log에 직접 설치 증거를 남긴다.
 
-## Validation
+## 검증
 
 - `actionlint .github/workflows/ci.yml`
 - `git diff --check`

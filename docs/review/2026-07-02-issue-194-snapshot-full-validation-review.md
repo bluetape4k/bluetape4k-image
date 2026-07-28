@@ -1,19 +1,19 @@
-# Issue #194 Snapshot Full Validation Review
+# Issue #194 Snapshot Full Validation 검토
 
-## Scope
+## 범위
 
-- Issue: #194, `ci: require full OCR and VIPS validation before snapshot publishing`
-- Files reviewed: `.github/workflows/publish-snapshot.yml`
-- Review date: 2026-07-02
+- 이슈: #194, `ci: require full OCR and VIPS validation before snapshot publishing`
+- 검토 파일: `.github/workflows/publish-snapshot.yml`
+- 검토일: 2026-07-02
 
-## Findings
+## 발견 사항
 
 - P0: 0
 - P1: 0
 - P2: 0
 - P3: 0
 
-## Evidence
+## 근거
 
 - Snapshot publishing now depends on `validate-full-nightly`.
 - `validate-full-nightly` checks the triggering Nightly run jobs through the GitHub Actions API.
@@ -31,7 +31,7 @@
   - skipped OCR job: non-publish-eligible.
   - all OCR/VIPS jobs successful: publish-eligible.
 
-## Residual Risk
+## 남은 위험
 
-- This PR does not change the Nightly workflow itself; it blocks the snapshot publish workflow from publishing when the triggering run is not full-validation eligible.
+- 이 PR은 Nightly workflow 자체를 바꾸지 않는다. triggering run이 full-validation eligible이 아니면 snapshot publish workflow가 publish하지 못하게 막는다.
 - Release publish remains a separate gate in issue #195.
