@@ -33,20 +33,19 @@ import java.nio.file.Files
 import java.nio.file.Path
 
 /**
- * Header-derived dimensions reported by the metadata extraction API.
+ * metadata 추출 API가 보고하는 헤더 기반 이미지 크기입니다.
  *
- * This reuses the core [ImageDimensions] value object so callers can apply the
- * same decoded-size validation helpers to metadata reports and image probes.
+ * core [ImageDimensions] 값 객체를 재사용하므로, 호출자는 metadata report와 image probe에
+ * 동일한 디코딩 크기 검증 helper를 적용할 수 있습니다.
  */
 typealias ImageMetadataDimensions = ImageDimensions
 
 /**
- * Options for privacy-aware metadata report extraction.
+ * privacy-aware metadata report 추출 옵션입니다.
  *
- * By default the report is safe for public API responses: GPS fields are
- * removed and raw diagnostic tags are omitted. Set [includeDiagnosticTags] only
- * for internal logs or operator tooling, where bounded tag descriptions help
- * explain backend metadata behavior.
+ * 기본 report는 public API 응답에 안전하도록 GPS 필드를 제거하고 원시 diagnostic tag를
+ * 생략합니다. [includeDiagnosticTags]는 제한된 tag 설명이 backend metadata 동작을
+ * 설명하는 데 필요한 내부 로그나 운영자 도구에서만 켭니다.
  */
 data class ImageMetadataReadOptions(
     val maxBytes: Int = DEFAULT_MAX_BYTES,
@@ -69,10 +68,10 @@ data class ImageMetadataReadOptions(
 }
 
 /**
- * Sanitized ICC profile summary.
+ * 정제된 ICC profile 요약입니다.
  *
- * The report exposes small scalar facts only. It never carries the raw ICC
- * payload, native pointers, or source file paths.
+ * report는 작은 scalar 사실만 노출합니다. 원시 ICC payload, native pointer,
+ * source file path는 절대 담지 않습니다.
  */
 data class ImageMetadataIccProfile(
     val byteCount: Int? = null,
@@ -85,11 +84,10 @@ data class ImageMetadataIccProfile(
 }
 
 /**
- * Best-effort HDR and gain-map metadata hints.
+ * best-effort HDR 및 gain-map metadata hint입니다.
  *
- * These flags are conservative. They are true only when the parsed metadata
- * directory names, tag names, or descriptions contain recognizable HDR or
- * gain-map terms.
+ * 이 flag들은 보수적으로 설정됩니다. parsing된 metadata directory 이름, tag 이름,
+ * description에 식별 가능한 HDR 또는 gain-map 용어가 있을 때만 `true`입니다.
  */
 data class ImageMetadataHdrHints(
     val hasHdrHint: Boolean = false,
@@ -107,11 +105,11 @@ data class ImageMetadataHdrHints(
 }
 
 /**
- * Bounded diagnostic metadata for internal observability.
+ * 내부 observability를 위한 제한된 diagnostic metadata입니다.
  *
- * Diagnostics are opt-in through [ImageMetadataReadOptions.includeDiagnosticTags].
- * Tag values are truncated and GPS directories are omitted when sensitive
- * metadata stripping is enabled.
+ * diagnostic 정보는 [ImageMetadataReadOptions.includeDiagnosticTags]로 명시적으로
+ * opt-in해야 합니다. sensitive metadata 제거가 활성화되면 tag 값은 잘리고
+ * GPS directory는 생략됩니다.
  */
 data class ImageMetadataDirectoryReport(
     val name: String,
@@ -132,13 +130,12 @@ data class ImageMetadataDirectoryReport(
 }
 
 /**
- * Privacy-aware image metadata extraction report.
+ * privacy-aware 이미지 metadata 추출 report입니다.
  *
- * The default report is suitable for public DTOs: it contains normalized EXIF,
- * dimensions, orientation, boolean presence flags, small ICC/HDR summaries, and
- * no raw metadata blobs. Use [withoutSensitiveMetadata] before exposing a report
- * if it was built with [ImageMetadataReadOptions.stripSensitiveMetadata] set to
- * `false`.
+ * 기본 report는 public DTO에 적합합니다. 정규화된 EXIF, 크기, 방향, 존재 여부 flag,
+ * 작은 ICC/HDR 요약만 포함하며 원시 metadata blob은 담지 않습니다.
+ * [ImageMetadataReadOptions.stripSensitiveMetadata]가 `false`인 상태로 생성된 report를
+ * 외부에 노출해야 한다면 먼저 [withoutSensitiveMetadata]를 적용합니다.
  */
 data class ImageMetadataReport(
     val exif: ExifData = ExifData.EMPTY,
@@ -172,12 +169,11 @@ data class ImageMetadataReport(
 private val metadataLog = KotlinLogging.logger(ImageMetadataReport::class)
 
 /**
- * Adds sanitized backend header fields to an existing metadata report.
+ * 기존 metadata report에 정제된 backend header field를 추가합니다.
  *
- * This is intended for optional backend adapters, such as libvips-based
- * readers, that can expose small header facts without coupling this module to a
- * native runtime. Raw paths, native pointers, location fields, and unbounded
- * blobs are filtered out before the diagnostic directory is added.
+ * libvips 기반 reader처럼 이 module을 native runtime에 결합하지 않고 작은 header 사실을
+ * 노출할 수 있는 선택적 backend adapter를 위한 확장입니다. diagnostic directory를
+ * 추가하기 전에 원시 path, native pointer, 위치 필드, 제한 없는 blob을 걸러냅니다.
  */
 fun ImageMetadataReport.withBackendHeaderFields(
     sourceBackend: String,
@@ -212,7 +208,7 @@ fun ImageMetadataReport.withBackendHeaderFields(
 }
 
 /**
- * Reads a privacy-aware metadata report from encoded image bytes.
+ * 인코딩 이미지 바이트에서 privacy-aware metadata report를 읽습니다.
  */
 fun readImageMetadataReport(
     bytes: ByteArray,
@@ -225,7 +221,7 @@ fun readImageMetadataReport(
 }
 
 /**
- * Reads a privacy-aware metadata report from a [File].
+ * [File]에서 privacy-aware metadata report를 읽습니다.
  */
 fun File.readImageMetadataReport(
     options: ImageMetadataReadOptions = ImageMetadataReadOptions(),
@@ -242,7 +238,7 @@ fun File.readImageMetadataReport(
     }
 
 /**
- * Reads a privacy-aware metadata report from a [Path].
+ * [Path]에서 privacy-aware metadata report를 읽습니다.
  */
 fun Path.readImageMetadataReport(
     options: ImageMetadataReadOptions = ImageMetadataReadOptions(),
@@ -261,9 +257,9 @@ fun Path.readImageMetadataReport(
     }
 
 /**
- * Reads a privacy-aware metadata report from an [InputStream].
+ * [InputStream]에서 privacy-aware metadata report를 읽습니다.
  *
- * The stream remains caller-owned and is not closed by this function.
+ * stream은 계속 호출자가 소유하며 이 함수는 stream을 닫지 않습니다.
  */
 fun InputStream.readImageMetadataReport(
     options: ImageMetadataReadOptions = ImageMetadataReadOptions(),
@@ -271,7 +267,7 @@ fun InputStream.readImageMetadataReport(
     readImageMetadataReport(readBoundedBytes(options.maxBytes), options)
 
 /**
- * Reads a metadata report from a [File] on [Dispatchers.IO].
+ * [Dispatchers.IO] 위에서 [File]의 metadata report를 읽습니다.
  */
 suspend fun File.suspendReadImageMetadataReport(
     options: ImageMetadataReadOptions = ImageMetadataReadOptions(),
@@ -279,7 +275,7 @@ suspend fun File.suspendReadImageMetadataReport(
     withContext(Dispatchers.IO) { readImageMetadataReport(options) }
 
 /**
- * Reads a metadata report from a [Path] on [Dispatchers.IO].
+ * [Dispatchers.IO] 위에서 [Path]의 metadata report를 읽습니다.
  */
 suspend fun Path.suspendReadImageMetadataReport(
     options: ImageMetadataReadOptions = ImageMetadataReadOptions(),

@@ -18,10 +18,10 @@ import java.awt.image.BufferedImage
  * // proportionalScaled.width == 400 (비율 유지)
  * ```
  *
- * @param width        Scaled image의 width
- * @param height       Scaled image의 height
+ * @param width        scaling된 이미지의 width
+ * @param height       scaling된 이미지의 height
  * @param proportional 비례 적용 여부
- * @return scaled [BufferedImage]
+ * @return scaling된 [BufferedImage]
  */
 fun BufferedImage.scale(width: Int, height: Int, proportional: Boolean = true): BufferedImage {
     val xScale = width.toDouble() / this.width
@@ -45,7 +45,7 @@ fun BufferedImage.scale(width: Int, height: Int, proportional: Boolean = true): 
  * ```
  *
  * @param ratio scaling 할 비율
- * @return Scaled [BufferedImage]
+ * @return scaling된 [BufferedImage]
  */
 fun BufferedImage.scale(ratio: Double): BufferedImage {
     ratio.requirePositiveNumber("ratio")
@@ -70,7 +70,7 @@ fun BufferedImage.scale(ratio: Double): BufferedImage {
  *
  * @param xScale x 축에 대한 scaling 비율
  * @param yScale y 축에 대한 scaling 비율
- * @return scaled [BufferedImage]
+ * @return scaling된 [BufferedImage]
  */
 fun BufferedImage.scale(xScale: Double, yScale: Double): BufferedImage {
     val transform = AffineTransform.getScaleInstance(xScale, yScale)

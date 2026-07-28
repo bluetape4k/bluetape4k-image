@@ -66,7 +66,7 @@ class AutoCropTest : AbstractImageTest() {
         val noPad = image.autoCrop(tolerance = 0, backgroundColor = Color.WHITE)
         val withPad = image.autoCrop(tolerance = 0, padding = 5, backgroundColor = Color.WHITE)
 
-        // padding=5 adds up to 10 pixels per axis (clamped to original bounds)
+        // padding=5는 축마다 최대 10 pixel을 더합니다. 원본 bounds 안으로 clamp됩니다.
         withPad.width shouldBeGreaterOrEqualTo (noPad.width + 8)
     }
 
@@ -102,11 +102,11 @@ class AutoCropTest : AbstractImageTest() {
         }
         val image = ImmutableImage.wrapAwt(buf)
 
-        // tolerance=0 with pure white background — near-white is not removed
+        // 순수 white background에서 tolerance=0이면 near-white는 제거되지 않습니다.
         val nocrop = image.autoCrop(tolerance = 0, backgroundColor = Color.WHITE)
         nocrop.width shouldBeEqualTo 100
 
-        // tolerance=20 matches near-white → crop occurs
+        // tolerance=20은 near-white와 match되므로 crop이 발생합니다.
         val cropped = image.autoCrop(tolerance = 20, backgroundColor = Color.WHITE)
         cropped.width shouldBeLessThan 100
     }

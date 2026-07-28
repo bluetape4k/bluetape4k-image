@@ -222,7 +222,7 @@ inline fun BufferedImage.useGraphics(
  *
  * @param w width   이미지 넓이
  * @param h height  이미지 높이
- * @return [BufferedImage] instance
+ * @return [BufferedImage] 인스턴스
  */
 fun bufferedImageOf(w: Int, h: Int): BufferedImage {
     w.requirePositiveNumber("w")

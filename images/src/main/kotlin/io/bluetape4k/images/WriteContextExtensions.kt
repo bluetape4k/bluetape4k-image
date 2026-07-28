@@ -14,7 +14,7 @@ import java.io.ByteArrayOutputStream
  * // bytes.isNotEmpty() == true
  * ```
  *
- * @return [ByteArray]
+ * @return 인코딩된 이미지 [ByteArray]
  */
 fun WriteContext.toByteArray(): ByteArray =
     ByteArrayOutputStream().use { bos ->

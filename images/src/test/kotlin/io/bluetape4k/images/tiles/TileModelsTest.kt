@@ -14,7 +14,7 @@ class TileModelsTest : AbstractImageTest() {
         return ImmutableImage.fromAwt(buf)
     }
 
-    // ── TileSize ───────────────────────────────────────────────────────────
+    // ── TileSize 검증 ──────────────────────────────────────────────────────
 
     @Test
     fun `TileSize stores width and height`() {
@@ -44,7 +44,7 @@ class TileModelsTest : AbstractImageTest() {
         size.height shouldBeEqualTo 1
     }
 
-    // ── ImageTile ──────────────────────────────────────────────────────────
+    // ── ImageTile 검증 ─────────────────────────────────────────────────────
 
     @Test
     fun `ImageTile stores position and image`() {

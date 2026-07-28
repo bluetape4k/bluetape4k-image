@@ -63,7 +63,7 @@ class RotationTest : AbstractImageTest() {
         val image = loadCafeImage()
         val result = image.rotateDegrees(45.0, background = Color.WHITE)
 
-        // corner pixel (0,0) should be white (red channel > 200)
+        // corner pixel(0,0)은 white여야 합니다(red channel > 200).
         val cornerRgb = result.awt().getRGB(0, 0)
         val red = (cornerRgb ushr 16) and 0xFF
         red shouldBeGreaterThan 200
@@ -95,7 +95,7 @@ class RotationTest : AbstractImageTest() {
         twice.width shouldBeInRange (image.width - 2)..(image.width + 2)
         twice.height shouldBeInRange (image.height - 2)..(image.height + 2)
 
-        // center pixel check: should be close to original center pixel (tolerance 5 per channel)
+        // center pixel은 원본 center pixel과 가까워야 합니다(channel별 tolerance 5).
         val cx = image.width / 2
         val cy = image.height / 2
         val origRgb = image.awt().getRGB(cx, cy)

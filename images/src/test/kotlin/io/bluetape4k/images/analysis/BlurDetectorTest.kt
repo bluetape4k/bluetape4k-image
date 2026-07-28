@@ -138,7 +138,7 @@ class BlurDetectorTest {
     @Test
     fun `threshold boundary score equals threshold is not blurry`() {
         val score = BlurScore(score = 100.0, threshold = 100.0)
-        // score < threshold → isBlurry; score == threshold → NOT blurry
+        // score < threshold이면 isBlurry이고, score == threshold이면 blurry가 아닙니다.
         score.isBlurry.shouldBeFalse()
     }
 
@@ -150,4 +150,3 @@ class BlurDetectorTest {
         variance shouldBeGreaterOrEqualTo 0.0
     }
 }
-

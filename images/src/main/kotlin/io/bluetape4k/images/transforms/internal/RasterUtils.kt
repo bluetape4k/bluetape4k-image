@@ -110,7 +110,7 @@ internal fun BufferedImage.setArgbPixels(pixels: IntArray): BufferedImage {
  * @param r Red 채널 (0..255).
  * @param g Green 채널 (0..255).
  * @param b Blue 채널 (0..255).
- * @return packed ARGB `Int`.
+ * @return packed ARGB `Int` 값.
  */
 internal inline fun argb(a: Int, r: Int, g: Int, b: Int): Int =
     (a and 0xFF shl 24) or (r and 0xFF shl 16) or (g and 0xFF shl 8) or (b and 0xFF)

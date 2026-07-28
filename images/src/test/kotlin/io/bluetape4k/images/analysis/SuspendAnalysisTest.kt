@@ -33,7 +33,7 @@ class SuspendAnalysisTest {
         private fun resourcePath(path: String): Path? = resourceFile(path)?.toPath()
     }
 
-    // ─── suspendDominantColors ───────────────────────────────────────────────
+    // ─── suspendDominantColors 검증 ─────────────────────────────────────────
 
     @Test
     fun `suspendDominantColors returns colors in coroutine`() = runTest(timeout = 30.seconds) {
@@ -67,7 +67,7 @@ class SuspendAnalysisTest {
         }
     }
 
-    // ─── suspendBlurScore ────────────────────────────────────────────────────
+    // ─── suspendBlurScore 검증 ──────────────────────────────────────────────
 
     @Test
     fun `suspendBlurScore returns score in coroutine`() = runTest(timeout = 30.seconds) {
@@ -101,7 +101,7 @@ class SuspendAnalysisTest {
         }
     }
 
-    // ─── suspendReadExif ─────────────────────────────────────────────────────
+    // ─── suspendReadExif 검증 ───────────────────────────────────────────────
 
     @Test
     fun `suspendReadExif via File in coroutine`() = runTest(timeout = 30.seconds) {

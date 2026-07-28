@@ -58,7 +58,7 @@ class HistogramEqualizationTest {
 
         result.width shouldBeEqualTo dark.width
         result.height shouldBeEqualTo dark.height
-        // Uniform image has 0 variance — CLAHE output should differ or stay; just check it doesn't throw
+        // uniform image는 variance가 0입니다. CLAHE 결과는 달라질 수도 유지될 수도 있으므로 예외만 확인합니다.
     }
 
     @Test
@@ -68,7 +68,7 @@ class HistogramEqualizationTest {
 
         result.width shouldBeEqualTo 256
         result.height shouldBeEqualTo 64
-        // No exception should be thrown
+        // 예외가 발생하지 않아야 합니다.
     }
 
     @Test
@@ -88,7 +88,7 @@ class HistogramEqualizationTest {
 
         resultBig.width shouldBeEqualTo resultGlobal.width
         resultBig.height shouldBeEqualTo resultGlobal.height
-        // Pixel-level comparison optional — both use same fallback path
+        // pixel-level 비교는 선택 사항입니다. 둘 다 같은 fallback path를 사용합니다.
     }
 
     @Test
@@ -100,7 +100,7 @@ class HistogramEqualizationTest {
         val r = (rgb ushr 16) and 0xFF
         val g = (rgb ushr 8) and 0xFF
 
-        // red channel should dominate — r should be greater than g
+        // red channel이 지배적이어야 하므로 r이 g보다 커야 합니다.
         r shouldBeGreaterThan g
     }
 

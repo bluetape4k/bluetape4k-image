@@ -105,7 +105,7 @@ object GoldenImageAssert : KLogging() {
     }
 
     // ──────────────────────────────────────────────────────────────────────────────
-    // private helpers
+    // private helper입니다.
     // ──────────────────────────────────────────────────────────────────────────────
 
     private fun loadGolden(key: String): ImmutableImage? {

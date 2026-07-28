@@ -24,17 +24,17 @@ class PixelPermitLimiterTest : AbstractImageTest() {
     fun `withPermit releases permits after block completes`() = runTest {
         val limiter = PixelPermitLimiter(maxPixels = 1_000L)
 
-        // Run a sequence of permits — if not released, the second call would deadlock
+        // permit을 순차 실행합니다. release되지 않으면 두 번째 호출이 deadlock됩니다.
         limiter.withPermit(500L) { }
         limiter.withPermit(500L) { }
-        limiter.withPermit(500L) { } // third — works because earlier ones released
-        // Reaching here without timeout means permits were properly released
+        limiter.withPermit(500L) { } // 세 번째 호출은 이전 permit이 release되어 동작합니다.
+        // timeout 없이 여기까지 도달하면 permit이 제대로 release된 것입니다.
     }
 
     @Test
     fun `withPermit with pixelCount exceeding maxPixels is coerced to maxPixels`() = runTest {
-        // pixelCount is coerced to [MIN_PIXEL_PERMIT, maxPixels], so a very large
-        // request should succeed immediately (treated as maxPixels)
+        // pixelCount는 [MIN_PIXEL_PERMIT, maxPixels]로 보정되므로, 매우 큰 요청도
+        // maxPixels로 취급되어 즉시 성공해야 합니다.
         val limiter = PixelPermitLimiter(maxPixels = 100L)
         val counter = AtomicInteger(0)
 
@@ -48,7 +48,7 @@ class PixelPermitLimiterTest : AbstractImageTest() {
         val limiter = PixelPermitLimiter(maxPixels = 1_000L)
         val counter = AtomicInteger(0)
 
-        // pixelCount 0 is coerced to MIN_PIXEL_PERMIT (1)
+        // pixelCount 0은 MIN_PIXEL_PERMIT(1)로 보정됩니다.
         limiter.withPermit(pixelCount = 0L) { counter.incrementAndGet() }
 
         counter.get() shouldBeEqualTo 1
@@ -86,36 +86,36 @@ class PixelPermitLimiterTest : AbstractImageTest() {
 
     @Test
     fun `suspended waiter is removed on cancellation`() = runTest {
-        // Fill the limiter so the second acquire must wait
+        // 두 번째 acquire가 기다리도록 limiter를 채웁니다.
         val maxPixels = 100L
         val limiter = PixelPermitLimiter(maxPixels = maxPixels)
 
-        // Occupy all permits in a long-running block
+        // 오래 실행되는 block에서 모든 permit을 점유합니다.
         var holderStarted = false
         val holder = launch {
             limiter.withPermit(maxPixels) {
                 holderStarted = true
-                // simulate holding permits for a while by suspending the test
+                // test를 suspend해서 permit을 한동안 보유하는 상황을 흉내 냅니다.
                 delay(timeMillis = Long.MAX_VALUE)
             }
         }
 
-        // Wait until holder has started
+        // holder가 시작될 때까지 기다립니다.
         while (!holderStarted) {
             kotlinx.coroutines.yield()
         }
 
-        // Now launch a waiter — it cannot acquire immediately
+        // 이제 waiter를 시작합니다. 즉시 acquire할 수 없습니다.
         val waiter = launch {
             limiter.withPermit(1L) {
-                // Should not reach here during this test
+                // 이 test 중에는 여기까지 도달하면 안 됩니다.
             }
         }
 
-        // Cancel the waiter; it must not throw or deadlock
+        // waiter를 cancel합니다. 예외나 deadlock이 발생하면 안 됩니다.
         waiter.cancelAndJoin()
 
-        // Cancel the holder too
+        // holder도 cancel합니다.
         holder.cancelAndJoin()
     }
 }

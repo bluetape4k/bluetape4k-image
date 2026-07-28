@@ -64,7 +64,7 @@ suspend fun ImmutableImage.suspendBlurScore(threshold: Double = BlurScore.DEFAUL
  * Laplacian variance를 계산하는 내부 함수.
  *
  * 1. grayscale 변환 (Rec. 601 luminance)
- * 2. Laplacian 3×3 convolution
+ * 2. Laplacian 3×3 convolution으로 edge 강도를 계산합니다.
  * 3. variance 계산 (boundary 1px 제외)
  */
 internal fun computeLaplacianVariance(image: ImmutableImage): Double {

@@ -158,7 +158,7 @@ class SuspendWriteContext(
     }
 
     /**
-     * Writes the encoded image to a caller-owned [BufferedSink].
+     * 인코딩된 이미지를 호출자가 소유한 [BufferedSink]에 씁니다.
      *
      * ```
      * val writer = SuspendPngWriter.NoCompression
@@ -169,7 +169,7 @@ class SuspendWriteContext(
      * // buffer.size > 0
      * ```
      *
-     * @param sink output sink. This function flushes but does not close it.
+     * @param sink 출력 sink입니다. 이 함수는 flush만 수행하고 닫지는 않습니다.
      */
     suspend fun write(sink: BufferedSink) {
         writer.suspendWrite(image, metadata, sink.outputStream())
@@ -177,12 +177,12 @@ class SuspendWriteContext(
     }
 
     /**
-     * Writes the encoded image to an Okio [Sink].
+     * 인코딩된 이미지를 Okio [Sink]에 씁니다.
      *
-     * This overload buffers and closes [sink]. Use [write] with [BufferedSink]
-     * when the caller must keep ownership of the sink lifecycle.
+     * 이 overload는 [sink]를 buffer하고 닫습니다. 호출자가 sink lifecycle을 계속
+     * 소유해야 한다면 [BufferedSink]를 받는 [write]를 사용합니다.
      *
-     * @param sink output sink
+     * @param sink 출력 sink입니다.
      */
     suspend fun write(sink: Sink) {
         sink.buffered().use { bufferedSink ->
@@ -191,13 +191,12 @@ class SuspendWriteContext(
     }
 
     /**
-     * Writes the encoded image to a caller-owned [BufferedSuspendedSink].
+     * 인코딩된 이미지를 호출자가 소유한 [BufferedSuspendedSink]에 씁니다.
      *
-     * Scrimage encoders are blocking, so this overload bridges the suspended
-     * sink to a blocking Okio sink while preserving the caller-owned sink
-     * lifecycle.
+     * Scrimage encoder는 blocking 방식이므로, 이 overload는 호출자가 sink lifecycle을
+     * 소유한 상태를 보존하면서 suspended sink를 blocking Okio sink로 연결합니다.
      *
-     * @param sink output sink. This function flushes but does not close it.
+     * @param sink 출력 sink입니다. 이 함수는 flush만 수행하고 닫지는 않습니다.
      */
     suspend fun write(sink: BufferedSuspendedSink) {
         val blockingSink = sink.asBlocking().buffered()
@@ -206,13 +205,12 @@ class SuspendWriteContext(
     }
 
     /**
-     * Writes the encoded image to a [SuspendedSink].
+     * 인코딩된 이미지를 [SuspendedSink]에 씁니다.
      *
-     * This overload buffers and closes [sink]. Use [write] with
-     * [BufferedSuspendedSink] when the caller must keep ownership of the sink
-     * lifecycle.
+     * 이 overload는 [sink]를 buffer하고 닫습니다. 호출자가 sink lifecycle을 계속
+     * 소유해야 한다면 [BufferedSuspendedSink]를 받는 [write]를 사용합니다.
      *
-     * @param sink output sink
+     * @param sink 출력 sink입니다.
      */
     suspend fun write(sink: SuspendedSink) {
         val bufferedSink = sink.bufferedSuspended()

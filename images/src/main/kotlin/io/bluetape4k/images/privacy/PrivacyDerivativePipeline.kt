@@ -37,12 +37,12 @@ import kotlin.math.roundToInt
 import kotlin.time.TimeSource
 
 /**
- * Public-safe alias for derivative image dimensions.
+ * public-safe derivative 이미지 크기에 대한 alias입니다.
  */
 typealias PrivacyImageDimensions = ImageDimensions
 
 /**
- * Processing stage used when privacy derivative generation fails.
+ * privacy derivative 생성 실패 시 사용하는 처리 stage입니다.
  */
 enum class PrivacyDerivativeFailureStage {
     VALIDATION,
@@ -52,7 +52,7 @@ enum class PrivacyDerivativeFailureStage {
 }
 
 /**
- * Metadata categories intentionally not copied into public derivatives.
+ * public derivative에 의도적으로 복사하지 않는 metadata category입니다.
  */
 enum class PrivacyMetadataCategory {
     GPS,
@@ -61,7 +61,7 @@ enum class PrivacyMetadataCategory {
 }
 
 /**
- * Actions applied while building a public-safe derivative.
+ * public-safe derivative를 만드는 동안 적용된 action입니다.
  */
 enum class PrivacyDerivativeAction {
     GPS_REMOVED,
@@ -73,21 +73,21 @@ enum class PrivacyDerivativeAction {
 }
 
 /**
- * Redaction rendering mode for localized privacy treatment.
+ * 위치 지정 privacy treatment를 위한 redaction rendering mode입니다.
  */
 enum class PrivacyRedactionMode {
-    /** Draws an opaque or translucent rectangle over the sensitive region. */
+    /** sensitive region 위에 불투명 또는 반투명 rectangle을 그립니다. */
     SOLID_MASK,
 }
 
 /**
- * Encoded output format for a privacy derivative.
+ * privacy derivative의 인코딩 출력 format입니다.
  *
- * ## Contract
- * - [writer] is the coroutine-aware encoder used to re-encode the derivative.
- * - Re-encoding writes fresh bytes and does not copy source EXIF payloads.
- * - [extension] is normalized for caller-side naming; this class does not
- *   choose storage paths.
+ * ## 동작/계약
+ * - [writer]는 derivative를 다시 인코딩하는 coroutine-aware encoder입니다.
+ * - re-encoding은 새 byte를 쓰며 source EXIF payload를 복사하지 않습니다.
+ * - [extension]은 caller-side naming을 위해 정규화됩니다. 이 class는 storage path를
+ *   선택하지 않습니다.
  */
 data class PrivacyDerivativeFormat(
     @Transient val writer: SuspendImageWriter,
@@ -107,23 +107,22 @@ data class PrivacyDerivativeFormat(
         private const val PATH_SEPARATOR = '/'
         private const val WINDOWS_PATH_SEPARATOR = '\\'
 
-        /** JPEG output suitable for most public thumbnails and previews. */
+        /** 대부분의 public thumbnail과 preview에 적합한 JPEG 출력입니다. */
         val Jpeg: PrivacyDerivativeFormat = PrivacyDerivativeFormat(SuspendJpegWriter.Default, "jpg")
 
-        /** PNG output for lossless public derivatives. */
+        /** lossless public derivative를 위한 PNG 출력입니다. */
         val Png: PrivacyDerivativeFormat = PrivacyDerivativeFormat(SuspendPngWriter.MaxCompression, "png")
     }
 }
 
 /**
- * Localized privacy redaction to apply before encoding the public derivative.
+ * public derivative를 인코딩하기 전에 적용할 위치 지정 privacy redaction입니다.
  *
- * ## Contract
- * - [region] uses the same geometry model as sensitive-content moderation.
- * - Only rectangle geometries are rendered by this core pipeline. Other
- *   geometries should be rasterized by detector adapters before calling this
- *   function.
- * - [maskOpacity] is clamped by validation to the inclusive `0.0..1.0` range.
+ * ## 동작/계약
+ * - [region]은 sensitive-content moderation과 동일한 geometry model을 사용합니다.
+ * - 이 core pipeline은 rectangle geometry만 render합니다. 다른 geometry는 이 함수를
+ *   호출하기 전에 detector adapter에서 rasterize해야 합니다.
+ * - [maskOpacity]는 validation으로 `0.0..1.0` inclusive 범위에 묶입니다.
  */
 data class PrivacyRedaction(
     val region: SensitiveRegion,
@@ -143,14 +142,14 @@ data class PrivacyRedaction(
 }
 
 /**
- * Options for building a privacy-safe derivative image.
+ * privacy-safe derivative image를 만들기 위한 option입니다.
  *
- * ## Contract
- * - Source dimensions are validated before expensive transforms.
- * - Metadata and GPS removal are reportable policy decisions. Re-encoding the
- *   derivative writes fresh bytes instead of copying source metadata.
- * - [thumbnailSize] uses the existing thumbnail model to keep public preview
- *   sizing consistent with the thumbnail pipeline.
+ * ## 동작/계약
+ * - 비용이 큰 transform 전에 source 크기를 검증합니다.
+ * - metadata 및 GPS 제거는 report 가능한 policy decision입니다. derivative re-encoding은
+ *   source metadata를 복사하지 않고 새 byte를 씁니다.
+ * - [thumbnailSize]는 기존 thumbnail model을 사용해 public preview 크기 정책을
+ *   thumbnail pipeline과 일관되게 유지합니다.
  */
 data class PrivacyDerivativeOptions(
     val stripMetadata: Boolean = true,
@@ -175,7 +174,7 @@ data class PrivacyDerivativeOptions(
 }
 
 /**
- * Failure item captured in a derivative report or batch result.
+ * derivative report 또는 batch result에 기록되는 failure item입니다.
  */
 data class PrivacyDerivativeFailure(
     val stage: PrivacyDerivativeFailureStage,
@@ -192,7 +191,7 @@ data class PrivacyDerivativeFailure(
 }
 
 /**
- * Applied redaction summary for audit logs and client diagnostics.
+ * audit log와 client diagnostic을 위한 적용 redaction 요약입니다.
  */
 data class AppliedPrivacyRedaction(
     val regionId: String?,
@@ -216,7 +215,7 @@ data class AppliedPrivacyRedaction(
 }
 
 /**
- * Audit report for one public-safe derivative.
+ * 단일 public-safe derivative에 대한 audit report입니다.
  */
 data class PrivacyDerivativeReport(
     val source: String?,
@@ -240,7 +239,7 @@ data class PrivacyDerivativeReport(
 }
 
 /**
- * Successful privacy derivative payload.
+ * 성공한 privacy derivative payload입니다.
  */
 data class PrivacyDerivativeResult(
     val image: ImmutableImage,
@@ -254,13 +253,13 @@ data class PrivacyDerivativeResult(
 }
 
 /**
- * Batch result for [processPrivacyDerivatives].
+ * [processPrivacyDerivatives]의 batch result입니다.
  */
 sealed interface PrivacyDerivativeBatchResult : Serializable {
-    /** Source path that produced this result. */
+    /** 이 result를 생성한 source path입니다. */
     val source: Path
 
-    /** Successfully generated derivative. */
+    /** 성공적으로 생성된 derivative입니다. */
     data class Success(
         override val source: Path,
         val result: PrivacyDerivativeResult,
@@ -270,7 +269,7 @@ sealed interface PrivacyDerivativeBatchResult : Serializable {
         }
     }
 
-    /** Failed derivative generation item. */
+    /** derivative 생성 실패 item입니다. */
     data class Failure(
         override val source: Path,
         val stage: PrivacyDerivativeFailureStage,
@@ -283,13 +282,13 @@ sealed interface PrivacyDerivativeBatchResult : Serializable {
 }
 
 /**
- * Builds a public-safe derivative of this image.
+ * 이 이미지의 public-safe derivative를 만듭니다.
  *
- * ## Contract
- * - The source image is not mutated.
- * - Source dimensions are validated before resize/redaction work.
- * - The returned bytes are freshly encoded by [PrivacyDerivativeOptions.outputFormat].
- * - Cancellation is rethrown unchanged.
+ * ## 동작/계약
+ * - source image는 mutate하지 않습니다.
+ * - resize/redaction 작업 전에 source 크기를 검증합니다.
+ * - 반환되는 byte는 [PrivacyDerivativeOptions.outputFormat]으로 새로 인코딩됩니다.
+ * - cancellation은 변경하지 않고 다시 던집니다.
  */
 suspend fun ImmutableImage.suspendPrivacyDerivative(
     options: PrivacyDerivativeOptions = PrivacyDerivativeOptions(),
@@ -345,15 +344,14 @@ suspend fun ImmutableImage.suspendPrivacyDerivative(
 }
 
 /**
- * Processes image paths into privacy-safe derivatives using the same core
- * transform logic as [suspendPrivacyDerivative].
+ * [suspendPrivacyDerivative]와 같은 core transform logic으로 image path를
+ * privacy-safe derivative로 처리합니다.
  *
- * ## Contract
- * - Header dimensions are probed before full decode when ImageIO supports the
- *   source format.
- * - [ImageProcessingOptions.maxInFlightPixels] gates concurrent decoded work.
- * - When [ImageProcessingOptions.skipFailures] is `true`, failures are emitted
- *   as [PrivacyDerivativeBatchResult.Failure] and forwarded to [onFailure].
+ * ## 동작/계약
+ * - ImageIO가 source format을 지원하면 전체 decode 전에 header 크기를 probe합니다.
+ * - [ImageProcessingOptions.maxInFlightPixels]로 동시에 디코딩되는 작업량을 제한합니다.
+ * - [ImageProcessingOptions.skipFailures]가 `true`이면 실패를
+ *   [PrivacyDerivativeBatchResult.Failure]로 emit하고 [onFailure]로 전달합니다.
  */
 fun Flow<Path>.processPrivacyDerivatives(
     privacyOptions: PrivacyDerivativeOptions = PrivacyDerivativeOptions(),
