@@ -693,36 +693,29 @@ git add examples/spring-boot-barcode-api/src/main/kotlin \
 git commit -m "feat: add barcode scenario endpoints"
 ```
 
-### Task 7: Publish the Bilingual Quickstart and Rendered Diagrams
+### Task 7: Bilingual Quickstart와 Rendered Diagram 게시
 
 - **Complexity:** High
 - **Depends on:** Tasks 1-6
 - **Required skills:** `bluetape-diagram`, then `bluetape-writer`
-- **Files:** example READMEs, three diagram SVG/PNG pairs, root/provider README locales
-**Expected DoD:** an English or Korean reader can start the app, call all four tested endpoints, understand limits/provider boundaries, and see the same verified diagrams.
+- **Files:** example README, diagram SVG/PNG pair 세 개, root/provider README locale
+**Expected DoD:** English 또는 Korean reader가 app을 시작하고, tested endpoint 네 개를 호출하며, limit/provider boundary를 이해하고, 같은 verified diagram을 볼 수 있다.
 
-- [ ] **Step 1: Create diagram sources and render assets**
+- [ ] **Step 1: Diagram source 생성과 asset render**
 
-Use `bluetape-diagram` and create English-label SVG+PNG pairs under
-`examples/spring-boot-barcode-api/docs/images/readme-diagrams/`:
+`bluetape-diagram`을 사용해 `examples/spring-boot-barcode-api/docs/images/readme-diagrams/` 아래 English-label SVG+PNG pair를 만든다:
 
-1. `barcode-api-scenarios`: POST upload plus three deterministic GET routes;
-2. `barcode-api-architecture`: Controller -> shared service -> provider-neutral
-   `BarcodeReader` -> ZXing, with fixture loader beside the controller;
-3. `barcode-api-sequence`: validate -> IO bytes -> CPU probe/fallback -> decode
-   -> extract -> bounded DTO/error.
+1. `barcode-api-scenarios`: POST upload와 deterministic GET route 세 개
+2. `barcode-api-architecture`: Controller -> shared service -> provider-neutral `BarcodeReader` -> ZXing, 그리고 controller 옆 fixture loader
+3. `barcode-api-sequence`: validate -> IO bytes -> CPU probe/fallback -> decode -> extract -> bounded DTO/error
 
-This task has no measured two-series chart, so the complementary-color chart
-rule is N/A. Diagrams should use the repository palette and clearly distinct
-route/service/provider colors.
+이 task에는 measured two-series chart가 없으므로 complementary-color chart rule은 N/A이다. Diagram은 repository palette를 사용하고 route/service/provider color를 명확히 구분해야 한다.
 
-Render every SVG to PNG, inspect the PNGs visually, and verify text is not
-clipped. Keep source SVG and PNG dimensions consistent with the diagram skill.
+모든 SVG를 PNG로 render하고 PNG를 visually inspect하며 text가 clipped되지 않았는지 검증한다. Source SVG와 PNG dimension은 diagram skill과 일치시킨다.
 
-- [ ] **Step 2: Write the English README from tested commands**
+- [ ] **Step 2: Tested command 기반 English README 작성**
 
-Create `README.md` with the language switch, architecture, dependencies,
-`bootRun`, configuration, and these exact calls:
+Language switch, architecture, dependency, `bootRun`, configuration, 그리고 다음 exact call을 포함한 `README.md`를 작성한다:
 
 ```bash
 ./gradlew :spring-boot-barcode-api:bootRun
@@ -733,27 +726,20 @@ curl -F 'file=@/path/to/image.webp;type=image/webp' \
   http://localhost:8080/api/barcodes/extract
 ```
 
-Include tested success/no-result/malformed JSON, PNG/JPEG/WebP allowlist,
-encoded/dimension defaults, provider-neutral API plus ZXing dependency boundary,
-verified QR/Code 128 scope, and the warning that unauthenticated local examples
-need auth, rate limiting, request-log policy, malware scanning, and operational
-limits before internet exposure.
+Tested success/no-result/malformed JSON, PNG/JPEG/WebP allowlist, encoded/dimension default, provider-neutral API와 ZXing dependency boundary, verified QR/Code 128 scope, 그리고 unauthenticated local example을 internet에 노출하기 전 auth, rate limiting, request-log policy, malware scanning, operational limit가 필요하다는 warning을 포함한다.
 
-- [ ] **Step 3: Localize and link all locale pairs**
+- [ ] **Step 3: 모든 locale pair localize와 link**
 
-Use `bluetape-writer` to create natural `README.ko.md` with source-equivalent
-content and the same assets. Update:
+`bluetape-writer`를 사용해 source-equivalent content와 같은 asset을 가진 자연스러운 `README.ko.md`를 작성한다. 다음을 업데이트한다:
 
-- root `README.md` and `README.ko.md` barcode/Examples sections;
-- `images-barcode-zxing/README.md` and `README.ko.md` with the runnable
-  quickstart link.
+- Root `README.md`와 `README.ko.md`의 barcode/Examples section
+- Runnable quickstart link를 포함한 `images-barcode-zxing/README.md`와 `README.ko.md`
 
-Keep contributor-facing link text English in English files and natural Korean
-in Korean files.
+English file의 contributor-facing link text는 English로, Korean file의 link text는 자연스러운 한국어로 유지한다.
 
-- [ ] **Step 4: Validate docs and commit**
+- [ ] **Step 4: Docs 검증과 commit**
 
-Run the diagram skill validators, then:
+Diagram skill validator를 실행한 뒤 다음을 실행한다:
 
 ```bash
 rg -n 'spring-boot-barcode-api|/api/barcodes/(extract|sample|no-result|malformed)' \
@@ -767,17 +753,17 @@ git add README.md README.ko.md images-barcode-zxing/README.md \
 git commit -m "docs: add Spring barcode quickstart guide"
 ```
 
-### Task 8: Close Verification, Review, Lesson, and PR Delivery Gates
+### Task 8: Verification, Review, Lesson, PR Delivery Gate 종료
 
 - **Complexity:** High
 - **Depends on:** Tasks 1-7
 - **Required skills:** `verification-before-completion`, `requesting-code-review`, `bluetape-full-feature`
 - **Files:** final review, lesson, workflow evidence, PR metadata
-**Expected DoD:** current HEAD is reproducibly green, reviewed at P0=0/P1=0, lesson-complete, pushed in an issue-linked PR, and stopped at CI/merge-ready approval.
+**Expected DoD:** Current HEAD가 reproducibly green이고, P0=0/P1=0으로 review되며, lesson-complete 상태이고, issue-linked PR에 push된 뒤 CI/merge-ready approval에서 중단한다.
 
-- [ ] **Step 1: Run targeted tests from a clean test state**
+- [ ] **Step 1: Clean test state에서 targeted test 실행**
 
-Run sequentially:
+Sequential로 실행한다:
 
 ```bash
 ./gradlew :spring-boot-barcode-api:cleanTest \
@@ -788,10 +774,9 @@ Run sequentially:
   --console=plain
 ```
 
-Expected: all tests PASS; no native/JNI, OCR, Docker, or Testcontainers runtime
-is used.
+예상 결과는 모든 test PASS이며 native/JNI, OCR, Docker, Testcontainers runtime은 사용하지 않는다.
 
-- [ ] **Step 2: Run build/static/registration verification**
+- [ ] **Step 2: Build/static/registration verification 실행**
 
 ```bash
 ./gradlew :spring-boot-barcode-api:build --console=plain
@@ -801,84 +786,57 @@ actionlint .github/workflows/Examples.yml
 git diff --check origin/develop...HEAD
 ```
 
-Inspect and record:
+다음을 inspect하고 기록한다:
 
-- example appears once in settings, AGENTS, and Examples matrix;
-- `examples/**` keeps it non-published;
-- no BOM/catalog coordinate, publication aggregation, Kover/Codecov artifact,
-  main `ci.yml`, nightly production job, benchmark, native/JNI, OCR, Docker, or
-  Testcontainers change is required;
-- only configuration imports the ZXing implementation in main example code;
-- DTOs expose no backend metadata/raw bytes.
+- Example이 settings, AGENTS, Examples matrix에 한 번씩 나타난다.
+- `examples/**`가 이를 non-published로 유지한다.
+- BOM/catalog coordinate, publication aggregation, Kover/Codecov artifact, main `ci.yml`, nightly production job, benchmark, native/JNI, OCR, Docker, Testcontainers change가 필요하지 않다.
+- Main example code에서는 configuration만 ZXing implementation을 import한다.
+- DTO가 backend metadata/raw byte를 노출하지 않는다.
 
-- [ ] **Step 3: Smoke-start the application**
+- [ ] **Step 3: Application smoke-start**
 
-Start `:spring-boot-barcode-api:bootRun`, wait for port 8080, call all four
-README routes including one multipart fixture upload, compare statuses/JSON to
-MockMvc expectations, then send one multipart file larger than 5 MiB and verify
-the embedded server returns `413 payload_too_large`. Terminate the process
-cleanly. A port collision is a rerun condition with a fixed alternate port such
-as `--args='--server.port=18080'`, not a product failure.
+`:spring-boot-barcode-api:bootRun`을 시작하고 port 8080을 기다린다. Multipart fixture upload 하나를 포함해 README route 네 개를 모두 호출하고 status/JSON을 MockMvc expectation과 비교한다. 그런 다음 5 MiB보다 큰 multipart file 하나를 보내 embedded server가 `413 payload_too_large`를 반환하는지 검증한다. Process는 clean하게 종료한다. Port collision은 product failure가 아니라 `--args='--server.port=18080'` 같은 fixed alternate port로 rerun할 조건이다.
 
-- [ ] **Step 4: Run final review and close every P0/P1**
+- [ ] **Step 4: Final review 실행과 모든 P0/P1 종료**
 
-Create
-`docs/review/2026-07-14-issue-273-spring-barcode-quickstart-code-review.md`.
-Review performance, stability, security, operator/Ops, developer/API, and
-user/caller lenses plus integration. Re-run after fixes until P0=0/P1=0.
-Validate cancellation, WebP fallback, decompression guards, fixture ownership,
-sanitized errors, locale parity, rendered diagrams, and registration N/A
-evidence explicitly.
+`docs/review/2026-07-14-issue-273-spring-barcode-quickstart-code-review.md`를 생성한다. Performance, stability, security, operator/Ops, developer/API, user/caller lens와 integration을 review한다. Fix 이후 P0=0/P1=0이 될 때까지 다시 실행한다. Cancellation, WebP fallback, decompression guard, fixture ownership, sanitized error, locale parity, rendered diagram, registration N/A evidence를 명시적으로 검증한다.
 
-- [ ] **Step 5: Satisfy the Type A lesson gate**
+- [ ] **Step 5: Type A lesson gate 충족**
 
-Create `docs/lessons/2026-07-14-issue-273-spring-barcode-quickstart.md` with:
+`docs/lessons/2026-07-14-issue-273-spring-barcode-quickstart.md`를 만들고 다음을 포함한다:
 
-- context and approved endpoint/provider boundary;
-- why content type, encoded bytes, and decoded dimensions are distinct guards;
-- why WebP needs a metadata fallback when ImageIO probe is absent;
-- why cancellation and provider-neutral failures need distinct handling;
-- exact verification evidence and reusable guidance for future upload examples.
+- Context와 approved endpoint/provider boundary
+- Content type, encoded byte, decoded dimension이 서로 다른 guard인 이유
+- ImageIO probe가 없을 때 WebP에 metadata fallback이 필요한 이유
+- Cancellation과 provider-neutral failure를 구분해 처리해야 하는 이유
+- Exact verification evidence와 향후 upload example을 위한 reusable guidance
 
-Commit review/lesson and any review fixes with an intentional English message.
+Review/lesson과 review fix는 intentional English message로 commit한다.
 
-- [ ] **Step 6: Verify workflow state and prepare the PR**
+- [ ] **Step 6: Workflow state 검증과 PR 준비**
 
-Run the active `bluetape-flow.py verify` command for run
-`20260714T033629Z-d8d2c59c`, ensure all required checkboxes have fresh evidence,
-push `feat/issue-273-barcode-quickstart`, and create a PR targeting `develop`.
-The PR must:
+Run `20260714T033629Z-d8d2c59c`에 대한 active `bluetape-flow.py verify` command를 실행하고, 모든 required checkbox에 fresh evidence가 있는지 확인한다. `feat/issue-273-barcode-quickstart`를 push하고 `develop`을 target으로 PR을 만든다. PR은 다음을 만족해야 한다:
 
-- close issue #273;
-- inherit milestone `0.4.0`, assignee `debop`, and labels `documentation` and
-  `enhancement` from live issue #273;
-- list exact verification commands/results;
-- state non-published/BOM/Kover/benchmark/native/OCR/container N/A evidence;
-- include diagram previews or links and lesson/review paths.
+- Issue #273을 close한다.
+- Live issue #273에서 milestone `0.4.0`, assignee `debop`, label `documentation`, `enhancement`를 이어받는다.
+- Exact verification command/result를 나열한다.
+- Non-published/BOM/Kover/benchmark/native/OCR/container N/A evidence를 명시한다.
+- Diagram preview 또는 link와 lesson/review path를 포함한다.
 
-Verify the live PR metadata and current head SHA after creation.
+생성 후 live PR metadata와 current head SHA를 검증한다.
 
-- [ ] **Step 7: Monitor CI and stop at merge-ready**
+- [ ] **Step 7: CI monitoring과 merge-ready 중단**
 
-Wait for required checks. If a check fails, inspect the live log, reproduce and
-fix the root cause, rerun targeted/local evidence, push, and re-review the new
-head. Once CI is green, re-read reviews and unresolved threads, verify diagrams
-and the lesson against the exact PR head, report merge-ready evidence, and stop
-for a fresh explicit merge approval. Do not enable auto-merge.
+Required check를 기다린다. Check가 실패하면 live log를 inspect하고 root cause를 재현/수정한 뒤 targeted/local evidence를 다시 실행하고 push하며 새 head를 re-review한다. CI가 green이면 review와 unresolved thread를 다시 읽고 exact PR head 기준으로 diagram과 lesson을 검증한다. Merge-ready evidence를 보고하고 fresh explicit merge approval을 위해 중단한다. Auto-merge는 켜지 않는다.
 
-- [ ] **Step 8: Merge, sync, and clean only after fresh approval**
+- [ ] **Step 8: Fresh approval 이후에만 merge, sync, clean**
 
-After the user approves the exact merge-ready PR/head, re-read the live head,
-checks, reviews, and unresolved threads once more. Rebase-merge the PR, verify
-the merge SHA and issue #273 closure, fast-forward the real local `develop`,
-then automatically remove the clean merged worktree and local feature branch.
-Remove the remote feature branch when GitHub has not already done so. Preserve
-any unrelated dirty worktree and report cleanup evidence.
+사용자가 exact merge-ready PR/head를 승인한 뒤 live head, check, review, unresolved thread를 한 번 더 읽는다. PR을 rebase-merge하고 merge SHA와 issue #273 closure를 검증하며, 실제 local `develop`을 fast-forward한 다음 clean merged worktree와 local feature branch를 자동으로 제거한다. GitHub가 remote feature branch를 아직 제거하지 않았다면 제거한다. Unrelated dirty worktree는 보존하고 cleanup evidence를 보고한다.
 
 ## Rollback
 
-The example has no state or migration. A full rollback removes, as one coherent
-unit:
+Example에는 state나 migration이 없다. Full rollback은 다음을 하나의 coherent unit으로 제거한다:
 
 1. `examples/spring-boot-barcode-api/`;
 2. the settings mapping;
@@ -887,19 +845,17 @@ unit:
 5. root/provider README locale links;
 6. issue-specific review/lesson artifacts if the entire feature is abandoned.
 
-After rollback, rerun `./gradlew projects`, `actionlint`, barcode API/provider
-tests, and `git diff --check`. Do not remove or change the existing production
-barcode API/provider artifacts or the issue #272 benchmark fixtures.
+Rollback 이후 `./gradlew projects`, `actionlint`, barcode API/provider test, `git diff --check`를 다시 실행한다. 기존 production barcode API/provider artifact나 issue #272 benchmark fixture는 제거하거나 변경하지 않는다.
 
 ## Plan Self-Review
 
-- [x] Every issue/spec acceptance criterion maps to an ordered task and command.
-- [x] Every behavioral implementation task starts with a focused RED test.
-- [x] Producers precede consumers: registration -> fixtures -> configuration -> service -> POST -> GET -> docs -> delivery.
-- [x] All referenced types have an owner and signature before later use.
-- [x] Upload byte, media type, decoded dimension, malformed input, no-result, provider failure, and cancellation paths are assigned.
-- [x] Spring multipart and service-level oversize paths are both assigned.
-- [x] New module registration, CI, non-publication, BOM/catalog, Kover/Codecov, benchmark, and heavyweight runtime decisions have explicit evidence.
-- [x] English/Korean README parity and three rendered diagram pairs are assigned.
-- [x] No unresolved `TODO`, `TBD`, placeholder hash, command, endpoint, status, or response field remains.
-- [x] Merge is separated from plan approval, PR creation, and CI completion.
+- [x] 모든 issue/spec acceptance criterion이 ordered task와 command에 mapping된다.
+- [x] 모든 behavioral implementation task는 focused RED test로 시작한다.
+- [x] Producer가 consumer보다 앞선다: registration -> fixtures -> configuration -> service -> POST -> GET -> docs -> delivery.
+- [x] 이후 사용 전에 모든 referenced type에 owner와 signature가 있다.
+- [x] Upload byte, media type, decoded dimension, malformed input, no-result, provider failure, cancellation path가 배정되어 있다.
+- [x] Spring multipart와 service-level oversize path가 모두 배정되어 있다.
+- [x] New module registration, CI, non-publication, BOM/catalog, Kover/Codecov, benchmark, heavyweight runtime decision에 explicit evidence가 있다.
+- [x] English/Korean README parity와 rendered diagram pair 세 개가 배정되어 있다.
+- [x] 해결되지 않은 `TODO`, `TBD`, placeholder hash, command, endpoint, status, response field가 없다.
+- [x] Merge는 plan approval, PR creation, CI completion과 분리되어 있다.
