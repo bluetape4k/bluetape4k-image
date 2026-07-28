@@ -310,13 +310,13 @@ Create `BarcodeApiConfigurationTest.kt` with
 `ApplicationContextRunner().withUserConfiguration(BarcodeApiConfiguration::class.java)`.
 Cover:
 
-- default 5 MiB/16,777,216/8,192 values;
-- fixed service allowlist `image/png`, `image/jpeg`, `image/webp`;
-- zero/negative limits and `maxInputBytes > Int.MAX_VALUE` fail binding/startup;
-- the bean is declared as `BarcodeReader` and is backed by `ZxingBarcodeReader`;
-- all three fixtures load during context startup.
+- Default 5 MiB/16,777,216/8,192 value
+- Fixed service allowlist `image/png`, `image/jpeg`, `image/webp`
+- Zero/negative limit와 `maxInputBytes > Int.MAX_VALUE`가 binding/startup을 실패시킴
+- Bean이 `BarcodeReader`로 선언되고 `ZxingBarcodeReader`로 backing됨
+- Fixture 세 개가 context startup 중 모두 load됨
 
-Run RED:
+RED를 실행한다:
 
 ```bash
 ./gradlew :spring-boot-barcode-api:test \
@@ -324,11 +324,11 @@ Run RED:
   --console=plain
 ```
 
-Expected: FAIL because application/configuration/properties do not exist.
+Application/configuration/property가 아직 없으므로 예상 결과는 FAIL이다.
 
-- [ ] **Step 2: Implement immutable validated properties and beans**
+- [ ] **Step 2: Immutable validated property와 bean 구현**
 
-Create `BarcodeApiConfiguration.kt` with this shape:
+`BarcodeApiConfiguration.kt`를 다음 형태로 생성한다:
 
 ```kotlin
 @ConfigurationProperties(prefix = "example.barcode")
@@ -360,13 +360,9 @@ internal class BarcodeApiConfiguration {
 }
 ```
 
-Only this configuration file may import `ZxingBarcodeReader`. Add the
-`@SpringBootApplication` entrypoint in its own file. Add English KDoc to the
-public application and configuration-properties classes. The configuration,
-fixtures, controller, service, advice, and HTTP DTOs remain `internal` because
-this non-published module has no public library API.
+`ZxingBarcodeReader` import는 이 configuration file에서만 허용한다. `@SpringBootApplication` entrypoint는 별도 file에 추가한다. Public application class와 configuration-properties class에는 이번 Epic의 code comment policy에 맞춰 한국어 KDoc을 작성한다. 이 non-published module은 public library API가 없으므로 configuration, fixture, controller, service, advice, HTTP DTO는 `internal`로 유지한다.
 
-Set aligned multipart limits in `application.yml`:
+`application.yml`에 aligned multipart limit를 설정한다:
 
 ```yaml
 spring:
@@ -382,7 +378,7 @@ example:
     max-input-side: 8192
 ```
 
-- [ ] **Step 3: Run GREEN and commit**
+- [ ] **Step 3: GREEN 실행과 commit**
 
 ```bash
 ./gradlew :spring-boot-barcode-api:test \
@@ -393,18 +389,17 @@ git add examples/spring-boot-barcode-api/src/main \
 git commit -m "feat: configure Spring barcode quickstart"
 ```
 
-### Task 4: Implement the Coroutine-Aware Extraction Service with TDD
+### Task 4: Coroutine-aware Extraction Service를 TDD로 구현
 
 - **Complexity:** High
 - **Depends on:** Task 3
 - **Pattern skills:** `test-driven-development`, `bluetape-kotlin-patterns`, `kotlin-coroutines-skill`
 - **Files:** models, service, service test
-**Expected DoD:** one service safely handles uploads and fixtures, all accepted formats, pre-decode limits, provider-neutral DTO mapping, malformed normalization, and cancellation propagation.
+**Expected DoD:** Service 하나가 upload와 fixture, 모든 accepted format, pre-decode limit, provider-neutral DTO mapping, malformed normalization, cancellation propagation을 안전하게 처리한다.
 
-- [ ] **Step 1: Define bounded model tests and service behavior tests**
+- [ ] **Step 1: Bounded model test와 service behavior test 정의**
 
-Create `BarcodeExtractionServiceTest.kt` using `runTest` and injected test
-dispatchers. Cover these independent cases:
+`runTest`와 injected test dispatcher를 사용하는 `BarcodeExtractionServiceTest.kt`를 작성한다. 다음 independent case를 다룬다:
 
 1. QR bytes return count 1, exact text, `QR_CODE`, provider `ZXing`.
 2. blank PNG returns count 0 and an empty immutable list.
@@ -423,15 +418,9 @@ dispatchers. Cover these independent cases:
     exceptions remain provider-neutral exceptions.
 11. reader-thrown `CancellationException` is rethrown unchanged.
 
-Use test seams for `dimensionProbe` and `metadataDimensionProbe`, not static
-mocking. Inject `ioDispatcher` and `cpuDispatcher`; verify file byte reads use
-the former and probe/decode/reader work uses the latter. For this dispatcher
-test, create two named single-thread executors, convert them with
-`asCoroutineDispatcher()`, record the executing thread in a custom
-`MultipartFile` plus the injected probe/reader, and close both dispatchers with
-`use` after the assertion. Do not leak executor threads from tests.
+Static mocking 대신 `dimensionProbe`와 `metadataDimensionProbe` test seam을 사용한다. `ioDispatcher`와 `cpuDispatcher`를 주입하고 file byte read는 전자를, probe/decode/reader 작업은 후자를 사용하는지 검증한다. 이 dispatcher test에서는 이름 있는 single-thread executor 두 개를 만들고 `asCoroutineDispatcher()`로 변환한 뒤, custom `MultipartFile`과 injected probe/reader에서 executing thread를 기록한다. Assertion 이후 두 dispatcher는 `use`로 닫는다. Test에서 executor thread를 leak하지 않는다.
 
-- [ ] **Step 2: Run RED**
+- [ ] **Step 2: RED 실행**
 
 ```bash
 ./gradlew :spring-boot-barcode-api:test \
@@ -439,11 +428,11 @@ test, create two named single-thread executors, convert them with
   --console=plain
 ```
 
-Expected: FAIL because DTOs, request exception, and service do not exist.
+DTO, request exception, service가 아직 없으므로 예상 결과는 FAIL이다.
 
-- [ ] **Step 3: Add bounded serializable HTTP models**
+- [ ] **Step 3: Bounded serializable HTTP model 추가**
 
-Create `BarcodeApiModels.kt`:
+`BarcodeApiModels.kt`를 생성한다:
 
 ```kotlin
 data class BarcodeExtractionResponse(
@@ -479,12 +468,11 @@ internal class BarcodeRequestException(
 ) : RuntimeException(message)
 ```
 
-Mapping must copy only `text`, `format`, and `provider.name`; never serialize
-`BarcodeResult` directly.
+Mapping은 `text`, `format`, `provider.name`만 복사해야 하며, `BarcodeResult`를 직접 serialize하면 안 된다.
 
-- [ ] **Step 4: Implement the service and explicit dispatcher boundary**
+- [ ] **Step 4: Service와 explicit dispatcher boundary 구현**
 
-Create `BarcodeExtractionService.kt` with this constructor contract:
+다음 constructor contract를 가진 `BarcodeExtractionService.kt`를 생성한다:
 
 ```kotlin
 internal class BarcodeExtractionService(
@@ -505,7 +493,7 @@ internal class BarcodeExtractionService(
 }
 ```
 
-After the service compiles, extend the existing internal configuration with:
+Service가 compile된 뒤 existing internal configuration을 다음처럼 확장한다:
 
 ```kotlin
 @Bean
@@ -515,20 +503,16 @@ fun barcodeExtractionService(
 ): BarcodeExtractionService = BarcodeExtractionService(reader, properties)
 ```
 
-`extract(file)` must validate `isEmpty`, normalized media type, and reported
-size before `withContext(ioDispatcher) { file.bytes }`, then recheck actual byte
-size. The normalized media type must belong to an internal fixed constant set
-containing only PNG, JPEG, and WebP; it is not externally configurable.
-`extract(bytes)` must execute the following inside `cpuDispatcher`:
+`extract(file)`은 `withContext(ioDispatcher) { file.bytes }` 이전에 `isEmpty`, normalized media type, reported size를 validate하고, 이후 actual byte size를 다시 확인해야 한다. Normalized media type은 PNG, JPEG, WebP만 포함하는 internal fixed constant set에 속해야 하며 externally configurable하지 않다. `extract(bytes)`는 `cpuDispatcher` 내부에서 다음 순서로 실행해야 한다:
 
-1. reject empty/oversized bytes;
-2. resolve dimensions with primary probe, then bounded metadata fallback;
-3. reject missing dimensions as `MALFORMED_INPUT`;
-4. reject side or pixel excess as `413 payload_too_large`;
-5. call `immutableImageOf(bytes).extractBarcodes(reader, BarcodeOptions())`;
-6. map only bounded result fields.
+1. Empty/oversized byte를 거부한다.
+2. Primary probe로 dimension을 해석하고, 실패하면 bounded metadata fallback을 사용한다.
+3. Missing dimension은 `MALFORMED_INPUT`으로 거부한다.
+4. Side 또는 pixel 초과는 `413 payload_too_large`로 거부한다.
+5. `immutableImageOf(bytes).extractBarcodes(reader, BarcodeOptions())`를 호출한다.
+6. Bounded result field만 mapping한다.
 
-Catch order is mandatory:
+Catch order는 다음처럼 고정한다:
 
 ```kotlin
 try {
@@ -548,11 +532,9 @@ try {
 }
 ```
 
-Do not use `runCatching` around suspend code. Do not include filename, content,
-path, backend metadata, or the original exception message in caller-facing
-text.
+Suspend code 주변에는 `runCatching`을 사용하지 않는다. Caller-facing text에는 filename, content, path, backend metadata, original exception message를 포함하지 않는다.
 
-- [ ] **Step 5: Run GREEN, the whole module, and commit**
+- [ ] **Step 5: GREEN, whole module 실행과 commit**
 
 ```bash
 ./gradlew :spring-boot-barcode-api:test \
