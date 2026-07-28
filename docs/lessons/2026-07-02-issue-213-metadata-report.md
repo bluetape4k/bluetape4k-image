@@ -1,30 +1,42 @@
-# Issue 213 Metadata Report
+# Issue 213 Metadata report
 
-## Context
+## 배경
 
-#213 needed metadata extraction beyond the existing EXIF-only `readExif()` API while keeping public responses safe by default. The acceptance criteria included XMP, IPTC, ICC, dimensions, orientation, page counts, HDR/gain-map hints, byte/path/stream entry points, size guards, and sensitive-field stripping.
+#213은 public response를 기본적으로 안전하게 유지하면서 기존 EXIF-only `readExif()` API를
+넘어서는 metadata extraction이 필요했다. acceptance criteria에는 XMP, IPTC, ICC,
+dimensions, orientation, page count, HDR/gain-map hint, byte/path/stream entry point, size
+guard, sensitive-field stripping이 포함됐다.
 
-## Decision
+## 결정
 
-Add a pure JVM `ImageMetadataReport` API in `bluetape4k-images`:
+`bluetape4k-images`에 pure JVM `ImageMetadataReport` API를 추가한다.
 
-- Keep `readExif()` unchanged and reuse its normalized EXIF mapping.
-- Make `ImageMetadataReadOptions` strip GPS and omit raw diagnostics by default.
-- Expose scalar flags and summaries for XMP, IPTC, ICC, dimensions, orientation, page count, HDR, and gain-map hints.
-- Keep `InputStream` caller-owned, with bounded in-memory reading for stream size guards.
-- Let optional backend adapters add sanitized scalar header hints through `withBackendHeaderFields()` without adding a native libvips dependency to the core module. Diagnostic header fields still require `includeDiagnosticTags = true`.
+- `readExif()`는 변경하지 않고 normalized EXIF mapping을 재사용한다.
+- `ImageMetadataReadOptions`는 기본적으로 GPS를 strip하고 raw diagnostic을 생략한다.
+- XMP, IPTC, ICC, dimensions, orientation, page count, HDR, gain-map hint의 scalar flag와
+  summary를 노출한다.
+- `InputStream`은 caller-owned로 유지하고, stream size guard에는 bounded in-memory reading을
+  사용한다.
+- optional backend adapter가 core module에 native libvips dependency를 추가하지 않고
+  `withBackendHeaderFields()`를 통해 sanitized scalar header hint를 추가하게 한다. Diagnostic
+  header field는 여전히 `includeDiagnosticTags = true`가 필요하다.
 
-## Outcome
+## 결과
 
-Callers can choose a public-safe report for API responses or an explicitly diagnostic report for internal tooling. The report never carries raw metadata blobs, source paths, native pointers, or unbounded backend payloads.
+caller는 API response용 public-safe report 또는 internal tooling용 explicit diagnostic report를
+선택할 수 있다. report는 raw metadata blob, source path, native pointer, unbounded backend
+payload를 담지 않는다.
 
-## Verification
+## 검증
 
 - `./gradlew :bluetape4k-images:test --tests 'io.bluetape4k.images.analysis.ImageMetadataReportTest'`
 - `./gradlew :bluetape4k-images:test --tests 'io.bluetape4k.images.analysis.*'`
 - `./gradlew :bluetape4k-images:test`
 - `git diff --check`
 
-## Future Guard
+## 향후 방지책
 
-Do not add native backend dependencies or raw metadata payloads to `bluetape4k-images` for metadata enrichment. Add adapter-specific parsing in backend modules and pass only sanitized scalar header facts into `ImageMetadataReport.withBackendHeaderFields()`; keep backend diagnostic fields behind explicit opt-in.
+metadata enrichment를 위해 `bluetape4k-images`에 native backend dependency나 raw metadata
+payload를 추가하지 않는다. backend module에 adapter-specific parsing을 추가하고 sanitized
+scalar header fact만 `ImageMetadataReport.withBackendHeaderFields()`로 전달한다. backend
+diagnostic field는 explicit opt-in 뒤에 둔다.

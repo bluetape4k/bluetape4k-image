@@ -1,31 +1,31 @@
-# Issue #195 Release Full Validation Gate
+# 이슈 #195 Release 전체 검증 관문
 
-## Context
+## 배경
 
-The release workflow verified release metadata and then published Maven Central
-artifacts without proving that the tag commit had passed the full image module
-validation set.
+release workflow는 release metadata를 검증한 뒤, tag commit이 전체 이미지
+모듈 검증을 통과했는지 확인하지 않고 Maven Central 아티팩트를 게시했다.
 
-## Decision
+## 결정
 
-Add a release preflight job that verifies the release commit has a successful
-Nightly run with all required image, OCR, and VIPS jobs completed successfully.
+release commit을 대상으로 필수 이미지, OCR, VIPS job이 모두 성공한 Nightly
+실행이 있는지 확인하는 release 사전 검사 job을 추가한다.
 
-## Outcome
+## 결과
 
-Maven Central release publication now depends on `release-validation`. Tag
-pushes look up a successful Nightly run for the tag commit. Manual dispatch can
-provide a validation run ID or use an explicit override.
+이제 Maven Central release 게시는 `release-validation`에 의존한다. Tag
+push에서는 tag commit에 성공한 Nightly 실행이 있는지 조회한다. 수동
+dispatch에서는 검증 run ID를 제공하거나 명시적인 override를 사용할 수
+있다.
 
-## Verification
+## 검증
 
 - `actionlint .github/workflows/release.yml`
 - `git diff --check`
 - `rg -n -F "\\'" .github/workflows/release.yml`
-- Shell simulation for skipped OCR and all-success image job results
+- OCR을 건너뛴 결과와 모든 이미지 job이 성공한 결과에 대한 셸 시뮬레이션
 
-## Future Guard
+## 향후 지침
 
-Stable publication workflows must not treat metadata checks as a substitute for
-runtime validation. Native/OCR/VIPS-heavy releases need job-level validation
-evidence for the exact release commit before Maven Central publication.
+stable 게시 workflow에서는 metadata 검사를 런타임 검증의 대체 수단으로
+사용하면 안 된다. Native/OCR/VIPS 의존도가 높은 release는 Maven Central
+게시 전에 정확한 release commit에 대한 job 수준 검증 근거가 필요하다.

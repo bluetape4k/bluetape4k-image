@@ -1,20 +1,31 @@
-# Issue 193 Upload Dimension Limits Lesson
+# 이슈 193 업로드 이미지 크기 제한에서 얻은 교훈
 
-Date: 2026-07-02
-Issue: #193
+날짜: 2026-07-02
+이슈: #193
 
-## Context
+## 배경
 
-Upload routes and examples already limited compressed request bytes, but they decoded images before checking decoded dimensions. A small compressed image with very large dimensions could still force expensive decode, thumbnail, or OCR work.
+업로드 경로와 예제는 이미 압축된 요청 바이트 크기를 제한했지만, 디코딩 후
+이미지 크기를 확인하기 전에 이미지를 디코딩했다. 압축 크기는 작지만
+가로·세로가 매우 큰 이미지로 인해 여전히 고비용 디코딩, 썸네일 생성,
+OCR 작업이 실행될 수 있었다.
 
-## Decision
+## 결정
 
-Add a shared first-frame dimension probe in `bluetape4k-images` and validate `maxInputPixels` plus `maxInputSide` before thumbnail or OCR work. Keep byte-size limits separate from decoded-dimension limits because compressed size does not bound decoded memory or CPU cost.
+`bluetape4k-images`에 첫 프레임 크기를 조회하는 공통 기능을 추가하고,
+썸네일이나 OCR 작업 전에 `maxInputPixels`와 `maxInputSide`를 검증한다.
+압축 크기로는 디코딩에 필요한 메모리나 CPU 비용을 제한할 수 없으므로
+바이트 크기 제한과 디코딩 후 이미지 크기 제한은 분리해서 유지한다.
 
-## Outcome
+## 결과
 
-Ktor thumbnail routes, Ktor OCR example, Spring Boot image example, and Spring Boot OCR example now reject oversized decoded image headers before expensive processing. README locale pairs document the separate byte, pixel, and side limits.
+이제 Ktor 썸네일 경로, Ktor OCR 예제, Spring Boot 이미지 예제, Spring Boot
+OCR 예제는 고비용 처리를 시작하기 전에 허용 범위를 벗어난 이미지 헤더를
+거부한다. 각 언어의 README 쌍에는 바이트, 픽셀, 한 변 길이 제한을
+구분해서 설명했다.
 
-## Future Guard
+## 향후 지침
 
-For any new upload or image-processing example, validate both compressed bytes and decoded dimensions before creating `ImmutableImage`, invoking OCR, or calling native/VIPS processing.
+새 업로드 또는 이미지 처리 예제를 추가할 때는 `ImmutableImage`를 생성하거나
+OCR 또는 native/VIPS 처리를 호출하기 전에 압축된 바이트 크기와 디코딩 후
+이미지 크기를 모두 검증해야 한다.

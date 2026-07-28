@@ -1,31 +1,29 @@
-# Issue #246 BoofCV Provider Research
+# Issue #246 BoofCV provider research
 
-## Context
+## 배경
 
-#215 tracks barcode provider architecture. #246 evaluated whether BoofCV should
-become a `0.4.0` provider beside the newly added ZXing module.
+#215는 barcode provider architecture를 추적한다. #246은 BoofCV가 새로 추가된 ZXing module
+옆의 `0.4.0` provider가 되어야 하는지 평가했다.
 
-## Decision or Finding
+## 결정 또는 확인 사항
 
-Defer `images-barcode-boofcv` for `0.4.0`. BoofCV is useful as a future
-specialized QR, Micro QR, and Aztec provider when geometry or rejected-marker
-diagnostics are needed, but it is not a broad default barcode backend.
+`0.4.0`에서는 `images-barcode-boofcv`를 연기한다. BoofCV는 geometry 또는 rejected-marker
+diagnostic이 필요할 때 향후 specialized QR, Micro QR, Aztec provider로 유용하지만 broad
+default barcode backend는 아니다.
 
-## Outcome
+## 결과
 
-The provider set for `0.4.0` stays focused on `images-barcode-api` plus
-`images-barcode-zxing`. #247 should include BoofCV in the provider capability
-matrix as a deferred specialized 2D provider.
+`0.4.0`의 provider set은 `images-barcode-api`와 `images-barcode-zxing`에 집중한다. #247은
+BoofCV를 deferred specialized 2D provider로 provider capability matrix에 포함해야 한다.
 
-## Verification
+## 검증
 
-Research checked BoofCV GitHub metadata, Apache-2.0 license, Java runtime docs,
-Maven Central POM dependency shape, official QR/Micro QR/Aztec examples, a
-shallow source grep for barcode detector families, and ZXing public supported
-format docs.
+research는 BoofCV GitHub metadata, Apache-2.0 license, Java runtime docs, Maven Central
+POM dependency shape, official QR/Micro QR/Aztec example, barcode detector family에
+대한 shallow source grep, ZXing public supported format docs를 확인했다.
 
-## Future Guidance
+## 향후 지침
 
-Do not add a BoofCV module until fixtures prove a concrete QR/Aztec geometry
-gap that ZXing cannot cover. If a module is later added, scope it explicitly to
-QR, Micro QR, and Aztec unless BoofCV adds broader barcode support.
+ZXing이 처리할 수 없는 구체적 QR/Aztec geometry gap을 fixture가 증명하기 전에는 BoofCV
+module을 추가하지 않는다. 나중에 module을 추가하더라도 BoofCV가 더 넓은 barcode support를
+추가하지 않는 한 QR, Micro QR, Aztec로 범위를 명시한다.

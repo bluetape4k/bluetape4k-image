@@ -1,34 +1,32 @@
-# bluetape4k-image 7-Tier Review Stack
+# bluetape4k-image 7-Tier review stack
 
-Date: 2026-07-04
+날짜: 2026-07-04
 
-## Context
+## 배경
 
-The image repository review covered core image decoding, Ktor routes, Spring
-storage/CDN integration, Vips native backends, and CAPTCHA verification.
+image repository review는 core image decoding, Ktor route, Spring storage/CDN
+integration, Vips native backend, CAPTCHA verification을 다뤘다.
 
-## Decisions
+## 결정
 
-- Keep existing one-argument image decode helpers source-compatible, and add
-  bounded overloads for external input boundaries.
-- Treat malformed Ktor thumbnail payloads as caller input errors while
-  preserving coroutine cancellation propagation.
-- Keep S3 timeout/header behavior documented at the `S3Operations` boundary
-  instead of adding a parallel client construction path in this module.
-- For Vips path inputs, prefer a bounded byte snapshot over native path decode
-  so validation and decode operate on the same bytes.
-- Bound the default CAPTCHA in-memory store on save without changing the
-  one-shot verification semantics.
+- 기존 one-argument image decode helper는 source-compatible하게 유지하고 external input
+  boundary용 bounded overload를 추가한다.
+- malformed Ktor thumbnail payload는 caller input error로 다루면서 coroutine cancellation
+  propagation을 보존한다.
+- 이 module에 parallel client construction path를 추가하지 않고 S3 timeout/header behavior는
+  `S3Operations` boundary에 문서화한다.
+- Vips path input에서는 validation과 decode가 같은 byte에서 동작하도록 native path decode보다
+  bounded byte snapshot을 우선한다.
+- one-shot verification semantic은 바꾸지 않고 default CAPTCHA in-memory store를 save 시점에
+  bound한다.
 
-## Verification
+## 검증
 
-- Targeted tests were run for each touched module before committing each stack
-  layer.
-- Full repository tests are still required after the stack is assembled.
+- 각 stack layer를 commit하기 전에 수정된 module별 targeted test를 실행했다.
+- stack 조립 후에는 full repository test가 여전히 필요하다.
 
-## Future Guidance
+## 향후 지침
 
-- Public KDoc touched by future work should be converted to English when it is
-  not already.
-- Native-backed tests should isolate pre-native input-boundary checks in small
-  unit tests so they do not become pending when native libraries are missing.
+- 향후 작업이 public KDoc을 건드리면 이번 localization 정책에 맞게 Korean prose로 전환한다.
+- native-backed test는 native library가 없을 때 pending으로 변하지 않도록 pre-native
+  input-boundary check를 작은 unit test로 분리한다.
