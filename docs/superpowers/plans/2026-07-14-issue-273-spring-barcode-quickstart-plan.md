@@ -1,16 +1,16 @@
-# Issue #273 Spring Boot Barcode Quickstart Implementation Plan
+# Issue #273 Spring Boot Barcode Quickstart 구현 계획
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **Agentic worker 필수 지침:** 이 계획은 task 단위로 구현한다. 구현 표면은 superpowers:subagent-driven-development(권장) 또는 superpowers:executing-plans를 사용한다. 진행 추적에는 checkbox(`- [ ]`) 문법을 사용한다.
 
-**Goal:** Add a runnable, non-published Spring Boot 4 quickstart that extracts barcodes from bounded PNG/JPEG/WebP multipart uploads and exposes deterministic success, no-result, and malformed-input endpoints backed by ZXing.
+**목표:** Bounded PNG/JPEG/WebP multipart upload에서 barcode를 추출하고 ZXing 기반 deterministic success, no-result, malformed-input endpoint를 제공하는 runnable, non-published Spring Boot 4 quickstart를 추가한다.
 
-**Architecture:** A dedicated `examples/spring-boot-barcode-api` module wires a provider-neutral `BarcodeReader` bean to `ZxingBarcodeReader`. A single coroutine-aware extraction service owns upload validation, dimension probing, image decoding, provider calls, and bounded DTO mapping; both the multipart POST route and three module-owned fixture GET routes call that service. Controller advice owns stable, sanitized HTTP error mapping.
+**아키텍처:** 전용 `examples/spring-boot-barcode-api` module이 provider-neutral `BarcodeReader` bean을 `ZxingBarcodeReader`에 연결한다. 단일 coroutine-aware extraction service가 upload validation, dimension probing, image decoding, provider call, bounded DTO mapping을 소유하며, multipart POST route와 module-owned fixture GET route 세 개가 모두 이 service를 호출한다. Controller advice는 stable, sanitized HTTP error mapping을 소유한다.
 
 **Tech Stack:** Kotlin 2.4, Java 21, Spring Boot 4 WebMVC, Kotlin coroutines, Scrimage `ImmutableImage`, bluetape4k barcode API, ZXing provider, JUnit 5, MockMvc, bluetape4k assertions, Gradle 9.x.
 
 ---
 
-## Approved Contract
+## 승인된 계약
 
 - Issue: [#273](https://github.com/bluetape4k/bluetape4k-image/issues/273)
 - Spec: `docs/superpowers/specs/2026-07-14-issue-273-spring-barcode-quickstart-design.md`
@@ -23,86 +23,85 @@
   - `GET /api/barcodes/no-result`
   - `GET /api/barcodes/malformed`
 - Upload allowlist: `image/png`, `image/jpeg`, `image/webp`
-- Default guards: 5 MiB encoded bytes, 16,777,216 decoded pixels, 8,192 maximum side
-- Success and no-result both return `200 OK`; malformed input returns sanitized `400 Bad Request` with reason `MALFORMED_INPUT`.
-- The quickstart stores no upload and adds no production artifact, provider, dependency version, BOM entry, benchmark result, or public library API.
-- PR creation is authorized only after implementation, verification, review, lesson, and workflow gates pass. Merge requires a later fresh merge-ready approval.
-- Implementation proceeds inline in this session after plan approval, matching the user's previously selected execution mode.
+- Default guard: 5 MiB encoded byte, 16,777,216 decoded pixel, 8,192 maximum side
+- Success와 no-result는 모두 `200 OK`를 반환한다. Malformed input은 reason `MALFORMED_INPUT`을 가진 sanitized `400 Bad Request`를 반환한다.
+- Quickstart는 upload를 저장하지 않으며 production artifact, provider, dependency version, BOM entry, benchmark result, public library API를 추가하지 않는다.
+- PR 생성은 implementation, verification, review, lesson, workflow gate가 모두 통과한 뒤에만 허용된다. Merge에는 이후 fresh merge-ready approval이 필요하다.
+- Implementation은 plan approval 이후 이 session에서 inline으로 진행하며, 사용자가 이전에 선택한 execution mode와 맞춘다.
 
-## File Responsibility Map
+## 파일 Responsibility Map
 
-| Path | Responsibility |
+| Path | 책임 |
 |---|---|
-| `settings.gradle.kts` | Register `:spring-boot-barcode-api` and map the example directory |
-| `AGENTS.md` | Add the example to the module table and targeted command list |
-| `.github/workflows/Examples.yml` | Add the example test to the PR/push/daily matrix |
-| `examples/spring-boot-barcode-api/build.gradle.kts` | Declare the non-published Spring/ZXing example dependencies and main class |
-| `examples/spring-boot-barcode-api/src/main/kotlin/io/bluetape4k/images/examples/spring/barcode/SpringBootBarcodeApiApplication.kt` | Application entrypoint only |
-| `.../BarcodeApiConfiguration.kt` | Immutable properties, `BarcodeReader`, fixture, and service beans |
-| `.../BarcodeApiModels.kt` | Bounded success/error DTOs and example-local request exception |
-| `.../BarcodeExampleFixtures.kt` | Fixed enum-owned classpath resources, startup validation, copy-on-read |
+| `settings.gradle.kts` | `:spring-boot-barcode-api` 등록과 example directory mapping |
+| `AGENTS.md` | Module table과 targeted command list에 example 추가 |
+| `.github/workflows/Examples.yml` | PR/push/daily matrix에 example test 추가 |
+| `examples/spring-boot-barcode-api/build.gradle.kts` | Non-published Spring/ZXing example dependency와 main class 선언 |
+| `examples/spring-boot-barcode-api/src/main/kotlin/io/bluetape4k/images/examples/spring/barcode/SpringBootBarcodeApiApplication.kt` | Application entrypoint만 담당 |
+| `.../BarcodeApiConfiguration.kt` | Immutable property, `BarcodeReader`, fixture, service bean |
+| `.../BarcodeApiModels.kt` | Bounded success/error DTO와 example-local request exception |
+| `.../BarcodeExampleFixtures.kt` | Fixed enum-owned classpath resource, startup validation, copy-on-read |
 | `.../BarcodeExtractionService.kt` | Upload validation, byte I/O, dimension guard, decode, extraction, DTO mapping |
-| `.../BarcodeApiController.kt` | One multipart POST and three fixture GET routes |
-| `.../BarcodeApiExceptionHandler.kt` | Stable status/error/reason mapping without payload or stack disclosure |
-| `examples/spring-boot-barcode-api/src/main/resources/application.yml` | Spring multipart request/file limits and example defaults |
-| `examples/spring-boot-barcode-api/src/main/resources/barcodes/*` | Module-owned QR, blank, and malformed fixtures |
-| `examples/spring-boot-barcode-api/src/test/kotlin/.../BarcodeExampleFixturesTest.kt` | Fixture hashes, dimensions, payload, empty result, and byte isolation |
-| `.../BarcodeApiConfigurationTest.kt` | Property defaults/validation and provider-neutral bean wiring |
-| `.../BarcodeExtractionServiceTest.kt` | Service success, formats, guards, malformed normalization, cancellation |
+| `.../BarcodeApiController.kt` | Multipart POST 하나와 fixture GET route 세 개 |
+| `.../BarcodeApiExceptionHandler.kt` | Payload 또는 stack disclosure 없는 stable status/error/reason mapping |
+| `examples/spring-boot-barcode-api/src/main/resources/application.yml` | Spring multipart request/file limit와 example default |
+| `examples/spring-boot-barcode-api/src/main/resources/barcodes/*` | Module-owned QR, blank, malformed fixture |
+| `examples/spring-boot-barcode-api/src/test/kotlin/.../BarcodeExampleFixturesTest.kt` | Fixture hash, dimension, payload, empty result, byte isolation |
+| `.../BarcodeApiConfigurationTest.kt` | Property default/validation과 provider-neutral bean wiring |
+| `.../BarcodeExtractionServiceTest.kt` | Service success, format, guard, malformed normalization, cancellation |
 | `.../SpringBootBarcodeApiApplicationTest.kt` | MockMvc POST/GET/status/JSON integration contract |
-| `.../BarcodeApiExceptionHandlerTest.kt` | Resolver-level multipart/missing-part error mapping without assuming MockMvc enforces container limits |
-| `examples/spring-boot-barcode-api/src/test/resources/*` | Required JUnit parallelism and test logging configuration |
-| `examples/spring-boot-barcode-api/README.md` / `README.ko.md` | Equivalent runnable English/Korean guide and production warnings |
-| `examples/spring-boot-barcode-api/docs/images/readme-diagrams/*` | Scenario, architecture, and sequence SVG/PNG pairs |
-| `README.md` / `README.ko.md` | Root barcode and Examples links |
+| `.../BarcodeApiExceptionHandlerTest.kt` | MockMvc가 container limit를 강제한다고 가정하지 않는 resolver-level multipart/missing-part error mapping |
+| `examples/spring-boot-barcode-api/src/test/resources/*` | Required JUnit parallelism과 test logging configuration |
+| `examples/spring-boot-barcode-api/README.md` / `README.ko.md` | 동등한 runnable English/Korean guide와 production warning |
+| `examples/spring-boot-barcode-api/docs/images/readme-diagrams/*` | Scenario, architecture, sequence SVG/PNG pair |
+| `README.md` / `README.ko.md` | Root barcode와 Examples link |
 | `images-barcode-zxing/README.md` / `README.ko.md` | Provider-to-quickstart link |
-| `docs/review/2026-07-14-issue-273-spring-barcode-quickstart-*.md` | Plan and code review convergence evidence |
+| `docs/review/2026-07-14-issue-273-spring-barcode-quickstart-*.md` | Plan/code review convergence evidence |
 | `docs/lessons/2026-07-14-issue-273-spring-barcode-quickstart.md` | Required Type A lesson |
 
-All Kotlin files below the example use package
-`io.bluetape4k.images.examples.spring.barcode`.
+Example 아래 모든 Kotlin file은 package `io.bluetape4k.images.examples.spring.barcode`를 사용한다.
 
 ## Acceptance Traceability
 
 | Requirement | Tasks | Proof |
 |---|---|---|
 | Runnable dedicated Spring Boot module | 1, 3 | `projects`, application context test, `bootRun` smoke |
-| Provider-neutral Spring bean backed by ZXing | 3 | bean type test; ZXing import confined to configuration |
-| Multipart PNG/JPEG/WebP upload | 4, 5 | service format tests and MockMvc multipart tests |
-| Encoded byte, decoded pixel, side, and content-type guards | 3-5 | property validation, focused service tests, HTTP status/code tests |
-| Deterministic success/no-result/malformed scenarios | 2, 4, 6 | pinned fixture tests and three GET integration tests |
-| One shared extraction service | 4-6 | controller constructor/source review and MockK/MockMvc behavior |
-| Bounded response DTO and sanitized errors | 4, 5 | exact JSON assertions and forbidden-field assertions |
-| Correct coroutine dispatch and cancellation | 4 | injected dispatcher tests and unchanged `CancellationException` |
-| Bilingual docs and three rendered diagrams | 7 | locale parity review and SVG/PNG render validation |
-| Complete non-published module registration | 1, 8 | settings/AGENTS/Examples/root/provider links, publication and Kover N/A evidence |
-| Merge-ready workflow evidence | 8 | clean verification, P0/P1=0 review, lesson, exact-head PR checks |
+| ZXing 기반 provider-neutral Spring bean | 3 | Bean type test; ZXing import는 configuration에만 한정 |
+| Multipart PNG/JPEG/WebP upload | 4, 5 | Service format test와 MockMvc multipart test |
+| Encoded byte, decoded pixel, side, content-type guard | 3-5 | Property validation, focused service test, HTTP status/code test |
+| Deterministic success/no-result/malformed scenario | 2, 4, 6 | Pinned fixture test와 GET integration test 세 개 |
+| Shared extraction service 하나 | 4-6 | Controller constructor/source review와 MockK/MockMvc behavior |
+| Bounded response DTO와 sanitized error | 4, 5 | Exact JSON assertion과 forbidden-field assertion |
+| 올바른 coroutine dispatch와 cancellation | 4 | Injected dispatcher test와 변경되지 않은 `CancellationException` |
+| Bilingual docs와 rendered diagram 세 개 | 7 | Locale parity review와 SVG/PNG render validation |
+| Complete non-published module registration | 1, 8 | settings/AGENTS/Examples/root/provider link, publication/Kover N/A evidence |
+| Merge-ready workflow evidence | 8 | Clean verification, P0/P1=0 review, lesson, exact-head PR check |
 
 ## Risk Prediction
 
 | Risk | Signal | Prevention/test | Rollback point |
 |---|---|---|---|
-| WebP passes the media allowlist but ImageIO cannot probe it | `probeImageDimensions` returns `null` for a valid WebP | use bounded `readImageMetadataReport` fallback; exercise a real WebP | return to Task 4 RED/GREEN |
-| Compressed image bomb reaches full decode | pixel/side check occurs after `immutableImageOf` | resolve dimensions and enforce both limits before decode | revert service commit |
-| Multipart limit and application limit disagree | container rejects before stable JSON handler or service reads excess bytes | keep the file limit at 5 MiB, allow request-envelope overhead, test the handler directly, and smoke-test a real oversized request | return to Tasks 3, 5, and 8 |
-| Error response leaks provider or input detail | handler returns exception message/cause/filename | use fixed messages and bounded DTO; assert absence of filename, bytes, stack, metadata | return to Task 5 |
-| Mutable fixture bytes leak across requests | cached `ByteArray` returned directly | clone on load and every read; mutation-isolation test | return to Task 2 |
-| Cancellation is normalized as decode failure | broad `catch (Exception)` precedes cancellation | explicitly rethrow `CancellationException`; focused test | return to Task 4 |
-| Provider implementation leaks into HTTP/API code | `com.google.zxing` or `ZxingBarcodeReader` appears outside configuration/test generation | dependency/source scan and bounded response DTO | revert offending task |
-| New module is locally green but absent from CI | Examples matrix or settings mapping omitted | registration task first; final matrix and `projects` checks | revert Task 1 as one unit |
-| Documentation drifts from route/status contract | curl path/status differs from MockMvc tests | copy exact tested examples into both locales; parity review | return to Task 7 |
+| WebP가 media allowlist를 통과하지만 ImageIO가 probe하지 못함 | Valid WebP에 대해 `probeImageDimensions`가 `null` 반환 | Bounded `readImageMetadataReport` fallback 사용, real WebP 실행 | Task 4 RED/GREEN으로 복귀 |
+| Compressed image bomb이 full decode까지 도달 | Pixel/side check가 `immutableImageOf` 이후 발생 | Decode 전에 dimension을 해석하고 두 limit 모두 강제 | Service commit revert |
+| Multipart limit와 application limit 불일치 | Stable JSON handler 전에 container가 거부하거나 service가 excess byte를 읽음 | File limit는 5 MiB로 유지, request-envelope overhead 허용, handler 직접 test와 real oversized request smoke test | Task 3, 5, 8로 복귀 |
+| Error response가 provider 또는 input detail 누출 | Handler가 exception message/cause/filename 반환 | Fixed message와 bounded DTO 사용, filename/bytes/stack/metadata 부재 assert | Task 5로 복귀 |
+| Mutable fixture byte가 request 사이에서 누출 | Cached `ByteArray`를 직접 반환 | Load와 read마다 clone, mutation-isolation test | Task 2로 복귀 |
+| Cancellation이 decode failure로 normalize됨 | Broad `catch (Exception)`이 cancellation보다 앞섬 | `CancellationException`을 명시적으로 rethrow, focused test | Task 4로 복귀 |
+| Provider implementation이 HTTP/API code로 누출 | Configuration/test generation 밖에 `com.google.zxing` 또는 `ZxingBarcodeReader` 등장 | Dependency/source scan과 bounded response DTO | Offending task revert |
+| 새 module은 local green이지만 CI에 없음 | Examples matrix 또는 settings mapping 누락 | Registration task 우선, final matrix와 `projects` check | Task 1을 한 단위로 revert |
+| Documentation이 route/status contract와 drift | curl path/status가 MockMvc test와 다름 | Exact tested example을 두 locale에 복사, parity review | Task 7로 복귀 |
 
-### Task 1: Register the Non-Published Spring Example Skeleton
+### Task 1: Non-published Spring Example Skeleton 등록
 
 - **Complexity:** Medium
-- **Depends on:** approved spec and clean baseline
+- **Depends on:** approved spec과 clean baseline
 - **Pattern skills:** `bluetape-kotlin-patterns`, `references/module-setup.md`
-- **Files:** settings, AGENTS, Examples workflow, new Gradle build, required test resources
-**Expected DoD:** Gradle discovers the module, the example has no Maven publication surface, and CI schedules its test on PR/push/daily events.
+- **Files:** settings, AGENTS, Examples workflow, new Gradle build, required test resource
+**Expected DoD:** Gradle이 module을 발견하고, example에 Maven publication surface가 없으며, CI가 PR/push/daily event에서 test를 schedule한다.
 
-- [ ] **Step 1: Add the module build and registration chain**
+- [ ] **Step 1: Module build와 registration chain 추가**
 
-Create `examples/spring-boot-barcode-api/build.gradle.kts`:
+`examples/spring-boot-barcode-api/build.gradle.kts`를 생성한다:
 
 ```kotlin
 plugins {
@@ -131,28 +130,25 @@ springBoot {
 }
 ```
 
-Add the exact settings mapping:
+Exact settings mapping을 추가한다:
 
 ```kotlin
 include("spring-boot-barcode-api")
 project(":spring-boot-barcode-api").projectDir = file("examples/spring-boot-barcode-api")
 ```
 
-Add the module table/command to `AGENTS.md`, and add this matrix entry to
-`.github/workflows/Examples.yml`:
+`AGENTS.md`에 module table/command를 추가하고 `.github/workflows/Examples.yml`에는 다음 matrix entry를 추가한다:
 
 ```yaml
 - example: spring-boot-barcode-api
   gradle_tasks: :spring-boot-barcode-api:test
 ```
 
-The existing `examples/**` path filter already covers the new directory; do not
-duplicate it. Add `junit-platform.properties` and `logback-test.xml` by copying
-the repository-standard contents from `examples/spring-boot-image-api`.
+기존 `examples/**` path filter가 이미 새 directory를 포함하므로 중복 추가하지 않는다. `examples/spring-boot-image-api`의 repository-standard content를 복사해 `junit-platform.properties`와 `logback-test.xml`을 추가한다.
 
-- [ ] **Step 2: Verify discovery and non-publication**
+- [ ] **Step 2: Discovery와 non-publication 검증**
 
-Run:
+다음을 실행한다:
 
 ```bash
 ./gradlew projects --console=plain
@@ -160,14 +156,14 @@ Run:
 actionlint .github/workflows/Examples.yml
 ```
 
-Expected:
+예상 결과:
 
-- `:spring-boot-barcode-api` maps to `examples/spring-boot-barcode-api`.
-- application, `bootRun`, and test tasks exist.
-- no Maven Central publication task is introduced for the example.
-- `Examples.yml` is valid and contains exactly one matrix row for the module.
+- `:spring-boot-barcode-api`가 `examples/spring-boot-barcode-api`에 mapping된다.
+- application, `bootRun`, test task가 존재한다.
+- Example에 Maven Central publication task가 도입되지 않는다.
+- `Examples.yml`이 유효하며 module matrix row를 정확히 하나만 포함한다.
 
-- [ ] **Step 3: Commit the registration unit**
+- [ ] **Step 3: Registration unit commit**
 
 ```bash
 git add settings.gradle.kts AGENTS.md .github/workflows/Examples.yml \
@@ -176,17 +172,17 @@ git add settings.gradle.kts AGENTS.md .github/workflows/Examples.yml \
 git commit -m "build: register Spring barcode example"
 ```
 
-### Task 2: Lock the Module-Owned Fixture Contract
+### Task 2: Module-owned Fixture Contract 고정
 
 - **Complexity:** High
 - **Depends on:** Task 1
 - **Pattern skills:** `test-driven-development`, `bluetape-kotlin-patterns`, `references/testing.md`
-- **Files:** fixture resources, loader, fixture test
-**Expected DoD:** the module owns exactly three bounded resources whose hashes, dimensions, payload/no-result semantics, startup availability, and immutable copy behavior are deterministic.
+- **Files:** fixture resource, loader, fixture test
+**Expected DoD:** Module이 hash, dimension, payload/no-result semantic, startup availability, immutable copy behavior가 deterministic한 bounded resource 정확히 세 개를 소유한다.
 
-- [ ] **Step 1: Write fixture tests first**
+- [ ] **Step 1: Fixture test 먼저 작성**
 
-Create `BarcodeExampleFixturesTest.kt` with tests that require:
+다음을 요구하는 test를 포함한 `BarcodeExampleFixturesTest.kt`를 작성한다:
 
 ```kotlin
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -226,10 +222,9 @@ class BarcodeExampleFixturesTest {
 }
 ```
 
-Also cover exactly three enum paths and missing-resource startup failure through
-an internal injected `resourceLoader: (String) -> ByteArray?` constructor.
+Internal injected `resourceLoader: (String) -> ByteArray?` constructor를 통해 enum path가 정확히 세 개인지와 missing-resource startup failure도 다룬다.
 
-- [ ] **Step 2: Run the focused test and capture RED**
+- [ ] **Step 2: Focused test 실행 후 RED 기록**
 
 ```bash
 ./gradlew :spring-boot-barcode-api:test \
@@ -237,12 +232,11 @@ an internal injected `resourceLoader: (String) -> ByteArray?` constructor.
   --console=plain
 ```
 
-Expected: FAIL because fixture enum, loader, and resources do not exist. Fix
-unrelated syntax/configuration errors before accepting RED.
+Fixture enum, loader, resource가 아직 없으므로 예상 결과는 FAIL이다. RED로 인정하기 전에 관련 없는 syntax/configuration error는 고친다.
 
-- [ ] **Step 3: Add the fixed loader contract**
+- [ ] **Step 3: Fixed loader contract 추가**
 
-Create `BarcodeExampleFixtures.kt`:
+`BarcodeExampleFixtures.kt`를 생성한다:
 
 ```kotlin
 internal enum class BarcodeExampleFixture(val resource: String) {
@@ -266,19 +260,13 @@ internal class BarcodeExampleFixtures internal constructor(
 }
 ```
 
-Keep path construction enum-only. `loadClasspathResource` must use the class
-loader, close the stream with `use`, and return no mutable cached array.
+Path construction은 enum-only로 유지한다. `loadClasspathResource`는 class loader를 사용하고 stream은 `use`로 닫으며 mutable cached array를 반환하지 않아야 한다.
 
-- [ ] **Step 4: Generate/copy the exact fixture bytes and verify hashes**
+- [ ] **Step 4: Exact fixture byte 생성/복사와 hash 검증**
 
-Create `src/main/resources/barcodes/`. Generate the 220x220 QR once with ZXing
-3.5.4 `MultiFormatWriter`/`MatrixToImageWriter`, payload
-`bluetape4k-barcode-quickstart`, and PNG output. Copy the already reviewed
-220x220 white PNG from
-`benchmark/images-benchmark/src/main/resources/bench/barcode/no-result.png`.
-Create `malformed.bin` as the exact 12 ASCII bytes `not-an-image` with no newline.
+`src/main/resources/barcodes/`를 생성한다. ZXing 3.5.4 `MultiFormatWriter`/`MatrixToImageWriter`, payload `bluetape4k-barcode-quickstart`, PNG output으로 220x220 QR을 한 번 생성한다. 이미 review된 220x220 white PNG를 `benchmark/images-benchmark/src/main/resources/bench/barcode/no-result.png`에서 복사한다. `malformed.bin`은 newline 없이 정확히 12 ASCII byte `not-an-image`로 만든다.
 
-Do not retain a generator in production/test sources. Before continuing, run:
+Production/test source에는 generator를 남기지 않는다. 계속하기 전에 다음을 실행한다:
 
 ```bash
 shasum -a 256 \
@@ -287,7 +275,7 @@ shasum -a 256 \
   examples/spring-boot-barcode-api/src/main/resources/barcodes/malformed.bin
 ```
 
-Expected hashes, in order:
+예상 hash는 순서대로 다음과 같다:
 
 ```text
 5d048dd6769ede80f453ffb6c80fe6745092bf895c429b6104d5cc74d892c44d
@@ -295,7 +283,7 @@ Expected hashes, in order:
 f2e2c6db1745cc40df646dc40c385487c36e4ceb3f1d5c8d6ad1f7620af1ebae
 ```
 
-- [ ] **Step 5: Run GREEN and commit**
+- [ ] **Step 5: GREEN 실행과 commit**
 
 ```bash
 ./gradlew :spring-boot-barcode-api:test \
@@ -306,8 +294,7 @@ git add examples/spring-boot-barcode-api/src/main/{kotlin,resources} \
 git commit -m "test: lock barcode quickstart fixtures"
 ```
 
-Expected: PASS with the exact hashes, dimensions, QR payload, empty result, and
-copy isolation.
+예상 결과는 exact hash, dimension, QR payload, empty result, copy isolation을 검증하며 PASS이다.
 
 ### Task 3: Wire the Application, Properties, and Provider Boundary
 
