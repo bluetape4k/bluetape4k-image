@@ -145,40 +145,34 @@ workload shape를 한 번 생성한다.
 - result는 scenario별로 분리한다. 서로 다른 dimension의 value를 하나의 ranking으로 평균내지 않는다.
 - report는 source identity, derived dimension, encoded input bytes, measured output bytes를 기록한다.
 
-## 7. Benchmark Architecture
+## 7. Benchmark 아키텍처
 
 ### 7.1 Stable matrix
 
-Add a focused `VipsCodecMatrixBenchmark` and a fail-fast
-`VipsCodecMatrixState` under `src/benchmark`. The state reuses the current
-binding-neutral runtime selection and reads the prepared fixture manifest. It
-does not change the historical, skip-capable `VipsBenchmarkState` or its JPEG
-benchmark behavior.
+`src/benchmark` 아래에 focused `VipsCodecMatrixBenchmark`와 fail-fast `VipsCodecMatrixState`를 추가한다.
+state는 현재 binding-neutral runtime selection을 재사용하고 prepared fixture manifest를 읽는다. historical,
+skip-capable `VipsBenchmarkState`나 JPEG benchmark behavior는 변경하지 않는다.
 
-Put deterministic fixture preparation, run-manifest serialization, capability
-status DTOs/mapping, and diagnostic sanitization in vips-free `internal`
-components under `src/main`. These components must not reference `VipsRuntime`
-or `VipsImage`, so `images-vips-api` remains `benchmarkImplementation` and no
-production dependency changes. A `CodecMatrixRuntimeAdapter` under
-`src/benchmark` maps the selected Vips runtime/image operations to the internal
-DTO/factory seam. Unit tests inject vips-free fakes; only JMH annotations,
-runtime adapters, and measured calls live under `src/benchmark`. Tests of
-annotations/configuration may use focused source contract assertions where the
-Gradle source-set graph offers no behavioral seam.
+deterministic fixture preparation, run-manifest serialization, capability status DTO/mapping,
+diagnostic sanitization은 `src/main` 아래 vips-free `internal` component에 둔다. 이 component는 `VipsRuntime`이나
+`VipsImage`를 reference하면 안 된다. 따라서 `images-vips-api`는 `benchmarkImplementation`으로 남고 production
+dependency change는 없다. `src/benchmark` 아래의 `CodecMatrixRuntimeAdapter`는 선택된 Vips runtime/image
+operation을 internal DTO/factory 경계로 mapping한다. unit test는 vips-free fake를 주입한다. JMH annotation,
+runtime adapter, measured call만 `src/benchmark` 아래에 둔다. Gradle source-set graph가 behavioral 경계를
+제공하지 않는 annotation/configuration test는 focused source contract assertion을 사용할 수 있다.
 
-All measured rows use one explicit option profile:
+모든 measured row는 하나의 explicit option profile을 사용한다.
 
 ```text
 quality=85, effort=4, lossless=false, stripMetadata=true
 ```
 
-PNG ignores `quality` and maps `effort` to its compression level. WebP is the
-common lossy web profile, not a lossless-quality peer to PNG. The report must
-therefore present latency and byte-size trade-offs without claiming equivalent
-visual quality or compression efficiency. JPEG input and forcing-output bytes
-also use quality 85 with metadata stripped.
+PNG는 `quality`를 무시하고 `effort`를 compression level로 mapping한다. WebP는 common lossy web profile이며
+PNG와 lossless-quality peer가 아니다. 따라서 report는 equivalent visual quality나 compression efficiency를
+주장하지 않고 latency와 byte-size trade-off를 제시해야 한다. JPEG input과 forcing-output bytes도 metadata를
+stripping한 quality 85를 사용한다.
 
-The stable class exposes four method families for each scenario:
+stable class는 각 scenario에 대해 네 method family를 노출한다.
 
 ```text
 encodePngFromJpeg
@@ -187,76 +181,63 @@ decodePngToJpeg
 decodeWebpToJpeg
 ```
 
-Every invocation creates and closes its own `VipsImage`. Output bytes are
-consumed by `Blackhole`. Runtime initialization failure is a benchmark failure;
-the class must not use `bh.consume(null)` or publish a no-op timing row.
+모든 invocation은 자체 `VipsImage`를 만들고 닫는다. output bytes는 `Blackhole`이 소비한다. runtime
+initialization failure는 benchmark failure다. class는 `bh.consume(null)`을 사용하거나 no-op timing row를
+publish하면 안 된다.
 
-Add a named `codecMatrix` benchmark configuration. Its expected Gradle task is:
+named `codecMatrix` benchmark configuration을 추가한다. expected Gradle task는 다음과 같다.
 
 ```text
 :bluetape4k-images-benchmark:benchmarkCodecMatrixBenchmark
 ```
 
-Both `benchmarkCodecMatrixBenchmark` and the default `benchmarkBenchmark`
-execution task depend on `prepareCodecMatrixFixtures` and receive the selected
-run manifest path as a JVM system property. Compile, generate, jar, `build`,
-`check`, and `test` tasks do not execute fixture preparation or native
-capability probes.
+`benchmarkCodecMatrixBenchmark`와 default `benchmarkBenchmark` execution task는 모두
+`prepareCodecMatrixFixtures`에 의존하고, 선택된 run manifest path를 JVM system property로 받는다. compile,
+generate, jar, `build`, `check`, `test` task는 fixture preparation이나 native capability probe를 실행하지 않는다.
 
-Add a non-native `codecMatrixPreflight` JavaExec task using
-`CodecMatrixPreflightMain` on the main runtime classpath. The existing
-`prepareCodecMatrixFixtures` JavaExec task uses `CodecMatrixFixtureMain` on the
-main runtime classpath and depends on preflight plus
-`syncCodecMatrixSourceFixtures`. The stable benchmark depends on preparation
-and consumes their shared run ID and fixture manifest. Missing/mismatched
-preflight, selector, host compatibility, or manifest evidence fails before
-native initialization.
+main runtime classpath의 `CodecMatrixPreflightMain`을 사용하는 non-native `codecMatrixPreflight` JavaExec task를
+추가한다. 기존 `prepareCodecMatrixFixtures` JavaExec task는 main runtime classpath의
+`CodecMatrixFixtureMain`을 사용하고 preflight와 `syncCodecMatrixSourceFixtures`에 의존한다. stable benchmark는
+preparation에 의존하며 shared run ID와 fixture manifest를 소비한다. missing/mismatched preflight, selector,
+host compatibility, manifest evidence는 native initialization 전에 실패한다.
 
-The configuration uses one fork, one benchmark thread, libvips concurrency 4,
-one one-second warmup iteration, and three one-second measurement iterations in
-`AverageTime` mode with `ms` output. The focused GC-profiler addendum uses the
-same thread count, runtime concurrency, warmup, measurement, fork, fixture, and
-codec option profile.
+configuration은 one fork, one benchmark thread, libvips concurrency 4, one one-second warmup iteration,
+three one-second measurement iteration을 `AverageTime` mode와 `ms` output으로 사용한다. focused GC-profiler
+addendum은 같은 thread count, runtime concurrency, warmup, measurement, fork, fixture, codec option profile을
+사용한다.
 
-The existing JPEG benchmark remains unchanged as historical evidence and is
-referenced beside the new matrix rather than duplicated in the focused task.
+기존 JPEG benchmark는 historical evidence로 변경하지 않고, focused task 안에 duplicate하지 않으며 new matrix 옆에서
+reference한다.
 
 ### 7.2 Experimental matrix
 
-Add a separate `VipsExperimentalCodecMatrixBenchmark` for AVIF/HEIC. Exclude
-this class from the plugin's default `main` configuration and include it only in
-the explicit `codecMatrixAvif` and `codecMatrixHeic` configurations. Their
-expected Gradle tasks are:
+AVIF/HEIC용 별도 `VipsExperimentalCodecMatrixBenchmark`를 추가한다. 이 class는 plugin default `main`
+configuration에서 제외하고 explicit `codecMatrixAvif`, `codecMatrixHeic` configuration에만 포함한다.
+expected Gradle task는 다음과 같다.
 
 ```text
 :bluetape4k-images-benchmark:benchmarkCodecMatrixAvifBenchmark
 :bluetape4k-images-benchmark:benchmarkCodecMatrixHeicBenchmark
 ```
 
-Add a `codecMatrixCapabilityReport` JavaExec task backed by
-`CodecMatrixCapabilityMain` on the benchmark runtime classpath.
-It depends on `codecMatrixPreflight` and `prepareCodecMatrixFixtures`, then
-initializes only the selected `-Pvips.impl` runtime and writes a structured
-JSON snapshot under `build/reports/benchmarks/codec-matrix/`. Each entry records
-backend, scenario, format, direction, capability, eligibility status, sanitized
-reason, JVM, architecture, and observed libvips version. `UNAVAILABLE` and
-`UNKNOWN` are successful observations from this task; runtime initialization,
-fixture corruption, or malformed output fails the task.
+benchmark runtime classpath의 `CodecMatrixCapabilityMain`을 사용하는 `codecMatrixCapabilityReport` JavaExec task를
+추가한다. 이 task는 `codecMatrixPreflight`와 `prepareCodecMatrixFixtures`에 의존한 뒤 선택된
+`-Pvips.impl` runtime만 초기화하고 `build/reports/benchmarks/codec-matrix/` 아래에 structured JSON snapshot을
+쓴다. 각 entry는 backend, scenario, format, direction, capability, eligibility status, sanitized reason, JVM,
+architecture, observed libvips version을 기록한다. `UNAVAILABLE`과 `UNKNOWN`은 이 task의 successful observation이다.
+runtime initialization, fixture corruption, malformed output은 task를 실패시킨다.
 
-`vips.impl` is an exact allowlist: only `java21` and `java25` are accepted.
-Missing input keeps the existing `java25` default, but any other value fails at
-Gradle configuration time. Evidence records both the requested selector and the
-identity reported by the initialized runtime; a mismatch fails preflight.
+`vips.impl`은 exact allowlist다. `java21`과 `java25`만 허용한다. input이 없으면 기존 `java25` default를
+유지하지만, 다른 값은 Gradle configuration time에 실패한다. evidence는 requested selector와 initialized runtime이
+보고한 identity를 모두 기록한다. mismatch는 preflight를 실패시킨다.
 
-The shared non-native preflight records requested backend, actual JDK
-vendor/version, OS/kernel/architecture, CPU model, JNI
-binary architecture when applicable, the FFM native-access flag, sanitized
-loader-path availability, available disk space, git SHA/dirty state, and a
-generated run ID. A known JDK/architecture/native-binary incompatibility becomes
-a structured `N/A` observation without attempting runtime initialization.
-Unexpected initialization or probe failure is `ERROR` and fails the task.
+shared non-native preflight는 requested backend, actual JDK vendor/version, OS/kernel/architecture,
+CPU model, 해당되는 경우 JNI binary architecture, FFM native-access flag, sanitized loader-path availability,
+available disk space, git SHA/dirty state, generated run ID를 기록한다. 알려진 JDK/architecture/native-binary
+incompatibility는 runtime initialization을 시도하지 않고 structured `N/A` observation이 된다. unexpected
+initialization 또는 probe failure는 `ERROR`이며 task를 실패시킨다.
 
-The experimental class has four exact method families per scenario:
+experimental class는 각 scenario에 대해 네 exact method family를 가진다.
 
 ```text
 encodeAvifFromJpeg
@@ -265,65 +246,49 @@ encodeHeicFromJpeg
 decodeHeicToJpeg
 ```
 
-The AVIF and HEIC configurations include only their matching two methods and
-reuse the stable option/timing profile. A canonical preparation step uses an
-eligible backend to encode a manifest-pinned JPEG raster to the target format,
-validates target magic bytes/dimensions/positive size, and stores that exact
-AVIF/HEIC input plus its SHA-256 in the fixture manifest. Decode rows consume
-the pinned target-format bytes; encode rows consume the pinned JPEG bytes.
-The target-format manifest records the producer backend, JDK, libvips and codec
-library versions, preparation command, and producer run ID. Experimental rows
-from different hosts, producer manifests, or input hashes are never compared.
+AVIF와 HEIC configuration은 각각 matching two method만 포함하고 stable option/timing profile을 재사용한다.
+canonical preparation step은 eligible backend로 manifest-pinned JPEG raster를 target format으로 encode하고,
+target magic bytes/dimensions/positive size를 검증하며, 정확한 AVIF/HEIC input과 SHA-256을 fixture manifest에
+저장한다. decode row는 pinned target-format bytes를 소비하고 encode row는 pinned JPEG bytes를 소비한다.
+target-format manifest는 producer backend, JDK, libvips/codec library version, preparation command,
+producer run ID를 기록한다. 서로 다른 host, producer manifest, input hash에서 나온 experimental row는 비교하지 않는다.
 
-Before an experimental run:
+experimental run 전에는 다음을 수행한다.
 
-1. Initialize the selected backend.
-2. Read `codecCapabilityReport()`.
-3. Evaluate the capability required by each direction independently. An encode
-   row requires encode `AVAILABLE`; a decode row requires decode `AVAILABLE` and
-   a pinned target-format input.
-4. Run a harness-local directional smoke with the exact timed boundary and
-   option profile: encode uses pinned JPEG -> target format and validates target
-   magic/dimensions; decode uses pinned target format -> JPEG and validates JPEG
-   magic/dimensions. The public round-trip `smokeTestCodec` may be recorded as
-   supplemental evidence only when both directions are available; it is not a
-   gate for a single-direction row.
-5. If capability is `UNAVAILABLE`, record `UNSUPPORTED` and the sanitized
-   report reason.
-6. If capability is `UNKNOWN`, record `SKIPPED` and the backend limitation;
-   do not infer support from installed package names.
-7. If capability is available but fixture preparation or smoke fails, record
-   `FAILED_SMOKE` with the failed stage, fail the experimental task, and block
-   accepted evidence. Do not downgrade an observed failure to `SKIPPED`.
+1. 선택된 backend를 initialize한다.
+2. `codecCapabilityReport()`를 읽는다.
+3. 각 direction에 필요한 capability를 독립적으로 평가한다. encode row는 encode `AVAILABLE`을 요구한다.
+   decode row는 decode `AVAILABLE`과 pinned target-format input을 요구한다.
+4. exact timed boundary와 option profile로 harness-local directional smoke를 실행한다. encode는 pinned JPEG ->
+   target format을 사용하고 target magic/dimensions를 검증한다. decode는 pinned target format -> JPEG를 사용하고
+   JPEG magic/dimensions를 검증한다. public round-trip `smokeTestCodec`은 양 direction이 모두 available일 때만
+   supplemental evidence로 기록할 수 있으며 single-direction row의 gate가 아니다.
+5. capability가 `UNAVAILABLE`이면 `UNSUPPORTED`와 sanitized report reason을 기록한다.
+6. capability가 `UNKNOWN`이면 `SKIPPED`와 backend limitation을 기록한다. installed package name에서 support를
+   추론하지 않는다.
+7. capability는 available이지만 fixture preparation 또는 smoke가 실패하면 failed stage와 함께 `FAILED_SMOKE`를
+   기록하고 experimental task를 실패시키며 accepted evidence를 block한다. observed failure를 `SKIPPED`로 낮추지 않는다.
 
-The experimental benchmark tasks do not fabricate JMH skip rows. Each task has
-a Gradle dependency on `codecMatrixCapabilityReport` and consumes its
-format/direction eligibility plus the fixture manifest. Direct invocation with
-an ineligible or missing preflight fails immediately and prints the exact
-capability command to run; it does not emit a partial or no-op JMH row. The
-capability output remains an ephemeral eligibility manifest under
-`build/reports` while measurement is running. After eligible rows finish, a
-finalization step combines eligibility with numeric latency/allocation/size
-artifacts or a terminal unmeasured status, validates their hashes, and atomically
-promotes the finalized snapshot to the tracked raw-evidence directory. No
-pre-benchmark file may claim `MEASURED` or accepted final status.
+experimental benchmark task는 JMH skip row를 fabricate하지 않는다. 각 task는 `codecMatrixCapabilityReport`에
+Gradle dependency를 가지며, 해당 format/direction eligibility와 fixture manifest를 소비한다. ineligible 또는
+missing preflight 상태의 direct invocation은 즉시 실패하고 실행할 정확한 capability command를 출력한다. partial 또는
+no-op JMH row를 내지 않는다. measurement가 실행되는 동안 capability output은 `build/reports` 아래 ephemeral
+eligibility manifest로 남는다. eligible row가 끝나면 finalization step이 eligibility와 numeric
+latency/allocation/size artifact 또는 terminal unmeasured status를 결합하고 hash를 검증한 뒤 finalized snapshot을
+tracked raw-evidence directory로 atomically promote한다. 어떤 pre-benchmark file도 `MEASURED` 또는 accepted final
+status를 주장하면 안 된다.
 
-The `codecMatrixCapabilityReport` task depends on
-`prepareCodecMatrixFixtures`. The two experimental benchmark tasks depend on
-that capability task and `prepareExperimentalCodecMatrixFixtures`, a JavaExec
-task using `CodecMatrixExperimentalFixtureMain` on the benchmark runtime
-classpath. That task generates manifest-pinned target inputs only for eligible
-encode formats; a decode-only row must consume an explicitly supplied compatible
-producer manifest or fail before timing. All tasks receive the same explicit
-run ID. The non-native `finalizeCodecMatrixEvidence` JavaExec task uses
-`CodecMatrixFinalizeMain` on the main runtime classpath and is the only task
-allowed to promote a staged run into
-`benchmark/images-benchmark/docs/raw/<run-id>/`; it verifies the run manifest,
-cell coverage, artifact hashes, terminal statuses, and absence of blocking
-states before an atomic directory move. Reinvoking preparation or finalization
-for an existing accepted run never overwrites tracked evidence.
+`codecMatrixCapabilityReport` task는 `prepareCodecMatrixFixtures`에 의존한다. 두 experimental benchmark task는
+해당 capability task와 benchmark runtime classpath의 `CodecMatrixExperimentalFixtureMain`을 사용하는 JavaExec task
+`prepareExperimentalCodecMatrixFixtures`에 의존한다. 이 task는 eligible encode format에 대해서만
+manifest-pinned target input을 생성한다. decode-only row는 명시적으로 제공된 compatible producer manifest를
+소비해야 하며, 없으면 timing 전에 실패한다. 모든 task는 같은 explicit run ID를 받는다. non-native
+`finalizeCodecMatrixEvidence` JavaExec task는 main runtime classpath의 `CodecMatrixFinalizeMain`을 사용하며,
+staged run을 `benchmark/images-benchmark/docs/raw/<run-id>/`로 promote할 수 있는 유일한 task다. atomic
+directory move 전에 run manifest, cell coverage, artifact hash, terminal status, blocking state 부재를
+검증한다. existing accepted run에 대해 preparation 또는 finalization을 다시 호출해도 tracked evidence를 overwrite하지 않는다.
 
-The Gradle task contract is exact:
+Gradle task contract는 exact하다.
 
 | Task | Type / entrypoint | Declared inputs | Output / dependency |
 |---|---|---|---|
@@ -335,14 +300,12 @@ The Gradle task contract is exact:
 | focused benchmark tasks | generated JMH tasks | preflight, exact fixture/eligibility manifests, run ID | staged latency JSON; direct calls enforce dependencies |
 | `finalizeCodecMatrixEvidence` | `JavaExec` / `CodecMatrixFinalizeMain`, main runtime | eligibility, staged latency/GC/size/status artifacts and hashes | atomic tracked `docs/raw/<run-id>/` |
 
-Only the stable `benchmarkBenchmark` and
-`benchmarkCodecMatrixBenchmark` tasks join the non-experimental preparation
-path. `build`, `check`, `test`, compile/generate/jar tasks, and the default
-benchmark graph never depend on capability or experimental-fixture tasks; AVIF
-and HEIC work starts only from their explicit focused task names.
+stable `benchmarkBenchmark`와 `benchmarkCodecMatrixBenchmark` task만 non-experimental preparation path에 참여한다.
+`build`, `check`, `test`, compile/generate/jar task, default benchmark graph는 capability 또는
+experimental-fixture task에 의존하지 않는다. AVIF/HEIC 작업은 explicit focused task name에서만 시작한다.
 
-Status semantics are per matrix cell and scoped to backend, JVM, architecture,
-host environment, libvips build, direction, scenario, and input hash:
+status semantics는 matrix cell별이며 backend, JVM, architecture, host environment, libvips build, direction,
+scenario, input hash scope를 가진다.
 
 - `MEASURED`: numeric latency/allocation/size evidence exists.
 - `UNSUPPORTED`: the required operation is explicitly `UNAVAILABLE`.
@@ -351,33 +314,27 @@ host environment, libvips build, direction, scenario, and input hash:
 - `FAILED_SMOKE`: capability said available but preparation/smoke failed; blocks acceptance.
 - `ERROR`: unexpected setup/runtime/evidence failure; blocks acceptance.
 
-Java 21 JVips therefore does not receive fabricated AVIF/HEIC rows on this host.
-Java 25 FFM rows are measured only after capability and smoke gates pass.
+따라서 이 host에서 Java 21 JVips는 fabricated AVIF/HEIC row를 받지 않는다. Java 25 FFM row는 capability와
+smoke gate가 통과한 뒤에만 측정된다.
 
-### 7.3 Measurement and raw evidence
+### 7.3 Measurement와 raw evidence
 
-Use `AverageTime` in `ms/op`; lower is better. Produce two raw evidence files
-per measured backend:
+`ms/op` 단위의 `AverageTime`을 사용하며 낮을수록 좋다. measured backend마다 두 raw evidence file을 만든다.
 
-- the normal kotlinx-benchmark/JMH JSON for latency;
-- a focused JMH `-prof gc` JSON for `gc.alloc.rate.norm` (`B/op`).
+- latency용 normal kotlinx-benchmark/JMH JSON.
+- `gc.alloc.rate.norm` (`B/op`)용 focused JMH `-prof gc` JSON.
 
-Managed allocation does not represent native libvips memory. The report states
-this limitation next to the allocation table.
+managed allocation은 native libvips memory를 나타내지 않는다. report는 allocation table 옆에 이 limitation을 명시한다.
 
-Output size is collected once outside the timed loop with the exact same
-fixture, codec, and options used by the benchmark. The report includes both
-input and output byte counts so a decode-to-JPEG row is not confused with an
-encode-from-JPEG row.
+output size는 benchmark가 사용하는 것과 정확히 같은 fixture, codec, option으로 timed loop 밖에서 한 번 수집한다.
+decode-to-JPEG row가 encode-from-JPEG row와 혼동되지 않도록 report는 input/output byte count를 모두 포함한다.
 
-Each backend/configuration/profiler command runs in a fresh JVM. Timed,
-preparation, smoke, and output-size paths close every `VipsImage` on success and
-failure; no lane calls irreversible `VipsRuntime.shutdown()` between trials. A
-failed or interrupted attempt retains its sanitized log, discards partial
-measurements, and reruns the complete affected lane only in a new process after
-the failure is diagnosed. The failed attempt retains `ERROR` or `FAILED_SMOKE`,
-diagnosis, mitigation, its run ID, and a link from the replacement attempt; an
-unexplained retry is never accepted.
+각 backend/configuration/profiler command는 fresh JVM에서 실행한다. timed, preparation, smoke, output-size path는
+success/failure 모두에서 모든 `VipsImage`를 닫는다. 어떤 lane도 trial 사이에 irreversible
+`VipsRuntime.shutdown()`을 호출하지 않는다. failed/interrupted attempt는 sanitized log를 유지하고 partial
+measurement를 버리며, failure를 진단한 뒤에만 새 process에서 complete affected lane을 다시 실행한다. failed attempt는
+`ERROR` 또는 `FAILED_SMOKE`, diagnosis, mitigation, run ID, replacement attempt link를 유지한다. unexplained retry는
+accepted되지 않는다.
 
 ## 8. Failure Handling
 
