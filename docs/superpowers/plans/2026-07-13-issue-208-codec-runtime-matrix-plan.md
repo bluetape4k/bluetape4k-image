@@ -353,22 +353,18 @@ git add benchmark/images-benchmark/src/main/kotlin/io/bluetape4k/images/benchmar
 git commit -m "feat: finalize codec benchmark evidence"
 ```
 
-### Task 6: Wire the Gradle Task Graph
+### Task 6: Gradle Task Graph 연결
 
 **Complexity:** Medium
 **Depends on:** Tasks 1-5
 **Pattern skills:** `bluetape-kotlin-patterns`, `references/module-setup.md`, workflow `repository-hazards.md`
-**Files:** modify module `build.gradle.kts`; create `CodecMatrixBenchmarkContractTest.kt` and `CodecMatrixBenchmarkTaskFunctionalTest.kt`.
+**Files:** Module `build.gradle.kts`를 수정하고 `CodecMatrixBenchmarkContractTest.kt`, `CodecMatrixBenchmarkTaskFunctionalTest.kt`를 만든다.
 
-- [ ] **Step 1: Write failing Gradle source-contract tests**
+- [ ] **Step 1: 실패하는 Gradle source-contract test를 작성한다.**
 
-Assert selector validation, exact task/config/entrypoint names, timing,
-includes/excludes, task dependencies, Java launchers/classpaths, run-ID and
-manifest propagation, and non-dependencies for compile/generate/jar/build/check/test.
-Add `testImplementation(gradleTestKit())` only for the functional task tests;
-do not add or change a catalog alias/version.
+Selector validation, exact task/config/entrypoint name, timing, include/exclude, task dependency, Java launcher/classpath, run-ID/manifest propagation, compile/generate/jar/build/check/test에 대한 non-dependency를 assert한다. `testImplementation(gradleTestKit())`는 functional task test에만 추가한다. Catalog alias/version은 추가하거나 바꾸지 않는다.
 
-- [ ] **Step 2: Observe RED**
+- [ ] **Step 2: RED를 관찰한다.**
 
 ```bash
 ./gradlew :bluetape4k-images-benchmark:test \
@@ -377,10 +373,9 @@ do not add or change a catalog alias/version.
   -Pvips.impl=java25 --console=plain
 ```
 
-Expected: both source-contract and functional task tests fail for the missing
-selector/task/parameter-file/gating behavior before Gradle implementation.
+Expected: Gradle 구현 전에는 selector/task/parameter-file/gating behavior가 없으므로 source-contract test와 functional task test가 모두 실패한다.
 
-- [ ] **Step 3: Implement the exact Gradle graph**
+- [ ] **Step 3: 정확한 Gradle graph를 구현한다.**
 
 Validate:
 
@@ -391,18 +386,9 @@ require(vipsImpl == "java21" || vipsImpl == "java25") {
 }
 ```
 
-Keep `images-vips-api` as `benchmarkImplementation` and move only the selected
-backend implementation to `benchmarkRuntimeOnly`. Configure the plugin's
-`main` benchmark configuration to exclude the experimental class;
-`codecMatrix` includes only `VipsCodecMatrixBenchmark`; `codecMatrixAvif` and
-`codecMatrixHeic` include only their exact two methods. All focused configs use
-1 warmup, 3 measurements, 1 second, average time, ms, JSON, 1 fork, and 1
-thread. Apply the same timing/mode/unit/fork/thread annotations to both matrix
-classes so the default `benchmarkBenchmark`, focused tasks, and direct GC
-profiler cannot drift. Contract tests compare all three launch paths. Set benchmark working directory to the repository root and add native
-access only to benchmark-runtime launches.
+`images-vips-api`는 `benchmarkImplementation`으로 유지하고, 선택된 backend implementation만 `benchmarkRuntimeOnly`로 이동한다. Plugin의 `main` benchmark configuration은 experimental class를 제외한다. `codecMatrix`는 `VipsCodecMatrixBenchmark`만 포함하고, `codecMatrixAvif`와 `codecMatrixHeic`는 각각 정확한 두 method만 포함한다. 모든 focused config는 1 warmup, 3 measurement, 1 second, average time, ms, JSON, 1 fork, 1 thread를 사용한다. Default `benchmarkBenchmark`, focused task, direct GC profiler가 drift되지 않도록 두 matrix class에 같은 timing/mode/unit/fork/thread annotation을 적용한다. Contract test는 세 launch path를 모두 비교한다. Benchmark working directory는 repository root로 설정하고 native access는 benchmark-runtime launch에만 추가한다.
 
-Register the exact contract:
+정확한 contract를 등록한다.
 
 ```text
 syncCodecMatrixSourceFixtures          Sync / two checked-in inputs
@@ -417,58 +403,17 @@ benchmarkCodecMatrixAvifBenchmark       generated AVIF JMH task
 benchmarkCodecMatrixHeicBenchmark       generated HEIC JMH task
 ```
 
-`prepareCodecMatrixFixtures` depends on `codecMatrixPreflight` and
-`syncCodecMatrixSourceFixtures`. Both stable execution tasks
-(`benchmarkBenchmark`, `benchmarkCodecMatrixBenchmark`) depend only on stable
-preparation. `codecMatrixCapabilityReport` depends on preflight and stable
-preparation. `prepareExperimentalCodecMatrixFixtures` depends explicitly on
-`codecMatrixCapabilityReport` through its output provider and consumes that
-eligibility plus stable fixtures. Each experimental JMH task depends on
-`prepareExperimentalCodecMatrixFixtures`, so the enforced order is preflight ->
-stable preparation -> capability -> experimental preparation -> JMH. All share
-the validated run ID and exact manifest paths.
-Compile/generate/jar/build/check/test never execute fixture preparation, native
-capability probes, or experimental preparation. The default benchmark graph
-never reaches capability or experimental preparation.
+`prepareCodecMatrixFixtures`는 `codecMatrixPreflight`와 `syncCodecMatrixSourceFixtures`에 의존한다. 두 stable execution task(`benchmarkBenchmark`, `benchmarkCodecMatrixBenchmark`)는 stable preparation에만 의존한다. `codecMatrixCapabilityReport`는 preflight와 stable preparation에 의존한다. `prepareExperimentalCodecMatrixFixtures`는 output provider를 통해 `codecMatrixCapabilityReport`에 명시적으로 의존하고, eligibility와 stable fixture를 소비한다. 각 experimental JMH task는 `prepareExperimentalCodecMatrixFixtures`에 의존하므로 강제 순서는 preflight -> stable preparation -> capability -> experimental preparation -> JMH다. 모두 검증된 run ID와 exact manifest path를 공유한다. Compile/generate/jar/build/check/test는 fixture preparation, native capability probe, experimental preparation을 실행하지 않는다. Default benchmark graph는 capability나 experimental preparation에 도달하지 않는다.
 
-`finalizeCodecMatrixEvidence` always passes the validated run ID. Map optional
-Gradle providers `codec.matrix.supersedes` and
-`codec.matrix.replacesFailedAttempt` to CLI arguments `--supersedes` and
-`--replaces-failed-attempt` respectively; blank, malformed, self-referential,
-or nonexistent references fail before finalizer execution. Contract and
-functional tests assert the exact provider-to-argument mapping so documented
-rerun commands are executable.
+`finalizeCodecMatrixEvidence`는 항상 검증된 run ID를 넘긴다. Optional Gradle provider `codec.matrix.supersedes`와 `codec.matrix.replacesFailedAttempt`는 각각 CLI argument `--supersedes`, `--replaces-failed-attempt`로 mapping한다. Blank, malformed, self-referential, nonexistent reference는 finalizer 실행 전에 실패한다. Contract/functional test는 documented rerun command가 실행 가능하도록 정확한 provider-to-argument mapping을 assert한다.
 
-For each focused benchmark execution task, capture its start instant in
-`doFirst`. In `doLast`, require exactly one JSON report below the matching
-`build/reports/benchmarks/<configuration>/` directory with a modification time
-at or after that instant, validate its JMH configuration/row set, and atomically
-stage it as `latency-<backend>-<configuration>.json` below the selected run.
-Zero or multiple matching reports fail the task instead of guessing.
+각 focused benchmark execution task는 `doFirst`에서 start instant를 캡처한다. `doLast`에서는 matching `build/reports/benchmarks/<configuration>/` directory 아래에 그 instant 이후 수정된 JSON report가 정확히 하나인지 요구하고, JMH configuration/row set을 검증한 뒤 selected run 아래에 `latency-<backend>-<configuration>.json`으로 atomic stage한다. Matching report가 0개 또는 여러 개이면 추측하지 않고 task를 실패시킨다.
 
-kotlinx-benchmark 0.4.17 creates every execution task as `JavaExec` whose sole
-argument is a generated JMH parameter file. For each experimental format,
-`CodecMatrixExperimentalFixtureMain` writes a validated replacement parameter
-file after eligibility is known, with the identical protocol/report settings
-and exact `include:` lines for eligible directions. Configure the generated
-`JavaExec` task with `onlyIf` to skip zero-eligible formats and, in `doFirst`,
-fail on blocking status, call `setArgs(listOf(exactParameterFile))`, and set the
-run ID/backend/preflight/fixture/eligibility JVM properties. Do not mutate the
-plugin's static `BenchmarkConfiguration` after configuration time. Add a
-Gradle TestKit functional test for zero-eligible skip, one-direction exact
-parameter file, blocking failure, and JVM-property propagation, plus pure
-parameter-renderer tests. This is backed by the installed 0.4.17
-`createJvmBenchmarkExecTask` source, not an assumed task API.
+kotlinx-benchmark 0.4.17은 모든 execution task를 generated JMH parameter file 하나만 argument로 받는 `JavaExec`로 만든다. 각 experimental format에 대해 `CodecMatrixExperimentalFixtureMain`은 eligibility가 확인된 뒤 동일한 protocol/report setting과 eligible direction의 정확한 `include:` line을 가진 validated replacement parameter file을 쓴다. Generated `JavaExec` task는 `onlyIf`로 zero-eligible format을 skip하고, `doFirst`에서 blocking status면 실패하며, `setArgs(listOf(exactParameterFile))`를 호출하고 run ID/backend/preflight/fixture/eligibility JVM property를 설정한다. Configuration time 이후 plugin의 static `BenchmarkConfiguration`을 mutate하지 않는다. Zero-eligible skip, one-direction exact parameter file, blocking failure, JVM-property propagation에 대한 Gradle TestKit functional test와 pure parameter-renderer test를 추가한다. 이는 가정한 task API가 아니라 설치된 0.4.17 `createJvmBenchmarkExecTask` source에 근거한다.
 
-The plugin creates one JMH jar per target, not per benchmark configuration, and
-that jar contains the compiled benchmark source set including the experimental
-class. `stageCodecMatrixProfilerJar` depends on `benchmarkBenchmarkJar`, reads
-the exact `Jar.archiveFile` provider, verifies current commit/build freshness
-and the stable/experimental generated classes, records SHA-256, and copies it
-to the run's fixed staging path. It fails on a missing/stale/unexpected jar and
-never uses `find -print -quit`.
+Plugin은 benchmark configuration별이 아니라 target별 JMH jar 하나를 만든다. 이 jar에는 experimental class를 포함한 compiled benchmark source set이 들어 있다. `stageCodecMatrixProfilerJar`는 `benchmarkBenchmarkJar`에 의존하고, 정확한 `Jar.archiveFile` provider를 읽으며, current commit/build freshness와 stable/experimental generated class를 검증하고, SHA-256을 기록한 뒤 run의 fixed staging path로 복사한다. Missing/stale/unexpected jar에서는 실패하며 `find -print -quit`를 사용하지 않는다.
 
-- [ ] **Step 4: Verify names, invalid input, and dry-run isolation**
+- [ ] **Step 4: Name, invalid input, dry-run isolation을 검증한다.**
 
 ```bash
 ./gradlew :bluetape4k-images-benchmark:test \
@@ -488,16 +433,9 @@ never uses `find -print -quit`.
   -Pcodec.matrix.runId=issue-208-dry-run -Pvips.impl=java25 --console=plain
 ```
 
-Expected: exact tasks and entrypoints exist; invalid input fails at
-configuration time; `codecMatrixPreflight --dry-run` remains main-runtime and
-non-native; default execution has sync/preflight/stable preparation but no
-capability/experimental execution; AVIF has preflight, preparation,
-capability, and experimental preparation. Also dry-run `build`, `check`,
-`test`, benchmark compile/generate/jar tasks and prove they reach none of the
-six execution/preparation tasks. Contract assertions verify the ordered
-capability output-provider edge, not merely sibling dependencies.
+Expected: exact task와 entrypoint가 존재한다. Invalid input은 configuration time에 실패한다. `codecMatrixPreflight --dry-run`은 main-runtime/non-native로 남는다. Default execution은 sync/preflight/stable preparation을 가지지만 capability/experimental execution은 없다. AVIF는 preflight, preparation, capability, experimental preparation을 가진다. 또한 `build`, `check`, `test`, benchmark compile/generate/jar task를 dry-run해 여섯 execution/preparation task 중 어느 것도 도달하지 않음을 증명한다. Contract assertion은 sibling dependency만이 아니라 ordered capability output-provider edge를 검증한다.
 
-- [ ] **Step 5: Verify existing-module registration remains unchanged**
+- [ ] **Step 5: Existing-module registration이 변하지 않았는지 검증한다.**
 
 ```bash
 ./gradlew projects --console=plain
@@ -505,13 +443,9 @@ git diff -- settings.gradle.kts bom gradle/libs.versions.toml \
   .github/workflows/ci.yml .github/workflows/nightly.yml
 ```
 
-Expected: the benchmark module is still listed; the scoped branch diff is
-empty. After commits, use `git diff --exit-code origin/develop...HEAD --` with
-the same paths; a working-tree-only diff is insufficient. This
-is concrete N/A evidence for the new-module/BOM/catalog/CI/Nightly registration
-chain, not permission to edit those surfaces.
+Expected: benchmark module은 계속 listing되고 scoped branch diff는 비어 있다. Commit 후에는 같은 path에 대해 `git diff --exit-code origin/develop...HEAD --`를 사용한다. Working-tree-only diff만으로는 부족하다. 이는 new-module/BOM/catalog/CI/Nightly registration chain에 대한 concrete N/A evidence이지, 해당 surface를 편집할 권한이 아니다.
 
-- [ ] **Step 6: Commit Gradle wiring**
+- [ ] **Step 6: Gradle wiring을 commit한다.**
 
 ```bash
 git add benchmark/images-benchmark/build.gradle.kts \
@@ -520,34 +454,24 @@ git add benchmark/images-benchmark/build.gradle.kts \
 git commit -m "build: wire codec matrix benchmark tasks"
 ```
 
-### Task 7: Add the Stable PNG/WebP Matrix
+### Task 7: Stable PNG/WebP Matrix 추가
 
 **Complexity:** Medium
 **Depends on:** Tasks 2, 3, 6
 **Pattern skills:** `bluetape-kotlin-patterns`, `references/testing.md`
-**Files:** create `VipsCodecMatrixBenchmark.kt`; extend `CodecMatrixBenchmarkContractTest.kt`.
+**Files:** `VipsCodecMatrixBenchmark.kt`를 만들고 `CodecMatrixBenchmarkContractTest.kt`를 확장한다.
 
-- [ ] **Step 1: Add failing source-contract assertions**
+- [ ] **Step 1: 실패하는 source-contract assertion을 추가한다.**
 
-Assert the exact four methods, `@Threads(1)`, `@Fork(1)`, `@Warmup(iterations =
-1, time = 1, timeUnit = TimeUnit.SECONDS)`, `@Measurement(iterations = 3, time
-= 1, timeUnit = TimeUnit.SECONDS)`,
-`@BenchmarkMode(Mode.AverageTime)`, `@OutputTimeUnit(TimeUnit.MILLISECONDS)`, two scenario
-parameters, the explicit `quality=85, effort=4, lossless=false,
-stripMetadata=true` profile, manifest/preflight loading, strict adapter use,
-and absence of `vipsAvailable`/`bh.consume(null)`.
+정확한 네 method, `@Threads(1)`, `@Fork(1)`, `@Warmup(iterations = 1, time = 1, timeUnit = TimeUnit.SECONDS)`, `@Measurement(iterations = 3, time = 1, timeUnit = TimeUnit.SECONDS)`, `@BenchmarkMode(Mode.AverageTime)`, `@OutputTimeUnit(TimeUnit.MILLISECONDS)`, 두 scenario parameter, 명시적 `quality=85, effort=4, lossless=false, stripMetadata=true` profile, manifest/preflight loading, strict adapter use, `vipsAvailable`/`bh.consume(null)` 부재를 assert한다.
 
-- [ ] **Step 2: Observe RED**
+- [ ] **Step 2: RED를 관찰한다.**
 
-Run the Task 6 focused test; expect missing stable JMH source assertions to fail.
+Task 6 focused test를 실행한다. Stable JMH source assertion이 아직 없어서 실패해야 한다.
 
-- [ ] **Step 3: Implement fail-fast state and methods**
+- [ ] **Step 3: Fail-fast state와 method를 구현한다.**
 
-Use thread-scoped `VipsCodecMatrixState` with `@Param("web-photo",
-"profile")`. Trial setup validates matching run ID, preflight, selector,
-backend identity, manifest hashes/dimensions/magic/options, loads pinned
-JPEG/PNG/WebP, and opens only `CodecMatrixRuntimeAdapter` at concurrency 4.
-Each method opens/closes one image and consumes forced output:
+`@Param("web-photo", "profile")`를 가진 thread-scoped `VipsCodecMatrixState`를 사용한다. Trial setup은 matching run ID, preflight, selector, backend identity, manifest hash/dimension/magic/option을 검증하고, pinned JPEG/PNG/WebP를 load하며, concurrency 4에서 `CodecMatrixRuntimeAdapter`만 연다. 각 method는 image 하나를 열고 닫으며 forced output을 consume한다.
 
 ```kotlin
 @Benchmark
@@ -565,9 +489,9 @@ fun decodeWebpToJpeg(state: VipsCodecMatrixState, bh: Blackhole) {
 }
 ```
 
-Implement matching PNG methods. Do not catch runtime/transcode failures. Teardown releases references but never calls `shutdown()`.
+Matching PNG method도 구현한다. Runtime/transcode failure는 catch하지 않는다. Teardown은 reference를 release하지만 `shutdown()`은 호출하지 않는다.
 
-- [ ] **Step 4: Test, compile both toolchains, and commit**
+- [ ] **Step 4: Test, 두 toolchain compile, commit을 수행한다.**
 
 ```bash
 ./gradlew :bluetape4k-images-benchmark:test \
@@ -582,33 +506,24 @@ git add benchmark/images-benchmark/src/benchmark/kotlin/io/bluetape4k/images/ben
 git commit -m "perf: add stable codec benchmark matrix"
 ```
 
-### Task 8: Add Opt-In AVIF/HEIC Methods
+### Task 8: Opt-In AVIF/HEIC Method 추가
 
 **Complexity:** Medium
 **Depends on:** Tasks 4, 6, 7
 **Pattern skills:** `bluetape-kotlin-patterns`, `references/testing.md`
-**Files:** create `VipsExperimentalCodecMatrixBenchmark.kt`; extend `CodecMatrixBenchmarkContractTest.kt`.
+**Files:** `VipsExperimentalCodecMatrixBenchmark.kt`를 만들고 `CodecMatrixBenchmarkContractTest.kt`를 확장한다.
 
-- [ ] **Step 1: Add failing experimental assertions**
+- [ ] **Step 1: 실패하는 experimental assertion을 추가한다.**
 
-Assert four method names, `@OptIn(VipsIncubatingApi::class)`, distinct direction states, pinned target decode input, JPEG encode input, eligibility checks, and no no-op/fallback.
+네 method name, `@OptIn(VipsIncubatingApi::class)`, distinct direction state, pinned target decode input, JPEG encode input, eligibility check, no no-op/fallback을 assert한다.
 
-- [ ] **Step 2: Observe RED**
+- [ ] **Step 2: RED를 관찰한다.**
 
-Run the Task 6 focused test; expect missing experimental source assertions to fail.
+Task 6 focused test를 실행한다. Experimental source assertion이 아직 없어서 실패해야 한다.
 
-- [ ] **Step 3: Implement direction-specific states and methods**
+- [ ] **Step 3: Direction-specific state와 method를 구현한다.**
 
-Create AVIF and HEIC states delegating to common internal state. Setup requires
-matching `ELIGIBLE` for the invoked direction, validates pinned input
-hash/magic/dimensions/producer manifest, and fails with the exact capability
-command when evidence is missing. After eligibility is generated, the
-experimental fixture command writes the exact kotlinx-benchmark parameter file
-consumed by the generated `JavaExec` task as specified in Task 6, containing
-only eligible direction includes. `UNSUPPORTED`, `SKIPPED`, and `N_A`
-directions remain manifest statuses and emit no JMH rows; zero eligible
-directions completes without launching JMH, while `FAILED_SMOKE`/`ERROR` fail
-the task. Implement:
+Common internal state에 delegate하는 AVIF/HEIC state를 만든다. Setup은 invoked direction이 matching `ELIGIBLE`인지 요구하고, pinned input hash/magic/dimension/producer manifest를 검증하며, evidence가 없으면 정확한 capability command와 함께 실패한다. Eligibility 생성 후 experimental fixture command는 Task 6에 지정된 generated `JavaExec` task가 소비할 정확한 kotlinx-benchmark parameter file을 쓰며, eligible direction include만 포함한다. `UNSUPPORTED`, `SKIPPED`, `N_A` direction은 manifest status로 남고 JMH row를 emit하지 않는다. Eligible direction이 0개이면 JMH launch 없이 완료하고, `FAILED_SMOKE`/`ERROR`는 task를 실패시킨다. 구현:
 
 ```kotlin
 @Benchmark fun encodeAvifFromJpeg(state: VipsAvifCodecMatrixState, bh: Blackhole)
@@ -617,9 +532,9 @@ the task. Implement:
 @Benchmark fun decodeHeicToJpeg(state: VipsHeicCodecMatrixState, bh: Blackhole)
 ```
 
-Every invocation opens/closes one image and consumes output bytes.
+모든 invocation은 image 하나를 열고 닫으며 output byte를 consume한다.
 
-- [ ] **Step 4: Compile, prove isolation, and commit**
+- [ ] **Step 4: Compile, isolation 증명, commit을 수행한다.**
 
 ```bash
 ./gradlew :bluetape4k-images-benchmark:test \
