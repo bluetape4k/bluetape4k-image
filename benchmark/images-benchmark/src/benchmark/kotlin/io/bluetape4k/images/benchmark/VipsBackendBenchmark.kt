@@ -16,17 +16,17 @@ import kotlinx.benchmark.Blackhole
 import java.util.concurrent.TimeUnit
 
 /**
- * Common libvips geometry benchmark used for backend-to-backend comparison.
+ * backend-to-backend 비교에 사용하는 common libvips geometry benchmark입니다.
  *
- * Run this class twice with the same parameters:
+ * 같은 parameter로 이 class를 두 번 실행합니다.
  *
  * ```bash
  * ./gradlew :bluetape4k-images-benchmark:benchmarkBenchmark -Pvips.impl=java21
  * ./gradlew :bluetape4k-images-benchmark:benchmarkBenchmark -Pvips.impl=java25
  * ```
  *
- * The Gradle property swaps the runtime backend while the benchmark method names
- * remain stable, so the generated JSON can be joined side by side by backend.
+ * Gradle property는 runtime backend만 교체하고 benchmark method name은 안정적으로 유지합니다.
+ * 따라서 생성된 JSON을 backend별로 나란히 join할 수 있습니다.
  */
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.MILLISECONDS)

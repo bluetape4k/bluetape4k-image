@@ -45,8 +45,8 @@ import kotlinx.io.readByteArray
 import java.util.concurrent.TimeUnit
 
 /**
- * Ktor test-host benchmarks for multipart parsing, image processing, and the full
- * production thumbnail route. The application is started once per JMH trial.
+ * multipart parsing, image processing, full production thumbnail route에 대한 Ktor test-host benchmark입니다.
+ * application은 JMH trial마다 한 번 시작합니다.
  */
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
@@ -120,7 +120,7 @@ class KtorThumbnailRouteBenchmark {
     }
 }
 
-/** Fail-fast route benchmark for a multipart upload one byte above the configured limit. */
+/** configured limit보다 1 byte 큰 multipart upload에 대한 fail-fast route benchmark입니다. */
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
 @Warmup(iterations = 1, time = 1, timeUnit = TimeUnit.SECONDS)
@@ -160,8 +160,8 @@ class KtorThumbnailRejectedRouteBenchmark {
 }
 
 /**
- * Concurrent accepted-request benchmark. Each sample is the completion time for
- * one batch whose requests are released from the same coroutine gate.
+ * concurrent accepted-request benchmark입니다. 각 sample은 같은 coroutine gate에서 release된 request batch 하나의
+ * completion time입니다.
  */
 @BenchmarkMode(Mode.SampleTime)
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
@@ -216,7 +216,7 @@ class KtorThumbnailConcurrentRouteBenchmark {
     }
 }
 
-/** Concurrent fail-fast benchmark for uploads one byte above the configured limit. */
+/** configured limit보다 1 byte 큰 upload에 대한 concurrent fail-fast benchmark입니다. */
 @BenchmarkMode(Mode.SampleTime)
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
 @Warmup(iterations = 3, time = 3, timeUnit = TimeUnit.SECONDS)
@@ -262,8 +262,8 @@ class KtorThumbnailConcurrentRejectedBenchmark {
 }
 
 /**
- * Mixed traffic benchmark with 90% accepted requests and 10% oversize
- * rejections. Concurrency values are multiples of ten to keep the ratio exact.
+ * accepted request 90%와 oversize rejection 10%를 섞은 mixed traffic benchmark입니다.
+ * ratio를 정확히 유지하기 위해 concurrency 값은 10의 배수입니다.
  */
 @BenchmarkMode(Mode.SampleTime)
 @OutputTimeUnit(TimeUnit.MILLISECONDS)

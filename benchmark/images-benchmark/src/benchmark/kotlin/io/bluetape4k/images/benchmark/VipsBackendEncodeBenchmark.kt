@@ -15,7 +15,7 @@ import kotlinx.benchmark.Blackhole
 import java.util.concurrent.TimeUnit
 
 /**
- * Common libvips encode benchmark used for backend-to-backend comparison.
+ * backend-to-backend 비교에 사용하는 common libvips encode benchmark입니다.
  */
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.MILLISECONDS)

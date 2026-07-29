@@ -13,14 +13,12 @@ import org.openjdk.jmh.annotations.Param
 import org.openjdk.jmh.annotations.Threads
 
 /**
- * Measures ZXing extraction from one immutable image that was decoded during trial setup.
+ * trial setup 중 decode된 immutable image 하나에서 ZXing extraction을 측정합니다.
  *
- * The `benchmarkBarcodeLatencyBenchmark` task reports average milliseconds per
- * extraction (lower is better). The `benchmarkBarcodeThroughputBenchmark` task
- * reports extractions per second (higher is better). PNG loading, image decode,
- * fixture validation, and reader construction stay outside the timed method.
- * ZXing's current single-result provider path is measured for QR, Code 128, and
- * an image with no barcode result.
+ * `benchmarkBarcodeLatencyBenchmark` task는 extraction당 평균 millisecond를 보고합니다(낮을수록 좋음).
+ * `benchmarkBarcodeThroughputBenchmark` task는 초당 extraction 수를 보고합니다(높을수록 좋음). PNG loading,
+ * image decode, fixture validation, reader construction은 timed method 밖에 둡니다. ZXing의 현재 single-result
+ * provider path를 QR, Code 128, barcode result가 없는 image에 대해 측정합니다.
  */
 @State(Scope.Benchmark)
 @Threads(1)

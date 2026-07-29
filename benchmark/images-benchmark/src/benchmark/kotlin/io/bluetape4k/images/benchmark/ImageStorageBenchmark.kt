@@ -35,8 +35,8 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 
 /**
- * Storage API benchmarks. The S3 methods use an in-memory S3Operations double: they measure
- * storage adapter and byte-materialization overhead without requiring credentials or a network.
+ * Storage API benchmark입니다. S3 method는 in-memory S3Operations double을 사용합니다. credential이나 network 없이
+ * storage adapter와 byte materialization overhead를 측정하기 위해서입니다.
  */
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.MILLISECONDS)

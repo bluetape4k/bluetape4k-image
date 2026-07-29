@@ -15,13 +15,11 @@ import org.openjdk.jmh.annotations.Threads
 import java.awt.image.BufferedImage
 
 /**
- * Measures the public Tess4J-backed text extraction path with hash-pinned document fixtures.
+ * hash-pinned document fixture로 public Tess4J-backed text extraction path를 측정합니다.
  *
- * Fixture resource loading, PNG decoding, traineddata checks, and a one-time
- * recognition check run during trial setup. `extractText` measures the default
- * public API, including its per-call Tesseract engine setup. `preprocessAndExtract`
- * additionally measures grayscale preprocessing and a type-normalizing right rotation
- * for the rotated input.
+ * fixture resource loading, PNG decoding, traineddata check, one-time recognition check는 trial setup 중 실행합니다.
+ * `extractText`는 per-call Tesseract engine setup을 포함한 기본 public API를 측정합니다. `preprocessAndExtract`는
+ * rotated input에 대한 grayscale preprocessing과 type-normalizing right rotation까지 추가로 측정합니다.
  */
 @State(Scope.Benchmark)
 @Threads(1)
