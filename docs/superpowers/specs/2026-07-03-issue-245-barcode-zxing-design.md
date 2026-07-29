@@ -1,59 +1,53 @@
-# Issue #245 ZXing Barcode Provider Design Spec
+# Issue #245 ZXing Barcode Provider 설계 명세
 
-- Issue: [#245](https://github.com/bluetape4k/bluetape4k-image/issues/245)
-- Parent epic: [#215](https://github.com/bluetape4k/bluetape4k-image/issues/215)
-- Milestone: `0.4.0`
-- Branch/worktree: `feat/issue-245-barcode-zxing` at `.worktrees/feat-issue-245-barcode-zxing`
+- 이슈: [#245](https://github.com/bluetape4k/bluetape4k-image/issues/245)
+- 상위 epic: [#215](https://github.com/bluetape4k/bluetape4k-image/issues/215)
+- 마일스톤: `0.4.0`
+- branch/worktree: `.worktrees/feat-issue-245-barcode-zxing`의 `feat/issue-245-barcode-zxing`
 
-## Problem
+## 문제
 
-The provider-neutral barcode API from #244 needs a first OSS implementation so
-callers can decode QR and common 1D barcodes without depending on a future
-native or commercial provider. ZXing is the lowest-friction first provider
-because it is Apache-2.0, pure JVM, and covers QR plus major retail/industrial
-1D symbologies.
+#244의 provider-neutral barcode API에는 첫 OSS 구현이 필요하다. 그래야 caller가 future native 또는
+commercial provider에 의존하지 않고 QR과 일반적인 1D barcode를 decode할 수 있다. ZXing은 Apache-2.0,
+pure JVM이며 QR과 주요 retail/industrial 1D symbology를 다루므로 첫 provider로 도입 비용이 가장 낮다.
 
-## Current Evidence
+## 현재 증거
 
-- `bluetape4k-images-barcode-api` already defines `BarcodeReader`,
-  `BarcodeOptions`, `BarcodeResult`, `BarcodeRegion`, provider identity, and
-  sanitized `BarcodeException` failure reasons.
-- #215 requires provider dependencies to stay out of `bluetape4k-images` and
-  the API module.
-- #245 requires QR plus at least one 1D family, provider metadata, result
-  points/bounding polygon mapping, no-code handling, and documentation of ZXing
-  maintenance/capability boundaries.
-- Maven Central metadata observed for `com.google.zxing:core` and
-  `com.google.zxing:javase` reports latest/release `3.5.4`.
+- `bluetape4k-images-barcode-api`는 이미 `BarcodeReader`, `BarcodeOptions`, `BarcodeResult`,
+  `BarcodeRegion`, provider identity, sanitized `BarcodeException` failure reason을 정의한다.
+- #215는 provider dependency가 `bluetape4k-images`와 API module 밖에 머물도록 요구한다.
+- #245는 QR과 최소 하나의 1D family, provider metadata, result points/bounding polygon mapping,
+  no-code handling, ZXing maintenance/capability boundary 문서화를 요구한다.
+- `com.google.zxing:core`, `com.google.zxing:javase`에 대해 관측한 Maven Central metadata는
+  latest/release `3.5.4`를 보고한다.
 
-## Goals
+## 목표
 
-- Add published module `bluetape4k-images-barcode-zxing`.
-- Keep all ZXing dependencies and imports inside the ZXing provider module.
-- Implement `ZxingBarcodeReader` as a `BarcodeReader`.
-- Decode QR Code and Code 128 in deterministic tests, with broader API format
-  mappings for supported ZXing symbologies.
-- Map ZXing text, backend format, result points, bounding box, raw bytes when
-  requested, provider identity, and metadata into #244 models.
-- Return an empty list for images with no barcode.
-- Throw `BarcodeException` with provider-neutral failure reasons for unsupported
-  requested formats, malformed encoded inputs, and decode failures.
-- Document explicit provider construction and `ImmutableImage.extractBarcodes`
-  usage in English and Korean README files.
+- published module `bluetape4k-images-barcode-zxing`을 추가한다.
+- 모든 ZXing dependency와 import를 ZXing provider module 내부에 유지한다.
+- `ZxingBarcodeReader`를 `BarcodeReader`로 구현한다.
+- deterministic test에서 QR Code와 Code 128을 decode하고, 지원되는 ZXing symbology에 대해 더 넓은
+  API format mapping을 둔다.
+- 요청 시 ZXing text, backend format, result points, bounding box, raw bytes, provider identity,
+  metadata를 #244 model로 mapping한다.
+- barcode가 없는 image에는 empty list를 반환한다.
+- unsupported requested format, malformed encoded input, decode failure에는 provider-neutral failure reason을
+  가진 `BarcodeException`을 던진다.
+- English와 Korean README file에 explicit provider construction과 `ImmutableImage.extractBarcodes` 사용법을
+  문서화한다.
 
-## Non-Goals
+## 비목표
 
-- Do not make ZXing the default provider for `images-barcode-api`.
-- Do not add ZXing to `bluetape4k-images` or `images-barcode-api`.
-- Do not implement BoofCV, commercial SDKs, OpenCV, or ZBar in this issue.
-- Do not build the full cross-provider fixture/capability matrix; #247 owns
-  that after at least one concrete provider lands.
-- Do not introduce a service loader registry before there are multiple shipped
-  providers.
+- ZXing을 `images-barcode-api`의 default provider로 만들지 않는다.
+- `bluetape4k-images`나 `images-barcode-api`에 ZXing을 추가하지 않는다.
+- 이 issue에서는 BoofCV, commercial SDK, OpenCV, ZBar를 구현하지 않는다.
+- full cross-provider fixture/capability matrix를 만들지 않는다. 최소 하나의 concrete provider가 들어온 뒤 #247이
+  이를 소유한다.
+- 여러 shipped provider가 생기기 전에는 service loader registry를 도입하지 않는다.
 
-## Module Boundary
+## Module 경계
 
-Add:
+다음을 추가한다.
 
 ```text
 images-barcode-zxing/
@@ -61,18 +55,17 @@ images-barcode-zxing/
   package: io.bluetape4k.images.barcode.zxing
 ```
 
-Gradle dependencies:
+Gradle dependency:
 
 - `api(project(":bluetape4k-images-barcode-api"))`
 - `implementation(libs.zxing.core)`
 - `implementation(libs.zxing.javase)`
 - `testImplementation(libs.bluetape4k.junit5)`
-- `testImplementation(libs.kotlinx.coroutines.test)` if suspend entry points
-  need direct provider tests.
+- suspend entry point에 direct provider test가 필요하면 `testImplementation(libs.kotlinx.coroutines.test)`.
 
 ## Public API
 
-Primary provider:
+primary provider:
 
 ```kotlin
 class ZxingBarcodeReader(
@@ -82,9 +75,8 @@ class ZxingBarcodeReader(
 }
 ```
 
-Convenience entry points may be added only when they add provider-specific
-failure normalization that the generic API extension cannot see, such as
-malformed encoded input handling:
+generic API extension이 볼 수 없는 provider-specific failure normalization을 추가할 때만 convenience
+entry point를 추가할 수 있다. malformed encoded input handling이 그 예다.
 
 ```kotlin
 fun ZxingBarcodeReader.readBarcodes(
@@ -93,46 +85,39 @@ fun ZxingBarcodeReader.readBarcodes(
 ): List<BarcodeResult>
 ```
 
-## Mapping Rules
+## Mapping 규칙
 
-- Empty `BarcodeOptions.formats` means all ZXing-supported formats.
-- `BarcodeFormat.UNKNOWN` is not passed as a ZXing hint.
-- If callers request only formats ZXing cannot support, fail with
-  `BarcodeFailureReason.UNSUPPORTED_FORMAT`.
-- `NotFoundException` returns `emptyList()` because no-code images are an
-  expected negative result.
-- `FormatException`, `ChecksumException`, and unexpected runtime decode errors
-  become `BarcodeException(DECODE_FAILED, ...)`.
-- Malformed encoded bytes become `BarcodeException(MALFORMED_INPUT, ...)` in
-  provider-specific byte helpers.
-- `Result.resultPoints` become pixel-space `BarcodePoint` values. A bounding
-  box is included when the points produce positive width and height.
-- `Result.rawBytes` is exposed only when `BarcodeOptions.includeRawBytes` is
-  true and ZXing provides non-empty bytes.
-- ZXing result metadata is converted to string-only metadata values.
+- empty `BarcodeOptions.formats`는 모든 ZXing-supported format을 의미한다.
+- `BarcodeFormat.UNKNOWN`은 ZXing hint로 전달하지 않는다.
+- caller가 ZXing이 지원할 수 없는 format만 요청하면 `BarcodeFailureReason.UNSUPPORTED_FORMAT`으로 실패한다.
+- `NotFoundException`은 `emptyList()`를 반환한다. no-code image는 expected negative result이기 때문이다.
+- `FormatException`, `ChecksumException`, unexpected runtime decode error는
+  `BarcodeException(DECODE_FAILED, ...)`가 된다.
+- malformed encoded bytes는 provider-specific byte helper에서 `BarcodeException(MALFORMED_INPUT, ...)`가 된다.
+- `Result.resultPoints`는 pixel-space `BarcodePoint` 값이 된다. point가 positive width와 height를 만들 때
+  bounding box를 포함한다.
+- `Result.rawBytes`는 `BarcodeOptions.includeRawBytes`가 true이고 ZXing이 non-empty bytes를 제공할 때만 노출한다.
+- ZXing result metadata는 string-only metadata value로 변환한다.
 
-## Testing Strategy
+## 테스트 전략
 
-Always-on tests:
+always-on test:
 
-- QR image decodes to `BarcodeFormat.QR_CODE`.
-- Code 128 image decodes to `BarcodeFormat.CODE_128`.
-- Requested format filtering does not return mismatched barcodes.
-- No-code image returns an empty list.
-- Rotated QR image decodes when `tryHarder = true`.
-- Malformed encoded byte helper throws `BarcodeException` with
-  `MALFORMED_INPUT`.
-- Unsupported requested format set throws `UNSUPPORTED_FORMAT` when no ZXing
-  mapping exists.
-- Result metadata includes provider identity, backend format, and pixel region
-  when ZXing exposes result points.
+- QR image가 `BarcodeFormat.QR_CODE`로 decode된다.
+- Code 128 image가 `BarcodeFormat.CODE_128`로 decode된다.
+- requested format filtering이 mismatch barcode를 반환하지 않는다.
+- no-code image가 empty list를 반환한다.
+- `tryHarder = true`일 때 rotated QR image가 decode된다.
+- malformed encoded byte helper가 `MALFORMED_INPUT`을 가진 `BarcodeException`을 던진다.
+- ZXing mapping이 없을 때 unsupported requested format set이 `UNSUPPORTED_FORMAT`을 던진다.
+- ZXing이 result point를 노출할 때 result metadata가 provider identity, backend format, pixel region을 포함한다.
 
-Tests generate barcode images in-memory with ZXing writers. Do not add
-network-fetched fixtures in this issue; #247 owns shared fixture breadth.
+test는 ZXing writer로 in-memory barcode image를 생성한다. 이 issue에서는 network-fetched fixture를
+추가하지 않는다. shared fixture 범위는 #247이 소유한다.
 
-## Documentation and Registration
+## 문서화와 등록
 
-Update:
+다음을 업데이트한다.
 
 - `settings.gradle.kts`
 - `gradle/libs.versions.toml`
@@ -147,30 +132,24 @@ Update:
 - `.github/workflows/publish-snapshot.yml`
 - `.github/workflows/Examples.yml`
 
-BOM constraints are automatic for published subprojects because
-`bom/build.gradle.kts` iterates published subprojects.
+`bom/build.gradle.kts`가 published subproject를 순회하므로 published subproject에 대한 BOM constraint는 자동이다.
 
-## Risks and Mitigations
+## 위험과 완화
 
-- **ZXing maintenance-mode risk**: document it as the first OSS provider, not a
-  long-term exclusive dependency.
-- **API leakage**: keep ZXing classes internal to the provider package and
-  expose only #244 API models.
-- **Multi-barcode limitation**: ZXing's simple reader path may decode one
-  barcode per image for many formats. Document this provider boundary and leave
-  multi-provider/multi-barcode breadth to future issue work if needed.
-- **Workflow drift**: add CI/Nightly/release validation in the same PR.
-- **Test fragility**: generate deterministic in-memory fixtures with ZXing
-  writers instead of depending on external image files.
+- **ZXing maintenance-mode risk**: ZXing을 long-term exclusive dependency가 아니라 첫 OSS provider로 문서화한다.
+- **API leakage**: ZXing class를 provider package 내부에 유지하고 #244 API model만 노출한다.
+- **multi-barcode limitation**: ZXing의 simple reader path는 많은 format에서 image당 barcode 하나만 decode할 수 있다.
+  이 provider boundary를 문서화하고 필요하면 multi-provider/multi-barcode 범위를 future issue work로 남긴다.
+- **workflow drift**: CI/Nightly/release validation을 같은 PR에 추가한다.
+- **test fragility**: external image file에 의존하지 않고 ZXing writer로 deterministic in-memory fixture를 생성한다.
 
-## Acceptance Criteria
+## 인수 기준
 
-- `:bluetape4k-images-barcode-zxing` exists and builds.
-- ZXing dependencies are visible only in the ZXing provider module.
-- Unit tests cover QR, Code 128, no-code, rotated QR, malformed input, and
-  unsupported format behavior.
-- Root/module README locale set documents construction and extension-style use.
-- CI/Nightly/release/publish workflow registration includes the new module.
+- `:bluetape4k-images-barcode-zxing`이 존재하고 build된다.
+- ZXing dependency는 ZXing provider module에서만 보인다.
+- unit test가 QR, Code 128, no-code, rotated QR, malformed input, unsupported format behavior를 다룬다.
+- root/module README locale set이 construction과 extension-style 사용을 문서화한다.
+- CI/Nightly/release/publish workflow registration이 새 module을 포함한다.
 - `./gradlew :bluetape4k-images-barcode-zxing:test`,
   `./gradlew :bluetape4k-images-barcode-zxing:compileTestKotlin --warning-mode all`,
-  `./gradlew projects`, `actionlint`, and `git diff --check` pass.
+  `./gradlew projects`, `actionlint`, `git diff --check`가 통과한다.
