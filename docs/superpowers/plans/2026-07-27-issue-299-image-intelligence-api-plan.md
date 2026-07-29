@@ -956,23 +956,23 @@ git commit -m "Expose image analysis as a stable partial-result API" \
   -m "Tested: multipart success, partial, failed-envelope, input, and sanitized 500 tests"
 ```
 
-## Task 7: Prove lifecycle, profile, and full example behavior
+## Task 7: lifecycle, profile, 전체 example behavior 증명
 
-**Complexity:** High
-**Depends on:** Tasks 1–6
+**복잡도:** High
+**의존성:** Tasks 1-6
 **Pattern skills:** `bluetape-kotlin-patterns`, `kotlin-coroutines-skill`, `test-driven-development`
-**Rollback point:** integration fixtures/tests can be reverted independently; production behavior remains covered by focused tests.
+**Rollback 지점:** integration fixture/test는 독립적으로 되돌릴 수 있고, production behavior는 focused test가 계속 보호한다.
 
-**Files:**
+**파일:**
 
 - Create: `examples/spring-boot-image-intelligence-api/src/test/kotlin/io/bluetape4k/images/examples/spring/intelligence/ImageIntelligenceApplicationTest.kt`
 - Create: `examples/spring-boot-image-intelligence-api/src/test/kotlin/io/bluetape4k/images/examples/spring/intelligence/ImageIntelligenceCancellationTest.kt`
 - Create: `examples/spring-boot-image-intelligence-api/src/test/kotlin/io/bluetape4k/images/examples/spring/intelligence/ImageIntelligenceObservabilityTest.kt`
 - Modify: `examples/spring-boot-image-intelligence-api/src/test/kotlin/io/bluetape4k/images/examples/spring/intelligence/support/ImageIntelligenceFixtures.kt`
 
-- [ ] **Step 1: Add application profile tests**
+- [ ] **Step 1: application profile test 추가**
 
-Prove the Spring context provides exactly:
+Spring context가 정확히 다음 provider 구성을 제공함을 증명한다:
 
 ```text
 default       disabled OCR, disabled detector, ZXing
@@ -980,44 +980,42 @@ demo          fixture OCR, fixture detector, ZXing
 native-ocr    Tesseract OCR, disabled detector, ZXing
 ```
 
-Do not execute native OCR in the default test suite. Verify conflicting `demo,native-ocr`
-profiles fail closed rather than relying on bean ordering.
+default test suite에서는 native OCR을 실행하지 않는다. `demo,native-ocr` profile 충돌은 bean ordering에 의존하지 않고 fail closed됨을 검증한다.
 
-- [ ] **Step 2: Add end-to-end generated-image tests**
+- [ ] **Step 2: end-to-end generated-image test 추가**
 
-Generate:
+다음을 생성한다:
 
-- a QR visitor pass producing `ALLOW`;
-- a blank valid image producing policy `MANUAL_REVIEW`;
-- a valid image with injected OCR failure preserving detection/barcode;
-- a valid image with unavailable OCR/detector;
-- malformed and oversized uploads rejected before providers.
+- `ALLOW`를 만드는 QR visitor pass
+- policy `MANUAL_REVIEW`를 만드는 blank valid image
+- detection/barcode를 보존하면서 OCR failure를 inject한 valid image
+- unavailable OCR/detector를 포함한 valid image
+- provider 전에 거절되는 malformed 및 oversized upload
 
-Pin generated QR payload and dimensions and call actual `ZxingBarcodeReader`.
+생성한 QR payload와 dimension을 고정하고 실제 `ZxingBarcodeReader`를 호출한다.
 
-- [ ] **Step 3: Add real cancellation and concurrency proof**
+- [ ] **Step 3: 실제 cancellation과 concurrency 증거 추가**
 
-Start a request/service coroutine with three controllable providers, cancel the parent, and assert:
+controllable provider 세 개로 request/service coroutine을 시작하고 parent를 cancel한 뒤 다음을 assert한다:
 
-- all provider jobs observe cancellation;
-- no response DTO is produced;
-- permits return to their initial count;
-- a subsequent request completes;
-- internal lane timeout still produces a response and does not cancel siblings.
+- 모든 provider job이 cancellation을 관찰한다.
+- response DTO가 생성되지 않는다.
+- permit이 initial count로 돌아온다.
+- subsequent request가 완료된다.
+- internal lane timeout은 여전히 response를 만들고 sibling을 cancel하지 않는다.
 
-- [ ] **Step 4: Add structured-log redaction proof**
+- [ ] **Step 4: structured-log redaction 증거 추가**
 
-Capture application logs for one completed request and one provider failure. Assert logs contain:
+completed request 하나와 provider failure 하나에 대한 application log를 capture한다. log가 다음을 포함하는지 assert한다:
 
-- request ID;
-- provider ID;
-- outcome status;
-- timeout or elapsed milliseconds.
+- request ID
+- provider ID
+- outcome status
+- timeout 또는 elapsed milliseconds
 
-Assert logs do not contain the generated QR payload, OCR text, image bytes, native path,
-exception message, or stack trace at the API boundary.
+API boundary에서 log가 generated QR payload, OCR text, image bytes, native path, exception message, stack trace를 포함하지 않는지 assert한다.
 
-- [ ] **Step 5: Run targeted lifecycle tests**
+- [ ] **Step 5: targeted lifecycle test 실행**
 
 ```bash
 ./gradlew :spring-boot-image-intelligence-api:test \
@@ -1026,17 +1024,16 @@ exception message, or stack trace at the API boundary.
   --tests '*ImageIntelligenceObservabilityTest' --no-daemon
 ```
 
-Expected: all profile, end-to-end, cancellation, permit-recovery, subsequent-request, and
-log-redaction tests pass.
+예상 결과: 모든 profile, end-to-end, cancellation, permit-recovery, subsequent-request, log-redaction test가 통과한다.
 
-- [ ] **Step 6: Run the whole example test task from clean test outputs**
+- [ ] **Step 6: clean test output에서 전체 example test task 실행**
 
 ```bash
 ./gradlew :spring-boot-image-intelligence-api:cleanTest \
   :spring-boot-image-intelligence-api:test --no-build-cache --no-daemon
 ```
 
-Expected: all example tests pass with zero skipped default-path behavior and no native runtime.
+예상 결과: 모든 example test가 통과하고 default-path behavior skip은 0이며 native runtime은 필요하지 않다.
 
 - [ ] **Step 7: Commit**
 
