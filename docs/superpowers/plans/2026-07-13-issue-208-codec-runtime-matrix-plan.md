@@ -1,110 +1,99 @@
-# Issue #208 Codec/Runtime Matrix Implementation Plan
+# Issue #208 Codec/Runtime Matrix 구현 계획
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **Agentic worker 필수 지침:** 이 계획은 task 단위로 구현한다. 구현 표면은 superpowers:subagent-driven-development(권장) 또는 superpowers:executing-plans를 사용한다. 진행 추적에는 checkbox(`- [ ]`) 문법을 사용한다.
 
-**Goal:** Add a fail-closed, reproducible PNG/WebP codec benchmark matrix with opt-in AVIF/HEIC evidence for the Java 21 JNI and Java 25 FFM libvips runtimes.
+**목표:** Java 21 JNI와 Java 25 FFM libvips runtime에 대해 fail-closed 방식으로 재현 가능한 PNG/WebP codec benchmark matrix를 추가하고, AVIF/HEIC는 opt-in evidence로 다룬다.
 
-**Architecture:** Internal main-source harness components prepare hash-pinned fixtures, probe the selected runtime, serialize eligibility/run manifests, and finalize append-only evidence. JMH source files contain only trial setup and measured transcode calls; stable tasks consume the same canonical manifest, while experimental tasks depend on direction-specific capability and smoke gates.
+**아키텍처:** Internal main-source harness component는 hash-pinned fixture를 준비하고, 선택된 runtime을 probe하며, eligibility/run manifest를 serialize하고, append-only evidence를 finalize한다. JMH source file은 trial setup과 측정 대상 transcode call만 포함한다. Stable task는 같은 canonical manifest를 소비하고, experimental task는 direction-specific capability와 smoke gate에 의존한다.
 
-**Tech Stack:** repository-selected Kotlin 2.4.0 (Kotlin 2.3+ line), Java 21/25 toolchains, Gradle Kotlin DSL, kotlinx-benchmark 0.4.17/JMH, kotlinx-serialization JSON, Scrimage, libvips through JVips JNI or vips-ffm, JUnit 5, bluetape4k assertions.
+**기술 스택:** Repository-selected Kotlin 2.4.0(Kotlin 2.3+ line), Java 21/25 toolchain, Gradle Kotlin DSL, kotlinx-benchmark 0.4.17/JMH, kotlinx-serialization JSON, Scrimage, JVips JNI 또는 vips-ffm을 통한 libvips, JUnit 5, bluetape4k assertion.
 
 ---
 
-## Preconditions and Boundaries
+## 전제조건과 경계
 
 - Worktree: `.worktrees/perf-issue-208-codec-runtime-matrix`
 - Branch: `perf/issue-208-codec-runtime-matrix`
 - Base: `origin/develop` at `feb75001a35fceb53f976a982e7d44a1eb28e204`
 - Approved spec: `docs/superpowers/specs/2026-07-13-issue-208-codec-runtime-matrix-design.md`
-- Scope is limited to `bluetape4k-images-benchmark`, its benchmark evidence, both benchmark README locales, and triggered chart assets.
-- Do not change `VipsImage`, `VipsRuntime`, JVips, FFM, BOM, any catalog alias
-  or version, module registration, CI, Nightly, or production APIs. A dependency
-  resolution failure reopens scope approval; it never authorizes an inline
-  catalog fix.
-- Keep historical `VipsBenchmarkState` and `VipsBackendEncodeBenchmark.vips_encodeJpeg` unchanged.
-- Run all JNI/FFM/capability/JMH commands sequentially. Diagnose failed native attempts before a fresh-process rerun.
-- Every harness CLI accepts a validated run ID and documented scalar flags only. Gradle pins the repository working directory; Kotlin code derives and verifies the exact generated, staging, and accepted roots and rejects absolute/caller-provided paths, `..`, symlinks in any ancestor or tree entry, and non-regular inputs.
-- After every `.kt` edit, run IDE diagnostics when available, optimize imports, and resolve all errors and deprecations before Gradle compilation. When IDE tooling is unavailable, record that limitation and use the focused Kotlin compile/test command as fallback evidence.
-- Stop after implementation review, lesson commit, and PR readiness. PR creation and merge remain explicit user boundaries.
+- 범위는 `bluetape4k-images-benchmark`, 해당 benchmark evidence, benchmark README 두 locale, 그리고 trigger된 chart asset으로 제한한다.
+- `VipsImage`, `VipsRuntime`, JVips, FFM, BOM, catalog alias/version, module registration, CI, Nightly, production API는 변경하지 않는다. Dependency resolution failure가 발생하면 scope approval을 다시 열어야 하며, inline catalog fix 권한으로 해석하지 않는다.
+- 기존 `VipsBenchmarkState`와 `VipsBackendEncodeBenchmark.vips_encodeJpeg`는 변경하지 않는다.
+- 모든 JNI/FFM/capability/JMH command는 sequential로 실행한다. 실패한 native attempt는 fresh-process rerun 전에 진단한다.
+- 모든 harness CLI는 검증된 run ID와 문서화된 scalar flag만 받는다. Gradle은 repository working directory를 pin한다. Kotlin code는 정확한 generated/staging/accepted root를 파생하고 검증하며, absolute path, caller-provided path, `..`, ancestor 또는 tree entry의 symlink, non-regular input을 거부한다.
+- `.kt` 편집 후 IDE diagnostic을 사용할 수 있으면 실행하고 import를 정리하며 Gradle compile 전에 모든 error/deprecation을 해결한다. IDE tooling을 사용할 수 없으면 그 제한을 기록하고 focused Kotlin compile/test command를 fallback evidence로 사용한다.
+- Implementation review, lesson commit, PR readiness 이후 중단한다. PR 생성과 merge는 명시적 user boundary로 남긴다.
 
-## File and Ownership Map
+## 파일과 Ownership Map
 
-| File | Responsibility |
+| File | 책임 |
 |---|---|
-| `benchmark/images-benchmark/build.gradle.kts` | strict selector, dependencies, named configs, prepare/capability/finalize tasks |
-| `benchmark/images-benchmark/src/main/kotlin/io/bluetape4k/images/benchmark/CodecMatrixModels.kt` | scenarios, statuses, reason codes, manifests |
-| `benchmark/images-benchmark/src/main/kotlin/io/bluetape4k/images/benchmark/CodecMatrixJson.kt` | canonical JSON, SHA-256, atomic writes, validation |
-| `benchmark/images-benchmark/src/main/kotlin/io/bluetape4k/images/benchmark/CodecMatrixFixtures.kt` | fixed-source preparation and fixture manifest |
-| `benchmark/images-benchmark/src/main/kotlin/io/bluetape4k/images/benchmark/CodecMatrixPreflight.kt` | vips-free selector, host/JDK/binary preflight, diagnostics |
-| `benchmark/images-benchmark/src/main/kotlin/io/bluetape4k/images/benchmark/CodecMatrixCapability.kt` | vips-free capability/smoke DTO and operation seam |
+| `benchmark/images-benchmark/build.gradle.kts` | strict selector, dependency, named config, prepare/capability/finalize task |
+| `benchmark/images-benchmark/src/main/kotlin/io/bluetape4k/images/benchmark/CodecMatrixModels.kt` | scenario, status, reason code, manifest |
+| `benchmark/images-benchmark/src/main/kotlin/io/bluetape4k/images/benchmark/CodecMatrixJson.kt` | canonical JSON, SHA-256, atomic write, validation |
+| `benchmark/images-benchmark/src/main/kotlin/io/bluetape4k/images/benchmark/CodecMatrixFixtures.kt` | fixed-source preparation과 fixture manifest |
+| `benchmark/images-benchmark/src/main/kotlin/io/bluetape4k/images/benchmark/CodecMatrixPreflight.kt` | vips-free selector, host/JDK/binary preflight, diagnostic |
+| `benchmark/images-benchmark/src/main/kotlin/io/bluetape4k/images/benchmark/CodecMatrixCapability.kt` | vips-free capability/smoke DTO와 operation seam |
 | `benchmark/images-benchmark/src/main/kotlin/io/bluetape4k/images/benchmark/CodecMatrixFixtureMain.kt` | stable fixture preparation CLI |
 | `benchmark/images-benchmark/src/main/kotlin/io/bluetape4k/images/benchmark/CodecMatrixPreflightMain.kt` | non-native preflight CLI |
 | `benchmark/images-benchmark/src/main/kotlin/io/bluetape4k/images/benchmark/CodecMatrixFinalizeMain.kt` | non-native finalization/promotion CLI |
-| `benchmark/images-benchmark/src/benchmark/kotlin/io/bluetape4k/images/benchmark/CodecMatrixRuntimeAdapter.kt` | selected Vips runtime/image adapter with no fallback |
-| `benchmark/images-benchmark/src/benchmark/kotlin/io/bluetape4k/images/benchmark/CodecMatrixCapabilityMain.kt` | selected-backend capability and directional-smoke CLI |
+| `benchmark/images-benchmark/src/benchmark/kotlin/io/bluetape4k/images/benchmark/CodecMatrixRuntimeAdapter.kt` | fallback 없는 selected Vips runtime/image adapter |
+| `benchmark/images-benchmark/src/benchmark/kotlin/io/bluetape4k/images/benchmark/CodecMatrixCapabilityMain.kt` | selected-backend capability와 directional-smoke CLI |
 | `benchmark/images-benchmark/src/benchmark/kotlin/io/bluetape4k/images/benchmark/CodecMatrixExperimentalFixtureMain.kt` | eligible AVIF/HEIC target-input CLI |
-| `benchmark/images-benchmark/src/benchmark/kotlin/io/bluetape4k/images/benchmark/VipsCodecMatrixBenchmark.kt` | stable state and four measured boundaries |
-| `benchmark/images-benchmark/src/benchmark/kotlin/io/bluetape4k/images/benchmark/VipsExperimentalCodecMatrixBenchmark.kt` | opt-in AVIF/HEIC states and methods |
-| `benchmark/images-benchmark/src/test/kotlin/io/bluetape4k/images/benchmark/CodecMatrixModelsTest.kt` | manifest/status invariants |
+| `benchmark/images-benchmark/src/benchmark/kotlin/io/bluetape4k/images/benchmark/VipsCodecMatrixBenchmark.kt` | stable state와 네 measured boundary |
+| `benchmark/images-benchmark/src/benchmark/kotlin/io/bluetape4k/images/benchmark/VipsExperimentalCodecMatrixBenchmark.kt` | opt-in AVIF/HEIC state와 method |
+| `benchmark/images-benchmark/src/test/kotlin/io/bluetape4k/images/benchmark/CodecMatrixModelsTest.kt` | manifest/status invariant |
 | `benchmark/images-benchmark/src/test/kotlin/io/bluetape4k/images/benchmark/CodecMatrixFixturesTest.kt` | fixture determinism/path/magic |
 | `benchmark/images-benchmark/src/test/kotlin/io/bluetape4k/images/benchmark/CodecMatrixRuntimeTest.kt` | selector/preflight/sanitizer |
 | `benchmark/images-benchmark/src/test/kotlin/io/bluetape4k/images/benchmark/CodecMatrixCapabilityTest.kt` | direction/smoke/close ownership |
-| `benchmark/images-benchmark/src/test/kotlin/io/bluetape4k/images/benchmark/CodecMatrixEvidenceFinalizerTest.kt` | hashes/cells/no-overwrite |
+| `benchmark/images-benchmark/src/test/kotlin/io/bluetape4k/images/benchmark/CodecMatrixEvidenceFinalizerTest.kt` | hash/cell/no-overwrite |
 | `benchmark/images-benchmark/src/test/kotlin/io/bluetape4k/images/benchmark/CodecMatrixBenchmarkContractTest.kt` | JMH/config/task graph contract |
 | `benchmark/images-benchmark/src/test/kotlin/io/bluetape4k/images/benchmark/CodecMatrixBenchmarkTaskFunctionalTest.kt` | Gradle TestKit execution-argument/gating contract |
 | `benchmark/images-benchmark/docs/raw/<run-id>/` | finalized append-only evidence |
-| `benchmark/images-benchmark/docs/codec-runtime-matrix-2026-07-13.md` | detailed report |
-| `benchmark/images-benchmark/README.md` / `README.ko.md` | equivalent summary and links |
-| `docs/images/readme-charts/images-benchmark-codec-runtime-matrix-chart-01.svg` / `.png` | conditional comparable chart |
+| `benchmark/images-benchmark/docs/codec-runtime-matrix-2026-07-13.md` | 상세 report |
+| `benchmark/images-benchmark/README.md` / `README.ko.md` | 동등한 summary와 link |
+| `docs/images/readme-charts/images-benchmark-codec-runtime-matrix-chart-01.svg` / `.png` | 조건부 comparable chart |
 | `docs/lessons/2026-07-13-issue-208-codec-runtime-matrix.md` | durable lesson |
 
 ## Acceptance Traceability
 
-| Requirement | Tasks | Proof |
+| 요구사항 | Tasks | Proof |
 |---|---|---|
-| PNG/WebP four-boundary matrix, two scenarios | 2, 7 | 8 stable JMH rows per runnable backend |
-| Identical inputs across backends | 2, 6 | one run ID and manifest hashes |
-| No lazy-open/no-op timing | 7, 8 | forced output and no `bh.consume(null)` |
+| PNG/WebP four-boundary matrix, 두 scenario | 2, 7 | 실행 가능한 backend마다 8개 stable JMH row |
+| Backend 간 동일 input | 2, 6 | 하나의 run ID와 manifest hash |
+| lazy-open/no-op timing 없음 | 7, 8 | forced output과 `bh.consume(null)` 부재 |
 | Direction-specific AVIF/HEIC | 4, 8 | cell eligibility, smoke, focused task graph |
-| Terminal statuses and blockers | 1, 4, 5 | validators and negative tests |
-| Latency/allocation/input/output bytes | 5, 9 | JMH, GC profiler, size artifacts |
-| Runtime/environment evidence | 3, 4, 9 | preflight/capability/run manifests |
-| Default experimental isolation | 6, 8 | dry-runs and contract tests |
-| README/report/locale parity | 10 | paired docs and link checks |
-| Comparable chart only | 10 | diagram ledger or evidence-backed N/A |
-| Review/lesson | 11 | P0/P1=0 and committed lesson |
+| Terminal status와 blocker | 1, 4, 5 | validator와 negative test |
+| Latency/allocation/input/output byte | 5, 9 | JMH, GC profiler, size artifact |
+| Runtime/environment evidence | 3, 4, 9 | preflight/capability/run manifest |
+| Default experimental isolation | 6, 8 | dry-run과 contract test |
+| README/report/locale parity | 10 | paired doc과 link check |
+| Comparable chart only | 10 | diagram ledger 또는 evidence-backed N/A |
+| Review/lesson | 11 | P0/P1=0과 committed lesson |
 
 ## Risk Prediction
 
 | Risk | Signal | Mitigation | Rerun/rollback |
 |---|---|---|---|
-| Backend inputs differ | hash mismatch | prepare once with explicit run ID | discard run and restart native evidence |
-| Java 21 binary incompatible | arm64 host/x86_64 JNI | non-native preflight emits `N_A` | do not invoke JNI JMH |
-| Capability lies about operation | malformed/failed transcode | blocking `FAILED_SMOKE` | diagnose and use new run ID |
-| Native lifecycle leak | retry-only pass/close mismatch | `use`, fresh process per lane, no `shutdown()` | invalidate and rerun lane |
-| Experimental graph leakage | default dry-run includes probe/task | explicit exclusion and graph tests | repair before native work |
-| Evidence leaks local data | paths/secret-like token | fixed reasons, sanitizer, promotion scan | reject staging and regenerate |
-| GC protocol differs | row/iteration/thread mismatch | pin direct JMH flags | rerun profiler lane |
-| Promotion overwrites evidence | target exists/partial move | atomic append-only promotion | new run with `supersedes` |
+| Backend input 불일치 | hash mismatch | 명시적 run ID로 한 번만 prepare | run 폐기 후 native evidence 재시작 |
+| Java 21 binary incompatible | arm64 host/x86_64 JNI | non-native preflight가 `N_A` emit | JNI JMH 호출 금지 |
+| Capability가 operation을 잘못 보고 | malformed/failed transcode | blocking `FAILED_SMOKE` | 진단 후 새 run ID 사용 |
+| Native lifecycle leak | retry-only pass/close mismatch | `use`, lane별 fresh process, `shutdown()` 금지 | lane 무효화 후 rerun |
+| Experimental graph leakage | default dry-run에 probe/task 포함 | explicit exclusion과 graph test | native work 전에 수리 |
+| Evidence가 local data 노출 | path/secret-like token | fixed reason, sanitizer, promotion scan | staging 거부 후 regenerate |
+| GC protocol 불일치 | row/iteration/thread mismatch | direct JMH flag pin | profiler lane rerun |
+| Promotion이 evidence overwrite | target exists/partial move | atomic append-only promotion | `supersedes`로 새 run |
 
-### Task 1: Define Manifest and Status Invariants
+### Task 1: Manifest와 Status Invariant 정의
 
 **Complexity:** High
 **Depends on:** approved spec
 **Pattern skills:** `bluetape-kotlin-patterns`, `references/testing.md`
-**Files:** create `CodecMatrixModels.kt`, `CodecMatrixJson.kt`,
-`CodecMatrixModelsTest.kt`; modify module `build.gradle.kts` only.
+**Files:** `CodecMatrixModels.kt`, `CodecMatrixJson.kt`, `CodecMatrixModelsTest.kt`를 만들고 module `build.gradle.kts`만 수정한다.
 
-- [ ] **Step 1: Add failing invariant tests**
+- [ ] **Step 1: 실패하는 invariant test를 추가한다.**
 
-Apply `alias(libs.plugins.kotlin.serialization)` and consume
-`implementation(libs.kotlinx.serialization.json)`. Until the governed alias is
-published in a release-train catalog tag, add the documented temporary issue
-#208 version pin to the repo-local alias. Disable the benchmark module's unused
-atomicfu JVM transform so sequential Java 25 then Java 21 verification does not
-load Java 25 classes in a Java 21 transformer. Preserve the existing
-`benchmarkImplementation(project(":bluetape4k-images-vips-api"))`; do not add
-Vips API types to the main source-set dependency graph. Test:
+`alias(libs.plugins.kotlin.serialization)`을 적용하고 `implementation(libs.kotlinx.serialization.json)`을 사용한다. Governed alias가 release-train catalog tag로 게시되기 전까지는 문서화된 temporary issue #208 version pin을 repo-local alias에 추가한다. Java 25 이후 Java 21 sequential verification에서 Java 21 transformer가 Java 25 class를 load하지 않도록 benchmark module의 사용하지 않는 atomicfu JVM transform을 비활성화한다. 기존 `benchmarkImplementation(project(":bluetape4k-images-vips-api"))`는 보존한다. Main source-set dependency graph에 Vips API type을 추가하지 않는다. Test:
 
 ```kotlin
 @Test
@@ -122,7 +111,7 @@ fun `accepted manifest rejects blocking states`() {
 }
 ```
 
-- [ ] **Step 2: Observe RED**
+- [ ] **Step 2: RED를 관찰한다.**
 
 ```bash
 ./gradlew :bluetape4k-images-benchmark:test \
@@ -130,9 +119,9 @@ fun `accepted manifest rejects blocking states`() {
   -Pvips.impl=java25 --console=plain
 ```
 
-Expected: missing codec-matrix model types fail compilation.
+Expected: codec-matrix model type이 아직 없어서 compilation이 실패한다.
 
-- [ ] **Step 3: Implement models and canonical JSON**
+- [ ] **Step 3: Model과 canonical JSON을 구현한다.**
 
 Define:
 
@@ -151,26 +140,11 @@ Define:
 }
 ```
 
-Import `kotlinx.serialization.SerialName`. Use internal `@Serializable` data
-classes implementing `java.io.Serializable` with `serialVersionUID` for
-dimensions, hashes, inputs, fixture entries, cells, eligibility, and finalized
-manifests. Introduce named value/request types for run ID, SHA-256, dimensions,
-paths, and multi-string operation inputs instead of positional same-type
-parameters. Persist only repository-relative `String` paths; serialized models
-must not contain `Path`, `File`, or host-local absolute paths. Enforce unique
-expected cells, run IDs matching `[a-z0-9][a-z0-9._-]{7,79}`, no `MEASURED`
-in eligibility, no `ELIGIBLE/FAILED_SMOKE/ERROR` in accepted evidence,
-complete latency/allocation/input/output metrics and hashes for `MEASURED`, and fixed reason/rerun guidance for
-unmeasured cells. `CodecMatrixJson` uses pretty, explicit-default JSON,
-SHA-256, and same-directory temporary plus atomic move. Before decoding it
-checks the declared SHA-256 and a fixed byte-size ceiling; strict decoding
-rejects unknown/duplicate keys, excess nesting, non-finite numbers, oversized
-strings/collections, and any cell/artifact count outside the exact matrix
-cardinality. Add negative tests for every bound.
+`kotlinx.serialization.SerialName`을 import한다. Dimension, hash, input, fixture entry, cell, eligibility, finalized manifest에는 `serialVersionUID`를 가진 `java.io.Serializable` 구현 internal `@Serializable` data class를 사용한다. Positional same-type parameter 대신 run ID, SHA-256, dimension, path, multi-string operation input에 named value/request type을 도입한다. Repository-relative `String` path만 persist하고, serialized model에는 `Path`, `File`, host-local absolute path를 포함하지 않는다. Unique expected cell, `[a-z0-9][a-z0-9._-]{7,79}`에 맞는 run ID, eligibility에 `MEASURED` 없음, accepted evidence에 `ELIGIBLE/FAILED_SMOKE/ERROR` 없음, `MEASURED` cell의 latency/allocation/input/output metric과 hash 완비, unmeasured cell의 fixed reason/rerun guidance를 강제한다. `CodecMatrixJson`은 pretty explicit-default JSON, SHA-256, same-directory temporary plus atomic move를 사용한다. Decode 전에 declared SHA-256과 fixed byte-size ceiling을 확인한다. Strict decoding은 unknown/duplicate key, excess nesting, non-finite number, oversized string/collection, 정확한 matrix cardinality 밖의 cell/artifact count를 거부한다. 모든 bound에 negative test를 추가한다.
 
-- [ ] **Step 4: Observe GREEN and commit**
+- [ ] **Step 4: GREEN을 관찰하고 commit한다.**
 
-Rerun the focused test; expect PASS without native initialization.
+Focused test를 다시 실행한다. Native initialization 없이 `PASS`해야 한다.
 
 ```bash
 git add benchmark/images-benchmark/build.gradle.kts \
@@ -180,16 +154,16 @@ git add benchmark/images-benchmark/build.gradle.kts \
 git commit -m "feat: add codec matrix manifest model"
 ```
 
-### Task 2: Prepare Canonical PNG/WebP Fixtures
+### Task 2: Canonical PNG/WebP Fixture 준비
 
 **Complexity:** High
 **Depends on:** Task 1
 **Pattern skills:** `bluetape-kotlin-patterns`, `references/testing.md`
-**Files:** create `CodecMatrixFixtures.kt`, `CodecMatrixFixtureMain.kt`, `CodecMatrixFixturesTest.kt`.
+**Files:** `CodecMatrixFixtures.kt`, `CodecMatrixFixtureMain.kt`, `CodecMatrixFixturesTest.kt`를 만든다.
 
-- [ ] **Step 1: Write failing fixture tests**
+- [ ] **Step 1: 실패하는 fixture test를 작성한다.**
 
-Prove exact generated-source names/dimensions, deterministic hashes, symlink/missing rejection, no-overwrite, derived 1920x1080/512x512, positive size, and JPEG/PNG/WebP magic. Tests copy only the two repository fixtures into a temporary directory shaped like the Gradle `Sync` output; harness code never receives a repository root or another module's test path:
+정확한 generated-source name/dimension, deterministic hash, symlink/missing rejection, no-overwrite, derived 1920x1080/512x512, positive size, JPEG/PNG/WebP magic을 증명한다. Test는 두 repository fixture만 Gradle `Sync` output 형태의 temporary directory로 복사한다. Harness code는 repository root나 다른 module의 test path를 받지 않는다.
 
 ```kotlin
 @Test
@@ -201,7 +175,7 @@ fun `canonical preparation is deterministic`() {
 }
 ```
 
-- [ ] **Step 2: Observe RED**
+- [ ] **Step 2: RED를 관찰한다.**
 
 ```bash
 ./gradlew :bluetape4k-images-benchmark:test \
@@ -209,13 +183,11 @@ fun `canonical preparation is deterministic`() {
   -Pvips.impl=java25 --console=plain
 ```
 
-Expected: fixture functions are unresolved.
+Expected: fixture function이 아직 없어 unresolved 상태다.
 
-- [ ] **Step 3: Implement fixed-source preparation**
+- [ ] **Step 3: Fixed-source preparation을 구현한다.**
 
-Consume only `build/generated/codec-matrix-source-fixtures/`, populated by
-`syncCodecMatrixSourceFixtures` in Task 6. Keep the checked-in source paths
-solely in that Gradle `Sync` declaration. Use:
+Task 6의 `syncCodecMatrixSourceFixtures`가 채운 `build/generated/codec-matrix-source-fixtures/`만 소비한다. Checked-in source path는 해당 Gradle `Sync` declaration에만 둔다. Use:
 
 ```kotlin
 private const val CAFE_SOURCE = "cafe.jpg"
@@ -225,19 +197,9 @@ private val PNG_WRITER = PngWriter(4)
 private val WEBP_WRITER = WebpWriter(-1, 85, 4, false, false)
 ```
 
-Resolve below the generated-source directory, reject symlinks, verify original
-dimensions, and implement the specified integer cover-scale plus centered crop
-without stretching. Write derived JPEG/PNG/WebP under
-`build/codec-matrix/<run-id>/fixtures/<scenario>/` and atomically write
-`fixtures/manifest.json` with source/derived/input hashes, magic, byte counts,
-dimensions, recipe, and options. Existing run content must validate
-byte-identically or fail. `CodecMatrixFixtureMain` accepts only `--run-id`;
-from the Gradle-pinned repository working directory it derives the exact
-generated-source, backend-preflight, and run output paths. Tests reject a
-changed working root, absolute/`..` paths, symlink ancestors/targets, and
-non-regular generated inputs.
+Generated-source directory 아래로만 resolve하고, symlink를 거부하며, original dimension을 검증하고, stretching 없이 지정된 integer cover-scale plus centered crop을 구현한다. Derived JPEG/PNG/WebP는 `build/codec-matrix/<run-id>/fixtures/<scenario>/` 아래에 쓰고, source/derived/input hash, magic, byte count, dimension, recipe, option을 담은 `fixtures/manifest.json`을 atomic하게 쓴다. Existing run content는 byte-identical하게 validate되거나 fail해야 한다. `CodecMatrixFixtureMain`은 `--run-id`만 받는다. Gradle-pinned repository working directory에서 정확한 generated-source, backend-preflight, run output path를 파생한다. Test는 changed working root, absolute/`..` path, symlink ancestor/target, non-regular generated input을 거부한다.
 
-- [ ] **Step 4: Observe GREEN**
+- [ ] **Step 4: GREEN을 관찰한다.**
 
 ```bash
 ./gradlew :bluetape4k-images-benchmark:test \
@@ -245,10 +207,9 @@ non-regular generated inputs.
   -Pvips.impl=java25 --console=plain
 ```
 
-Expected: fixture tests pass. The Gradle preparation task is registered in
-Task 6, after its command implementation exists.
+Expected: fixture test가 통과한다. Gradle preparation task는 command implementation이 존재한 뒤 Task 6에서 등록한다.
 
-- [ ] **Step 5: Commit fixture preparation**
+- [ ] **Step 5: Fixture preparation을 commit한다.**
 
 ```bash
 git add benchmark/images-benchmark/src/main/kotlin/io/bluetape4k/images/benchmark/CodecMatrixFixtures.kt \
