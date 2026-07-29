@@ -1,87 +1,82 @@
-# Issue #165 Design — Large-file Okio IO APIs
+# Issue #165 설계 — 대용량 파일 Okio IO API
 
-## Context
+## 배경
 
-Issue #165 asks for memory-conscious large-file image IO APIs that use Okio. The
-starting evidence is PR #167 / issue #166, which added a `kotlinx-benchmark`
-large streaming benchmark. The benchmark shows that Scrimage `Path`,
-`InputStream`, and Okio `Source/Sink` rows are latency- and managed-allocation
-similar because Scrimage decode/encode still dominates decoded image heap.
-libvips Java 25 FFM `Path` is the strongest measured row for large files.
+Issue #165는 Okio를 사용하는 메모리 의식형 대용량 이미지 IO API를 요구한다. 출발 증거는
+`kotlinx-benchmark` 기반 대용량 스트리밍 벤치마크를 추가한 PR #167 / issue #166이다.
+이 벤치마크에서는 Scrimage `Path`, `InputStream`, Okio `Source/Sink` 행의 지연 시간과
+관리 힙 할당량이 비슷하게 나타난다. Scrimage의 decode/encode가 여전히 디코딩된 이미지
+힙을 지배하기 때문이다. 대용량 파일에서 가장 강한 측정 행은 libvips Java 25 FFM `Path`이다.
 
-The user clarified that this work should use `bluetape4k-okio` actively, not
-just raw Okio types. Current code already has Scrimage `ImmutableImage`
-overloads for `BufferedSource`, `Source`, `BufferedSuspendedSource`,
-`SuspendedSource`, `BufferedSink`, `Sink`, `BufferedSuspendedSink`, and
-`SuspendedSink` in `images/src/main/kotlin/io/bluetape4k/images/ImmutableImageSupport.kt`.
+사용자는 이 작업이 단순히 raw Okio 타입만 받는 수준이 아니라 `bluetape4k-okio`를 적극적으로
+사용해야 한다고 명확히 했다. 현재 코드에는 이미
+`images/src/main/kotlin/io/bluetape4k/images/ImmutableImageSupport.kt`에 Scrimage
+`ImmutableImage`용 `BufferedSource`, `Source`, `BufferedSuspendedSource`,
+`SuspendedSource`, `BufferedSink`, `Sink`, `BufferedSuspendedSink`,
+`SuspendedSink` overload가 있다.
 
-## Current Evidence
+## 현재 증거
 
-- `images/build.gradle.kts` already exposes `libs.bluetape4k.okio`.
-- Scrimage load/write helpers already import:
+- `images/build.gradle.kts`는 이미 `libs.bluetape4k.okio`를 노출한다.
+- Scrimage load/write helper는 이미 다음 항목을 import한다.
   - `io.bluetape4k.okio.buffered`
   - `io.bluetape4k.okio.coroutines.buffered`
   - `io.bluetape4k.okio.coroutines.asBlocking`
   - `SuspendedSource`, `SuspendedSink`, `BufferedSuspendedSource`, `BufferedSuspendedSink`
-- `images/src/test/.../ImmutableImageSupportTest.kt` covers basic Okio load and
-  suspended source/sink cases, but lifecycle/close semantics and large generated
-  fixture behavior are thin.
-- `images-vips-api` currently exposes `VipsImage.writeTo(Path)` and
-  `VipsImage.writeTo(OutputStream)`, plus coroutine wrappers.
-- `images-vips-java21` and `images-vips-java25` expose ByteArray, File, Path,
-  InputStream load functions. Stream loads are bounded by `VipsLimits.MAX_INPUT_BYTES`.
-- `bluetape4k-okio` provides the preferred ecosystem bridge surface:
+- `images/src/test/.../ImmutableImageSupportTest.kt`는 기본 Okio load와 suspended
+  source/sink 사례를 다루지만, lifecycle/close 의미와 대용량 생성 fixture 동작 검증은 얇다.
+- `images-vips-api`는 현재 `VipsImage.writeTo(Path)`, `VipsImage.writeTo(OutputStream)`,
+  그리고 coroutine wrapper를 노출한다.
+- `images-vips-java21`과 `images-vips-java25`는 `ByteArray`, `File`, `Path`,
+  `InputStream` load 함수를 노출한다. stream load는 `VipsLimits.MAX_INPUT_BYTES`로 제한된다.
+- `bluetape4k-okio`는 선호되는 생태계 bridge surface를 제공한다.
   - `InputStream.asSource()`, `OutputStream.asSink()`
   - `Source.buffered()`, `Sink.buffered()`
   - `AsynchronousFileChannel.asSuspendedSource()`, `asSuspendedSink()`
   - `SuspendedSource.buffered()`, `SuspendedSink.buffered()`
   - `SuspendedSource.asBlocking()`, `SuspendedSink.asBlocking()`
-- Okio upstream documentation uses `use {}` around owning sources/sinks and
-  recommends operating through Okio once a source/sink wrapper owns the stream.
+- Okio upstream 문서는 ownership이 있는 source/sink에 `use {}`를 적용하며, source/sink wrapper가
+  stream을 소유한 뒤에는 Okio를 통해 작업하는 방식을 권장한다.
 
-## Requirements
+## 요구사항
 
-1. Provide a clear Okio-first API path for large-file callers without forcing
-   `ByteArray` staging at the public API boundary.
-2. Use `bluetape4k-okio` bridge helpers and suspended source/sink APIs directly.
-3. Keep Scrimage documentation honest: Okio helps lifecycle/integration, not
-   Scrimage decoded-image heap allocation.
-4. Add binding-neutral vips write extensions for Okio sinks.
-5. Add backend-specific vips load overloads for Okio sources and suspended
-   sources while preserving existing size/format/pixel safety checks.
-6. Keep resource ownership explicit:
-   - `BufferedSource` / `BufferedSink` / buffered suspended variants are
-     caller-owned and not closed by the helper.
-   - raw `Source` / `Sink` / suspended variants are buffered and closed by the helper.
-7. README and KDoc must state when vips `Path` is preferred for measured large
-   local-file performance.
+1. public API 경계에서 `ByteArray` staging을 강제하지 않는 명확한 Okio-first 대용량 파일 경로를 제공한다.
+2. `bluetape4k-okio` bridge helper와 suspended source/sink API를 직접 사용한다.
+3. Scrimage 문서는 정직하게 유지한다. Okio는 lifecycle과 통합에는 도움이 되지만 Scrimage의
+   디코딩된 이미지 힙 할당을 줄인다고 말하지 않는다.
+4. Okio sink용 binding-neutral vips write extension을 추가한다.
+5. 기존 크기, 형식, 픽셀 안전성 검사를 유지하면서 Okio source와 suspended source용 backend-specific
+   vips load overload를 추가한다.
+6. resource ownership을 명시한다.
+   - `BufferedSource` / `BufferedSink` / buffered suspended variant는 호출자 소유이며 helper가 닫지 않는다.
+   - raw `Source` / `Sink` / suspended variant는 helper가 buffering하고 닫는다.
+7. README와 KDoc은 측정된 대용량 로컬 파일 성능에서 vips `Path`가 선호되는 시점을 명시해야 한다.
 
-## Design Options
+## 설계 선택지
 
-### Option A — Only document existing Scrimage Okio APIs
+### 선택지 A — 기존 Scrimage Okio API만 문서화
 
-This is too small for #165. It would not give vips users a large-file Okio
-surface and would leave the benchmark evidence disconnected from API choices.
+이는 #165에 비해 범위가 너무 작다. vips 사용자에게 대용량 파일 Okio surface를 제공하지 못하고,
+벤치마크 증거와 API 선택의 연결도 남겨둔다.
 
-### Option B — Add only raw Okio overloads
+### 선택지 B — raw Okio overload만 추가
 
-This uses `okio.Source` and `okio.Sink` but does not lean into
-`bluetape4k-okio`. It also leaves coroutine file-channel paths up to each
-caller and weakens consistency with the rest of bluetape4k.
+이 방식은 `okio.Source`와 `okio.Sink`를 사용하지만 `bluetape4k-okio`를 충분히 활용하지 않는다.
+또한 coroutine file-channel 경로를 각 호출자에게 맡기며, bluetape4k의 나머지 영역과의 일관성을 약화한다.
 
-### Option C — Use bluetape4k-okio as the public IO bridge
+### 선택지 C — `bluetape4k-okio`를 public IO bridge로 사용
 
-Add vips Okio/suspended overloads using `bluetape4k-okio` adapters and tighten
-Scrimage tests/docs around the existing overloads. This keeps dependency and
-ownership semantics consistent across `images` and `images-vips-*`.
+`bluetape4k-okio` adapter를 사용해 vips Okio/suspended overload를 추가하고, 기존 overload 주변의
+Scrimage test/docs를 강화한다. 이렇게 하면 `images`와 `images-vips-*` 전반에서 dependency와
+ownership 의미가 일관되게 유지된다.
 
-Selected: Option C.
+선택: 선택지 C.
 
-## API Shape
+## API 형태
 
 ### Scrimage `images`
 
-Keep existing public functions and add focused tests/docs:
+기존 public function을 유지하고 집중된 tests/docs를 추가한다.
 
 - `immutableImageOf(source: BufferedSource)`
 - `immutableImageOf(source: Source)`
@@ -94,7 +89,7 @@ Keep existing public functions and add focused tests/docs:
 
 ### vips API module
 
-Add binding-neutral extension functions in `images-vips-api`:
+`images-vips-api`에 binding-neutral extension function을 추가한다.
 
 - `VipsImage.writeTo(sink: BufferedSink, format, options)`
 - `VipsImage.writeTo(sink: Sink, format, options)`
@@ -103,13 +98,12 @@ Add binding-neutral extension functions in `images-vips-api`:
 - `VipsImage.suspendWriteTo(sink: BufferedSuspendedSink, format, options)`
 - `VipsImage.suspendWriteTo(sink: SuspendedSink, format, options)`
 
-These extensions encode through existing `VipsImage.writeTo(OutputStream)` and
-flush sinks. This is not a native streaming encoder guarantee because current
-vips implementations still call `toBytes()` internally.
+이 extension은 기존 `VipsImage.writeTo(OutputStream)`을 통해 encode하고 sink를 flush한다. 현재 vips
+구현이 내부에서 여전히 `toBytes()`를 호출하므로, 이는 native streaming encoder 보장이 아니다.
 
-### vips backend modules
+### vips backend module
 
-Add backend-specific load overloads:
+backend-specific load overload를 추가한다.
 
 - Java 21:
   - `vipsImageOf(source: BufferedSource)`
@@ -121,43 +115,37 @@ Add backend-specific load overloads:
 - Java 25:
   - same shape under `ffmVipsImageOf` / `suspendFfmVipsImageOf`
 
-All variants delegate to the existing bounded `InputStream` decode path or to
-the existing blocking bridge for suspended sources, so existing `MAX_INPUT_BYTES`
-and format allowlist behavior remains in force.
+모든 variant는 기존 bounded `InputStream` decode path 또는 suspended source용 기존 blocking bridge로
+위임한다. 따라서 기존 `MAX_INPUT_BYTES`와 format allowlist 동작은 그대로 유지된다.
 
-## Test Strategy
+## 테스트 전략
 
-- `images`: extend `ImmutableImageSupportTest` with generated larger fixtures
-  and explicit caller-owned vs helper-owned close/flush behavior.
-- `images-vips-api`: add a fake `VipsImage` test for Okio sink extensions,
-  including flush and close ownership.
-- `images-vips-java21/java25`: add backend tests for Okio source overloads,
-  gated by existing runtime availability base classes. Keep JNI/FFM tests serial
-  through existing Gradle configuration.
-- Add compile checks for all touched modules and run targeted tests. Java 25
-  checks must include `--enable-native-access` through existing Gradle config.
+- `images`: 생성된 더 큰 fixture와 명시적인 caller-owned/helper-owned close/flush 동작을
+  `ImmutableImageSupportTest`에 추가한다.
+- `images-vips-api`: Okio sink extension용 fake `VipsImage` test를 추가하고 flush와 close ownership을
+  포함한다.
+- `images-vips-java21/java25`: 기존 runtime availability base class로 gate되는 Okio source overload
+  backend test를 추가한다. JNI/FFM test는 기존 Gradle 구성에 따라 serial로 유지한다.
+- 모든 touch module에 compile check를 추가하고 targeted test를 실행한다. Java 25 check는 기존 Gradle 구성을
+  통해 `--enable-native-access`를 포함해야 한다.
 
-## Risks
+## 위험
 
-1. Public wording may imply true bounded-memory transform for Scrimage. Mitigate
-   with README/KDoc language tied to #166 allocation evidence.
-2. vips `Source` load currently buffers compressed input bytes because the
-   backend APIs decode from bytes for non-path sources. Mitigate by recommending
-   `Path` for local large files and documenting stream boundaries as integration
-   APIs.
-3. Suspended source/sink bridge can hide cancellation if implemented with
-   `runCatching`. Mitigate by direct `try/finally` cleanup and no broad
-   cancellation swallowing.
-4. Adding Okio types to `images-vips-api` affects dependency surface. Mitigate
-   by explicit `api(libs.bluetape4k.okio)` because the public API contains Okio
-   types.
+1. public 문구가 Scrimage에 대해 진정한 bounded-memory transform을 암시할 수 있다. #166 allocation
+   evidence에 연결된 README/KDoc 표현으로 완화한다.
+2. vips `Source` load는 non-path source에서 backend API가 bytes에서 decode하기 때문에 현재 compressed input
+   bytes를 buffering한다. 로컬 대용량 파일에는 `Path`를 권장하고 stream 경계를 integration API로 문서화해 완화한다.
+3. suspended source/sink bridge가 `runCatching`으로 구현되면 cancellation을 숨길 수 있다. 직접적인 `try/finally`
+   cleanup을 사용하고 넓은 cancellation swallowing을 피해서 완화한다.
+4. `images-vips-api`에 Okio 타입을 추가하면 dependency surface가 영향을 받는다. public API가 Okio 타입을 포함하므로
+   명시적인 `api(libs.bluetape4k.okio)`로 완화한다.
 
-## Acceptance Mapping
+## 인수 기준 매핑
 
-| Issue criterion | Design response |
+| 이슈 기준 | 설계 응답 |
 |---|---|
-| Clear large-file path without ByteArray boundary | Scrimage/vips Okio source/sink APIs plus Path recommendation |
-| Okio APIs isolated | `images` and `images-vips-api` only expose public Okio; backend modules add concrete load overloads |
-| Resource closing/failure/cancellation | Ownership split and focused tests |
-| README/README.ko limitations | Large-file section with #166 evidence |
-| Benchmark evidence link | README and PR body link `benchmark/images-benchmark/docs/large-streaming-2026-06-05.md` |
+| `ByteArray` 경계 없는 명확한 대용량 파일 경로 | Scrimage/vips Okio source/sink API와 `Path` 권장 |
+| Okio API 격리 | `images`와 `images-vips-api`만 public Okio를 노출하고, backend module은 concrete load overload를 추가 |
+| resource close/failure/cancellation | ownership 분리와 집중 test |
+| README/README.ko 제한 설명 | #166 증거가 포함된 대용량 파일 section |
+| benchmark evidence link | README와 PR body가 `benchmark/images-benchmark/docs/large-streaming-2026-06-05.md`를 link |
