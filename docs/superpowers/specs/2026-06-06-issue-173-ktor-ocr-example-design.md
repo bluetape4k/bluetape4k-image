@@ -1,4 +1,4 @@
-# Issue 173 Ktor OCR Example Design
+# Issue 173 Ktor OCR 예제 설계
 
 ## 문제
 
@@ -37,8 +37,8 @@ Ktor 사용자는 multipart upload, language option, native Tesseract 설정, ro
 - 정상 CI는 실제 Tesseract 설치를 요구하지 않는다.
 - README는 영어/한국어 locale set으로 작성하고 native Tesseract/traineddata 설치와
   local run/test command를 설명한다.
-- README diagram은 English label PNG를 embed하고, matching SVG/DOT/plain/Graphviz
-  evidence를 생성한다.
+- README diagram은 English label PNG를 embed하고, 대응되는 SVG/DOT/plain/Graphviz evidence를
+  생성한다.
 
 ## 비목표
 
@@ -75,8 +75,8 @@ production policy를 넓힌다. reusable helper가 필요하면 별도 follow-up
 
 ## API 계약
 
-- `GET /ready` returns `200 OK` plain text `OK`.
-- `POST /api/ocr?languages=eng` consumes multipart form data.
+- `GET /ready`는 plain text `OK`와 함께 `200 OK`를 반환한다.
+- `POST /api/ocr?languages=eng`는 multipart form data를 소비한다.
 - multipart field name은 `file`.
 - 허용 content type: `image/jpeg`, `image/png`, `image/webp`, `image/gif`.
 - 성공 응답:
@@ -89,15 +89,14 @@ production policy를 넓힌다. reusable helper가 필요하면 별도 follow-up
 }
 ```
 
-- caller validation failure: `400 bad_request` with local `OcrApiErrorResponse`.
+- caller validation failure: local `OcrApiErrorResponse`와 함께 `400 bad_request`.
 - `OcrException`: `503 ocr_unavailable`.
 
 ## 구성
 
-- `PORT`: server port, default `8080`.
-- `TESSDATA_PREFIX`: host Tesseract default lookup.
-- `EXAMPLE_OCR_TESSDATA_PATH`: optional app-level tessdata path passed to
-  `OcrOptions.tessdataPath`.
+- `PORT`: server port다. 기본값은 `8080`이다.
+- `TESSDATA_PREFIX`: host Tesseract가 기본으로 탐색하는 경로다.
+- `EXAMPLE_OCR_TESSDATA_PATH`: `OcrOptions.tessdataPath`에 전달되는 optional app-level tessdata path다.
 
 ## 보안 / 신뢰 경계
 
@@ -135,10 +134,10 @@ production policy를 넓힌다. reusable helper가 필요하면 별도 follow-up
 
 ## DoD
 
-- Spec/plan/review artifacts exist under `docs/superpowers` and `docs/review`.
-- `examples/ktor-ocr-api` compiles and tests pass.
-- Root and module README locale set are updated.
-- Diagrams are generated and visually inspected.
-- Examples workflow includes the new module.
-- Step 6-R shows P0=0 and P1=0.
-- PR body ends with `## DoD Status`.
+- spec/plan/review artifact가 `docs/superpowers`와 `docs/review` 아래에 존재한다.
+- `examples/ktor-ocr-api`가 compile되고 test가 통과한다.
+- root와 module README locale set이 업데이트된다.
+- diagram이 생성되고 시각적으로 검토된다.
+- Examples workflow가 새 module을 포함한다.
+- Step 6-R이 P0=0, P1=0을 보여준다.
+- PR body가 `## DoD Status`로 끝난다.
