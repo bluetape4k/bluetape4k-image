@@ -75,93 +75,75 @@ AVIF/HEIC path에 대한 explicit evidence는 제공하지 않는다.
 - libvips는 buffer-based WebP와 HEIF load/save operation을 노출한다.
   <https://libvips.github.io/pyvips/vimage.html>
 
-## 5. Considered Approaches
+## 5. 검토한 접근법
 
-### 5.1 Recommended: binding-neutral transcode matrix
+### 5.1 권장: binding-neutral transcode matrix
 
-Use the public `VipsImage` boundary and force evaluation with a common output
-codec:
+public `VipsImage` boundary를 사용하고 common output codec으로 evaluation을 강제한다.
 
 - JPEG input -> PNG output (`encodePngFromJpeg`)
 - JPEG input -> WebP output (`encodeWebpFromJpeg`)
 - PNG input -> JPEG output (`decodePngToJpeg`)
 - WebP input -> JPEG output (`decodeWebpToJpeg`)
 
-This is intentionally a transcode pipeline rather than a claim of pure codec
-CPU time. The input side identifies the decode codec and the output side forces
-libvips to evaluate pixels. The same binding-neutral operations run against
-both backends.
+이는 순수 codec CPU time을 주장하는 것이 아니라 의도적인 transcode pipeline이다. input side는 decode codec을
+식별하고 output side는 libvips가 pixel을 evaluate하도록 강제한다. 같은 binding-neutral operation이 두 backend
+모두에서 실행된다.
 
-### 5.2 Rejected: header/open timing as decode timing
+### 5.2 거부: header/open timing을 decode timing으로 간주
 
-Measuring only `vipsImageOf(bytes)` or reading dimensions can measure lazy open
-and header parsing without evaluating all pixels. Labeling that result as decode
-latency would be misleading.
+`vipsImageOf(bytes)`만 측정하거나 dimension만 읽으면 모든 pixel을 evaluate하지 않고 lazy open과 header
+parsing을 측정할 수 있다. 그 결과를 decode latency로 표시하면 오해를 만든다.
 
-### 5.3 Rejected: backend-specific raw-pixel hooks
+### 5.3 거부: backend-specific raw-pixel hook
 
-Adding JNI- and FFM-specific benchmark adapters could isolate a lower-level
-decode boundary, but it would couple the harness to backend internals and make
-cross-backend semantics harder to keep equivalent. Issue #208 does not justify
-new production SPI or native adapter APIs.
+JNI/FFM-specific benchmark adapter를 추가하면 lower-level decode boundary를 분리할 수는 있지만, harness가
+backend internal에 결합되고 cross-backend semantics를 equivalent하게 유지하기 어려워진다. Issue #208은 새
+production SPI나 native adapter API를 정당화하지 않는다.
 
-### 5.4 Rejected: all codecs in the default task
+### 5.4 거부: 모든 codec을 default task에 포함
 
-Putting AVIF/HEIC methods in the default task would make the normal benchmark
-path depend on optional native codecs. Unsupported hosts could fail or, worse,
-emit no-op measurements. Experimental codecs remain a separate opt-in lane.
+default task에 AVIF/HEIC method를 넣으면 normal benchmark path가 optional native codec에 의존한다.
+unsupported host는 실패하거나 더 나쁘게 no-op measurement를 낼 수 있다. experimental codec은 별도 opt-in lane으로
+유지한다.
 
-## 6. Fixture Design
+## 6. Fixture 설계
 
-Use two repository-managed source images and derive realistic workload shapes
-once in a canonical preparation step before any JMH process starts:
+JMH process가 시작되기 전에 canonical preparation step에서 repository-managed source image 두 개로 realistic
+workload shape를 한 번 생성한다.
 
-| Scenario | Source | Derived raster | Purpose |
+| Scenario | Source | Derived raster | 목적 |
 |---|---|---:|---|
-| `web-photo` | `cafe.jpg` (4032x3024) | center-cropped/resized 1920x1080 | common large web content |
-| `profile` | `homer.jpg` (1248x702) | center-cropped/resized 512x512 | common profile/avatar content |
+| `web-photo` | `cafe.jpg` (4032x3024) | center-cropped/resized 1920x1080 | 일반적인 대용량 web content |
+| `profile` | `homer.jpg` (1248x702) | center-cropped/resized 512x512 | 일반적인 profile/avatar content |
 
-Rules:
+규칙:
 
-- Resolve the checked-in sources from
-  `benchmark/images-benchmark/src/main/resources/bench/cafe.jpg` and
-  `images/src/test/resources/images/homer.jpg`. Record their SHA-256 values in
-  the result report.
-- A cacheable `syncCodecMatrixSourceFixtures` Gradle `Sync` task declares those
-  files as inputs and copies them into
-  `build/generated/codec-matrix-source-fixtures/`. All harness code consumes
-  only this generated directory; it never resolves another module's test tree
-  from the process working directory.
-- The transformation recipe is deterministic and happens outside the measured
-  loop: scale uniformly until both target dimensions are covered, then take the
-  centered target rectangle using integer pixel coordinates. Do not stretch the
-  source or select a random crop.
-- The derived raster is encoded once into the JPEG, PNG, and WebP inputs needed
-  by the stable matrix.
-- A canonical preparation command writes the derived rasters and JPEG/PNG/WebP
-  inputs once under `build/codec-matrix/<run-id>/fixtures/`. It also writes a
-  manifest containing logical fixture IDs, source and derived SHA-256 values,
-  dimensions, magic-byte result, byte count, transform recipe, and codec
-  options. Backend benchmark JVMs only read this manifest and fail if any hash,
-  dimension, or magic byte differs.
-- The command is the `prepareCodecMatrixFixtures` Gradle task. It accepts a
-  validated `-Pcodec.matrix.runId=<run-id>` and refuses to overwrite an existing
-  run directory with different content. When the property is absent, local
-  smoke runs use a generated non-publishable run ID; accepted evidence always
-  uses one explicit run ID across preparation, backend, profiler, and
-  finalization commands.
-- JMH trial setup verifies the manifest and loads its bytes; it never regenerates
-  or re-encodes canonical inputs.
-- Stable runs use identical manifest-pinned input bytes for Java 21 and Java 25.
-- A missing source fixture is a setup failure. The codec matrix must not fall
-  back to a synthetic image because that would silently change the workload.
-- The matrix loader accepts only the two fixed repository resources above. It
-  does not accept a caller path, follow a symlink, or reuse the synthetic
-  fallback in `BenchmarkImageSets`.
-- Results stay separated by scenario. Values from different dimensions are not
-  averaged into one ranking.
-- The report records source identity, derived dimensions, encoded input bytes,
-  and measured output bytes.
+- checked-in source는 `benchmark/images-benchmark/src/main/resources/bench/cafe.jpg`와
+  `images/src/test/resources/images/homer.jpg`에서 resolve한다. 해당 SHA-256 값을 result report에 기록한다.
+- cacheable `syncCodecMatrixSourceFixtures` Gradle `Sync` task는 이 file들을 input으로 선언하고
+  `build/generated/codec-matrix-source-fixtures/`로 copy한다. 모든 harness code는 이 generated directory만
+  소비한다. process working directory에서 다른 module의 test tree를 resolve하지 않는다.
+- transformation recipe는 deterministic하며 measured loop 밖에서 실행된다. 두 target dimension을 모두 덮을 때까지
+  uniform scale한 뒤 integer pixel coordinate로 centered target rectangle을 가져온다. source를 stretch하거나 random
+  crop을 선택하지 않는다.
+- derived raster는 stable matrix에 필요한 JPEG, PNG, WebP input으로 한 번 encode한다.
+- canonical preparation command는 derived raster와 JPEG/PNG/WebP input을
+  `build/codec-matrix/<run-id>/fixtures/` 아래에 한 번 쓴다. 또한 logical fixture ID, source/derived
+  SHA-256 value, dimension, magic-byte result, byte count, transform recipe, codec option을 포함하는
+  manifest를 쓴다. backend benchmark JVM은 이 manifest만 읽고 hash, dimension, magic byte가 다르면 실패한다.
+- command는 `prepareCodecMatrixFixtures` Gradle task다. validated
+  `-Pcodec.matrix.runId=<run-id>`를 받고, 다른 content가 있는 existing run directory overwrite를 거부한다.
+  property가 없으면 local smoke run은 generated non-publishable run ID를 사용한다. accepted evidence는
+  preparation, backend, profiler, finalization command 전반에서 항상 하나의 explicit run ID를 사용한다.
+- JMH trial setup은 manifest를 검증하고 bytes를 load한다. canonical input을 재생성하거나 re-encode하지 않는다.
+- stable run은 Java 21과 Java 25에 대해 identical manifest-pinned input bytes를 사용한다.
+- missing source fixture는 setup failure다. codec matrix는 synthetic image로 fallback하면 안 된다. 그렇게 하면
+  workload가 조용히 바뀌기 때문이다.
+- matrix loader는 위 두 fixed repository resource만 받는다. caller path를 받거나 symlink를 따라가거나
+  `BenchmarkImageSets`의 synthetic fallback을 재사용하지 않는다.
+- result는 scenario별로 분리한다. 서로 다른 dimension의 value를 하나의 ranking으로 평균내지 않는다.
+- report는 source identity, derived dimension, encoded input bytes, measured output bytes를 기록한다.
 
 ## 7. Benchmark Architecture
 
