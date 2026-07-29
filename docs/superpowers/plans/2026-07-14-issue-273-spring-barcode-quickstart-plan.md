@@ -584,11 +584,11 @@ Run RED:
   --console=plain
 ```
 
-Expected: FAIL with 404 because controller and advice do not exist.
+Controller와 advice가 아직 없으므로 예상 결과는 404 FAIL이다.
 
-- [ ] **Step 2: Implement the thin POST controller**
+- [ ] **Step 2: Thin POST controller 구현**
 
-Create `BarcodeApiController.kt`:
+`BarcodeApiController.kt`를 생성한다:
 
 ```kotlin
 @RestController
@@ -602,14 +602,11 @@ internal class BarcodeApiController(
 }
 ```
 
-The controller performs no byte read, decode, provider call, or exception
-message construction.
+Controller는 byte read, decode, provider call, exception message construction을 수행하지 않는다.
 
-- [ ] **Step 3: Implement stable sanitized advice**
+- [ ] **Step 3: Stable sanitized advice 구현**
 
-Create `BarcodeApiExceptionHandler.kt` with
-`@RestControllerAdvice(basePackageClasses = [BarcodeApiController::class])`.
-Map:
+`@RestControllerAdvice(basePackageClasses = [BarcodeApiController::class])`를 가진 `BarcodeApiExceptionHandler.kt`를 생성한다. 다음처럼 mapping한다:
 
 | Exception/reason | Status | `error` | Fixed message |
 |---|---:|---|---|
@@ -621,20 +618,11 @@ Map:
 | `PROVIDER_UNAVAILABLE` | 503 | `provider_unavailable` | `The barcode provider is unavailable.` |
 | all other `BarcodeException` reasons | 500 | lowercase reason | `Barcode extraction failed.` |
 
-Set `reason` only for `BarcodeException` and never return `cause` or raw
-`exception.message` for provider failures.
+`reason`은 `BarcodeException`에만 설정하고, provider failure에 대해서는 `cause`나 raw `exception.message`를 절대 반환하지 않는다.
 
-Create `BarcodeApiExceptionHandlerTest.kt` and call the advice with
-`MaxUploadSizeExceededException` and a missing-`file` exception directly. This
-locks status and JSON DTO mapping because MockMvc's synthetic
-`MockMultipartFile` does not exercise the embedded servlet container's byte
-limit. Also parameterize `MALFORMED_INPUT`, `UNSUPPORTED_FORMAT`,
-`PROVIDER_UNAVAILABLE`, `DECODE_FAILED`, `NO_BARCODE`, `CANCELLED`, and `UNKNOWN`
-to lock their exact status/error/reason/fixed-message mapping and prove that a
-provider exception message is never echoed. The real resolver limit is covered
-by Task 8's bootRun smoke request.
+`BarcodeApiExceptionHandlerTest.kt`를 만들고 `MaxUploadSizeExceededException`과 missing-`file` exception을 advice에 직접 호출한다. MockMvc의 synthetic `MockMultipartFile`은 embedded servlet container의 byte limit를 실행하지 않으므로, 이 test가 status와 JSON DTO mapping을 고정한다. 또한 `MALFORMED_INPUT`, `UNSUPPORTED_FORMAT`, `PROVIDER_UNAVAILABLE`, `DECODE_FAILED`, `NO_BARCODE`, `CANCELLED`, `UNKNOWN`을 parameterize해 exact status/error/reason/fixed-message mapping을 고정하고 provider exception message가 echo되지 않음을 증명한다. Real resolver limit는 Task 8의 bootRun smoke request에서 다룬다.
 
-- [ ] **Step 4: Run GREEN and commit**
+- [ ] **Step 4: GREEN 실행과 commit**
 
 ```bash
 ./gradlew :spring-boot-barcode-api:test \
@@ -646,17 +634,17 @@ git add examples/spring-boot-barcode-api/src/main/kotlin \
 git commit -m "feat: expose barcode upload endpoint"
 ```
 
-### Task 6: Add the Three Deterministic GET Scenarios
+### Task 6: Deterministic GET Scenario 세 개 추가
 
 - **Complexity:** Medium
 - **Depends on:** Task 5
 - **Pattern skills:** `test-driven-development`, `bluetape-kotlin-patterns`
 - **Files:** controller and existing integration test
-**Expected DoD:** success, no-result, and malformed contracts are reproducible without caller-owned files and still flow through the same service/advice.
+**Expected DoD:** Success, no-result, malformed contract가 caller-owned file 없이 재현 가능하고, 여전히 같은 service/advice를 통해 흐른다.
 
-- [ ] **Step 1: Add failing GET integration tests**
+- [ ] **Step 1: Failing GET integration test 추가**
 
-Add assertions for:
+다음 assertion을 추가한다:
 
 ```text
 GET /api/barcodes/sample     -> 200, count 1, expected QR payload
@@ -664,12 +652,9 @@ GET /api/barcodes/no-result  -> 200, count 0, results []
 GET /api/barcodes/malformed  -> 400, malformed_input, MALFORMED_INPUT
 ```
 
-The tests must prove GET responses match the POST DTO/error schema. Do not add a
-Spring spy solely to prove delegation; the controller has no alternate decode
-dependency, and the final source review must confirm that all four methods call
-the single constructor-injected service.
+Test는 GET response가 POST DTO/error schema와 일치함을 증명해야 한다. Delegation 증명만을 위해 Spring spy를 추가하지 않는다. Controller에는 alternate decode dependency가 없으며, final source review가 네 method 모두 단일 constructor-injected service를 호출하는지 확인해야 한다.
 
-Run:
+다음을 실행한다:
 
 ```bash
 ./gradlew :spring-boot-barcode-api:test \
@@ -677,12 +662,11 @@ Run:
   --console=plain
 ```
 
-Expected: FAIL with 404 for all three paths.
+세 path 모두 404로 FAIL하는 것이 예상 결과이다.
 
-- [ ] **Step 2: Add GET mappings through the same service**
+- [ ] **Step 2: 같은 service를 통한 GET mapping 추가**
 
-Add `BarcodeExampleFixtures` as the controller's second constructor dependency,
-then add only these methods:
+`BarcodeExampleFixtures`를 controller의 두 번째 constructor dependency로 추가한 뒤, 다음 method만 추가한다:
 
 ```kotlin
 @GetMapping("/sample")
@@ -698,9 +682,9 @@ suspend fun malformed(): BarcodeExtractionResponse =
     extractionService.extract(fixtures.bytes(BarcodeExampleFixture.MALFORMED))
 ```
 
-Do not introduce separate fixture-specific decode logic.
+Fixture-specific decode logic을 별도로 도입하지 않는다.
 
-- [ ] **Step 3: Run GREEN and commit**
+- [ ] **Step 3: GREEN 실행과 commit**
 
 ```bash
 ./gradlew :spring-boot-barcode-api:test --console=plain
