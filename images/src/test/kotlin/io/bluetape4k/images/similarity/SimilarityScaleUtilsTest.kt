@@ -18,7 +18,7 @@ class SimilarityScaleUtilsTest : AbstractImageTest() {
     fun `prepareForSimilarity returns same image when already within maxSide`() {
         val image = makeImage(200, 100)
         val result = image.prepareForSimilarity(512)
-        // No resize needed — should be the same object
+        // resize가 필요 없으므로 같은 object여야 합니다.
         result shouldBeEqualTo image
     }
 
@@ -34,7 +34,7 @@ class SimilarityScaleUtilsTest : AbstractImageTest() {
     fun `prepareForSimilarity preserves aspect ratio`() {
         val image = makeImage(1000, 500)  // 2:1 ratio
         val result = image.prepareForSimilarity(512)
-        // Width should be double the height approximately
+        // 너비는 높이의 약 두 배여야 합니다.
         val ratio = result.width.toDouble() / result.height.toDouble()
         (ratio > 1.9 && ratio < 2.1).let { valid ->
             if (!valid) throw AssertionError("Expected ratio ~2 but got $ratio")

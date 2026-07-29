@@ -6,76 +6,76 @@ import io.bluetape4k.support.requirePositiveNumber
 import java.io.Serializable
 
 /**
- * Stable sensitive-content category used by bluetape4k moderation callers.
+ * bluetape4k moderation caller가 사용하는 안정적인 sensitive-content category입니다.
  *
- * Detector adapters should map backend-specific labels into one of these
- * categories while keeping the raw backend label on [SensitiveContentDetection].
+ * detector adapter는 backend-specific label을 이 category 중 하나로 매핑하되,
+ * 원시 backend label은 [SensitiveContentDetection]에 보존해야 합니다.
  */
 enum class SensitiveContentCategory {
-    /** Explicit nudity or sexual content. */
+    /** 명시적인 노출 또는 성적 content입니다. */
     EXPLICIT_NUDITY,
 
-    /** Suggestive but not explicitly sexual content. */
+    /** 명시적이지는 않지만 선정적인 content입니다. */
     SUGGESTIVE,
 
-    /** Graphic or non-graphic violent content. */
+    /** graphic 또는 non-graphic 폭력 content입니다. */
     VIOLENCE,
 
-    /** Self-harm or suicide-related content. */
+    /** 자해 또는 자살 관련 content입니다. */
     SELF_HARM,
 
-    /** Hate, extremist, or discriminatory symbols. */
+    /** 혐오, 극단주의, 차별 상징입니다. */
     HATE_SYMBOL,
 
-    /** Weapons or weapon-like objects. */
+    /** 무기 또는 무기처럼 보이는 object입니다. */
     WEAPON,
 
-    /** Regulated substances or drug-related content. */
+    /** 규제 물질 또는 약물 관련 content입니다. */
     DRUG,
 
-    /** Child/minor safety category. */
+    /** 아동/미성년자 안전 category입니다. */
     MINOR_SAFETY,
 
-    /** Sensitive text visible in the image. */
+    /** 이미지에 보이는 민감한 text입니다. */
     SENSITIVE_TEXT,
 
-    /** Category that is intentionally not classified by this version. */
+    /** 이 version에서 의도적으로 분류하지 않는 category입니다. */
     OTHER,
 }
 
 /**
- * Policy severity assigned to a sensitive-content detection.
+ * sensitive-content detection에 부여되는 policy severity입니다.
  */
 enum class SensitiveContentSeverity {
-    /** Low-risk content that usually needs no automatic treatment. */
+    /** 일반적으로 자동 treatment가 필요 없는 low-risk content입니다. */
     LOW,
 
-    /** Medium-risk content that may need caller policy evaluation. */
+    /** caller policy evaluation이 필요할 수 있는 medium-risk content입니다. */
     MEDIUM,
 
-    /** High-risk content that commonly triggers redaction or review. */
+    /** 보통 redaction 또는 review를 유발하는 high-risk content입니다. */
     HIGH,
 
-    /** Critical content that commonly triggers rejection or quarantine. */
+    /** 보통 rejection 또는 quarantine을 유발하는 critical content입니다. */
     CRITICAL,
 }
 
 /**
- * Coordinate system used by a sensitive region geometry.
+ * sensitive region geometry가 사용하는 coordinate system입니다.
  */
 enum class SensitiveCoordinateSpace {
-    /** Pixel coordinates in the original image coordinate space. */
+    /** 원본 이미지 좌표계의 pixel coordinate입니다. */
     PIXEL,
 
-    /** Normalized coordinates where both axes are in the inclusive `0.0..1.0` range. */
+    /** 두 축이 모두 `0.0..1.0` inclusive 범위인 normalized coordinate입니다. */
     NORMALIZED,
 }
 
 /**
- * Point used by polygon and polyline sensitive regions.
+ * polygon 및 polyline sensitive region이 사용하는 point입니다.
  *
- * @property x horizontal coordinate in the region coordinate space
- * @property y vertical coordinate in the region coordinate space
+ * @property x region coordinate space에서의 수평 coordinate입니다.
+ * @property y region coordinate space에서의 수직 coordinate입니다.
  */
 data class SensitivePoint(
     val x: Double,
@@ -117,11 +117,11 @@ data class SensitivePoint(
 }
 
 /**
- * Raster mask metadata for a sensitive region.
+ * sensitive region에 대한 raster mask metadata입니다.
  *
- * Mask bytes are intentionally not embedded in the core model. Store a caller
- * reference, dimensions, and optional media/checksum metadata so detector
- * adapters can hand off masks without adding ML or storage dependencies.
+ * mask byte는 core model에 의도적으로 넣지 않습니다. detector adapter가 ML 또는 storage
+ * dependency를 추가하지 않고 mask를 넘길 수 있도록 caller reference, 크기, 선택적
+ * media/checksum metadata만 저장합니다.
  */
 data class SensitiveRasterMask(
     val width: Int,
@@ -145,24 +145,23 @@ data class SensitiveRasterMask(
 }
 
 /**
- * Geometry variants that can localize sensitive content in an image.
+ * 이미지 안의 sensitive content 위치를 표현하는 geometry variant입니다.
  *
- * `Rectangle`, `Polygon`, and `Polyline` support pixel and normalized
- * coordinate systems. `RasterMask` carries mask metadata and is validated by
- * mask dimensions instead of vector coordinates.
+ * `Rectangle`, `Polygon`, `Polyline`은 pixel 및 normalized coordinate system을 지원합니다.
+ * `RasterMask`는 mask metadata를 담고 vector coordinate 대신 mask 크기로 검증됩니다.
  */
 sealed interface SensitiveRegionGeometry: Serializable {
 
     /**
-     * Ensures this geometry fits within [imageDimensions].
+     * 이 geometry가 [imageDimensions] 안에 들어가는지 확인합니다.
      *
-     * Normalized vector geometries are already bounded by construction. Pixel
-     * vector geometries are checked against the original image dimensions.
+     * normalized vector geometry는 생성 시 이미 bounded 상태입니다. pixel vector geometry는
+     * 원본 이미지 크기에 대해 확인합니다.
      */
     fun requireWithin(imageDimensions: ImageDimensions): SensitiveRegionGeometry
 
     /**
-     * Axis-aligned rectangle geometry.
+     * 축에 정렬된 rectangle geometry입니다.
      */
     data class Rectangle(
         val x: Double,
@@ -214,9 +213,9 @@ sealed interface SensitiveRegionGeometry: Serializable {
     }
 
     /**
-     * Closed polygon geometry.
+     * 닫힌 polygon geometry입니다.
      *
-     * The first and last points must be equal. Use [Polyline] for open paths.
+     * 첫 번째 point와 마지막 point는 같아야 합니다. 열린 path에는 [Polyline]을 사용합니다.
      */
     data class Polygon(
         val points: List<SensitivePoint>,
@@ -244,10 +243,10 @@ sealed interface SensitiveRegionGeometry: Serializable {
     }
 
     /**
-     * Open polyline geometry.
+     * 열린 polyline geometry입니다.
      *
-     * A polyline describes a path or contour and must not repeat the first point
-     * as the last point. Use [Polygon] for closed areas.
+     * polyline은 path 또는 contour를 표현하며 첫 번째 point를 마지막 point로 반복하면
+     * 안 됩니다. 닫힌 area에는 [Polygon]을 사용합니다.
      */
     data class Polyline(
         val points: List<SensitivePoint>,
@@ -273,7 +272,7 @@ sealed interface SensitiveRegionGeometry: Serializable {
     }
 
     /**
-     * Raster mask geometry.
+     * raster mask geometry입니다.
      */
     data class RasterMask(
         val mask: SensitiveRasterMask,
@@ -294,10 +293,10 @@ sealed interface SensitiveRegionGeometry: Serializable {
 }
 
 /**
- * Localized sensitive image region.
+ * 위치가 지정된 sensitive image region입니다.
  *
- * Region metadata is intentionally string-only so detector adapters can carry
- * backend hints without coupling the core image module to a specific runtime.
+ * region metadata는 의도적으로 string-only입니다. 따라서 detector adapter가 core image
+ * module을 특정 runtime에 결합하지 않고 backend hint를 전달할 수 있습니다.
  */
 data class SensitiveRegion(
     val geometry: SensitiveRegionGeometry,
@@ -316,14 +315,13 @@ data class SensitiveRegion(
 }
 
 /**
- * Backend-neutral sensitive-content detection result.
+ * backend-neutral sensitive-content detection result입니다.
  *
- * The model separates detection facts from treatment actions such as blur,
- * mosaic, reject, quarantine, or manual review. Detector adapters should map
- * raw model labels to stable [category] values while preserving
- * [rawBackendLabel].
+ * 이 model은 detection fact와 blur, mosaic, reject, quarantine, manual review 같은
+ * treatment action을 분리합니다. detector adapter는 원시 model label을 안정적인
+ * [category] 값으로 매핑하면서 [rawBackendLabel]을 보존해야 합니다.
  *
- * Example:
+ * 예:
  * ```kotlin
  * val detection = SensitiveContentDetection(
  *     label = "explicit-nudity",

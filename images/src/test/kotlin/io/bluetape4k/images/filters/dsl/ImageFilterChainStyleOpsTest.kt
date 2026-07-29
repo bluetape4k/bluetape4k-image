@@ -85,7 +85,7 @@ class ImageFilterChainStyleOpsTest : AbstractFilterTest() {
     fun `applyFilters with grayscale produces different image`() {
         val image = sampleImage()
         val result = image.applyFilters { grayscale() }
-        // grayscale changes R, G, B so result differs from a colored original
+        // grayscale은 R, G, B를 바꾸므로 결과가 컬러 원본과 달라집니다.
         assertNotSimilarToImage(result, image, threshold = 5)
     }
 

@@ -159,7 +159,7 @@ suspend fun ImmutableImage.suspendPerspectiveTransform(
  * - `[sx, sy, 1, 0, 0, 0, -dx*sx, -dx*sy] · h = dx`
  * - `[0, 0, 0, sx, sy, 1, -dy*sx, -dy*sy] · h = dy`
  *
- * @return `[h11, h12, h13, h21, h22, h23, h31, h32, h33=1.0]` (row-major, size 9).
+ * @return `[h11, h12, h13, h21, h22, h23, h31, h32, h33=1.0]` 형식의 row-major 배열(size 9).
  */
 private fun computeHomography(src: List<ImagePoint>, dst: List<ImagePoint>): DoubleArray {
     val a = DoubleArray(8 * 8)
@@ -215,7 +215,7 @@ private fun solve8x8(a: DoubleArray, b: DoubleArray): DoubleArray {
     val pivotEpsilon = 1e-12
 
     for (col in 0 until n) {
-        // Find pivot row
+        // pivot 행을 찾습니다.
         var pivotRow = col
         var pivotAbs = abs(a[col * n + col])
         for (r in (col + 1) until n) {
@@ -229,7 +229,7 @@ private fun solve8x8(a: DoubleArray, b: DoubleArray): DoubleArray {
             throw IllegalArgumentException("source or destination points are nearly collinear")
         }
 
-        // Swap pivot row with current row
+        // pivot 행을 현재 행과 교환합니다.
         if (pivotRow != col) {
             for (c in 0 until n) {
                 val tmp = a[col * n + c]
@@ -241,14 +241,14 @@ private fun solve8x8(a: DoubleArray, b: DoubleArray): DoubleArray {
             b[pivotRow] = tmpB
         }
 
-        // Normalize pivot row
+        // pivot 행을 정규화합니다.
         val pivot = a[col * n + col]
         for (c in 0 until n) {
             a[col * n + c] /= pivot
         }
         b[col] /= pivot
 
-        // Eliminate other rows
+        // 다른 행에서 현재 column을 소거합니다.
         for (r in 0 until n) {
             if (r == col) continue
             val factor = a[r * n + col]

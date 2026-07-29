@@ -19,7 +19,7 @@ private const val MSSIM_DEFAULT_SIGMA = 1.5
 /**
  * 11×11 가우시안 가중 슬라이딩 윈도우 기반 MSSIM(Mean SSIM)을 계산합니다.
  *
- * Wang et al. (2004) "Image Quality Assessment: From Error Visibility to Structural Similarity"
+ * 참고 논문: Wang et al. (2004) "Image Quality Assessment: From Error Visibility to Structural Similarity"
  * 의 표준 구현으로, 글로벌 [ssimTo]보다 국소 구조(local structure)를 정확히 반영합니다.
  *
  * ## 알고리즘

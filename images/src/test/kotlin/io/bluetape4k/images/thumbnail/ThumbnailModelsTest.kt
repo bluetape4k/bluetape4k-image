@@ -13,7 +13,7 @@ import kotlin.test.assertFailsWith
 
 class ThumbnailModelsTest : AbstractImageTest() {
 
-    // ── ThumbnailSize ──────────────────────────────────────────────────────
+    // ── ThumbnailSize 검증 ─────────────────────────────────────────────────
 
     @Test
     fun `ThumbnailSize stores width and height`() {
@@ -55,7 +55,7 @@ class ThumbnailModelsTest : AbstractImageTest() {
         }
     }
 
-    // ── ThumbnailCrop ──────────────────────────────────────────────────────
+    // ── ThumbnailCrop 검증 ─────────────────────────────────────────────────
 
     @Test
     fun `ThumbnailCrop Fit is a singleton`() {
@@ -68,7 +68,7 @@ class ThumbnailModelsTest : AbstractImageTest() {
         smart.shouldNotBeNull()
     }
 
-    // ── ThumbnailFormat ────────────────────────────────────────────────────
+    // ── ThumbnailFormat 검증 ───────────────────────────────────────────────
 
     @Test
     fun `ThumbnailFormat Jpeg has jpg extension`() {
@@ -101,7 +101,7 @@ class ThumbnailModelsTest : AbstractImageTest() {
         }
     }
 
-    // ── ThumbnailOutputName ────────────────────────────────────────────────
+    // ── ThumbnailOutputName 검증 ───────────────────────────────────────────
 
     @Test
     fun `ThumbnailOutputName Default appends size suffix and extension`() {
@@ -125,7 +125,7 @@ class ThumbnailModelsTest : AbstractImageTest() {
         name shouldBeEqualTo "img-thumb.jpg"
     }
 
-    // ── ThumbnailResult ────────────────────────────────────────────────────
+    // ── ThumbnailResult 검증 ───────────────────────────────────────────────
 
     @Test
     fun `ThumbnailResult stage is null for Success status`() {

@@ -30,7 +30,7 @@ object ColorSpaceConverter {
      * @param r Red 채널 값 (0..255)
      * @param g Green 채널 값 (0..255)
      * @param b Blue 채널 값 (0..255)
-     * @return Triple(H∈[0,360), S∈[0,1], V∈[0,1])
+ * @return HSV 성분 Triple(H∈[0,360), S∈[0,1], V∈[0,1])
      */
     fun rgbToHsv(r: Int, g: Int, b: Int): Triple<Float, Float, Float> {
         val hsb = Color.RGBtoHSB(r, g, b, null)

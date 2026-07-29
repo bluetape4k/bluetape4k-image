@@ -153,7 +153,7 @@ fun ImmutableImage.dhash(): Long = dhashOf(HashSize.BITS_64)[0]
  * 평균 기준 비트화 → [LongArray].
  *
  * DCT pHash와 유사하나 Haar 변환을 사용해 더 빠릅니다.
- * BITS_64: scaleTo(32, 32) → DWT 2-level → 8×8 LL subband = 64bit.
+ * 계산 경로 BITS_64: scaleTo(32, 32) → DWT 2-level → 8×8 LL subband = 64bit.
  *
  * 비트 순서: row-major, LSB = first bit.
  *
@@ -165,7 +165,7 @@ fun ImmutableImage.whashOf(size: PHashSize = PHashSize.BITS_64): LongArray {
     val matrix = Array(size.resize) { y ->
         DoubleArray(size.resize) { x -> luminance(scaled.pixel(x, y)) / PIXEL_MAX }
     }
-    // levels = log2(resize/lowSide): BITS_64 → log2(4)=2, BITS_256 → 2, BITS_1024 → 2
+    // levels는 log2(resize/lowSide)입니다: BITS_64 → log2(4)=2, BITS_256 → 2, BITS_1024 → 2
     val levels = Integer.numberOfTrailingZeros(size.resize / size.lowSide)
     haarTransform2d(matrix, levels = levels)
 
@@ -226,7 +226,7 @@ fun ImmutableImage.phashOf(size: PHashSize = PHashSize.BITS_64): LongArray {
  *
  * @param other 비교 대상 이미지
  * @param size 비트폭. 기본 [PHashSize.BITS_64].
- * @return Hamming distance (0 ~ [PHashSize.bits])
+ * @return Hamming distance 값 (0 ~ [PHashSize.bits])
  */
 fun ImmutableImage.phashOfDistanceTo(
     other: ImmutableImage,

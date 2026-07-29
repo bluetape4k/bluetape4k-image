@@ -43,7 +43,7 @@ class ExifDataTest {
         private fun resourcePath(path: String): Path? = resourceFile(path)?.toPath()
     }
 
-    // ─── readExif(ByteArray) ─────────────────────────────────────────────────
+    // ─── readExif(ByteArray) 검증 ───────────────────────────────────────────
 
     @Test
     fun `readExif on empty byte array returns EMPTY`() {
@@ -92,7 +92,7 @@ class ExifDataTest {
         result.hasGps.shouldBeFalse()  // homer는 만화 이미지 → GPS 없음
     }
 
-    // ─── File.readExif() ─────────────────────────────────────────────────────
+    // ─── File.readExif() 검증 ───────────────────────────────────────────────
 
     @Test
     fun `File readExif on nonexistent file returns EMPTY`() {
@@ -117,7 +117,7 @@ class ExifDataTest {
         // 카페 이미지는 EXIF가 있을 수도 없을 수도 있으므로 예외만 없으면 통과
     }
 
-    // ─── Path.readExif() ─────────────────────────────────────────────────────
+    // ─── Path.readExif() 검증 ───────────────────────────────────────────────
 
     @Test
     fun `Path readExif on real photo file`() {
@@ -127,7 +127,7 @@ class ExifDataTest {
         result.hasGps.shouldBeFalse()
     }
 
-    // ─── InputStream.readExif() ─────────────────────────────────────────────
+    // ─── InputStream.readExif() 검증 ────────────────────────────────────────
 
     @Test
     fun `InputStream readExif on programmatic jpeg`() {
@@ -144,7 +144,7 @@ class ExifDataTest {
         result.hasGps.shouldBeFalse()
     }
 
-    // ─── ExifData model ─────────────────────────────────────────────────────
+    // ─── ExifData model 검증 ────────────────────────────────────────────────
 
     @Test
     fun `hasGps is false when both lat and lon are null`() {

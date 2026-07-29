@@ -12,7 +12,7 @@ import kotlin.test.assertFailsWith
 
 class ImageBatchModelsTest : AbstractImageTest() {
 
-    // ── ImageBatchFailureStage ──────────────────────────────────────────────
+    // ── ImageBatchFailureStage 검증 ─────────────────────────────────────────
 
     @Test
     fun `ImageBatchFailureStage has all expected values`() {
@@ -24,7 +24,7 @@ class ImageBatchModelsTest : AbstractImageTest() {
         stages.size shouldBeEqualTo 4
     }
 
-    // ── ImageBatchException ────────────────────────────────────────────────
+    // ── ImageBatchException 검증 ───────────────────────────────────────────
 
     @Test
     fun `ImageBatchException stores source stage and message`() {
@@ -60,7 +60,7 @@ class ImageBatchModelsTest : AbstractImageTest() {
         ex.cause shouldBeEqualTo cause
     }
 
-    // ── ImageBatchResult sealed hierarchy ─────────────────────────────────
+    // ── ImageBatchResult sealed hierarchy 검증 ─────────────────────────────
 
     @Test
     fun `ImageBatchResult Failure carries source stage output and cause`() {
@@ -91,7 +91,7 @@ class ImageBatchModelsTest : AbstractImageTest() {
         failure.output shouldBeEqualTo null
     }
 
-    // ── ImageProcessingOptions ─────────────────────────────────────────────
+    // ── ImageProcessingOptions 검증 ────────────────────────────────────────
 
     @Test
     fun `ImageProcessingOptions default values are set correctly`() {

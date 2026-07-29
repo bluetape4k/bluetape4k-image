@@ -140,7 +140,7 @@ fun ImmutableImage.smartCrop(
         SaliencyStrategy.SobelEnergy -> computeSobelMagnitude(luma, dsW, dsH)
     }
 
-    // 4) Integral image (1-indexed, (dsW+1) x (dsH+1))
+    // 4) integral image를 구성합니다(1-indexed, (dsW+1) x (dsH+1)).
     val iw = dsW + 1
     val ih = dsH + 1
     val integ = LongArray(iw * ih)
@@ -262,8 +262,8 @@ suspend fun ImmutableImage.suspendSmartCrop(
 /**
  * Sobel 엣지 magnitude (L1 norm) 맵을 계산합니다.
  *
- * - Gx kernel: `[[-1,0,1],[-2,0,2],[-1,0,1]]`
- * - Gy kernel: `[[-1,-2,-1],[0,0,0],[1,2,1]]`
+ * - Gx kernel 값: `[[-1,0,1],[-2,0,2],[-1,0,1]]`
+ * - Gy kernel 값: `[[-1,-2,-1],[0,0,0],[1,2,1]]`
  * - 결과: `|Gx| + |Gy|` (border 픽셀은 0)
  */
 private fun computeSobelMagnitude(luma: IntArray, w: Int, h: Int): IntArray {
@@ -292,4 +292,3 @@ private fun computeSobelMagnitude(luma: IntArray, w: Int, h: Int): IntArray {
     }
     return mag
 }
-

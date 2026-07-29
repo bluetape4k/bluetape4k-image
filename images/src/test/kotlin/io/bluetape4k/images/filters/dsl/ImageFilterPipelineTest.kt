@@ -43,7 +43,7 @@ class ImageFilterPipelineTest : AbstractFilterTest() {
             sepia()
         }
 
-        // Apply each filter sequentially to verify result equivalence
+        // 결과 동등성을 확인하기 위해 각 filter를 순서대로 적용합니다.
         val sequential = image
             .filter(BrightnessFilter(1.2f))
             .filter(ContrastFilter(1.1))
@@ -54,7 +54,7 @@ class ImageFilterPipelineTest : AbstractFilterTest() {
 
     @Test
     fun `pixel op between natives does not alter result`() {
-        // native1 + pixel(identity) + native2 should equal native1 + native2
+        // native1 + pixel(identity) + native2는 native1 + native2와 같아야 합니다.
         val withIdentityPixel = image.applyFilters {
             brightness(1.2f)
             pixel { it }

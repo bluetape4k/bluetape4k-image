@@ -4,10 +4,10 @@ import io.bluetape4k.support.requireNotBlank
 import java.io.Serializable
 
 /**
- * State names for an auditable sensitive-content moderation workflow.
+ * 감사 가능한 sensitive-content moderation workflow의 상태 이름입니다.
  *
- * The policy layer records these states only as decision metadata. Rendering,
- * quarantine storage, and rejection side effects remain caller responsibilities.
+ * policy layer는 이 상태를 decision metadata로만 기록합니다. rendering, quarantine
+ * storage, rejection side effect는 계속 caller 책임입니다.
  */
 enum class SensitiveModerationWorkflowState {
     DETECTED,
@@ -21,7 +21,7 @@ enum class SensitiveModerationWorkflowState {
 }
 
 /**
- * Treatment selected by a sensitive-content moderation policy.
+ * sensitive-content moderation policy가 선택한 treatment입니다.
  */
 enum class SensitiveTreatmentAction {
     ALLOW,
@@ -35,7 +35,7 @@ enum class SensitiveTreatmentAction {
 }
 
 /**
- * Coarse strength or urgency assigned to a treatment action.
+ * treatment action에 부여되는 대략적인 강도 또는 긴급도입니다.
  */
 enum class SensitiveTreatmentLevel {
     LOW,
@@ -45,11 +45,11 @@ enum class SensitiveTreatmentLevel {
 }
 
 /**
- * Optional treatment parameters selected by policy.
+ * policy가 선택한 optional treatment parameter입니다.
  *
- * The parameters are descriptive and renderer-neutral. A renderer may interpret
- * supported values such as [mosaicBlockSize], [blurRadius], or [maskOpacity],
- * while a pure rejection or quarantine path can ignore pixel parameters.
+ * parameter는 descriptive하며 renderer-neutral입니다. renderer는 [mosaicBlockSize],
+ * [blurRadius], [maskOpacity] 같은 지원 값을 해석할 수 있고, 순수 rejection 또는
+ * quarantine path는 pixel parameter를 무시할 수 있습니다.
  */
 data class SensitiveTreatmentParameters(
     val mosaicBlockSize: Int? = null,
@@ -79,10 +79,10 @@ data class SensitiveTreatmentParameters(
 }
 
 /**
- * One rule in a sensitive-content moderation policy.
+ * sensitive-content moderation policy의 단일 rule입니다.
  *
- * Empty [categories] means the rule may match any category. [minimumSeverity]
- * and [minimumConfidence] are inclusive thresholds.
+ * [categories]가 비어 있으면 모든 category와 match될 수 있습니다. [minimumSeverity]와
+ * [minimumConfidence]는 inclusive threshold입니다.
  */
 data class SensitiveModerationRule(
     val id: String,
@@ -102,7 +102,7 @@ data class SensitiveModerationRule(
     }
 
     /**
-     * Returns true when this rule applies to [detection].
+     * 이 rule이 [detection]에 적용되면 `true`를 반환합니다.
      */
     fun matches(detection: SensitiveContentDetection): Boolean =
         (categories.isEmpty() || detection.category in categories) &&
@@ -115,7 +115,7 @@ data class SensitiveModerationRule(
 }
 
 /**
- * Per-detection moderation decision.
+ * detection별 moderation decision입니다.
  */
 data class SensitiveModerationDecision(
     val detection: SensitiveContentDetection,
@@ -138,7 +138,7 @@ data class SensitiveModerationDecision(
 }
 
 /**
- * Auditable report produced by a sensitive-content moderation policy.
+ * sensitive-content moderation policy가 생성하는 감사 가능한 report입니다.
  */
 data class SensitiveModerationReport(
     val decisions: List<SensitiveModerationDecision>,
@@ -160,14 +160,14 @@ data class SensitiveModerationReport(
 }
 
 /**
- * Backend-neutral moderation policy for sensitive-content detections.
+ * sensitive-content detection을 위한 backend-neutral moderation policy입니다.
  *
- * ## Contract
- * - Consumes [SensitiveContentDetection] facts and emits treatment decisions.
- * - Does not run detector inference or render pixels.
- * - Selects the first matching rule for each detection.
- * - Applies [fallbackRule] when no rule matches a detection, keeping unknown
- *   categories fail-closed by default.
+ * ## 동작/계약
+ * - [SensitiveContentDetection] fact를 소비해 treatment decision을 냅니다.
+ * - detector inference를 실행하거나 pixel을 render하지 않습니다.
+ * - 각 detection마다 처음 match되는 rule을 선택합니다.
+ * - detection에 match되는 rule이 없으면 [fallbackRule]을 적용해 unknown category를
+ *   기본적으로 fail-closed로 처리합니다.
  */
 data class SensitiveModerationPolicy(
     val rules: List<SensitiveModerationRule>,
@@ -175,7 +175,7 @@ data class SensitiveModerationPolicy(
 ): Serializable {
 
     /**
-     * Evaluates [detections] and returns an auditable moderation report.
+     * [detections]를 평가하고 감사 가능한 moderation report를 반환합니다.
      */
     fun evaluate(detections: Iterable<SensitiveContentDetection>): SensitiveModerationReport {
         val decisions = detections.map { detection ->
@@ -217,7 +217,7 @@ data class SensitiveModerationPolicy(
         private const val serialVersionUID: Long = -1616822281669313145L
 
         /**
-         * Creates a fail-closed policy that quarantines unmatched detections.
+         * match되지 않은 detection을 quarantine하는 fail-closed policy를 생성합니다.
          */
         fun failClosed(
             rules: List<SensitiveModerationRule>,

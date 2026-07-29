@@ -27,10 +27,10 @@ class ImageColorSpaceExtensionsTest : AbstractFilterTest() {
 
     @Test
     fun `toHsvArray has hue component in 0 to 360 range`() {
-        // ColorSpaceConverter.rgbToHsvInto stores H in degrees: H ∈ [0, 360)
+        // ColorSpaceConverter.rgbToHsvInto는 H를 degree 단위로 저장합니다: H ∈ [0, 360)
         val image = solidColorImage(200, 100, 50, 4, 4)
         val hsv = image.toHsvArray()
-        // H is at indices 0, 3, 6, ...
+        // H는 0, 3, 6, ... index에 있습니다.
         val hues = (hsv.indices step 3).map { hsv[it] }
         hues.forEach { h ->
             (h >= 0f && h < 360f).let { valid ->
@@ -43,7 +43,7 @@ class ImageColorSpaceExtensionsTest : AbstractFilterTest() {
     fun `toHsvArray for pure red pixel has expected hue near 0 degrees`() {
         val image = solidColorImage(255, 0, 0, 1, 1)
         val hsv = image.toHsvArray()
-        // For pure red: H ≈ 0° (or 360° wrapped), S = 1, V = 1
+        // 순수 red는 H ≈ 0°(또는 360° wrap), S = 1, V = 1입니다.
         val h = hsv[0]
         (h < 18f || h > 342f).let { isRedHue ->
             if (!isRedHue) throw AssertionError("Expected hue near 0° for red, got $h")
@@ -69,12 +69,12 @@ class ImageColorSpaceExtensionsTest : AbstractFilterTest() {
 
     @Test
     fun `toYCbCrArray for grayscale image has Cb and Cr near neutral`() {
-        // For a gray pixel (128, 128, 128) Cb and Cr should be near 128
+        // gray pixel(128, 128, 128)의 Cb와 Cr은 128 근처여야 합니다.
         val image = solidColorImage(128, 128, 128, 1, 1)
         val ycbcr = image.toYCbCrArray()
         val cb = ycbcr[1]
         val cr = ycbcr[2]
-        // Cb, Cr near 128 (neutral) — allow ±5 tolerance
+        // Cb, Cr은 neutral 값인 128 근처입니다. ±5 tolerance를 허용합니다.
         (kotlin.math.abs(cb - 128f) < 5f).let { if (!it) throw AssertionError("Cb=$cb not near 128") }
         (kotlin.math.abs(cr - 128f) < 5f).let { if (!it) throw AssertionError("Cr=$cr not near 128") }
     }

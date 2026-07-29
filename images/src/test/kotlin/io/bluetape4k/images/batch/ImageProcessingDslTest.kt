@@ -30,7 +30,7 @@ class ImageProcessingDslTest : AbstractImageTest() {
 
         val result = dsl.apply(image)
 
-        // No transforms — result should equal original dimensions
+        // transform이 없으므로 result는 original dimension과 같아야 합니다.
         result.width shouldBeEqualTo image.width
         result.height shouldBeEqualTo image.height
         dsl.selectedWriter() shouldBeEqualTo null
@@ -137,7 +137,7 @@ class ImageProcessingDslTest : AbstractImageTest() {
     fun `gaussianBlur accepts positive radius`() {
         val dsl = ImageProcessingDsl()
         dsl.gaussianBlur(radius = 3)
-        // Should not throw; apply should produce a result
+        // 예외가 발생하지 않아야 하며 apply는 result를 생성해야 합니다.
         val result = dsl.apply(sampleImage())
         result.shouldNotBeNull()
     }

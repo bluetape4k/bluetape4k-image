@@ -5,14 +5,14 @@ import java.awt.Color
 import java.io.Serializable
 
 /**
- * Options for SVG rasterization.
+ * SVG 래스터화 옵션입니다.
  *
- * ## Contract
- * - If both `width` and `height` are `null`, the rasterizer keeps the SVG's intrinsic size.
- * - `allowExternalResources` defaults to `false` and should stay disabled for untrusted SVG input.
- * - `timeoutMillis` bounds Batik rasterization work.
- * - `maxWidthPx` and `maxHeightPx` cap the requested or intrinsic output dimensions.
- * - Numeric dimensions, DPI, timeout, and maximum bounds must be positive.
+ * ## 동작/계약
+ * - `width`와 `height`가 모두 `null`이면 rasterizer가 SVG의 고유 크기를 유지합니다.
+ * - `allowExternalResources` 기본값은 `false`이며, 신뢰하지 않는 SVG 입력에서는 계속 비활성화해야 합니다.
+ * - `timeoutMillis`는 Batik 래스터화 작업 시간을 제한합니다.
+ * - `maxWidthPx`와 `maxHeightPx`는 요청된 출력 크기나 SVG 고유 출력 크기의 상한을 정합니다.
+ * - 숫자 크기, DPI, timeout, 최대 크기 한계는 모두 양수여야 합니다.
  *
  * ```kotlin
  * val opts = SvgRasterizeOptions(width = 800, height = 600, dpi = 144)
@@ -20,15 +20,15 @@ import java.io.Serializable
  * val image = rasterizer.rasterize(svgInputStream, opts)
  * ```
  *
- * @property width requested output width in pixels (`null` keeps the intrinsic width)
- * @property height requested output height in pixels (`null` keeps the intrinsic height)
- * @property dpi rasterization DPI, defaulting to 96
- * @property backgroundColor background color (`null` keeps transparency)
- * @property allowExternalResources whether Batik may load external resources
- * @property allowedSchemes allowed URL schemes for future external-resource filtering
- * @property timeoutMillis rasterization timeout in milliseconds
- * @property maxWidthPx maximum allowed output width in pixels
- * @property maxHeightPx maximum allowed output height in pixels
+ * @property width 요청 출력 너비(px). `null`이면 SVG 고유 너비를 유지합니다.
+ * @property height 요청 출력 높이(px). `null`이면 SVG 고유 높이를 유지합니다.
+ * @property dpi 래스터화 DPI입니다. 기본값은 96입니다.
+ * @property backgroundColor 배경색입니다. `null`이면 투명 배경을 유지합니다.
+ * @property allowExternalResources Batik이 외부 리소스를 읽을 수 있는지 여부입니다.
+ * @property allowedSchemes 향후 외부 리소스 필터링에 사용할 허용 URL scheme 목록입니다.
+ * @property timeoutMillis 래스터화 timeout입니다. 단위는 millisecond입니다.
+ * @property maxWidthPx 허용되는 최대 출력 너비(px)입니다.
+ * @property maxHeightPx 허용되는 최대 출력 높이(px)입니다.
  */
 data class SvgRasterizeOptions(
     val width: Int? = null,

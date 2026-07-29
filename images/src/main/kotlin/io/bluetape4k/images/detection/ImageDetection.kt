@@ -16,88 +16,88 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 /**
- * Detector-facing coordinate space alias shared with sensitive-content regions.
+ * sensitive-content region과 공유하는 detector용 coordinate space alias입니다.
  */
 typealias DetectionCoordinateSpace = SensitiveCoordinateSpace
 
 /**
- * Detector-facing point alias shared with sensitive-content polygon and polyline regions.
+ * sensitive-content polygon 및 polyline region과 공유하는 detector용 point alias입니다.
  */
 typealias DetectionPoint = SensitivePoint
 
 /**
- * Detector-facing raster mask metadata alias shared with sensitive-content regions.
+ * sensitive-content region과 공유하는 detector용 raster mask metadata alias입니다.
  */
 typealias DetectionRasterMask = SensitiveRasterMask
 
 /**
- * Detector-facing region geometry alias shared with sensitive-content regions.
+ * sensitive-content region과 공유하는 detector용 region geometry alias입니다.
  */
 typealias DetectionRegionGeometry = SensitiveRegionGeometry
 
 /**
- * Detector-facing rectangle geometry alias shared with sensitive-content regions.
+ * sensitive-content region과 공유하는 detector용 rectangle geometry alias입니다.
  */
 typealias DetectionRectangleRegion = SensitiveRegionGeometry.Rectangle
 
 /**
- * Detector-facing polygon geometry alias shared with sensitive-content regions.
+ * sensitive-content region과 공유하는 detector용 polygon geometry alias입니다.
  */
 typealias DetectionPolygonRegion = SensitiveRegionGeometry.Polygon
 
 /**
- * Detector-facing polyline geometry alias shared with sensitive-content regions.
+ * sensitive-content region과 공유하는 detector용 polyline geometry alias입니다.
  */
 typealias DetectionPolylineRegion = SensitiveRegionGeometry.Polyline
 
 /**
- * Detector-facing raster-mask geometry alias shared with sensitive-content regions.
+ * sensitive-content region과 공유하는 detector용 raster-mask geometry alias입니다.
  */
 typealias DetectionRasterMaskRegion = SensitiveRegionGeometry.RasterMask
 
 /**
- * Detector-facing region alias shared with sensitive-content moderation models.
+ * sensitive-content moderation model과 공유하는 detector용 region alias입니다.
  */
 typealias DetectionRegion = SensitiveRegion
 
 /**
- * Stable backend-neutral category for image detector results.
+ * 이미지 detector 결과에 사용하는 안정적인 backend-neutral category입니다.
  */
 enum class DetectionCategory {
-    /** Human face or face-like region. */
+    /** 사람 얼굴 또는 얼굴과 유사한 region입니다. */
     FACE,
 
-    /** Human body or person region. */
+    /** 사람 신체 또는 인물 region입니다. */
     PERSON,
 
-    /** General object category. */
+    /** 일반 object category입니다. */
     OBJECT,
 
-    /** Text-like image region. */
+    /** text처럼 보이는 이미지 region입니다. */
     TEXT,
 
-    /** Logo, mark, or brand-like region. */
+    /** logo, mark, brand처럼 보이는 region입니다. */
     LOGO,
 
-    /** Landmark or scene-level region. */
+    /** landmark 또는 scene-level region입니다. */
     LANDMARK,
 
-    /** Sensitive-content region forwarded to moderation policy. */
+    /** moderation policy로 전달되는 sensitive-content region입니다. */
     SENSITIVE_REGION,
 
-    /** Backend-specific category not modeled by this version. */
+    /** 이 version에서 모델링하지 않는 backend-specific category입니다. */
     OTHER,
 }
 
 /**
- * Detector identity preserved with every detection result.
+ * 모든 detection result에 보존되는 detector identity입니다.
  *
- * ## Contract
- * - [name] identifies the detector adapter or model family.
- * - [version] and [backend] are optional because fake detectors, remote
- *   services, and local ML runtimes expose different metadata.
- * - [metadata] is string-only so the core image module does not depend on a
- *   specific ML runtime or model manifest format.
+ * ## 동작/계약
+ * - [name]은 detector adapter 또는 model family를 식별합니다.
+ * - fake detector, remote service, local ML runtime마다 metadata 노출 방식이 달라
+ *   [version]과 [backend]는 선택값입니다.
+ * - core image module이 특정 ML runtime이나 model manifest 형식에 의존하지 않도록
+ *   [metadata]는 string-only map입니다.
  *
  * ```kotlin
  * val detector = DetectorIdentity(name = "fake-face-detector", version = "test")
@@ -130,12 +130,12 @@ data class DetectorIdentity private constructor(
 }
 
 /**
- * Pixel-space bounding box in original image coordinates.
+ * 원본 이미지 좌표계의 pixel-space bounding box입니다.
  *
- * ## Contract
- * - [x] and [y] are zero-based top-left pixel coordinates.
- * - [width] and [height] must be positive.
- * - Use [requireWithin] before treating the box as valid for a concrete image.
+ * ## 동작/계약
+ * - [x]와 [y]는 0 기준 좌상단 pixel coordinate입니다.
+ * - [width]와 [height]는 양수여야 합니다.
+ * - 구체적인 이미지에서 유효한 box로 다루기 전에 [requireWithin]으로 검증합니다.
  */
 @ConsistentCopyVisibility
 data class DetectionBoundingBox private constructor(
@@ -152,7 +152,7 @@ data class DetectionBoundingBox private constructor(
         height.requirePositiveNumber("height")
     }
 
-    /** Ensures this box fits within [imageDimensions]. */
+    /** 이 box가 [imageDimensions] 안에 들어가는지 확인합니다. */
     fun requireWithin(imageDimensions: ImageDimensions): DetectionBoundingBox {
         require(x + width <= imageDimensions.width && y + height <= imageDimensions.height) {
             "bounding box is outside imageBounds=${imageDimensions.width}x${imageDimensions.height}: " +
@@ -170,17 +170,16 @@ data class DetectionBoundingBox private constructor(
 }
 
 /**
- * Backend-neutral detector output for faces, objects, text, or sensitive regions.
+ * 얼굴, object, text, sensitive region에 대한 backend-neutral detector 출력입니다.
  *
- * ## Contract
- * - [label] is the stable caller-facing label.
- * - [rawBackendLabel] preserves model-specific labels without forcing callers
- *   to parse backend metadata.
- * - [region] reuses the sensitive-content geometry model, so moderation policy
- *   and detector adapters share rectangle, polygon, polyline, and raster-mask
- *   semantics.
- * - This model carries facts only. It does not choose policy actions such as
- *   blur, mosaic, reject, quarantine, or manual review.
+ * ## 동작/계약
+ * - [label]은 호출자에게 노출되는 안정적인 label입니다.
+ * - [rawBackendLabel]은 호출자가 backend metadata를 parsing하지 않아도 되도록
+ *   model-specific label을 보존합니다.
+ * - [region]은 sensitive-content geometry model을 재사용하므로 moderation policy와
+ *   detector adapter가 rectangle, polygon, polyline, raster-mask 의미를 공유합니다.
+ * - 이 model은 사실만 담습니다. blur, mosaic, reject, quarantine, manual review 같은
+ *   policy action은 선택하지 않습니다.
  *
  * ```kotlin
  * val result = DetectionResult(
@@ -216,7 +215,7 @@ data class DetectionResult private constructor(
         metadata.requireValidStringMetadata("metadata")
     }
 
-    /** Ensures the optional region is valid for [imageDimensions]. */
+    /** 선택 region이 [imageDimensions]에서 유효한지 확인합니다. */
     fun requireWithin(imageDimensions: ImageDimensions): DetectionResult {
         region?.geometry?.requireWithin(imageDimensions)
         return this
@@ -249,13 +248,13 @@ data class DetectionResult private constructor(
 }
 
 /**
- * Detector query options applied by core detector entry points.
+ * core detector entry point에 적용되는 detector query option입니다.
  *
- * ## Contract
- * - [minimumConfidence] filters results below the requested confidence.
- * - Empty [categories] or [labels] means "allow all".
- * - Filtering is deterministic and runtime-free; concrete detectors may also
- *   use the same options to avoid unnecessary backend work.
+ * ## 동작/계약
+ * - [minimumConfidence]보다 낮은 confidence의 결과는 걸러냅니다.
+ * - [categories] 또는 [labels]가 비어 있으면 "allow all" 의미입니다.
+ * - filtering은 deterministic하며 runtime dependency가 없습니다. concrete detector도
+ *   불필요한 backend 작업을 피하기 위해 같은 option을 사용할 수 있습니다.
  */
 @ConsistentCopyVisibility
 data class DetectionOptions private constructor(
@@ -272,13 +271,13 @@ data class DetectionOptions private constructor(
         labels.forEach { it.requireNotBlank("labels") }
     }
 
-    /** Returns true when [result] satisfies this option set. */
+    /** [result]가 이 option set을 만족하면 `true`를 반환합니다. */
     fun accepts(result: DetectionResult): Boolean =
         result.confidence >= minimumConfidence &&
             (categories.isEmpty() || result.category in categories) &&
             (labels.isEmpty() || result.label in labels || result.rawBackendLabel in labels)
 
-    /** Filters [results] according to this option set. */
+    /** 이 option set에 따라 [results]를 필터링합니다. */
     fun filter(results: Iterable<DetectionResult>): List<DetectionResult> =
         results.filter(::accepts)
 
@@ -295,23 +294,21 @@ data class DetectionOptions private constructor(
 }
 
 /**
- * Pluggable detector boundary for [ImmutableImage].
+ * [ImmutableImage]에 대한 pluggable detector boundary입니다.
  *
- * ## Contract
- * Implementations may be deterministic fakes, native runtimes, remote services,
- * or model-backed adapters. Production adapters should keep model downloads,
- * native libraries, GPU requirements, and large fixtures outside the core
- * `bluetape4k-images` artifact.
+ * ## 동작/계약
+ * 구현체는 deterministic fake, native runtime, remote service, model-backed adapter일 수
+ * 있습니다. production adapter는 model download, native library, GPU requirement,
+ * 큰 fixture를 core `bluetape4k-images` artifact 밖에 둡니다.
  */
 fun interface ImageDetector {
 
-    /** Detects regions or objects in [image] using [options]. */
+    /** [options]를 사용해 [image] 안의 region 또는 object를 탐지합니다. */
     fun detect(image: ImmutableImage, options: DetectionOptions): List<DetectionResult>
 }
 
 /**
- * Detects image regions with [detector] and validates the selected results
- * against this image's dimensions.
+ * [detector]로 이미지 region을 탐지하고 선택된 결과를 이 이미지 크기에 대해 검증합니다.
  */
 fun ImmutableImage.detectRegions(
     detector: ImageDetector,
@@ -324,13 +321,12 @@ fun ImmutableImage.detectRegions(
 }
 
 /**
- * Detects image regions on [dispatcher].
+ * [dispatcher] 위에서 이미지 region을 탐지합니다.
  *
- * ## Contract
- * - Uses [Dispatchers.Default] by default because local detector adapters are
- *   commonly CPU-bound.
- * - External service adapters can pass [Dispatchers.IO].
- * - Cancellation before dispatch prevents [detector] from starting.
+ * ## 동작/계약
+ * - local detector adapter는 대체로 CPU-bound이므로 기본값은 [Dispatchers.Default]입니다.
+ * - external service adapter는 [Dispatchers.IO]를 전달할 수 있습니다.
+ * - dispatch 전에 취소되면 [detector]가 시작되지 않습니다.
  */
 suspend fun ImmutableImage.suspendDetectRegions(
     detector: ImageDetector,
@@ -342,7 +338,7 @@ suspend fun ImmutableImage.suspendDetectRegions(
     }
 
 /**
- * Converts a rectangle geometry to a pixel bounding box for [imageDimensions].
+ * rectangle geometry를 [imageDimensions] 기준 pixel bounding box로 변환합니다.
  */
 fun DetectionRectangleRegion.toPixelBoundingBox(
     imageDimensions: ImageDimensions,
@@ -369,7 +365,7 @@ fun DetectionRectangleRegion.toPixelBoundingBox(
 }
 
 /**
- * Returns a pixel bounding box when this result carries rectangle geometry.
+ * 이 결과가 rectangle geometry를 담고 있으면 pixel bounding box를 반환합니다.
  */
 fun DetectionResult.pixelBoundingBox(imageDimensions: ImageDimensions): DetectionBoundingBox? =
     (region?.geometry as? DetectionRectangleRegion)?.toPixelBoundingBox(imageDimensions)

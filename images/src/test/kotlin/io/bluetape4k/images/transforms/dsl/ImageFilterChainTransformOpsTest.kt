@@ -188,7 +188,7 @@ class ImageFilterChainTransformOpsTest : AbstractImageTest() {
     @Test
     fun `transformOp logs warning when op throws exception`() {
         // logback ListAppender로 warn 로그 캡처
-        // KLoggerNameResolver: "Kt$..." → substringBefore("Kt$") → no "Kt" suffix
+        // KLoggerNameResolver는 "Kt$..."를 substringBefore("Kt$")로 잘라 "Kt" suffix를 남기지 않습니다.
         val logger = LoggerFactory.getLogger(
             "io.bluetape4k.images.transforms.dsl.ImageFilterChainTransformOps"
         ) as Logger

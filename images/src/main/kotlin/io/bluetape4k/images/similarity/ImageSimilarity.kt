@@ -14,11 +14,11 @@ import kotlin.math.sqrt
  * |---|---|---|---|
  * | [pixelAvgDelta] | 채널별 RGB 차이 평균 | 0.0 ~ 255.0 | 0.0 |
  * | [pixelMaxDelta] | 채널별 RGB 차이 최댓값 | 0 ~ 255 | 0 |
- * | [mse]           | Mean Squared Error | 0.0 ~ 65025.0 | 0.0 |
- * | [psnr]          | Peak Signal-to-Noise Ratio (dB) | 0 ~ ∞ | ∞ |
- * | [ssim]          | Structural Similarity Index | -1.0 ~ 1.0 | 1.0 |
+ * | [mse]           | Mean Squared Error 평균 제곱 오차 | 0.0 ~ 65025.0 | 0.0 |
+ * | [psnr]          | Peak Signal-to-Noise Ratio 신호대잡음비(dB) | 0 ~ ∞ | ∞ |
+ * | [ssim]          | Structural Similarity Index 구조적 유사도 | -1.0 ~ 1.0 | 1.0 |
  * | [phash]         | 64bit Perceptual Hash | Long | 동일 |
- * | [phashDistance] | pHash Hamming distance | 0 ~ 64 | 0 |
+ * | [phashDistance] | pHash Hamming distance 해밍 거리 | 0 ~ 64 | 0 |
  *
  * ## 선택 가이드
  *
@@ -93,7 +93,7 @@ fun ImmutableImage.pixelMaxDeltaTo(other: ImmutableImage): Int {
  *
  * @receiver 비교 기준 이미지
  * @param other 비교 대상 이미지
- * @return MSE (0.0 ~ 65025.0)
+ * @return MSE 값 (0.0 ~ 65025.0)
  * @throws IllegalArgumentException 두 이미지의 크기가 다를 때
  */
 fun ImmutableImage.mseTo(other: ImmutableImage): Double {
@@ -120,7 +120,7 @@ fun ImmutableImage.mseTo(other: ImmutableImage): Double {
  *
  * @receiver 비교 기준 이미지
  * @param other 비교 대상 이미지
- * @return PSNR in dB (0 ~ ∞)
+ * @return dB 단위 PSNR (0 ~ ∞)
  * @throws IllegalArgumentException 두 이미지의 크기가 다를 때
  */
 fun ImmutableImage.psnrTo(other: ImmutableImage): Double {
@@ -140,7 +140,7 @@ fun ImmutableImage.psnrTo(other: ImmutableImage): Double {
  *
  * @receiver 비교 기준 이미지
  * @param other 비교 대상 이미지
- * @return SSIM (-1.0 ~ 1.0)
+ * @return SSIM 값 (-1.0 ~ 1.0)
  * @throws IllegalArgumentException 두 이미지의 크기가 다를 때
  */
 fun ImmutableImage.ssimTo(other: ImmutableImage): Double {
@@ -189,7 +189,7 @@ fun ImmutableImage.ssimTo(other: ImmutableImage): Double {
  * 리사이즈·약한 JPEG 압축·밝기 변화에 견고합니다.
  *
  * @receiver 이미지
- * @return 64bit perceptual hash
+ * @return 64bit perceptual hash 값
  */
 fun ImmutableImage.phash(): Long {
     val scaled = scaleTo(PHASH_SIZE, PHASH_SIZE, HASH_SCALE_METHOD)
@@ -214,17 +214,17 @@ fun ImmutableImage.phash(): Long {
 }
 
 /**
- * Calculates the pHash [HashDistance.hamming] distance between two images.
+ * 두 이미지 사이의 pHash [HashDistance.hamming] distance를 계산합니다.
  *
- * Value guide:
- * - 0 ~ 5: nearly identical
- * - 6 ~ 10: visually similar
- * - 11 ~ 20: minor variation
- * - 20 or higher: different images
+ * 값 해석 기준:
+ * - 0 ~ 5: 거의 동일
+ * - 6 ~ 10: 시각적으로 유사
+ * - 11 ~ 20: 작은 변형
+ * - 20 이상: 다른 이미지
  *
- * @receiver baseline image
- * @param other comparison image
- * @return Hamming distance (0 ~ 64)
+ * @receiver 기준 이미지
+ * @param other 비교 이미지
+ * @return Hamming distance 값 (0 ~ 64)
  */
 fun ImmutableImage.phashDistanceTo(other: ImmutableImage): Int =
     HashDistance.hamming(phash(), other.phash())

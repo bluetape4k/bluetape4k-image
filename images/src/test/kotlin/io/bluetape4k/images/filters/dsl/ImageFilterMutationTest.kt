@@ -38,7 +38,7 @@ class ImageFilterMutationTest : AbstractFilterTest() {
         val result1 = image.applyFilters { sepia() }
         val result2 = image.applyFilters { sepia() }
 
-        // Both calls start from same immutable source — results must be identical
+        // 두 호출은 같은 immutable source에서 시작하므로 결과가 같아야 합니다.
         assertSimilarToImage(result1, result2, tolerance = 0)
     }
 

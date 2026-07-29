@@ -12,8 +12,8 @@ import com.sksamuel.scrimage.ImmutableImage
  * | 이미지 크기 | 알고리즘 | 권장 maxSide |
  * |---|---|---|
  * | ≤ 256px | `mssimTo` 직접 호출 | — |
- * | 256px ~ 800px | `mssimTo` | 800 |
- * | 800px ~ 4K | `histogramSimilarityTo` / `blockMeanSimilarityTo` | 512 |
+ * | 256px ~ 800px | `mssimTo` 권장 | 800 |
+ * | 800px ~ 4K | `histogramSimilarityTo` / `blockMeanSimilarityTo` 권장 | 512 |
  * | 4K+ | hash 계열 (`ahash`, `dhash`, `phash`) | — (내부 리사이즈) |
  *
  * ## 사용 예시

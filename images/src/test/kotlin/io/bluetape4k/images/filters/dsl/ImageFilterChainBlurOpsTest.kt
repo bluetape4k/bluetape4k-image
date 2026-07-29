@@ -35,7 +35,7 @@ class ImageFilterChainBlurOpsTest : AbstractFilterTest() {
 
     @Test
     fun `gaussianBlur with zero radius is allowed`() {
-        // radius >= 0 is the contract; 0 means "no blur" but is valid
+        // radius >= 0이 contract입니다. 0은 "no blur"를 의미하지만 유효합니다.
         val chain = ImageFilterChain()
         chain.gaussianBlur(0)
         chain.build().size shouldBeEqualTo 1
@@ -74,8 +74,8 @@ class ImageFilterChainBlurOpsTest : AbstractFilterTest() {
     fun `gaussianBlur applied via applyFilters produces visually different image`() {
         val image = sampleImage()
         val result = image.applyFilters { gaussianBlur(5) }
-        // A strong blur on a solid image changes pixel values near the edge
-        // Simplest assertion: result is not the same object and has same dimensions
+        // 단색 이미지에 강한 blur를 적용하면 edge 근처 pixel 값이 바뀝니다.
+        // 가장 단순한 assertion은 result가 같은 object가 아니고 크기가 같다는 점입니다.
         result.width shouldBeEqualTo image.width
         result.height shouldBeEqualTo image.height
         (result !== image).shouldBeTrue()

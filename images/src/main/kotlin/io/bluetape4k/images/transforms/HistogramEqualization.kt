@@ -48,7 +48,7 @@ fun ImmutableImage.clahe(tileSize: Int = 8, clipLimit: Double = 2.0): ImmutableI
     val h = srcBuf.height
     val total = w * h
 
-    // Step 2: RGB -> YCbCr (BT.601)
+    // 2단계: RGB -> YCbCr (BT.601)
     val yPlane = IntArray(total)
     val cbPlane = IntArray(total)
     val crPlane = IntArray(total)
@@ -62,7 +62,7 @@ fun ImmutableImage.clahe(tileSize: Int = 8, clipLimit: Double = 2.0): ImmutableI
         crPlane[i] = (0.5 * r - 0.419 * g - 0.081 * b + 128).toInt().coerceIn(0, 255)
     }
 
-    // Step 3: Tile fallback — clamp to maxOf(w,h) so globalEqualize (tileSize=max) yields a 1×1 grid
+    // 3단계: tile fallback. globalEqualize(tileSize=max)가 1×1 grid를 만들도록 maxOf(w,h)로 제한합니다.
     val effectiveTileSize = if (tileSize >= maxOf(w, h)) {
         log.debug { "clahe tile fallback: tile=$tileSize >= max(w=$w, h=$h), collapsing to single tile" }
         maxOf(w, h)
@@ -70,11 +70,11 @@ fun ImmutableImage.clahe(tileSize: Int = 8, clipLimit: Double = 2.0): ImmutableI
         tileSize
     }
 
-    // Step 4: Compute tile grid
+    // 4단계: tile grid를 계산합니다.
     val nTilesX = (w + effectiveTileSize - 1) / effectiveTileSize
     val nTilesY = (h + effectiveTileSize - 1) / effectiveTileSize
 
-    // Step 5: For each tile, compute histogram -> clip -> CDF -> LUT
+    // 5단계: 각 tile마다 histogram -> clip -> CDF -> LUT 순서로 계산합니다.
     val tileLuts = Array(nTilesY) { ty ->
         Array(nTilesX) { tx ->
             val x0 = tx * effectiveTileSize
@@ -83,7 +83,7 @@ fun ImmutableImage.clahe(tileSize: Int = 8, clipLimit: Double = 2.0): ImmutableI
             val y1 = minOf(y0 + effectiveTileSize, h)
             val tilePixelCount = (x1 - x0) * (y1 - y0)
 
-            // Build histogram
+            // histogram을 구성합니다.
             val hist = IntArray(256)
             for (py in y0 until y1) {
                 for (px in x0 until x1) {
@@ -91,7 +91,7 @@ fun ImmutableImage.clahe(tileSize: Int = 8, clipLimit: Double = 2.0): ImmutableI
                 }
             }
 
-            // Clip histogram
+            // histogram을 clipping합니다.
             val cap = (clipLimit * tilePixelCount / 256).toInt().coerceAtLeast(1)
             var excess = 0
             for (i in 0 until 256) {
@@ -100,7 +100,7 @@ fun ImmutableImage.clahe(tileSize: Int = 8, clipLimit: Double = 2.0): ImmutableI
                     hist[i] = cap
                 }
             }
-            // Redistribute excess evenly
+            // 초과분을 균등하게 재분배합니다.
             val addPerBin = excess / 256
             val remainder = excess % 256
             for (i in 0 until 256) {
@@ -110,7 +110,7 @@ fun ImmutableImage.clahe(tileSize: Int = 8, clipLimit: Double = 2.0): ImmutableI
                 hist[i]++
             }
 
-            // Build CDF LUT
+            // CDF LUT를 구성합니다.
             val lut = IntArray(256)
             var cdf = 0
             for (i in 0 until 256) {
@@ -121,7 +121,7 @@ fun ImmutableImage.clahe(tileSize: Int = 8, clipLimit: Double = 2.0): ImmutableI
         }
     }
 
-    // Step 6: Apply bilinear tile interpolation
+    // 6단계: bilinear tile interpolation을 적용합니다.
     for (py in 0 until h) {
         for (px in 0 until w) {
             val txF = (px - effectiveTileSize / 2.0) / effectiveTileSize
@@ -145,7 +145,7 @@ fun ImmutableImage.clahe(tileSize: Int = 8, clipLimit: Double = 2.0): ImmutableI
         }
     }
 
-    // Step 7: YCbCr -> RGB
+    // 7단계: YCbCr -> RGB
     for (i in 0 until total) {
         val y = yPlane[i]
         val cb = cbPlane[i] - 128
@@ -157,7 +157,7 @@ fun ImmutableImage.clahe(tileSize: Int = 8, clipLimit: Double = 2.0): ImmutableI
         pixels[i] = argb(alpha, r, g, b)
     }
 
-    // Step 8: Return result
+    // 8단계: 결과를 반환합니다.
     val outBuf = srcBuf.copyArgb()
     outBuf.setArgbPixels(pixels)
     return ImmutableImage.wrapAwt(outBuf)

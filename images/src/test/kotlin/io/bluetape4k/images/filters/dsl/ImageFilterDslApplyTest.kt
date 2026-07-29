@@ -39,7 +39,7 @@ class ImageFilterDslApplyTest : AbstractFilterTest() {
     @Test
     fun `empty block - returns same source instance`() {
         val result = image.applyFilters { }
-        // compactAndApply returns source directly when ops is empty
+        // ops가 비어 있으면 compactAndApply는 source를 그대로 반환합니다.
         result shouldBeEqualTo image
     }
 
