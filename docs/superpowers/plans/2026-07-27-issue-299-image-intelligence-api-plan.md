@@ -688,14 +688,14 @@ git commit -m "Compose image capabilities through explicit providers" \
   -m "Tested: provider profile, unavailable, fixture, cancellation, and real ZXing tests"
 ```
 
-## Task 5: Orchestrate parallel lanes and apply a separate policy
+## Task 5: parallel lane을 조율하고 별도 policy 적용
 
-**Complexity:** High
-**Depends on:** Tasks 3 and 4
+**복잡도:** High
+**의존성:** Tasks 3 and 4
 **Pattern skills:** `bluetape-kotlin-patterns`, `kotlin-coroutines-skill`, `test-driven-development`
-**Rollback point:** workflow, aggregator, and policy are internal and can be reverted together.
+**Rollback 지점:** workflow, aggregator, policy는 internal이므로 함께 되돌릴 수 있다.
 
-**Files:**
+**파일:**
 
 - Create: `examples/spring-boot-image-intelligence-api/src/main/kotlin/io/bluetape4k/images/examples/spring/intelligence/service/ImageIntelligenceWorkflow.kt`
 - Create: `examples/spring-boot-image-intelligence-api/src/main/kotlin/io/bluetape4k/images/examples/spring/intelligence/service/ImageIntelligenceAggregator.kt`
@@ -703,21 +703,21 @@ git commit -m "Compose image capabilities through explicit providers" \
 - Create: `examples/spring-boot-image-intelligence-api/src/test/kotlin/io/bluetape4k/images/examples/spring/intelligence/service/ImageIntelligenceWorkflowTest.kt`
 - Create: `examples/spring-boot-image-intelligence-api/src/test/kotlin/io/bluetape4k/images/examples/spring/intelligence/service/VisitorPassPolicyTest.kt`
 
-- [ ] **Step 1: Write RED workflow tests**
+- [ ] **Step 1: workflow RED test 작성**
 
-Prove:
+다음을 증명한다:
 
-- three controlled lanes overlap in time rather than executing sequentially;
-- each lane writes one unique context key;
-- a provider `Failed` result still yields workflow `WorkReport.Success`;
-- OCR failure preserves detection and barcode outcomes;
-- a missing context key becomes `ImageWorkflowException`;
-- an unexpected programming exception yields workflow failure and a sanitized service error;
-- external job cancellation reaches all active provider adapters.
+- 세 controlled lane이 순차 실행되지 않고 시간상 겹친다.
+- 각 lane은 고유한 context key 하나에 쓴다.
+- provider `Failed` result가 있어도 workflow는 `WorkReport.Success`를 낸다.
+- OCR failure가 발생해도 detection과 barcode outcome을 보존한다.
+- missing context key는 `ImageWorkflowException`이 된다.
+- 예상하지 못한 programming exception은 workflow failure와 정제된 service error가 된다.
+- external job cancellation이 활성 provider adapter 모두에 도달한다.
 
-- [ ] **Step 2: Write RED aggregate and policy decision-table tests**
+- [ ] **Step 2: aggregate와 policy decision-table RED test 작성**
 
-Aggregate rules:
+Aggregate rule:
 
 ```text
 all Completed/Empty       -> COMPLETED
@@ -725,7 +725,7 @@ available + degraded      -> PARTIAL
 no available result       -> FAILED
 ```
 
-Policy order:
+Policy 순서:
 
 ```text
 sensitive detection fact                     -> QUARANTINE
@@ -735,7 +735,7 @@ missing/multiple face or missing/multiple QR   -> MANUAL_REVIEW
 valid OCR + one face + one visitor QR          -> ALLOW
 ```
 
-Explicitly prove `Detection Empty` and `Detection Failed` are not equivalent.
+`Detection Empty`와 `Detection Failed`가 동등하지 않음을 명시적으로 증명한다.
 
 - [ ] **Step 3: Run RED**
 
@@ -745,11 +745,11 @@ Explicitly prove `Detection Empty` and `Detection Failed` are not equivalent.
   --tests '*VisitorPassPolicyTest' --no-daemon
 ```
 
-Expected: compilation fails because workflow and policy types are absent.
+예상 결과: workflow와 policy type이 없으므로 compilation이 실패한다.
 
-- [ ] **Step 4: Implement the workflow with separate keys**
+- [ ] **Step 4: 분리된 key로 workflow 구현**
 
-Use:
+다음을 사용한다:
 
 ```kotlin
 private const val OCR_RESULT = "analysis.ocr"
@@ -757,16 +757,13 @@ private const val DETECTION_RESULT = "analysis.detection"
 private const val BARCODE_RESULT = "analysis.barcode"
 ```
 
-Each `execute` block records its `AnalysisResult` and returns:
+각 `execute` block은 자신의 `AnalysisResult`를 기록하고 다음 값을 반환한다:
 
 ```kotlin
 WorkReport.success(context)
 ```
 
-After `flow.execute(context)`, require `WorkReport.Success`, then read all three typed values.
-Do not expose or return `WorkContext` outside `ImageIntelligenceWorkflow`.
-Use one checked extraction helper so a missing key or wrong value type becomes a stable
-orchestration defect rather than a later null failure:
+`flow.execute(context)` 뒤에는 `WorkReport.Success`를 요구한 다음 typed value 세 개를 모두 읽는다. `ImageIntelligenceWorkflow` 밖으로 `WorkContext`를 노출하거나 반환하지 않는다. 하나의 checked extraction helper를 사용해 missing key나 wrong value type이 이후 null failure가 아니라 안정적인 orchestration defect가 되게 한다:
 
 ```kotlin
 private inline fun <reified T : Any> WorkContext.requireResult(key: String): T =
@@ -777,10 +774,9 @@ private inline fun <reified T : Any> WorkContext.requireResult(key: String): T =
         )
 ```
 
-- [ ] **Step 5: Implement aggregate status and policy**
+- [ ] **Step 5: aggregate status와 policy 구현**
 
-Keep `ImageIntelligenceAggregator` purely deterministic. Keep `VisitorPassPolicy` free of
-provider execution and HTTP types. Return:
+`ImageIntelligenceAggregator`는 순수 deterministic으로 유지한다. `VisitorPassPolicy`에는 provider execution과 HTTP type을 넣지 않는다. 다음 값을 반환한다:
 
 ```kotlin
 internal data class VisitorPassDecision(
@@ -789,7 +785,7 @@ internal data class VisitorPassDecision(
 )
 ```
 
-Use stable reason codes such as:
+다음과 같은 안정적인 reason code를 사용한다:
 
 - `SENSITIVE_REGION_DETECTED`
 - `INVALID_VISITOR_QR`
@@ -798,7 +794,7 @@ Use stable reason codes such as:
 - `FACE_COUNT_REQUIRES_REVIEW`
 - `QR_COUNT_REQUIRES_REVIEW`
 
-- [ ] **Step 6: Run GREEN and repeat the cancellation test**
+- [ ] **Step 6: GREEN 실행과 cancellation test 반복**
 
 ```bash
 ./gradlew :spring-boot-image-intelligence-api:test \
@@ -806,8 +802,7 @@ Use stable reason codes such as:
   --tests '*VisitorPassPolicyTest' --no-daemon
 ```
 
-Expected: concurrency, partial results, missing-key failure, cancellation, aggregate, and policy
-tests pass.
+예상 결과: concurrency, partial result, missing-key failure, cancellation, aggregate, policy test가 통과한다.
 
 - [ ] **Step 7: Commit**
 
