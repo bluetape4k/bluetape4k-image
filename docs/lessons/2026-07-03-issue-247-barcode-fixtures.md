@@ -1,33 +1,30 @@
-# Issue #247 Barcode Fixtures and Capability Docs
+# Issue #247 Barcode fixture와 capability 문서
 
-## Context
+## 배경
 
-#247 followed the API, ZXing provider, and BoofCV research issues. The remaining
-gap was reusable fixture shape plus user-facing capability documentation.
+#247은 API, ZXing provider, BoofCV research issue 뒤를 이었다. 남은 gap은 reusable fixture
+shape와 user-facing capability documentation이었다.
 
-## Decision or Finding
+## 결정 또는 확인 사항
 
-Use deterministic runtime-generated fixtures instead of committing external
-barcode image binaries. Keep provider-neutral helpers in
-`images-barcode-api` test fixtures and keep ZXing-specific QR/Code 128 image
-generation inside the ZXing provider tests.
+external barcode image binary를 commit하는 대신 deterministic runtime-generated fixture를
+사용한다. provider-neutral helper는 `images-barcode-api` test fixture에 두고, ZXing-specific
+QR/Code 128 image generation은 ZXing provider test 안에 둔다.
 
-## Outcome
+## 결과
 
-`BarcodeTestFixtures` now provides no-code images, rotated images, malformed
-bytes, and source-note metadata for provider tests. README capability docs
-record API, ZXing, deferred BoofCV, and future commercial/native provider
-scope.
+`BarcodeTestFixtures`는 이제 provider test용 no-code image, rotated image, malformed byte,
+source-note metadata를 제공한다. README capability docs는 API, ZXing, deferred BoofCV, future
+commercial/native provider scope를 기록한다.
 
-## Verification
+## 검증
 
-Targeted API and ZXing module tests plus compile warning checks verify the
-fixture helper shape and provider test reuse. Documentation was checked against
-actual class names and current #246 research output.
+targeted API와 ZXing module test, compile warning check가 fixture helper shape와 provider
+test reuse를 검증한다. Documentation은 actual class name과 현재 #246 research output에
+대조해 확인했다.
 
-## Future Guidance
+## 향후 지침
 
-When adding another barcode provider, depend on the API module test fixtures for
-shared negative/rotation cases. Add provider-specific positive image generation
-or license-cleared resources only in the provider module that owns that decoder
-dependency.
+다른 barcode provider를 추가할 때 shared negative/rotation case에는 API module test fixture를
+사용한다. provider-specific positive image generation 또는 license-cleared resource는 해당
+decoder dependency를 소유한 provider module에만 추가한다.

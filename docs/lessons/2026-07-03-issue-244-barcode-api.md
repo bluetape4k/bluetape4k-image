@@ -1,30 +1,29 @@
-# Issue #244 Barcode API Lessons
+# Issue #244 Barcode API 교훈
 
-## Context
+## 배경
 
-Issue #244 added the provider-neutral barcode API module before the ZXing
-provider issue. The work created a new published module, public value models,
-sync/suspend entry points, README locale updates, and CI/Nightly registration.
+Issue #244는 ZXing provider issue 전에 provider-neutral barcode API module을 추가했다. 이
+작업은 새 published module, public value model, sync/suspend entry point, README locale
+update, CI/Nightly registration을 만들었다.
 
-## Decision
+## 결정
 
-Keep `images-barcode-api` dependency-light: it depends on `bluetape4k-images`
-and coroutines only. Concrete decoders such as ZXing and BoofCV must live in
-separate provider modules.
+`images-barcode-api`는 dependency-light로 유지한다. 이 module은 `bluetape4k-images`와
+coroutines에만 의존한다. ZXing, BoofCV 같은 concrete decoder는 별도 provider module에
+있어야 한다.
 
-## Outcome
+## 결과
 
-The module exposes `BarcodeReader`, `BarcodeOptions`, `BarcodeResult`,
-geometry/provider models, input helper extensions, and cancellation-safe
-suspend extraction. Tests cover validation, serialization, input helpers,
-dispatcher delegation, cancellation-before-start, and provider cancellation.
+module은 `BarcodeReader`, `BarcodeOptions`, `BarcodeResult`, geometry/provider model, input
+helper extension, cancellation-safe suspend extraction을 노출한다. test는 validation,
+serialization, input helper, dispatcher delegation, cancellation-before-start, provider
+cancellation을 다룬다.
 
-## Future Guard
+## 향후 방지책
 
-When a public data class carries `ByteArray`, override equality and hash code
-or avoid array properties. Kotlin data class defaults compare arrays by
-reference, which is wrong for provider-neutral value models unless explicitly
-documented.
+public data class가 `ByteArray`를 담는다면 equality와 hash code를 override하거나 array
+property를 피한다. Kotlin data class 기본값은 array를 reference로 비교하므로 명시적으로
+문서화하지 않는 한 provider-neutral value model에는 맞지 않는다.
 
-For `fun interface` contracts, do not put default parameters on the single
-abstract method. Provide extension overloads for default-option ergonomics.
+`fun interface` contract에서는 single abstract method에 default parameter를 두지 않는다.
+default-option ergonomics는 extension overload로 제공한다.

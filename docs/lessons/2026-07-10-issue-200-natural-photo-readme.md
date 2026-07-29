@@ -1,23 +1,29 @@
-# Issue #200 natural-photo benchmark headline
+# Issue #200 자연 사진 벤치마크 대표 결과
 
-## Context
+## 배경
 
-The image benchmark README headline tables still cited a synthetic-fallback run even though comparable natural-photo JMH evidence was committed.
+이미지 벤치마크 README의 대표 표는 비교 가능한 자연 사진 JMH 근거가 커밋된 뒤에도
+합성 대체 이미지로 실행한 결과를 계속 인용하고 있었다.
 
-## Decision
+## 결정
 
-Use the committed 2026-05-28 natural-photo report and raw JSON as the README headline source. Keep English and Korean tables identical, and show chart bars on a linear axis for these small comparison sets.
+커밋된 2026-05-28 자연 사진 보고서와 원시 JSON을 README 대표 결과의 출처로
+사용한다. 영문 표와 국문 표의 내용을 동일하게 유지하고, 비교 항목이 적은 이
+차트의 막대는 선형 축으로 표시한다.
 
-## Outcome
+## 결과
 
-The README now states the measurement source and date. The generator renders target PNGs with CairoSVG at 2x resolution; an ASCII separator is used in chart axis labels because the previous middle-dot glyph rendered as tofu in CairoSVG output.
+README에 측정 출처와 날짜를 명시했다. 생성기는 CairoSVG로 대상 PNG를 2배
+해상도에서 렌더링한다. 기존 가운뎃점 글리프가 CairoSVG 출력에서 두부 문자로
+표시되어 차트 축 레이블에는 ASCII 구분자를 사용한다.
 
-## Verification
+## 검증
 
-- Matched every displayed value against the report and raw JSON.
-- Regenerated SVG and PNG charts, checked SVG XML, and inspected full-size PNGs.
-- Completed final 7-tier review with P0=0 and P1=0.
+- 표시된 모든 값을 보고서와 원시 JSON에 대조했다.
+- SVG와 PNG 차트를 다시 생성하고 SVG XML을 검사한 뒤 원본 크기 PNG를 확인했다.
+- 최종 7단계 검토를 완료했으며 결과는 P0=0, P1=0이었다.
 
-## Future guidance
+## 향후 지침
 
-For documentation charts, validate the rendered PNG rather than only the SVG source; verify axis semantics and font glyphs at the published resolution.
+문서용 차트는 SVG 원본만 확인하지 말고 렌더링된 PNG를 검증해야 한다. 게시
+해상도에서 축의 의미와 글꼴 글리프가 올바른지도 확인한다.

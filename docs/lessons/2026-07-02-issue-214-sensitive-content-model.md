@@ -1,34 +1,38 @@
-# Lessons Learned - Issue #214 Sensitive Content Detection Model
+# Issue #214 Sensitive content detection model 교훈
 
-Date: 2026-07-02
-Related issue: #214
+날짜: 2026-07-02
+관련 이슈: #214
 
-## Context
+## 배경
 
-The 0.4.0 line needed the first sensitive-content boundary without selecting a detector runtime or adding model dependencies to `bluetape4k-images`.
+0.4.0 line은 detector runtime을 선택하거나 `bluetape4k-images`에 model dependency를
+추가하지 않는 첫 sensitive-content boundary가 필요했다.
 
-## Decision
+## 결정
 
-Add only backend-neutral result models to the core image module:
+core image module에는 backend-neutral result model만 추가한다.
 
-- stable category and severity enums
-- raw backend label preservation
-- rectangle, polygon, polyline, and raster-mask region geometries
-- coordinate and confidence validation
+- stable category와 severity enum
+- raw backend label 보존
+- rectangle, polygon, polyline, raster-mask region geometry
+- coordinate와 confidence validation
 
-Detector runtimes, policy actions, and redaction rendering remain separate issues/modules.
+Detector runtime, policy action, redaction rendering은 별도 issue/module로 유지한다.
 
-## Outcome
+## 결과
 
-The public model now lets future detector adapters publish consistent results without forcing OpenCV, ONNX, model weights, or policy engines into the core module.
+public model은 이제 향후 detector adapter가 OpenCV, ONNX, model weight, policy engine을 core
+module에 강제하지 않고 consistent result를 publish할 수 있게 한다.
 
-## Verification
+## 검증
 
-- Red compile failure before model implementation.
-- Targeted model tests pass.
-- Full `:bluetape4k-images:test` passes.
-- README/README.ko document the non-goals and caller policy risks.
+- model 구현 전 red compile failure.
+- targeted model test 통과.
+- 전체 `:bluetape4k-images:test` 통과.
+- README/README.ko가 non-goal과 caller policy risk를 문서화.
 
-## Future Guard
+## 향후 방지책
 
-Future sensitive-content work should consume this model first. Do not add runtime detector dependencies, bundled model assets, or treatment actions to `bluetape4k-images` without a separate issue and module-boundary review.
+향후 sensitive-content 작업은 이 model을 먼저 소비해야 한다. 별도 issue와 module-boundary
+review 없이 runtime detector dependency, bundled model asset, treatment action을
+`bluetape4k-images`에 추가하지 않는다.

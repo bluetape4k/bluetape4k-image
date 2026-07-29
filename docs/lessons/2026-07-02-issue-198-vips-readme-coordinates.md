@@ -1,28 +1,27 @@
-# Issue #198 VIPS README Coordinates
+# Issue #198 VIPS README 좌표
 
-## Context
+## 배경
 
-The Java 21 and Java 25 VIPS module README pairs documented `1.7.0` dependency
-coordinates, while the image repository had moved to a different release line.
+Java 21과 Java 25 VIPS module README pair는 `1.7.0` dependency coordinate를
+문서화하고 있었지만, image repository는 이미 다른 release line으로 이동해 있었다.
 
-## Decision
+## 결정
 
-Use `<version>` placeholders in module-level dependency examples instead of
-hard-coding a release number that can silently drift from `gradle.properties`
-and the BOM README.
+module-level dependency example에는 `gradle.properties`와 BOM README에서 조용히
+드리프트할 수 있는 release number를 hard-code하지 않고 `<version>` placeholder를
+사용한다.
 
-## Outcome
+## 결과
 
-The VIPS Java 21 and Java 25 README pairs now match the repository's module
-README convention, and the Java 21 BOM snippet matches the BOM README usage.
+VIPS Java 21과 Java 25 README pair는 이제 repository의 module README convention과
+일치하고, Java 21 BOM snippet도 BOM README 사용 방식과 맞는다.
 
-## Verification
+## 검증
 
 - `git diff --check`
-- Stale `1.7.0` searches across the changed VIPS README pairs, root README, and BOM README
+- 변경된 VIPS README pair, root README, BOM README에서 stale `1.7.0` 검색
 
-## Future Guard
+## 향후 방지책
 
-For module README dependency snippets, prefer `<version>` or BOM-managed
-coordinates unless the document is explicitly showing a release-specific copy
-snippet.
+module README dependency snippet에서는 문서가 release-specific copy snippet을 명시적으로
+보여주는 경우가 아니라면 `<version>` 또는 BOM-managed coordinate를 우선한다.

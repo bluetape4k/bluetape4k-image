@@ -1,26 +1,24 @@
-# Issue #245 ZXing Barcode Provider
+# Issue #245 ZXing Barcode provider
 
-## Context
+## 배경
 
-#244 introduced a provider-neutral barcode API. #245 added the first concrete
-OSS provider without leaking ZXing types into the shared API module.
+#244는 provider-neutral barcode API를 도입했다. #245는 ZXing type을 shared API module로
+누수하지 않으면서 첫 concrete OSS provider를 추가했다.
 
-## Decision
+## 결정
 
-Keep ZXing in a dedicated `images-barcode-zxing` module and expose only
-`BarcodeReader`, `BarcodeOptions`, `BarcodeResult`, and related API models.
-No-code images return an empty list. Malformed encoded byte input is normalized
-as `BarcodeException(MALFORMED_INPUT)`.
+ZXing은 dedicated `images-barcode-zxing` module에 두고 `BarcodeReader`, `BarcodeOptions`,
+`BarcodeResult`와 related API model만 노출한다. no-code image는 empty list를 반환한다.
+malformed encoded byte input은 `BarcodeException(MALFORMED_INPUT)`으로 normalize한다.
 
-## Outcome
+## 결과
 
-The module decodes generated QR and Code 128 samples, maps result points into a
-pixel-space region, records provider metadata, and participates in CI/Nightly
-validation as a publishable module.
+module은 generated QR과 Code 128 sample을 decode하고, result point를 pixel-space region으로
+mapping하며, provider metadata를 기록하고 publishable module로 CI/Nightly validation에
+참여한다.
 
-## Future Guidance
+## 향후 지침
 
-Do not add ZXing dependencies to `images` or `images-barcode-api`. If more
-barcode breadth is needed, compare providers through the same `BarcodeReader`
-contract and update #247's fixture/capability matrix rather than extending this
-module into a provider registry.
+`images` 또는 `images-barcode-api`에 ZXing dependency를 추가하지 않는다. barcode breadth가
+더 필요하면 이 module을 provider registry로 확장하지 말고 같은 `BarcodeReader` contract로
+provider를 비교하고 #247의 fixture/capability matrix를 갱신한다.

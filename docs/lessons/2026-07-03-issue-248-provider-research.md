@@ -1,31 +1,30 @@
-# Issue #248 Commercial and Native Provider Research
+# Issue #248 Commercial/native provider research
 
-## Context
+## 배경
 
-#248 evaluated whether commercial or native barcode engines should become
-optional providers after the API, ZXing provider, BoofCV research, and fixture
-documentation landed.
+#248은 API, ZXing provider, BoofCV research, fixture documentation이 들어온 뒤 commercial
+또는 native barcode engine이 optional provider가 되어야 하는지 평가했다.
 
-## Decision or Finding
+## 결정 또는 확인 사항
 
-Do not add commercial or native providers for 0.4.0. Dynamsoft and Aspose are
-future optional commercial candidates only after license and CI policy exists.
-OpenCV is not broad enough to replace ZXing as a barcode provider. ZBar carries
-native/JNI and LGPL review cost that does not fit the default JVM module path.
+0.4.0에는 commercial 또는 native provider를 추가하지 않는다. Dynamsoft와 Aspose는 license와
+CI policy가 준비된 뒤에만 future optional commercial candidate가 된다. OpenCV는 barcode
+provider로 ZXing을 대체할 만큼 넓지 않다. ZBar는 default JVM module path에 맞지 않는
+native/JNI와 LGPL review cost를 가진다.
 
-## Outcome
+## 결과
 
-The provider architecture remains API plus ZXing for 0.4.0. #248 should close as
-research, with no follow-up implementation issues created yet.
+0.4.0의 provider architecture는 API plus ZXing으로 유지한다. #248은 아직 follow-up
+implementation issue를 만들지 않고 research로 close해야 한다.
 
-## Verification
+## 검증
 
-Research checked current vendor docs, pricing/license pages, Maven/package
-metadata, and native/runtime documentation. The same conclusion was preserved in
-`bluetape4k-wiki` for cross-repo retrieval.
+research는 current vendor docs, pricing/license page, Maven/package metadata,
+native/runtime documentation을 확인했다. 같은 결론은 cross-repo retrieval을 위해
+`bluetape4k-wiki`에 보존했다.
 
-## Future Guidance
+## 향후 지침
 
-If a customer or downstream module needs a commercial barcode backend, open a
-new issue only after license key handling, CI secret policy, redistribution
-terms, and runtime platform targets are explicit.
+customer 또는 downstream module이 commercial barcode backend를 필요로 한다면 license key
+handling, CI secret policy, redistribution term, runtime platform target이 명확해진 뒤에만
+새 issue를 연다.

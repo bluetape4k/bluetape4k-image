@@ -1,38 +1,37 @@
-# Issue #197 Large Streaming Benchmark Parity
+# Issue #197 대용량 스트리밍 벤치마크 동등성
 
-## Context
+## 배경
 
-#197 aligned the Scrimage and libvips large-streaming benchmark to one
-color-preserving decode-resize-JPEG-encode contract and made the comparable
-lane Java 25 FFM-only.
+#197에서는 Scrimage와 libvips의 대용량 스트리밍 벤치마크를 색상을 보존하는 하나의
+디코딩-크기 조정-JPEG 인코딩 계약에 맞췄다. 비교 가능한 실행 경로는 Java 25
+FFM으로 한정했다.
 
-## Decision or Finding
+## 결정 및 확인 사항
 
-Do not promote one short benchmark snapshot into a universal `Path` throughput
-or memory recommendation. Current Java 21 and Java 25 vips `Path` overloads
-both read bounded compressed input just like the stream overloads: all current
-vips input boundaries apply the 50 MiB guard and buffer the input. `Path` is a
-caller API/lifecycle choice, not a streaming-memory or guard-bypass path.
+짧게 측정한 벤치마크 스냅숏 하나만으로 `Path`의 처리량이나 메모리 사용 방식을
+일반화해서는 안 된다. 현재 Java 21과 Java 25 vips의 `Path` 오버로드는 스트림
+오버로드와 마찬가지로 크기가 제한된 압축 입력을 읽는다. 현재 모든 vips 입력
+경계는 50 MiB 제한을 적용하고 입력을 버퍼링한다. `Path`는 호출자가 API와
+생명주기를 선택하는 수단이지, 스트리밍 메모리 사용을 보장하거나 제한을 우회하는
+경로가 아니다.
 
-## Outcome
+## 결과
 
-The EN/KO root and benchmark README files state that boundary contract. The
-Java 25 full benchmark command explicitly includes FFM-only large streaming;
-the Java 21 instructions run only named JNI-compatible configurations. The
-rebased large-streaming SVG/PNG was regenerated because its prior rendered
-middle-dot glyph had become tofu.
+영문·국문 루트 README와 벤치마크 README에 이 경계 계약을 명시했다. Java 25 전체
+벤치마크 명령에는 FFM 전용 대용량 스트리밍 작업을 명시적으로 포함했고, Java 21
+안내에서는 이름을 지정한 JNI 호환 구성만 실행한다. 리베이스 후 대용량 스트리밍
+SVG/PNG에서 기존 가운뎃점 글리프가 두부 문자로 렌더링되어 이미지를 다시 생성했다.
 
-## Verification
+## 검증
 
-Targeted contract test, Java 25 benchmark compilation, a fresh 16-row Java 25
-benchmark run, and a controlled invalid-FFM cleanup run passed. The chart SVG
-was XML-checked and the full-size published PNG was visually inspected. The
-Java 21 named task set was verified with Gradle `--dry-run`.
+계약 집중 테스트, Java 25 벤치마크 컴파일, 새로 실행한 16행 Java 25 벤치마크,
+통제된 잘못된 FFM 정리 실행이 모두 통과했다. 차트 SVG는 XML 유효성을 검사했고,
+게시 크기의 PNG 원본도 육안으로 확인했다. 이름을 지정한 Java 21 작업 모음은
+Gradle `--dry-run`으로 검증했다.
 
-## Future Guidance
+## 향후 지침
 
-After rebasing benchmark evidence, regenerate the affected PNG and inspect the
-published raster, not only its SVG source. When a benchmark backend becomes
-exclusive, validate every documented full-suite command against the selected
-target. Keep README recommendations tied to the raw measurement scope and the
-actual input-boundary contract.
+벤치마크 근거를 리베이스한 뒤에는 영향받은 PNG를 다시 생성하고 SVG 원본뿐 아니라
+게시할 래스터 이미지도 확인해야 한다. 벤치마크 백엔드가 하나로 제한되면 문서에
+기록된 모든 전체 실행 명령을 선택한 대상에 맞춰 검증한다. README의 권장 사항은
+원시 측정 범위와 실제 입력 경계 계약 안에서만 제시한다.

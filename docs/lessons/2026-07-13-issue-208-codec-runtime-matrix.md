@@ -1,62 +1,60 @@
-# Issue #208 Codec/Runtime Matrix Lessons
+# Issue #208 코덱/런타임 매트릭스에서 얻은 교훈
 
-## Context
+## 배경
 
-Issue #208 adds a reproducible codec/runtime matrix for PNG, WebP, AVIF, and
-HEIC across the Java 21 JNI and Java 25 FFM backend families. The accepted run
-uses `cafe.jpg` as a web-photo fixture and `homer.jpg` as a profile fixture.
+Issue #208에서는 Java 21 JNI와 Java 25 FFM 백엔드 계열에서 PNG, WebP, AVIF,
+HEIC을 비교할 수 있는 재현 가능한 코덱/런타임 매트릭스를 추가했다. 채택한 실행은
+`cafe.jpg`를 웹 사진 픽스처로, `homer.jpg`를 프로필 픽스처로 사용한다.
 
-## Decision or Finding
+## 결정 및 확인 사항
 
-- Treat a matrix cell as comparable only when scenario, format, direction,
-  input hash, codec options, backend, JVM, libvips version, and JMH protocol are
-  fixed. This report compares cells within one accepted Java 25 run and does
-  not rank the unavailable Java 21 lane.
-- Make unsupported or unavailable runtime paths explicit terminal states.
-  Java 21 host incompatibility is evidence as 16 `N/A` cells, not an omitted
-  backend and not a Java 25 win.
-- Use direction-specific smoke probes before experimental AVIF/HEIC work. An
-  encoder can be available while its decoder is not, so format-level support
-  is too coarse.
-- Promote only a complete, hash-linked, append-only evidence directory. A
-  failed or interrupted attempt gets a new run ID rather than overwriting an
-  accepted run.
-- Keep the serialization catalog pin local and temporary until the governed
-  alias appears in a release-train central catalog tag. Do not mutate the
-  dependencies repository as part of image benchmark work.
-- Disable atomicfu transformation in a module that does not use atomicfu but
-  switches its Kotlin target between Java 21 and Java 25. Otherwise a Java 21
-  verification can fail while loading stale Java 25 output from the same
-  worktree.
+- 시나리오, 형식, 방향, 입력 해시, 코덱 옵션, 백엔드, JVM, libvips 버전, JMH
+  프로토콜이 모두 고정된 경우에만 매트릭스 셀을 비교 대상으로 본다. 이 보고서는
+  채택한 Java 25 실행 안의 셀만 비교하며, 사용할 수 없었던 Java 21 실행 경로에는
+  순위를 매기지 않는다.
+- 지원하지 않거나 사용할 수 없는 런타임 경로는 명시적인 종료 상태로 남긴다.
+  Java 21 호스트 비호환은 백엔드를 생략하거나 Java 25의 승리로 해석할 일이 아니라,
+  16개 `N/A` 셀로 기록할 근거다.
+- 실험적인 AVIF/HEIC 작업 전에는 방향별 스모크 검사를 수행한다. 인코더는 사용할
+  수 있지만 디코더는 사용할 수 없는 경우가 있으므로, 형식 단위의 지원 여부만으로는
+  충분하지 않다.
+- 완전하고 해시로 연결된 추가 전용 근거 디렉터리만 채택한다. 실패하거나 중단된
+  시도는 채택한 실행을 덮어쓰지 않고 새 실행 ID를 받는다.
+- 관리 대상 별칭이 릴리스 트레인의 중앙 카탈로그 태그에 포함될 때까지만 직렬화
+  카탈로그 버전을 로컬에 임시로 고정한다. 이미지 벤치마크 작업의 일부로 의존성
+  저장소를 수정하지 않는다.
+- atomicfu를 사용하지 않으면서 Kotlin 대상을 Java 21과 Java 25 사이에서 바꾸는
+  모듈에서는 atomicfu 변환을 비활성화한다. 그렇지 않으면 같은 작업 트리의 오래된
+  Java 25 출력을 읽다가 Java 21 검증이 실패할 수 있다.
 
-## Outcome
+## 결과
 
-The accepted run records 16 measured Java 25 cells and 16 Java 21 `N/A` cells.
-For both the web-photo and profile scenarios, the report includes latency,
-managed-heap allocation, input/output bytes, dimensions, hashes, backend/JVM,
-libvips identity, and terminal status. English and Korean README summaries link
-the report, immutable evidence, and matching SVG/PNG charts.
+채택한 실행에는 측정된 Java 25 셀 16개와 Java 21 `N/A` 셀 16개를 기록했다. 웹
+사진과 프로필 시나리오 모두에 대해 보고서는 지연 시간, 관리 힙 할당량, 입출력
+바이트, 크기, 해시, 백엔드/JVM, libvips 식별 정보, 종료 상태를 담는다. 영문·국문
+README 요약은 보고서, 불변 근거, 내용이 일치하는 SVG/PNG 차트로 연결된다.
 
-## Verification
+## 검증
 
-- Benchmark-module tests: 70 passing tests on Java 25.
-- Benchmark compilation: Java 25 followed by Java 21 passed without an
-  intervening clean after the cross-toolchain atomicfu regression was repaired.
-- Task graph: all 11 codec tasks registered; documented default dry run passed
-  with an explicit run ID.
-- Evidence audit: 32 terminal cells, 11 verified artifact links, 13 parseable
-  JSON files, no symlinks, and no modified/deleted accepted raw evidence.
-- Documentation audit: identical locale tables, valid SVG XML, rendered PNGs
-  inspected at original size, and `git diff --check` passed.
-- Six-lens implementation review converged at `P0=0`, `P1=0`.
+- 벤치마크 모듈 테스트: Java 25에서 테스트 70개가 통과했다.
+- 벤치마크 컴파일: 도구 체인 간 atomicfu 회귀를 수정한 뒤 중간에 clean하지
+  않고 Java 25, Java 21 순서로 실행해 모두 통과했다.
+- 작업 그래프: 코덱 작업 11개가 모두 등록되었고, 명시적인 실행 ID를 사용한 문서의
+  기본 드라이런이 통과했다.
+- 근거 감사: 종료 상태 셀 32개, 검증된 아티팩트 링크 11개, 파싱 가능한 JSON 파일
+  13개를 확인했다. 심볼릭 링크는 없었고, 채택한 원시 근거가 수정되거나 삭제되지
+  않았다.
+- 문서 감사: 언어별 표가 동일했고 SVG XML이 유효했다. 렌더링된 PNG를 원본 크기로
+  확인했으며 `git diff --check`가 통과했다.
+- 6개 관점의 구현 검토는 `P0=0`, `P1=0`으로 수렴했다.
 
-## Future Guidance
+## 향후 지침
 
-If a future run measures both runtime families, generate comparison tables and
-charts from an explicit canonical comparability key rather than joining on
-format name alone. When a chart compares exactly two series, use a
-complementary pastel pair with matching legend swatches; use a categorical
-palette for three or more series. Keep no-op and lazy-row guards so unsupported
-experimental directions cannot silently appear as measured. Remove the local
-serialization version pin as soon as a release-train central catalog tag
-exposes the governed alias, then rerun benchmark-module tests against that tag.
+향후 실행에서 두 런타임 계열을 모두 측정한다면 형식 이름만으로 결합하지 말고,
+명시적인 표준 비교 키로 비교 표와 차트를 생성해야 한다. 차트가 정확히 두 계열을
+비교할 때는 범례 색상 견본과 일치하는 보색 계열의 파스텔 색상 두 개를 사용하고,
+세 계열 이상이면 범주형 팔레트를 사용한다. 지원하지 않는 실험 방향이 측정값처럼
+나타나지 않도록 아무 작업도 하지 않는 경로와 지연 생성 행에 대한 보호 장치를
+유지한다. 릴리스 트레인의 중앙 카탈로그 태그가 관리 대상 별칭을 제공하는 즉시
+로컬 직렬화 버전 고정을 제거하고, 해당 태그를 기준으로 벤치마크 모듈 테스트를
+다시 실행한다.
