@@ -1,111 +1,70 @@
-# Issue #1 OCR Research Refresh
+# Issue #1 OCR research refresh
 
-- Issue: [#1](https://github.com/bluetape4k/bluetape4k-image/issues/1)
-- Date: 2026-06-05
-- Scope: refresh the prior OCR handoff before writing the implementation spec.
+- 이슈: [#1](https://github.com/bluetape4k/bluetape4k-image/issues/1)
+- 날짜: 2026-06-05
+- 범위: implementation spec 작성 전 기존 OCR handoff refresh.
 
-## Decision
+## 결정
 
-Keep issue #1 focused on a Tesseract/Tess4J baseline in a new optional
-`bluetape4k-images-ocr` module. Do not add OCR dependencies to
-`bluetape4k-images`.
+issue #1은 새 optional `bluetape4k-images-ocr` module의 Tesseract/Tess4J baseline에 집중한다. `bluetape4k-images`에는 OCR dependency를 추가하지 않는다.
 
-PaddleOCR is out of scope for issue #1. It is a broader Python/model/document-AI
-stack with separate runtime, model packaging, serving, hardware, and CI concerns.
-The follow-up is tracked in
-[#169](https://github.com/bluetape4k/bluetape4k-image/issues/169).
+PaddleOCR은 issue #1 범위 밖이다. PaddleOCR은 별도 runtime, model packaging, serving, hardware, CI concern을 가진 더 넓은 Python/model/document-AI stack이다. 후속 작업은 [#169](https://github.com/bluetape4k/bluetape4k-image/issues/169)에서 추적한다.
 
-## Updated Source Evidence
+## 업데이트된 source evidence
 
-- Prior repo-local research:
-  `docs/superpowers/research/2026-05-29-issue-83-ocr-dependency-model-packaging-research.md`.
-- Prior lesson:
-  `docs/lessons/2026-05-29-image-ai-research-gates.md`.
-- GitHub issue #83 is closed with a comment linking the research handoff.
-- Tess4J Maven metadata checked on 2026-06-05: latest/release `5.19.0`,
-  last updated `20260527033916`.
-- Tess4J GitHub release checked on 2026-06-05:
-  `tess4j-5.19.0`, Apache-2.0, published 2026-05-27.
-- Tesseract GitHub release checked on 2026-06-05:
-  `5.5.2`, Apache-2.0, published 2025-12-26.
-- Tesseract installation docs state that engine packages and language
-  `traineddata` packages are installed separately.
-- `tesseract-ocr/tessdata` is Apache-2.0 and provides trained models.
-- PaddleOCR GitHub release checked on 2026-06-05:
-  `v3.6.0`, Apache-2.0, published 2026-05-28.
+- 기존 repo-local research: `docs/superpowers/research/2026-05-29-issue-83-ocr-dependency-model-packaging-research.md`.
+- 기존 lesson: `docs/lessons/2026-05-29-image-ai-research-gates.md`.
+- GitHub issue #83은 research handoff를 연결한 comment와 함께 closed 상태다.
+- Tess4J Maven metadata checked on 2026-06-05: latest/release `5.19.0`, last updated `20260527033916`.
+- Tess4J GitHub release checked on 2026-06-05: `tess4j-5.19.0`, Apache-2.0, published 2026-05-27.
+- Tesseract GitHub release checked on 2026-06-05: `5.5.2`, Apache-2.0, published 2025-12-26.
+- Tesseract installation docs는 engine package와 language `traineddata` package를 별도로 설치한다고 설명한다.
+- `tesseract-ocr/tessdata`는 Apache-2.0이며 trained model을 제공한다.
+- PaddleOCR GitHub release checked on 2026-06-05: `v3.6.0`, Apache-2.0, published 2026-05-28.
 
-## Repository Fit
+## repository 적합성
 
-- Existing optional native/runtime dependencies already live outside the core
-  module, for example `bluetape4k-images-vips-java21` and
-  `bluetape4k-images-vips-java25`.
-- The root README and repo-local `AGENTS.md` module list must be updated when a
-  new module is added.
-- Root README visual assets currently include module overview, module chart, and
-  architecture diagrams. Adding OCR makes those assets stale, so diagram work is
-  in scope for issue #1.
-- `settings.gradle.kts`, the BOM constraints, CI path filters, CI jobs, Nightly
-  jobs, coverage artifacts, and README module tables must all include the new
-  module.
+- 기존 optional native/runtime dependency는 이미 core module 밖에 있다. 예시는 `bluetape4k-images-vips-java21`, `bluetape4k-images-vips-java25`다.
+- 새 module이 추가되면 root README와 repo-local `AGENTS.md` module list를 갱신해야 한다.
+- root README visual asset에는 현재 module overview, module chart, architecture diagram이 포함되어 있다. OCR 추가는 이 asset을 stale하게 만들므로 diagram 작업은 issue #1 범위에 포함한다.
+- `settings.gradle.kts`, BOM constraint, CI path filter, CI job, Nightly job, coverage artifact, README module table이 모두 새 module을 포함해야 한다.
 
-## API Evidence
+## API evidence
 
-Tess4J 5.19.0 exposes the required first implementation surface:
+Tess4J 5.19.0은 첫 구현에 필요한 surface를 제공한다:
 
 - `ITesseract.doOCR(BufferedImage)`
 - `ITesseract.setDatapath(String)`
 - `ITesseract.setLanguage(String)`
 - `ITesseract.setOcrEngineMode(int)`
 - `ITesseract.setPageSegMode(int)`
-- `Tesseract` reads `TESSDATA_PREFIX` by default and validates missing datapath
-  or language data during initialization.
+- `Tesseract`는 기본적으로 `TESSDATA_PREFIX`를 읽고, missing datapath 또는 language data를 initialization 중 validate한다.
 
-This supports an `ImmutableImage.awt()` based implementation without temporary
-files for the common single-image path.
+이 surface는 common single-image path에서 temporary file 없이 `ImmutableImage.awt()` 기반 구현을 지원한다.
 
-## Test and CI Strategy
+## test 및 CI 전략
 
-Update from issue #175 on 2026-06-06: the host-native CI lane is no longer the
-default GitHub Actions strategy. Ubuntu 24.04 ships a Leptonica package line
-older than the current Lept4J/Tess4J native symbol surface. CI and Nightly now
-use the `-Docr.container.enabled=true` portable gate, while `-Docr.enabled=true`
-remains a local/manual host-native check.
+2026-06-06 issue #175 업데이트: host-native CI lane은 더 이상 기본 GitHub Actions 전략이 아니다. Ubuntu 24.04는 현재 Lept4J/Tess4J native symbol surface보다 오래된 Leptonica package line을 제공한다. CI와 Nightly는 이제 portable gate인 `-Docr.container.enabled=true`를 사용하고, `-Docr.enabled=true`는 local/manual host-native check로 남긴다.
 
-Use three test levels:
+세 test level을 사용한다:
 
-1. Unit tests with a fake `OcrEngine` for API validation, option validation, and
-   suspend wrapper behavior. These run in the normal local and CI test path.
-2. Host-native Tess4J integration tests gated by `-Docr.enabled=true`. CI can
-   install `tesseract-ocr`, `tesseract-ocr-eng`, `tesseract-ocr-kor`, and
-   `tesseract-ocr-jpn` before running this lane.
-3. Testcontainers OCR CLI smoke tests gated by `-Docr.container.enabled=true`.
-   These validate a containerized Tesseract runtime and language data, but they
-   do not replace the host-native Tess4J integration test because a separate
-   container cannot load native libraries into the host JVM.
+1. API validation, option validation, suspend wrapper behavior를 위한 fake `OcrEngine` 기반 unit test. 이는 일반 local 및 CI test path에서 실행한다.
+2. `-Docr.enabled=true`로 gate하는 host-native Tess4J integration test. CI가 이 lane을 실행할 때는 `tesseract-ocr`, `tesseract-ocr-eng`, `tesseract-ocr-kor`, `tesseract-ocr-jpn`을 먼저 설치할 수 있다.
+3. `-Docr.container.enabled=true`로 gate하는 Testcontainers OCR CLI smoke test. 이는 containerized Tesseract runtime과 language data를 검증하지만, 별도 container가 host JVM에 native library를 load할 수 없으므로 host-native Tess4J integration test를 대체하지 않는다.
 
-Local Docker is not available in the current agent environment, so the
-Testcontainers lane must be designed as CI-capable and locally skippable with an
-explicit skip reason.
+현재 agent environment에서는 local Docker를 사용할 수 없다. 따라서 Testcontainers lane은 CI-capable하고 local에서는 명시적인 skip reason과 함께 skip 가능하도록 설계해야 한다.
 
-## Follow-Up Scope Guard
+## follow-up scope guard
 
-Created [#169](https://github.com/bluetape4k/bluetape4k-image/issues/169) for
-PaddleOCR backend evaluation. Do not expand issue #1 into PaddleOCR integration.
+PaddleOCR backend evaluation은 [#169](https://github.com/bluetape4k/bluetape4k-image/issues/169)로 생성했다. issue #1을 PaddleOCR integration으로 확장하지 않는다.
 
-If Testcontainers image build/runtime reliability becomes larger than expected,
-keep the host-native Tess4J baseline and file a separate CI hardening issue
-instead of delaying the API/module baseline.
+Testcontainers image build/runtime reliability가 예상보다 커지면 API/module baseline을 지연하지 말고, host-native Tess4J baseline을 유지한 채 별도 CI hardening issue를 등록한다.
 
-## Step 1-R DoD Inputs for Spec
+## Step 1-R DoD input for spec
 
-- Add `bluetape4k-images-ocr` as a published module.
-- Add `tess4j = "5.19.0"` and `tess4j = { module = "net.sourceforge.tess4j:tess4j" }`
-  to the repo-local version catalog.
-- Public API should expose `OcrEngine`, `TesseractOcrEngine`, `OcrOptions`,
-  `OcrResult`, `extractText`, and `suspendExtractText`.
-- Keep `traineddata` external by default and document `TESSDATA_PREFIX` plus
-  explicit `tessdataPath`.
-- Keep extension functions in the OCR module package so consumers opt in by
-  adding the OCR artifact.
-- Update README/README.ko, module README/README.ko, root diagrams/charts, CI,
-  Nightly, BOM, and repo-local `AGENTS.md`.
+- `bluetape4k-images-ocr`를 published module로 추가한다.
+- repo-local version catalog에 `tess4j = "5.19.0"`와 `tess4j = { module = "net.sourceforge.tess4j:tess4j" }`를 추가한다.
+- public API는 `OcrEngine`, `TesseractOcrEngine`, `OcrOptions`, `OcrResult`, `extractText`, `suspendExtractText`를 노출해야 한다.
+- `traineddata`는 기본적으로 external로 유지하고 `TESSDATA_PREFIX`와 명시적인 `tessdataPath`를 문서화한다.
+- consumer가 OCR artifact를 추가해야 opt in되도록 extension function은 OCR module package에 둔다.
+- README/README.ko, module README/README.ko, root diagram/chart, CI, Nightly, BOM, repo-local `AGENTS.md`를 갱신한다.

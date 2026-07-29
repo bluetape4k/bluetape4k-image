@@ -1,75 +1,63 @@
-# Issue #246 BoofCV Barcode Provider Research
+# Issue #246 BoofCV barcode provider 연구
 
-- Issue: [#246](https://github.com/bluetape4k/bluetape4k-image/issues/246)
+- 이슈: [#246](https://github.com/bluetape4k/bluetape4k-image/issues/246)
 - Parent epic: [#215](https://github.com/bluetape4k/bluetape4k-image/issues/215)
 - Milestone: `0.4.0`
 - Branch/worktree: `docs/issue-246-boofcv-provider-research` at `.worktrees/docs-issue-246-boofcv-provider-research`
 - Research date: 2026-07-03
 
-## Decision
+## 결정
 
-Defer a dedicated `images-barcode-boofcv` provider for `0.4.0`.
+`0.4.0`에서는 전용 `images-barcode-boofcv` provider를 보류한다.
 
-BoofCV is viable as a future specialized geometric 2D provider, especially for
-QR, Micro QR, and Aztec cases where rejected candidates, finder-pattern
-geometry, pose utilities, or richer internal detector state matter. It is not a
-better default OSS barcode provider than ZXing for `0.4.0` because the observed
-BoofCV barcode surface is fiducial/2D focused and does not cover common 1D
-barcode families such as Code 128, EAN, UPC, ITF, Codabar, or Code 39.
+BoofCV는 향후 specialized geometric 2D provider로는 가능성이 있다. 특히 QR, Micro QR, Aztec에서 rejected candidate, finder-pattern geometry, pose utility, 더 풍부한 internal detector state가 중요할 때 유용할 수 있다. 그러나 `0.4.0`의 기본 OSS barcode provider로는 ZXing보다 낫지 않다. 관찰된 BoofCV barcode surface는 fiducial/2D 중심이며 Code 128, EAN, UPC, ITF, Codabar, Code 39 같은 일반 1D barcode family를 cover하지 않는다.
 
-## Primary Source Evidence
+## primary source evidence
 
-| Area | Evidence | Source |
+| 영역 | evidence | source |
 | --- | --- | --- |
-| License | BoofCV is distributed under Apache License 2.0. Maven Central metadata for `org.boofcv:boofcv-all:1.4.0` also reports Apache-2.0. | `LICENSE-2.0.txt` from `lessthanoptimal/BoofCV`; Maven Central `org.boofcv:boofcv-all` |
-| Maintenance | GitHub reported latest release `v1.4.0`, published `2026-05-25T19:07:44Z`, with repository push activity on `2026-07-02T16:37:36Z`. | `gh repo view lessthanoptimal/BoofCV` |
-| Runtime | BoofCV documentation says runtime requires Java 11+, while building requires Java 17. Java 21 consumers are inside that runtime floor. | BoofCV Download page |
-| Module shape | BoofCV docs recommend Maven Central and state that core functionality can be referenced through the `all` module, with individual integration modules separate. | BoofCV Download page |
-| Dependency weight | `boofcv-all:1.4.0` POM has 9 compile dependencies, including Swing, JCodec, WebcamCapture, JavaCV, and FFmpeg integration modules. `boofcv-core:1.4.0` has 13 compile dependencies and pulls the recognition stack. `boofcv-recognition:1.4.0` has 6 compile dependencies. | Maven Central POMs from `repo1.maven.org` |
-| QR support | Official QR example uses `FactoryFiducial.qrcode(config, GrayU8.class)` and says BoofCV is designed for large images, small markers, rotation invariance, richer internal information, and rejected markers. | BoofCV Example Detect QR Code |
-| Micro QR support | Official Micro QR example uses `FactoryFiducial.microqr(config, GrayU8.class)` and exposes decoded detections through `MicroQrCodeDetector`. | BoofCV Example Detect Micro QR Code |
-| Aztec support | Official Aztec example uses `FactoryFiducial.aztec(config, GrayU8.class)` and exposes failed detections plus finder-pattern information. | BoofCV Example Detect Aztec Code |
-| 1D coverage gap | A shallow source grep of BoofCV `SNAPSHOT` found QR, Micro QR, and Aztec detector surfaces under `main/boofcv-recognition`, but no source hits for `DataMatrix`, `Code128`, `CODE_128`, `EAN_13`, `PDF417`, or `PDF_417`. | Local shallow clone `/tmp/boofcv-research` from `lessthanoptimal/BoofCV` |
-| ZXing breadth | ZXing documents itself as a Java multi-format 1D/2D barcode library and lists UPC, EAN, Code 39, Code 93, Code 128, Codabar, ITF, QR, Data Matrix, Aztec, PDF417, MaxiCode, RSS-14, and RSS-Expanded. | ZXing GitHub README and BarcodeFormat API |
+| License | BoofCV는 Apache License 2.0으로 배포된다. `org.boofcv:boofcv-all:1.4.0`의 Maven Central metadata도 Apache-2.0을 보고한다. | `lessthanoptimal/BoofCV`의 `LICENSE-2.0.txt`; Maven Central `org.boofcv:boofcv-all` |
+| Maintenance | GitHub 기준 latest release는 `v1.4.0`, published `2026-05-25T19:07:44Z`, repository push activity는 `2026-07-02T16:37:36Z`다. | `gh repo view lessthanoptimal/BoofCV` |
+| Runtime | BoofCV 문서는 runtime Java 11+, build Java 17 필요를 명시한다. Java 21 consumer는 이 runtime floor 안에 있다. | BoofCV Download page |
+| Module shape | BoofCV docs는 Maven Central 사용을 권장하고 core functionality를 `all` module로 참조할 수 있으며 individual integration module은 분리된다고 설명한다. | BoofCV Download page |
+| Dependency weight | `boofcv-all:1.4.0` POM은 Swing, JCodec, WebcamCapture, JavaCV, FFmpeg integration module을 포함해 9개 compile dependency를 가진다. `boofcv-core:1.4.0`은 13개 compile dependency와 recognition stack을 가져온다. `boofcv-recognition:1.4.0`은 6개 compile dependency를 가진다. | `repo1.maven.org`의 Maven Central POM |
+| QR support | official QR example은 `FactoryFiducial.qrcode(config, GrayU8.class)`를 사용하고, BoofCV가 large image, small marker, rotation invariance, richer internal information, rejected marker를 위해 설계되었다고 설명한다. | BoofCV Example Detect QR Code |
+| Micro QR support | official Micro QR example은 `FactoryFiducial.microqr(config, GrayU8.class)`를 사용하고 `MicroQrCodeDetector`로 decoded detection을 노출한다. | BoofCV Example Detect Micro QR Code |
+| Aztec support | official Aztec example은 `FactoryFiducial.aztec(config, GrayU8.class)`를 사용하고 failed detection과 finder-pattern information을 노출한다. | BoofCV Example Detect Aztec Code |
+| 1D coverage gap | BoofCV `SNAPSHOT` shallow source grep에서 `main/boofcv-recognition` 아래 QR, Micro QR, Aztec detector surface는 확인했지만 `DataMatrix`, `Code128`, `CODE_128`, `EAN_13`, `PDF417`, `PDF_417` source hit는 없었다. | `lessthanoptimal/BoofCV`에서 받은 local shallow clone `/tmp/boofcv-research` |
+| ZXing breadth | ZXing은 자신을 Java multi-format 1D/2D barcode library로 문서화하며 UPC, EAN, Code 39, Code 93, Code 128, Codabar, ITF, QR, Data Matrix, Aztec, PDF417, MaxiCode, RSS-14, RSS-Expanded를 나열한다. | ZXing GitHub README and BarcodeFormat API |
 
-## Provider Comparison
+## provider 비교
 
-| Criterion | ZXing provider (`images-barcode-zxing`) | Potential BoofCV provider |
+| 기준 | ZXing provider (`images-barcode-zxing`) | 잠재 BoofCV provider |
 | --- | --- | --- |
-| Default OSS provider fit | Strong. Pure JVM and broad barcode symbology coverage. Already implemented in #245. | Weak for default role. Strong only for specialized 2D geometric detection. |
+| Default OSS provider fit | 강함. Pure JVM이고 barcode symbology coverage가 넓다. #245에서 이미 구현됐다. | default role로는 약함. specialized 2D geometric detection에서만 강함. |
 | License | Apache-2.0. | Apache-2.0. |
-| Java 21 compatibility | Current repo tests pass on the Java 21 line. | Runtime floor is Java 11+, so Java 21 is acceptable. Build floor is Java 17. |
-| Supported barcode families | Broad 1D and 2D coverage: QR, Data Matrix, Aztec, PDF417, Code 128, EAN/UPC, ITF, Codabar, and others. | Observed official/source-backed barcode-like scope: QR, Micro QR, Aztec. No observed 1D, Data Matrix, or PDF417 detector surface. |
-| QR-family detection | Good baseline. `tryHarder` helps rotation/noisy cases. | Strong candidate where QR geometry, rejected detections, and pose details are useful. |
-| Bounding geometry | ZXing exposes `ResultPoint` values that #245 maps into pixel-space regions and a derived bounding box. | BoofCV exposes richer detector structures and finder-pattern geometry for QR/Aztec families. |
-| Rotation handling | #245 tests rotated QR with `tryHarder = true`. | Official QR docs state rotation-invariant detector design. |
-| Dependency footprint | `core` has no runtime dependencies beyond test-only JUnit in the POM; `javase` adds `core`, JCommander, and runtime `jai-imageio-core`. | Heavier. Even the targeted recognition stack pulls BoofCV, GeoRegression, DDogleg, and Trove dependencies; `all` also pulls GUI/video/native-adjacent integration modules. |
-| Kotlin/JVM ergonomics | Simple Java APIs through `MultiFormatReader` and image luminance sources. | Java APIs are usable from Kotlin, but they require BoofCV image conversion (`GrayU8`) and separate detector types per symbology family. |
-| Multi-provider value | Current provider for 0.4.0. | Future optional provider only if #247 fixtures show concrete QR/Aztec geometry wins. |
+| Java 21 compatibility | 현재 repo test가 Java 21 line에서 통과한다. | runtime floor는 Java 11+라 Java 21은 허용된다. build floor는 Java 17이다. |
+| Supported barcode families | QR, Data Matrix, Aztec, PDF417, Code 128, EAN/UPC, ITF, Codabar 등 넓은 1D/2D coverage. | source-backed로 관찰된 official barcode-like scope는 QR, Micro QR, Aztec이다. 1D, Data Matrix, PDF417 detector surface는 관찰되지 않았다. |
+| QR-family detection | 좋은 baseline이다. `tryHarder`는 rotation/noisy case에 도움이 된다. | QR geometry, rejected detection, pose detail이 유용한 경우 강한 후보다. |
+| Bounding geometry | ZXing은 #245가 pixel-space region과 derived bounding box로 mapping하는 `ResultPoint` 값을 노출한다. | BoofCV는 QR/Aztec family에 더 풍부한 detector structure와 finder-pattern geometry를 노출한다. |
+| Rotation handling | #245는 `tryHarder = true`로 rotated QR을 test한다. | official QR docs는 rotation-invariant detector design을 명시한다. |
+| Dependency footprint | `core`는 POM에서 test-only JUnit 외 runtime dependency가 없다. `javase`는 `core`, JCommander, runtime `jai-imageio-core`를 추가한다. | 더 무겁다. targeted recognition stack도 BoofCV, GeoRegression, DDogleg, Trove dependency를 가져오며 `all`은 GUI/video/native-adjacent integration module도 가져온다. |
+| Kotlin/JVM ergonomics | `MultiFormatReader`와 image luminance source를 통한 단순한 Java API다. | Kotlin에서 Java API를 사용할 수 있지만 BoofCV image conversion(`GrayU8`)과 symbology family별 detector type이 필요하다. |
+| Multi-provider value | 0.4.0의 현재 provider다. | #247 fixture가 QR/Aztec geometry에서 구체적인 이점을 보일 때만 future optional provider다. |
 
-## Recommendation
+## 권고
 
-For `0.4.0`, keep the shipped provider set as:
+`0.4.0`에서 shipped provider set은 다음으로 유지한다:
 
 - `images-barcode-api`
 - `images-barcode-zxing`
 
-Do not create `images-barcode-boofcv` now. Record BoofCV as deferred in the
-epic/provider comparison surface and let #247's fixture/capability matrix
-include a `Deferred specialized 2D provider` row for BoofCV.
+지금 `images-barcode-boofcv`는 만들지 않는다. BoofCV는 epic/provider comparison surface에 보류로 기록하고, #247 fixture/capability matrix에는 BoofCV용 `Deferred specialized 2D provider` row를 포함한다.
 
-Create a follow-up BoofCV implementation issue only when one of these becomes
-true:
+다음 조건 중 하나가 참일 때만 follow-up BoofCV implementation issue를 만든다:
 
-- #247 fixture results show ZXing is materially weaker for QR/Aztec localization
-  or rotation/noise cases that bluetape4k users need.
-- A caller requires rejected-marker diagnostics, finder-pattern geometry, or
-  pose metadata that the provider-neutral API can expose without overfitting to
-  BoofCV.
-- The provider scope is explicitly limited to QR, Micro QR, and Aztec, not a
-  general barcode backend.
+- #247 fixture result가 bluetape4k user에게 필요한 QR/Aztec localization 또는 rotation/noise case에서 ZXing이 실질적으로 약함을 보여준다.
+- caller가 provider-neutral API에 BoofCV overfitting 없이 노출할 수 있는 rejected-marker diagnostics, finder-pattern geometry, pose metadata를 요구한다.
+- provider scope가 general barcode backend가 아니라 QR, Micro QR, Aztec으로 명시적으로 제한된다.
 
-## Sources
+## 출처
 
 - BoofCV GitHub repository: <https://github.com/lessthanoptimal/BoofCV>
 - BoofCV license file: <https://github.com/lessthanoptimal/BoofCV/blob/SNAPSHOT/LICENSE-2.0.txt>
@@ -81,11 +69,10 @@ true:
 - ZXing repository: <https://github.com/zxing/zxing>
 - ZXing `BarcodeFormat` API: <https://zxing.github.io/zxing/apidocs/com/google/zxing/BarcodeFormat.html>
 
-## Follow-Up for #247
+## #247 follow-up
 
-The provider capability matrix should include:
+provider capability matrix는 다음을 포함해야 한다:
 
 - ZXing: implemented, broad 1D/2D OSS provider.
-- BoofCV: deferred specialized 2D provider, source-backed scope QR, Micro QR,
-  and Aztec; no observed 1D coverage.
-- Commercial/native providers: future research from #248.
+- BoofCV: deferred specialized 2D provider, source-backed scope QR, Micro QR, Aztec; observed 1D coverage 없음.
+- Commercial/native providers: #248의 future research.
