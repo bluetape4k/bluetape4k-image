@@ -1,84 +1,60 @@
-# Issue #4 images-captcha Design Spec
+# Issue #4 images-captcha 설계 스펙
 
-- Issue: [#4](https://github.com/bluetape4k/bluetape4k-image/issues/4) `feat: CAPTCHA 이미지 생성 모듈 추가 (images-captcha)`
+- 이슈: [#4](https://github.com/bluetape4k/bluetape4k-image/issues/4) `feat: CAPTCHA 이미지 생성 모듈 추가 (images-captcha)`
 - Milestone: `0.2.0`
 - Workflow: `bluetape4k-workflow` Type A Full Design
-- Target module: `bluetape4k-images-captcha`
+- 대상 module: `bluetape4k-images-captcha`
 
-## 1. Context
+## 1. context
 
-`bluetape4k-image` needs a first-party CAPTCHA image module for internal admin
-tools, B2B screens, and offline deployments where reCAPTCHA/hCaptcha is not
-appropriate. The issue body points to `x-obsoleted/captcha` in
-`bluetape4k-projects`; that path is stale in the current tree.
+`bluetape4k-image`에는 internal admin tool, B2B screen, offline deployment에서 사용할 first-party CAPTCHA image module이 필요하다. 이런 환경에서는 reCAPTCHA/hCaptcha가 적절하지 않다. issue body는 `bluetape4k-projects`의 `x-obsoleted/captcha`를 가리키지만, 현재 tree에서는 해당 path가 stale이다.
 
-Git history confirms the legacy implementation was deleted by
-`494d95ee1 chore: x-obsoleted 레거시 모듈 5개 삭제 (#331)` on 2026-05-07. The
-pre-delete tree contained:
+Git history에 따르면 legacy implementation은 2026-05-07의 `494d95ee1 chore: x-obsoleted 레거시 모듈 5개 삭제 (#331)`에서 삭제됐다. 삭제 전 tree에는 다음 요소가 있었다:
 
 - `Captcha.kt`, `CaptchaGenerator.kt`, `CaptchaCodeGenerator.kt`
 - `config/CaptchaConfig.kt`, `config/CaptchaTheme.kt`
 - `image/ImageCaptcha.kt`, `image/ImageCaptchaGenerator.kt`
-- `utils/FontProvider.kt`, embedded fonts, README files, and tests
+- `utils/FontProvider.kt`, embedded fonts, README files, tests
 
-The new module should reuse the proven shape, but not copy legacy contracts
-blindly. This repository already has `bluetape4k-images`, `ImmutableImage`
-helpers, multilingual README policy, BOM aggregation, and Java 21 baseline.
+새 module은 검증된 형태를 재사용하되 legacy contract를 맹목적으로 복사하지 않는다. 이 repository에는 이미 `bluetape4k-images`, `ImmutableImage` helper, multilingual README policy, BOM aggregation, Java 21 baseline이 있다.
 
-## 2. Goals
+## 2. 목표
 
-- Add a published `bluetape4k-images-captcha` module under `images-captcha/`.
-- Generate CAPTCHA challenges as text plus `ImmutableImage`.
-- Provide a configurable Java2D/scrimage implementation with no native
-  dependency.
-- Support synchronous and suspend generation APIs.
-- Include deterministic enough tests for dimensions, length, allowed charset,
-  writer output, validation, and uniqueness behavior.
-- Register the module in Gradle settings, BOM, README files, CI/Nightly
-  workflow scope if the repository requires explicit module lists.
+- `images-captcha/` 아래에 published `bluetape4k-images-captcha` module을 추가한다.
+- CAPTCHA challenge를 text와 `ImmutableImage`로 생성한다.
+- native dependency 없는 configurable Java2D/scrimage implementation을 제공한다.
+- synchronous 및 suspend generation API를 지원한다.
+- dimension, length, allowed charset, writer output, validation, uniqueness behavior에 대해 충분히 deterministic한 test를 포함한다.
+- repository가 explicit module list를 요구하면 Gradle settings, BOM, README files, CI/Nightly workflow scope에 module을 등록한다.
 
-## 3. Non-Goals
+## 3. 비목표
 
-- No CAPTCHA validation/store/session lifecycle. This module creates challenges;
-  applications own persistence, rate limiting, replay protection, and answer
-  comparison.
-- No audio CAPTCHA.
-- No external CAPTCHA service integration.
-- No ML or OCR-resistance guarantee. The module is a utility for lightweight
-  friction, not a high-security bot-defense system.
-- No new third-party dependencies unless current `bluetape4k-images` and
-  shared bluetape4k libraries are insufficient.
+- CAPTCHA validation/store/session lifecycle은 제공하지 않는다. 이 module은 challenge를 생성하며, persistence, rate limiting, replay protection, answer comparison은 application 책임이다.
+- audio CAPTCHA는 제공하지 않는다.
+- external CAPTCHA service integration은 제공하지 않는다.
+- ML 또는 OCR-resistance guarantee는 제공하지 않는다. 이 module은 lightweight friction용 utility이며 high-security bot-defense system이 아니다.
+- 현재 `bluetape4k-images`와 shared bluetape4k library로 충분하다면 새 third-party dependency를 추가하지 않는다.
 
-## 4. Legacy Evidence and Reuse
+## 4. legacy evidence와 reuse
 
-### 4.1 Reusable Legacy Ideas
+### 4.1 재사용 가능한 legacy idea
 
-- `CaptchaCodeGenerator` validated non-empty symbols and positive length with
-  bluetape4k validation helpers.
-- Default symbols were uppercase letters plus digits.
-- `CaptchaConfig` exposed width, height, length, noise count, theme, palette,
-  font paths/styles, and font size.
-- `ImageCaptchaGenerator` created an `ImmutableImage`, filled the background,
-  drew rotated characters, and optionally drew random line noise.
-- Font loading supported classpath bundled fonts and custom file paths.
-- Tests covered code generation, config behavior, image generation, output
-  bytes/files, and font provider behavior.
+- `CaptchaCodeGenerator`는 bluetape4k validation helper로 non-empty symbol과 positive length를 검증했다.
+- default symbol은 uppercase letter와 digit이었다.
+- `CaptchaConfig`는 width, height, length, noise count, theme, palette, font path/style, font size를 노출했다.
+- `ImageCaptchaGenerator`는 `ImmutableImage`를 만들고 background를 채운 뒤 rotated character를 그렸으며, optional random line noise를 그렸다.
+- font loading은 classpath bundled font와 custom file path를 지원했다.
+- test는 code generation, config behavior, image generation, output bytes/files, font provider behavior를 cover했다.
 
-### 4.2 Legacy Issues to Fix
+### 4.2 수정할 legacy issue
 
-- Legacy `CaptchaConfig` used `MutableList` defaults in a `data class`; the new
-  public config should expose immutable `List` values.
-- Legacy API returned generic `Captcha<T>` and `ImageCaptcha`; the new API should
-  use domain names aligned with the issue: `CaptchaChallenge` and
-  `CaptchaGenerator`.
-- Legacy `generate()` silently coerced length to at least four in the image
-  generator. The new design should validate options up front and keep generated
-  text length equal to requested/configured length.
-- Legacy code used deprecated `useGraphics`; new code must use current
-  `withGraphics`/current image helpers where applicable.
-- Legacy KDoc was Korean; new public KDoc must be English.
+- legacy `CaptchaConfig`는 `data class`에서 `MutableList` default를 사용했다. 새 public config는 immutable `List` 값을 노출해야 한다.
+- legacy API는 generic `Captcha<T>`와 `ImageCaptcha`를 반환했다. 새 API는 issue와 맞는 domain name인 `CaptchaChallenge`, `CaptchaGenerator`를 사용한다.
+- legacy `generate()`는 image generator에서 length를 조용히 최소 4로 coerce했다. 새 design은 option을 upfront validation하고 generated text length를 requested/configured length와 같게 유지한다.
+- legacy code는 deprecated `useGraphics`를 사용했다. 새 code는 적용 가능한 곳에서 current `withGraphics`/current image helper를 사용해야 한다.
+- legacy KDoc은 한국어였다. 이번 Epic 요구에 따라 새 public KDoc과 comment도 한국어로 작성한다.
 
-## 5. Public API
+## 5. public API
 
 Package: `io.bluetape4k.images.captcha`
 
@@ -100,11 +76,7 @@ class CaptchaChallenge(
 )
 ```
 
-`CaptchaChallenge` is intentionally **not** a `data class` and does not
-implement `Serializable`. The repository requires every `data class` to be
-`Serializable`, but `ImmutableImage` is not a safe Java-serialization payload.
-Applications that need persistence should encode `image` to bytes with the
-existing image writer APIs and store their own DTO.
+`CaptchaChallenge`는 의도적으로 `data class`가 아니며 `Serializable`을 구현하지 않는다. repository는 모든 `data class`가 `Serializable`이기를 요구하지만, `ImmutableImage`는 안전한 Java-serialization payload가 아니다. persistence가 필요한 application은 기존 image writer API로 `image`를 byte로 encode하고 자체 DTO를 저장해야 한다.
 
 ```kotlin
 data class CaptchaOptions(
@@ -121,26 +93,19 @@ data class CaptchaOptions(
 ) : Serializable
 ```
 
-Every `data class` in the new module must implement `Serializable` and define a
-`serialVersionUID`. This includes `CaptchaOptions`, `CaptchaImageSize`, and any
-data-class implementations of `CaptchaNoise`, `CaptchaDistortion`, or
-`CaptchaFont`.
+새 module의 모든 `data class`는 `Serializable`을 구현하고 `serialVersionUID`를 정의해야 한다. 여기에는 `CaptchaOptions`, `CaptchaImageSize`, 그리고 `CaptchaNoise`, `CaptchaDistortion`, `CaptchaFont`의 data-class implementation이 포함된다.
 
-Supporting value types:
+지원 value type:
 
-- `CaptchaImageSize(width: Int, height: Int)` to avoid same-type positional
-  width/height mistakes.
-- `CaptchaNoise` is a sealed interface with concrete values:
+- `CaptchaImageSize(width: Int, height: Int)`는 same-type positional width/height 실수를 피하기 위해 사용한다.
+- `CaptchaNoise`는 concrete value를 가진 sealed interface다:
   - `None`
   - `Low` (`lines=2`, `dots=20`)
   - `Medium` (`lines=4`, `dots=40`)
   - `High` (`lines=8`, `dots=80`)
-  - `Custom(lines: Int, dots: Int)` data class; both counts must be in `0..500`
-- `CaptchaDistortion` supports `None` and `Wave(strength: Float)`. `strength`
-  must be in `0.0f..1.0f`; tests verify dimensions and non-empty encoded output,
-  not exact pixel layout.
-- Font customization is intentionally limited to logical JVM font family names
-  in the first release. Use this public ABI:
+  - `Custom(lines: Int, dots: Int)` data class; 두 count는 모두 `0..500`이어야 한다.
+- `CaptchaDistortion`은 `None`과 `Wave(strength: Float)`를 지원한다. `strength`는 `0.0f..1.0f` 범위여야 하며, test는 정확한 pixel layout이 아니라 dimension과 non-empty encoded output을 검증한다.
+- 첫 release의 font customization은 logical JVM font family name으로 의도적으로 제한한다. public ABI는 다음과 같다:
 
 ```kotlin
 data class CaptchaFont(
@@ -156,11 +121,8 @@ enum class CaptchaFontStyle {
 }
 ```
 
-  `CaptchaFontStyle` maps to AWT `Font` constants internally. Do not add bundled
-  font binary assets in issue #4; that would require separate license review.
-- Public colors use `java.awt.Color`. This is acceptable because the module is
-  explicitly Java2D/JVM-only; future non-AWT backends should introduce a
-  separate color abstraction instead of changing this API silently.
+`CaptchaFontStyle`은 내부에서 AWT `Font` constant로 mapping된다. issue #4에서는 bundled font binary asset을 추가하지 않는다. 이는 별도 license review가 필요하기 때문이다.
+- public color는 `java.awt.Color`를 사용한다. 이 module은 명시적으로 Java2D/JVM-only이므로 허용된다. future non-AWT backend는 이 API를 조용히 바꾸지 말고 별도 color abstraction을 도입해야 한다.
 
 Factory DSL:
 
@@ -168,8 +130,7 @@ Factory DSL:
 fun captchaGenerator(block: CaptchaOptionsBuilder.() -> Unit = {}): CaptchaGenerator
 ```
 
-The builder should map issue examples while preserving Kotlin named-value
-clarity:
+builder는 Kotlin named-value clarity를 유지하면서 issue example을 mapping해야 한다:
 
 ```kotlin
 val generator = captchaGenerator {
@@ -184,109 +145,83 @@ val generator = captchaGenerator {
 }
 ```
 
-## 6. Implementation Design
+## 6. implementation design
 
 - Module directory: `images-captcha/`
 - Artifact: `io.github.bluetape4k.image:bluetape4k-images-captcha`
 - Dependencies:
-  - `api(project(":bluetape4k-images"))` because public API exposes
-    `ImmutableImage`.
-  - `implementation(libs.bluetape4k.core)` if validation helpers are not already
-    transitively available through `bluetape4k-images`.
-  - `implementation(libs.kotlinx.coroutines.core)` for suspend API if the module
-    wraps generation in `Dispatchers.Default` or `Dispatchers.IO`.
+  - public API가 `ImmutableImage`를 노출하므로 `api(project(":bluetape4k-images"))`.
+  - validation helper가 `bluetape4k-images`를 통해 transitively 제공되지 않으면 `implementation(libs.bluetape4k.core)`.
+  - module이 generation을 `Dispatchers.Default` 또는 `Dispatchers.IO`로 감싸면 suspend API용 `implementation(libs.kotlinx.coroutines.core)`.
   - `testImplementation(libs.bluetape4k.junit5)`.
 
 Renderer:
 
-- Use Java2D through scrimage/`ImmutableImage` creation.
-- Fill background, render each character with controlled random rotation and
-  jitter, then draw noise.
-- Default `charSet` excludes ambiguous characters (`I`, `O`, `0`, `1`) to match
-  the issue body. It is uppercase-only by design.
-- Use `java.security.SecureRandom` by default for CAPTCHA text generation. The
-  concrete generator may expose an internal constructor with a deterministic
-  random source for tests; the public factory keeps the secure default.
-- Accept a `Clock` in the concrete generator/factory with
-  `Clock.systemUTC()` as the default. `expiresAt` is an advisory convenience
-  value (`clock.instant() + options.expiresAfter`); applications still own
-  challenge storage, replay protection, and validation policy.
-- Headless operation must work with `-Djava.awt.headless=true`.
+- scrimage/`ImmutableImage` creation을 통해 Java2D를 사용한다.
+- background를 채우고, controlled random rotation과 jitter로 각 character를 render한 뒤 noise를 그린다.
+- default `charSet`은 issue body와 맞게 ambiguous character(`I`, `O`, `0`, `1`)를 제외한다. 설계상 uppercase-only다.
+- CAPTCHA text generation에는 기본적으로 `java.security.SecureRandom`을 사용한다. concrete generator는 test용 deterministic random source를 받는 internal constructor를 노출할 수 있고, public factory는 secure default를 유지한다.
+- concrete generator/factory는 default `Clock.systemUTC()`와 함께 `Clock`을 받을 수 있어야 한다. `expiresAt`은 advisory convenience value(`clock.instant() + options.expiresAfter`)이며, challenge storage, replay protection, validation policy는 여전히 application 책임이다.
+- `-Djava.awt.headless=true`에서 headless operation이 동작해야 한다.
 
 Suspend API:
 
-- `generateSuspend()` should wrap CPU/rendering work in
-  `withContext(Dispatchers.Default)` unless tests show Java2D blocks on IO.
-- Rethrow `CancellationException` before broad exception handling if any error
-  wrapping is added.
+- test가 Java2D가 IO에서 block됨을 보여주지 않는 한 `generateSuspend()`는 CPU/rendering work를 `withContext(Dispatchers.Default)`로 감싼다.
+- error wrapping이 추가되면 broad exception handling 전에 `CancellationException`을 다시 throw한다.
 
-## 7. Validation
+## 7. validation
 
-Validate options at construction/build time:
+option은 construction/build time에 검증한다:
 
 - `length in 1..32`
-- `charSet` not blank, has at least two distinct characters, and contains only
-  printable BMP non-control characters
+- `charSet`은 blank가 아니고, 최소 두 개의 distinct character를 가지며, printable BMP non-control character만 포함한다.
 - `imageSize.width in 1..2000`, `imageSize.height in 1..2000`
 - `fontSize > 0`
 - `expiresAfter > Duration.ZERO`
-- `textColors` not empty
-- `textColors` alpha values are visible (`alpha > 0`) and not all text colors
-  equal `backgroundColor`
-- noise/distortion strengths/counts are non-negative and bounded
+- `textColors`는 비어 있지 않다.
+- `textColors` alpha 값은 보이는 값(`alpha > 0`)이어야 하며, 모든 text color가 `backgroundColor`와 같으면 안 된다.
+- noise/distortion strength/count는 non-negative이고 bounded여야 한다.
 
-Use bluetape4k `require*` validation helpers where available. Do not silently
-coerce invalid caller input. Because `generate(length: Int)` allows per-call
-overrides, both `generate()` and `generateSuspend()` must validate the effective
-length before generating text.
+사용 가능한 경우 bluetape4k `require*` validation helper를 사용한다. invalid caller input을 조용히 coerce하지 않는다. `generate(length: Int)`가 per-call override를 허용하므로 `generate()`와 `generateSuspend()`는 text 생성 전에 effective length를 모두 validate해야 한다.
 
-## 8. Tests
+## 8. tests
 
-Add focused tests under `images-captcha/src/test/kotlin`:
+`images-captcha/src/test/kotlin` 아래에 focused test를 추가한다:
 
-- options validation throws `IllegalArgumentException`
+- options validation이 `IllegalArgumentException`을 throw한다.
 - generated `CaptchaChallenge.text.length == requested length`
-- generated text uses only configured charset
-- generated image width/height match options
-- generated `expiresAt` is after generation time and roughly `expiresAfter`
-  using an injected fixed `Clock`
-- 100 generated challenges from default generator are not all identical
-- generated image encodes to bytes through existing image writer APIs
-- suspend generation returns equivalent contract and responds to cancellation
-  before rendering starts. Mid-render cancellation is not guaranteed because
-  Java2D rendering is CPU-bound and non-suspending.
-- headless property does not prevent generation
+- generated text는 configured charset만 사용한다.
+- generated image width/height는 options와 일치한다.
+- injected fixed `Clock`을 사용해 generated `expiresAt`이 generation time 이후이고 대략 `expiresAfter`와 일치한다.
+- default generator에서 생성한 100개 challenge가 모두 동일하지 않다.
+- generated image는 기존 image writer API로 byte encode된다.
+- suspend generation은 동등한 contract를 반환하고 rendering 시작 전 cancellation에 반응한다. Java2D rendering은 CPU-bound이고 non-suspending이므로 mid-render cancellation은 보장하지 않는다.
+- headless property가 generation을 막지 않는다.
 
-Use `bluetape4k-assertions`, `runTest` or existing coroutine test pattern for
-suspend-only tests, and include module test resources:
+`bluetape4k-assertions`, suspend-only test용 `runTest` 또는 기존 coroutine test pattern을 사용하고 module test resource를 포함한다:
 
 - `src/test/resources/junit-platform.properties`
 - `src/test/resources/logback-test.xml`
 
-## 9. Documentation
+## 9. documentation
 
-- Add `images-captcha/README.md` and `images-captcha/README.ko.md`.
-- Update root `README.md` and `README.ko.md` module tables, dependency snippets,
-  and module README links.
-- Public KDoc must be English.
-- Internal spec/plan/lesson may be Korean or English; this spec is English to
-  preserve future cross-tool reuse.
+- `images-captcha/README.md`와 `images-captcha/README.ko.md`를 추가한다.
+- root `README.md`와 `README.ko.md`의 module table, dependency snippet, module README link를 갱신한다.
+- 이번 Epic 요구에 따라 public KDoc/comment는 한국어로 작성한다.
+- internal spec/plan/lesson은 user-collaboration document이므로 한국어를 사용한다.
 
-## 10. Build and CI
+## 10. build 및 CI
 
-Required checks during implementation:
+구현 중 필요한 check:
 
 - `./gradlew projects`
 - `./gradlew :bluetape4k-images-captcha:test`
 - `./gradlew :bluetape4k-images-captcha:build`
 - `git diff --check`
 
-If `.github/workflows/*.yml` contains explicit path filters or module lists,
-update CI and Nightly so the new module is covered, then run `actionlint`.
-For this repository, treat CI/Nightly registration as mandatory unless verified
-otherwise against current workflow files.
+`.github/workflows/*.yml`에 explicit path filter 또는 module list가 있으면 새 module을 cover하도록 CI와 Nightly를 갱신한 뒤 `actionlint`를 실행한다. 이 repository에서는 current workflow file로 불필요함이 검증되지 않는 한 CI/Nightly registration을 mandatory로 취급한다.
 
-The new module test task must set:
+새 module test task는 다음을 설정해야 한다:
 
 ```kotlin
 tasks.withType<Test>().configureEach {
@@ -294,27 +229,23 @@ tasks.withType<Test>().configureEach {
 }
 ```
 
-## 11. Acceptance Criteria
+## 11. acceptance criteria
 
-- `bluetape4k-images-captcha` is registered and published through normal project
-  conventions.
-- Public API can generate CAPTCHA text plus `ImmutableImage` synchronously and
-  through suspend API.
-- Default generator works in headless local/CI JVM.
-- README English/Korean docs show dependency and usage.
-- Tests pass for the new module.
-- PR closes issue #4.
-- `.github/workflows/ci.yml` and nightly workflows are checked for explicit
-  module lists/path filters and updated if needed.
+- `bluetape4k-images-captcha`가 일반 project convention을 통해 등록되고 publish된다.
+- public API는 sync 및 suspend API로 CAPTCHA text와 `ImmutableImage`를 생성할 수 있다.
+- default generator는 headless local/CI JVM에서 동작한다.
+- README English/Korean docs는 dependency와 usage를 보여준다.
+- 새 module test가 통과한다.
+- PR이 issue #4를 닫는다.
+- `.github/workflows/ci.yml`와 nightly workflow의 explicit module list/path filter를 확인하고 필요하면 갱신한다.
 
-## 12. Open Decisions
+## 12. open decisions
 
-- None. Distortion is included only as `None` plus bounded `Wave`; font bundling
-  is deferred to avoid unreviewed binary assets and license drift.
+- 없음. Distortion은 `None`과 bounded `Wave`만 포함한다. font bundling은 검토되지 않은 binary asset과 license drift를 피하기 위해 보류한다.
 
-## 13. Step 2-R Review Notes
+## 13. Step 2-R review notes
 
-### Claude Code Opus Advisor
+### Claude Code Opus advisor
 
 - Artifact: `.omx/artifacts/claude-issue-4-images-captcha-spec-20260524165243.md`
 - Rerun artifact: `.omx/artifacts/claude-issue-4-images-captcha-spec-rerun-20260524165543.md`
@@ -323,19 +254,19 @@ tasks.withType<Test>().configureEach {
 
 | Severity | Finding | Decision |
 |---|---|---|
-| P1 | `generate(length)` bypassed construction-time validation | Accepted. Spec now requires effective length validation in both sync and suspend generation paths. |
-| P1 | `CaptchaChallenge : Serializable` conflicts with non-serializable `ImmutableImage` | Accepted. Spec now uses a regular non-serializable class and documents persistence guidance. |
-| P1 | `CaptchaDistortion` public API was unresolved | Accepted. Spec now commits to `None` plus bounded `Wave(strength)`. |
-| P2 | CI/Nightly registration was conditional | Accepted. Spec now makes workflow inspection/updates mandatory unless verified unnecessary. |
-| P2 | `expiresAt` tests needed a clock seam | Accepted. Spec now requires injectable `Clock`. |
-| P2 | `expiresAt` lifecycle scope ambiguous | Accepted. Spec now documents it as advisory only. |
-| P2 | Headless property not pinned in build config | Accepted. Spec now requires test JVM headless property. |
-| P2 | Default charset exclusion policy could drift | Accepted. Spec now states uppercase-only and ambiguous-excluded. |
-| P2 | Font assets need license clearance | Accepted. Spec now defers bundled binary fonts and uses logical JVM font families. |
-| P2 | Serializable completeness for options/member data classes | Accepted. Spec now requires `Serializable` and `serialVersionUID` for all module data classes. |
-| P2 | AWT `Color` locks API to JVM/AWT | Accepted with rationale. This module is Java2D/JVM-only; future non-AWT backend requires a new abstraction. |
-| P2 | Suspend cancellation test expectation too loose | Accepted. Spec now states cancellation is guaranteed before render starts, not mid-render. |
-| P1 | Plan review: `CaptchaFont` public type undefined | Accepted. Spec now pins `CaptchaFont` and `CaptchaFontStyle` ABI. |
-| P1 | Plan review: `CaptchaNoise` public type undefined | Accepted. Spec now pins sealed values and custom bounds. |
-| P2 | Raw `fontStyle: Int` leaks AWT constants | Accepted. Spec now uses `CaptchaFontStyle`. |
-| P3 | Missing upper bounds/printable charset/color visibility | Accepted. Spec now sets practical bounds and validation rules. |
+| P1 | `generate(length)`가 construction-time validation을 우회했다. | 수용. spec은 이제 sync 및 suspend generation path 모두에서 effective length validation을 요구한다. |
+| P1 | `CaptchaChallenge : Serializable`이 non-serializable `ImmutableImage`와 충돌했다. | 수용. spec은 이제 regular non-serializable class를 사용하고 persistence guidance를 문서화한다. |
+| P1 | `CaptchaDistortion` public API가 미해결이었다. | 수용. spec은 이제 `None`과 bounded `Wave(strength)`로 확정한다. |
+| P2 | CI/Nightly registration이 conditional이었다. | 수용. spec은 이제 불필요함이 검증되지 않는 한 workflow inspection/update를 mandatory로 만든다. |
+| P2 | `expiresAt` test에는 clock seam이 필요했다. | 수용. spec은 injectable `Clock`을 요구한다. |
+| P2 | `expiresAt` lifecycle scope가 모호했다. | 수용. spec은 이를 advisory로만 문서화한다. |
+| P2 | headless property가 build config에 고정되지 않았다. | 수용. spec은 test JVM headless property를 요구한다. |
+| P2 | default charset exclusion policy가 drift될 수 있었다. | 수용. spec은 uppercase-only와 ambiguous-excluded를 명시한다. |
+| P2 | font asset에는 license clearance가 필요하다. | 수용. spec은 bundled binary font를 보류하고 logical JVM font family를 사용한다. |
+| P2 | option/member data class의 Serializable completeness가 필요했다. | 수용. spec은 모든 module data class에 `Serializable`과 `serialVersionUID`를 요구한다. |
+| P2 | AWT `Color`가 API를 JVM/AWT에 고정한다. | 근거와 함께 수용. 이 module은 Java2D/JVM-only이며 future non-AWT backend에는 새 abstraction이 필요하다. |
+| P2 | suspend cancellation test expectation이 너무 느슨했다. | 수용. spec은 cancellation이 render 시작 전에는 보장되지만 mid-render에는 보장되지 않는다고 명시한다. |
+| P1 | Plan review: `CaptchaFont` public type이 정의되지 않았다. | 수용. spec은 이제 `CaptchaFont`와 `CaptchaFontStyle` ABI를 고정한다. |
+| P1 | Plan review: `CaptchaNoise` public type이 정의되지 않았다. | 수용. spec은 sealed value와 custom bound를 고정한다. |
+| P2 | raw `fontStyle: Int`가 AWT constant를 노출했다. | 수용. spec은 이제 `CaptchaFontStyle`을 사용한다. |
+| P3 | upper bound/printable charset/color visibility가 누락됐다. | 수용. spec은 practical bound와 validation rule을 설정한다. |
