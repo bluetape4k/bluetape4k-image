@@ -1,37 +1,37 @@
-# Vips API Dependency Boundary Implementation Plan
+# Vips API Dependency Boundary 구현 계획
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use `superpowers:subagent-driven-development` (recommended) or `superpowers:executing-plans` to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **Agentic worker 필수 지침:** 이 계획은 task 단위로 구현한다. 구현 표면은 `superpowers:subagent-driven-development`(권장) 또는 `superpowers:executing-plans`를 사용한다. 진행 추적에는 checkbox(`- [ ]`) 문법을 사용한다.
 
-**Goal:** Publish a binding-neutral Vips API artifact whose normal consumer variants do not expose `bluetape4k-images`, Scrimage, or TwelveMonkeys while preserving explicit AVIF/HEIC opt-in and fixture-only pixel comparison support.
+**목표:** 일반 consumer variant에서 `bluetape4k-images`, Scrimage, TwelveMonkeys를 노출하지 않는 binding-neutral Vips API artifact를 게시한다. AVIF/HEIC 명시 opt-in과 fixture-only pixel comparison support는 유지한다.
 
-**Architecture:** Introduce a Vips-owned binary opt-in marker and make AVIF/HEIC enum entries the only declarations that propagate it to callers. Replace old image-marker imports in the Vips API and Java 21/25 implementations, then remove the main `images` project dependency. Keep `testFixturesApi` scoped to image comparison support and prove the boundary from generated Maven POM and Gradle Module Metadata.
+**아키텍처:** Vips 소유 binary opt-in marker를 도입하고, AVIF/HEIC enum entry만 caller에게 opt-in을 전파하게 한다. Vips API와 Java 21/25 implementation의 기존 image-marker import를 교체한 뒤 main `images` project dependency를 제거한다. `testFixturesApi`는 image comparison support에만 한정하고, generated Maven POM과 Gradle Module Metadata에서 boundary를 증명한다.
 
-**Tech Stack:** Kotlin 2.3, Gradle Kotlin DSL, `java-test-fixtures`, JUnit 5, bluetape4k assertions, Maven Publish.
+**기술 스택:** Kotlin 2.3, Gradle Kotlin DSL, `java-test-fixtures`, JUnit 5, bluetape4k assertion, Maven Publish.
 
 ---
 
-## File Structure and Scope
+## 파일 구조와 범위
 
-| Path | Responsibility |
+| Path | 책임 |
 |---|---|
-| `images-vips-api/build.gradle.kts` | Main-vs-fixture dependency boundary and strict opt-in compiler fixture source sets. |
+| `images-vips-api/build.gradle.kts` | Main-vs-fixture dependency boundary와 strict opt-in compiler fixture source set. |
 | `images-vips-api/src/main/kotlin/io/bluetape4k/images/vips/VipsIncubatingApi.kt` | Public Vips-specific opt-in marker. |
 | `images-vips-api/src/main/kotlin/io/bluetape4k/images/vips/VipsImageFormat.kt` | Caller-visible AVIF/HEIC opt-in propagation. |
-| `images-vips-api/src/main/kotlin/io/bluetape4k/images/vips/VipsCodecCapabilityReport.kt` | Internal permission to refer to AVIF/HEIC without making stable report containers experimental. |
-| `images-vips-api/src/test/kotlin/io/bluetape4k/images/vips/*.kt` | Capability and stable-report regression tests. |
-| `images-vips-api/src/{optedVipsOptInFixture,unoptedVipsOptInFixture}/kotlin/...` | Strict compiler fixtures for opted success and unopted expected failure. |
-| `images-vips-java21/src/{main,test}/kotlin/...` | Java 21 backend marker migration; no runtime/native-code changes. |
-| `images-vips-java25/src/{main,test}/kotlin/...` | Java 25 FFM backend marker migration; no runtime/native-code changes. |
-| `README*.md`, `images-vips-{api,java21,java25}/README*.md` | Copy-paste-safe AVIF/HEIC opt-in migration; API README pair also documents the fixture-only boundary. |
-| `images/src/main/kotlin/io/bluetape4k/images/{avif/AvifWriter.kt,heic/HeicReader.kt}` | Contract-only image-module KDoc with no reverse Vips documentation dependency. |
+| `images-vips-api/src/main/kotlin/io/bluetape4k/images/vips/VipsCodecCapabilityReport.kt` | Stable report container를 experimental로 만들지 않고 AVIF/HEIC를 참조하기 위한 internal permission. |
+| `images-vips-api/src/test/kotlin/io/bluetape4k/images/vips/*.kt` | Capability와 stable-report regression test. |
+| `images-vips-api/src/{optedVipsOptInFixture,unoptedVipsOptInFixture}/kotlin/...` | Opted success와 unopted expected failure를 위한 strict compiler fixture. |
+| `images-vips-java21/src/{main,test}/kotlin/...` | Java 21 backend marker migration. Runtime/native-code 변경 없음. |
+| `images-vips-java25/src/{main,test}/kotlin/...` | Java 25 FFM backend marker migration. Runtime/native-code 변경 없음. |
+| `README*.md`, `images-vips-{api,java21,java25}/README*.md` | Copy-paste-safe AVIF/HEIC opt-in migration. API README pair는 fixture-only boundary도 문서화한다. |
+| `images/src/main/kotlin/io/bluetape4k/images/{avif/AvifWriter.kt,heic/HeicReader.kt}` | Reverse Vips documentation dependency가 없는 contract-only image-module KDoc. |
 
-No module registration, BOM/catalog, CI workflow, dependency upgrade, runtime codec behavior, benchmark source, release, or publication configuration is in scope. The existing 16 Vips API/backend files with direct old-marker imports are the complete migration set and must be re-counted before editing.
+Module registration, BOM/catalog, CI workflow, dependency upgrade, runtime codec behavior, benchmark source, release, publication configuration은 범위 밖이다. 기존 old-marker direct import가 있는 16개 Vips API/backend file이 전체 migration set이며, 편집 전 다시 count해야 한다.
 
-## Task 1: Add the public Vips marker and lock the stable-report contract
+## Task 1: Public Vips marker 추가와 stable-report contract 잠금
 
 **Complexity:** medium
 
-**Apply:** `$bluetape4k-code-patterns` to every Kotlin source, KDoc, and test change in this task.
+**Apply:** 이 task의 모든 Kotlin source, KDoc, test change에 `$bluetape4k-code-patterns`를 적용한다.
 
 **Files:**
 
@@ -41,13 +41,13 @@ No module registration, BOM/catalog, CI workflow, dependency upgrade, runtime co
 - Modify: `images-vips-api/src/test/kotlin/io/bluetape4k/images/vips/VipsCodecCapabilityReportTest.kt`
 - Create: `images-vips-api/src/test/kotlin/io/bluetape4k/images/vips/VipsStableCodecCapabilityReportTest.kt`
 
-**Current-code assumption to recheck:** `VipsImageFormat.AVIF` and `.HEIC` are currently the only public enum entries marked incubating, while `VipsCodecCapability` and `VipsCodecCapabilityReport` are internal `@OptIn` users rather than propagated opt-in declarations.
+**다시 확인할 current-code assumption:** `VipsImageFormat.AVIF`와 `.HEIC`만 현재 incubating public enum entry이고, `VipsCodecCapability`/`VipsCodecCapabilityReport`는 propagated opt-in declaration이 아니라 internal `@OptIn` user이다.
 
-- [ ] **Step 1: Write the failing source-level migration test.**
+- [ ] **Step 1: 실패하는 source-level migration test를 작성한다.**
 
-  Change the existing capability test to import the not-yet-created `VipsIncubatingApi`, apply it at class scope, and add the stable, unannotated regression test below. The missing import intentionally makes test compilation fail before the marker exists.
+  기존 capability test가 아직 존재하지 않는 `VipsIncubatingApi`를 import하고 class scope에 적용하게 바꾼 뒤, 아래 stable unannotated regression test를 추가한다. Missing import는 marker가 생기기 전 test compilation이 실패하도록 의도한 것이다.
 
-  In `VipsCodecCapabilityReportTest.kt`, make this exact replacement before adding the new test file:
+  `VipsCodecCapabilityReportTest.kt`에서 새 test file을 추가하기 전에 아래와 같이 정확히 교체한다.
 
   ~~~kotlin
   import io.bluetape4k.images.vips.VipsIncubatingApi
@@ -75,13 +75,13 @@ No module registration, BOM/catalog, CI workflow, dependency upgrade, runtime co
   }
   ~~~
 
-- [ ] **Step 2: Verify the test source fails for the intended reason.**
+- [ ] **Step 2: Test source가 의도한 이유로 실패하는지 확인한다.**
 
   Run: `./gradlew :bluetape4k-images-vips-api:compileTestKotlin --rerun-tasks`
 
-  Expected: `FAILURE` with an unresolved reference to `VipsIncubatingApi`; do not accept unrelated compiler errors as the red result.
+  Expected: `VipsIncubatingApi` unresolved reference 때문에 `FAILURE`가 발생한다. 관련 없는 compiler error를 red result로 수용하지 않는다.
 
-- [ ] **Step 3: Add the marker and migrate only the API-side declarations.**
+- [ ] **Step 3: Marker를 추가하고 API-side declaration만 migration한다.**
 
   ~~~~kotlin
   package io.bluetape4k.images.vips
@@ -117,25 +117,25 @@ No module registration, BOM/catalog, CI workflow, dependency upgrade, runtime co
   annotation class VipsIncubatingApi
   ~~~~
 
-  In `VipsImageFormat.kt`, replace the old import/KDoc reference and annotate only `AVIF` and `HEIC` with `@VipsIncubatingApi`. In `VipsCodecCapabilityReport.kt`, replace both existing class-level `@OptIn(IncubatingImageApi::class)` declarations with `@OptIn(VipsIncubatingApi::class)`; do not place `@VipsIncubatingApi` on the report container classes. Keep public signatures and serialization IDs unchanged.
+  `VipsImageFormat.kt`에서는 old import/KDoc reference를 교체하고 `AVIF`, `HEIC`에만 `@VipsIncubatingApi`를 붙인다. `VipsCodecCapabilityReport.kt`에서는 기존 class-level `@OptIn(IncubatingImageApi::class)` 두 곳을 `@OptIn(VipsIncubatingApi::class)`로 교체한다. Report container class에는 `@VipsIncubatingApi`를 붙이지 않는다. Public signature와 serialization ID는 바꾸지 않는다.
 
-- [ ] **Step 4: Verify the API regression tests pass.**
+- [ ] **Step 4: API regression test가 통과하는지 검증한다.**
 
   Run: `./gradlew :bluetape4k-images-vips-api:test --tests '*VipsCodecCapabilityReportTest' --tests '*VipsStableCodecCapabilityReportTest' --rerun-tasks`
 
-  Expected: `BUILD SUCCESSFUL`; the stable-report test compiles without `@OptIn`, while the capability test uses the Vips-owned marker.
+  Expected: `BUILD SUCCESSFUL`. Stable-report test는 `@OptIn` 없이 compile되고, capability test는 Vips-owned marker를 사용한다.
 
-- [ ] **Step 5: Commit the API contract slice.**
+- [ ] **Step 5: API contract slice를 commit한다.**
 
-  Run `git diff --check`, then commit with Lore trailers. Intent line: `refactor: own Vips capability opt-in contract`.
+  `git diff --check`를 실행한 뒤 Lore trailer로 commit한다. Intent line: `refactor: own Vips capability opt-in contract`.
 
-**Rollback / rerun point:** Revert this commit if the annotation cannot be applied to enum entries with the approved target set; do not widen the marker to report container types as a workaround.
+**Rollback / rerun point:** 승인된 target set으로 enum entry에 annotation을 적용할 수 없으면 이 commit을 되돌린다. Report container type에 marker를 넓게 붙이는 workaround를 사용하지 않는다.
 
-## Task 2: Prove opt-in diagnostics with strict Kotlin compiler fixtures
+## Task 2: Strict Kotlin compiler fixture로 opt-in diagnostic 증명
 
 **Complexity:** high
 
-**Apply:** `$bluetape4k-code-patterns` to the Gradle Kotlin DSL and Kotlin fixture sources in this task.
+**Apply:** 이 task의 Gradle Kotlin DSL과 Kotlin fixture source에 `$bluetape4k-code-patterns`를 적용한다.
 
 **Files:**
 
@@ -143,9 +143,9 @@ No module registration, BOM/catalog, CI workflow, dependency upgrade, runtime co
 - Create: `images-vips-api/src/unoptedVipsOptInFixture/kotlin/io/bluetape4k/images/vips/UnoptedVipsOptInFixture.kt`
 - Create: `images-vips-api/src/optedVipsOptInFixture/kotlin/io/bluetape4k/images/vips/OptedVipsOptInFixture.kt`
 
-**Current-code assumption to recheck:** the Java/Kotlin plugins create Kotlin compile tasks for custom Java source sets using the `compile<SourceSetName>Kotlin` convention. Confirm generated task names with `:bluetape4k-images-vips-api:tasks --all` before executing either fixture.
+**다시 확인할 current-code assumption:** Java/Kotlin plugin은 custom Java source set에 대해 `compile<SourceSetName>Kotlin` convention의 Kotlin compile task를 만든다. Fixture 실행 전 `:bluetape4k-images-vips-api:tasks --all`로 generated task name을 확인한다.
 
-- [ ] **Step 1: Add the unopted fixture source and strict source-set wiring.**
+- [ ] **Step 1: Unopted fixture source와 strict source-set wiring을 추가한다.**
 
   ~~~kotlin
   sourceSets {
@@ -170,7 +170,7 @@ No module registration, BOM/catalog, CI workflow, dependency upgrade, runtime co
   }
   ~~~
 
-  The unopted fixture is:
+  Unopted fixture는 다음과 같다.
 
   ~~~kotlin
   package io.bluetape4k.images.vips
@@ -180,13 +180,13 @@ No module registration, BOM/catalog, CI workflow, dependency upgrade, runtime co
   }
   ~~~
 
-- [ ] **Step 2: Verify strict compilation fails with the marker diagnostic.**
+- [ ] **Step 2: Strict compilation이 marker diagnostic으로 실패하는지 확인한다.**
 
   Run: `./gradlew :bluetape4k-images-vips-api:compileUnoptedVipsOptInFixtureKotlin -PverifyVipsOptInFixtures --rerun-tasks --console=plain`
 
-  Expected: `FAILURE` caused by warnings-as-errors; the diagnostic names `VipsIncubatingApi`. Record this expected failure in the Step DoD evidence.
+  Expected: warnings-as-errors 때문에 `FAILURE`가 발생하고 diagnostic에 `VipsIncubatingApi`가 표시된다. 이 expected failure를 Step DoD evidence에 기록한다.
 
-- [ ] **Step 3: Add the opted fixture and verify strict compilation succeeds.**
+- [ ] **Step 3: Opted fixture를 추가하고 strict compilation success를 확인한다.**
 
   ~~~kotlin
   package io.bluetape4k.images.vips
@@ -199,19 +199,19 @@ No module registration, BOM/catalog, CI workflow, dependency upgrade, runtime co
 
   Run: `./gradlew :bluetape4k-images-vips-api:compileOptedVipsOptInFixtureKotlin -PverifyVipsOptInFixtures --rerun-tasks --console=plain`
 
-  Expected: `BUILD SUCCESSFUL` with no opt-in warning promoted to an error.
+  Expected: opt-in warning이 error로 승격되지 않고 `BUILD SUCCESSFUL`이 나온다.
 
-- [ ] **Step 4: Commit the compiler-fixture slice.**
+- [ ] **Step 4: Compiler-fixture slice를 commit한다.**
 
-  Run `git diff --check`, then commit with Lore trailers. Intent line: `test: lock Vips opt-in compiler diagnostics`.
+  `git diff --check`를 실행한 뒤 Lore trailer로 commit한다. Intent line: `test: lock Vips opt-in compiler diagnostics`.
 
-**Rollback / rerun point:** If Kotlin does not create the expected task names, adjust only the task lookup to the names printed by `tasks --all`; retain the two isolated source sets and do not add `kotlin-compile-testing`.
+**Rollback / rerun point:** Kotlin이 예상 task name을 만들지 않으면 `tasks --all`에 출력된 이름에 맞춰 task lookup만 조정한다. 두 isolated source set은 유지하고 `kotlin-compile-testing`을 추가하지 않는다.
 
-## Task 3: Remove the main image dependency and migrate both backend families
+## Task 3: Main image dependency 제거와 두 backend family migration
 
 **Complexity:** high
 
-**Apply:** `$bluetape4k-code-patterns` to every Kotlin import and opt-in change.
+**Apply:** 모든 Kotlin import와 opt-in change에 `$bluetape4k-code-patterns`를 적용한다.
 
 **Files:**
 
@@ -221,11 +221,11 @@ No module registration, BOM/catalog, CI workflow, dependency upgrade, runtime co
 - Modify: `images-vips-java25/src/main/kotlin/io/bluetape4k/images/vips/java25/{FfmVipsImage.kt,FfmVipsImageSupport.kt,FfmVipsRuntime.kt,internal/FfmVipsFormatSupport.kt,writer/FfmVipsHeifWriter.kt}`
 - Modify: `images-vips-java25/src/test/kotlin/io/bluetape4k/images/vips/java25/{FfmVipsCodecCapabilityTest.kt,FfmVipsImageTest.kt}`
 
-**Current-code assumption to recheck:** `rg -l 'IncubatingImageApi' images-vips-api images-vips-java21 images-vips-java25 --glob '*.kt'` returns exactly the 16 migration files described in the design. `testFixturesApi(project(":bluetape4k-images"))` remains necessary for `VipsGoldenAssert`.
+**다시 확인할 current-code assumption:** `rg -l 'IncubatingImageApi' images-vips-api images-vips-java21 images-vips-java25 --glob '*.kt'`는 design에 설명된 16개 migration file만 반환한다. `testFixturesApi(project(":bluetape4k-images"))`는 `VipsGoldenAssert`를 위해 계속 필요하다.
 
-- [ ] **Step 1: Remove only the main API dependency and capture the expected backend failure.**
+- [ ] **Step 1: Main API dependency만 제거하고 expected backend failure를 캡처한다.**
 
-  Delete this dependency and its stale comment; leave `testFixturesApi` intact:
+  아래 dependency와 stale comment를 제거하되 `testFixturesApi`는 유지한다.
 
   ~~~kotlin
   api(project(":bluetape4k-images"))
@@ -233,47 +233,47 @@ No module registration, BOM/catalog, CI workflow, dependency upgrade, runtime co
 
   Run: `./gradlew :bluetape4k-images-vips-java21:compileKotlin :bluetape4k-images-vips-java25:compileKotlin --rerun-tasks`
 
-  Expected: `FAILURE` with unresolved `IncubatingImageApi` imports in both backend families. This confirms the migration is exercising the removed public boundary rather than an accidental transitive dependency.
+  Expected: 두 backend family에서 unresolved `IncubatingImageApi` import로 `FAILURE`가 발생한다. 이는 migration이 removed public boundary를 실제로 검증하고 있음을 보여 주며 accidental transitive dependency를 피한다.
 
-- [ ] **Step 2: Migrate every direct old-marker import in the Vips scope.**
+- [ ] **Step 2: Vips scope의 모든 direct old-marker import를 migration한다.**
 
-  In all files listed above, replace:
+  위 파일 전체에서 아래를 교체한다.
 
   ~~~kotlin
   import io.bluetape4k.images.IncubatingImageApi
   @OptIn(IncubatingImageApi::class)
   ~~~
 
-  with:
+  다음으로 바꾼다.
 
   ~~~kotlin
   import io.bluetape4k.images.vips.VipsIncubatingApi
   @OptIn(VipsIncubatingApi::class)
   ~~~
 
-  Do not change JNI `NativeHandle` ownership, Java 25 `Arena` lifecycle, runtime initialization, codec detection, exception behavior, or test inputs.
+  JNI `NativeHandle` ownership, Java 25 `Arena` lifecycle, runtime initialization, codec detection, exception behavior, test input은 변경하지 않는다.
 
-- [ ] **Step 3: Verify migration completeness and backend compilation.**
+- [ ] **Step 3: Migration completeness와 backend compilation을 검증한다.**
 
   Run: `rg -n 'IncubatingImageApi' images-vips-api images-vips-java21 images-vips-java25 --glob '*.kt'`
 
-  Expected: no matches.
+  Expected: match가 없어야 한다.
 
   Run: `./gradlew :bluetape4k-images-vips-api:test :bluetape4k-images-vips-java21:compileKotlin :bluetape4k-images-vips-java21:compileTestKotlin :bluetape4k-images-vips-java25:compileKotlin :bluetape4k-images-vips-java25:compileTestKotlin --rerun-tasks`
 
-  Expected: `BUILD SUCCESSFUL`; the four backend compile tasks do not require JNI/FFM native test execution.
+  Expected: `BUILD SUCCESSFUL`. 네 backend compile task는 JNI/FFM native test execution을 요구하지 않는다.
 
-- [ ] **Step 4: Commit the dependency-boundary slice.**
+- [ ] **Step 4: Dependency-boundary slice를 commit한다.**
 
-  Run `git diff --check`, then commit with Lore trailers. Intent line: `refactor: decouple Vips API from image implementation`.
+  `git diff --check`를 실행한 뒤 Lore trailer로 commit한다. Intent line: `refactor: decouple Vips API from image implementation`.
 
-**Rollback / rerun point:** If either backend needs a type other than the marker from `bluetape4k-images`, stop and revise the plan/spec; do not restore the broad main `api(project(":bluetape4k-images"))` dependency by default.
+**Rollback / rerun point:** Backend가 marker 외의 `bluetape4k-images` type을 필요로 하면 plan/spec를 수정한다. 넓은 main `api(project(":bluetape4k-images"))` dependency를 기본 workaround로 되돌리지 않는다.
 
-## Task 4: Verify publication variants and document the caller migration
+## Task 4: Publication variant 검증과 caller migration 문서화
 
 **Complexity:** medium
 
-**Apply:** `$bluetape4k-code-patterns` to KDoc examples and public API names.
+**Apply:** KDoc example과 public API name을 해석할 때 `$bluetape4k-code-patterns`를 적용한다.
 
 **Files:**
 
@@ -288,20 +288,20 @@ No module registration, BOM/catalog, CI workflow, dependency upgrade, runtime co
 - Modify: `images/src/main/kotlin/io/bluetape4k/images/avif/AvifWriter.kt`
 - Modify: `images/src/main/kotlin/io/bluetape4k/images/heic/HeicReader.kt`
 
-**Current-code assumption to recheck:** capability/smoke snippets using `VipsImageFormat.AVIF`/`.HEIC` occur in all eight README variants above, and the two image-module KDocs contain Vips-specific examples that cannot import a Vips-owned annotation without a reverse dependency.
+**다시 확인할 current-code assumption:** `VipsImageFormat.AVIF`/`.HEIC` capability/smoke snippet은 위 여덟 README variant 모두에 있으며, 두 image-module KDoc에는 reverse dependency 없이 Vips-owned annotation을 import할 수 없는 Vips-specific example이 있다.
 
-- [ ] **Step 1: Generate the actual publication descriptors.**
+- [ ] **Step 1: 실제 publication descriptor를 생성한다.**
 
   Run: `./gradlew :bluetape4k-images-vips-api:generatePomFileForBluetapeImagePublication :bluetape4k-images-vips-api:generateMetadataFileForBluetapeImagePublication --rerun-tasks`
 
-  Expected: `BUILD SUCCESSFUL` and these generated files exist:
+  Expected: `BUILD SUCCESSFUL`이며 아래 generated file이 존재한다.
 
   ~~~text
   images-vips-api/build/publications/BluetapeImage/pom-default.xml
   images-vips-api/build/publications/BluetapeImage/module.json
   ~~~
 
-- [ ] **Step 2: Assert normal Maven and Gradle consumer variants are present and clean.**
+- [ ] **Step 2: Normal Maven/Gradle consumer variant가 존재하고 clean한지 assert한다.**
 
   Run:
 
@@ -320,9 +320,9 @@ No module registration, BOM/catalog, CI workflow, dependency upgrade, runtime co
   test "$forbidden" = "0"
   ~~~
 
-  Expected: exit code `0`; the XPath inspects dependency entries only, so the published `bluetape4k-images-vips-api` artifactId itself cannot be mistaken for the forbidden `bluetape4k-images` dependency.
+  Expected: exit code `0`. XPath는 dependency entry만 검사하므로 published `bluetape4k-images-vips-api` artifactId 자체를 forbidden `bluetape4k-images` dependency로 오해하지 않는다.
 
-  Run each command below before inspecting dependency arrays:
+  Dependency array를 검사하기 전에 아래 command를 각각 실행한다.
 
   ~~~bash
   jq -e '[.variants[] | select(.name == "apiElements")] | length == 1' images-vips-api/build/publications/BluetapeImage/module.json
@@ -330,7 +330,7 @@ No module registration, BOM/catalog, CI workflow, dependency upgrade, runtime co
   jq -e '[.variants[] | select(.name | test("testFixtures"))] | length > 0' images-vips-api/build/publications/BluetapeImage/module.json
   ~~~
 
-  Expected: every command exits `0`; a missing normal or fixture variant is a publication-metadata failure, not an empty dependency list.
+  Expected: 모든 command가 exit `0`이어야 한다. Normal 또는 fixture variant가 없으면 empty dependency list가 아니라 publication-metadata failure이다.
 
   Run:
 
@@ -362,11 +362,11 @@ No module registration, BOM/catalog, CI workflow, dependency upgrade, runtime co
   ' images-vips-api/build/publications/BluetapeImage/module.json
   ~~~
 
-  Expected: exit code `0`; the fixture variant intentionally retains the image dependency.
+  Expected: exit code `0`. Fixture variant는 의도적으로 image dependency를 유지한다.
 
-- [ ] **Step 3: Update every Vips capability README example and explain the fixture boundary.**
+- [ ] **Step 3: 모든 Vips capability README example을 업데이트하고 fixture boundary를 설명한다.**
 
-  In each English and Korean README variant, state that the main Vips API artifact does not require the Scrimage image implementation artifact. For every AVIF/HEIC capability or smoke example, add the required Vips imports and a scoped opt-in. API README examples must be independently copy-pasteable:
+  English/Korean README variant마다 main Vips API artifact가 Scrimage image implementation artifact를 요구하지 않는다고 명시한다. 모든 AVIF/HEIC capability 또는 smoke example에는 필요한 Vips import와 scoped opt-in을 추가한다. API README example은 독립적으로 copy-paste 가능해야 한다.
 
   ~~~kotlin
   import io.bluetape4k.images.vips.VipsImageFormat
@@ -384,9 +384,9 @@ No module registration, BOM/catalog, CI workflow, dependency upgrade, runtime co
   }
   ~~~
 
-  Java 21/25 backend README snippets must likewise import `VipsIncubatingApi` and `VipsImageFormat`, and use their concrete runtime type (`JVipsRuntime` or `FfmVipsRuntime`) with its explicit import when that type appears in the snippet. Keep the native libvips availability caveat.
+  Java 21/25 backend README snippet도 `VipsIncubatingApi`, `VipsImageFormat`를 import하고, snippet에 concrete runtime type(`JVipsRuntime` 또는 `FfmVipsRuntime`)이 나오면 그 explicit import를 사용한다. Native libvips availability caveat는 유지한다.
 
-  In the Vips API README pair, add a repository-build test-source example and explain in English and Korean that it is intentionally fixture-only, not a published main-artifact dependency:
+  Vips API README pair에는 repository-build test-source example을 추가하고, 이것이 published main-artifact dependency가 아니라 의도적인 fixture-only boundary임을 English/Korean으로 설명한다.
 
   ~~~kotlin
   dependencies {
@@ -395,33 +395,33 @@ No module registration, BOM/catalog, CI workflow, dependency upgrade, runtime co
   }
   ~~~
 
-  Explain that this test dependency is only for pixel-comparison helpers such as `VipsGoldenAssert`; normal consumers do not receive `bluetape4k-images` through the Vips API artifact.
+  이 test dependency는 `VipsGoldenAssert` 같은 pixel-comparison helper 전용이다. 일반 consumer는 Vips API artifact를 통해 `bluetape4k-images`를 받지 않는다.
 
-- [ ] **Step 4: Replace reverse-boundary KDoc examples with contract-only English KDoc.**
+- [ ] **Step 4: Reverse-boundary KDoc example을 contract-only English KDoc으로 교체한다.**
 
-  In `AvifWriter.kt` and `HeicReader.kt`, remove Vips types and Vips enum values from examples. Preserve the interfaces' `@IncubatingImageApi` contract; the updated public KDoc must be English and may state that a compatible backend supplies runtime support without naming or importing the Vips marker.
+  `AvifWriter.kt`와 `HeicReader.kt`에서 Vips type과 Vips enum value를 example에서 제거한다. Interface의 `@IncubatingImageApi` contract는 보존한다. 업데이트된 public KDoc은 English로 두며, Vips marker를 naming/import하지 않고 compatible backend가 runtime support를 제공한다고 설명할 수 있다.
 
-- [ ] **Step 5: Verify documentation against source and metadata.**
+- [ ] **Step 5: Documentation을 source와 metadata에 대조해 검증한다.**
 
   Run: `rg -n 'IncubatingImageApi|VipsIncubatingApi|VipsImageFormat\.(AVIF|HEIC)' README.md README.ko.md images-vips-api/README.md images-vips-api/README.ko.md images-vips-java21/README.md images-vips-java21/README.ko.md images-vips-java25/README.md images-vips-java25/README.ko.md images/src/main/kotlin/io/bluetape4k/images/avif/AvifWriter.kt images/src/main/kotlin/io/bluetape4k/images/heic/HeicReader.kt`
 
-  Expected: manually inspect every AVIF/HEIC README result to confirm its code block imports `VipsIncubatingApi` and uses a scoped `@OptIn(VipsIncubatingApi::class)`; API snippets also resolve `VipsRuntime`/`VipsImageFormat`, backend snippets resolve their runtime type/`VipsImageFormat`, image-module KDocs do not contain Vips implementation types, and their own `IncubatingImageApi` usage remains.
+  Expected: 모든 AVIF/HEIC README result를 수동 점검해 code block이 `VipsIncubatingApi`를 import하고 scoped `@OptIn(VipsIncubatingApi::class)`를 사용하는지 확인한다. API snippet은 `VipsRuntime`/`VipsImageFormat`을 resolve하고, backend snippet은 해당 runtime type/`VipsImageFormat`을 resolve한다. Image-module KDoc에는 Vips implementation type이 없어야 하며, 자체 `IncubatingImageApi` usage는 유지된다.
 
-- [ ] **Step 6: Commit the documentation and publication-evidence slice.**
+- [ ] **Step 6: Documentation과 publication-evidence slice를 commit한다.**
 
-  Run `git diff --check`, then commit with Lore trailers. Intent line: `docs: explain Vips opt-in dependency boundary`.
+  `git diff --check`를 실행한 뒤 Lore trailer로 commit한다. Intent line: `docs: explain Vips opt-in dependency boundary`.
 
-**Rollback / rerun point:** If normal metadata variants contain a forbidden dependency, stop before PR creation, retain generated descriptors, and return to Task 3 rather than weakening the acceptance check.
+**Rollback / rerun point:** Normal metadata variant에 forbidden dependency가 포함되면 PR 생성 전에 중단하고 generated descriptor를 보존한 상태로 Task 3으로 돌아간다. Acceptance check를 약하게 만들지 않는다.
 
-## Task 5: Perform the final local verification pass
+## Task 5: 최종 local verification pass 수행
 
 **Complexity:** medium
 
-**Apply:** `$bluetape4k-code-patterns` when interpreting Kotlin compiler/test results. No concurrency helper applies: this change does not add or alter concurrent behavior, coroutines, JNI/FFM lifecycle, or Testcontainers usage.
+**Apply:** Kotlin compiler/test result를 해석할 때 `$bluetape4k-code-patterns`를 적용한다. 이 변경은 concurrent behavior, coroutine, JNI/FFM lifecycle, Testcontainers usage를 추가하거나 변경하지 않으므로 concurrency helper는 적용하지 않는다.
 
-**Files:** no intentional source changes; verify the complete diff from Tasks 1–4 only.
+**Files:** 의도적 source change 없음. Task 1-4의 전체 diff만 검증한다.
 
-- [ ] **Step 1: Run the complete targeted Gradle validation sequence serially.**
+- [ ] **Step 1: 전체 targeted Gradle validation sequence를 serial로 실행한다.**
 
   Run:
 
@@ -438,15 +438,15 @@ No module registration, BOM/catalog, CI workflow, dependency upgrade, runtime co
     -PverifyVipsOptInFixtures --rerun-tasks
   ~~~
 
-  Expected: `BUILD SUCCESSFUL`. Run the unopted fixture separately because its expected failure is a required assertion, not a normal build success.
+  Expected: `BUILD SUCCESSFUL`. Unopted fixture는 expected failure가 required assertion이므로 별도 실행한다.
 
-- [ ] **Step 2: Re-run the unopted expected-failure command and inspect the diagnostic.**
+- [ ] **Step 2: Unopted expected-failure command를 다시 실행하고 diagnostic을 점검한다.**
 
   Run: `./gradlew :bluetape4k-images-vips-api:compileUnoptedVipsOptInFixtureKotlin -PverifyVipsOptInFixtures --rerun-tasks --console=plain`
 
-  Expected: non-zero exit and a diagnostic containing `VipsIncubatingApi`.
+  Expected: non-zero exit이고 diagnostic에 `VipsIncubatingApi`가 포함된다.
 
-- [ ] **Step 3: Run final source/documentation boundary checks.**
+- [ ] **Step 3: Final source/documentation boundary check를 실행한다.**
 
   Run: `git diff --check`
 
@@ -454,33 +454,33 @@ No module registration, BOM/catalog, CI workflow, dependency upgrade, runtime co
 
   Run: `rg -n 'api\(project\(":bluetape4k-images"\)\)|IncubatingImageApi' images-vips-api images-vips-java21 images-vips-java25 --glob '*.kt' --glob 'build.gradle.kts'`
 
-  Expected: no Vips API/backend matches; `testFixturesApi(project(":bluetape4k-images"))` remains in `images-vips-api/build.gradle.kts`.
+  Expected: Vips API/backend match가 없어야 한다. `images-vips-api/build.gradle.kts`의 `testFixturesApi(project(":bluetape4k-images"))`는 유지된다.
 
-- [ ] **Step 4: Produce required review and learning artifacts before PR work.**
+- [ ] **Step 4: PR 작업 전 필수 review와 learning artifact를 만든다.**
 
-  Create Step 6-R review evidence under `docs/review/2026-07-10-issue-202-implementation-review.md`, then create `docs/lessons/2026-07-10-issue-202-vips-api-boundary.md` covering the POM-versus-Gradle-metadata guard. Record the generated POM/module paths, each boundary assertion command and exit code, the unopted fixture's expected diagnostic, and SHA-256 hashes of both descriptors. Commit both with final implementation changes before creating a PR.
+  `docs/review/2026-07-10-issue-202-implementation-review.md`에 Step 6-R review evidence를 만들고, POM-versus-Gradle-metadata guard를 다루는 `docs/lessons/2026-07-10-issue-202-vips-api-boundary.md`를 만든다. Generated POM/module path, 각 boundary assertion command와 exit code, unopted fixture expected diagnostic, 두 descriptor의 SHA-256 hash를 기록한다. PR 생성 전 final implementation change와 함께 commit한다.
 
-  Before PR creation, confirm that the CI runs named `Test / images-vips-api`, `Test / images-vips-java21`, and `Test / images-vips-java25` succeeded for the branch. Local compile-only backend verification does not replace this CI gate because it installs and exercises the libvips environment.
+  PR 생성 전 branch에서 `Test / images-vips-api`, `Test / images-vips-java21`, `Test / images-vips-java25` CI run이 성공했는지 확인한다. Local compile-only backend verification은 libvips environment를 설치하고 실행하는 CI gate를 대체하지 않는다.
 
-**Rollback / rerun point:** If any compile, metadata, or source-boundary check fails, do not create a PR. Return to the task that owns the failed invariant and rerun its targeted verification after repair.
+**Rollback / rerun point:** Compile, metadata, source-boundary check 중 하나라도 실패하면 PR을 만들지 않는다. 실패 invariant를 소유한 task로 돌아가 수정 후 targeted verification을 다시 실행한다.
 
 ## Requirement Coverage Matrix
 
-| Approved design requirement | Plan task and evidence |
+| Approved design requirement | Plan task와 evidence |
 |---|---|
-| Vips-owned, BINARY opt-in marker with exact targets | Task 1, Steps 1–4; API test compilation. |
-| Only AVIF/HEIC propagates caller opt-in; reports stay stable | Task 1, Steps 1–4; unannotated stable report test. |
-| Main artifact excludes `bluetape4k-images` | Task 3, Step 1; Task 4, Steps 1–2. |
-| Fixture-only image dependency remains intentional | Task 3, Step 1; Task 4, Step 2 fixture-variant assertion. |
-| API and both backends migrate all main/test opt-ins | Task 3, Steps 2–3; four backend compile tasks. |
-| Exact opted/unopted compiler behavior is proven | Task 2, Steps 1–3; Task 5, Step 2. |
-| README and KDoc migration stays boundary-correct | Task 4, Steps 3–5. |
-| No JNI/FFM runtime/codec behavior change | Task 3, Step 2; Task 5, Step 1. |
-| No release/PR before evidence and rollback guard | Task 4, Step 2; Task 5, Step 4. |
+| Exact target을 가진 Vips-owned BINARY opt-in marker | Task 1 Step 1-4; API test compilation. |
+| AVIF/HEIC만 caller opt-in 전파; report는 stable 유지 | Task 1 Step 1-4; unannotated stable report test. |
+| Main artifact가 `bluetape4k-images` 제외 | Task 3 Step 1; Task 4 Step 1-2. |
+| Fixture-only image dependency는 intentional | Task 3 Step 1; Task 4 Step 2 fixture-variant assertion. |
+| API와 두 backend의 모든 main/test opt-in migration | Task 3 Step 2-3; 네 backend compile task. |
+| Opted/unopted compiler behavior를 정확히 증명 | Task 2 Step 1-3; Task 5 Step 2. |
+| README와 KDoc migration이 boundary-correct | Task 4 Step 3-5. |
+| JNI/FFM runtime/codec behavior 변경 없음 | Task 3 Step 2; Task 5 Step 1. |
+| Evidence와 rollback guard 전 release/PR 없음 | Task 4 Step 2; Task 5 Step 4. |
 
 ## Plan Self-Review
 
-- **Spec coverage:** every acceptance criterion maps to a task and fresh verification command in the matrix above.
-- **Ordering:** Task 1 introduces the marker; Task 2 proves its compiler contract; Task 3 removes the dependency only after the new marker exists; Task 4 validates publication output and docs; Task 5 is the final gate.
-- **Placeholder scan:** no unresolved implementation placeholder remains.
-- **Type consistency:** `VipsIncubatingApi`, the two fixture source-set names, publication `BluetapeImage`, and generated descriptor paths use the same names throughout the plan.
+- **Spec coverage:** 모든 acceptance criterion은 위 matrix의 task와 fresh verification command에 연결된다.
+- **Ordering:** Task 1은 marker를 도입하고, Task 2는 compiler contract를 증명하며, Task 3은 새 marker가 존재한 뒤 dependency를 제거한다. Task 4는 publication output과 docs를 검증하고, Task 5는 final gate다.
+- **Placeholder scan:** unresolved implementation placeholder가 남아 있지 않다.
+- **Type consistency:** `VipsIncubatingApi`, 두 fixture source-set name, publication `BluetapeImage`, generated descriptor path는 계획 전체에서 같은 이름을 사용한다.
