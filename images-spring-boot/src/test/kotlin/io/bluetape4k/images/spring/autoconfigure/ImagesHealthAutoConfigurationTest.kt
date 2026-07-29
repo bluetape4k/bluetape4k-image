@@ -28,8 +28,8 @@ class ImagesHealthAutoConfigurationTest {
 
     @Test
     fun `does not register when no ImageStorage bean present`() {
-        // Disable storage so no ImageStorage bean is created;
-        // ImagesHealthAutoConfiguration has @ConditionalOnBean(ImageStorage) and will not activate.
+        // ImageStorage bean이 생성되지 않도록 storage를 비활성화합니다.
+        // ImagesHealthAutoConfiguration은 @ConditionalOnBean(ImageStorage)을 가지므로 활성화되지 않습니다.
         contextRunner
             .withPropertyValues("bluetape4k.images.storage.enabled=false")
             .run { ctx ->
@@ -48,8 +48,8 @@ class ImagesHealthAutoConfigurationTest {
 
     @Test
     fun `user-provided health indicator bean takes precedence`() {
-        // Supply a named bean that satisfies @ConditionalOnMissingBean(name="imageStorageHealthIndicator");
-        // auto-configuration must not register a second instance.
+        // @ConditionalOnMissingBean(name="imageStorageHealthIndicator")를 만족시키는 named bean을 제공합니다.
+        // auto-configuration은 두 번째 instance를 등록하면 안 됩니다.
         val mockStorage = mockk<ImageStorage>(relaxed = true)
         val customIndicator = ImageStorageHealthIndicator(
             storage = mockStorage,

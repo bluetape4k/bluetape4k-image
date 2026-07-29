@@ -100,13 +100,13 @@ class LocalImageStorageTest {
 
     @Test
     fun `download throws ValidationException when file exceeds maxSizeBytes`() = runTest {
-        // Upload with a permissive storage instance (bypasses size check on upload)
+        // upload size check를 통과하도록 permissive storage instance로 먼저 저장합니다.
         val permissiveStorage = LocalImageStorage(tempDir, maxSizeBytes = 1024 * 1024L * 10)
         val bigBytes = ByteArray(10) { it.toByte() }
         val bigKey = ImageObjectKey.of("big", "file.jpg")
         permissiveStorage.upload(bigKey, bigBytes, options)
 
-        // Download with a restrictive storage pointing to the same directory
+        // 같은 directory를 바라보는 restrictive storage로 download 제한을 검증합니다.
         val restrictiveStorage = LocalImageStorage(tempDir, maxSizeBytes = 4L)
 
         assertFailsWith<ImageStorageException.ValidationException> {
@@ -162,7 +162,7 @@ class LocalImageStorageTest {
     @Test
     fun `delete is idempotent for missing key`() = runTest {
         val missingKey = ImageObjectKey.of("nonexistent", "ghost.jpg")
-        // Should not throw
+        // 없는 key 삭제는 예외를 던지면 안 됩니다.
         storage.delete(missingKey)
         assertFalse(storage.exists(missingKey))
     }
@@ -183,15 +183,15 @@ class LocalImageStorageTest {
 
     @Test
     fun `list returns uploaded keys under prefix`() = runTest {
-        // Upload files with a two-level prefix so the prefix directory is walkable.
-        // key.fullKey = "photos/gallery/img1.jpg" → split gives prefix="photos", name="gallery/img1.jpg"
-        // list is called with ImageObjectKey whose fullKey resolves to the "photos/gallery" directory.
+        // prefix directory를 walk할 수 있도록 two-level prefix를 가진 file을 upload합니다.
+        // key.fullKey = "photos/gallery/img1.jpg"이면 split 결과는 prefix="photos", name="gallery/img1.jpg"입니다.
+        // list는 fullKey가 "photos/gallery" directory로 해석되는 ImageObjectKey로 호출됩니다.
         val key1 = ImageObjectKey.of("photos/gallery", "img1.jpg")
         val key2 = ImageObjectKey.of("photos/gallery", "img2.jpg")
         storage.upload(key1, sampleBytes, options)
         storage.upload(key2, sampleBytes, options)
 
-        // prefix key whose fullKey = "photos/gallery" → resolves to the directory containing img1 and img2
+        // fullKey = "photos/gallery"인 prefix key는 img1/img2를 담은 directory로 해석됩니다.
         val listPrefix = ImageObjectKey.of("photos", "gallery")
         val listed = storage.list(listPrefix).toList()
 
@@ -210,7 +210,7 @@ class LocalImageStorageTest {
 
     @Test
     fun `path traversal attempt is rejected by ImageObjectKey of`() {
-        // ImageObjectKey.of validates before reaching storage — ".." in prefix is rejected
+        // storage에 도달하기 전에 ImageObjectKey.of가 validation하므로 prefix의 ".."는 거부됩니다.
         assertFailsWith<IllegalArgumentException> {
             ImageObjectKey.of("../etc", "passwd")
         }

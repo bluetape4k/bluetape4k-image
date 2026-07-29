@@ -11,18 +11,17 @@ import org.springframework.boot.health.contributor.ReactiveHealthIndicator
 import reactor.core.publisher.Mono
 
 /**
- * Reactive health indicator that probes the configured [ImageStorage].
+ * 설정된 [ImageStorage]를 probe하는 reactive health indicator입니다.
  *
- * ## Behavior / Contract
- * - Calls `storage.exists(ImageObjectKey.of("_health", probeKey))` to verify the storage backend
- *   is reachable.
- * - Returns `Health.up()` on success; `Health.down(e)` when the probe raises an exception other
- *   than [CancellationException].
- * - [CancellationException] is always rethrown to honour structured concurrency (CLAUDE.md).
- * - Suspend bridge: implemented as a [ReactiveHealthIndicator] returning `Mono<Health>` via
- *   `kotlinx-coroutines-reactor`'s `mono { }` builder. `runBlocking` is never used.
+ * ## 동작/계약
+ * - storage backend reachability를 확인하기 위해 `storage.exists(ImageObjectKey.of("_health", probeKey))`를 호출합니다.
+ * - 성공하면 `Health.up()`을 반환하고, probe가 [CancellationException]이 아닌 exception을 던지면
+ *   `Health.down(e)`를 반환합니다.
+ * - structured concurrency(CLAUDE.md)를 지키기 위해 [CancellationException]은 항상 다시 던집니다.
+ * - suspend bridge는 `kotlinx-coroutines-reactor`의 `mono { }` builder를 통해
+ *   `Mono<Health>`를 반환하는 [ReactiveHealthIndicator]로 구현합니다. `runBlocking`은 절대 사용하지 않습니다.
  *
- * Constructor parameters are accepted in named form so wiring via auto-configuration is explicit.
+ * auto-configuration wiring이 명시적이도록 constructor parameter는 named form으로 받습니다.
  */
 class ImageStorageHealthIndicator(
     private val storage: ImageStorage,
@@ -31,7 +30,7 @@ class ImageStorageHealthIndicator(
 
     companion object : KLogging() {
 
-        /** Prefix segment used for the synthetic health-probe key. */
+        /** synthetic health-probe key에 사용하는 prefix segment입니다. */
         private const val HEALTH_PREFIX: String = "_health"
     }
 

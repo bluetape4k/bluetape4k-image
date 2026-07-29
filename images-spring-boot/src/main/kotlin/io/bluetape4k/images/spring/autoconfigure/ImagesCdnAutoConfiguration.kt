@@ -16,24 +16,23 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
 /**
- * Phase 3 — CDN URL signing auto-configuration.
+ * Phase 3 CDN URL signing auto-configuration입니다.
  *
- * ## Behavior / Contract
- * - Binds [CdnProperties] under the `bluetape4k.images.cdn` prefix.
- * - Disabled by default — must be explicitly turned on via `bluetape4k.images.cdn.enabled=true`.
- * - Ordered after [ImagesStorageAutoConfiguration] via `afterName` (string FQCN).
- * - Nested [S3PresignCdnConfiguration] activates when [S3Operations] is on the classpath and the
- *   provider is `s3_presign` (default); its signer bean is created only when an [S3Operations] bean
- *   exists.
- * - Nested [CloudFrontCdnConfiguration] activates when `software.amazon.awssdk.services.cloudfront.CloudFrontUtilities`
- *   is on the classpath and the provider is `cloudfront`.
- * - Nested [CdnSanitizingConfiguration] registers a [CdnPropertySanitizingFunction] bean to redact
- *   private-key material in `/actuator/configprops` and `/actuator/env`. It activates only when
- *   `org.springframework.boot.actuate.endpoint.SanitizingFunction` is on the classpath.
+ * ## 동작 / 계약
+ * - `bluetape4k.images.cdn` prefix 아래 [CdnProperties]를 bind합니다.
+ * - 기본값은 비활성화입니다. `bluetape4k.images.cdn.enabled=true`로 명시적으로 켜야 합니다.
+ * - [ImagesStorageAutoConfiguration] 뒤에 오도록 `afterName`(string FQCN)으로 ordering합니다.
+ * - nested [S3PresignCdnConfiguration]은 [S3Operations]가 classpath에 있고 provider가 `s3_presign`(default)일 때
+ *   활성화됩니다. signer bean은 [S3Operations] bean이 있을 때만 생성됩니다.
+ * - nested [CloudFrontCdnConfiguration]은 `software.amazon.awssdk.services.cloudfront.CloudFrontUtilities`가
+ *   classpath에 있고 provider가 `cloudfront`일 때 활성화됩니다.
+ * - nested [CdnSanitizingConfiguration]은 `/actuator/configprops`와 `/actuator/env`의 private-key material을
+ *   redaction하는 [CdnPropertySanitizingFunction] bean을 등록합니다.
+ *   `org.springframework.boot.actuate.endpoint.SanitizingFunction`이 classpath에 있을 때만 활성화됩니다.
  *
  * ### Maintainer note
- * Do not change `afterName` to `after` — it would cause `NoClassDefFoundError` when the consumer
- * omits `bluetape4k-aws-spring-boot`.
+ * `afterName`을 `after`로 바꾸면 안 됩니다. consumer가 `bluetape4k-aws-spring-boot`를 빼면
+ * `NoClassDefFoundError`가 발생할 수 있습니다.
  */
 @AutoConfiguration(
     afterName = [
@@ -49,14 +48,14 @@ import org.springframework.context.annotation.Configuration
 class ImagesCdnAutoConfiguration {
 
     /**
-     * S3 presigned-URL CDN signer. Activated when [S3Operations] is on the classpath and the
-     * provider is `s3_presign` (default).
+     * S3 presigned-URL CDN signer입니다. [S3Operations]가 classpath에 있고 provider가 `s3_presign`(default)일 때
+     * 활성화됩니다.
      *
-     * Reference to [S3Operations] is confined to this nested class so the outer
-     * `@AutoConfiguration` class never directly references the `compileOnly` SDK type.
+     * [S3Operations] 참조는 이 nested class 안에만 둡니다. 외부 `@AutoConfiguration` class가 `compileOnly` SDK type을
+     * 직접 참조하지 않게 하기 위해서입니다.
      *
-     * The bean is registered with the concrete [S3PreSignedUrlSigner] return type — it satisfies
-     * dependency injection for both [CdnReadSigner] and `CdnWriteSigner` interfaces automatically.
+     * bean은 concrete [S3PreSignedUrlSigner] return type으로 등록됩니다. 이 type은 [CdnReadSigner]와
+     * `CdnWriteSigner` interface에 대한 dependency injection을 자동으로 충족합니다.
      */
     @Configuration(proxyBeanMethods = false)
     @ConditionalOnClass(name = ["io.bluetape4k.aws.spring.s3.S3Operations"])
@@ -85,8 +84,8 @@ class ImagesCdnAutoConfiguration {
     }
 
     /**
-     * CloudFront signed-URL signer. Activated when [software.amazon.awssdk.services.cloudfront.CloudFrontUtilities]
-     * is on the classpath and the provider is `cloudfront`.
+     * CloudFront signed-URL signer입니다. [software.amazon.awssdk.services.cloudfront.CloudFrontUtilities]가
+     * classpath에 있고 provider가 `cloudfront`일 때 활성화됩니다.
      */
     @Configuration(proxyBeanMethods = false)
     @ConditionalOnClass(name = ["software.amazon.awssdk.services.cloudfront.CloudFrontUtilities"])
@@ -104,9 +103,8 @@ class ImagesCdnAutoConfiguration {
     }
 
     /**
-     * Registers a [CdnPropertySanitizingFunction] bean to redact private-key material from
-     * Actuator endpoint payloads (T7.7). Active only when `spring-boot-actuator` is on the
-     * classpath.
+     * Actuator endpoint payload의 private-key material을 redaction하기 위해 [CdnPropertySanitizingFunction]
+     * bean을 등록합니다(T7.7). `spring-boot-actuator`가 classpath에 있을 때만 활성화됩니다.
      */
     @Configuration(proxyBeanMethods = false)
     @ConditionalOnClass(name = ["org.springframework.boot.actuate.endpoint.SanitizingFunction"])

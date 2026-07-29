@@ -15,24 +15,23 @@ import java.net.URISyntaxException
 import java.time.Duration
 
 /**
- * AWS S3 presigned URL signer that implements both [CdnReadSigner] and [CdnWriteSigner].
+ * [CdnReadSigner]와 [CdnWriteSigner]를 모두 구현하는 AWS S3 presigned URL signer입니다.
  *
- * ## Behavior / Contract
- * - Delegates to [S3Operations.presignGet] and [S3Operations.presignPut] from `bluetape4k-aws-spring-boot`.
- * - The underlying SDK signing path uses RSA and can block; both `signGet` and `signPut` hop to
- *   [Dispatchers.IO].
- * - [expiresIn] must be positive and at most 7 days (AWS S3 SigV4 maximum).
- * - The full object key is `keyPrefix/fullKey`, normalized so there is no double `/`.
- * - [UploadOptions.contentType] is forwarded to the presigned PUT request. The remaining options
- *   ([UploadOptions.cacheControl] and [UploadOptions.metadata]) are accepted for API compatibility
- *   but are not forwarded, because the current [S3Operations.presignPut] surface does not expose
- *   them. Callers that need those headers must sign with the lower-level AWS SDK directly.
- * - All catch blocks rethrow [CancellationException] first. SDK / parsing failures are mapped to
- *   [ImageStorageException.TransientException].
+ * ## 동작 / 계약
+ * - `bluetape4k-aws-spring-boot`의 [S3Operations.presignGet]과 [S3Operations.presignPut]에 위임합니다.
+ * - 내부 SDK signing path는 RSA를 사용하며 block될 수 있으므로 `signGet`과 `signPut`은 모두 [Dispatchers.IO]에서 실행합니다.
+ * - [expiresIn]은 양수여야 하며 AWS S3 SigV4 최대값인 7일을 넘을 수 없습니다.
+ * - 전체 object key는 `keyPrefix/fullKey`이며, 중복 `/`가 생기지 않도록 정규화합니다.
+ * - [UploadOptions.contentType]은 presigned PUT request에 전달합니다. 나머지 option인
+ *   [UploadOptions.cacheControl]과 [UploadOptions.metadata]는 API 호환성을 위해 받지만 전달하지 않습니다. 현재
+ *   [S3Operations.presignPut] surface가 해당 값을 노출하지 않기 때문입니다. 이 header가 필요한 caller는
+ *   lower-level AWS SDK로 직접 signing해야 합니다.
+ * - 모든 catch block은 [CancellationException]을 먼저 다시 던집니다. SDK / parsing failure는
+ *   [ImageStorageException.TransientException]으로 매핑합니다.
  *
- * @param operations the S3 operations facade.
- * @param bucket the S3 bucket that backs the storage; must be non-blank.
- * @param keyPrefix optional bucket-internal prefix that all keys are placed under.
+ * @param operations S3 operation facade입니다.
+ * @param bucket storage를 backing하는 S3 bucket입니다. blank일 수 없습니다.
+ * @param keyPrefix 모든 key가 놓이는 bucket 내부 prefix입니다. 비어 있으면 prefix를 붙이지 않습니다.
  */
 class S3PreSignedUrlSigner(
     private val operations: S3Operations,
@@ -43,7 +42,7 @@ class S3PreSignedUrlSigner(
     companion object : KLogging() {
         private const val serialVersionUID: Long = 1L
 
-        /** AWS SigV4 hard limit for presigned URL expiry. */
+        /** presigned URL expiry에 대한 AWS SigV4 hard limit입니다. */
         private val MAX_EXPIRY: Duration = Duration.ofDays(7)
     }
 
@@ -51,7 +50,7 @@ class S3PreSignedUrlSigner(
         bucket.requireNotBlank("bucket")
     }
 
-    /** Joins [keyPrefix] with [ImageObjectKey.fullKey], collapsing duplicate separators. */
+    /** [keyPrefix]와 [ImageObjectKey.fullKey]를 결합하고 중복 separator를 접습니다. */
     private fun objectKey(key: ImageObjectKey): String {
         if (keyPrefix.isBlank()) return key.fullKey
         return "${keyPrefix.trimEnd('/')}/${key.fullKey}"

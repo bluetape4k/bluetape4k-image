@@ -4,14 +4,14 @@ import java.io.Serializable
 import java.time.Instant
 
 /**
- * Result of a successful image upload operation.
+ * 성공한 image upload operation의 result입니다.
  *
- * ## Behavior
- * - [key] identifies where the image was stored.
- * - [etag] is the entity tag returned by the backend (e.g., MD5 hash for S3).
- * - [sizeBytes] is the number of bytes stored.
- * - [contentType] is the MIME type of the stored image.
- * - [uploadedAt] records when the upload completed; defaults to [Instant.now].
+ * ## 동작
+ * - [key]는 image가 저장된 위치를 식별합니다.
+ * - [etag]는 backend가 반환한 entity tag입니다(예: S3의 MD5 hash).
+ * - [sizeBytes]는 저장된 byte 수입니다.
+ * - [contentType]은 저장된 image의 MIME type입니다.
+ * - [uploadedAt]은 upload 완료 시각을 기록합니다. 기본값은 [Instant.now]입니다.
  */
 data class ImageUploadResult(
     val key: ImageObjectKey,

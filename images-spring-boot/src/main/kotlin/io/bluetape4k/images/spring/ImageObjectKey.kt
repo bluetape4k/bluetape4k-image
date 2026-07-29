@@ -4,13 +4,13 @@ import io.bluetape4k.support.requireNotBlank
 import java.io.Serializable
 
 /**
- * Immutable key identifying an image object in storage.
+ * storage 안의 image object를 식별하는 immutable key입니다.
  *
- * ## Behavior
- * - [prefix] and [name] must match `^[A-Za-z0-9._/-]+$` and must not contain `..` segments.
- * - [fullKey] is `prefix/name` (no double slash even when prefix ends with `/`).
- * - Validation runs in the companion factory; `copy()` keeps constructor visibility.
- * - Construct via [of] factory.
+ * ## 동작
+ * - [prefix]와 [name]은 `^[A-Za-z0-9._/-]+$`에 match되어야 하며 `..` segment를 포함하면 안 됩니다.
+ * - [fullKey]는 `prefix/name`입니다. prefix가 `/`로 끝나도 double slash를 만들지 않습니다.
+ * - validation은 companion factory에서 실행됩니다. `copy()`는 constructor visibility를 유지합니다.
+ * - 생성은 [of] factory를 통해 수행합니다.
  */
 @ConsistentCopyVisibility
 data class ImageObjectKey private constructor(
@@ -35,11 +35,11 @@ data class ImageObjectKey private constructor(
             return ImageObjectKey(prefix, name)
         }
 
-        /** Creates a validated [ImageObjectKey]. */
+        /** 검증된 [ImageObjectKey]를 생성합니다. */
         fun of(prefix: String, name: String): ImageObjectKey = invoke(prefix, name)
     }
 
-    /** Returns `prefix/name`, normalizing the separator. */
+    /** separator를 정규화해 `prefix/name`을 반환합니다. */
     val fullKey: String
         get() {
             val p = if (prefix.endsWith("/")) prefix else "$prefix/"

@@ -7,82 +7,82 @@ import kotlinx.coroutines.flow.Flow
 import java.nio.file.Path
 
 /**
- * Abstraction over image object storage backends.
+ * image object storage backend에 대한 abstraction입니다.
  *
- * ## Behavior
- * - All operations are suspend and safe to call from a coroutine context.
- * - Upload operations are atomic: partial writes must not be visible to readers.
- * - [download] throws [io.bluetape4k.images.spring.ImageStorageException.NotFoundException] if the key is absent.
- * - [delete] is idempotent — no exception is thrown when the key does not exist.
- * - [exists] throws [io.bluetape4k.images.spring.ImageStorageException.AccessDeniedException] on
- *   permission errors, not `false`.
- * - [list] returns a cold [Flow]; cancellation is propagated correctly.
- * - All implementations must rethrow [kotlinx.coroutines.CancellationException] before any broad catch.
+ * ## 동작
+ * - 모든 operation은 suspend이며 coroutine context에서 호출해도 안전합니다.
+ * - upload operation은 atomic해야 합니다. partial write가 reader에게 보여서는 안 됩니다.
+ * - key가 없으면 [download]는 [io.bluetape4k.images.spring.ImageStorageException.NotFoundException]을 던집니다.
+ * - [delete]는 idempotent입니다. key가 없어도 예외를 던지지 않습니다.
+ * - permission error에서 [exists]는 `false`가 아니라
+ *   [io.bluetape4k.images.spring.ImageStorageException.AccessDeniedException]을 던집니다.
+ * - [list]는 cold [Flow]를 반환하며 cancellation을 올바르게 전파합니다.
+ * - 모든 구현체는 broad catch보다 먼저 [kotlinx.coroutines.CancellationException]을 다시 던져야 합니다.
  */
 interface ImageStorage {
 
     /**
-     * Uploads image bytes.
+     * image byte를 upload합니다.
      *
-     * ## Behavior
-     * - Throws [io.bluetape4k.images.spring.ImageStorageException.ValidationException] if
-     *   `bytes.size` exceeds the configured maximum or if [options] is invalid.
+     * ## 동작
+     * - `bytes.size`가 configured maximum을 초과하거나 [options]가 invalid이면
+     *   [io.bluetape4k.images.spring.ImageStorageException.ValidationException]을 던집니다.
      */
     suspend fun upload(key: ImageObjectKey, bytes: ByteArray, options: UploadOptions): ImageUploadResult
 
     /**
-     * Uploads image from a file path.
+     * file path에서 image를 upload합니다.
      *
-     * ## Behavior
-     * - Streams the file content; suitable for large images.
-     * - Throws [io.bluetape4k.images.spring.ImageStorageException.ValidationException] if the file
-     *   size exceeds the configured maximum.
+     * ## 동작
+     * - file content를 stream하므로 large image에 적합합니다.
+     * - file size가 configured maximum을 초과하면
+     *   [io.bluetape4k.images.spring.ImageStorageException.ValidationException]을 던집니다.
      */
     suspend fun upload(key: ImageObjectKey, source: Path, options: UploadOptions): ImageUploadResult
 
     /**
-     * Downloads image bytes.
+     * image byte를 download합니다.
      *
-     * ## Behavior
-     * - Throws [io.bluetape4k.images.spring.ImageStorageException.NotFoundException] if key is absent.
-     * - Throws [io.bluetape4k.images.spring.ImageStorageException.ValidationException] if the object
-     *   size exceeds the configured download limit.
+     * ## 동작
+     * - key가 없으면 [io.bluetape4k.images.spring.ImageStorageException.NotFoundException]을 던집니다.
+     * - object size가 configured download limit을 초과하면
+     *   [io.bluetape4k.images.spring.ImageStorageException.ValidationException]을 던집니다.
      */
     suspend fun download(key: ImageObjectKey): ByteArray
 
     /**
-     * Downloads image to a destination path.
+     * image를 destination path로 download합니다.
      *
-     * ## Behavior
-     * - Streams the content; suitable for large images.
-     * - Throws [io.bluetape4k.images.spring.ImageStorageException.NotFoundException] if key is absent.
+     * ## 동작
+     * - content를 stream하므로 large image에 적합합니다.
+     * - key가 없으면 [io.bluetape4k.images.spring.ImageStorageException.NotFoundException]을 던집니다.
      */
     suspend fun download(key: ImageObjectKey, destination: Path)
 
     /**
-     * Deletes an image.
+     * image를 삭제합니다.
      *
-     * ## Behavior
-     * - No-op if key does not exist (idempotent).
+     * ## 동작
+     * - key가 없으면 no-op입니다(idempotent).
      */
     suspend fun delete(key: ImageObjectKey)
 
     /**
-     * Returns true if the image exists.
+     * image가 존재하면 `true`를 반환합니다.
      *
-     * ## Behavior
-     * - Throws [io.bluetape4k.images.spring.ImageStorageException.AccessDeniedException] on
-     *   permission errors rather than returning false.
+     * ## 동작
+     * - permission error에서는 `false`를 반환하지 않고
+     *   [io.bluetape4k.images.spring.ImageStorageException.AccessDeniedException]을 던집니다.
      */
     suspend fun exists(key: ImageObjectKey): Boolean
 
     /**
-     * Lists all image keys under [prefix].
+     * [prefix] 아래의 모든 image key를 나열합니다.
      *
-     * ## Behavior
-     * - Returns a cold [Flow] — iteration starts when collected.
-     * - Cancellation is propagated: collecting coroutine cancellation stops the listing.
-     * - [prefix] is typed as [ImageObjectKey] to prevent path-traversal bypass via string injection.
+     * ## 동작
+     * - cold [Flow]를 반환합니다. collection 시점에 iteration이 시작됩니다.
+     * - cancellation을 전파합니다. collecting coroutine이 취소되면 listing을 중단합니다.
+     * - string injection을 통한 path-traversal 우회를 막기 위해 [prefix]는 [ImageObjectKey] type입니다.
      */
     fun list(prefix: ImageObjectKey): Flow<ImageObjectKey>
 }

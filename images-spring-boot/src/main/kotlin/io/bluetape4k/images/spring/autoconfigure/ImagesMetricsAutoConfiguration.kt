@@ -10,23 +10,22 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
 /**
- * Phase 5 — Micrometer decoration auto-configuration.
+ * Phase 5 Micrometer decoration auto-configuration입니다.
  *
- * ## Behavior / Contract
- * - Ordered after [ImagesStorageAutoConfiguration] via `afterName` so the [ImageStorage] bean
- *   is available when the [BeanPostProcessor] is registered.
- * - Toggled by `bluetape4k.images.metrics.enabled` (default `true`).
- * - Activated only when `io.micrometer.core.instrument.MeterRegistry` is on the classpath; the
- *   outer class therefore never directly references the `compileOnly` Micrometer type — the
- *   [MetricsDecorationConfiguration] nested class is the lone integration point.
- * - Registers an [ImageStorageMetricsBeanPostProcessor] that wraps every [io.bluetape4k.images.spring.storage.ImageStorage]
- *   bean with [io.bluetape4k.images.spring.metrics.MetricImageStorage] during context startup.
+ * ## 동작 / 계약
+ * - [BeanPostProcessor] 등록 시점에 [ImageStorage] bean을 사용할 수 있도록 [ImagesStorageAutoConfiguration]
+ *   뒤에 `afterName`으로 ordering합니다.
+ * - `bluetape4k.images.metrics.enabled`로 toggle됩니다(default `true`).
+ * - `io.micrometer.core.instrument.MeterRegistry`가 classpath에 있을 때만 활성화됩니다. 따라서 외부 class는
+ *   `compileOnly` Micrometer type을 직접 참조하지 않으며, nested [MetricsDecorationConfiguration] class가 유일한
+ *   integration point입니다.
+ * - context startup 중 모든 [io.bluetape4k.images.spring.storage.ImageStorage] bean을
+ *   [io.bluetape4k.images.spring.metrics.MetricImageStorage]로 감싸는 [ImageStorageMetricsBeanPostProcessor]를 등록합니다.
  *
  * ### Maintainer note
- * The `@Bean` factory for the [BeanPostProcessor] is intentionally an instance method (not
- * `@JvmStatic`). Spring may emit an INFO log when a non-static `@Bean` returns a
- * [BeanPostProcessor]; this is acceptable here because the post-processor depends on a runtime
- * Spring-managed [MeterRegistry] that is itself wired through normal `@Autowired` lookup.
+ * [BeanPostProcessor]를 반환하는 `@Bean` factory는 의도적으로 instance method입니다(`@JvmStatic` 아님).
+ * non-static `@Bean`이 [BeanPostProcessor]를 반환하면 Spring이 INFO log를 낼 수 있습니다. 여기서는 post-processor가
+ * runtime Spring-managed [MeterRegistry]에 의존하고, 그 registry가 일반 `@Autowired` lookup으로 wiring되므로 허용합니다.
  */
 @AutoConfiguration(
     afterName = [
