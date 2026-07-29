@@ -1,22 +1,22 @@
-# Issue #196 CI Root Build Test Coverage Review
+# Issue #196 CI Root Build Test Coverage 검토
 
-## Scope
+## 범위
 
-- Issue: #196, `ci: run affected module tests for root Gradle and buildSrc changes`
-- Files reviewed: `.github/workflows/ci.yml`
-- Review date: 2026-07-02
+- 이슈: #196, `ci: run affected module tests for root Gradle and buildSrc changes`
+- 검토 파일: `.github/workflows/ci.yml`
+- 검토일: 2026-07-02
 
-## Findings
+## 발견 사항
 
 - P0: 0
 - P1: 0
 - P2: 0
 - P3: 0
 
-## Evidence
+## 근거
 
 - `build-logic` path filter now covers root Gradle scripts, `gradle.properties`, `gradle/**`, and `buildSrc/**`.
-- Every module test job now also runs when `build-logic` changed.
+- 이제 `build-logic`이 바뀌면 모든 module test job도 실행된다.
 - `ci-status` fails when a required module test is skipped for workflow dispatch, build-logic changes, or the matching module path.
 - `actionlint .github/workflows/ci.yml`: PASS.
 - `git diff --check`: PASS.
@@ -26,7 +26,7 @@
   - module path changed + skipped module test: FAIL as expected.
   - unaffected module skipped: PASS as expected.
 
-## Residual Risk
+## 남은 위험
 
-- This PR does not force module tests for workflow-only changes; workflow syntax and status logic are validated locally with `actionlint` and shell simulation.
-- Snapshot and release publish gates remain separate issues (#194 and #195).
+- 이 PR은 workflow-only change에 대해 module test를 강제하지 않는다. workflow syntax와 status logic은 `actionlint`와 shell simulation으로 로컬 검증한다.
+- Snapshot publish gate와 release publish gate는 별도 issue(#194, #195)로 남긴다.

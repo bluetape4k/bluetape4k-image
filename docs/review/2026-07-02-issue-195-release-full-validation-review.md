@@ -1,19 +1,19 @@
-# Issue #195 Release Full Validation Review
+# Issue #195 Release Full Validation 검토
 
-## Scope
+## 범위
 
-- Issue: #195, `release: gate Maven Central publish on full image module validation`
-- Files reviewed: `.github/workflows/release.yml`
-- Review date: 2026-07-02
+- 이슈: #195, `release: gate Maven Central publish on full image module validation`
+- 검토 파일: `.github/workflows/release.yml`
+- 검토일: 2026-07-02
 
-## Findings
+## 발견 사항
 
 - P0: 0
 - P1: 0
 - P2: 0
 - P3: 0
 
-## Evidence
+## 근거
 
 - `release-validation` now runs before Maven Central publication.
 - Tag-triggered releases resolve the tag commit and look for a successful Nightly validation run for that commit.
@@ -35,7 +35,7 @@
   - skipped OCR job: release validation rejects publication.
   - all required image jobs successful: release validation accepts publication.
 
-## Residual Risk
+## 남은 위험
 
-- This PR does not dispatch a live release workflow or publish artifacts.
+- 이 PR은 live release workflow를 dispatch하거나 artifact를 publish하지 않는다.
 - If a tag commit has no full Nightly run yet, release publication is intentionally blocked until validation evidence exists or an explicit manual override is used.
