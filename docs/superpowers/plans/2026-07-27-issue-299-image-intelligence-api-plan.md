@@ -1,100 +1,99 @@
-# Integrated Image Intelligence API Example Implementation Plan
+# 통합 이미지 인텔리전스 API 예제 구현 계획
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **에이전트 작업자용:** 필수 서브 스킬: 이 계획은 작업 단위로 구현해야 하며, `superpowers:subagent-driven-development` 사용을 권장하고 대안으로 `superpowers:executing-plans`를 사용할 수 있다. 진행 추적에는 체크박스(`- [ ]`) 문법을 사용한다.
 
-**Goal:** Add a runnable Spring Boot example that qualifies and decodes one uploaded image once, executes OCR, detection, and real ZXing barcode analysis concurrently, preserves partial outcomes, and applies a separate visitor-pass policy.
+**목표:** 업로드된 이미지 하나를 검증하고 정확히 한 번만 디코딩하는 실행 가능한 Spring Boot 예제를 추가한다. 이 예제는 OCR, 감지, 실제 ZXing 바코드 분석을 동시에 실행하고, 부분 결과를 보존하며, 별도의 방문자 패스 정책을 적용한다.
 
-**Architecture:** `ImageUploadQualifier` creates one `QualifiedImage`; three provider adapters run through guarded `SuspendParallelFlow` lanes and record domain `AnalysisResult` values in distinct `WorkContext` keys. The workflow output is aggregated and interpreted by `VisitorPassPolicy`, then mapped to stable HTTP DTOs without exposing workflow library types.
+**아키텍처:** `ImageUploadQualifier`가 하나의 `QualifiedImage`를 만든다. 세 provider adapter는 보호된 `SuspendParallelFlow` lane에서 실행되고, domain `AnalysisResult` 값을 서로 다른 `WorkContext` key에 기록한다. workflow 출력은 집계된 뒤 `VisitorPassPolicy`가 해석하며, workflow library type을 노출하지 않는 안정적인 HTTP DTO로 매핑한다.
 
-**Tech Stack:** Kotlin 2.4, Spring Boot 4 Web MVC, Kotlin Coroutines, `bluetape4k-images`, `bluetape4k-images-ocr`, `bluetape4k-images-barcode-zxing`, `bluetape4k-workflow`, JUnit 6, MockK, bluetape4k assertions, ZXing test fixture generation.
+**기술 스택:** Kotlin 2.4, Spring Boot 4 Web MVC, Kotlin Coroutines, `bluetape4k-images`, `bluetape4k-images-ocr`, `bluetape4k-images-barcode-zxing`, `bluetape4k-workflow`, JUnit 6, MockK, bluetape4k assertions, ZXing test fixture generation.
 
-**Status:** Approved for implementation on 2026-07-27.
+**상태:** 2026-07-27에 구현 승인됨.
 
 ---
 
-## 1. Execution contract
+## 1. 실행 계약
 
-- Execute inline in the existing isolated worktree:
+- 기존 격리 worktree에서 인라인으로 실행한다:
   `/Users/debop/work/bluetape4k/bluetape4k-image/.worktrees/feat-issue-299-image-intelligence-api`.
 - Base branch: `develop`.
 - Feature branch: `feat/issue-299-image-intelligence-api`.
-- Use `test-driven-development` and `bluetape-kotlin-patterns` for every Kotlin behavior.
-- Use `bluetape-diagram` before creating or changing SVG/PNG diagrams.
-- Keep native OCR, container, JNI, and other heavyweight checks sequential.
-- Commit after each task using the Lore commit protocol.
-- Do not merge. Stop after PR CI, review, and merge-ready evidence for a fresh user decision.
+- 모든 Kotlin 동작에는 `test-driven-development`와 `bluetape-kotlin-patterns`를 사용한다.
+- SVG/PNG diagram을 만들거나 변경하기 전에는 `bluetape-diagram`을 사용한다.
+- native OCR, container, JNI, 기타 무거운 검증은 순차 실행한다.
+- 각 작업 후 Lore commit protocol로 commit한다.
+- merge하지 않는다. PR CI, review, merge-ready evidence를 확보한 뒤 새 사용자 결정을 위해 중지한다.
 
-## 2. File map
+## 2. 파일 맵
 
-Create focused files under:
+다음 경로 아래에 책임이 좁은 파일을 만든다:
 
 `examples/spring-boot-image-intelligence-api/src/main/kotlin/io/bluetape4k/images/examples/spring/intelligence/`
 
-| File | Responsibility |
+| 파일 | 책임 |
 |---|---|
 | `ImageIntelligenceApiApplication.kt` | Spring Boot application entry point |
-| `config/ImageIntelligenceConfiguration.kt` | validated properties, profile-specific providers, ZXing, service beans |
-| `model/AnalysisModels.kt` | `AnalysisResult`, lane payloads, aggregate status |
-| `model/ApiModels.kt` | stable HTTP response and policy DTOs |
-| `service/ImageUploadQualifier.kt` | bounded multipart read, MIME/magic checks, dimension probe, one decode |
-| `service/GuardedAnalysisRunner.kt` | semaphore, timeout, cancellation, elapsed time, sanitized failure mapping |
-| `service/ImageAnalysisProviders.kt` | OCR, detector, and barcode provider adapter contracts and implementations |
-| `service/ImageIntelligenceWorkflow.kt` | `SuspendParallelFlow`, separate context keys, typed result extraction |
-| `service/ImageIntelligenceAggregator.kt` | `COMPLETED`, `PARTIAL`, `FAILED` calculation |
+| `config/ImageIntelligenceConfiguration.kt` | 검증된 properties, profile별 provider, ZXing, service bean |
+| `model/AnalysisModels.kt` | `AnalysisResult`, lane payload, aggregate status |
+| `model/ApiModels.kt` | 안정적인 HTTP response와 policy DTO |
+| `service/ImageUploadQualifier.kt` | 제한된 multipart read, MIME/magic check, dimension probe, 단일 decode |
+| `service/GuardedAnalysisRunner.kt` | semaphore, timeout, cancellation, elapsed time, 정제된 failure mapping |
+| `service/ImageAnalysisProviders.kt` | OCR, detector, barcode provider adapter 계약과 구현 |
+| `service/ImageIntelligenceWorkflow.kt` | `SuspendParallelFlow`, 분리된 context key, typed result extraction |
+| `service/ImageIntelligenceAggregator.kt` | `COMPLETED`, `PARTIAL`, `FAILED` 계산 |
 | `service/VisitorPassPolicy.kt` | `ALLOW`, `MANUAL_REVIEW`, `REJECT`, `QUARANTINE` |
-| `service/ImageIntelligenceService.kt` | qualify → analyze → aggregate → policy → response |
+| `service/ImageIntelligenceService.kt` | qualify -> analyze -> aggregate -> policy -> response |
 | `web/ImageIntelligenceController.kt` | multipart endpoint |
-| `web/ImageIntelligenceExceptionHandler.kt` | stable `ProblemDetail` mapping |
+| `web/ImageIntelligenceExceptionHandler.kt` | 안정적인 `ProblemDetail` mapping |
 
-Mirror each responsibility under `src/test/kotlin`. Put deterministic test helpers in:
+각 책임을 `src/test/kotlin` 아래에 대응시킨다. 결정적인 test helper는 다음 파일에 둔다:
 
 `src/test/kotlin/io/bluetape4k/images/examples/spring/intelligence/support/ImageIntelligenceFixtures.kt`.
 
-No production binary fixture is required. Tests generate a deterministic QR image with ZXing,
-encode it as PNG, and pin the resulting payload and dimensions.
+production binary fixture는 필요하지 않다. test는 ZXing으로 결정적인 QR image를 생성하고 PNG로 encode한 뒤, 생성된 payload와 dimension을 고정한다.
 
-## 3. Acceptance traceability
+## 3. 수용 기준 추적성
 
-| Spec acceptance criterion | Plan task |
+| Spec 수용 기준 | 계획 작업 |
 |---|---|
-| Runnable non-published Spring Boot example and local project dependencies | Task 1 |
-| Bounded input, dimension probe before full decode, one `ImmutableImage` | Task 2 |
-| Separate `Completed`, `Empty`, `Unavailable`, `Failed` outcomes | Task 3 |
-| Bounded concurrency, timeout, cancellation distinction | Task 3 |
-| Local OCR/detection adapters and actual ZXing provider | Task 4 |
-| `WorkReport.Success` means step completion, not domain success | Task 5 |
-| Preserve sibling results after one lane failure | Task 5 |
-| Separate aggregate status and visitor-pass policy | Task 5 |
-| Stable multipart HTTP contract and sanitized errors | Task 6 |
-| Full success, empty, unavailable, failure, timeout, cancellation tests | Tasks 2–7 |
-| Bilingual README and dark SVG/PNG diagrams | Task 8 |
-| settings, AGENTS, root README, Examples workflow registration | Tasks 1 and 8 |
-| Targeted/full validation, actionlint, diagram checks, review, lesson, PR | Task 9 |
-| Versioned manual and publish BOM unchanged | Tasks 8 and 9 |
+| 실행 가능한 non-published Spring Boot 예제와 local project dependency | Task 1 |
+| 제한된 입력, full decode 전 dimension probe, 하나의 `ImmutableImage` | Task 2 |
+| 분리된 `Completed`, `Empty`, `Unavailable`, `Failed` 결과 | Task 3 |
+| 제한된 concurrency, timeout, cancellation 구분 | Task 3 |
+| local OCR/detection adapter와 실제 ZXing provider | Task 4 |
+| `WorkReport.Success`는 domain success가 아니라 step completion을 의미 | Task 5 |
+| 한 lane 실패 후에도 sibling result 보존 | Task 5 |
+| aggregate status와 visitor-pass policy 분리 | Task 5 |
+| 안정적인 multipart HTTP 계약과 정제된 error | Task 6 |
+| full success, empty, unavailable, failure, timeout, cancellation test | Tasks 2-7 |
+| bilingual README와 dark SVG/PNG diagram | Task 8 |
+| settings, AGENTS, root README, Examples workflow 등록 | Tasks 1 and 8 |
+| targeted/full validation, actionlint, diagram check, review, lesson, PR | Task 9 |
+| versioned manual과 publish BOM 불변 | Tasks 8 and 9 |
 
-## 4. Predicted risks and controls
+## 4. 예상 위험과 통제
 
-| Risk | Signal | Control | Rerun or rollback point |
+| 위험 | 신호 | 통제 | 재실행 또는 rollback 지점 |
 |---|---|---|---|
-| Compressed and decoded images retained together | heap growth during concurrent requests | `QualifiedImage` does not retain upload bytes | Task 2 qualification tests |
-| Full decode before rejecting excessive dimensions | large allocation before validation | `probeImageDimensions` and metadata fallback precede `immutableImageOf` | Task 2 oversized fixture test |
-| Provider timeout mistaken for external cancellation | caller cancellation returned as lane failure | catch local `TimeoutCancellationException`, rethrow other `CancellationException` | Task 3 cancellation tests |
-| In-process native OCR ignores interruption | timeout expires but native call keeps running | document best-effort interruption; require process/remote isolation for strict SLA | Tasks 3, 4, 8 |
-| One lane failure cancels siblings | missing successful partial results | normalize expected provider failures into `AnalysisResult`, return `WorkReport.Success` | Task 5 partial-result test |
-| Shared context key collision | nondeterministic result replacement | one constant key per lane, write once, extract only after workflow completion | Task 5 context tests |
-| Failed detector treated as empty detector result | unsafe automatic `ALLOW` | retain `Failed`/`Unavailable`; policy decision-table test | Task 5 policy tests |
-| Test uses fake barcode reader only | integration contract not proven | generate QR and execute real `ZxingBarcodeReader` | Tasks 4 and 7 |
-| New example omitted from CI or docs | local success but repository drift | registration search, `./gradlew projects`, `actionlint` | Tasks 8 and 9 |
-| Diagram SVG looks correct but PNG is broken | unreadable README asset | render both, inspect PNG at full size, run diagram validators | Task 8 |
+| compressed image와 decoded image를 함께 보관 | concurrent request 중 heap 증가 | `QualifiedImage`가 upload byte를 보관하지 않음 | Task 2 qualification test |
+| 과도한 dimension을 거절하기 전에 full decode 수행 | validation 전 큰 allocation 발생 | `probeImageDimensions`와 metadata fallback을 `immutableImageOf`보다 먼저 실행 | Task 2 oversized fixture test |
+| provider timeout을 external cancellation으로 오인 | caller cancellation이 lane failure로 반환됨 | local `TimeoutCancellationException`만 catch하고 다른 `CancellationException`은 rethrow | Task 3 cancellation test |
+| in-process native OCR이 interruption을 무시 | timeout이 끝나도 native call이 계속 실행 | best-effort interruption을 문서화하고, 엄격한 SLA에는 process/remote isolation 요구 | Tasks 3, 4, 8 |
+| 한 lane failure가 sibling을 취소 | 성공한 partial result 누락 | 예상 가능한 provider failure를 `AnalysisResult`로 정규화하고 `WorkReport.Success` 반환 | Task 5 partial-result test |
+| shared context key 충돌 | nondeterministic result replacement | lane마다 하나의 constant key를 쓰고, 한 번만 write하며, workflow completion 뒤에만 extract | Task 5 context test |
+| failed detector를 empty detector result로 처리 | 안전하지 않은 automatic `ALLOW` | `Failed`/`Unavailable`을 유지하고 policy decision-table test로 검증 | Task 5 policy test |
+| test가 fake barcode reader만 사용 | integration contract 미검증 | QR을 생성하고 실제 `ZxingBarcodeReader` 실행 | Tasks 4 and 7 |
+| 새 예제가 CI 또는 docs에서 누락 | local success지만 repository drift 발생 | registration search, `./gradlew projects`, `actionlint` | Tasks 8 and 9 |
+| diagram SVG는 정상처럼 보이나 PNG가 깨짐 | README asset 판독 불가 | 둘 다 render하고 full size PNG를 inspect하며 diagram validator 실행 | Task 8 |
 
-## Task 1: Register the example and lock configuration contracts
+## Task 1: 예제 등록과 configuration 계약 고정
 
-**Complexity:** Medium
-**Depends on:** committed design
+**복잡도:** Medium
+**의존성:** committed design
 **Pattern skills:** `bluetape-kotlin-patterns`, `test-driven-development`
-**Rollback point:** remove only the new settings entry and example directory before later tasks depend on them.
+**Rollback 지점:** 이후 task가 의존하기 전에 새 settings entry와 example directory만 제거한다.
 
-**Files:**
+**파일:**
 
 - Modify: `settings.gradle.kts`
 - Modify: `AGENTS.md`
@@ -106,9 +105,9 @@ encode it as PNG, and pin the resulting payload and dimensions.
 - Create: `examples/spring-boot-image-intelligence-api/src/test/resources/junit-platform.properties`
 - Create: `examples/spring-boot-image-intelligence-api/src/test/resources/logback-test.xml`
 
-- [ ] **Step 1: Register the empty Gradle project and add the failing property test**
+- [ ] **Step 1: 빈 Gradle project를 등록하고 실패하는 property test 추가**
 
-Add to `settings.gradle.kts` beside the other Spring Boot examples:
+`settings.gradle.kts`에서 다른 Spring Boot 예제 옆에 추가한다:
 
 ```kotlin
 include("spring-boot-image-intelligence-api")
@@ -116,7 +115,7 @@ project(":spring-boot-image-intelligence-api").projectDir =
     file("examples/spring-boot-image-intelligence-api")
 ```
 
-Create `build.gradle.kts`:
+`build.gradle.kts`를 만든다:
 
 ```kotlin
 plugins {
@@ -153,7 +152,7 @@ springBoot {
 }
 ```
 
-Write tests that construct `ImageIntelligenceProperties` and reject:
+`ImageIntelligenceProperties`를 생성하고 다음 값을 거절하는 test를 작성한다:
 
 ```kotlin
 @Test
@@ -173,20 +172,20 @@ fun `rejects non-positive upload and provider limits`() {
 }
 ```
 
-- [ ] **Step 2: Run the focused test and observe RED**
+- [ ] **Step 2: focused test를 실행하고 RED 확인**
 
-Run:
+실행:
 
 ```bash
 ./gradlew :spring-boot-image-intelligence-api:test \
   --tests '*ImageIntelligencePropertiesTest' --no-daemon
 ```
 
-Expected: Kotlin compilation fails because `ImageIntelligenceProperties` does not exist.
+예상 결과: `ImageIntelligenceProperties`가 없으므로 Kotlin compilation이 실패한다.
 
-- [ ] **Step 3: Implement the application and validated properties**
+- [ ] **Step 3: application과 검증된 properties 구현**
 
-Use `java.time.Duration` so Spring configuration binding remains direct:
+Spring configuration binding을 직접 유지하도록 `java.time.Duration`을 사용한다:
 
 ```kotlin
 @ConfigurationProperties(prefix = "example.image-intelligence")
@@ -221,27 +220,23 @@ data class ImageIntelligenceProperties(
 }
 ```
 
-Create the application entry point with `@SpringBootApplication`. Register properties through
-`@EnableConfigurationProperties(ImageIntelligenceProperties::class)` on a
-`@Configuration(proxyBeanMethods = false)` class.
+`@SpringBootApplication`으로 application entry point를 만든다. `@Configuration(proxyBeanMethods = false)` class에서 `@EnableConfigurationProperties(ImageIntelligenceProperties::class)`를 통해 properties를 등록한다.
 
-Set matching Spring multipart and example defaults in `application.yml`; Spring multipart size
-must not be lower than `max-input-bytes`.
+`application.yml`에 Spring multipart 설정과 example default를 맞춰 둔다. Spring multipart size는 `max-input-bytes`보다 작으면 안 된다.
 
-- [ ] **Step 4: Add required test resources and repository module map**
+- [ ] **Step 4: 필요한 test resource와 repository module map 추가**
 
-Use the same JUnit parallel-disable and Logback test configuration as
-`examples/spring-boot-barcode-api`. Add this row to `AGENTS.md`:
+`examples/spring-boot-barcode-api`와 같은 JUnit parallel-disable 및 Logback test configuration을 사용한다. `AGENTS.md`에 다음 행을 추가한다:
 
 ```markdown
 | `examples/spring-boot-image-intelligence-api` | Non-published Spring Boot OCR, detection, and barcode orchestration example |
 ```
 
-Add `./gradlew :spring-boot-image-intelligence-api:test` to the command section.
+command section에 `./gradlew :spring-boot-image-intelligence-api:test`를 추가한다.
 
-- [ ] **Step 5: Run GREEN and project registration proof**
+- [ ] **Step 5: GREEN과 project registration 증거 확인**
 
-Run:
+실행:
 
 ```bash
 ./gradlew :spring-boot-image-intelligence-api:test \
@@ -249,7 +244,7 @@ Run:
 ./gradlew projects --no-daemon | rg ':spring-boot-image-intelligence-api'
 ```
 
-Expected: property tests pass and the project appears exactly once.
+예상 결과: property test가 통과하고 project가 정확히 한 번 표시된다.
 
 - [ ] **Step 6: Commit**
 
