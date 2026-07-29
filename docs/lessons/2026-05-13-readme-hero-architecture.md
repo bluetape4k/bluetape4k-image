@@ -1,27 +1,26 @@
-# README Hero And Architecture Refresh
+# README 대표 이미지와 아키텍처 개선
 
-## Context
+## 배경
 
-The image repository already had a root architecture diagram but lacked a visual
-entrypoint and explicit project-purpose section.
+이미지 저장소에는 루트 아키텍처 다이어그램이 이미 있었지만, 시각적 진입점과
+프로젝트 목적을 명시하는 섹션이 없었다.
 
-## Decision
+## 결정
 
-Store the generated image-processing workbench in `docs/images/image-workbench.png`
-and add purpose and feature sections ahead of the module table in both README
-locales.
+생성한 이미지 처리 작업대 이미지를 `docs/images/image-workbench.png`에 저장하고,
+두 언어 README의 모듈 표 앞에 목적과 기능 섹션을 추가한다.
 
-## Outcome
+## 결과
 
-The root README now introduces the scrimage, coroutine I/O, libvips, JNI, FFM,
-and benchmark story before the detailed module list.
+루트 README는 상세 모듈 목록보다 먼저 scrimage, 코루틴 I/O, libvips, JNI, FFM,
+벤치마크 구성을 소개한다.
 
-## Verification
+## 검증
 
-- Confirmed the generated asset exists as a PNG under `docs/images`.
-- Verified both README locales reference the shared image path.
+- 생성한 자산이 `docs/images` 아래에 PNG로 존재하는지 확인했다.
+- 두 언어 README가 같은 이미지 경로를 참조하는지 검증했다.
 
-## Future Guidance
+## 향후 지침
 
-Keep native backend constraints in `AGENTS.md`, `CLAUDE.md`, and README
-architecture docs aligned when adding new image modules.
+이미지 모듈을 추가할 때 `AGENTS.md`, `CLAUDE.md`, README 아키텍처 문서의
+네이티브 백엔드 제약을 서로 일치시킨다.

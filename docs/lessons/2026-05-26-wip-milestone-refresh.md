@@ -1,21 +1,21 @@
-# WIP Milestone Refresh
+# WIP 마일스톤 갱신
 
-## Context
+## 배경
 
-The local WIP queue had a newer milestone discovery snapshot.
+로컬 WIP 대기열에 더 최신 마일스톤 조사 스냅샷이 있었다.
 
-## Decision
+## 결정
 
-Publish the WIP refresh as documentation-only repo planning state.
+WIP 갱신을 문서 전용 저장소 계획 상태로 게시한다.
 
-## Outcome
+## 결과
 
-Patch and minor milestone candidates are captured for future image work.
+이후 이미지 작업을 위한 패치 및 마이너 마일스톤 후보를 기록했다.
 
-## Verification
+## 검증
 
-Reviewed the WIP diff; no runtime files changed.
+WIP 차이를 검토했으며 런타임 파일은 변경되지 않았다.
 
-## Future Notes
+## 향후 참고
 
-Keep WIP planning updates separate from feature implementation PRs.
+WIP 계획 갱신은 기능 구현 PR과 분리한다.

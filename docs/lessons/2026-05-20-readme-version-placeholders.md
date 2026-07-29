@@ -1,17 +1,19 @@
-# README Version Placeholders
+# README 버전 자리표시자
 
-## Context
+## 배경
 
-README dependency snippets still used `0.1.0-SNAPSHOT` after the source version moved to `0.1.1-SNAPSHOT`.
+소스 버전을 `0.1.1-SNAPSHOT`으로 올린 뒤에도 README 의존성 예제는
+`0.1.0-SNAPSHOT`을 사용했다.
 
-## Decision
+## 결정
 
-Use `<version>` placeholders for image artifacts in both English and Korean README files.
+영어와 한국어 README 모두 이미지 아티팩트 버전에 `<version>` 자리표시자를 사용한다.
 
-## Verification
+## 검증
 
-Grep README files for stale `0.1.0-SNAPSHOT` artifact examples before publishing.
+게시하기 전에 README 파일에서 오래된 `0.1.0-SNAPSHOT` 아티팩트 예제를 검색한다.
 
-## Future Guidance
+## 향후 지침
 
-Prefer placeholders in dependency snippets so release bumps do not create documentation drift.
+릴리스 버전을 올려도 문서 불일치가 생기지 않도록 의존성 예제에는 자리표시자를
+우선 사용한다.

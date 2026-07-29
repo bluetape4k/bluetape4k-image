@@ -1,29 +1,28 @@
-# 2026-05-20 — Images benchmark charts
+# 2026-05-20 — 이미지 벤치마크 차트
 
-## Context
+## 배경
 
-The images benchmark README used diagram-style visuals for benchmark results.
-Those visuals made performance data harder to interpret than charts.
+이미지 벤치마크 README는 벤치마크 결과를 다이어그램 형태로 표현했다.
+이 시각 자료는 차트보다 성능 데이터를 해석하기 어려웠다.
 
-## Decision
+## 결정
 
-Add static benchmark charts under `docs/images/readme-charts/` and link them from
-the English/Korean README files and benchmark result note. Preserve SVG sources
-next to PNG files for later reuse.
+`docs/images/readme-charts/` 아래에 정적 벤치마크 차트를 추가하고 영어/한국어
+README와 벤치마크 결과 기록에서 링크한다. 나중에 재사용할 수 있도록 SVG 원본을
+PNG 파일 옆에 보관한다.
 
-## Outcome
+## 결과
 
-Resize, encode, and filter benchmark results are now shown as chart images. The
-encode benchmark description was also corrected to state that it uses a 4K photo
-image.
+크기 조정, 인코딩, 필터 벤치마크 결과를 차트 이미지로 보여 준다. 인코딩
+벤치마크 설명도 4K 사진 이미지를 사용한다고 정확히 수정했다.
 
-## Verification
+## 검증
 
 - `xmllint --noout docs/images/readme-charts/*.svg`
 - `identify docs/images/readme-charts/*.png`
-- Manual visual spot-check of all three image benchmark charts.
+- 이미지 벤치마크 차트 세 개를 모두 육안으로 표본 검사했다.
 
-## Future
+## 향후 지침
 
-Use chart visuals for numeric benchmark results. Reserve architecture diagrams
-for structural relationships.
+수치형 벤치마크 결과에는 차트를 사용한다. 구조적 관계를 설명할 때만 아키텍처
+다이어그램을 사용한다.

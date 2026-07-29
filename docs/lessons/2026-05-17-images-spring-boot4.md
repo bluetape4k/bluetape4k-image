@@ -1,7 +1,7 @@
-# Lessons: images-spring-boot4 (Issue #5)
+# 교훈: images-spring-boot4 (Issue #5)
 
-Date: 2026-05-17
-Branch: feat/images-spring-boot4
+날짜: 2026-05-17
+브랜치: feat/images-spring-boot4
 
 ## 요약
 
@@ -17,7 +17,7 @@ Spring Boot 4 + AWS S3/CDN 자동 구성 통합 모듈(`images-spring-boot4`)을
 Spring Boot 4에서는 별도 모듈 `spring-boot-health`로 이전됐고 패키지도 변경됐다.
 
 - **이전**: `org.springframework.boot.actuate.health.ReactiveHealthIndicator`
-- **이후**: `org.springframework.boot.health.contributor.ReactiveHealthIndicator` (in `spring-boot-health`)
+- **이후**: `org.springframework.boot.health.contributor.ReactiveHealthIndicator` (`spring-boot-health`에 포함)
 
 **해결**:
 - `build.gradle.kts`에 `compileOnly(libs.spring.boot.health)` 추가
@@ -44,7 +44,7 @@ compileOnly(libs.jakarta.annotation.api)
 ### 해결: 중첩 `@Configuration` + `@ConditionalOnClass(name=[String])` 패턴
 
 ```kotlin
-// ❌ 위험: outer class에 compileOnly 타입 직접 참조
+// ❌ 위험: 외부 클래스에서 compileOnly 타입을 직접 참조
 @AutoConfiguration
 class ImagesStorageAutoConfiguration {
     @Bean fun s3ImageStorage(ops: S3Operations): ImageStorage = ...  // NoClassDefFoundError 위험
@@ -54,7 +54,7 @@ class ImagesStorageAutoConfiguration {
 @AutoConfiguration
 class ImagesStorageAutoConfiguration {
     @Configuration(proxyBeanMethods = false)
-    @ConditionalOnClass(name = ["io.bluetape4k.aws.spring.s3.S3Operations"])  // string FQCN!
+    @ConditionalOnClass(name = ["io.bluetape4k.aws.spring.s3.S3Operations"])  // 문자열 FQCN
     class S3StorageConfiguration {
         @Bean fun s3ImageStorage(ops: S3Operations): ImageStorage = ...
     }
@@ -62,7 +62,7 @@ class ImagesStorageAutoConfiguration {
 ```
 
 **규칙**:
-- `afterName` (string) 사용, `after` (KClass) 금지 — optional 모듈의 KClass 참조는 `NoClassDefFoundError`
+- `afterName`(문자열) 사용, `after`(KClass) 금지 — 선택 모듈의 KClass 참조는 `NoClassDefFoundError`를 일으킬 수 있음
 - `@ConditionalOnClass(name=[...])` 사용, `@ConditionalOnClass(value=[...])` 금지
 
 ---
@@ -86,16 +86,16 @@ alias(libs.plugins.spring.boot) apply false
 
 ---
 
-## 4. S3Operations 실제 API 확인
+## 4. `S3Operations` 실제 API 확인
 
-S3Operations (bluetape4k-aws-spring-boot)의 메서드명이 pseudocode와 달랐다:
+`S3Operations`(`bluetape4k-aws-spring-boot`)의 메서드명이 의사 코드와 달랐다:
 
 - `putObject()` → `upload()`
 - `getObject()` → `download()`
 - `headObject()` 없음 → `exists()` 구현에 `listPage` 사용
 - `presignGet/presignPut` → `URL` 반환, `URI`로 변환 필요
 
-**교훈**: 실제 소스를 먼저 읽고 구현해야 한다. SDK pseudocode를 그대로 사용하면 컴파일 오류.
+**교훈**: 실제 소스를 먼저 읽고 구현해야 한다. SDK 의사 코드를 그대로 사용하면 컴파일 오류가 발생한다.
 
 ---
 
@@ -131,9 +131,9 @@ CloudFront `privateKeyPem`이 `/actuator/configprops` 엔드포인트에 노출�
 
 ---
 
-## 7. 3-R Plan Review에서 발견된 주요 이슈 (3 rounds)
+## 7. 3-R 계획 검토에서 발견한 주요 이슈(3회)
 
-| Round | 발견 | 해결 |
+| 회차 | 발견 | 해결 |
 |-------|------|------|
 | 1 | 13 HIGH: FQCN 오류, ReactiveHealthIndicator 위치, LocalImageStorage 생성자, S3Exception 격리, BPP 메트릭, URL→URI, SanitizingFunction, SDK timeout, 테스트 누락 | 모두 스펙/플랜 반영 |
 | 2 | 2 HIGH: S3PreSignedUrlSigner 생성자 불일치, nullable bucket 처리 | 반영 |
@@ -146,7 +146,7 @@ CloudFront `privateKeyPem`이 `/actuator/configprops` 엔드포인트에 노출�
 - [ ] `spring-boot-health` 별도 의존성 확인 (`ReactiveHealthIndicator` 위치 확인)
 - [ ] `jakarta.annotation-api` compileOnly 명시
 - [ ] `kotlin-spring` 플러그인 루트에 `apply false` 선언
-- [ ] 모든 optional 의존성 → 중첩 `@Configuration` + `@ConditionalOnClass(name=[String])`
-- [ ] `afterName` 사용 (string), `after` (KClass) 금지
-- [ ] `@ConditionalOnProperty` 모든 auto-config 클래스에 적용 (entrypoint만 아님)
-- [ ] SanitizingFunction으로 민감 속성 마스킹
+- [ ] 모든 선택 의존성 → 중첩 `@Configuration` + `@ConditionalOnClass(name=[String])`
+- [ ] `afterName` 사용(문자열), `after`(KClass) 금지
+- [ ] `@ConditionalOnProperty`를 모든 자동 구성 클래스에 적용(진입점에만 적용하지 않음)
+- [ ] `SanitizingFunction`으로 민감 속성 마스킹

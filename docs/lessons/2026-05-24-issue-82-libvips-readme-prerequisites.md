@@ -1,33 +1,34 @@
-# Issue 82 libvips README Prerequisites
+# Issue 82 libvips README 사전 조건
 
-## Context
+## 배경
 
-Issue #82 asked for user-facing README setup to match the current libvips,
-JVips, and Java 25 FFM runtime requirements.
+Issue #82는 사용자용 README 설정을 현재 libvips, JVips, Java 25 FFM 런타임
+요구사항과 일치시키도록 요청했다.
 
-## Decision
+## 결정
 
-Keep root README setup concise, but make native boundaries explicit: the pure JVM
-`images` module needs no native library, `images-vips-*` modules need libvips,
-and `images-vips-java25` consumers must provide `--enable-native-access=ALL-UNNAMED`
-as a JVM startup option. Correct examples must place that flag before `-jar`.
+루트 README 설정은 간결하게 유지하되 네이티브 경계를 명시한다. 순수 JVM
+`images` 모듈에는 네이티브 라이브러리가 필요 없고, `images-vips-*` 모듈에는
+libvips가 필요하다. `images-vips-java25` 사용자는 JVM 시작 옵션으로
+`--enable-native-access=ALL-UNNAMED`를 제공해야 한다. 올바른 예제에서는 이
+플래그를 `-jar`보다 앞에 배치해야 한다.
 
-## Outcome
+## 결과
 
-Updated English and Korean root README setup/troubleshooting and aligned the
-Java 25 module README examples for command-line, Spring Boot/container launch,
-IDE VM options, and Homebrew macOS library lookup.
+영어와 한국어 루트 README의 설정/문제 해결 내용을 갱신하고, 명령줄,
+Spring Boot/컨테이너 실행, IDE VM 옵션, Homebrew macOS 라이브러리 검색에 대한
+Java 25 모듈 README 예제를 일치시켰다.
 
-## Verification
+## 검증
 
-- Compared README claims with `images-vips-java21/build.gradle.kts` and
+- README 설명을 `images-vips-java21/build.gradle.kts` 및
   `images-vips-java25/build.gradle.kts`.
-- `git diff --check` passed.
-- `rg` found no remaining `java -jar ... --enable-native-access` examples in
-  the touched README files.
+- `git diff --check`를 통과했다.
+- 변경한 README 파일에서 `rg`로 검사한 결과
+  `java -jar ... --enable-native-access` 예제가 남아 있지 않았다.
 
-## Future Guidance
+## 향후 지침
 
-Document FFM native access as a JVM launch concern, not an application property.
-For macOS Homebrew libvips failures, mention `DYLD_LIBRARY_PATH=/opt/homebrew/lib`
-alongside `vips --version`.
+FFM 네이티브 접근은 애플리케이션 속성이 아니라 JVM 실행 문제로 문서화한다.
+macOS Homebrew libvips 오류에는 `vips --version`과 함께
+`DYLD_LIBRARY_PATH=/opt/homebrew/lib`을 안내한다.
