@@ -1,4 +1,4 @@
-# Step 2-R Spec Review — Issue 172 Spring Boot OCR Example
+# Step 2-R 설계 검토 — Issue 172 Spring Boot OCR 예제
 
 Reviewed spec:
 `docs/superpowers/specs/2026-06-06-issue-172-spring-boot-ocr-example-design.md`
@@ -8,31 +8,31 @@ Reference loaded:
 
 ## Multi-Perspective Findings
 
-| Perspective | P0 | P1 | P2 | P3 | Notes |
+| 관점 | P0 | P1 | P2 | P3 | 참고 |
 |---|---:|---:|---:|---:|---|
-| Kotlin developer | 0 | 0 | 0 | 0 | Endpoint/service/test shape follows existing Spring Boot example and `images-ocr` contracts. |
-| Security | 0 | 0 | 0 | 0 | Initial P1 for caller-controlled `tessdataPath` was fixed by moving it to app configuration. |
-| Ops/SRE | 0 | 0 | 0 | 0 | Native OCR failure is separated as 503 and real Tesseract requirements are documented. |
-| User/caller | 0 | 0 | 0 | 0 | Upload API, language parsing, native requirements, and non-goals are explicit. |
+| Kotlin 개발자 | 0 | 0 | 0 | 0 | Endpoint/service/test shape follows existing Spring Boot example and `images-ocr` contracts. |
+| 보안 | 0 | 0 | 0 | 0 | Initial P1 for caller-controlled `tessdataPath` was fixed by moving it to app configuration. |
+| 운영/SRE | 0 | 0 | 0 | 0 | Native OCR failure is separated as 503 and real Tesseract requirements are documented. |
+| 사용자/호출자 | 0 | 0 | 0 | 0 | Upload API, language parsing, native requirements, and non-goals are explicit. |
 
-## Local 7-Tier Review
+## 로컬 7계층 검토
 
-| Tier | P0 | P1 | P2 | P3 | Evidence |
+| 계층 | P0 | P1 | P2 | P3 | 근거 |
 |---|---:|---:|---:|---:|---|
-| 1 Security | 0 | 0 | 0 | 0 | No file-path endpoint; no caller-controlled tessdata path; multipart validation required. |
-| 2 Ops/SRE | 0 | 0 | 0 | 0 | 400 vs 503 failure semantics defined; no production lifecycle implied. |
-| 3 Structural impact | 0 | 0 | 0 | 0 | New example module keeps existing examples isolated and uses current registration pattern. |
-| 4 Kotlin/API quality | 0 | 0 | 0 | 0 | Uses `OcrEngine`, `OcrOptions`, `suspendExtractText`, constructor injection, and fake engine tests. |
-| 5 Tests/types/silent failure | 0 | 0 | 0 | 0 | MockMvc test scope covers success, validation failure, and OCR failure without native OCR. |
-| 6 Performance/stability | 0 | 0 | 0 | 0 | Blocking multipart byte read and OCR call are specified behind coroutine dispatcher boundaries. |
-| 7 Docs/release/evidence | 0 | 0 | 0 | 0 | README locale set, diagrams, root docs, AGENTS, Gradle, and Examples workflow are acceptance criteria. |
+| 1 보안 | 0 | 0 | 0 | 0 | file-path endpoint는 없고 caller-controlled tessdata path도 없다. multipart validation이 필요하다. |
+| 2 운영/SRE | 0 | 0 | 0 | 0 | 400 vs 503 failure semantics defined; no production lifecycle implied. |
+| 3 구조 영향 | 0 | 0 | 0 | 0 | New example module keeps existing examples isolated and uses current registration pattern. |
+| 4 Kotlin/API 품질 | 0 | 0 | 0 | 0 | Uses `OcrEngine`, `OcrOptions`, `suspendExtractText`, constructor injection, and fake engine tests. |
+| 5 테스트/타입/조용한 실패 | 0 | 0 | 0 | 0 | MockMvc test scope covers success, validation failure, and OCR failure without native OCR. |
+| 6 성능/안정성 | 0 | 0 | 0 | 0 | Blocking multipart byte read and OCR call are specified behind coroutine dispatcher boundaries. |
+| 7 문서/릴리스/근거 | 0 | 0 | 0 | 0 | README locale set, diagrams, root docs, AGENTS, Gradle, and Examples workflow are acceptance criteria. |
 
-## Convergence
+## 수렴 결과
 
-| Finding | Severity | Resolution |
+| 발견 사항 | Severity | 해결 |
 |---|---|---|
 | Request-level `tessdataPath` would teach caller-controlled host path configuration. | P1 | Replaced with `example.ocr.tessdata-path` application property and explicit no request path rule. |
 
-Final integrated counts: P0 = 0, P1 = 0, P2 = 0, P3 = 0.
+최종 통합 건수: P0 = 0, P1 = 0, P2 = 0, P3 = 0.
 
-Gate verdict: PASS.
+게이트 판정: PASS.

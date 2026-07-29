@@ -1,55 +1,55 @@
-# Issue #1 OCR Step 6-R Review
+# Issue #1 OCR Step 6-R 검토
 
-- Issue: #1
-- Branch: `feat/issue-1-ocr-support`
-- Workflow: `$bluetape4k-workflow` Type A / `$bluetape4k-full-feature`
-- Scope: `images-ocr`, root README locales, root diagrams/charts, module registration, CI, Nightly, repo-local guidance.
-- Reviewer: Codex local review with `bluetape4k-code-patterns`, `bluetape4k-diagram`, and Step 6-R references.
+- 이슈: #1
+- 브랜치: `feat/issue-1-ocr-support`
+- 워크플로: `$bluetape4k-workflow` Type A / `$bluetape4k-full-feature`
+- 범위: `images-ocr`, 루트 README locale, 루트 다이어그램/차트, 모듈 등록, CI, Nightly, repo-local guidance.
+- 검토자:  Codex 로컬 검토. 사용: `bluetape4k-code-patterns`, `bluetape4k-diagram`, 및 Step 6-R 참고 자료.
 
-## Baseline Finding
+## 기준 발견 사항
 
-| Priority | File | Area | Finding | Action |
+| 우선순위 | 파일 | 영역 | 발견 사항 | 조치 |
 |---|---|---|---|---|
-| P1 | `images-ocr/src/main/kotlin/io/bluetape4k/images/ocr/TesseractOcrEngine.kt` | Public API / dependency boundary | The first implementation exposed a Tess4J `ITesseract` factory in the public constructor while Tess4J is an `implementation` dependency. | Replaced it with private primary constructor, public no-arg constructor, internal `TesseractClient` adapter, and `@JvmSynthetic` test factory. |
+| P1 | `images-ocr/src/main/kotlin/io/bluetape4k/images/ocr/TesseractOcrEngine.kt` | 공개 API / 의존성 경계 | 첫 구현은 Tess4J가 `implementation` 의존성인데도 공개 constructor에서 Tess4J `ITesseract` factory를 노출했다. | Replaced it with private primary constructor, public no-arg constructor, internal `TesseractClient` adapter, and `@JvmSynthetic` test factory. |
 
-## Tier Findings
+## 계층별 발견 사항
 
-| Tier | Area | P0 | P1 | P2 | P3 | Result |
+| 계층 | 영역 | P0 | P1 | P2 | P3 | 결과 |
 |---|---|---:|---:|---:|---:|---|
-| 1 | Security | 0 | 0 | 0 | 0 | No secrets, credentials, unsafe defaults, injection surface, or unsafe deserialization found. Error messages sanitize native paths. |
-| 2 | Ops/SRE reliability | 0 | 0 | 0 | 0 | Native runtime/tessdata failures are wrapped with actionable configuration messages. Per-call Tess4J instance avoids shared mutable native state. |
-| 3 | Structural impact | 0 | 0 | 0 | 0 | Module depends on `:bluetape4k-images`; no reverse dependency or cross-module API break. Public constructor surface no longer exposes Tess4J. |
-| 4 | Kotlin code quality | 0 | 0 | 0 | 0 | KDoc is English, models are serializable, validation uses `require*`, suspend API uses `withContext(Dispatchers.IO)`, no `!!` or deprecated Exposed imports. |
-| 5 | Tests/types/silent failure | 0 | 0 | 0 | 0 | Options, enum mapping, serialization, delegation, per-call configuration, sanitized errors, dispatcher dispatch, and pre-start cancellation are tested. Native/container tests are gated. |
-| 6 | Performance/stability | 0 | 0 | 0 | 0 | Blocking OCR is isolated to the blocking API or `Dispatchers.IO`. No unbounded retry/buffer/wait added. Container test is gated and not always-on. |
-| 7 | Docs/release/evidence | 0 | 0 | 0 | 0 | README/README.ko, module READMEs, AGENTS, diagrams, module registration, CI, Nightly, and verification evidence were updated. |
+| 1 | 보안 | 0 | 0 | 0 | 0 | secret, credential, unsafe default, injection surface, unsafe deserialization은 발견되지 않았다. 오류 메시지는 native path를 sanitize한다. |
+| 2 | 운영/SRE 안정성 | 0 | 0 | 0 | 0 | native runtime/tessdata 실패는 조치 가능한 구성 메시지로 감싼다. 호출별 Tess4J instance는 shared mutable native state를 피한다. |
+| 3 | 구조 영향 | 0 | 0 | 0 | 0 | 모듈은 `:bluetape4k-images`에 의존하며 reverse dependency나 cross-module API break는 없다. 공개 constructor surface는 더 이상 Tess4J를 노출하지 않는다. |
+| 4 | Kotlin 코드 품질 | 0 | 0 | 0 | 0 | KDoc은 영어이고 model은 serializable이며 validation은 `require*`를 사용한다. suspend API는 `withContext(Dispatchers.IO)`를 사용하고 `!!`나 deprecated Exposed import는 없다. |
+| 5 | 테스트/타입/조용한 실패 | 0 | 0 | 0 | 0 | option, enum mapping, serialization, delegation, 호출별 구성, sanitized error, dispatcher dispatch, 시작 전 취소를 테스트한다. native/container test는 gate로 보호된다. |
+| 6 | 성능/안정성 | 0 | 0 | 0 | 0 | blocking OCR은 blocking API 또는 `Dispatchers.IO`에 격리된다. unbounded retry/buffer/wait는 추가하지 않았다. container test는 gated이며 always-on이 아니다. |
+| 7 | 문서/릴리스/근거 | 0 | 0 | 0 | 0 | README/README.ko, module README, AGENTS, diagram, module registration, CI, Nightly, verification evidence를 갱신했다. |
 
-## Pattern And Impact Checks
+## 패턴과 영향 점검
 
-- CodeGraph was attempted earlier in the session, but the repository graph was empty (`Files: 0`, never updated), so review used source inspection, Gradle module evidence, GNO, and targeted grep.
-- GNO docs query found the closest module-registration precedent: `docs/superpowers/plans/2026-05-24-issue-4-images-captcha-plan.md`.
-- GNO GitHub query found image repo precedents: issue #31 and PR #131.
-- Production/test concurrency quick scan: `GlobalScope|runBlocking|Thread.sleep|delay|synchronized|@Synchronized|runCatching` returned 0 matches in `images-ocr`.
-- Kotlin hazard scan: `!!|SqlExpressionBuilder.eq|assertThrows|kotlin.test.assertFailsWith|invoking .*shouldThrow` returned 0 matches in `images-ocr`.
-- Public classfile check: `javap ... TesseractOcrEngine | grep tess4j || true` returned no `tess4j` signature.
+- 세션 앞부분에서 CodeGraph를 시도했지만 repository graph가 비어 있었다(`Files: 0`, 갱신된 적 없음). 그래서 source inspection, Gradle module evidence, GNO, targeted grep으로 검토했다.
+- GNO docs query는 가장 가까운 모듈 등록 선례를 찾았다: `docs/superpowers/plans/2026-05-24-issue-4-images-captcha-plan.md`.
+- GNO GitHub query는 image repo 선례를 찾았다: issue #31 and PR #131.
+- production/test concurrency quick scan: `GlobalScope|runBlocking|Thread.sleep|delay|synchronized|@Synchronized|runCatching` `images-ocr`에서 0개 일치.
+- Kotlin hazard scan: `!!|SqlExpressionBuilder.eq|assertThrows|kotlin.test.assertFailsWith|invoking .*shouldThrow` `images-ocr`에서 0개 일치.
+- public classfile check: `javap ... TesseractOcrEngine | grep tess4j || true` `tess4j` signature가 없음을 반환.
 
-## Diagram Review
+## 다이어그램 검토
 
-- Latest `$bluetape4k-diagram` skill was reread and applied after the user correction.
-- Font discovery: `fc-match "Architects Daughter"` resolved `ArchitectsDaughter-Regular.ttf`; `fc-match "Comic Mono"` resolved `ComicMono-Bold.ttf`.
-- XML gate: `xmllint --noout` passed for changed SVG assets.
+- 사용자 수정 이후 최신 `-diagram` skill을 다시 읽고 적용했다.
+- font discovery: `fc-match "아키텍처s Daughter"` resolved `아키텍처sDaughter-Regular.ttf`; `fc-match "Comic Mono"` resolved `ComicMono-Bold.ttf`.
+- XML gate: `xmllint --noout` 변경된 SVG asset에서 통과.
 - README image links: `missing=0`.
 - SVG/PNG pairs: `missing_png=0`.
-- Forbidden font/SVG embed scan: 0 matches for README SVG embeds, `Inter`, `Arial`, `Helvetica`, old `13x13`, and tiny `3.9x3.9` arrowheads.
-- Graphviz evidence exists for the changed root Image Architecture, `images-ocr` Architecture, and `images-ocr` Class Diagram: `.dot`, `.plain`, `*-graphviz.svg`, and `*-graphviz.png`.
-- Rendered PNGs inspected individually:
+- 금지 font/SVG embed scan: 0 matches for README SVG embeds, `Inter`, `Arial`, `Helvetica`, old `13x13`, and tiny `3.9x3.9` arrowheads.
+- 변경된 root Image 아키텍처ure, `images-ocr` 아키텍처ure, `images-ocr` Class Diagram에 대한 Graphviz evidence가 있다: `.dot`, `.plain`, `*-graphviz.svg`, `*-graphviz.png`.
+- 렌더링된 PNG를 개별 검수했다:
   - `docs/images/readme-diagrams/root-readme-overview-01.png`
   - `docs/images/readme-charts/root-readme-module-chart-01.png`
   - `docs/images/readme-diagrams/bluetape4k-image-architecture-01.png`
   - `docs/images/readme-diagrams/images-ocr-architecture-01.png`
   - `docs/images/readme-diagrams/images-ocr-class-diagram-01.png`
   - `docs/images/readme-diagrams/images-ocr-sequence-diagram-01.png`
-- Overview geometry gate:
+- overview geometry gate:
 
 ```text
 geometryGate file=docs/images/readme-diagrams/root-readme-overview-01.svg
@@ -68,22 +68,22 @@ geometryGate file=docs/images/readme-diagrams/images-ocr-sequence-diagram-01.svg
 nodes=5 routes=7 segments=8 badEndpointAngle=0 badBends=0 interiorCrossings=0 marginImbalance=balanced titleGap=24 labelsOk=True
 ```
 
-## Validation Evidence
+## 검증 근거
 
-| Command | Result |
+| 명령 | 결과 |
 |---|---|
 | `./gradlew -q projects --console=plain` | Passed; `:bluetape4k-images-ocr` is registered. |
 | `./gradlew :bluetape4k-images-ocr:compileKotlin :bluetape4k-images-ocr:compileTestKotlin :bluetape4k-images-ocr:test --console=plain` | Passed; 13 tests, 10 executed, 3 skipped. |
-| `./gradlew :bluetape4k-images-ocr:build --console=plain` | Passed; includes Kover verify. |
+| `./gradlew :bluetape4k-images-ocr:build --console=plain` | PASS; Kover verify 포함. |
 | `./gradlew :bluetape4k-images-ocr:koverXmlReport --console=plain` | Passed; `images-ocr/build/reports/kover/report.xml` exists. |
 | `actionlint` | Passed. |
 | `git diff --check` | Passed. |
-| Diagram asset validation | Passed; XML, README links, PNG pairs, font discovery, forbidden font/embed grep, and geometry gates passed. |
+| 다이어그램 asset 검증 | PASS; XML, README link, PNG pair, font discovery, forbidden font/embed grep, geometry gate 통과. |
 | `:bluetape4k-images-ocr:detekt` | Not available in this project; task lookup failed with `task 'detekt' not found`. |
 | `command -v tesseract` | `tesseract_not_found`; native OCR tests skipped locally. |
 | `command -v docker` | `docker_not_found`; container OCR tests skipped locally. |
 
-## Convergence
+## 수렴 결과
 
-- Final gate: `P0 = 0`, `P1 = 0`.
-- Remaining risk: native/container OCR tests are configured for CI/Nightly but were not run locally because this machine lacks Tesseract and Docker.
+- 최종 게이트: `P0 = 0`, `P1 = 0`.
+- 남은 위험: native/container OCR 테스트는 CI/Nightly에 구성돼 있지만, 이 머신에 Tesseract와 Docker가 없어 로컬에서는 실행하지 않았다.

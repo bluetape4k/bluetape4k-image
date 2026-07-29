@@ -1,19 +1,19 @@
-# Issue #175 OCR Native CI Review
+# Issue #175 OCR Native CI 검토
 
-- Issue: [#175](https://github.com/bluetape4k/bluetape4k-image/issues/175)
-- Scope: CI/Nightly OCR runtime strategy, README locale pair, research and
+- 이슈: [#175](https://github.com/bluetape4k/bluetape4k-image/issues/175)
+- 범위: CI/Nightly OCR runtime strategy, README locale pair, research and
   lesson artifacts.
 
-## Pre-PR Review
+## PR 전 검토
 
-### Findings
+### 발견 사항
 
 - P0: 0
 - P1: 0
 - P2: 0
 - P3: 0
 
-### Evidence Checked
+### 근거 Checked
 
 - #174 failed CI logs for `ubuntu-24.04` host-native OCR failures.
 - `dependencyInsight` for Tess4J/Lept4J runtime versions.
@@ -29,9 +29,6 @@
 - `./gradlew :bluetape4k-images-ocr:test --tests 'io.bluetape4k.images.ocr.OcrQuickstartExampleTest' -Docr.enabled=true --rerun-tasks --no-daemon`:
   PASS, 1 passing.
 
-### Verdict
+### 판정
 
-APPROVE. The chosen strategy is narrower and more maintainable than
-source-building native OCR libraries in every CI run. The acceptance criteria are
-met by documenting the strategy, aligning CI/Nightly behavior, and preserving
-host-native OCR as a local/manual check.
+APPROVE. 선택한 전략은 매 CI 실행마다 native OCR library를 source-build하는 방식보다 좁고 유지보수하기 쉽다. 전략을 문서화하고 CI/Nightly 동작을 정렬하며 host-native OCR을 local/manual check로 보존하므로 acceptance criteria를 충족한다.
