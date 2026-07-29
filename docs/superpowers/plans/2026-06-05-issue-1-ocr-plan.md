@@ -1,61 +1,59 @@
-# Issue #1 OCR Implementation Plan
+# Issue #1 OCR 구현 계획
 
-- Issue: [#1](https://github.com/bluetape4k/bluetape4k-image/issues/1)
-- Spec:
+- 이슈: [#1](https://github.com/bluetape4k/bluetape4k-image/issues/1)
+- 명세:
   `docs/superpowers/specs/2026-06-05-issue-1-ocr-design.md`
-- Research:
+- 조사:
   `docs/superpowers/research/2026-06-05-issue-1-ocr-research-refresh.md`
-- Spec review:
+- 명세 리뷰:
   `docs/review/2026-06-05-issue-1-ocr-spec-review.md`
-- Follow-up:
+- 후속:
   [#169](https://github.com/bluetape4k/bluetape4k-image/issues/169)
 
-## Execution Rules
+## 실행 규칙
 
-- Keep all source changes inside the feature worktree.
-- Do not start Step 4 implementation until Step 3-R passes and spec/plan
-  artifacts are committed.
-- Keep `bluetape4k-images` free of Tess4J/Tesseract dependencies.
-- Keep public KDoc, README English text, GitHub artifacts, and commit messages in
-  English.
-- Keep user-facing Korean README and final chat reporting in Korean.
-- Load and apply `$bluetape4k-code-patterns` before Step 4 implementation and
-  Step 6-R code review; record the relevant checks in the Step DoD report.
-- Use `$bluetape4k-diagram` gates for changed root README visual assets.
-- If PaddleOCR or a more complex OCR runtime becomes necessary, stop and use
-  follow-up issue #169 instead of expanding #1.
+- 모든 source 변경은 feature worktree 안에 유지한다.
+- Step 3-R이 통과하고 spec/plan artifact가 commit되기 전에는 Step 4 구현을 시작하지 않는다.
+- `bluetape4k-images`에는 Tess4J/Tesseract dependency를 추가하지 않는다.
+- 당시 계획 기준으로 public KDoc, README English text, GitHub artifact, commit message는
+  English로 유지한다.
+- user-facing Korean README와 최종 chat report는 Korean으로 작성한다.
+- Step 4 구현과 Step 6-R code review 전에 `$bluetape4k-code-patterns`를 load/apply하고,
+  관련 check를 Step DoD report에 기록한다.
+- root README visual asset이 바뀌면 `$bluetape4k-diagram` gate를 사용한다.
+- PaddleOCR 또는 더 복잡한 OCR runtime이 필요해지면 #1 범위를 넓히지 말고 멈춘 뒤
+  follow-up issue #169를 사용한다.
 
-## Task Plan
+## 작업 계획
 
 | Task | Scope | Files |
 |---|---|---|
-| T1 Module registration | Add published OCR module to Gradle settings and version catalog | `settings.gradle.kts`, `gradle/libs.versions.toml`, `images-ocr/build.gradle.kts` |
-| T2 API models | Add OCR options/result/enums/exceptions with English KDoc and serializable data classes | `images-ocr/src/main/kotlin/io/bluetape4k/images/ocr/*.kt` |
-| T3 Engine and extensions | Implement Tess4J-backed engine and `ImmutableImage` sync/suspend extensions | `images-ocr/src/main/kotlin/io/bluetape4k/images/ocr/*.kt` |
-| T4 Unit tests | Add fake-engine and model tests that pass without native OCR | `images-ocr/src/test/kotlin/...` |
-| T5 Native tests | Add host-native Tess4J tests gated by `ocr.enabled` | `images-ocr/src/test/kotlin/...` |
-| T6 Testcontainers tests | Add containerized Tesseract CLI smoke gated by `ocr.container.enabled` | `images-ocr/src/test/kotlin/...` |
-| T7 Module docs | Add OCR README locale set and test resources | `images-ocr/README.md`, `images-ocr/README.ko.md`, `src/test/resources/*` |
-| T8 Root docs/guidance | Register OCR in root README locale set and repo-local AGENTS | `README.md`, `README.ko.md`, `AGENTS.md` |
-| T9 Root diagrams/charts | Update root README visual assets to include OCR | `docs/images/readme-diagrams/*`, `docs/images/readme-charts/*` |
-| T10 CI/Nightly | Add OCR path filters, jobs, coverage artifact, and status needs | `.github/workflows/ci.yml`, `.github/workflows/nightly-tests.yml` |
-| T11 Verification | Run targeted Gradle, docs, diagram, and workflow checks | commands below |
-| T12 Review prep | Save code review artifact, lessons, PR body DoD | `docs/review/*`, `docs/lessons/*`, PR body |
+| T1 Module registration | OCR published module을 Gradle settings와 version catalog에 추가 | `settings.gradle.kts`, `gradle/libs.versions.toml`, `images-ocr/build.gradle.kts` |
+| T2 API models | OCR options/result/enums/exceptions를 English KDoc과 serializable data class로 추가 | `images-ocr/src/main/kotlin/io/bluetape4k/images/ocr/*.kt` |
+| T3 Engine and extensions | Tess4J-backed engine과 `ImmutableImage` sync/suspend extension 구현 | `images-ocr/src/main/kotlin/io/bluetape4k/images/ocr/*.kt` |
+| T4 Unit tests | native OCR 없이 통과하는 fake-engine/model test 추가 | `images-ocr/src/test/kotlin/...` |
+| T5 Native tests | `ocr.enabled`로 gate되는 host-native Tess4J test 추가 | `images-ocr/src/test/kotlin/...` |
+| T6 Testcontainers tests | `ocr.container.enabled`로 gate되는 containerized Tesseract CLI smoke 추가 | `images-ocr/src/test/kotlin/...` |
+| T7 Module docs | OCR README locale set과 test resource 추가 | `images-ocr/README.md`, `images-ocr/README.ko.md`, `src/test/resources/*` |
+| T8 Root docs/guidance | root README locale set과 repo-local AGENTS에 OCR 등록 | `README.md`, `README.ko.md`, `AGENTS.md` |
+| T9 Root diagrams/charts | OCR을 포함하도록 root README visual asset 갱신 | `docs/images/readme-diagrams/*`, `docs/images/readme-charts/*` |
+| T10 CI/Nightly | OCR path filter, job, coverage artifact, status need 추가 | `.github/workflows/ci.yml`, `.github/workflows/nightly-tests.yml` |
+| T11 Verification | targeted Gradle, docs, diagram, workflow check 실행 | 아래 command |
+| T12 Review prep | code review artifact, lesson, PR body DoD 저장 | `docs/review/*`, `docs/lessons/*`, PR body |
 
-## Implementation Details
+## 구현 세부 사항
 
 ### T1 Module registration
 
-- Include `bluetape4k-images-ocr` and map it to `images-ocr`.
-- Add `tess4j = "5.19.0"` and `libs.tess4j`.
-- Let BOM constraints pick up the new published module through existing
-  `rootProject.subprojects` logic.
-- Verify with `./gradlew -q projects`.
+- `bluetape4k-images-ocr`를 include하고 `images-ocr`에 mapping한다.
+- `tess4j = "5.19.0"`과 `libs.tess4j`를 추가한다.
+- 새 published module은 기존 `rootProject.subprojects` logic을 통해 BOM constraint에 포함되게 한다.
+- `./gradlew -q projects`로 확인한다.
 
 ### T2/T3 API and engine
 
-- Create package `io.bluetape4k.images.ocr`.
-- Implement:
+- `io.bluetape4k.images.ocr` package를 생성한다.
+- 다음을 구현한다.
   - `OcrEngine`
   - `OcrOptions`
   - `OcrResult`
@@ -65,97 +63,96 @@
   - `TesseractOcrEngine`
   - `ImmutableImage.extractText`
   - `ImmutableImage.suspendExtractText`
-- `TesseractOcrEngine` creates a fresh `Tesseract` per call.
-- `TesseractOcrEngine` does not share mutable Tess4J client state across calls;
-  each call owns its configured `Tesseract` instance for the duration of OCR.
-- `suspendExtractText` wraps blocking OCR in `Dispatchers.IO`.
-- Exceptions must not expose secrets or full local paths beyond the explicit
-  configured tessdata path error context.
+- `TesseractOcrEngine`은 call마다 fresh `Tesseract`를 생성한다.
+- `TesseractOcrEngine`은 mutable Tess4J client state를 call 사이에 공유하지 않는다. 각 call은
+  OCR duration 동안 자신이 configure한 `Tesseract` instance를 소유한다.
+- `suspendExtractText`는 blocking OCR을 `Dispatchers.IO`로 감싼다.
+- exception은 명시적으로 configure된 tessdata path error context를 넘어서 secret이나 전체 local
+  path를 노출하지 않아야 한다.
 
 ### T4/T5/T6 tests
 
-- Add `junit-platform.properties` and `logback-test.xml`.
-- Unit tests:
-  - options validation
+- `junit-platform.properties`와 `logback-test.xml`을 추가한다.
+- Unit test:
+  - option validation
   - enum value mapping
   - fake engine delegation
-  - suspend delegation with `runTest`
-  - suspend cancellation propagation before/around the blocking boundary
-  - serializable models
-  - per-call engine lifecycle/configuration isolation
-- Native tests:
+  - `runTest` 기반 suspend delegation
+  - blocking boundary 전후의 suspend cancellation propagation
+  - serializable model
+  - call별 engine lifecycle/configuration isolation
+- Native test:
   - `@EnabledIfSystemProperty(named = "ocr.enabled", matches = "true")`
   - generated English fixture OCR
   - missing language/datapath failure message
-  - language-pack availability for `eng`, `kor`, `jpn`
-- Container tests:
+  - `eng`, `kor`, `jpn` language-pack availability
+- Container test:
   - `@EnabledIfSystemProperty(named = "ocr.container.enabled", matches = "true")`
-  - test-owned Dockerfile, no unverified OCR image
+  - test-owned Dockerfile, unverified OCR image 없음
   - CLI OCR English smoke
-  - `tesseract --list-langs` contains `eng`, `kor`, `jpn`
+  - `tesseract --list-langs`에 `eng`, `kor`, `jpn` 포함
 
-If local Docker remains unavailable, record local container verification as
-skipped and rely on GitHub CI for `ocr.container.enabled=true`.
+local Docker를 계속 사용할 수 없으면 local container verification은 skipped로 기록하고
+`ocr.container.enabled=true`는 GitHub CI evidence에 의존한다.
 
 ### T7/T8 docs
 
 - Root README/README.ko:
-  - add OCR adoption lane
-  - add module row
-  - add requirements row for Tesseract/traineddata
-  - add install dependency
-  - add usage example
-  - add troubleshooting for `TESSDATA_PREFIX`, missing languages, and native
-    library loading
-  - add module README links
+  - OCR adoption lane 추가
+  - module row 추가
+  - Tesseract/traineddata requirements row 추가
+  - install dependency 추가
+  - usage example 추가
+  - `TESSDATA_PREFIX`, missing languages, native library loading troubleshooting 추가
+  - module README link 추가
 - Module README/README.ko:
-  - describe installation and language data setup
-  - show sync and suspend examples
-  - explain `OcrOptions`
-  - explain native and container test gates
+  - installation과 language data setup 설명
+  - sync/suspend example 제시
+  - `OcrOptions` 설명
+  - native/container test gate 설명
 - Repo-local `AGENTS.md`:
-  - add module row and command examples
-  - note OCR native tests are gated and sequential.
+  - module row와 command example 추가
+  - OCR native test는 gated이며 sequential하게 실행한다고 기록
 
 ### T9 diagram work
 
-- Update existing root README diagram/chart assets in place.
-- Keep every README image as PNG and every PNG paired with SVG.
-- Keep or regenerate Graphviz `.dot`, `.plain`, and `-graphviz.svg/png` for the
-  connector-heavy root overview.
-- Use English labels.
-- Validate:
-  - SVG XML parses.
-  - PNG exists for each changed SVG.
-  - README does not embed local SVG assets.
-  - README image links resolve.
-  - Rendered PNGs are inspected directly.
-  - Geometry/source drift checks from `$bluetape4k-diagram` are recorded.
+- 기존 root README diagram/chart asset을 제자리에서 갱신한다.
+- 모든 README image는 PNG로 유지하고 모든 PNG는 SVG pair를 가진다.
+- connector-heavy root overview에는 Graphviz `.dot`, `.plain`, `-graphviz.svg/png`를
+  유지하거나 regenerate한다.
+- label은 English를 사용한다.
+- 다음을 검증한다.
+  - SVG XML parsing.
+  - 변경된 SVG마다 PNG 존재.
+  - README가 local SVG asset을 embed하지 않음.
+  - README image link resolution.
+  - rendered PNG 직접 inspection.
+  - `$bluetape4k-diagram`의 geometry/source drift check 기록.
 
 ### T10 CI/Nightly
 
 - CI:
-  - add `images-ocr` output/filter/job
-  - install Tesseract packages and Noto CJK fonts
-  - run `tesseract --list-langs` preflight
-  - run `:bluetape4k-images-ocr:test -Docr.enabled=true -Docr.container.enabled=true`
-  - add test results artifact and status need
+  - `images-ocr` output/filter/job 추가
+  - Tesseract package와 Noto CJK font 설치
+  - `tesseract --list-langs` preflight 실행
+  - `:bluetape4k-images-ocr:test -Docr.enabled=true -Docr.container.enabled=true` 실행
+  - test results artifact와 status need 추가
 - Nightly full:
-  - add OCR job and `coverage-images-ocr`
-  - include OCR job in status and coverage aggregation needs
-- Run `actionlint` after workflow edits.
+  - OCR job과 `coverage-images-ocr` 추가
+  - status와 coverage aggregation need에 OCR job 포함
+- workflow 수정 후 `actionlint`를 실행한다.
 
-## Validation Commands
+## 검증 명령
 
-Run in this order unless Step 3-R changes the plan:
+Step 3-R이 계획을 바꾸지 않는 한 다음 순서로 실행한다.
 
 1. `./gradlew -q projects`
 2. `./gradlew :bluetape4k-images-ocr:compileKotlin :bluetape4k-images-ocr:compileTestKotlin --console=plain`
 3. `./gradlew :bluetape4k-images-ocr:test --console=plain`
 4. `./gradlew :bluetape4k-images-ocr:detekt --console=plain`
-5. If local Tesseract is available:
+5. local Tesseract가 있으면:
    `./gradlew :bluetape4k-images-ocr:test -Docr.enabled=true --console=plain`
-6. If local Docker is available:
+6. local Docker가 있으면:
    `./gradlew :bluetape4k-images-ocr:test -Docr.container.enabled=true --console=plain`
 7. `./gradlew :bluetape4k-images-ocr:build --console=plain`
 8. `./gradlew :bluetape4k-images-ocr:koverXmlReport --console=plain`
@@ -166,17 +163,15 @@ Run in this order unless Step 3-R changes the plan:
 13. `actionlint`
 14. `rg "\\\\'" .github/workflows` must return no hits.
 15. `git diff --check`
-16. Step 6-R 7-tier review with `$bluetape4k-code-patterns` reapplied and
-    `P0 = 0`, `P1 = 0`.
+16. `$bluetape4k-code-patterns`를 다시 적용한 Step 6-R 7-tier review, `P0 = 0`, `P1 = 0`.
 
-## Rollback Plan
+## 롤백 계획
 
-- Remove `images-ocr/`.
-- Remove `bluetape4k-images-ocr` from `settings.gradle.kts`, README locale set,
-  AGENTS, CI, Nightly, and diagrams.
-- Remove `tess4j` from `gradle/libs.versions.toml`.
-- Re-run `./gradlew -q projects`, `actionlint`, diagram validation, and
-  `git diff --check`.
+- `images-ocr/` 제거.
+- `settings.gradle.kts`, README locale set, AGENTS, CI, Nightly, diagram에서
+  `bluetape4k-images-ocr` 제거.
+- `gradle/libs.versions.toml`에서 `tess4j` 제거.
+- `./gradlew -q projects`, `actionlint`, diagram validation, `git diff --check`를 다시 실행한다.
 
 ## Step 3 DoD
 
