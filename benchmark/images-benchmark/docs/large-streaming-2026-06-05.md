@@ -1,22 +1,22 @@
-# Superseded: Large Image Streaming Pipeline Benchmark (2026-06-05)
+# 대체됨: 대용량 이미지 스트리밍 파이프라인 벤치마크 (2026-06-05)
 
-> **Historical evidence only.** This report used an asymmetric grayscale
-> transform and must not support current recommendations. See the refreshed
-> [2026-07-10 report](large-streaming-2026-07-10.md). The raw JSON below is
-> retained unchanged for historical reproducibility.
+> **역사적 근거 전용.** 이 보고서는 비대칭 회색조 변환을 사용했으므로 현재 권장
+> 사항의 근거로 사용하면 안 된다. 갱신된
+> [2026-07-10 보고서](large-streaming-2026-07-10.md)를 참고한다. 아래 원시 JSON은
+> 역사적 재현성을 위해 변경하지 않고 보존한다.
 
-This report adds full load-transform-write pipeline evidence for milestone
-`0.3.0` large-file and OCR-preprocessing work.
+이 보고서는 milestone `0.3.0`의 대용량 파일 및 OCR 전처리 작업을 위해 전체
+load-transform-write 파이프라인 근거를 추가한다.
 
-## Environment
+## 실행 환경
 
-| Item | Value |
+| 항목 | 값 |
 |------|-------|
 | Host | macOS arm64 |
 | JVM | GraalVM Java 25.0.3 |
-| Primary command | `JAVA_HOME=$(/usr/libexec/java_home -v 25) ./gradlew :bluetape4k-images-benchmark:benchmarkLargeStreamingBenchmark -Pvips.impl=java25 --console=plain` |
-| Primary raw JSON | [`raw/benchmark-large-streaming-2026-06-05-macos-java25.json`](raw/benchmark-large-streaming-2026-06-05-macos-java25.json) |
-| Allocation addendum | [`raw/benchmark-large-streaming-jmh-gc-2026-06-05-macos-java25.json`](raw/benchmark-large-streaming-jmh-gc-2026-06-05-macos-java25.json) |
+| 주요 명령 | `JAVA_HOME=$(/usr/libexec/java_home -v 25) ./gradlew :bluetape4k-images-benchmark:benchmarkLargeStreamingBenchmark -Pvips.impl=java25 --console=plain` |
+| 주요 원시 JSON | [`raw/benchmark-large-streaming-2026-06-05-macos-java25.json`](raw/benchmark-large-streaming-2026-06-05-macos-java25.json) |
+| 할당 부록 | [`raw/benchmark-large-streaming-jmh-gc-2026-06-05-macos-java25.json`](raw/benchmark-large-streaming-jmh-gc-2026-06-05-macos-java25.json) |
 
 ```bash
 JAVA_HOME=$(/usr/libexec/java_home -v 25) \
@@ -33,76 +33,73 @@ JAVA25=$(/usr/libexec/java_home -v 25)
   -rff benchmark/images-benchmark/docs/raw/benchmark-large-streaming-jmh-gc-2026-06-05-macos-java25.json
 ```
 
-> The benchmark source and primary execution path use `kotlinx-benchmark`.
-> On JVM, `kotlinx-benchmark` uses JMH as its backend. The Gradle DSL does not
-> expose JMH profilers, so managed heap allocation and GC counters are recorded
-> in the separate JMH GC profiler addendum.
+> 벤치마크 소스와 주요 실행 경로는 `kotlinx-benchmark`를 사용한다. JVM에서
+> `kotlinx-benchmark`는 JMH를 백엔드로 사용한다. Gradle DSL은 JMH profiler를
+> 노출하지 않으므로 관리 힙 할당과 GC counter는 별도 JMH GC profiler 부록에
+> 기록한다.
 
-## Fixtures
+## 픽스처
 
-The benchmark generates deterministic JPEG fixtures during JMH setup. Large
-binary files are not committed to the repository.
+벤치마크는 JMH 설정 중 결정적인 JPEG 픽스처를 생성한다. 큰 바이너리 파일은
+저장소에 커밋하지 않는다.
 
-| Scenario | Generated dimensions | Transform | Role |
+| 시나리오 | 생성 크기 | 변환 | 역할 |
 |----------|----------------------|-----------|------|
-| `large-photo` | 4032x3024 | resize to 1920x1440, grayscale, JPEG encode | Large natural-photo-like pipeline |
-| `ocr-document` | 2480x3508 | resize to 1240x1754, grayscale, JPEG encode | Document/OCR-preprocessing-like pipeline |
+| `large-photo` | 4032x3024 | resize to 1920x1440, grayscale, JPEG encode | 큰 자연 사진형 파이프라인 |
+| `ocr-document` | 2480x3508 | resize to 1240x1754, grayscale, JPEG encode | 문서/OCR 전처리형 파이프라인 |
 
-## Results
+## 결과
 
-AverageTime is lower-is-better. This is a local comparable snapshot, not a
-production ranking.
+AverageTime은 낮을수록 좋다. 이는 로컬 비교 스냅숏이지 운영 순위가 아니다.
 
-### Scrimage Rows
+### Scrimage 행
 
-| Boundary | `large-photo` | `ocr-document` | Interpretation |
+| 경계 | `large-photo` | `ocr-document` | 해석 |
 |----------|---------------|----------------|----------------|
-| `ByteArray` | 224.04 ms/op | 143.64 ms/op | In-memory baseline; convenient but stages compressed input bytes. |
-| `Path` | 223.19 ms/op | 145.13 ms/op | Comparable with other blocking Scrimage boundaries in this run. |
-| `InputStream` / `OutputStream` | 221.64 ms/op | 148.39 ms/op | Fastest large-photo Scrimage row; useful for caller-owned stream boundaries. |
-| Okio `Source` / `Sink` | 222.00 ms/op | 145.59 ms/op | Comparable with stream/path; not a latency win. |
-| Suspended file source/sink | 254.95 ms/op | 170.69 ms/op | Slower because Scrimage still bridges to blocking streams. |
+| `ByteArray` | 224.04 ms/op | 143.64 ms/op | 인메모리 기준선이다. 편리하지만 압축 입력 byte를 staging한다. |
+| `Path` | 223.19 ms/op | 145.13 ms/op | 이 실행의 다른 블로킹 Scrimage 경계와 비슷하다. |
+| `InputStream` / `OutputStream` | 221.64 ms/op | 148.39 ms/op | 가장 빠른 `large-photo` Scrimage 행이며, 호출자 소유 stream 경계에 유용하다. |
+| Okio `Source` / `Sink` | 222.00 ms/op | 145.59 ms/op | stream/path와 비슷하며 지연 시간 이점은 아니다. |
+| Suspended file source/sink | 254.95 ms/op | 170.69 ms/op | Scrimage가 여전히 블로킹 stream으로 bridge하므로 더 느리다. |
 
-### libvips Java 25 FFM Rows
+### libvips Java 25 FFM 행
 
-| Boundary | `large-photo` | `ocr-document` | Interpretation |
+| 경계 | `large-photo` | `ocr-document` | 해석 |
 |----------|---------------|----------------|----------------|
-| `ByteArray` | 23.65 ms/op | 15.38 ms/op | Much faster than Scrimage, but still stages compressed input bytes. |
-| `Path` | 7.13 ms/op | 5.47 ms/op | Best row in this run; vips can decode directly from a file path. |
-| `InputStream` / `OutputStream` | 23.99 ms/op | 15.59 ms/op | Similar to `ByteArray` because the vips stream path reads bounded bytes. |
+| `ByteArray` | 23.65 ms/op | 15.38 ms/op | Scrimage보다 훨씬 빠르지만 여전히 압축 입력 byte를 staging한다. |
+| `Path` | 7.13 ms/op | 5.47 ms/op | 이 실행에서 가장 좋은 행이다. vips가 파일 경로에서 직접 디코딩할 수 있다. |
+| `InputStream` / `OutputStream` | 23.99 ms/op | 15.59 ms/op | vips stream 경로가 제한된 byte를 읽기 때문에 `ByteArray`와 비슷하다. |
 
-### Managed Heap Allocation Addendum
+### 관리 힙 할당 부록
 
-Allocation is `gc.alloc.rate.norm` from the JMH GC profiler. Values are managed
-heap allocation only; libvips native memory must still be checked with native
-profiling tools when native lifetime is the concern.
+할당량은 JMH GC profiler의 `gc.alloc.rate.norm`이다. 값은 관리 힙 할당만 나타낸다.
+네이티브 생명주기가 관심사라면 libvips 네이티브 메모리는 별도 native profiling
+도구로 확인해야 한다.
 
-| Boundary | `large-photo` allocation | `ocr-document` allocation | GC observation |
+| 경계 | `large-photo` 할당 | `ocr-document` 할당 | GC 관찰 |
 |----------|--------------------------|---------------------------|----------------|
-| Scrimage `ByteArray` | 226,613,134 B/op (216.12 MiB/op) | 172,450,359 B/op (164.46 MiB/op) | 5-6 young GCs per run |
-| Scrimage `Path` | 226,896,636 B/op (216.39 MiB/op) | 172,320,109 B/op (164.34 MiB/op) | Similar to `ByteArray` |
-| Scrimage `InputStream` / `OutputStream` | 227,932,451 B/op (217.37 MiB/op) | 173,361,261 B/op (165.33 MiB/op) | Similar to `Path` and Okio |
-| Scrimage Okio `Source` / `Sink` | 227,950,815 B/op (217.39 MiB/op) | 173,368,561 B/op (165.34 MiB/op) | No managed-allocation win |
-| Scrimage suspended source/sink | 229,457,449 B/op (218.83 MiB/op) | 174,171,066 B/op (166.10 MiB/op) | Slightly more allocation plus bridge overhead |
-| vips `ByteArray` | 576,111 B/op (0.55 MiB/op) | 361,436 B/op (0.34 MiB/op) | Near-zero GC |
-| vips `Path` | 569,114 B/op (0.54 MiB/op) | 359,858 B/op (0.34 MiB/op) | Near-zero GC |
-| vips `InputStream` / `OutputStream` | 2,601,939 B/op (2.48 MiB/op) | 1,467,317 B/op (1.40 MiB/op) | Low allocation, one GC count in this run |
+| Scrimage `ByteArray` | 226,613,134 B/op (216.12 MiB/op) | 172,450,359 B/op (164.46 MiB/op) | 실행당 young GC 5-6회 |
+| Scrimage `Path` | 226,896,636 B/op (216.39 MiB/op) | 172,320,109 B/op (164.34 MiB/op) | `ByteArray`와 비슷함 |
+| Scrimage `InputStream` / `OutputStream` | 227,932,451 B/op (217.37 MiB/op) | 173,361,261 B/op (165.33 MiB/op) | `Path` 및 Okio와 비슷함 |
+| Scrimage Okio `Source` / `Sink` | 227,950,815 B/op (217.39 MiB/op) | 173,368,561 B/op (165.34 MiB/op) | 관리 할당 이점 없음 |
+| Scrimage suspended source/sink | 229,457,449 B/op (218.83 MiB/op) | 174,171,066 B/op (166.10 MiB/op) | 할당이 약간 더 많고 bridge overhead가 있음 |
+| vips `ByteArray` | 576,111 B/op (0.55 MiB/op) | 361,436 B/op (0.34 MiB/op) | 거의 0에 가까운 GC |
+| vips `Path` | 569,114 B/op (0.54 MiB/op) | 359,858 B/op (0.34 MiB/op) | 거의 0에 가까운 GC |
+| vips `InputStream` / `OutputStream` | 2,601,939 B/op (2.48 MiB/op) | 1,467,317 B/op (1.40 MiB/op) | 낮은 할당, 이 실행에서 GC count 1회 |
 
-## Recommendation
+## 권장 사항
 
-For #165, position Okio and suspended boundaries as lifecycle and integration
-features, not as latency, throughput, or managed-allocation optimizations for
-Scrimage. The large-file API should still avoid unnecessary compressed
-`ByteArray` staging where a `Path`, `InputStream`, `Source`, or caller-owned
-sink boundary already exists, but README/API wording should be explicit that
-Scrimage decode/encode remains blocking internally and still dominates decoded
-image heap allocation.
+#165에서는 Okio와 suspended 경계를 Scrimage의 지연 시간, 처리량, 관리 할당 최적화가
+아니라 생명주기와 통합 기능으로 설명한다. 대용량 파일 API는 `Path`, `InputStream`,
+`Source`, 호출자 소유 sink 경계가 이미 있는 경우 불필요한 압축 `ByteArray` staging을
+피해야 한다. 다만 README/API 문구에는 Scrimage 디코딩/인코딩이 내부적으로 여전히
+블로킹이며, 디코딩된 이미지의 힙 할당을 계속 지배한다는 점을 명시해야 한다.
 
-For #1, use the document/OCR-like row as preprocessing evidence: large document
-resize/encode is feasible in the benchmark lane, but OCR implementation should
-prefer an optional OCR module and keep native/model dependencies isolated.
+#1에서는 문서/OCR형 행을 전처리 근거로 사용한다. 큰 문서의 resize/encode는
+벤치마크 lane에서 가능하지만, OCR 구현은 선택적 OCR 모듈을 선호하고 네이티브/모델
+의존성을 격리해야 한다.
 
-For performance-sensitive large-image transforms, libvips remains the primary
-recommendation. In this Java 25 FFM run, the `Path` pipeline was the strongest
-large-file row on both latency and managed heap allocation, because the Java
-wrapper work stays under 1 MiB/op while the native backend owns the transform.
+성능에 민감한 대용량 이미지 변환에서는 libvips가 여전히 주요 권장 경로다. 이 Java
+25 FFM 실행에서 `Path` 파이프라인은 지연 시간과 관리 힙 할당 모두에서 가장 강한
+대용량 파일 행이었다. Java wrapper 작업은 1 MiB/op 아래에 머물고 변환은 네이티브
+백엔드가 맡기 때문이다.

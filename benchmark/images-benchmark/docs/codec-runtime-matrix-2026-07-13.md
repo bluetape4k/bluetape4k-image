@@ -1,46 +1,43 @@
-# Codec Runtime Matrix — 2026-07-13
+# 코덱 런타임 매트릭스 — 2026-07-13
 
-Issue [#208](https://github.com/bluetape4k/bluetape4k-image/issues/208)
-records a reproducible codec matrix for the libvips Java 21 JNI and Java 25
-FFM backends. The accepted run is
-`issue-208-20260713-macos-arm64-09` at Git SHA
-`999b1e87f764a175d9887af9972ed41644e37f9e`.
+Issue [#208](https://github.com/bluetape4k/bluetape4k-image/issues/208)은
+libvips Java 21 JNI와 Java 25 FFM 백엔드의 재현 가능한 코덱 매트릭스를 기록한다.
+승인된 실행은 Git SHA `999b1e87f764a175d9887af9972ed41644e37f9e`의
+`issue-208-20260713-macos-arm64-09`다.
 
-## Status legend
+## 상태 범례
 
-- `MEASURED`: capability checks passed and both latency and allocation evidence
-  were accepted.
-- `N/A`: the runtime could not be evaluated on this host; this is not a zero or
-  a failed benchmark.
-- `UNSUPPORTED`: the selected runtime was available, but the requested codec or
-  direction was not supported.
-- `SKIPPED`: an eligible cell was intentionally not executed and therefore has
-  no performance result.
+- `MEASURED`: 기능 검사를 통과했으며 지연 시간과 할당량 근거가 모두 승인되었다.
+- `N/A`: 이 호스트에서 런타임을 평가할 수 없었다. 0이나 벤치마크 실패를 뜻하지
+  않는다.
+- `UNSUPPORTED`: 선택한 런타임은 사용할 수 있지만 요청한 코덱이나 방향을
+  지원하지 않는다.
+- `SKIPPED`: 실행 가능한 셀을 의도적으로 실행하지 않아 성능 결과가 없다.
 
-## Result summary
+## 결과 요약
 
-| Backend | Runtime | Host result | Matrix cells |
+| 백엔드 | 런타임 | 호스트 결과 | 매트릭스 셀 |
 |---------|---------|-------------|--------------|
-| `java25` | FFM | `MEASURED` | 16 of 16 |
-| `java21` | JVips JNI | `N/A` — `CAPABILITY_UNKNOWN`: JNI binary architecture is unavailable | 16 of 16 terminal `N/A` cells |
+| `java25` | FFM | `MEASURED` | 16개 중 16개 |
+| `java21` | JVips JNI | `N/A` — `CAPABILITY_UNKNOWN`: JNI 바이너리 아키텍처를 확인할 수 없음 | 16개 모두 최종 `N/A` 셀 |
 
-![Codec runtime latency](../../../docs/images/readme-charts/images-benchmark-codec-runtime-latency-chart-01.png)
+![코덱 런타임 지연 시간](../../../docs/images/readme-charts/images-benchmark-codec-runtime-latency-chart-01.png)
 
-![Codec encode output size](../../../docs/images/readme-charts/images-benchmark-codec-output-size-chart-01.png)
+![코덱 인코딩 출력 크기](../../../docs/images/readme-charts/images-benchmark-codec-output-size-chart-01.png)
 
-`encode` measures JPEG input to the named target codec. `decode` measures the
-named codec input to JPEG output. AverageTime is in milliseconds per operation
-and lower is better. Allocation is JMH `gc.alloc.rate.norm` managed-heap bytes
-per operation; it does not include native libvips memory. Output bytes are a
-codec/options snapshot, not a visual-quality ranking.
+`encode`는 JPEG 입력을 지정한 대상 코덱으로 변환하는 작업을 측정한다. `decode`는
+지정한 코덱 입력을 JPEG로 출력하는 작업을 측정한다. AverageTime은 작업당
+밀리초이며 낮을수록 좋다. 할당량은 JMH `gc.alloc.rate.norm`으로 측정한 작업당
+관리 힙 바이트 수이며 libvips 네이티브 메모리는 포함하지 않는다. 출력 바이트
+수는 특정 코덱과 옵션의 스냅샷이며 시각적 품질 순위가 아니다.
 
-## Java 25 FFM measurements
+## Java 25 FFM 측정값
 
-### Profile image
+### 프로필 이미지
 
-The profile scenario center-crops `homer.jpg` to `512 x 512`.
+프로필 시나리오는 `homer.jpg` 중앙을 `512 x 512`로 자른다.
 
-| Format | Direction | AverageTime (ms/op) | Managed allocation (B/op) | Input (B) | Output (B) |
+| 형식 | 방향 | AverageTime (ms/op) | 관리 힙 할당량 (B/op) | 입력 (B) | 출력 (B) |
 |--------|-----------|---------------------|---------------------------|-----------|------------|
 | PNG | encode | 5.945 | 456,466 | 32,205 | 225,576 |
 | PNG | decode | 2.156 | 69,491 | 257,323 | 32,181 |
@@ -51,11 +48,11 @@ The profile scenario center-crops `homer.jpg` to `512 x 512`.
 | HEIC | encode | 60.350 | 132,465 | 32,205 | 55,961 |
 | HEIC | decode | 7.681 | 70,063 | 55,961 | 32,200 |
 
-### Web photo
+### 웹 사진
 
-The web-photo scenario center-crops `cafe.jpg` to `1920 x 1080`.
+웹 사진 시나리오는 `cafe.jpg` 중앙을 `1920 x 1080`으로 자른다.
 
-| Format | Direction | AverageTime (ms/op) | Managed allocation (B/op) | Input (B) | Output (B) |
+| 형식 | 방향 | AverageTime (ms/op) | 관리 힙 할당량 (B/op) | 입력 (B) | 출력 (B) |
 |--------|-----------|---------------------|---------------------------|-----------|------------|
 | PNG | encode | 80.132 | 6,984,121 | 429,306 | 3,485,741 |
 | PNG | decode | 18.825 | 868,771 | 4,106,689 | 428,521 |
@@ -66,48 +63,49 @@ The web-photo scenario center-crops `cafe.jpg` to `1920 x 1080`.
 | HEIC | encode | 339.555 | 1,521,700 | 429,306 | 754,672 |
 | HEIC | decode | 73.038 | 871,753 | 754,672 | 429,295 |
 
-These values describe this host, libvips build, fixture recipe, codec options,
-and short JMH protocol. They do not establish a universal codec ranking. In
-particular, AVIF and HEIC are incubating APIs and output sizes cannot be
-compared as quality-equivalent without a separate visual-quality study.
+이 값은 해당 호스트, libvips 빌드, 픽스처 생성법, 코덱 옵션, 짧은 JMH 실행
+절차에만 해당한다. 보편적인 코덱 순위를 뜻하지 않는다. 특히 AVIF와 HEIC는
+실험 단계 API이며, 별도의 시각 품질 연구 없이 출력 크기를 동일 품질 기준으로
+비교할 수 없다.
 
-## Fixture provenance
+## 픽스처 출처
 
-Both committed source photographs are converted with the deterministic
-`cover-center-crop-v1` recipe. Stable fixtures use JPEG quality 85 without
-progressive output, PNG compression 4, and lossy WebP quality 85/method 4.
+커밋된 원본 사진 두 장은 결정적 `cover-center-crop-v1` 방식으로 변환한다. 안정
+픽스처에는 progressive 출력 없는 JPEG 품질 85, PNG 압축 4, 손실 WebP 품질
+85/method 4를 사용한다.
 
-| Scenario | Source | Source shape / bytes | Derived shape | Stable input SHA-256 |
+| 시나리오 | 원본 | 원본 크기 / 바이트 | 파생 크기 | 안정 입력 SHA-256 |
 |----------|--------|----------------------|---------------|---------------------|
 | `web-photo` | `cafe.jpg` | `4032 x 3024` / 3,061,079 B | `1920 x 1080` | JPEG `5b6e2e599160…`; PNG `51948986bd7a…`; WebP `8d26bd6c6c0c…` |
 | `profile` | `homer.jpg` | `1248 x 702` / 83,973 B | `512 x 512` | JPEG `6bca6f3aa1f7…`; PNG `ae31030716d9…`; WebP `36893de3ea32…` |
 
-AVIF and HEIC inputs were produced only after capability checks by Java 25 FFM
-with libvips `8.18.4`. Their hashes and magic signatures are recorded in the
-[experimental fixture manifest](raw/issue-208-20260713-macos-arm64-09/fixtures/experimental-java25/manifest.json).
+AVIF와 HEIC 입력은 libvips `8.18.4`를 사용하는 Java 25 FFM 기능 검사를 통과한
+뒤에만 생성했다. 해시와 매직 시그니처는
+[실험 픽스처 매니페스트](raw/issue-208-20260713-macos-arm64-09/fixtures/experimental-java25/manifest.json)에
+기록되어 있다.
 
-## Environment and preflight
+## 실행 환경과 사전 검사
 
-| Fact | Java 21 JNI | Java 25 FFM |
+| 항목 | Java 21 JNI | Java 25 FFM |
 |------|-------------|-------------|
-| OS / architecture | macOS `26.5.1`, arm64, Apple M5 | same host |
+| OS / 아키텍처 | macOS `26.5.1`, arm64, Apple M5 | 동일 호스트 |
 | JDK | Oracle `21.0.11+9-LTS-jvmci-23.1-b92` | Oracle `25.0.3+9-LTS-jvmci-25.1-b19` |
-| Native access | disabled | enabled |
-| Loader path | available | available |
-| Git state | clean, `999b1e87f764…` | clean, `999b1e87f764…` |
-| Preflight | `N/A` | `ELIGIBLE` |
+| 네이티브 접근 | 비활성화 | 활성화 |
+| 로더 경로 | 사용 가능 | 사용 가능 |
+| Git 상태 | clean, `999b1e87f764…` | clean, `999b1e87f764…` |
+| 사전 검사 | `N/A` | `ELIGIBLE` |
 
-The Java 21 preflight stopped before JNI initialization because the JNI binary
-architecture could not be established for this arm64 host. Rerun Java 21 on a
-host with a compatible JVips JNI binary and keep the same fixture recipe and
-JMH protocol; do not reinterpret these `N/A` cells as Java 25 wins.
+이 arm64 호스트에서 JNI 바이너리 아키텍처를 확인할 수 없어 Java 21 사전 검사는
+JNI 초기화 전에 중단되었다. 호환되는 JVips JNI 바이너리가 있는 호스트에서 같은
+픽스처 생성법과 JMH 실행 절차로 Java 21을 다시 실행해야 한다. 이 `N/A` 셀을
+Java 25의 우위로 해석해서는 안 된다.
 
-## Reproduction protocol
+## 재현 절차
 
-Run native/JNI/FFM steps sequentially from a clean checkout. Use a new run ID;
-accepted evidence directories are immutable. The repo-local serialization pin
-is a temporary issue #208 exception until the governed alias is available in a
-release-train catalog tag.
+깨끗한 checkout에서 native/JNI/FFM 단계를 순차 실행한다. 새 실행 ID를 사용해야
+하며 승인된 근거 디렉터리는 변경할 수 없다. 저장소 로컬 직렬화 버전 고정은
+관리되는 별칭을 릴리스 트레인 카탈로그 태그에서 사용할 수 있을 때까지 적용하는
+임시 issue #208 예외다.
 
 ```bash
 RUN_ID=issue-208-YYYYMMDD-host-01
@@ -133,7 +131,7 @@ JAVA_HOME=$(/usr/libexec/java_home -v 25) ./gradlew \
   -Pcodec.matrix.runId="$RUN_ID" -Pvips.impl=java25 \
   --console=plain
 
-# Run each experimental task only when the matching capability cells are ELIGIBLE.
+# 대응하는 기능 셀이 ELIGIBLE일 때만 각 실험 작업을 실행한다.
 JAVA_HOME=$(/usr/libexec/java_home -v 25) ./gradlew \
   :bluetape4k-images-benchmark:benchmarkCodecMatrixAvifBenchmark \
   :bluetape4k-images-benchmark:benchmarkCodecMatrixHeicBenchmark \
@@ -146,10 +144,10 @@ JAVA_HOME=$(/usr/libexec/java_home -v 25) ./gradlew \
   --console=plain
 ```
 
-For allocation, launch the staged JMH jar in one fresh JVM each for stable,
-AVIF, and HEIC. Absolute manifest paths are required. The accepted run used
-both experimental directions because all matching capability cells were
-`ELIGIBLE`; omit any pattern that is not eligible on a rerun.
+할당량을 측정할 때는 안정 코덱, AVIF, HEIC마다 준비된 JMH jar를 새 JVM 하나에서
+실행한다. 매니페스트는 절대 경로로 지정해야 한다. 승인된 실행에서는 대응하는
+모든 기능 셀이 `ELIGIBLE`이어서 두 실험 방향을 모두 사용했다. 다시 실행할 때
+적합하지 않은 패턴은 제외한다.
 
 ```bash
 JAVA25=$(/usr/libexec/java_home -v 25)/bin/java
@@ -184,7 +182,7 @@ profile_codec_matrix \
   allocation-java25-heic.json
 ```
 
-Finally promote only a complete accepted run:
+마지막으로 완전하게 승인된 실행만 승격한다.
 
 ```bash
 ./gradlew :bluetape4k-images-benchmark:finalizeCodecMatrixEvidence \
@@ -192,16 +190,16 @@ Finally promote only a complete accepted run:
   --console=plain
 ```
 
-## Evidence ledger
+## 근거 원장
 
-The accepted [run manifest](raw/issue-208-20260713-macos-arm64-09/run-manifest.json)
-contains 32 terminal cells and SHA-256/byte-count links for 11 artifacts:
+승인된 [실행 매니페스트](raw/issue-208-20260713-macos-arm64-09/run-manifest.json)에는
+최종 상태 셀 32개와 아티팩트 11개의 SHA-256/바이트 수 링크가 포함되어 있다.
 
-- Java 21 and Java 25 preflight reports
-- stable and experimental fixture manifests
-- stable, AVIF, and HEIC latency JSON
-- stable, AVIF, and HEIC GC-profiler JSON
-- Java 25 size evidence
+- Java 21과 Java 25 사전 검사 보고서
+- 안정 및 실험 픽스처 매니페스트
+- 안정, AVIF, HEIC 지연 시간 JSON
+- 안정, AVIF, HEIC GC 프로파일러 JSON
+- Java 25 크기 근거
 
-The complete immutable directory is
-[`docs/raw/issue-208-20260713-macos-arm64-09/`](raw/issue-208-20260713-macos-arm64-09/).
+전체 변경 불가 디렉터리는
+[`docs/raw/issue-208-20260713-macos-arm64-09/`](raw/issue-208-20260713-macos-arm64-09/)다.

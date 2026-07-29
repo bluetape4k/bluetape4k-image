@@ -1,11 +1,11 @@
-# Storage Backend Benchmark (Issue #204)
+# 스토리지 백엔드 벤치마크 (Issue #204)
 
-This suite measures the `ImageStorage` adapter boundary, not a production S3
-network. The local lane uses `LocalImageStorage` with a temporary filesystem
-root. The S3 lane uses `S3ImageStorage` backed by an in-memory `S3Operations`
-double, so it is deterministic and requires no credentials.
+이 스위트는 운영 S3 네트워크가 아니라 `ImageStorage` 어댑터 경계를 측정한다.
+로컬 경로는 임시 파일 시스템 루트와 `LocalImageStorage`를 사용한다. S3 경로는
+메모리 내 `S3Operations` 대역을 사용하는 `S3ImageStorage`로 구성하므로 실행
+결과가 결정적이며 자격 증명이 필요하지 않다.
 
-## Commands
+## 실행 명령
 
 ```bash
 ./gradlew :bluetape4k-images-benchmark:benchmarkStorageLocalBenchmark
@@ -13,32 +13,32 @@ double, so it is deterministic and requires no credentials.
   -Pstorage.s3.enabled=true
 ```
 
-The S3 command is intentionally opt-in. It measures adapter and byte
-materialization overhead; it must not be presented as cloud latency or
-throughput. A live S3-compatible endpoint can be evaluated separately with
-the same `ImageStorage` contract and an environment-specific harness.
+S3 명령은 의도적으로 선택 실행 방식이다. 어댑터와 바이트 구체화 오버헤드를
+측정하므로 클라우드 지연 시간이나 처리량으로 해석해서는 안 된다. 실제 S3 호환
+엔드포인트는 동일한 `ImageStorage` 계약과 환경별 하네스를 사용해 별도로 평가할
+수 있다.
 
-## Workload
+## 워크로드
 
-| Dimension | Value |
+| 항목 | 값 |
 |-----------|-------|
-| Payloads | deterministic `homer.jpg` JPEG and PNG encodings |
-| Size guard | 4 MiB maximum; below-limit and 4 MiB + 1 byte rejection |
-| Object count | 9 objects per backend (one payload plus eight list fixtures) |
-| Operations | byte upload/download, path download, prefix list, over-limit upload |
-| Cleanup | temporary local root deleted in JMH tear-down; in-memory S3 map is trial-scoped |
+| 페이로드 | 결정적으로 생성한 `homer.jpg` JPEG와 PNG 인코딩 |
+| 크기 제한 | 최대 4 MiB, 제한 이내와 4 MiB + 1바이트 거부 |
+| 객체 수 | 백엔드당 객체 9개(페이로드 1개와 목록용 픽스처 8개) |
+| 작업 | 바이트 업로드/다운로드, 경로 다운로드, 접두사 목록 조회, 제한 초과 업로드 |
+| 정리 | JMH tear-down에서 임시 로컬 루트를 삭제하며 메모리 내 S3 맵은 trial 범위로 유지 |
 
-The benchmark methods keep setup uploads outside the measured iteration. This
-separates API operation cost from fixture creation and cleanup cost.
+벤치마크 메서드는 준비용 업로드를 측정 반복 구간 밖에서 수행한다. 따라서 API
+작업 비용과 픽스처 생성 및 정리 비용을 분리할 수 있다.
 
-Raw Java 25/macOS output: [`storage-local.json`](raw/issue-204-20260726-macos-java25/storage-local.json)
-and [`storage-s3-inmemory.json`](raw/issue-204-20260726-macos-java25/storage-s3-inmemory.json).
+Java 25/macOS 원본 출력: [`storage-local.json`](raw/issue-204-20260726-macos-java25/storage-local.json),
+[`storage-s3-inmemory.json`](raw/issue-204-20260726-macos-java25/storage-s3-inmemory.json).
 
-![Storage backend benchmark chart](../../../docs/images/readme-charts/images-benchmark-storage-backend-chart-01.png)
+![스토리지 백엔드 벤치마크 차트](../../../docs/images/readme-charts/images-benchmark-storage-backend-chart-01.png)
 
-## Interpretation
+## 해석
 
-Latency is `AverageTime ms/op` and lower is better. Results are local snapshots:
-filesystem rows include OS cache effects, while in-memory S3 rows represent
-adapter overhead only. Allocation or network conclusions require a separate
-GC-profiler run and a real S3-compatible service.
+지연 시간은 `AverageTime ms/op`이며 낮을수록 좋다. 결과는 로컬 스냅샷이다.
+파일 시스템 행에는 OS 캐시 효과가 포함되고 메모리 내 S3 행은 어댑터 오버헤드만
+나타낸다. 할당량이나 네트워크 관련 결론을 내려면 별도의 GC 프로파일러 실행과
+실제 S3 호환 서비스가 필요하다.
