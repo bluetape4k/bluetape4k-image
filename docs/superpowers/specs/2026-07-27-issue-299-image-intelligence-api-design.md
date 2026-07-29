@@ -1,12 +1,12 @@
 # Issue #299 - 통합 이미지 인텔리전스 API 예제 설계
 
-**Date**: 2026-07-27
-**Issue**: https://github.com/bluetape4k/bluetape4k-image/issues/299
-**Transferred from**: https://github.com/bluetape4k/bluetape4k-workshop/issues/578
-**Target example**: `examples/spring-boot-image-intelligence-api`
+**날짜**: 2026-07-27
+**이슈**: https://github.com/bluetape4k/bluetape4k-image/issues/299
+**이전 출처**: https://github.com/bluetape4k/bluetape4k-workshop/issues/578
+**대상 예제**: `examples/spring-boot-image-intelligence-api`
 (`:spring-boot-image-intelligence-api`)
-**Workflow lane**: Type A Full Feature
-**Status**: Approved for implementation planning
+**workflow lane**: Type A Full Feature
+**상태**: 구현 계획 승인됨
 
 ## 1. 목적과 독자
 
