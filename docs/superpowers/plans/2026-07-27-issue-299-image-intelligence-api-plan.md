@@ -540,33 +540,32 @@ git commit -m "Separate provider execution from analysis outcomes" \
   -m "Tested: guarded runner outcome, semaphore, timeout, and cancellation tests"
 ```
 
-## Task 4: Reuse OCR, detection, and real ZXing through provider adapters
+## Task 4: provider adapter를 통해 OCR, detection, 실제 ZXing 재사용
 
-**Complexity:** High
-**Depends on:** Tasks 2 and 3
+**복잡도:** High
+**의존성:** Tasks 2 and 3
 **Pattern skills:** `bluetape-kotlin-patterns`, `kotlin-coroutines-skill`, `test-driven-development`
-**Rollback point:** remove profile/provider beans while retaining generic runner and models.
+**Rollback 지점:** generic runner와 model은 유지하고 profile/provider bean만 제거한다.
 
-**Files:**
+**파일:**
 
 - Create: `examples/spring-boot-image-intelligence-api/src/main/kotlin/io/bluetape4k/images/examples/spring/intelligence/service/ImageAnalysisProviders.kt`
 - Modify: `examples/spring-boot-image-intelligence-api/src/main/kotlin/io/bluetape4k/images/examples/spring/intelligence/config/ImageIntelligenceConfiguration.kt`
 - Create: `examples/spring-boot-image-intelligence-api/src/test/kotlin/io/bluetape4k/images/examples/spring/intelligence/service/ImageAnalysisProvidersTest.kt`
 - Modify: `examples/spring-boot-image-intelligence-api/src/test/kotlin/io/bluetape4k/images/examples/spring/intelligence/support/ImageIntelligenceFixtures.kt`
 
-- [ ] **Step 1: Write provider contract tests**
+- [ ] **Step 1: provider contract test 작성**
 
-Prove:
+다음을 증명한다:
 
-- default OCR returns `Unavailable("provider_not_configured")`;
-- default detector returns `Unavailable("provider_not_configured")`;
-- demo OCR returns structured text with page metadata;
-- demo detector returns one face fact and no policy action;
-- blank image produces barcode `Empty`;
-- generated QR image produces barcode `Completed` with `QR_CODE` and payload
-  `visitor:PASS-001`;
-- provider exceptions become sanitized `Failed`;
-- provider cancellation is propagated.
+- default OCR은 `Unavailable("provider_not_configured")`를 반환한다.
+- default detector는 `Unavailable("provider_not_configured")`를 반환한다.
+- demo OCR은 page metadata가 포함된 structured text를 반환한다.
+- demo detector는 하나의 face fact를 반환하고 policy action은 만들지 않는다.
+- blank image는 barcode `Empty`를 만든다.
+- 생성한 QR image는 `QR_CODE`와 payload `visitor:PASS-001`이 포함된 barcode `Completed`를 만든다.
+- provider exception은 정제된 `Failed`가 된다.
+- provider cancellation은 전파된다.
 
 - [ ] **Step 2: Run RED**
 
@@ -575,9 +574,9 @@ Prove:
   --tests '*ImageAnalysisProvidersTest' --no-daemon
 ```
 
-Expected: compilation fails because provider adapters do not exist.
+예상 결과: provider adapter가 없으므로 compilation이 실패한다.
 
-- [ ] **Step 3: Implement narrow provider contracts**
+- [ ] **Step 3: 좁은 provider contract 구현**
 
 ```kotlin
 internal interface OcrAnalysisProvider {
@@ -596,7 +595,7 @@ internal interface BarcodeAnalysisProvider {
 }
 ```
 
-Implement:
+다음을 구현한다:
 
 - `DisabledOcrAnalysisProvider`
 - `FixtureOcrAnalysisProvider`
@@ -605,7 +604,7 @@ Implement:
 - `FixtureDetectionAnalysisProvider`
 - `ZxingBarcodeAnalysisProvider`
 
-Reuse the existing suspend adapters instead of wrapping providers again:
+provider를 다시 wrapping하지 말고 기존 suspend adapter를 재사용한다:
 
 ```kotlin
 image.suspendExtractOcr(options, engine, ocrDispatcher)
@@ -613,14 +612,11 @@ image.suspendDetectRegions(detector, options, detectionDispatcher)
 image.suspendExtractBarcodes(reader, options, barcodeDispatcher)
 ```
 
-Those adapters dispatch blocking work with `withContext`. README must later state that
-dispatch prevents work from starting after cancellation, but an already-running native
-call may ignore cancellation.
+이 adapter들은 `withContext`로 blocking work를 dispatch한다. README에는 나중에 dispatch가 cancellation 이후의 work 시작을 막지만, 이미 실행 중인 native call은 cancellation을 무시할 수 있다고 명시해야 한다.
 
-- [ ] **Step 4: Configure profile ownership explicitly**
+- [ ] **Step 4: profile ownership을 명시적으로 구성**
 
-Use `@Profile("demo")`, `@Profile("native-ocr")`, and negated profile conditions so exactly
-one OCR provider and one detector provider exist:
+`@Profile("demo")`, `@Profile("native-ocr")`, negated profile condition을 사용해 정확히 하나의 OCR provider와 하나의 detector provider만 존재하게 한다:
 
 ```text
 default         disabled OCR + disabled detector + ZXing
@@ -629,7 +625,7 @@ native-ocr      Tesseract OCR + disabled detector + ZXing
 demo,native-ocr invalid combination rejected by a configuration test
 ```
 
-Add a startup guard rather than depending on bean ordering:
+bean ordering에 의존하지 말고 startup guard를 추가한다:
 
 ```kotlin
 internal class ImageIntelligenceProfileGuard(
@@ -644,7 +640,7 @@ internal class ImageIntelligenceProfileGuard(
 }
 ```
 
-Register the guard unconditionally and use these exact profile expressions:
+guard를 unconditional로 등록하고 다음 profile expression을 정확히 사용한다:
 
 ```text
 fixture OCR                  @Profile("demo & !native-ocr")
@@ -655,32 +651,29 @@ disabled detector            @Profile("!demo")
 ZXing barcode                no profile restriction
 ```
 
-The conflicting-profile test must assert context startup failure and the stable
-configuration message above.
+conflicting-profile test는 context startup failure와 위의 안정적인 configuration message를 assert해야 한다.
 
-Do not auto-download models or traineddata. Pass optional `tessdataPath` only from validated
-configuration.
+model이나 traineddata를 자동 download하지 않는다. optional `tessdataPath`는 검증된 configuration에서만 전달한다.
 
-- [ ] **Step 5: Generate the QR fixture at test runtime**
+- [ ] **Step 5: test runtime에서 QR fixture 생성**
 
-Use ZXing `QRCodeWriter` in test support to render `visitor:PASS-001` into a
-`BufferedImage`, then encode with the existing image utilities. Pin:
+test support에서 ZXing `QRCodeWriter`를 사용해 `visitor:PASS-001`을 `BufferedImage`로 render한 뒤 기존 image utility로 encode한다. 다음 값을 고정한다:
 
-- payload;
-- format `QR_CODE`;
-- dimensions;
-- generated-source note.
+- payload
+- format `QR_CODE`
+- dimensions
+- generated-source note
 
-No external image license or binary fixture is introduced.
+external image license나 binary fixture는 도입하지 않는다.
 
-- [ ] **Step 6: Run GREEN**
+- [ ] **Step 6: GREEN 실행**
 
 ```bash
 ./gradlew :spring-boot-image-intelligence-api:test \
   --tests '*ImageAnalysisProvidersTest' --no-daemon
 ```
 
-Expected: default/demo adapters and actual ZXing extraction pass without Tesseract.
+예상 결과: default/demo adapter와 실제 ZXing extraction이 Tesseract 없이 통과한다.
 
 - [ ] **Step 7: Commit**
 
