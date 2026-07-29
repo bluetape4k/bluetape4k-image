@@ -499,7 +499,7 @@ CI는 Tesseract, tessdata, 운영체제 native library를 요구하지 않는다
 - 작업별 제한 시간은 해당 작업의 `Failed`만 생성
 - 외부 취소가 모든 하위 작업에 전달됨
 - 각 작업이 서로 다른 `WorkContext` 키에 한 번만 기록
-- 예외 메시지와 stack trace 비노출
+- 예외 메시지와 스택 추적 비노출
 
 ### 정책
 
@@ -512,16 +512,16 @@ CI는 Tesseract, tessdata, 운영체제 native library를 요구하지 않는다
 
 ### HTTP 통합
 
-- `demo` profile의 실제 ZXing + fixture OCR·감지 `COMPLETED`
+- `demo` 프로필의 실제 ZXing + fixture OCR·감지 `COMPLETED`
 - 한 공급자 실패의 `PARTIAL`
-- 기본 profile의 OCR·감지 `UNAVAILABLE`
+- 기본 프로필의 OCR·감지 `UNAVAILABLE`
 - 모든 필수 결과를 얻지 못한 `FAILED`
 - 입력 오류의 정제된 `400`
 - 예상하지 못한 workflow 결함의 정제된 `500`
 
-테스트 fixture는 방문증 시나리오를 재현하는 고정 이미지와 pinned hash를 가진다.
+테스트 fixture는 방문증 시나리오를 재현하는 고정 이미지와 고정 해시를 가진다.
 QR 판독은 실제 `ZxingBarcodeReader`를 호출한다. OCR·감지는 호스트 의존성을 없애기
-위해 결정적인 adapter를 사용한다. native OCR 테스트는 opt-in이며 다른 native·container
+위해 결정적인 adapter를 사용한다. native OCR 테스트는 명시적으로 켜야 하며 다른 native·container
 검증과 병렬 실행하지 않는다.
 
 ## 17. 문서와 다이어그램
@@ -538,49 +538,49 @@ QR 판독은 실제 `ZxingBarcodeReader`를 호출한다. OCR·감지는 호스�
 - 실서비스에서 추가해야 할 인증, 저장, 악성 파일 검사, 개인정보 보호
 - 관련 OCR·바코드·민감 정보 자료 링크
 
-dark style 기술 다이어그램은 다음 두 개를 만든다.
+어두운 스타일의 기술 다이어그램은 다음 두 개를 만든다.
 
 1. 입력 검증 → 단일 디코딩 → 세 분석 작업 → 집계 → 정책의 아키텍처
 2. 정상, 부분 실패, 외부 취소의 상호 작용 흐름
 
-SVG를 원본으로 유지하고 같은 basename의 PNG를 생성한다. README에는 PNG를
+SVG를 원본으로 유지하고 같은 기본 이름의 PNG를 생성한다. README에는 PNG를
 표시하고 SVG를 크게 볼 수 있는 링크를 제공한다. PNG 변환 뒤 텍스트 잘림, 화살촉,
-call line, 카드 간격을 실제 크기로 검수한다.
+호출선, 카드 간격을 실제 크기로 검수한다.
 
 ## 18. 호환성과 운영 경계
 
 - 기존 라이브러리와 예제의 공개 계약은 바꾸지 않는다.
 - 새 예제는 배포되지 않으므로 소비자 BOM과 artifact 좌표에 영향이 없다.
-- 기본 profile은 외부 서비스, native OCR, Docker 없이 실행된다.
+- 기본 프로필은 외부 서비스, native OCR, Docker 없이 실행된다.
 - 실제 OCR·감지 공급자는 adapter bean을 교체하는 확장점으로만 제공한다.
-- API 응답의 상태와 reason code는 예제 내부의 안정된 학습 계약으로 테스트한다.
+- API 응답의 상태와 사유 코드는 예제 내부의 안정된 학습 계약으로 테스트한다.
 - 운영에 적용할 때 인증·인가, 저장·삭제 정책, 악성 파일 검사, 개인정보 보호,
-  외부 공급자 재시도와 circuit breaker를 별도 설계해야 한다.
+  외부 공급자 재시도와 회로 차단기를 별도 설계해야 한다.
 
 ## 19. 수용 기준
 
 - [ ] `examples/spring-boot-image-intelligence-api`가 실행 가능한 Spring Boot 예제로 등록된다.
-- [ ] 이미지·OCR·바코드 local project와 관리된 `bluetape4k-workflow` 의존성을 재사용한다.
+- [ ] 이미지·OCR·바코드 로컬 프로젝트와 관리된 `bluetape4k-workflow` 의존성을 재사용한다.
 - [ ] 입력을 한 번 검증하고 `ImmutableImage`를 한 번 디코딩한 뒤 세 작업이 공유한다.
 - [ ] OCR·감지·바코드를 제한된 병렬 실행으로 처리한다.
 - [ ] 각 작업은 `Completed`, `Empty`, `Unavailable`, `Failed`를 독립적으로 반환한다.
 - [ ] `WorkReport.Success`와 분석 업무 성공을 코드와 문서에서 분리한다.
 - [ ] 한 작업의 실패 후에도 다른 성공 결과가 응답에 남는다.
-- [ ] 작업별 timeout과 외부 cancellation이 구분된다.
+- [ ] 작업별 제한 시간과 외부 취소가 구분된다.
 - [ ] 감지 사실과 `VisitorPassPolicy` 결정이 분리된다.
 - [ ] 기본 테스트는 native OCR이나 운영 ML 모델을 요구하지 않는다.
 - [ ] 실제 ZXing 판독을 포함한 성공·빈 결과·부분 실패·사용 불가·입력 오류·취소 테스트가 통과한다.
-- [ ] 영어·한국어 README와 dark style SVG·PNG 다이어그램이 동등하게 제공된다.
-- [ ] settings, AGENTS, root README, Examples workflow 등록이 완료된다.
-- [ ] `./gradlew projects`에 새 모듈이 표시되고 targeted/full example tests가 통과한다.
-- [ ] `actionlint .github/workflows/Examples.yml`, diagram 검증, `git diff --check`가 통과한다.
+- [ ] 영어·한국어 README와 어두운 스타일의 SVG·PNG 다이어그램이 동등하게 제공된다.
+- [ ] settings, AGENTS, 루트 README, Examples workflow 등록이 완료된다.
+- [ ] `./gradlew projects`에 새 모듈이 표시되고 대상 예제 테스트와 전체 예제 테스트가 통과한다.
+- [ ] `actionlint .github/workflows/Examples.yml`, 다이어그램 검증, `git diff --check`가 통과한다.
 - [ ] versioned manual과 배포 BOM은 변경하지 않는다.
 
 ## 20. 완료 조건
 
 - Type A 설계·계획·구현·검토·lesson·PR 게이트가 순서대로 완료된다.
 - 기본 환경에서 외부 자격 증명, Docker, native OCR 없이 예제 테스트가 통과한다.
-- `demo` profile에서 fixture OCR·감지와 실제 ZXing을 조합한 결과를 재현할 수 있다.
+- `demo` 프로필에서 fixture OCR·감지와 실제 ZXing을 조합한 결과를 재현할 수 있다.
 - 부분 실패에서도 성공한 결과가 보존되고, 외부 취소는 결과로 위장되지 않는다.
 - 상태 두 축과 정책 분리가 코드, 테스트, README, 다이어그램에서 같은 의미로 표현된다.
 - 블로그 시리즈가 재사용할 수 있는 안정적인 예제 코드와 설명 경계가 마련된다.
