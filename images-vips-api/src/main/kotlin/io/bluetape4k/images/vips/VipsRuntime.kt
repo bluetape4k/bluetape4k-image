@@ -44,21 +44,18 @@ interface VipsRuntime {
     val isShutdown: Boolean
 
     /**
-     * Reports codec capabilities for the selected libvips backend.
+     * 선택된 libvips backend의 codec capability를 보고합니다.
      *
-     * Stable formats (`JPEG`, `PNG`, and `WEBP`) are unconditional. Optional
-     * HEIF-family formats (`AVIF` and `HEIC`) are reported with backend-specific
-     * native operation evidence when the binding can inspect it.
+     * stable format(`JPEG`, `PNG`, `WEBP`)은 unconditional입니다. optional HEIF-family format(`AVIF`, `HEIC`)은
+     * binding이 inspect할 수 있을 때 backend-specific native operation evidence와 함께 보고합니다.
      */
     fun codecCapabilityReport(): VipsCodecCapabilityReport
 
     /**
-     * Runs an opt-in decode-and-encode smoke test for [outputFormat].
+     * [outputFormat]에 대한 opt-in decode-and-encode smoke test를 실행합니다.
      *
-     * The caller owns [sampleBytes] and should provide a small image sample for
-     * the same codec family being verified. Failures are returned as sanitized
-     * [VipsCodecSmokeResult] values; raw native exception text remains out of the
-     * public result.
+     * caller는 [sampleBytes]를 소유하며, 검증하려는 동일 codec family의 작은 image sample을 제공해야 합니다.
+     * 실패는 sanitized [VipsCodecSmokeResult] 값으로 반환하며 raw native exception text는 public result에 포함하지 않습니다.
      */
     fun smokeTestCodec(
         sampleBytes: ByteArray,

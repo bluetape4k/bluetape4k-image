@@ -6,9 +6,9 @@ import io.bluetape4k.images.vips.VipsEncodeException
 import io.bluetape4k.images.vips.VipsEncodeOptions
 
 /**
- * JVips AVIF encoder.
+ * JVips AVIF encoder입니다.
  *
- * Requires a libvips build with libheif/libaom support.
+ * libheif/libaom support가 포함된 libvips build가 필요합니다.
  */
 internal object JVipsAvifWriter {
 

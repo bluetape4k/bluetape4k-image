@@ -10,11 +10,11 @@ import org.junit.jupiter.api.Test
 import java.lang.foreign.Arena
 
 /**
- * Unit tests for vips-ffm writer objects: [FfmVipsJpegWriter], [FfmVipsPngWriter], [FfmVipsWebpWriter].
+ * vips-ffm writer object [FfmVipsJpegWriter], [FfmVipsPngWriter], [FfmVipsWebpWriter]의 unit test입니다.
  *
- * Tests are in the same package as the writers to access `internal` visibility.
- * A shared `Arena.ofShared()` is used per test to construct `VImage` instances directly,
- * bypassing `ffmVipsImageOf` safety guards — fixtures are trusted inputs.
+ * `internal` visibility에 접근하기 위해 writer와 같은 package에 test를 둡니다.
+ * fixture는 trusted input이므로 test마다 shared `Arena.ofShared()`로 `VImage` instance를 직접 생성해
+ * `ffmVipsImageOf` safety guard를 우회합니다.
  */
 class FfmVipsWriterTest : AbstractFfmVipsTest() {
 
@@ -25,7 +25,7 @@ class FfmVipsWriterTest : AbstractFfmVipsTest() {
         private val WEBP_MARKER = byteArrayOf(0x57.toByte(), 0x45.toByte(), 0x42.toByte(), 0x50.toByte())
     }
 
-    // ─── FfmVipsJpegWriter ────────────────────────────────────────────────────
+    // ─── FfmVipsJpegWriter 검증 ───────────────────────────────────────────────
 
     @Test
     fun `FfmVipsJpegWriter writeToBytes returns non-empty bytes with JPEG magic`() {
@@ -61,7 +61,7 @@ class FfmVipsWriterTest : AbstractFfmVipsTest() {
         }
     }
 
-    // ─── FfmVipsPngWriter ─────────────────────────────────────────────────────
+    // ─── FfmVipsPngWriter 검증 ────────────────────────────────────────────────
 
     @Test
     fun `FfmVipsPngWriter writeToBytes returns non-empty bytes with PNG magic`() {
@@ -97,7 +97,7 @@ class FfmVipsWriterTest : AbstractFfmVipsTest() {
         }
     }
 
-    // ─── FfmVipsWebpWriter ────────────────────────────────────────────────────
+    // ─── FfmVipsWebpWriter 검증 ───────────────────────────────────────────────
 
     @Test
     fun `FfmVipsWebpWriter writeToBytes returns non-empty bytes with RIFF and WEBP markers`() {
@@ -135,7 +135,7 @@ class FfmVipsWriterTest : AbstractFfmVipsTest() {
         }
     }
 
-    // ─── helpers ──────────────────────────────────────────────────────────────
+    // ─── 헬퍼 ─────────────────────────────────────────────────────────────────
 
     private fun ByteArray.startsWith(prefix: ByteArray): Boolean {
         if (size < prefix.size) return false

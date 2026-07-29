@@ -4,37 +4,37 @@ import io.bluetape4k.support.requireNotBlank
 import java.io.Serializable
 
 /**
- * Native libvips codec support state for one direction.
+ * 한 방향에 대한 native libvips codec 지원 상태입니다.
  */
 enum class VipsCodecSupport {
-    /** The backend proved that the codec operation is available. */
+    /** backend가 codec operation을 사용할 수 있음을 확인했습니다. */
     AVAILABLE,
 
-    /** The backend proved that the codec operation is unavailable. */
+    /** backend가 codec operation을 사용할 수 없음을 확인했습니다. */
     UNAVAILABLE,
 
-    /** The backend cannot inspect the codec operation directly. */
+    /** backend가 codec operation을 직접 inspect할 수 없습니다. */
     UNKNOWN,
 }
 
 /**
- * Codec operation direction.
+ * codec operation direction입니다.
  */
 enum class VipsCodecDirection {
-    /** Decode image bytes into a libvips image. */
+    /** image bytes를 libvips image로 decode합니다. */
     DECODE,
 
-    /** Encode a libvips image into image bytes. */
+    /** libvips image를 image bytes로 encode합니다. */
     ENCODE,
 }
 
 /**
- * Capability for one codec operation direction.
+ * codec operation direction 하나의 capability입니다.
  *
- * @property direction decode or encode direction.
- * @property support observed support state.
- * @property operationName native libvips operation name when the backend can inspect it.
- * @property reason safe diagnostic detail. Do not include raw native error text.
+ * @property direction decode 또는 encode direction입니다.
+ * @property support 관측된 support state입니다.
+ * @property operationName backend가 inspect할 수 있을 때의 native libvips operation name입니다.
+ * @property reason 안전한 diagnostic detail입니다. raw native error text를 포함하면 안 됩니다.
  */
 data class VipsCodecOperationCapability(
     val direction: VipsCodecDirection,
@@ -52,7 +52,7 @@ data class VipsCodecOperationCapability(
         private const val serialVersionUID: Long = 8471687250112502126L
 
         /**
-         * Creates an available operation capability.
+         * available operation capability를 생성합니다.
          */
         fun available(
             direction: VipsCodecDirection,
@@ -62,7 +62,7 @@ data class VipsCodecOperationCapability(
             VipsCodecOperationCapability(direction, VipsCodecSupport.AVAILABLE, operationName, reason)
 
         /**
-         * Creates an unavailable operation capability.
+         * unavailable operation capability를 생성합니다.
          */
         fun unavailable(
             direction: VipsCodecDirection,
@@ -72,7 +72,7 @@ data class VipsCodecOperationCapability(
             VipsCodecOperationCapability(direction, VipsCodecSupport.UNAVAILABLE, operationName, reason)
 
         /**
-         * Creates an unknown operation capability.
+         * unknown operation capability를 생성합니다.
          */
         fun unknown(
             direction: VipsCodecDirection,
@@ -84,11 +84,10 @@ data class VipsCodecOperationCapability(
 }
 
 /**
- * Capability report for one HEIF-family image format.
+ * HEIF-family image format 하나에 대한 capability report입니다.
  *
- * Stable formats (`JPEG`, `PNG`, and `WEBP`) are reported by
- * [VipsCodecCapabilityReport.stableFormats] because they do not require
- * optional HEIF-family native codecs.
+ * stable format(`JPEG`, `PNG`, `WEBP`)은 optional HEIF-family native codec이 필요하지 않으므로
+ * [VipsCodecCapabilityReport.stableFormats]로 보고합니다.
  */
 @OptIn(VipsIncubatingApi::class)
 data class VipsCodecCapability(
@@ -108,7 +107,7 @@ data class VipsCodecCapability(
         private const val serialVersionUID: Long = -4414825673788643066L
 
         /**
-         * Creates a capability entry for an AVIF or HEIC format.
+         * AVIF 또는 HEIC format의 capability entry를 생성합니다.
          */
         fun heifFamily(
             format: VipsImageFormat,
@@ -125,13 +124,13 @@ data class VipsCodecCapability(
 }
 
 /**
- * Backend-level codec capability report.
+ * backend-level codec capability report입니다.
  *
- * @property backendName human-readable backend name such as `JVips/JNI` or `vips-ffm`.
- * @property libvipsVersion native libvips version when the backend can expose it.
- * @property stableFormats formats that are supported without optional HEIF-family codecs.
- * @property codecs HEIF-family codec capabilities.
- * @property inspectedOperations native libvips operation names inspected for this report.
+ * @property backendName `JVips/JNI` 또는 `vips-ffm` 같은 사람이 읽을 수 있는 backend name입니다.
+ * @property libvipsVersion backend가 노출할 수 있을 때의 native libvips version입니다.
+ * @property stableFormats optional HEIF-family codec 없이 지원되는 format입니다.
+ * @property codecs HEIF-family codec capability 목록입니다.
+ * @property inspectedOperations 이 report를 위해 inspect한 native libvips operation name입니다.
  */
 @OptIn(VipsIncubatingApi::class)
 data class VipsCodecCapabilityReport(
@@ -157,15 +156,15 @@ data class VipsCodecCapabilityReport(
     }
 
     /**
-     * Returns `true` when [format] is one of the stable unconditional formats.
+     * [format]이 stable unconditional format 중 하나이면 `true`를 반환합니다.
      */
     fun isStableFormat(format: VipsImageFormat): Boolean =
         format in stableFormats
 
     /**
-     * Finds a HEIF-family codec capability by [format].
+     * [format]에 해당하는 HEIF-family codec capability를 찾습니다.
      *
-     * @throws IllegalArgumentException when no capability is present for [format].
+     * @throws IllegalArgumentException [format]에 대한 capability가 없으면 던집니다.
      */
     fun codec(format: VipsImageFormat): VipsCodecCapability =
         codecs.firstOrNull { it.format == format }
@@ -174,13 +173,13 @@ data class VipsCodecCapabilityReport(
     companion object {
         private const val serialVersionUID: Long = -6234628369549391519L
 
-        /** Stable libvips formats that do not depend on optional HEIF-family codecs. */
+        /** optional HEIF-family codec에 의존하지 않는 stable libvips format입니다. */
         val DEFAULT_STABLE_FORMATS = setOf(VipsImageFormat.JPEG, VipsImageFormat.PNG, VipsImageFormat.WEBP)
     }
 }
 
 /**
- * Result of an opt-in codec smoke test against caller-provided sample bytes.
+ * caller가 제공한 sample bytes로 실행한 opt-in codec smoke test 결과입니다.
  */
 data class VipsCodecSmokeResult(
     val backendName: String,
@@ -202,7 +201,7 @@ data class VipsCodecSmokeResult(
         }
     }
 
-    /** `true` when both decode and encode stages completed. */
+    /** decode와 encode stage가 모두 완료되면 `true`입니다. */
     val succeeded: Boolean
         get() = decoded && encoded && failureStage == null
 
@@ -210,7 +209,7 @@ data class VipsCodecSmokeResult(
         private const val serialVersionUID: Long = -3548368494090999922L
 
         /**
-         * Creates a successful smoke-test result.
+         * 성공한 smoke-test result를 생성합니다.
          */
         fun success(backendName: String, format: VipsImageFormat): VipsCodecSmokeResult =
             VipsCodecSmokeResult(
@@ -221,7 +220,7 @@ data class VipsCodecSmokeResult(
             )
 
         /**
-         * Creates a failed smoke-test result with safe diagnostic text.
+         * 안전한 diagnostic text를 담은 failed smoke-test result를 생성합니다.
          */
         fun failure(
             backendName: String,

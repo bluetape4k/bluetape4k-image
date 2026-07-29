@@ -10,7 +10,7 @@ import java.io.ObjectOutputStream
 
 class VipsEncodeOptionsTest {
 
-    // ─── validation ──────────────────────────────────────────────────────────
+    // ─── validation 검증 ─────────────────────────────────────────────────────
 
     @Test
     fun `quality -1 throws IllegalArgumentException`() {
@@ -48,7 +48,7 @@ class VipsEncodeOptionsTest {
         max.effort shouldBeEqualTo 9
     }
 
-    // ─── companion constants ─────────────────────────────────────────────────
+    // ─── companion 상수 검증 ─────────────────────────────────────────────────
 
     @Test
     fun `Default has expected values`() {
@@ -70,7 +70,7 @@ class VipsEncodeOptionsTest {
         VipsEncodeOptions.LowBandwidth.effort shouldBeEqualTo 3
     }
 
-    // ─── Java serialization round-trip ───────────────────────────────────────
+    // ─── Java serialization round-trip 검증 ─────────────────────────────────
 
     @Test
     fun `serialization round-trip preserves all fields`() {

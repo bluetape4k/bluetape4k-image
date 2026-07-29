@@ -4,13 +4,12 @@ import java.io.OutputStream
 import java.nio.file.Path
 
 /**
- * Binding-neutral libvips image contract.
+ * binding-neutral libvips image contract입니다.
  *
- * Implementations from both the JVips Java 21 backend and the vips-ffm Java 25 backend own native
- * resources through [AutoCloseable]. Every image returned from a transforming operation is a new
- * closeable instance and must be closed independently.
+ * JVips Java 21 backend와 vips-ffm Java 25 backend 구현체는 [AutoCloseable]을 통해 native resource를 소유합니다.
+ * transforming operation이 반환하는 모든 image는 새로운 closeable instance이며 각각 독립적으로 닫아야 합니다.
  *
- * **Usage example:**
+ * **사용 예시:**
  * ```kotlin
  * vipsImageOf(file).use { image ->
  *     image.thumbnail(800).use { thumbnail ->
@@ -19,7 +18,7 @@ import java.nio.file.Path
  * }
  * ```
  *
- * **Thread safety**: implementations are single-threaded and must not be shared across coroutines.
+ * **thread safety**: 구현체는 single-threaded이며 coroutine 간에 공유하면 안 됩니다.
  */
 interface VipsImage : AutoCloseable {
 

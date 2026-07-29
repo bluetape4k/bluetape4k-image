@@ -13,10 +13,10 @@ import org.junit.jupiter.api.Test
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
- * Verifies that concurrent calls to [JVipsRuntime.init] execute native init exactly once,
- * and that sequential repeated calls are idempotent.
+ * [JVipsRuntime.init] concurrent call이 native init을 정확히 한 번만 실행하고,
+ * sequential repeated call이 idempotent인지 검증합니다.
  *
- * Uses a [JVipsNativeRuntime] adapter seam so no real libvips installation is required.
+ * 실제 libvips 설치가 없어도 되도록 [JVipsNativeRuntime] adapter seam을 사용합니다.
  */
 class JVipsRuntimeConcurrencyTest {
 

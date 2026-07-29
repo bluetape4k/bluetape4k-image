@@ -38,7 +38,7 @@ class JVipsImageTest : AbstractJVipsTest() {
         private val FTYP_MARKER = byteArrayOf(0x66, 0x74, 0x79, 0x70)
     }
 
-    // ─── 1: load + dimensions ─────────────────────────────────────────────
+    // ─── 1: load와 dimension 검증 ─────────────────────────────────────────
 
     @Test
     fun `vipsImageOf file returns correct dimensions`() {
@@ -49,7 +49,7 @@ class JVipsImageTest : AbstractJVipsTest() {
         }
     }
 
-    // ─── 2: resize ────────────────────────────────────────────────────────
+    // ─── 2: resize 검증 ──────────────────────────────────────────────────
 
     @Test
     fun `resize to 800x600 produces expected dimensions`() {
@@ -62,7 +62,7 @@ class JVipsImageTest : AbstractJVipsTest() {
         }
     }
 
-    // ─── 3: thumbnail ─────────────────────────────────────────────────────
+    // ─── 3: thumbnail 검증 ───────────────────────────────────────────────
 
     @Test
     fun `thumbnail 300 longest side is at most 300`() {
@@ -74,7 +74,7 @@ class JVipsImageTest : AbstractJVipsTest() {
         }
     }
 
-    // ─── 4: toBytes JPEG ──────────────────────────────────────────────────
+    // ─── 4: JPEG toBytes 검증 ────────────────────────────────────────────
 
     @Test
     fun `toBytes JPEG starts with JPEG magic bytes`() {
@@ -86,7 +86,7 @@ class JVipsImageTest : AbstractJVipsTest() {
         }
     }
 
-    // ─── 5: toBytes PNG ───────────────────────────────────────────────────
+    // ─── 5: PNG toBytes 검증 ─────────────────────────────────────────────
 
     @Test
     fun `toBytes PNG starts with PNG magic bytes`() {
@@ -98,7 +98,7 @@ class JVipsImageTest : AbstractJVipsTest() {
         }
     }
 
-    // ─── 6: toBytes WebP ──────────────────────────────────────────────────
+    // ─── 6: WebP toBytes 검증 ────────────────────────────────────────────
 
     @Test
     fun `toBytes WebP has RIFF and WEBP markers`() {
@@ -128,7 +128,7 @@ class JVipsImageTest : AbstractJVipsTest() {
         }
     }
 
-    // ─── 7: suspendToBytes ────────────────────────────────────────────────
+    // ─── 7: suspendToBytes 검증 ─────────────────────────────────────────
 
     @Test
     fun `suspendToBytes JPEG produces non-empty bytes with JPEG magic`() = runTest {
@@ -140,7 +140,7 @@ class JVipsImageTest : AbstractJVipsTest() {
         }
     }
 
-    // ─── 8: use-close idempotency ─────────────────────────────────────────
+    // ─── 8: use-close idempotency 검증 ──────────────────────────────────
 
     @Test
     fun `close called twice does not throw`() {
@@ -150,7 +150,7 @@ class JVipsImageTest : AbstractJVipsTest() {
         img.close() // must not throw
     }
 
-    // ─── 9: use-after-close throws ────────────────────────────────────────
+    // ─── 9: use-after-close exception 검증 ──────────────────────────────
 
     @Test
     fun `operations after close throw IllegalStateException`(@TempDir tmpDir: Path) {
@@ -168,7 +168,7 @@ class JVipsImageTest : AbstractJVipsTest() {
         }
     }
 
-    // ─── 10: crop exact dimensions ────────────────────────────────────────
+    // ─── 10: crop exact dimension 검증 ──────────────────────────────────
 
     @Test
     fun `crop 0 0 100 100 returns 100x100`() {
@@ -181,7 +181,7 @@ class JVipsImageTest : AbstractJVipsTest() {
         }
     }
 
-    // ─── 11: writeTo Path ─────────────────────────────────────────────────
+    // ─── 11: Path writeTo 검증 ──────────────────────────────────────────
 
     @Test
     fun `writeTo path creates valid JPEG file`(@TempDir tmpDir: Path) {
@@ -195,7 +195,7 @@ class JVipsImageTest : AbstractJVipsTest() {
         }
     }
 
-    // ─── 12: writeTo OutputStream ─────────────────────────────────────────
+    // ─── 12: OutputStream writeTo 검증 ──────────────────────────────────
 
     @Test
     fun `writeTo OutputStream produces bytes with JPEG magic`() {
@@ -239,7 +239,7 @@ class JVipsImageTest : AbstractJVipsTest() {
         }
     }
 
-    // ─── 13: invalid resize args ──────────────────────────────────────────
+    // ─── 13: invalid resize args 검증 ───────────────────────────────────
 
     @Test
     fun `resize with zero width throws`() {
@@ -249,7 +249,7 @@ class JVipsImageTest : AbstractJVipsTest() {
         }
     }
 
-    // ─── 14: out-of-bounds crop ───────────────────────────────────────────
+    // ─── 14: out-of-bounds crop 검증 ────────────────────────────────────
 
     @Test
     fun `crop beyond image bounds throws`() {
@@ -270,7 +270,7 @@ class JVipsImageTest : AbstractJVipsTest() {
         img.close()
     }
 
-    // ─── 15: corrupt data throws VipsDecodeException ──────────────────────
+    // ─── 15: corrupt data VipsDecodeException 검증 ─────────────────────
 
     @Test
     fun `corrupt bytes throw VipsDecodeException on load`() {
@@ -278,7 +278,7 @@ class JVipsImageTest : AbstractJVipsTest() {
         assertFailsWith<Exception> { vipsImageOf(corrupt) }
     }
 
-    // ─── helpers ──────────────────────────────────────────────────────────
+    // ─── 헬퍼 ────────────────────────────────────────────────────────────
 
     private fun ByteArray.startsWith(prefix: ByteArray): Boolean {
         if (size < prefix.size) return false

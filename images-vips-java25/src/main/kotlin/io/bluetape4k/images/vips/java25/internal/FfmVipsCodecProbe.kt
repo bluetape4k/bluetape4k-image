@@ -5,7 +5,7 @@ import app.photofox.vipsffm.jextract.VipsRaw
 import java.lang.foreign.Arena
 
 /**
- * Adapter for native libvips codec capability inspection.
+ * native libvips codec capability inspection용 adapter입니다.
  */
 internal interface FfmVipsCodecProbe {
     fun supportsOperation(name: String): Boolean
@@ -13,7 +13,7 @@ internal interface FfmVipsCodecProbe {
 }
 
 /**
- * Default vips-ffm codec probe backed by `vips_type_find`.
+ * `vips_type_find`를 기반으로 하는 기본 vips-ffm codec probe입니다.
  */
 internal object DefaultFfmVipsCodecProbe : FfmVipsCodecProbe {
     override fun libvipsVersion(): String? =
