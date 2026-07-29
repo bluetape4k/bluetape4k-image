@@ -816,14 +816,14 @@ git commit -m "Preserve partial analysis before applying visitor policy" \
   -m "Tested: parallel workflow, partial outcome, cancellation, aggregate, and policy tests"
 ```
 
-## Task 6: Expose stable HTTP responses without workflow leakage
+## Task 6: workflow leakage 없이 안정적인 HTTP response 노출
 
-**Complexity:** Medium
-**Depends on:** Tasks 2 and 5
+**복잡도:** Medium
+**의존성:** Tasks 2 and 5
 **Pattern skills:** `bluetape-kotlin-patterns`, `test-driven-development`
-**Rollback point:** remove web/service DTO layer while retaining tested domain orchestration.
+**Rollback 지점:** 검증된 domain orchestration은 유지하고 web/service DTO layer만 제거한다.
 
-**Files:**
+**파일:**
 
 - Create: `examples/spring-boot-image-intelligence-api/src/main/kotlin/io/bluetape4k/images/examples/spring/intelligence/model/ApiModels.kt`
 - Create: `examples/spring-boot-image-intelligence-api/src/main/kotlin/io/bluetape4k/images/examples/spring/intelligence/service/ImageIntelligenceService.kt`
@@ -832,18 +832,16 @@ git commit -m "Preserve partial analysis before applying visitor policy" \
 - Modify: `examples/spring-boot-image-intelligence-api/src/main/kotlin/io/bluetape4k/images/examples/spring/intelligence/config/ImageIntelligenceConfiguration.kt`
 - Create: `examples/spring-boot-image-intelligence-api/src/test/kotlin/io/bluetape4k/images/examples/spring/intelligence/web/ImageIntelligenceControllerTest.kt`
 
-- [ ] **Step 1: Write RED HTTP tests**
+- [ ] **Step 1: HTTP RED test 작성**
 
-With MockMvc or the repository Spring test pattern, prove:
+MockMvc 또는 repository Spring test pattern으로 다음을 증명한다:
 
-- `POST /api/images/intelligence` with generated QR under `demo` returns HTTP 200,
-  aggregate `COMPLETED`, decision `ALLOW`, and provider identifiers;
-- one injected lane failure returns HTTP 200 and aggregate `PARTIAL`;
-- all required lanes unavailable/failed returns HTTP 200 and aggregate `FAILED`;
-- missing part, empty file, unsupported type, MIME mismatch, malformed image, side overflow,
-  and pixel overflow return stable 4xx `ProblemDetail`;
-- unexpected workflow corruption returns sanitized 500 without raw exception text;
-- JSON contains no `WorkContext`, `WorkReport`, stack trace, raw image bytes, or native path.
+- `demo`에서 생성한 QR을 포함한 `POST /api/images/intelligence`는 HTTP 200, aggregate `COMPLETED`, decision `ALLOW`, provider identifier를 반환한다.
+- injected lane failure 하나는 HTTP 200과 aggregate `PARTIAL`을 반환한다.
+- 모든 required lane이 unavailable/failed이면 HTTP 200과 aggregate `FAILED`를 반환한다.
+- missing part, empty file, unsupported type, MIME mismatch, malformed image, side overflow, pixel overflow는 안정적인 4xx `ProblemDetail`을 반환한다.
+- 예상하지 못한 workflow corruption은 raw exception text 없이 정제된 500을 반환한다.
+- JSON에는 `WorkContext`, `WorkReport`, stack trace, raw image bytes, native path가 포함되지 않는다.
 
 - [ ] **Step 2: Run RED**
 
@@ -852,11 +850,11 @@ With MockMvc or the repository Spring test pattern, prove:
   --tests '*ImageIntelligenceControllerTest' --no-daemon
 ```
 
-Expected: compilation or context startup fails because the web layer is absent.
+예상 결과: web layer가 없으므로 compilation 또는 context startup이 실패한다.
 
-- [ ] **Step 3: Implement serializable API DTOs**
+- [ ] **Step 3: serializable API DTO 구현**
 
-Use dedicated response types:
+전용 response type을 사용한다:
 
 ```kotlin
 internal enum class AnalysisStatus {
@@ -902,9 +900,7 @@ internal data class ImageIntelligenceResponse(
 ) : Serializable
 ```
 
-All data classes implement `Serializable` and define `serialVersionUID`. Do not serialize
-raw OCR engine objects, raw bytes, `Throwable`, `WorkContext`, or `WorkReport`.
-The mapper must enforce these invariants:
+모든 data class는 `Serializable`을 구현하고 `serialVersionUID`를 정의한다. raw OCR engine object, raw bytes, `Throwable`, `WorkContext`, `WorkReport`는 serialize하지 않는다. mapper는 다음 invariant를 강제해야 한다:
 
 ```text
 OCR COMPLETED -> result != null, reasonCode == null
@@ -914,7 +910,7 @@ detection/barcode EMPTY     -> collection is empty, reasonCode == null
 UNAVAILABLE or FAILED       -> payload is absent/empty, reasonCode != null
 ```
 
-- [ ] **Step 4: Implement service, controller, and advice**
+- [ ] **Step 4: service, controller, advice 구현**
 
 Controller:
 
@@ -929,27 +925,24 @@ suspend fun analyze(
     service.analyze(file)
 ```
 
-`ImageIntelligenceService` receives
-`requestIdProvider: () -> String = { UUID.randomUUID().toString() }` so production gets a
-generated identifier and tests remain deterministic. It qualifies the file once, invokes
-workflow, aggregates, applies policy, and maps DTOs.
+`ImageIntelligenceService`는 `requestIdProvider: () -> String = { UUID.randomUUID().toString() }`를 받는다. production은 생성된 identifier를 사용하고 test는 deterministic하게 유지된다. service는 file을 한 번 qualify하고, workflow를 호출하고, aggregate와 policy를 적용한 뒤 DTO로 mapping한다.
 
-Advice maps:
+Advice mapping:
 
-- `InvalidImageUploadException` → `400` or `413` based on exception subtype;
-- missing multipart part → `400`;
-- Spring multipart overflow → `413`;
-- `ImageWorkflowException` → sanitized `500`;
-- no raw exception message in response.
+- `InvalidImageUploadException` -> exception subtype에 따라 `400` 또는 `413`
+- missing multipart part -> `400`
+- Spring multipart overflow -> `413`
+- `ImageWorkflowException` -> sanitized `500`
+- response에는 raw exception message를 넣지 않음
 
-- [ ] **Step 5: Run GREEN**
+- [ ] **Step 5: GREEN 실행**
 
 ```bash
 ./gradlew :spring-boot-image-intelligence-api:test \
   --tests '*ImageIntelligenceControllerTest' --no-daemon
 ```
 
-Expected: success, partial, failed-envelope, input rejection, and sanitized error tests pass.
+예상 결과: success, partial, failed-envelope, input rejection, sanitized error test가 통과한다.
 
 - [ ] **Step 6: Commit**
 
