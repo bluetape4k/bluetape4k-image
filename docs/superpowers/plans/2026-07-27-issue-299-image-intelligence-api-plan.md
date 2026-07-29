@@ -257,22 +257,22 @@ git commit -m "Establish the integrated image example boundary" \
   -m "Tested: property contract test and Gradle project listing"
 ```
 
-## Task 2: Qualify and decode each upload exactly once
+## Task 2: 각 upload를 검증하고 정확히 한 번만 decode
 
-**Complexity:** Medium
-**Depends on:** Task 1
+**복잡도:** Medium
+**의존성:** Task 1
 **Pattern skills:** `bluetape-kotlin-patterns`, `test-driven-development`
-**Rollback point:** revert qualifier and tests without affecting provider or workflow code.
+**Rollback 지점:** provider 또는 workflow code에 영향을 주지 않고 qualifier와 test만 revert한다.
 
-**Files:**
+**파일:**
 
 - Create: `examples/spring-boot-image-intelligence-api/src/main/kotlin/io/bluetape4k/images/examples/spring/intelligence/service/ImageUploadQualifier.kt`
 - Create: `examples/spring-boot-image-intelligence-api/src/test/kotlin/io/bluetape4k/images/examples/spring/intelligence/service/ImageUploadQualifierTest.kt`
 - Create: `examples/spring-boot-image-intelligence-api/src/test/kotlin/io/bluetape4k/images/examples/spring/intelligence/support/ImageIntelligenceFixtures.kt`
 
-- [ ] **Step 1: Write qualification boundary tests**
+- [ ] **Step 1: qualification boundary test 작성**
 
-Cover:
+다음을 검증한다:
 
 ```kotlin
 @Test
@@ -308,21 +308,20 @@ fun `rejects pixel overflow before decode`() = runTest {
 }
 ```
 
-Also test missing content type, empty bytes, reported-size overflow, actual-size overflow,
-unsupported GIF, malformed bytes, maximum side, and caller cancellation while reading bytes.
+content type 누락, empty bytes, reported-size overflow, actual-size overflow, unsupported GIF, malformed bytes, maximum side, byte read 중 caller cancellation도 함께 test한다.
 
-- [ ] **Step 2: Run the focused test and observe RED**
+- [ ] **Step 2: focused test를 실행하고 RED 확인**
 
 ```bash
 ./gradlew :spring-boot-image-intelligence-api:test \
   --tests '*ImageUploadQualifierTest' --no-daemon
 ```
 
-Expected: compilation fails because qualifier types are absent.
+예상 결과: qualifier type이 없으므로 compilation이 실패한다.
 
-- [ ] **Step 3: Implement the bounded qualification sequence**
+- [ ] **Step 3: 제한된 qualification sequence 구현**
 
-Use these contracts:
+다음 계약을 사용한다:
 
 ```kotlin
 internal data class QualifiedImage(
@@ -343,19 +342,19 @@ internal class ImagePayloadTooLargeException(
 ) : InvalidImageUploadException(reasonCode, message)
 ```
 
-`ImageUploadQualifier.qualify(file)` must execute in this exact order:
+`ImageUploadQualifier.qualify(file)`은 정확히 다음 순서로 실행해야 한다:
 
-1. reject empty input and unsupported declared content type;
-2. reject `MultipartFile.size` overflow;
-3. read bytes on `Dispatchers.IO`, rethrowing `CancellationException`;
-4. reject actual byte overflow;
-5. identify PNG, JPEG, or WebP from magic bytes and compare with declared type;
-6. call `probeImageDimensions`, falling back to bounded metadata parsing;
-7. reject maximum side and pixel count before full decode;
-8. call `immutableImageOf(bytes)` once on `Dispatchers.Default`;
-9. return only media type, dimensions, and decoded image—never retain the source bytes.
+1. empty input과 지원하지 않는 declared content type을 거절한다.
+2. `MultipartFile.size` overflow를 거절한다.
+3. `Dispatchers.IO`에서 byte를 읽고 `CancellationException`은 다시 throw한다.
+4. actual byte overflow를 거절한다.
+5. magic byte에서 PNG, JPEG, WebP를 식별하고 declared type과 비교한다.
+6. `probeImageDimensions`를 호출하고, 실패하면 제한된 metadata parsing으로 fallback한다.
+7. full decode 전에 maximum side와 pixel count를 거절한다.
+8. `Dispatchers.Default`에서 `immutableImageOf(bytes)`를 한 번만 호출한다.
+9. media type, dimension, decoded image만 반환하고 source byte는 절대 보관하지 않는다.
 
-Catch unexpected decode exceptions and expose only:
+예상하지 못한 decode exception은 catch하고 다음 형태로만 노출한다:
 
 ```kotlin
 InvalidImageUploadException(
@@ -365,14 +364,14 @@ InvalidImageUploadException(
 )
 ```
 
-- [ ] **Step 4: Run GREEN**
+- [ ] **Step 4: GREEN 실행**
 
 ```bash
 ./gradlew :spring-boot-image-intelligence-api:test \
   --tests '*ImageUploadQualifierTest' --no-daemon
 ```
 
-Expected: all qualification and cancellation tests pass.
+예상 결과: 모든 qualification 및 cancellation test가 통과한다.
 
 - [ ] **Step 5: Commit**
 
