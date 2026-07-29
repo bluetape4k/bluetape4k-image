@@ -1,54 +1,41 @@
-# Issue #273 Spring Boot Barcode Quickstart Spec Review
+# Issue #273 Spring Boot Barcode Quickstart Spec 검토
 
-## Scope
+## 범위
 
 - Artifact: `docs/superpowers/specs/2026-07-14-issue-273-spring-barcode-quickstart-design.md`
-- Artifact kind: spec
-- Research basis: live issue #273, existing barcode API/ZXing source and tests,
-  `spring-boot-image-api`, `Examples.yml`, module-registration guards, and issue
-  #272 deterministic barcode fixtures
-- Lenses: performance, stability, security, operator/Ops, developer/API,
-  user/caller, followed by main-session integration
+- Artifact 종류: spec
+- Research basis: live issue #273, 기존 barcode API/ZXing source와 tests, `spring-boot-image-api`, `Examples.yml`, module-registration guard, issue #272 deterministic barcode fixture
+- 관점: performance, stability, security, operator/Ops, developer/API, user/caller, 이후 main-session integration
 
-The active native-agent interface does not expose the required `agent_type`
-field and the session has fewer than six free lanes. Per `model-routing.md`,
-each required lens was executed as a separate read-only main-session pass
-rather than inventing agent roles.
+active native-agent interface는 필수 `agent_type` field를 노출하지 않고 세션에는 여섯 개의 free lane도 없다. `model-routing.md`에 따라 각 필수 lens는 agent role을 지어내지 않고 별도 read-only main-session pass로 실행했다.
 
-## Initial Findings
+## 초기 발견 사항
 
-| Priority | Lens | Evidence | Required edit | Resolution |
+| Priority | 관점 | 근거 | 필요한 수정 | 해결 |
 |---|---|---|---|---|
-| P1 | Security | The initial dimension guard named only `probeImageDimensions`, whose implementation depends on an ImageIO reader, while the upload allowlist includes WebP. | Define a bounded metadata-report fallback that can read WebP dimensions before full decode, and test all three accepted formats. | Fixed in sections 6.3 and 9. |
-| P1 | Developer/API | The initial response shape serialized the full library `BarcodeResult`, which can expose backend metadata, points, and future fields not intended as an HTTP contract. | Map provider-neutral results to a bounded DTO containing text, normalized format, and provider name. | Fixed in section 6.4. |
-| P1 | User/caller | The selected copied QR fixture exposed the issue #272 benchmark payload in a new-user quickstart. | Generate a module-owned QR with the stable payload `bluetape4k-barcode-quickstart`; keep the benchmark directory out of runtime source sets. | Fixed in sections 6.4 and 8. |
-| P2 | Performance | The initial fixture component contract did not say whether every GET repeated classpath I/O. | Load and validate fixed resources once at startup and avoid sharing mutable byte arrays. | Fixed in section 6.1. |
+| P1 | Security | 초기 dimension guard는 `probeImageDimensions`만 명명했는데, 해당 implementation은 ImageIO reader에 의존하고 upload allowlist에는 WebP가 포함된다. | full decode 전에 WebP dimension을 읽을 수 있는 bounded metadata-report fallback을 정의하고 세 accepted format을 모두 test한다. | Sections 6.3과 9에서 수정. |
+| P1 | Developer/API | 초기 response shape가 library `BarcodeResult` 전체를 serialize해 HTTP contract로 의도하지 않은 backend metadata, point, future field를 노출할 수 있었다. | provider-neutral result를 text, normalized format, provider name만 담는 bounded DTO로 map한다. | Section 6.4에서 수정. |
+| P1 | User/caller | 선택한 copied QR fixture가 issue #272 benchmark payload를 new-user quickstart에 노출했다. | stable payload `bluetape4k-barcode-quickstart`로 module-owned QR을 생성하고 benchmark directory를 runtime source set에서 제외한다. | Sections 6.4와 8에서 수정. |
+| P2 | Performance | 초기 fixture component contract가 모든 GET마다 classpath I/O를 반복하는지 설명하지 않았다. | fixed resource를 startup에 한 번 load/validate하고 mutable byte array sharing을 피한다. | Section 6.1에서 수정. |
 
-## Rerun Verdicts
+## 재실행 판정
 
-| Lens | Verdict | Evidence |
+| 관점 | 판정 | 근거 |
 |---|---|---|
-| Performance | PASS | Sections 6.1 and 6.3 load fixtures once, bound upload size before byte reads, and dispatch blocking I/O and CPU decode work to the appropriate coroutine dispatchers. |
-| Stability | PASS | Sections 6.1, 6.3, 8, 9, and 12 define startup failure for missing fixtures, immutable request isolation, cancellation propagation, deterministic failure cases, and stateless rollback. |
-| Security | PASS | Sections 6.3, 6.4, and 7 bound encoded and decoded size, validate actual image structure after untrusted content type, sanitize errors, omit payload/backend metadata, and document the unauthenticated local-example boundary. |
-| Operator/Ops | PASS | Sections 6.4 and 12 define stable status/error mappings, no persistent state or migration, default port behavior, startup diagnostics, and directory-level rollback. |
-| Developer/API | PASS | Sections 5-6 keep ZXing construction in configuration, use `BarcodeReader` in the service, isolate controller/service/fixture/DTO responsibilities, and avoid production API changes. |
-| User/caller | PASS | Sections 4, 6.2, 7, 10, and 13 provide a real upload path, three reproducible scenarios, exact commands/responses, bilingual docs, capability limits, and production-deployment warnings. |
+| Performance | PASS | Sections 6.1과 6.3은 fixture를 한 번 load하고, byte read 전에 upload size를 제한하며, blocking I/O와 CPU decode work를 적절한 coroutine dispatcher로 dispatch한다. |
+| Stability | PASS | Sections 6.1, 6.3, 8, 9, 12는 missing fixture의 startup failure, immutable request isolation, cancellation propagation, deterministic failure case, stateless rollback을 정의한다. |
+| Security | PASS | Sections 6.3, 6.4, 7은 encoded/decoded size를 bound하고, untrusted content type 이후 실제 image structure를 validate하며, error를 sanitize하고 payload/backend metadata를 생략하며 unauthenticated local-example boundary를 문서화한다. |
+| Operator/Ops | PASS | Sections 6.4와 12는 stable status/error mapping, persistent state나 migration 없음, default port behavior, startup diagnostics, directory-level rollback을 정의한다. |
+| Developer/API | PASS | Sections 5-6은 ZXing construction을 configuration에 두고, service에서 `BarcodeReader`를 사용하며, controller/service/fixture/DTO responsibility를 isolate하고 production API change를 피한다. |
+| User/caller | PASS | Sections 4, 6.2, 7, 10, 13은 real upload path, 세 reproducible scenario, exact command/response, bilingual docs, capability limit, production-deployment warning을 제공한다. |
 
-## Integration Verdict
+## 통합 판정
 
-- The selected dedicated module is narrower and more teachable than extending
-  the existing storage-focused Spring example.
-- Upload validation, malformed normalization, no-result semantics, provider
-  boundary, fixture ownership, HTTP DTO shape, and rollback are explicit and
-  testable.
-- The full registration chain is represented by settings, AGENTS, Examples
-  workflow, README locales, project listing, and diagram QA.
-- BOM/catalog, publication, Kover aggregation, benchmark updates, native/JNI,
-  OCR, Docker, and Testcontainers have concrete non-published pure-JVM N/A
-  evidence.
-- Chart N/A is evidence-backed because this issue has no measured series; the
-  three README diagrams remain required visual artifacts.
-- Latest convergence: **P0=0, P1=0**. The P2 fixture-I/O finding is fixed.
+- selected dedicated module은 기존 storage-focused Spring example 확장보다 좁고 teachable하다.
+- upload validation, malformed normalization, no-result semantic, provider boundary, fixture ownership, HTTP DTO shape, rollback이 명시적이고 testable하다.
+- full registration chain은 settings, AGENTS, Examples workflow, README locale, project listing, diagram QA로 표현된다.
+- BOM/catalog, publication, Kover aggregation, benchmark update, native/JNI, OCR, Docker, Testcontainers는 non-published pure-JVM N/A evidence가 구체적이다.
+- Chart N/A는 evidence-backed이다. 이 issue에는 measured series가 없고, README diagram 세 개는 여전히 required visual artifact다.
+- Latest convergence: **P0=0, P1=0**. P2 fixture-I/O finding은 수정됐다.
 
 Required checks: 7/7; N/A: 0; Blocked: 0.
