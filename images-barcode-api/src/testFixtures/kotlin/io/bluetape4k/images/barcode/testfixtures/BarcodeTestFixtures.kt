@@ -7,27 +7,27 @@ import java.awt.geom.AffineTransform
 import java.awt.image.BufferedImage
 
 /**
- * Deterministic barcode fixture helpers shared by provider tests.
+ * provider test가 공유하는 deterministic barcode fixture helper입니다.
  *
- * These helpers generate images at test runtime. They do not embed external
- * image assets, so there is no third-party image license to track.
+ * 이 helper들은 test runtime에 이미지를 생성합니다. 외부 image asset을 포함하지 않으므로
+ * 추적해야 할 third-party image license가 없습니다.
  */
 object BarcodeTestFixtures {
 
     /**
-     * License/source note for generated barcode fixtures.
+     * 생성된 barcode fixture의 license/source note입니다.
      */
     const val GENERATED_SOURCE_NOTE: String =
         "Generated at test runtime from deterministic code; no external image asset."
 
     /**
-     * Byte sequence that is intentionally not an encoded image.
+     * 의도적으로 인코딩 이미지가 아니게 만든 byte sequence입니다.
      */
     val malformedImageBytes: ByteArray =
         "not-an-image".toByteArray(Charsets.UTF_8)
 
     /**
-     * Creates a plain white image with no barcode content.
+     * barcode content가 없는 plain white image를 생성합니다.
      */
     fun blankImage(
         dimensions: ImageDimensions = ImageDimensions(width = 180, height = 120),
@@ -44,7 +44,7 @@ object BarcodeTestFixtures {
     }
 
     /**
-     * Rotates an image clockwise while preserving a white background.
+     * white background를 보존하면서 이미지를 시계 방향으로 회전합니다.
      */
     fun rotateClockwise(image: ImmutableImage): ImmutableImage {
         val source = image.awt()

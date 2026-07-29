@@ -1,36 +1,35 @@
 package io.bluetape4k.images.captcha
 
 /**
- * Generates CAPTCHA image challenges.
+ * CAPTCHA image challenge를 생성합니다.
  *
- * Use [CaptchaVerificationService] when applications need a reusable one-shot
- * verification contract for generated challenges. Applications still own the
- * durable storage backend and rate limiting policy.
+ * application이 생성된 challenge에 재사용 가능한 one-shot verification contract가 필요하면
+ * [CaptchaVerificationService]를 사용합니다. durable storage backend와 rate limiting
+ * policy는 계속 application 책임입니다.
  */
 interface CaptchaGenerator {
 
     /**
-     * Rendering and text-generation options used by this generator.
+     * 이 generator가 사용하는 rendering 및 text-generation option입니다.
      */
     val options: CaptchaOptions
 
     /**
-     * Generates a CAPTCHA challenge.
+     * CAPTCHA challenge를 생성합니다.
      *
-     * @param length effective text length for this call; defaults to
-     * [CaptchaOptions.length] and is validated per call
-     * @return generated challenge text and image
+     * @param length 이 호출에 적용할 실제 text length입니다. 기본값은 [CaptchaOptions.length]이고 호출마다 검증됩니다.
+     * @return 생성된 challenge text와 image입니다.
      */
     fun generate(length: Int = options.length): CaptchaChallenge
 
     /**
-     * Generates a CAPTCHA challenge from a coroutine.
+     * coroutine에서 CAPTCHA challenge를 생성합니다.
      *
-     * Cancellation is honored before CPU-bound Java2D rendering starts. Mid-render
-     * cancellation is not guaranteed because Java2D drawing is non-suspending.
+     * CPU-bound Java2D rendering이 시작되기 전 cancellation을 반영합니다. Java2D drawing은
+     * non-suspending이므로 rendering 중간 cancellation은 보장하지 않습니다.
      *
-     * @param length effective text length for this call
-     * @return generated challenge text and image
+     * @param length 이 호출에 적용할 실제 text length입니다.
+     * @return 생성된 challenge text와 image입니다.
      */
     suspend fun generateSuspend(length: Int = options.length): CaptchaChallenge
 }

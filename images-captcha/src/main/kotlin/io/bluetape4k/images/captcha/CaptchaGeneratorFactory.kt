@@ -3,7 +3,7 @@ package io.bluetape4k.images.captcha
 import java.time.Clock
 
 /**
- * Creates a Java2D-backed [CaptchaGenerator].
+ * Java2D 기반 [CaptchaGenerator]를 생성합니다.
  */
 fun captchaGenerator(
     clock: Clock = Clock.systemUTC(),

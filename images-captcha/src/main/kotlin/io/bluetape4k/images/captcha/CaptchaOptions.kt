@@ -10,10 +10,10 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 
 /**
- * Options used to generate a CAPTCHA image challenge.
+ * CAPTCHA image challenge 생성에 사용하는 option입니다.
  *
- * Defaults use uppercase characters only and exclude ambiguous `I`, `O`, `0`,
- * and `1` to reduce user-entry mistakes.
+ * 기본값은 uppercase character만 사용하고 모호한 `I`, `O`, `0`, `1`을 제외해
+ * 사용자 입력 실수를 줄입니다.
  */
 data class CaptchaOptions(
     val length: Int = DEFAULT_LENGTH,
@@ -78,7 +78,7 @@ data class CaptchaOptions(
 }
 
 /**
- * CAPTCHA image dimensions.
+ * CAPTCHA image dimension입니다.
  */
 data class CaptchaImageSize(
     val width: Int = DEFAULT_WIDTH,

@@ -4,38 +4,37 @@ import io.bluetape4k.support.requireNotBlank
 import java.io.Serializable
 
 /**
- * Provider-neutral barcode failure reason.
+ * provider-neutral barcode failure reason입니다.
  */
 enum class BarcodeFailureReason {
-    /** No barcode was found in the image. */
+    /** 이미지에서 barcode를 찾지 못했습니다. */
     NO_BARCODE,
 
-    /** The requested symbology is unsupported by the provider. */
+    /** 요청한 symbology를 provider가 지원하지 않습니다. */
     UNSUPPORTED_FORMAT,
 
-    /** Image input could not be decoded or was malformed. */
+    /** 이미지 입력을 디코딩할 수 없거나 입력이 malformed입니다. */
     MALFORMED_INPUT,
 
-    /** The provider failed during decoding. */
+    /** provider가 decoding 중 실패했습니다. */
     DECODE_FAILED,
 
-    /** The provider is unavailable or misconfigured. */
+    /** provider를 사용할 수 없거나 설정이 잘못되었습니다. */
     PROVIDER_UNAVAILABLE,
 
-    /** The operation was cancelled. */
+    /** 작업이 취소되었습니다. */
     CANCELLED,
 
-    /** Failure reason is unknown or provider-specific. */
+    /** failure reason이 알 수 없거나 provider-specific입니다. */
     UNKNOWN,
 }
 
 /**
- * Base exception for barcode extraction failures.
+ * barcode 추출 실패의 base exception입니다.
  *
- * ## Contract
- * Messages should be sanitized for logs and caller responses. Provider modules
- * may attach the original cause while keeping sensitive paths or payloads out
- * of [message].
+ * ## 동작/계약
+ * message는 log와 caller response에 안전하도록 정제되어야 합니다. provider module은
+ * 민감한 path나 payload가 [message]에 들어가지 않게 하면서 원본 cause를 붙일 수 있습니다.
  */
 open class BarcodeException(
     val reason: BarcodeFailureReason,

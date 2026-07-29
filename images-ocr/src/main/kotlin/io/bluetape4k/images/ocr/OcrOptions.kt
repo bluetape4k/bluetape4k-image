@@ -8,18 +8,16 @@ import java.io.Serializable
 import net.sourceforge.tess4j.ITessAPI
 
 /**
- * Options for Tesseract-backed OCR recognition.
+ * Tesseract 기반 OCR recognition option입니다.
  *
- * ## Contract
- * - [languages] are joined with `+` and passed to Tess4J as the Tesseract
- *   language expression.
- * - [tessdataPath] is optional. When omitted, Tesseract resolves trained data
- *   from `TESSDATA_PREFIX` or its own default lookup path.
- * - [variables] and [configs] are applied to the per-call Tess4J instance
- *   before OCR starts.
- * - [structuredDetail] controls how much structured OCR data is requested.
- * - [regions] limits recognition to caller-supplied source regions when the
- *   underlying engine supports region-limited extraction.
+ * ## 동작/계약
+ * - [languages]는 `+`로 join되어 Tess4J에 Tesseract language expression으로 전달됩니다.
+ * - [tessdataPath]는 선택값입니다. 생략하면 Tesseract가 `TESSDATA_PREFIX` 또는 자체
+ *   default lookup path에서 trained data를 찾습니다.
+ * - [variables]와 [configs]는 OCR 시작 전에 call별 Tess4J instance에 적용됩니다.
+ * - [structuredDetail]은 요청할 structured OCR data의 양을 제어합니다.
+ * - [regions]는 underlying engine이 region-limited extraction을 지원할 때 caller가
+ *   제공한 source region으로 recognition 범위를 제한합니다.
  *
  * ```kotlin
  * val options = OcrOptions(languages = listOf("eng", "kor"))
@@ -46,7 +44,7 @@ data class OcrOptions(
     }
 
     /**
-     * Language expression passed to Tess4J.
+     * Tess4J에 전달되는 language expression입니다.
      */
     val languageExpression: String
         get() = languages.joinToString(separator = "+")
@@ -59,12 +57,12 @@ data class OcrOptions(
 }
 
 /**
- * Structured OCR extraction detail requested from an [OcrEngine].
+ * [OcrEngine]에 요청하는 structured OCR extraction detail입니다.
  *
- * ## Contract
- * - [PLAIN_TEXT] preserves the current text-only baseline.
- * - [LINE] requests block and line entries when available.
- * - [WORD] requests block, line, and word entries when available.
+ * ## 동작/계약
+ * - [PLAIN_TEXT]는 현재 text-only baseline을 보존합니다.
+ * - [LINE]은 사용 가능할 때 block 및 line entry를 요청합니다.
+ * - [WORD]는 사용 가능할 때 block, line, word entry를 요청합니다.
  */
 enum class OcrStructuredDetail {
     PLAIN_TEXT,
@@ -73,12 +71,12 @@ enum class OcrStructuredDetail {
 }
 
 /**
- * Pixel-space OCR bounding box.
+ * pixel-space OCR bounding box입니다.
  *
- * ## Contract
- * Coordinates are zero-based pixel values in the source image coordinate
- * system. Width and height must be positive. Missing engine box data is modeled
- * as `null` on OCR entries instead of fabricating a zero-sized box.
+ * ## 동작/계약
+ * coordinate는 source image coordinate system의 0 기준 pixel 값입니다. width와 height는
+ * 양수여야 합니다. engine box data가 없으면 zero-sized box를 만들어내지 않고 OCR entry에서
+ * `null`로 모델링합니다.
  */
 @ConsistentCopyVisibility
 data class OcrBoundingBox private constructor(
@@ -95,11 +93,11 @@ data class OcrBoundingBox private constructor(
         height.requirePositiveNumber("height")
     }
 
-    /** Converts this box to an AWT rectangle for Tess4J region APIs. */
+    /** Tess4J region API에 넘길 AWT rectangle로 이 box를 변환합니다. */
     fun toAwtRectangle(): Rectangle =
         Rectangle(x, y, width, height)
 
-    /** Returns true when this box intersects [region]. */
+    /** 이 box가 [region]과 교차하면 `true`를 반환합니다. */
     fun intersects(region: OcrRegion): Boolean =
         toAwtRectangle().intersects(region.boundingBox.toAwtRectangle())
 
@@ -129,12 +127,11 @@ data class OcrBoundingBox private constructor(
 }
 
 /**
- * Caller-supplied source region for region-limited OCR.
+ * region-limited OCR을 위해 caller가 제공하는 source region입니다.
  *
- * ## Contract
- * [id] is optional and is copied to structured entries when a recognized box
- * intersects this region. It is metadata only; storage and workflow side
- * effects remain caller-owned.
+ * ## 동작/계약
+ * [id]는 선택값이며, 인식된 box가 이 region과 교차하면 structured entry로 복사됩니다.
+ * 이는 metadata일 뿐이고 storage 및 workflow side effect는 계속 caller 소유입니다.
  */
 @ConsistentCopyVisibility
 data class OcrRegion private constructor(
@@ -158,11 +155,10 @@ data class OcrRegion private constructor(
 }
 
 /**
- * OCR result returned by an [OcrEngine].
+ * [OcrEngine]이 반환하는 OCR result입니다.
  *
- * ## Contract
- * [text] contains the exact recognized text after the engine-level post
- * processing defined by [options].
+ * ## 동작/계약
+ * [text]는 [options]가 정의한 engine-level post processing 이후의 정확한 인식 text를 담습니다.
  */
 data class OcrResult(
     val text: String,
@@ -174,14 +170,13 @@ data class OcrResult(
 }
 
 /**
- * Structured OCR result returned by a [StructuredOcrEngine].
+ * [StructuredOcrEngine]이 반환하는 structured OCR result입니다.
  *
- * ## Contract
- * - [text] is the same plain-text extraction surface used by [OcrResult].
- * - [pages] always contains at least one source page entry.
- * - [blocks], [lines], and [words] are populated according to
- *   [OcrOptions.structuredDetail] and engine support.
- * - Missing confidence or bounding-box data stays `null`.
+ * ## 동작/계약
+ * - [text]는 [OcrResult]와 같은 plain-text extraction surface입니다.
+ * - [pages]는 항상 하나 이상의 source page entry를 포함합니다.
+ * - [blocks], [lines], [words]는 [OcrOptions.structuredDetail]와 engine support에 따라 채워집니다.
+ * - confidence 또는 bounding-box data가 없으면 `null`로 유지됩니다.
  */
 data class OcrStructuredResult(
     val text: String,
@@ -202,7 +197,7 @@ data class OcrStructuredResult(
 }
 
 /**
- * OCR source page metadata.
+ * OCR source page metadata입니다.
  */
 data class OcrPage(
     val pageIndex: Int,
@@ -223,7 +218,7 @@ data class OcrPage(
 }
 
 /**
- * OCR text block entry.
+ * OCR text block entry입니다.
  */
 data class OcrTextBlock(
     val pageIndex: Int,
@@ -244,7 +239,7 @@ data class OcrTextBlock(
 }
 
 /**
- * OCR text line entry.
+ * OCR text line entry입니다.
  */
 data class OcrTextLine(
     val pageIndex: Int,
@@ -265,7 +260,7 @@ data class OcrTextLine(
 }
 
 /**
- * OCR word entry.
+ * OCR word entry입니다.
  */
 data class OcrWord(
     val pageIndex: Int,
@@ -286,7 +281,7 @@ data class OcrWord(
 }
 
 /**
- * Stable wrapper around Tess4J OCR engine mode constants.
+ * Tess4J OCR engine mode constant를 감싸는 안정적인 wrapper입니다.
  */
 enum class TesseractEngineMode(
     val value: Int,
@@ -298,7 +293,7 @@ enum class TesseractEngineMode(
 }
 
 /**
- * Stable wrapper around Tess4J page segmentation mode constants.
+ * Tess4J page segmentation mode constant를 감싸는 안정적인 wrapper입니다.
  */
 enum class TesseractPageSegmentationMode(
     val value: Int,

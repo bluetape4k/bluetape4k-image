@@ -11,13 +11,13 @@ import net.sourceforge.tess4j.TesseractException
 import net.sourceforge.tess4j.Word
 
 /**
- * Tess4J-backed OCR engine.
+ * Tess4J 기반 OCR engine입니다.
  *
- * ## Contract
- * - A fresh Tess4J [ITesseract] instance is created for each recognition call.
- * - No mutable native OCR state is shared across calls.
- * - Tesseract and traineddata packages must be installed by the runtime
- *   environment; this module does not bundle language data.
+ * ## 동작/계약
+ * - 각 recognition call마다 새 Tess4J [ITesseract] instance를 생성합니다.
+ * - mutable native OCR state는 call 사이에 공유하지 않습니다.
+ * - Tesseract와 traineddata package는 runtime environment가 설치해야 하며, 이 module은
+ *   language data를 bundle하지 않습니다.
  *
  * ```kotlin
  * val text = image.extractText(engine = TesseractOcrEngine())

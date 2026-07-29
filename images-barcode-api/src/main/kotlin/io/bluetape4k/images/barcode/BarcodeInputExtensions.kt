@@ -6,7 +6,7 @@ import java.nio.file.Path
 import okio.Source
 
 /**
- * Reads barcodes from encoded image [bytes].
+ * 인코딩 이미지 [bytes]에서 barcode를 읽습니다.
  */
 fun BarcodeReader.readBarcodes(
     bytes: ByteArray,
@@ -15,7 +15,7 @@ fun BarcodeReader.readBarcodes(
     readBarcodes(immutableImageOf(bytes), options)
 
 /**
- * Reads barcodes from an encoded image [path].
+ * 인코딩 이미지 [path]에서 barcode를 읽습니다.
  */
 fun BarcodeReader.readBarcodes(
     path: Path,
@@ -24,9 +24,9 @@ fun BarcodeReader.readBarcodes(
     readBarcodes(immutableImageOf(path), options)
 
 /**
- * Reads barcodes from a caller-owned encoded image [input].
+ * 호출자가 소유한 인코딩 이미지 [input]에서 barcode를 읽습니다.
  *
- * The caller remains responsible for closing [input].
+ * [input]을 닫는 책임은 계속 호출자에게 있습니다.
  */
 fun BarcodeReader.readBarcodes(
     input: InputStream,
@@ -35,9 +35,9 @@ fun BarcodeReader.readBarcodes(
     readBarcodes(immutableImageOf(input), options)
 
 /**
- * Reads barcodes from an Okio [source].
+ * Okio [source]에서 barcode를 읽습니다.
  *
- * The source is closed by `immutableImageOf(source)`.
+ * source는 `immutableImageOf(source)`에서 닫힙니다.
  */
 fun BarcodeReader.readBarcodes(
     source: Source,

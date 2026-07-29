@@ -4,7 +4,7 @@ import java.awt.Color
 import kotlin.time.Duration
 
 /**
- * Builder for [CaptchaOptions].
+ * [CaptchaOptions] builder입니다.
  */
 class CaptchaOptionsBuilder {
 

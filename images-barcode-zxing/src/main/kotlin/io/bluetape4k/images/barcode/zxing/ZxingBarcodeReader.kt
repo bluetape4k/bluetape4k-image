@@ -26,13 +26,12 @@ import io.bluetape4k.images.barcode.BarcodeResult
 import io.bluetape4k.images.immutableImageOf
 
 /**
- * ZXing-backed barcode reader.
+ * ZXing 기반 barcode reader입니다.
  *
- * ## Contract
- * This provider keeps ZXing dependencies inside `images-barcode-zxing` and
- * returns only provider-neutral barcode API models. A no-code image returns an
- * empty list; unsupported requested formats and decode failures are normalized
- * as [BarcodeException].
+ * ## 동작/계약
+ * 이 provider는 ZXing dependency를 `images-barcode-zxing` 안에만 유지하고
+ * provider-neutral barcode API model만 반환합니다. barcode가 없는 이미지는 빈 list를
+ * 반환하고, 지원하지 않는 요청 format과 decode failure는 [BarcodeException]으로 정규화합니다.
  *
  * ```kotlin
  * val reader = ZxingBarcodeReader()
@@ -67,7 +66,7 @@ class ZxingBarcodeReader(
     }
 
     /**
-     * Reads barcodes from encoded image [bytes] and normalizes malformed input.
+     * 인코딩 이미지 [bytes]에서 barcode를 읽고 malformed input을 정규화합니다.
      */
     fun readBarcodes(
         bytes: ByteArray,
@@ -102,7 +101,7 @@ class ZxingBarcodeReader(
 }
 
 /**
- * Returns the default provider identity for ZXing barcode extraction.
+ * ZXing barcode 추출에 사용할 기본 provider identity를 반환합니다.
  */
 fun zxingProviderIdentity(): BarcodeProviderIdentity =
     BarcodeProviderIdentity(

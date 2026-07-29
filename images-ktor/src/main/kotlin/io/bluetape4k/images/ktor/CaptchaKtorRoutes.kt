@@ -31,10 +31,10 @@ private const val DEFAULT_CONTENT_TYPE = "image/png"
 private const val DEFAULT_ID_LENGTH = 16
 
 /**
- * Ktor route configuration for issuing and verifying bluetape4k CAPTCHA challenges.
+ * bluetape4k CAPTCHA challenge 발급 및 검증을 위한 Ktor route configuration입니다.
  *
- * The route helper reuses bluetape4k Ktor core request-parameter and error
- * response helpers while leaving JSON plugin installation to the application.
+ * 이 route helper는 bluetape4k Ktor core request-parameter 및 error response helper를
+ * 재사용하지만 JSON plugin 설치는 application에 맡깁니다.
  *
  * ```kotlin
  * routing {
@@ -85,7 +85,7 @@ enum class CaptchaVerificationStatus {
 }
 
 /**
- * Source-compatible alias for the shared bluetape4k Ktor error payload.
+ * shared bluetape4k Ktor error payload에 대한 source-compatible alias입니다.
  */
 @Deprecated(
     message = "Use io.bluetape4k.ktor.core.ApiErrorResponse.",
@@ -94,11 +94,11 @@ enum class CaptchaVerificationStatus {
 typealias CaptchaRouteErrorResponse = ApiErrorResponse
 
 /**
- * Registers CAPTCHA issue and one-shot verification endpoints.
+ * CAPTCHA issue endpoint와 one-shot verification endpoint를 등록합니다.
  *
- * Routes:
- * - `GET {routePath}?length=6` issues a challenge and returns base64 PNG bytes.
- * - `POST {routePath}/{id}/verify` consumes the challenge and verifies the submitted answer.
+ * 라우트:
+ * - `GET {routePath}?length=6`은 challenge를 발급하고 base64 PNG byte를 반환합니다.
+ * - `POST {routePath}/{id}/verify`는 challenge를 consume하고 제출된 answer를 검증합니다.
  */
 fun Route.bluetape4kCaptchaRoutes(
     config: CaptchaKtorRoutesConfig = CaptchaKtorRoutesConfig(),

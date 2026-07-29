@@ -20,10 +20,10 @@ import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
 
 /**
- * Java2D-backed [CaptchaGenerator] implementation.
+ * Java2D 기반 [CaptchaGenerator] 구현체입니다.
  *
- * Rendering uses JVM logical fonts, bounded noise, and optional wave distortion
- * without bundling native libraries or font assets.
+ * rendering은 native library나 font asset을 bundle하지 않고 JVM logical font, bounded
+ * noise, optional wave distortion을 사용합니다.
  */
 internal class Java2dCaptchaGenerator(
     override val options: CaptchaOptions = CaptchaOptions(),
@@ -71,7 +71,7 @@ internal class Java2dCaptchaGenerator(
                 graphics.composite = AlphaComposite.SrcOver
                 graphics.color = options.backgroundColor
                 graphics.fillRect(0, 0, options.imageSize.width, options.imageSize.height)
-                // Keep low-opacity noise both behind and over text for legibility plus replay resistance.
+                // 가독성과 replay resistance를 함께 얻기 위해 낮은 opacity의 noise를 text 뒤와 위에 모두 둡니다.
                 drawNoise(graphics)
                 drawText(graphics, text)
                 drawNoise(graphics)

@@ -37,12 +37,12 @@ private const val DEFAULT_THUMBNAIL_SIDE = 320
 private const val DEFAULT_MAX_THUMBNAIL_SIDE = 2_048
 
 /**
- * Ktor route configuration for a compact image thumbnail endpoint.
+ * compact image thumbnail endpoint를 위한 Ktor route configuration입니다.
  *
- * The helper is intentionally small: it decodes one multipart image part,
- * creates a thumbnail through `bluetape4k-images`, and writes encoded bytes
- * back to the caller. Applications that need persistence, S3, CDN URLs, or
- * native libvips should compose those concerns outside this route.
+ * 이 helper는 의도적으로 작게 유지됩니다. multipart image part 하나를 decode하고
+ * `bluetape4k-images`로 thumbnail을 만든 뒤 인코딩 byte를 caller에 돌려줍니다.
+ * persistence, S3, CDN URL, native libvips가 필요한 application은 이 route 밖에서
+ * 해당 concern을 조합해야 합니다.
  */
 class ImageThumbnailKtorRoutesConfig(
     val routePath: String = DEFAULT_IMAGE_ROUTE,
@@ -71,11 +71,11 @@ class ImageThumbnailKtorRoutesConfig(
 }
 
 /**
- * Registers a multipart thumbnail endpoint.
+ * multipart thumbnail endpoint를 등록합니다.
  *
- * Routes:
- * - `POST {routePath}/thumbnail?maxSide=320` reads multipart field `file` and
- *   returns encoded thumbnail bytes.
+ * 라우트:
+ * - `POST {routePath}/thumbnail?maxSide=320`은 multipart field `file`을 읽고
+ *   인코딩된 thumbnail byte를 반환합니다.
  */
 fun Route.bluetape4kImageThumbnailRoutes(
     config: ImageThumbnailKtorRoutesConfig = ImageThumbnailKtorRoutesConfig(),
@@ -109,7 +109,7 @@ fun Route.bluetape4kImageThumbnailRoutes(
 }
 
 /**
- * Source-compatible alias for the shared bluetape4k Ktor error payload.
+ * shared bluetape4k Ktor error payload에 대한 source-compatible alias입니다.
  */
 @Deprecated(
     message = "Use io.bluetape4k.ktor.core.ApiErrorResponse.",

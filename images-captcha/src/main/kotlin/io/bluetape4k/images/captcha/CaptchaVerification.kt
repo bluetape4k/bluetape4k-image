@@ -8,7 +8,7 @@ import java.time.Instant
 import java.util.concurrent.ConcurrentHashMap
 
 /**
- * Application-visible identifier for an issued CAPTCHA challenge.
+ * 발급된 CAPTCHA challenge의 application-visible identifier입니다.
  */
 @JvmInline
 value class CaptchaChallengeId(
@@ -24,11 +24,10 @@ value class CaptchaChallengeId(
 }
 
 /**
- * Serializable metadata stored while a rendered CAPTCHA challenge is waiting
- * for verification.
+ * rendering된 CAPTCHA challenge가 verification을 기다리는 동안 저장되는 serializable metadata입니다.
  *
- * Store this metadata alongside the encoded image bytes. Do not serialize
- * [CaptchaChallenge] directly because it contains scrimage [com.sksamuel.scrimage.ImmutableImage].
+ * 이 metadata를 인코딩 image byte와 함께 저장합니다. [CaptchaChallenge]는 scrimage
+ * [com.sksamuel.scrimage.ImmutableImage]를 포함하므로 직접 serialize하지 않습니다.
  */
 data class IssuedCaptchaChallenge(
     val id: CaptchaChallengeId,
@@ -44,7 +43,7 @@ data class IssuedCaptchaChallenge(
         private const val serialVersionUID: Long = -4817890773200146887L
 
         /**
-         * Creates persisted verification metadata from a generated image challenge.
+         * 생성된 image challenge에서 persistence용 verification metadata를 만듭니다.
          */
         fun from(id: CaptchaChallengeId, challenge: CaptchaChallenge): IssuedCaptchaChallenge =
             IssuedCaptchaChallenge(
@@ -56,34 +55,33 @@ data class IssuedCaptchaChallenge(
 }
 
 /**
- * Storage boundary for issued CAPTCHA metadata.
+ * 발급된 CAPTCHA metadata의 storage boundary입니다.
  *
- * Implementations should make [consume] single-use: once a challenge is returned
- * by [consume], subsequent calls for the same id should return `null`.
+ * 구현체는 [consume]을 single-use로 만들어야 합니다. [consume]이 challenge를 한 번
+ * 반환하면 같은 id의 이후 호출은 `null`을 반환해야 합니다.
  */
 interface CaptchaChallengeStore {
 
     /**
-     * Stores or replaces metadata for an issued challenge.
+     * 발급된 challenge metadata를 저장하거나 교체합니다.
      */
     fun save(challenge: IssuedCaptchaChallenge): IssuedCaptchaChallenge
 
     /**
-     * Atomically removes and returns metadata for a single verification attempt.
+     * 단일 verification attempt를 위해 metadata를 원자적으로 제거하고 반환합니다.
      */
     fun consume(id: CaptchaChallengeId): IssuedCaptchaChallenge?
 }
 
 /**
- * JVM-local in-memory CAPTCHA metadata store.
+ * JVM-local in-memory CAPTCHA metadata store입니다.
  *
- * This implementation is intended for tests, demos, and single-node
- * applications. [save] removes stale entries before inserting a new challenge,
- * then enforces [maxEntries] by evicting entries with the earliest expiration.
+ * 이 구현체는 test, demo, single-node application 용도입니다. [save]는 새 challenge를
+ * 삽입하기 전에 stale entry를 제거한 뒤, 가장 이른 expiration을 가진 entry부터 evict해
+ * [maxEntries]를 강제합니다.
  *
- * Use a distributed store implementation when application instances must share
- * issued challenges or when cleanup must run independently of challenge issue
- * traffic.
+ * application instance들이 발급 challenge를 공유해야 하거나 cleanup이 challenge issue
+ * traffic과 독립적으로 실행되어야 한다면 distributed store 구현체를 사용합니다.
  */
 class InMemoryCaptchaChallengeStore @JvmOverloads constructor(
     private val clock: Clock = Clock.systemUTC(),
@@ -107,13 +105,13 @@ class InMemoryCaptchaChallengeStore @JvmOverloads constructor(
         challenges.remove(id)
 
     /**
-     * Number of currently stored challenges. Exposed for tests and diagnostics.
+     * 현재 저장된 challenge 수입니다. test와 diagnostic을 위해 노출합니다.
      */
     val size: Int
         get() = challenges.size
 
     /**
-     * Removes expired challenges and returns the number of entries removed.
+     * 만료된 challenge를 제거하고 제거된 entry 수를 반환합니다.
      */
     fun removeExpired(now: Instant = clock.instant()): Int {
         var removed = 0
@@ -143,7 +141,7 @@ class InMemoryCaptchaChallengeStore @JvmOverloads constructor(
 }
 
 /**
- * Strategy used to compare the expected CAPTCHA answer with user input.
+ * 기대 CAPTCHA answer와 사용자 입력을 비교하는 strategy입니다.
  */
 fun interface CaptchaAnswerMatcher {
 
@@ -152,13 +150,13 @@ fun interface CaptchaAnswerMatcher {
     companion object {
 
         /**
-         * Exact comparison after trimming leading and trailing user-input spaces.
+         * 사용자 입력의 앞뒤 space를 trim한 뒤 exact 비교를 수행합니다.
          */
         fun exact(): CaptchaAnswerMatcher =
             CaptchaAnswerMatcher { expected, actual -> expected == actual.trim() }
 
         /**
-         * Case-insensitive comparison after trimming leading and trailing user-input spaces.
+         * 사용자 입력의 앞뒤 space를 trim한 뒤 case-insensitive 비교를 수행합니다.
          */
         fun caseInsensitive(): CaptchaAnswerMatcher =
             CaptchaAnswerMatcher { expected, actual -> expected.equals(actual.trim(), ignoreCase = true) }
@@ -166,14 +164,14 @@ fun interface CaptchaAnswerMatcher {
 }
 
 /**
- * Result of a one-shot CAPTCHA verification attempt.
+ * one-shot CAPTCHA verification attempt의 result입니다.
  */
 sealed interface CaptchaVerificationResult: Serializable {
 
     val id: CaptchaChallengeId
 
     /**
-     * Returns `true` only for [Success].
+     * [Success]인 경우에만 `true`를 반환합니다.
      */
     val verified: Boolean
         get() = this is Success
@@ -198,14 +196,14 @@ sealed interface CaptchaVerificationResult: Serializable {
 }
 
 /**
- * Issues and verifies CAPTCHA challenge metadata.
+ * CAPTCHA challenge metadata를 발급하고 검증합니다.
  *
- * Verification is one-shot: every call to [verify] consumes the stored
- * challenge before comparing the answer. This prevents replay and brute-force
- * retries against the same challenge id. A wrong answer or expired challenge
- * also consumes the id; a retry for the same id returns [CaptchaVerificationResult.NotFound].
+ * verification은 one-shot입니다. [verify] 호출은 answer 비교 전에 저장된 challenge를
+ * consume합니다. 이 방식은 같은 challenge id에 대한 replay와 brute-force retry를 막습니다.
+ * wrong answer나 expired challenge도 id를 consume하므로 같은 id로 retry하면
+ * [CaptchaVerificationResult.NotFound]가 반환됩니다.
  *
- * Example:
+ * 예:
  *
  * ```kotlin
  * val store = InMemoryCaptchaChallengeStore()
@@ -221,13 +219,13 @@ class CaptchaVerificationService(
 ) {
 
     /**
-     * Stores verification metadata for a generated challenge.
+     * 생성된 challenge의 verification metadata를 저장합니다.
      */
     fun issue(id: CaptchaChallengeId, challenge: CaptchaChallenge): IssuedCaptchaChallenge =
         store.save(IssuedCaptchaChallenge.from(id, challenge))
 
     /**
-     * Verifies a user answer and consumes the stored challenge.
+     * 사용자 answer를 검증하고 저장된 challenge를 consume합니다.
      */
     fun verify(id: CaptchaChallengeId, answer: String): CaptchaVerificationResult {
         val issued = store.consume(id) ?: return CaptchaVerificationResult.NotFound(id)

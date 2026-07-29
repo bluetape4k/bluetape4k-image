@@ -4,7 +4,7 @@ import io.bluetape4k.support.requireInRange
 import java.io.Serializable
 
 /**
- * Noise level applied to generated CAPTCHA images.
+ * 생성된 CAPTCHA image에 적용되는 noise level입니다.
  */
 sealed interface CaptchaNoise: Serializable {
 
@@ -40,7 +40,7 @@ sealed interface CaptchaNoise: Serializable {
     }
 
     /**
-     * Custom bounded line and dot noise counts.
+     * line 및 dot noise count를 직접 지정하는 bounded 설정입니다.
      */
     data class Custom(
         override val lines: Int,

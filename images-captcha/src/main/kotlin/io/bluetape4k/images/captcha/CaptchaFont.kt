@@ -5,13 +5,13 @@ import java.awt.Font
 import java.io.Serializable
 
 /**
- * Logical JVM font family and style used while rendering CAPTCHA text.
+ * CAPTCHA text를 rendering할 때 사용하는 logical JVM font family와 style입니다.
  *
- * The first release uses logical JVM fonts only and does not bundle font binary
- * assets, avoiding platform file dependencies and license drift.
+ * 첫 release는 logical JVM font만 사용하며 font binary asset을 bundle하지 않습니다.
+ * 따라서 platform file dependency와 license drift를 피합니다.
  *
- * @property family logical JVM font family such as [Font.SANS_SERIF]
- * @property style style mapped to an AWT [Font] constant internally
+ * @property family [Font.SANS_SERIF] 같은 logical JVM font family입니다.
+ * @property style 내부적으로 AWT [Font] constant에 매핑되는 style입니다.
  */
 data class CaptchaFont(
     val family: String = Font.SANS_SERIF,
@@ -39,7 +39,7 @@ data class CaptchaFont(
 }
 
 /**
- * Font style choices supported by [CaptchaFont].
+ * [CaptchaFont]가 지원하는 font style 선택지입니다.
  */
 enum class CaptchaFontStyle(internal val awtStyle: Int) {
     PLAIN(Font.PLAIN),
