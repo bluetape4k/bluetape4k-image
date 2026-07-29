@@ -33,13 +33,13 @@ fun main(args: Array<String>) {
 }
 
 /**
- * Spring Boot quickstart application for exposing OCR extraction over HTTP.
+ * OCR extraction을 HTTP로 노출하는 Spring Boot quickstart application입니다.
  */
 @SpringBootApplication
 class SpringBootOcrApiApplication
 
 /**
- * Example configuration for host-specific OCR runtime settings.
+ * host-specific OCR runtime setting을 담는 example configuration입니다.
  */
 @ConfigurationProperties(prefix = "example.ocr")
 data class ExampleOcrProperties(
@@ -61,7 +61,7 @@ data class ExampleOcrProperties(
 }
 
 /**
- * Wires the quickstart OCR service and its default Tess4J-backed engine.
+ * quickstart OCR service와 기본 Tess4J-backed engine을 연결합니다.
  */
 @Configuration(proxyBeanMethods = false)
 @EnableConfigurationProperties(ExampleOcrProperties::class)
@@ -83,7 +83,7 @@ class OcrApiConfiguration {
 }
 
 /**
- * Exposes OCR text extraction for multipart image uploads.
+ * multipart image upload에 대한 OCR text extraction을 노출합니다.
  */
 @RestController
 @RequestMapping("/api/ocr")
@@ -118,7 +118,7 @@ class OcrApiController(
 }
 
 /**
- * Converts multipart image uploads into `images-ocr` recognition calls.
+ * multipart image upload를 `images-ocr` recognition call로 변환합니다.
  */
 class SpringBootOcrService(
     private val ocrEngine: OcrEngine,
@@ -185,7 +185,7 @@ class SpringBootOcrService(
 }
 
 /**
- * OCR result returned by the quickstart API.
+ * quickstart API가 반환하는 OCR result입니다.
  */
 data class OcrTextResponse(
     val text: String,
@@ -199,7 +199,7 @@ data class OcrTextResponse(
 }
 
 /**
- * Error response for invalid OCR quickstart requests.
+ * invalid OCR quickstart request에 대한 error response입니다.
  */
 data class ApiErrorResponse(
     val error: String,

@@ -17,7 +17,7 @@ internal val ALLOWED_BARCODE_CONTENT_TYPES: Set<String> = setOf(
 )
 
 /**
- * Upload safety limits for the barcode quickstart.
+ * barcode quickstart의 upload safety limit입니다.
  */
 @ConfigurationProperties(prefix = "example.barcode")
 data class BarcodeExampleProperties(

@@ -8,7 +8,7 @@ fun main(args: Array<String>) {
 }
 
 /**
- * Spring Boot quickstart application for barcode extraction.
+ * barcode extraction용 Spring Boot quickstart application입니다.
  */
 @SpringBootApplication
 class SpringBootBarcodeApiApplication

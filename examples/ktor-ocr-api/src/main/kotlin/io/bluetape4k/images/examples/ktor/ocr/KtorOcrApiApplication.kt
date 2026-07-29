@@ -34,7 +34,7 @@ import kotlinx.serialization.json.Json
 import java.io.IOException
 
 /**
- * Runs the local-only Ktor OCR API quickstart.
+ * local-only Ktor OCR API quickstart를 실행합니다.
  */
 fun main() {
     embeddedServer(
@@ -46,7 +46,7 @@ fun main() {
 }
 
 /**
- * Installs JSON support and the Ktor OCR routes used by the quickstart.
+ * quickstart에서 사용하는 JSON support와 Ktor OCR route를 설치합니다.
  */
 fun Application.configureKtorOcrApi(
     config: KtorOcrApiConfig = KtorOcrApiConfig.fromEnvironment(),
@@ -85,7 +85,7 @@ fun Application.configureKtorOcrApi(
 }
 
 /**
- * Example configuration for host-specific OCR runtime settings.
+ * host-specific OCR runtime setting을 담는 example configuration입니다.
  */
 data class KtorOcrApiConfig(
     val routePath: String = "/api/ocr",
@@ -118,7 +118,7 @@ data class KtorOcrApiConfig(
 }
 
 /**
- * Converts multipart image uploads into `images-ocr` recognition calls.
+ * multipart image upload를 `images-ocr` recognition call로 변환합니다.
  */
 class KtorOcrService(
     private val ocrEngine: OcrEngine,
@@ -143,7 +143,7 @@ class KtorOcrService(
 }
 
 /**
- * OCR result returned by the quickstart API.
+ * quickstart API가 반환하는 OCR result입니다.
  */
 @Serializable
 data class OcrTextResponse(
@@ -158,7 +158,7 @@ data class OcrTextResponse(
 }
 
 /**
- * Error payload returned by the quickstart API.
+ * quickstart API가 반환하는 error payload입니다.
  */
 @Serializable
 data class OcrApiErrorResponse(
