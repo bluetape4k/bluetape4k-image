@@ -366,19 +366,19 @@ CI는 Tesseract, tessdata, 운영체제 native library를 요구하지 않는다
 
 ## 12. HTTP 계약
 
-### Endpoint
+### 엔드포인트
 
 `POST /api/images/intelligence`
 
-- consumes: `multipart/form-data`
-- required part: `file`
+- 소비 형식: `multipart/form-data`
+- 필수 파트: `file`
 - 유효한 이미지가 분석 경계에 들어간 뒤의 일부·전체 분석 실패: HTTP `200`
 - 빈 파일, 형식 불일치, 디코딩 불가: HTTP `400` `ProblemDetail`
 - 압축 바이트, 한 변 길이, 픽셀 한계 초과: HTTP `413` `ProblemDetail`
 - 요청 취소: 코루틴 취소 전파
 - 예상하지 못한 workflow 결함: HTTP `500` `ProblemDetail`
 
-여기서 HTTP `200`은 입력을 받아 분석 envelope를 정상적으로 만들었다는 transport
+여기서 HTTP `200`은 입력을 받아 분석 봉투를 정상적으로 만들었다는 전송 계층
 결과다. 업무적으로 사용할 수 있는 분석 결과가 없을 수 있으므로 호출자는 반드시
 응답의 전체 상태와 정책 결정을 확인해야 한다.
 
@@ -455,13 +455,13 @@ CI는 Tesseract, tessdata, 운영체제 native library를 요구하지 않는다
 
 ## 14. 오류와 관측성
 
-- 예상 가능한 입력 오류는 안정된 reason code를 가진 `400 ProblemDetail`로 반환한다.
+- 예상 가능한 입력 오류는 안정된 사유 코드를 가진 `400 ProblemDetail`로 반환한다.
 - 분석 공급자 오류는 작업별 `FAILED`로 정규화하고 원본 예외를 응답에 노출하지 않는다.
 - 예상하지 못한 workflow 결함만 정제된 `500 ProblemDetail`로 반환한다.
-- lifecycle, 작업별 provider, 상태, 제한 시간, 경과 시간은 구조화 로그로 남긴다.
+- 생명주기, 작업별 provider, 상태, 제한 시간, 경과 시간은 구조화 로그로 남긴다.
 - 업로드 원본, OCR 본문, 바코드 원문, 감지된 민감 정보는 로그에 남기지 않는다.
-- request id와 작업 이름은 저카디널리티 운영 문맥으로 사용하되 개인정보를 넣지 않는다.
-- health endpoint, 영속화, 재시도, 외부 공급자 circuit breaker는 이 예제 범위 밖이며
+- 요청 ID와 작업 이름은 저카디널리티 운영 문맥으로 사용하되 개인정보를 넣지 않는다.
+- 상태 점검 엔드포인트, 영속화, 재시도, 외부 공급자 회로 차단기는 이 예제 범위 밖이며
   운영 adapter를 추가할 때 별도로 설계한다.
 
 ## 15. 주요 실패 모드
@@ -469,12 +469,12 @@ CI는 Tesseract, tessdata, 운영체제 native library를 요구하지 않는다
 | 실패 모드 | 처리 | 검증 |
 |---|---|---|
 | 미디어 형식을 위장한 업로드 | 분석 전 `400`; 공급자 미호출 | HTTP 통합 테스트 |
-| 디코딩 폭탄에 가까운 픽셀 수 | 전체 디코딩 전 dimension probe와 pixel budget으로 `400` | 경계값 테스트 |
-| OCR 공급자 미설정 | OCR만 `UNAVAILABLE`; 다른 결과 보존 | 기본 profile 테스트 |
+| 디코딩 폭탄에 가까운 픽셀 수 | 전체 디코딩 전 차원 탐색과 픽셀 예산으로 `400` | 경계값 테스트 |
+| OCR 공급자 미설정 | OCR만 `UNAVAILABLE`; 다른 결과 보존 | 기본 프로필 테스트 |
 | 한 공급자 예외 | 해당 작업만 `FAILED`; 형제 결과 보존 | workflow 테스트 |
-| 작업별 제한 시간 초과 | 해당 작업만 `FAILED(TIMEOUT)` | virtual time 또는 제어된 지연 테스트 |
-| 외부 요청 취소 | 모든 하위 작업에 취소 전파 | 실제 coroutine cancellation 테스트 |
-| interruption에 반응하지 않는 native 호출 | 강제 종료를 보장하지 않음을 문서화하고 운영에서는 process 격리 | adapter 계약·README 검증 |
+| 작업별 제한 시간 초과 | 해당 작업만 `FAILED(TIMEOUT)` | 가상 시간 또는 제어된 지연 테스트 |
+| 외부 요청 취소 | 모든 하위 작업에 취소 전파 | 실제 코루틴 취소 테스트 |
+| 중단에 반응하지 않는 네이티브 호출 | 강제 종료를 보장하지 않음을 문서화하고 운영에서는 프로세스 격리 | adapter 계약·README 검증 |
 | workflow가 결과 키를 기록하지 않음 | 오케스트레이터 결함으로 `500` | 실패 주입 테스트 |
 | 감지 실패를 빈 목록으로 오판 | 정책이 자동 허용하지 않고 `MANUAL_REVIEW` | 정책 결정표 테스트 |
 
