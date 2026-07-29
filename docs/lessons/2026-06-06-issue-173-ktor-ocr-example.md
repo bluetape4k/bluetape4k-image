@@ -1,4 +1,4 @@
-# Lessons Learned — Issue 173 Ktor OCR Example (2026-06-06)
+# Issue 173 Ktor OCR example 교훈 (2026-06-06)
 
 **관련 이슈**: #173
 **영향 모듈**: `examples/ktor-ocr-api`, `bluetape4k-images-ocr`
@@ -42,7 +42,7 @@ whitespace를 모두 separator로 지원한다.
 - Test request `POST /api/ocr?languages=eng+kor`
 - Response body와 fake engine options가 모두 `["eng", "kor"]`임을 검증.
 
-## L3: Ktor OCR example tests should inject a fake engine
+## L3: Ktor OCR example test는 fake engine을 주입해야 한다
 
 ### 문제
 
