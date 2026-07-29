@@ -385,22 +385,22 @@ git commit -m "Reject unsafe image input before full decoding" \
   -m "Tested: ImageUploadQualifier boundary and cancellation tests"
 ```
 
-## Task 3: Model domain outcomes and guard provider execution
+## Task 3: domain outcome을 모델링하고 provider execution 보호
 
-**Complexity:** High
-**Depends on:** Task 1
+**복잡도:** High
+**의존성:** Task 1
 **Pattern skills:** `bluetape-kotlin-patterns`, `kotlin-coroutines-skill`, `test-driven-development`
-**Rollback point:** runner and models are internal and can be reverted before provider adapters use them.
+**Rollback 지점:** runner와 model은 internal이므로 provider adapter가 사용하기 전에 되돌릴 수 있다.
 
-**Files:**
+**파일:**
 
 - Create: `examples/spring-boot-image-intelligence-api/src/main/kotlin/io/bluetape4k/images/examples/spring/intelligence/model/AnalysisModels.kt`
 - Create: `examples/spring-boot-image-intelligence-api/src/main/kotlin/io/bluetape4k/images/examples/spring/intelligence/service/GuardedAnalysisRunner.kt`
 - Create: `examples/spring-boot-image-intelligence-api/src/test/kotlin/io/bluetape4k/images/examples/spring/intelligence/service/GuardedAnalysisRunnerTest.kt`
 
-- [ ] **Step 1: Write RED tests for the four outcomes**
+- [ ] **Step 1: 네 가지 outcome에 대한 RED test 작성**
 
-Write tests proving:
+다음을 증명하는 test를 작성한다:
 
 ```kotlin
 runner.run("fixture", timeout, semaphore) { "value" }
@@ -418,18 +418,17 @@ runner.run<String>("broken", timeout, semaphore) {
 }.shouldBeInstanceOf<AnalysisResult.Failed>()
 ```
 
-Assert elapsed time is non-negative and `Failed.reasonCode` does not contain
-`raw-secret`.
+elapsed time이 음수가 아니고 `Failed.reasonCode`에 `raw-secret`이 포함되지 않는지도 assert한다.
 
-- [ ] **Step 2: Write RED timeout, semaphore, and cancellation tests**
+- [ ] **Step 2: timeout, semaphore, cancellation RED test 작성**
 
-Use `runTest` and a real cancellation job where appropriate:
+필요한 곳에는 `runTest`와 실제 cancellation job을 사용한다:
 
-- local timeout becomes only `Failed("timeout")`;
-- external parent cancellation is rethrown and cancels the child;
-- maximum concurrent entries never exceed the configured permit count;
-- permits are released after success, failure, timeout, and cancellation;
-- one waiting caller cancellation does not consume a permit.
+- local timeout은 `Failed("timeout")`으로만 변환된다.
+- external parent cancellation은 다시 throw되어 child를 취소한다.
+- 최대 concurrent entry 수는 configured permit count를 절대 넘지 않는다.
+- success, failure, timeout, cancellation 후 permit이 release된다.
+- 대기 중인 caller cancellation 하나가 permit을 소비하지 않는다.
 
 - [ ] **Step 3: Run RED**
 
@@ -438,9 +437,9 @@ Use `runTest` and a real cancellation job where appropriate:
   --tests '*GuardedAnalysisRunnerTest' --no-daemon
 ```
 
-Expected: compilation fails because the runner and models are absent.
+예상 결과: runner와 model이 없으므로 compilation이 실패한다.
 
-- [ ] **Step 4: Implement immutable domain outcomes**
+- [ ] **Step 4: immutable domain outcome 구현**
 
 ```kotlin
 internal sealed interface AnalysisResult<out T> {
@@ -472,7 +471,7 @@ internal sealed interface AnalysisResult<out T> {
 }
 ```
 
-Add:
+다음을 추가한다:
 
 ```kotlin
 internal class ProviderUnavailableException(
@@ -480,12 +479,11 @@ internal class ProviderUnavailableException(
 ) : RuntimeException(reasonCode)
 ```
 
-Do not expose original exception messages through domain results.
+domain result를 통해 original exception message를 노출하지 않는다.
 
-- [ ] **Step 5: Implement `GuardedAnalysisRunner`**
+- [ ] **Step 5: `GuardedAnalysisRunner` 구현**
 
-Use `Semaphore.withPermit`, `withTimeout`, and `TimeSource.Monotonic`.
-Fix the public-to-example execution contract to this exact internal signature:
+`Semaphore.withPermit`, `withTimeout`, `TimeSource.Monotonic`을 사용한다. public-to-example execution contract를 다음 internal signature로 고정한다:
 
 ```kotlin
 internal suspend fun <T : Any> run(
@@ -497,10 +495,7 @@ internal suspend fun <T : Any> run(
 ): AnalysisResult<T>
 ```
 
-Here `Duration` is `java.time.Duration`; convert it with `timeout.toMillis()` only at
-the `withTimeout` boundary. Reject a blank provider, a non-positive timeout, and a
-semaphore configured with fewer than one permit when the runner beans are created.
-Catch in this order:
+여기서 `Duration`은 `java.time.Duration`이다. `timeout.toMillis()` 변환은 `withTimeout` 경계에서만 수행한다. runner bean을 만들 때 blank provider, non-positive timeout, permit이 1개보다 적게 configured된 semaphore를 거절한다. catch 순서는 다음과 같아야 한다:
 
 ```kotlin
 try {
@@ -522,18 +517,16 @@ try {
 }
 ```
 
-Validate provider, timeout, and concurrency configuration before execution.
-Logging may include provider and reason code but not raw exception messages, stack traces,
-image, OCR, barcode, or detection payloads.
+실행 전에 provider, timeout, concurrency configuration을 검증한다. logging에는 provider와 reason code를 포함할 수 있지만 raw exception message, stack trace, image, OCR, barcode, detection payload는 포함하지 않는다.
 
-- [ ] **Step 6: Run GREEN**
+- [ ] **Step 6: GREEN 실행**
 
 ```bash
 ./gradlew :spring-boot-image-intelligence-api:test \
   --tests '*GuardedAnalysisRunnerTest' --no-daemon
 ```
 
-Expected: outcome, permit, timeout, and real cancellation tests pass.
+예상 결과: outcome, permit, timeout, 실제 cancellation test가 통과한다.
 
 - [ ] **Step 7: Commit**
 
