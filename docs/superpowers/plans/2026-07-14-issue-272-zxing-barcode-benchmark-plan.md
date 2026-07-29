@@ -699,48 +699,38 @@ git add benchmark/images-benchmark/docs/raw/issue-272-20260714-macos-arm64-01
 git commit -m "perf: record barcode benchmark evidence"
 ```
 
-### Task 5: Publish the Result Report and README Locale Parity
+### Task 5: Result Report와 README Locale Parity 게시
 
 **Complexity:** Medium  
 **Depends on:** Task 4 accepted evidence  
-**Pattern skills:** `bluetape-writer` for Korean prose; chart N/A from approved spec  
-**Files:** create detailed report; modify both benchmark README files  
-**Expected DoD:** commands, environment, hashes, six-row table, directions, and caveats are accurate and equivalent across user-facing locales.
+**Pattern skills:** Korean prose에는 `bluetape-writer`; approved spec의 chart N/A
+**Files:** detailed report 생성, benchmark README file 두 개 수정
+**Expected DoD:** command, environment, hash, six-row table, direction, caveat가 정확하며 user-facing locale 사이에서 동등하다.
 
-- [ ] **Step 1: Write the detailed English report from raw JSON**
+- [ ] **Step 1: Raw JSON 기반 detailed English report 작성**
 
-Create `docs/barcode-extraction-2026-07-14.md` with sections:
+`docs/barcode-extraction-2026-07-14.md`를 만들고 다음 section을 포함한다:
 
-- environment and exact commands;
-- immutable fixture table with dimensions, payload class, and hashes;
-- one table containing scenario, latency `ms/op ± error`, throughput `ops/s ±
-  error`, and expected result;
-- measurement boundary stating PNG load/decode is setup-only;
-- interpretation that distinguishes QR, linear, and empty-search work but does
-  not rank providers or generalize beyond the host;
-- links to the accepted run directory and issue #272.
+- Environment와 exact command
+- Dimension, payload class, hash를 담은 immutable fixture table
+- Scenario, latency `ms/op ± error`, throughput `ops/s ± error`, expected result를 담은 단일 table
+- PNG load/decode가 setup-only임을 밝히는 measurement boundary
+- QR, linear, empty-search work를 구분하되 provider ranking이나 host 밖 일반화를 하지 않는 interpretation
+- Accepted run directory와 issue #272 link
 
-Do not derive throughput as the reciprocal of latency; use each raw mode's
-observed score.
+Throughput을 latency의 역수로 계산하지 말고, 각 raw mode의 observed score를 사용한다.
 
-- [ ] **Step 2: Add equivalent concise README sections**
+- [ ] **Step 2: 동등하고 간결한 README section 추가**
 
-Update `README.md` and `README.ko.md` together. Each section contains the same
-three scenario rows, metric directions, report/raw links, and local-snapshot
-caveat. Korean prose must be natural technical Korean, not a literal sentence
-mapping.
+`README.md`와 `README.ko.md`를 함께 업데이트한다. 각 section에는 같은 세 scenario row, metric direction, report/raw link, local-snapshot caveat를 둔다. Korean prose는 literal sentence mapping이 아니라 자연스러운 기술 한국어여야 한다.
 
-- [ ] **Step 3: Record the chart N/A decision**
+- [ ] **Step 3: Chart N/A 결정 기록**
 
-In the report/review evidence, state: one provider plus three workload shapes
-and two incompatible metric units makes a table clearer than a chart. Confirm no
-new SVG/PNG asset or stale README image link exists.
+Report/review evidence에 다음 판단을 기록한다. Provider 하나, workload shape 세 개, 서로 호환되지 않는 metric unit 두 개로 구성된 결과는 chart보다 table이 더 명확하다. 새 SVG/PNG asset이나 stale README image link가 없는지도 확인한다.
 
-- [ ] **Step 4: Verify documentation and commit**
+- [ ] **Step 4: Documentation 검증과 commit**
 
-Run a script that parses raw JSON and compares every displayed numeric value and
-link target in the report/README files. Run `git diff --check` and inspect both
-locales. Commit:
+Raw JSON을 parsing해 report/README file에 표시된 모든 numeric value와 link target을 비교하는 script를 실행한다. `git diff --check`를 실행하고 두 locale을 모두 inspect한다. 다음처럼 commit한다:
 
 ```bash
 git add benchmark/images-benchmark/README.md \
@@ -749,15 +739,15 @@ git add benchmark/images-benchmark/README.md \
 git commit -m "docs: publish barcode benchmark results"
 ```
 
-### Task 6: Complete Verification, Review, Lesson, and PR Delivery
+### Task 6: Verification, Review, Lesson, PR Delivery 완료
 
 **Complexity:** High  
 **Depends on:** Tasks 1-5  
 **Pattern skills:** `verification-before-completion`, Kotlin checklist, Type A verifier/review references  
-**Files:** create code-review and lesson artifacts; PR body only after gates pass  
-**Expected DoD:** exact approved spec/plan, Kotlin/hazard checklists, P0/P1 convergence, lesson, branch publication, PR metadata, and CI are complete before merge-ready reporting.
+**Files:** code-review와 lesson artifact 생성, gate 통과 후에만 PR body 작성
+**Expected DoD:** Merge-ready report 전에 exact approved spec/plan, Kotlin/hazard checklist, P0/P1 convergence, lesson, branch publication, PR metadata, CI가 완료된다.
 
-- [ ] **Step 1: Run targeted validation from a clean test state**
+- [ ] **Step 1: Clean test state에서 targeted validation 실행**
 
 ```bash
 ./gradlew :bluetape4k-images-benchmark:cleanTest \
@@ -768,9 +758,9 @@ git commit -m "docs: publish barcode benchmark results"
   --no-build-cache --console=plain
 ```
 
-Expected: all affected tests PASS with recorded counts.
+예상 결과는 영향받은 모든 test PASS와 기록된 count이다.
 
-- [ ] **Step 2: Run proportional repository checks**
+- [ ] **Step 2: Proportional repository check 실행**
 
 ```bash
 ./gradlew :bluetape4k-images-benchmark:build \
@@ -779,47 +769,31 @@ Expected: all affected tests PASS with recorded counts.
 git diff --check
 ```
 
-Inspect generated task names, dependency configurations, main/publication
-surface, untracked files, and the absence of module/BOM/catalog/workflow/Kover
-changes. Native/JNI, OCR, containers, and chart rendering are evidence-backed
-N/A for this pure-JVM existing-module change. Coroutines, cancellation,
-concurrent shared state, HTTP, Spring, Exposed, and lifecycle resource ownership
-are also N/A because the timed API is synchronous, stateless per call, and uses
-an immutable preloaded image without owned closeable resources.
+Generated task name, dependency configuration, main/publication surface, untracked file, module/BOM/catalog/workflow/Kover change 부재를 inspect한다. 이 변경은 pure-JVM existing-module change이므로 Native/JNI, OCR, container, chart rendering은 evidence-backed N/A이다. Timed API가 synchronous이고 call마다 stateless이며 owned closeable resource 없이 immutable preloaded image를 사용하므로 coroutine, cancellation, concurrent shared state, HTTP, Spring, Exposed, lifecycle resource ownership도 N/A이다.
 
-- [ ] **Step 3: Verify exact spec/plan acceptance**
+- [ ] **Step 3: Exact spec/plan acceptance 검증**
 
-Load the Type A verifier checklist. Map all acceptance rows to current files,
-tests, accepted raw evidence, and documentation. A missing or divergent row is
-`NEEDS FIX`; a material design change is `NEEDS REVIEW SCOPE`.
+Type A verifier checklist를 불러온다. 모든 acceptance row를 current file, test, accepted raw evidence, documentation에 mapping한다. 누락되거나 달라진 row는 `NEEDS FIX`이고, material design change는 `NEEDS REVIEW SCOPE`이다.
 
-- [ ] **Step 4: Run six review perspectives and integrate**
+- [ ] **Step 4: 여섯 review perspective 실행과 통합**
 
-Review performance, stability, security, Ops, developer/API, and user/caller
-against the full `origin/develop...HEAD` diff. Because the active interface lacks
-an `agent_type` field, use model-routing's explicit main-session fallback and
-record that limitation. Create
-`docs/review/2026-07-14-issue-272-zxing-barcode-benchmark-code-review.md`, fix
-P0/P1, rerun affected proof, and finish at P0=0/P1=0.
+Full `origin/develop...HEAD` diff에 대해 performance, stability, security, Ops, developer/API, user/caller 관점으로 review한다. Active interface에 `agent_type` field가 없으면 model-routing의 explicit main-session fallback을 사용하고 그 제한을 기록한다. `docs/review/2026-07-14-issue-272-zxing-barcode-benchmark-code-review.md`를 만들고, P0/P1을 고친 뒤 affected proof를 다시 실행해 P0=0/P1=0에서 끝낸다.
 
-- [ ] **Step 5: Write and commit the durable lesson**
+- [ ] **Step 5: Durable lesson 작성과 commit**
 
-Create `docs/lessons/2026-07-14-issue-272-zxing-barcode-benchmark.md` covering:
+`docs/lessons/2026-07-14-issue-272-zxing-barcode-benchmark.md`를 만들고 다음을 다룬다:
 
-- immutable fixture bytes rather than runtime generation for longitudinal
-  comparisons;
-- separate observed latency and throughput modes rather than reciprocal
-  conversion;
-- provider dependencies confined to benchmark/test configurations;
-- fresh-report timestamp and append-only accepted-run guards;
-- chart N/A rationale and the existing complementary-pair rule for future
-  two-provider charts.
+- Longitudinal comparison을 위해 runtime generation 대신 immutable fixture byte 사용
+- Reciprocal conversion 대신 관측된 latency와 throughput mode를 분리
+- Provider dependency를 benchmark/test configuration에 한정
+- Fresh-report timestamp와 append-only accepted-run guard
+- Chart N/A rationale과 향후 two-provider chart를 위한 기존 complementary-pair rule
 
-Commit review and lesson artifacts after final validation.
+Final validation 이후 review와 lesson artifact를 commit한다.
 
-- [ ] **Step 6: Publish the authorized exact branch and create the PR**
+- [ ] **Step 6: Authorized exact branch publish와 PR 생성**
 
-After CG-01 through CG-10 and A-01 through A-09 pass:
+CG-01부터 CG-10, A-01부터 A-09까지 통과한 뒤 실행한다:
 
 ```bash
 git push -u origin perf/issue-272-zxing-barcode-benchmark
@@ -831,36 +805,25 @@ gh pr create \
   --assignee debop
 ```
 
-Write an English PR body that links `Closes #272`, explains why/what before
-validation, mirrors milestone `0.4.0` and labels `test`, `performance`, and ends
-with `## DoD Status`. Verify live body, metadata, and exact local/remote head.
+`Closes #272`를 link하고 validation보다 앞에서 why/what을 설명하며 milestone `0.4.0`, label `test`, `performance`를 반영하고 `## DoD Status`로 끝나는 English PR body를 작성한다. Live body, metadata, exact local/remote head를 검증한다.
 
-- [ ] **Step 7: Wait for CI, refresh reviews, and stop at merge-ready**
+- [ ] **Step 7: CI 대기, review refresh, merge-ready에서 중단**
 
-Wait for required checks on the exact PR head. After green, reread reviews and
-threads, verify the lesson and chart N/A artifact, update the final DoD body,
-and report CG-16 through CG-18 as PENDING. Do not enable auto-merge.
+Exact PR head의 required check를 기다린다. Green 이후 review와 thread를 다시 읽고 lesson과 chart N/A artifact를 검증하며 final DoD body를 업데이트한 뒤 CG-16부터 CG-18까지 PENDING으로 보고한다. Auto-merge는 켜지 않는다.
 
-- [ ] **Step 8: Merge and clean only after fresh approval**
+- [ ] **Step 8: Fresh approval 이후에만 merge와 cleanup**
 
-After the user approves the exact merge-ready PR/head, rebase merge, verify the
-merge SHA and issue closure, fast-forward the real local `develop`, then
-automatically remove the clean merged worktree and local/remote feature branch.
-Preserve any unrelated dirty worktree.
+사용자가 exact merge-ready PR/head를 승인한 뒤에만 rebase merge를 수행하고, merge SHA와 issue closure를 검증하며, 실제 local `develop`을 fast-forward한 다음 clean merged worktree와 local/remote feature branch만 자동으로 제거한다. Unrelated dirty worktree는 보존한다.
 
 ## Final Expected Evidence
 
-- Three immutable fixture PNGs plus strict manifest and hashes.
-- Two supported Gradle tasks and two accepted raw JSON files.
-- Exactly six measured rows with correct mode/unit/direction.
-- Detailed report and equivalent English/Korean README sections.
-- Targeted tests, benchmark compilation/task listing, build, detekt, projects,
-  diff check, dependency-surface inspection, and raw/docs parity proof.
-- Spec, plan, plan review, code review, lesson, PR metadata, CI, and fresh merge
-  approval evidence.
+- Immutable fixture PNG 세 개, strict manifest, hash.
+- Supported Gradle task 두 개와 accepted raw JSON file 두 개.
+- 올바른 mode/unit/direction을 가진 measured row 정확히 여섯 개.
+- Detailed report와 동등한 English/Korean README section.
+- Targeted test, benchmark compilation/task listing, build, detekt, projects, diff check, dependency-surface inspection, raw/docs parity proof.
+- Spec, plan, plan review, code review, lesson, PR metadata, CI, fresh merge approval evidence.
 
 ## Workflow Stop Condition
 
-Normal execution stops after CI and live reviews converge and the exact PR/head
-is reported merge-ready. Merge, local sync, and cleanup occur only after the
-fresh CG-16 approval.
+Normal execution은 CI와 live review가 수렴하고 exact PR/head가 merge-ready로 보고된 뒤 중단한다. Merge, local sync, cleanup은 fresh CG-16 approval 이후에만 수행한다.
