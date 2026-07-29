@@ -1,32 +1,32 @@
-# Issue 173 Ktor OCR Example Plan
+# Issue 173 Ktor OCR Example 계획
 
-## Scope
+## 범위
 
-Implement issue #173 as a new non-published example module:
+Issue #173을 새 non-published example module로 구현한다.
 
 - `examples/ktor-ocr-api`
-- root README locale updates
+- root README locale update
 - example README locale set
-- generated README diagrams
+- generated README diagram
 - Gradle/settings/AGENTS registration
 - Examples workflow matrix coverage
-- review, verification, lessons, PR artifacts
+- review, verification, lessons, PR artifact
 
-## Task Plan
+## 작업 계획
 
 | Task | Description | DoD |
 |---|---|---|
-| T1 | Add Gradle module registration and build file. | `settings.gradle.kts` includes `ktor-ocr-api`; `./gradlew projects` lists it. |
-| T2 | Implement Ktor OCR app. | `GET /ready`; `POST /api/ocr`; injectable `OcrEngine`; env config for tessdata path; multipart validation; 400/503 mapping. |
-| T3 | Add Ktor route tests. | `testApplication` tests pass without native Tesseract; fake engine verifies languages and tessdata path; invalid multipart cases return 400. |
-| T4 | Add README locale set. | `README.md` and `README.ko.md` explain purpose, diagrams, native install, run, curl, test, and local-only limits. |
-| T5 | Update root docs and repo guidance. | Root README/README.ko examples mention Ktor OCR; repo `AGENTS.md` module list includes new example. |
-| T6 | Add diagrams. | Generator creates scenario, top-down layered architecture, and sequence assets with PNG/SVG/DOT/plain/Graphviz evidence. |
-| T7 | Update Examples workflow. | Matrix includes `:ktor-ocr-api:test`; path triggers already include `examples/**` and `images-ocr/**`; `actionlint` passes. |
-| T8 | Run verification and review. | Target tests, projects, diagram generation/XML/visual checks, workflow checks, `git diff --check`, Step 6-R P0=0/P1=0. |
-| T9 | Capture lessons, commit, PR. | Lessons committed before PR; PR body ends with `## DoD Status`; post-PR review and CI gate update PR body. |
+| T1 | Gradle module registration과 build file을 추가한다. | `settings.gradle.kts`가 `ktor-ocr-api`를 include하고 `./gradlew projects`가 이를 표시한다. |
+| T2 | Ktor OCR app을 구현한다. | `GET /ready`; `POST /api/ocr`; injectable `OcrEngine`; tessdata path env config; multipart validation; 400/503 mapping. |
+| T3 | Ktor route test를 추가한다. | `testApplication` test가 native Tesseract 없이 통과하고, fake engine이 languages와 tessdata path를 검증하며, invalid multipart case가 400을 반환한다. |
+| T4 | README locale set을 추가한다. | `README.md`와 `README.ko.md`가 purpose, diagrams, native install, run, curl, test, local-only limit를 설명한다. |
+| T5 | root docs와 repo guidance를 갱신한다. | Root README/README.ko examples가 Ktor OCR을 언급하고 repo `AGENTS.md` module list가 새 example을 포함한다. |
+| T6 | diagram을 추가한다. | generator가 scenario, top-down layered architecture, sequence asset을 PNG/SVG/DOT/plain/Graphviz evidence와 함께 생성한다. |
+| T7 | Examples workflow를 갱신한다. | matrix가 `:ktor-ocr-api:test`를 포함하고, path trigger는 이미 `examples/**`와 `images-ocr/**`를 포함하며, `actionlint`가 통과한다. |
+| T8 | verification과 review를 실행한다. | target tests, projects, diagram generation/XML/visual checks, workflow checks, `git diff --check`, Step 6-R P0=0/P1=0. |
+| T9 | lesson, commit, PR을 기록한다. | PR 전에 lesson을 commit하고, PR body는 `## DoD Status`로 끝나며, post-PR review와 CI gate가 PR body를 갱신한다. |
 
-## Implementation Details
+## 구현 세부 사항
 
 ### Module
 
@@ -41,23 +41,23 @@ Implement issue #173 as a new non-published example module:
   - `libs.ktor.server.netty`
   - `libs.ktor.serialization.kotlinx.json`
   - `runtimeOnly(libs.logback)`
-  - tests use `bluetape4k-junit5`, Ktor client content negotiation, and `ktor-server-test-host`
+  - test는 `bluetape4k-junit5`, Ktor client content negotiation, `ktor-server-test-host` 사용
 
 ### Route
 
 - `fun Application.configureKtorOcrApi(...)`
-- Defaults:
+- 기본값:
   - engine: `TesseractOcrEngine()`
   - tessdata path: `System.getenv("EXAMPLE_OCR_TESSDATA_PATH")`
   - max input bytes: 10 MiB
 - `POST /api/ocr`:
-  - reads multipart field `file`
-  - supports `PartData.FileItem` and `PartData.BinaryChannelItem`
-  - releases each part in `finally`
-  - validates non-empty upload and content type allowlist
-  - parses `languages` with `[,+\s]+`
-  - calls `immutableImageOf(uploadBytes).suspendExtractText(OcrOptions(...), engine)`
-  - responds with `OcrTextResponse`
+  - multipart field `file`을 읽는다.
+  - `PartData.FileItem`과 `PartData.BinaryChannelItem`을 지원한다.
+  - 각 part를 `finally`에서 release한다.
+  - non-empty upload와 content type allowlist를 검증한다.
+  - `languages`를 `[,+\s]+`로 parse한다.
+  - `immutableImageOf(uploadBytes).suspendExtractText(OcrOptions(...), engine)`을 호출한다.
+  - `OcrTextResponse`로 응답한다.
 - Errors:
   - `IllegalArgumentException` and `IOException` -> `400 bad_request`
   - `OcrException` -> `503 ocr_unavailable`
@@ -70,17 +70,17 @@ Implement issue #173 as a new non-published example module:
 - `rejects unsupported content type`
 - `maps OCR failures to service unavailable`
 
-Use a class-level fake `OcrEngine` injected through `configureKtorOcrApi(...)`.
+`configureKtorOcrApi(...)`를 통해 주입한 class-level fake `OcrEngine`을 사용한다.
 
 ### Diagrams
 
-Add three assets through `docs/scripts/generate-example-readme-diagrams.py`:
+`docs/scripts/generate-example-readme-diagrams.py`를 통해 asset 3개를 추가한다.
 
 - `examples-ktor-ocr-api-scenario-01`
 - `examples-ktor-ocr-api-architecture-01`
 - `examples-ktor-ocr-api-sequence-01`
 
-Architecture must be top-down layered:
+Architecture는 top-down layered 구조여야 한다.
 
 1. Client Layer
 2. Ktor Routing Layer
@@ -88,9 +88,9 @@ Architecture must be top-down layered:
 4. OCR Library Layer
 5. Native Runtime Layer
 
-## Validation Commands
+## 검증 명령
 
-Run in order:
+다음 순서로 실행한다.
 
 ```bash
 ./gradlew :ktor-ocr-api:test --no-configuration-cache --no-daemon
@@ -102,14 +102,13 @@ rg -n "\\\\'" .github/workflows
 git diff --check
 ```
 
-Visual inspection:
+시각 검토:
 
-- Open each new PNG and check text fit, layer containment, connector routing,
-  sequence label placement, PNG embed policy, and top-down architecture shape.
+- 새 PNG 각각을 열어 text fit, layer containment, connector routing, sequence label placement,
+  PNG embed policy, top-down architecture shape를 확인한다.
 
-## Follow-Up Issue Policy
+## Follow-Up Issue 정책
 
-Create a follow-up issue only if implementation proves a reusable `images-ktor`
-OCR route helper, production auth/rate-limit policy, batch OCR, persistence, or
-native Ktor OCR smoke gate is necessary. Do not create speculative follow-ups for
-rejected options already outside #173.
+구현 결과 reusable `images-ktor` OCR route helper, production auth/rate-limit policy, batch
+OCR, persistence, native Ktor OCR smoke gate가 필요하다고 증명될 때만 follow-up issue를 만든다.
+#173 밖의 rejected option에 대해 speculative follow-up을 만들지 않는다.
