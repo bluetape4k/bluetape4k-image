@@ -401,18 +401,17 @@ git add benchmark/images-benchmark/src/main benchmark/images-benchmark/src/test
 git commit -m "test: lock barcode benchmark fixtures"
 ```
 
-### Task 2: Add the Parameterized ZXing Benchmark and Two Modes
+### Task 2: Parameterized ZXing Benchmark와 두 Mode 추가
 
 **Complexity:** High  
 **Depends on:** Task 1  
 **Pattern skills:** `test-driven-development`, `bluetape-kotlin-patterns`, benchmark hazard gate  
-**Files:** create benchmark source and contract test; modify benchmark Gradle dependencies/configurations  
-**Expected DoD:** the same extraction method exposes exactly three scenarios through separate `avgt ms/op` and `thrpt ops/s` tasks without changing the main/published dependency surface.
+**Files:** benchmark source와 contract test 생성, benchmark Gradle dependency/configuration 수정
+**Expected DoD:** 같은 extraction method가 main/published dependency surface를 바꾸지 않고, 정확히 세 scenario를 별도 `avgt ms/op`와 `thrpt ops/s` task로 노출한다.
 
-- [ ] **Step 1: Write the failing benchmark configuration contract**
+- [ ] **Step 1: Failing benchmark configuration contract 작성**
 
-Create `BarcodeBenchmarkContractTest.kt` that reads the benchmark source and
-`build.gradle.kts` from `repositoryRoot()` and asserts:
+`repositoryRoot()`에서 benchmark source와 `build.gradle.kts`를 읽고 다음을 검증하는 `BarcodeBenchmarkContractTest.kt`를 작성한다:
 
 ```kotlin
 @Test
@@ -444,28 +443,26 @@ fun `latency and throughput configurations share class and fixed execution contr
 }
 ```
 
-Also assert `mode = "avgt"`/`outputTimeUnit = "ms"` and
-`mode = "thrpt"`/`outputTimeUnit = "s"` occur in their named blocks.
+또한 `mode = "avgt"`/`outputTimeUnit = "ms"`와 `mode = "thrpt"`/`outputTimeUnit = "s"`가 각각의 named block에 들어 있는지 확인한다.
 
-- [ ] **Step 2: Run the contract test and capture RED**
+- [ ] **Step 2: Contract test 실행 후 RED 기록**
 
-Run the single class. Expected: FAIL because the benchmark source and named
-configurations are missing.
+단일 class를 실행한다. Benchmark source와 named configuration이 없으므로 예상 결과는 FAIL이다.
 
-- [ ] **Step 3: Add benchmark/test provider dependencies only**
+- [ ] **Step 3: Benchmark/test provider dependency만 추가**
 
-Modify the dependency block:
+Dependency block을 다음처럼 수정한다:
 
 ```kotlin
 testImplementation(project(":bluetape4k-images-barcode-zxing"))
 add("benchmarkImplementation", project(":bluetape4k-images-barcode-zxing"))
 ```
 
-Do not add a new catalog alias/version or main `implementation` dependency.
+새 catalog alias/version이나 main `implementation` dependency는 추가하지 않는다.
 
-- [ ] **Step 4: Implement the benchmark state and timed method**
+- [ ] **Step 4: Benchmark state와 timed method 구현**
 
-Create `ZxingBarcodeExtractionBenchmark.kt`:
+`ZxingBarcodeExtractionBenchmark.kt`를 생성한다:
 
 ```kotlin
 @State(Scope.Benchmark)
@@ -495,13 +492,11 @@ class ZxingBarcodeExtractionBenchmark {
 }
 ```
 
-Add English KDoc documenting setup exclusion, the two Gradle tasks, metric
-directions, and the single-result provider boundary. Do not import
-`com.google.zxing`.
+Setup exclusion, 두 Gradle task, metric direction, single-result provider boundary를 설명하는 KDoc을 추가한다. 이번 Epic의 code comment policy에 맞춰 실제 구현 시 KDoc은 한국어로 작성한다. `com.google.zxing`은 import하지 않는다.
 
-- [ ] **Step 5: Register the two fixed configurations**
+- [ ] **Step 5: Fixed configuration 두 개 등록**
 
-Add constants and named configurations:
+Constant와 named configuration을 추가한다:
 
 ```kotlin
 val BARCODE_BENCHMARK_WARMUPS = 3
@@ -533,9 +528,9 @@ register("barcodeThroughput") {
 }
 ```
 
-- [ ] **Step 6: Run GREEN, compile the benchmark source set, and verify tasks**
+- [ ] **Step 6: GREEN 실행, benchmark source set compile, task 검증**
 
-Run:
+다음을 실행한다:
 
 ```bash
 ./gradlew :bluetape4k-images-benchmark:test \
@@ -545,10 +540,7 @@ Run:
   --console=plain
 ```
 
-Expected: PASS and exact generated tasks
-`benchmarkBarcodeLatencyBenchmark` and
-`benchmarkBarcodeThroughputBenchmark`. Inspect dependency output to confirm the
-provider appears only in benchmark/test configurations:
+예상 결과는 PASS이며 정확한 generated task `benchmarkBarcodeLatencyBenchmark`와 `benchmarkBarcodeThroughputBenchmark`가 존재해야 한다. Dependency output을 확인해 provider가 benchmark/test configuration에만 나타나는지 검증한다:
 
 ```bash
 ./gradlew :bluetape4k-images-benchmark:dependencies \
@@ -557,10 +549,9 @@ provider appears only in benchmark/test configurations:
   --configuration benchmarkRuntimeClasspath --console=plain
 ```
 
-Expected: `runtimeClasspath` does not contain
-`bluetape4k-images-barcode-zxing`; `benchmarkRuntimeClasspath` does.
+예상 결과는 `runtimeClasspath`에 `bluetape4k-images-barcode-zxing`이 없고, `benchmarkRuntimeClasspath`에는 있는 것이다.
 
-- [ ] **Step 7: Commit the benchmark behavior**
+- [ ] **Step 7: Benchmark behavior commit**
 
 ```bash
 git add benchmark/images-benchmark/build.gradle.kts \
