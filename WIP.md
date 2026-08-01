@@ -11,10 +11,11 @@ line closeout과 Backlog milestone으로 미룬 작업을 분리해서 본다.
   2026-06-27에 게시된 최신 stable release이다.
 - `develop`은 `baseVersion=0.4.0`을 사용한다. `0.4.0` milestone은 아직 개발
   중이며 release되지 않았다.
-- 현재 `0.4.0` milestone에는 문서 후속 작업인
-  [#462](https://github.com/bluetape4k/bluetape4k-image/issues/462)만 열린
-  상태로 남아 있다. 이 issue는 한국어 `Fixed` category를 `버그 수정`으로
-  통일하며 runtime behavior, public API, dependency, release를 변경하지 않는다.
+- 현재 `0.4.0` milestone에는 열린 issue가 없다. 문서 후속 작업인
+  [#462](https://github.com/bluetape4k/bluetape4k-image/issues/462)은
+  [PR #463](https://github.com/bluetape4k/bluetape4k-image/pull/463)으로
+  merge되어 한국어 `Fixed` category를 `버그 수정`으로 통일했다. 이 작업은
+  runtime behavior, public API, dependency, release를 변경하지 않는다.
 - [#270](https://github.com/bluetape4k/bluetape4k-image/issues/270)의 changelog
   backfill과 [#271](https://github.com/bluetape4k/bluetape4k-image/issues/271)의
   roadmap refresh는 완료되었다.
@@ -26,9 +27,11 @@ line closeout과 Backlog milestone으로 미룬 작업을 분리해서 본다.
   게시하거나 artifact version을 바꾸지 않았다.
 - [#271](https://github.com/bluetape4k/bluetape4k-image/issues/271)의 roadmap
   refresh도 완료되어 현재 milestone 상태를 반영한다.
-- [#462](https://github.com/bluetape4k/bluetape4k-image/issues/462)은 한국어
-  changelog의 `Fixed` heading을 `버그 수정`으로 표준화한다. 이 문서 작업은
-  release publication, version 변경, milestone closure를 수행하지 않는다.
+- [#462](https://github.com/bluetape4k/bluetape4k-image/issues/462)은
+  [PR #463](https://github.com/bluetape4k/bluetape4k-image/pull/463)으로
+  merge되어 한국어 changelog의 `Fixed` heading을 `버그 수정`으로 표준화했다.
+  이 문서 작업은 release publication이나 version 변경을 수행하지 않았고,
+  milestone은 현재 열린 issue 없이 유지된다.
 
 ## 연기된 Backlog
 
@@ -52,7 +55,8 @@ line closeout과 Backlog milestone으로 미룬 작업을 분리해서 본다.
 ## Release 경계
 
 `0.4.0` release date는 아직 정해지지 않았다.
-[#462](https://github.com/bluetape4k/bluetape4k-image/issues/462)를 포함한 문서
-작업의 완료는 release publication, version 변경, milestone closure를 의미하지
-않는다. 이러한 작업은 changelog가 완료된 milestone 작업을 반영한 뒤 별도의
-검증된 release workflow로만 진행한다.
+[#462](https://github.com/bluetape4k/bluetape4k-image/issues/462)와
+[PR #463](https://github.com/bluetape4k/bluetape4k-image/pull/463)의 문서 작업
+완료는 release publication, version 변경, milestone closure를 의미하지 않는다.
+이러한 작업은 changelog가 완료된 milestone 작업을 반영한 뒤 별도의 검증된
+release workflow로만 진행한다.
