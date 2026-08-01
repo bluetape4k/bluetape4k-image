@@ -1,5 +1,8 @@
 package io.bluetape4k.images.spring.autoconfigure
 
+import io.bluetape4k.assertions.shouldBeInstanceOf
+import io.bluetape4k.assertions.shouldBeSameInstanceAs
+import io.bluetape4k.assertions.shouldNotBeInstanceOf
 import io.bluetape4k.images.spring.metrics.MetricImageStorage
 import io.bluetape4k.images.spring.storage.ImageStorage
 import io.bluetape4k.images.spring.storage.LocalImageStorage
@@ -9,6 +12,9 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import org.springframework.boot.autoconfigure.AutoConfigurations
+import org.springframework.boot.micrometer.metrics.autoconfigure.CompositeMeterRegistryAutoConfiguration
+import org.springframework.boot.micrometer.metrics.autoconfigure.MetricsAutoConfiguration
+import org.springframework.boot.micrometer.metrics.autoconfigure.export.simple.SimpleMetricsExportAutoConfiguration
 import org.springframework.boot.test.context.runner.ApplicationContextRunner
 import java.nio.file.Path
 
@@ -26,25 +32,43 @@ class ImagesMetricsAutoConfigurationTest {
             )
         )
 
+    private val bootMetricsContextRunner = ApplicationContextRunner()
+        .withPropertyValues("management.simple.metrics.export.enabled=true")
+        .withConfiguration(
+            AutoConfigurations.of(
+                ImagesProcessingAutoConfiguration::class.java,
+                ImagesStorageAutoConfiguration::class.java,
+                MetricsAutoConfiguration::class.java,
+                CompositeMeterRegistryAutoConfiguration::class.java,
+                SimpleMetricsExportAutoConfiguration::class.java,
+                ImagesMetricsAutoConfiguration::class.java,
+            )
+        )
+
     @Test
     fun `wraps ImageStorage in MetricImageStorage when MeterRegistry bean present`() {
         contextRunner
             .withBean(MeterRegistry::class.java, { SimpleMeterRegistry() })
             .run { ctx ->
                 assertThat(ctx).hasSingleBean(ImageStorage::class.java)
-                assertThat(ctx.getBean(ImageStorage::class.java))
-                    .isInstanceOf(MetricImageStorage::class.java)
+                ctx.getBean(ImageStorage::class.java) shouldBeInstanceOf MetricImageStorage::class
             }
     }
 
     @Test
-    fun `context fails when Micrometer is on classpath but no MeterRegistry bean is registered`() {
-        // testImplementation 때문에 MeterRegistry class가 classpath에 있어 @ConditionalOnClass가 통과하고
-        // MetricsDecorationConfiguration이 활성화됩니다. @Bean factory는 MeterRegistry bean을 요구하므로,
-        // bean이 없으면 Spring은 UnsatisfiedDependencyException을 발생시킵니다.
-        // consumer가 MeterRegistry를 제공해야 한다는 의도된 sharp edge입니다.
+    fun `wraps ImageStorage when Boot creates the MeterRegistry after metrics auto-configuration`() {
+        bootMetricsContextRunner.run { ctx ->
+            assertThat(ctx).hasSingleBean(MeterRegistry::class.java)
+            assertThat(ctx).hasSingleBean(ImageStorage::class.java)
+            ctx.getBean(ImageStorage::class.java) shouldBeInstanceOf MetricImageStorage::class
+        }
+    }
+
+    @Test
+    fun `backs off when Micrometer is on classpath but no MeterRegistry bean is registered`() {
         contextRunner.run { ctx ->
-            assertThat(ctx).hasFailed()
+            assertThat(ctx).hasSingleBean(ImageStorage::class.java)
+            ctx.getBean(ImageStorage::class.java) shouldNotBeInstanceOf MetricImageStorage::class
         }
     }
 
@@ -56,8 +80,7 @@ class ImagesMetricsAutoConfigurationTest {
             .withBean(MeterRegistry::class.java, { SimpleMeterRegistry() })
             .run { ctx ->
                 assertThat(ctx).hasSingleBean(ImageStorage::class.java)
-                assertThat(ctx.getBean(ImageStorage::class.java))
-                    .isNotInstanceOf(MetricImageStorage::class.java)
+                ctx.getBean(ImageStorage::class.java) shouldNotBeInstanceOf MetricImageStorage::class
             }
     }
 
@@ -73,14 +96,14 @@ class ImagesMetricsAutoConfigurationTest {
             .withBean(ImageStorage::class.java, { alreadyWrapped })
             .run { ctx ->
                 val storage = ctx.getBean(ImageStorage::class.java)
-                assertThat(storage).isInstanceOf(MetricImageStorage::class.java)
+                storage shouldBeSameInstanceAs alreadyWrapped
                 // delegate가 또 다른 MetricImageStorage가 아니라 LocalImageStorage인지 확인합니다.
                 val delegate = MetricImageStorage::class.java
                     .getDeclaredField("delegate")
                     .also { it.isAccessible = true }
                     .get(storage)
-                assertThat(delegate).isNotInstanceOf(MetricImageStorage::class.java)
-                assertThat(delegate).isInstanceOf(LocalImageStorage::class.java)
+                delegate shouldNotBeInstanceOf MetricImageStorage::class
+                delegate shouldBeInstanceOf LocalImageStorage::class
             }
     }
 }

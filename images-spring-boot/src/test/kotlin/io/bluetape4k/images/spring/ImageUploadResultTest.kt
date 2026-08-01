@@ -1,9 +1,9 @@
 package io.bluetape4k.images.spring
 
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertNotEquals
-import org.junit.jupiter.api.Assertions.assertNotNull
-import org.junit.jupiter.api.Assertions.assertTrue
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldNotBeNull
 import org.junit.jupiter.api.Test
 import java.time.Instant
 
@@ -22,11 +22,11 @@ class ImageUploadResultTest {
             uploadedAt = uploadedAt,
         )
 
-        assertEquals(key, result.key)
-        assertEquals("abc123", result.etag)
-        assertEquals(1024L, result.sizeBytes)
-        assertEquals("image/jpeg", result.contentType)
-        assertEquals(uploadedAt, result.uploadedAt)
+        result.key shouldBeEqualTo key
+        result.etag shouldBeEqualTo "abc123"
+        result.sizeBytes shouldBeEqualTo 1024L
+        result.contentType shouldBeEqualTo "image/jpeg"
+        result.uploadedAt shouldBeEqualTo uploadedAt
     }
 
     @Test
@@ -40,12 +40,11 @@ class ImageUploadResultTest {
         )
         val after = Instant.now()
 
-        assertNotNull(result.uploadedAt)
-        assertTrue(
+        result.uploadedAt.shouldNotBeNull()
+        (
             !result.uploadedAt.isBefore(before.minusSeconds(5)) &&
-                !result.uploadedAt.isAfter(after.plusSeconds(5)),
-            "uploadedAt should be within 5 seconds of now",
-        )
+                !result.uploadedAt.isAfter(after.plusSeconds(5))
+            ).shouldBeTrue()
     }
 
     @Test
@@ -66,8 +65,8 @@ class ImageUploadResultTest {
             uploadedAt = uploadedAt,
         )
 
-        assertEquals(a, b)
-        assertEquals(a.hashCode(), b.hashCode())
+        a shouldBeEqualTo b
+        a.hashCode() shouldBeEqualTo b.hashCode()
     }
 
     @Test
@@ -88,7 +87,7 @@ class ImageUploadResultTest {
             uploadedAt = uploadedAt,
         )
 
-        assertNotEquals(a, b)
+        (a == b).shouldBeFalse()
     }
 
     @Test
@@ -104,11 +103,11 @@ class ImageUploadResultTest {
 
         val updated = original.copy(sizeBytes = 2048L, etag = "def456")
 
-        assertEquals(key, updated.key)
-        assertEquals("def456", updated.etag)
-        assertEquals(2048L, updated.sizeBytes)
-        assertEquals("image/jpeg", updated.contentType)
-        assertEquals(uploadedAt, updated.uploadedAt)
-        assertNotEquals(original, updated)
+        updated.key shouldBeEqualTo key
+        updated.etag shouldBeEqualTo "def456"
+        updated.sizeBytes shouldBeEqualTo 2048L
+        updated.contentType shouldBeEqualTo "image/jpeg"
+        updated.uploadedAt shouldBeEqualTo uploadedAt
+        (original == updated).shouldBeFalse()
     }
 }

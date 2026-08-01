@@ -65,6 +65,7 @@ dependencies {
 
     // Test
     testImplementation(libs.spring.boot.starter.test)
+    testImplementation("org.springframework.boot:spring-boot-micrometer-metrics")
     testImplementation(bt4k.bluetape4k.junit5)
     testImplementation(bt4k.bluetape4k.aws.spring.boot)
     testImplementation(libs.aws2.s3)

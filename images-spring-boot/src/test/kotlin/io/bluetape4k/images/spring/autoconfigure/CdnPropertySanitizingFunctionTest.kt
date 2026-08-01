@@ -1,6 +1,7 @@
 package io.bluetape4k.images.spring.autoconfigure
 
-import org.assertj.core.api.Assertions.assertThat
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeSameInstanceAs
 import org.junit.jupiter.api.Test
 import org.springframework.boot.actuate.endpoint.SanitizableData
 
@@ -16,7 +17,7 @@ class CdnPropertySanitizingFunctionTest {
             "-----BEGIN PRIVATE KEY-----...",
         )
         val result = sanitizer.apply(data)
-        assertThat(result.value).isEqualTo(SanitizableData.SANITIZED_VALUE)
+        result.value shouldBeEqualTo SanitizableData.SANITIZED_VALUE
     }
 
     @Test
@@ -27,7 +28,7 @@ class CdnPropertySanitizingFunctionTest {
             "/etc/ssl/private.pem",
         )
         val result = sanitizer.apply(data)
-        assertThat(result.value).isEqualTo(SanitizableData.SANITIZED_VALUE)
+        result.value shouldBeEqualTo SanitizableData.SANITIZED_VALUE
     }
 
     @Test
@@ -38,7 +39,7 @@ class CdnPropertySanitizingFunctionTest {
             "some-private-key",
         )
         val result = sanitizer.apply(data)
-        assertThat(result.value).isEqualTo(SanitizableData.SANITIZED_VALUE)
+        result.value shouldBeEqualTo SanitizableData.SANITIZED_VALUE
     }
 
     @Test
@@ -49,7 +50,7 @@ class CdnPropertySanitizingFunctionTest {
             "APKABC123",
         )
         val result = sanitizer.apply(data)
-        assertThat(result.value).isEqualTo("APKABC123")
+        result.value shouldBeEqualTo "APKABC123"
     }
 
     @Test
@@ -60,7 +61,7 @@ class CdnPropertySanitizingFunctionTest {
             "d1234.cloudfront.net",
         )
         val result = sanitizer.apply(data)
-        assertThat(result.value).isEqualTo("d1234.cloudfront.net")
+        result.value shouldBeEqualTo "d1234.cloudfront.net"
     }
 
     @Test
@@ -71,20 +72,20 @@ class CdnPropertySanitizingFunctionTest {
             "secret",
         )
         val result = sanitizer.apply(data)
-        assertThat(result.value).isEqualTo(SanitizableData.SANITIZED_VALUE)
+        result.value shouldBeEqualTo SanitizableData.SANITIZED_VALUE
     }
 
     @Test
     fun `returns same data instance when key is not sensitive`() {
         val data = SanitizableData(null, "bluetape4k.images.cdn.enabled", "true")
         val result = sanitizer.apply(data)
-        assertThat(result).isSameAs(data)
+        result shouldBeSameInstanceAs data
     }
 
     @Test
     fun `redacts null value for sensitive key`() {
         val data = SanitizableData(null, "bluetape4k.images.cdn.cloudfront.private-key-pem", null)
         val result = sanitizer.apply(data)
-        assertThat(result.value).isEqualTo(SanitizableData.SANITIZED_VALUE)
+        result.value shouldBeEqualTo SanitizableData.SANITIZED_VALUE
     }
 }

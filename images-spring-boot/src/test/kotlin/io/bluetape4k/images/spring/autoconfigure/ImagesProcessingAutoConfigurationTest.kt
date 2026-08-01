@@ -1,5 +1,7 @@
 package io.bluetape4k.images.spring.autoconfigure
 
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeTrue
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.boot.autoconfigure.AutoConfigurations
@@ -15,9 +17,9 @@ class ImagesProcessingAutoConfigurationTest {
         contextRunner.run { ctx ->
             assertThat(ctx).hasSingleBean(ImageProcessingProperties::class.java)
             val props = ctx.getBean(ImageProcessingProperties::class.java)
-            assertThat(props.enabled).isTrue()
-            assertThat(props.defaultFormat).isEqualTo("jpeg")
-            assertThat(props.defaultQuality).isEqualTo(85)
+            props.enabled.shouldBeTrue()
+            props.defaultFormat shouldBeEqualTo "jpeg"
+            props.defaultQuality shouldBeEqualTo 85
         }
     }
 
@@ -37,7 +39,7 @@ class ImagesProcessingAutoConfigurationTest {
             .run { ctx ->
                 assertThat(ctx).hasSingleBean(ImageProcessingProperties::class.java)
                 val props = ctx.getBean(ImageProcessingProperties::class.java)
-                assertThat(props.defaultQuality).isEqualTo(70)
+                props.defaultQuality shouldBeEqualTo 70
             }
     }
 
@@ -47,7 +49,7 @@ class ImagesProcessingAutoConfigurationTest {
             .withPropertyValues("bluetape4k.images.processing.default-format=png")
             .run { ctx ->
                 val props = ctx.getBean(ImageProcessingProperties::class.java)
-                assertThat(props.defaultFormat).isEqualTo("png")
+                props.defaultFormat shouldBeEqualTo "png"
             }
     }
 
