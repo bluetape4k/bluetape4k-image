@@ -1,5 +1,7 @@
 package io.bluetape4k.images.spring.autoconfigure
 
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeSameInstanceAs
 import io.bluetape4k.images.spring.health.ImageStorageHealthIndicator
 import io.bluetape4k.images.spring.storage.ImageStorage
 import io.mockk.mockk
@@ -63,8 +65,7 @@ class ImagesHealthAutoConfigurationTest {
             )
             .run { ctx ->
                 assertThat(ctx).hasSingleBean(ImageStorageHealthIndicator::class.java)
-                assertThat(ctx.getBean(ImageStorageHealthIndicator::class.java))
-                    .isSameAs(customIndicator)
+                ctx.getBean(ImageStorageHealthIndicator::class.java) shouldBeSameInstanceAs customIndicator
             }
     }
 
@@ -75,7 +76,7 @@ class ImagesHealthAutoConfigurationTest {
             .run { ctx ->
                 assertThat(ctx).hasSingleBean(ImageStorageHealthIndicator::class.java)
                 val props = ctx.getBean(ImageStorageProperties::class.java)
-                assertThat(props.healthProbeKey).isEqualTo(".my-probe")
+                props.healthProbeKey shouldBeEqualTo ".my-probe"
             }
     }
 }

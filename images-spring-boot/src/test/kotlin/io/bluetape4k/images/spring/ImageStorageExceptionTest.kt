@@ -1,10 +1,10 @@
 package io.bluetape4k.images.spring
 
+import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeInstanceOf
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertNotNull
-import org.junit.jupiter.api.Assertions.assertNull
-import org.junit.jupiter.api.Assertions.assertTrue
+import io.bluetape4k.assertions.shouldBeNull
+import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldNotBeNull
 import org.junit.jupiter.api.Test
 
 class ImageStorageExceptionTest {
@@ -14,19 +14,19 @@ class ImageStorageExceptionTest {
     @Test
     fun `NotFoundException has correct key`() {
         val ex = ImageStorageException.NotFoundException(key)
-        assertEquals(key, ex.key)
+        ex.key shouldBeEqualTo key
     }
 
     @Test
     fun `NotFoundException default message contains fullKey`() {
         val ex = ImageStorageException.NotFoundException(key)
-        assertTrue(ex.message?.contains(key.fullKey) == true)
+        ex.message.orEmpty().contains(key.fullKey).shouldBeTrue()
     }
 
     @Test
     fun `NotFoundException accepts custom message`() {
         val ex = ImageStorageException.NotFoundException(key, message = "Custom not found")
-        assertEquals("Custom not found", ex.message)
+        ex.message shouldBeEqualTo "Custom not found"
     }
 
     @Test
@@ -38,13 +38,13 @@ class ImageStorageExceptionTest {
     @Test
     fun `AccessDeniedException has correct key`() {
         val ex = ImageStorageException.AccessDeniedException(key)
-        assertEquals(key, ex.key)
+        ex.key shouldBeEqualTo key
     }
 
     @Test
     fun `AccessDeniedException default message contains fullKey`() {
         val ex = ImageStorageException.AccessDeniedException(key)
-        assertTrue(ex.message?.contains(key.fullKey) == true)
+        ex.message.orEmpty().contains(key.fullKey).shouldBeTrue()
     }
 
     @Test
@@ -56,13 +56,13 @@ class ImageStorageExceptionTest {
     @Test
     fun `ConflictException has correct key`() {
         val ex = ImageStorageException.ConflictException(key)
-        assertEquals(key, ex.key)
+        ex.key shouldBeEqualTo key
     }
 
     @Test
     fun `ConflictException default message contains fullKey`() {
         val ex = ImageStorageException.ConflictException(key)
-        assertTrue(ex.message?.contains(key.fullKey) == true)
+        ex.message.orEmpty().contains(key.fullKey).shouldBeTrue()
     }
 
     @Test
@@ -74,15 +74,15 @@ class ImageStorageExceptionTest {
     @Test
     fun `TransientException with null key works`() {
         val ex = ImageStorageException.TransientException()
-        assertNull(ex.key)
-        assertNotNull(ex.message)
+        ex.key.shouldBeNull()
+        ex.message.shouldNotBeNull()
     }
 
     @Test
     fun `TransientException with key works`() {
         val ex = ImageStorageException.TransientException(key = key)
-        assertEquals(key, ex.key)
-        assertTrue(ex.message?.contains(key.fullKey) == true)
+        ex.key shouldBeEqualTo key
+        ex.message.orEmpty().contains(key.fullKey).shouldBeTrue()
     }
 
     @Test
@@ -94,15 +94,15 @@ class ImageStorageExceptionTest {
     @Test
     fun `ValidationException with null key and explicit message works`() {
         val ex = ImageStorageException.ValidationException(key = null, message = "size exceeded")
-        assertNull(ex.key)
-        assertEquals("size exceeded", ex.message)
+        ex.key.shouldBeNull()
+        ex.message shouldBeEqualTo "size exceeded"
     }
 
     @Test
     fun `ValidationException with key and message works`() {
         val ex = ImageStorageException.ValidationException(key = key, message = "upload too large")
-        assertEquals(key, ex.key)
-        assertEquals("upload too large", ex.message)
+        ex.key shouldBeEqualTo key
+        ex.message shouldBeEqualTo "upload too large"
     }
 
     @Test
@@ -129,7 +129,7 @@ class ImageStorageExceptionTest {
                 is ImageStorageException.TransientException    -> "transient"
                 is ImageStorageException.ValidationException   -> "validation"
             }
-            assertNotNull(label)
+            label.shouldNotBeNull()
         }
     }
 
@@ -137,13 +137,13 @@ class ImageStorageExceptionTest {
     fun `NotFoundException cause is stored`() {
         val cause = RuntimeException("root cause")
         val ex = ImageStorageException.NotFoundException(key, cause = cause)
-        assertEquals(cause, ex.cause)
+        ex.cause shouldBeEqualTo cause
     }
 
     @Test
     fun `TransientException cause is stored`() {
         val cause = java.io.IOException("disk error")
         val ex = ImageStorageException.TransientException(key = key, cause = cause)
-        assertEquals(cause, ex.cause)
+        ex.cause shouldBeEqualTo cause
     }
 }

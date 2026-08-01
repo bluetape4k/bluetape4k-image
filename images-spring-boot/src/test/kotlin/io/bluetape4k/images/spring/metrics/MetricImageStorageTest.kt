@@ -1,5 +1,9 @@
 package io.bluetape4k.images.spring.metrics
 
+import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.images.spring.ImageObjectKey
 import io.bluetape4k.images.spring.ImageStorageException
 import io.bluetape4k.images.spring.ImageUploadResult
@@ -14,8 +18,6 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.Instant
-import kotlin.test.assertFailsWith
-import kotlin.test.assertTrue
 
 class MetricImageStorageTest {
 
@@ -40,8 +42,7 @@ class MetricImageStorageTest {
 
         storage.upload(key, ByteArray(10), options)
 
-        val timer = registry.find("images.storage.upload.duration").timer()
-        assertTrue(timer != null && timer.count() == 1L)
+        registry.find("images.storage.upload.duration").timer().shouldNotBeNull().count() shouldBeEqualTo 1L
     }
 
     @Test
@@ -53,10 +54,8 @@ class MetricImageStorageTest {
             storage.upload(key, ByteArray(10), options)
         }
 
-        val timer = registry.find("images.storage.upload.duration").timer()
-        assertTrue(timer != null && timer.count() == 1L)
-        val counter = registry.find("images.storage.upload.errors").counter()
-        assertTrue(counter != null && counter.count() == 1.0)
+        registry.find("images.storage.upload.duration").timer().shouldNotBeNull().count() shouldBeEqualTo 1L
+        registry.find("images.storage.upload.errors").counter().shouldNotBeNull().count() shouldBeEqualTo 1.0
     }
 
     @Test
@@ -67,11 +66,10 @@ class MetricImageStorageTest {
             storage.upload(key, ByteArray(10), options)
         }
 
-        val timer = registry.find("images.storage.upload.duration").timer()
-        assertTrue(timer != null && timer.count() == 1L)
+        registry.find("images.storage.upload.duration").timer().shouldNotBeNull().count() shouldBeEqualTo 1L
         val counter = registry.find("images.storage.upload.errors").counter()
         // CancellationException에서는 counter를 증가시키면 안 됩니다.
-        assertTrue(counter == null || counter.count() == 0.0)
+        (counter == null || counter.count() == 0.0).shouldBeTrue()
     }
 
     @Test
@@ -80,8 +78,7 @@ class MetricImageStorageTest {
 
         storage.download(key)
 
-        val timer = registry.find("images.storage.download.duration").timer()
-        assertTrue(timer != null && timer.count() == 1L)
+        registry.find("images.storage.download.duration").timer().shouldNotBeNull().count() shouldBeEqualTo 1L
     }
 
     @Test
@@ -92,16 +89,14 @@ class MetricImageStorageTest {
             storage.download(key)
         }
 
-        val timer = registry.find("images.storage.download.duration").timer()
-        assertTrue(timer != null && timer.count() == 1L)
-        val counter = registry.find("images.storage.download.errors").counter()
-        assertTrue(counter != null && counter.count() == 1.0)
+        registry.find("images.storage.download.duration").timer().shouldNotBeNull().count() shouldBeEqualTo 1L
+        registry.find("images.storage.download.errors").counter().shouldNotBeNull().count() shouldBeEqualTo 1.0
     }
 
     @Test
     fun `delegates exists to underlying storage`() = runTest {
         coEvery { delegate.exists(key) } returns true
-        assertTrue(storage.exists(key))
+        storage.exists(key).shouldBeTrue()
         coVerify { delegate.exists(key) }
     }
 }

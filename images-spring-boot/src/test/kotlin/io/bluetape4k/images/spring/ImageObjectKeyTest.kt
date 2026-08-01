@@ -1,40 +1,40 @@
 package io.bluetape4k.images.spring
 
-import org.junit.jupiter.api.Assertions.assertEquals
+import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.shouldBeEqualTo
 import org.junit.jupiter.api.Test
-import kotlin.test.assertFailsWith
 
 class ImageObjectKeyTest {
 
     @Test
     fun `of creates key with correct fields`() {
         val key = ImageObjectKey.of("uploads", "photo.jpg")
-        assertEquals("uploads", key.prefix)
-        assertEquals("photo.jpg", key.name)
+        key.prefix shouldBeEqualTo "uploads"
+        key.name shouldBeEqualTo "photo.jpg"
     }
 
     @Test
     fun `fullKey joins prefix and name with slash`() {
         val key = ImageObjectKey.of("uploads", "photo.jpg")
-        assertEquals("uploads/photo.jpg", key.fullKey)
+        key.fullKey shouldBeEqualTo "uploads/photo.jpg"
     }
 
     @Test
     fun `fullKey normalizes trailing slash in prefix`() {
         val key = ImageObjectKey.of("uploads/", "photo.jpg")
-        assertEquals("uploads/photo.jpg", key.fullKey)
+        key.fullKey shouldBeEqualTo "uploads/photo.jpg"
     }
 
     @Test
     fun `of allows nested prefix segments`() {
         val key = ImageObjectKey.of("a/b/c", "file.png")
-        assertEquals("a/b/c/file.png", key.fullKey)
+        key.fullKey shouldBeEqualTo "a/b/c/file.png"
     }
 
     @Test
     fun `of allows dot in name`() {
         val key = ImageObjectKey.of("thumb", "img.webp")
-        assertEquals("thumb/img.webp", key.fullKey)
+        key.fullKey shouldBeEqualTo "thumb/img.webp"
     }
 
     @Test
@@ -83,7 +83,7 @@ class ImageObjectKeyTest {
     fun `data class equality based on fields`() {
         val a = ImageObjectKey.of("uploads", "photo.jpg")
         val b = ImageObjectKey.of("uploads", "photo.jpg")
-        assertEquals(a, b)
-        assertEquals(a.hashCode(), b.hashCode())
+        a shouldBeEqualTo b
+        a.hashCode() shouldBeEqualTo b.hashCode()
     }
 }

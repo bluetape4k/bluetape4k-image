@@ -1,16 +1,15 @@
 package io.bluetape4k.images.spring.storage
 
 import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.images.spring.ImageObjectKey
 import io.bluetape4k.images.spring.ImageStorageException
 import io.bluetape4k.images.spring.UploadOptions
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
-import org.junit.jupiter.api.Assertions.assertArrayEquals
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertFalse
-import org.junit.jupiter.api.Assertions.assertNotNull
-import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import java.nio.file.Files
 import java.nio.file.Path
@@ -28,11 +27,11 @@ class LocalImageStorageTest {
     fun `upload bytes stores data and returns correct result`() = runTest {
         val result = storage.upload(key, sampleBytes, options)
 
-        assertEquals(key, result.key)
-        assertTrue(result.etag.isNotBlank())
-        assertEquals(sampleBytes.size.toLong(), result.sizeBytes)
-        assertEquals(options.contentType, result.contentType)
-        assertNotNull(result.uploadedAt)
+        result.key shouldBeEqualTo key
+        result.etag.isNotBlank().shouldBeTrue()
+        result.sizeBytes shouldBeEqualTo sampleBytes.size.toLong()
+        result.contentType shouldBeEqualTo options.contentType
+        result.uploadedAt.shouldNotBeNull()
     }
 
     @Test
@@ -53,11 +52,11 @@ class LocalImageStorageTest {
         val pathKey = ImageObjectKey.of("originals", "source.jpg")
         val result = storage.upload(pathKey, sourceFile, options)
 
-        assertEquals(pathKey, result.key)
-        assertTrue(result.etag.isNotBlank())
-        assertEquals(sampleBytes.size.toLong(), result.sizeBytes)
-        assertEquals(options.contentType, result.contentType)
-        assertNotNull(result.uploadedAt)
+        result.key shouldBeEqualTo pathKey
+        result.etag.isNotBlank().shouldBeTrue()
+        result.sizeBytes shouldBeEqualTo sampleBytes.size.toLong()
+        result.contentType shouldBeEqualTo options.contentType
+        result.uploadedAt.shouldNotBeNull()
     }
 
     @Test
@@ -86,7 +85,7 @@ class LocalImageStorageTest {
 
         val downloaded = storage.download(key)
 
-        assertArrayEquals(sampleBytes, downloaded)
+        downloaded.contentEquals(sampleBytes).shouldBeTrue()
     }
 
     @Test
@@ -121,7 +120,7 @@ class LocalImageStorageTest {
         val destination = Files.createTempFile(tempDir, "dest-", ".jpg")
         storage.download(key, destination)
 
-        assertArrayEquals(sampleBytes, Files.readAllBytes(destination))
+        Files.readAllBytes(destination).contentEquals(sampleBytes).shouldBeTrue()
     }
 
     @Test
@@ -152,11 +151,11 @@ class LocalImageStorageTest {
     @Test
     fun `delete removes an existing file`() = runTest {
         storage.upload(key, sampleBytes, options)
-        assertTrue(storage.exists(key))
+        storage.exists(key).shouldBeTrue()
 
         storage.delete(key)
 
-        assertFalse(storage.exists(key))
+        storage.exists(key).shouldBeFalse()
     }
 
     @Test
@@ -164,21 +163,21 @@ class LocalImageStorageTest {
         val missingKey = ImageObjectKey.of("nonexistent", "ghost.jpg")
         // 없는 key 삭제는 예외를 던지면 안 됩니다.
         storage.delete(missingKey)
-        assertFalse(storage.exists(missingKey))
+        storage.exists(missingKey).shouldBeFalse()
     }
 
     @Test
     fun `exists returns true for existing key`() = runTest {
         storage.upload(key, sampleBytes, options)
 
-        assertTrue(storage.exists(key))
+        storage.exists(key).shouldBeTrue()
     }
 
     @Test
     fun `exists returns false for non-existing key`() = runTest {
         val missingKey = ImageObjectKey.of("ghost", "image.jpg")
 
-        assertFalse(storage.exists(missingKey))
+        storage.exists(missingKey).shouldBeFalse()
     }
 
     @Test
@@ -195,8 +194,8 @@ class LocalImageStorageTest {
         val listPrefix = ImageObjectKey.of("photos", "gallery")
         val listed = storage.list(listPrefix).toList()
 
-        assertTrue(listed.any { it.fullKey == key1.fullKey }, "listed=$listed")
-        assertTrue(listed.any { it.fullKey == key2.fullKey }, "listed=$listed")
+        listed.any { it.fullKey == key1.fullKey }.shouldBeTrue()
+        listed.any { it.fullKey == key2.fullKey }.shouldBeTrue()
     }
 
     @Test
@@ -205,7 +204,7 @@ class LocalImageStorageTest {
 
         val listed = storage.list(missingPrefix).toList()
 
-        assertTrue(listed.isEmpty())
+        listed.isEmpty().shouldBeTrue()
     }
 
     @Test
