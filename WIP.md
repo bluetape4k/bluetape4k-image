@@ -1,6 +1,6 @@
 # WIP - bluetape4k-image
 
-스냅샷: 2026-07-14 KST
+스냅샷: 2026-08-01 KST
 
 이 로드맵은 `debop`에게 할당된 열린 GitHub issue를 추적한다. 현재 release
 line closeout과 Backlog milestone으로 미룬 작업을 분리해서 본다.
@@ -11,16 +11,24 @@ line closeout과 Backlog milestone으로 미룬 작업을 분리해서 본다.
   2026-06-27에 게시된 최신 stable release이다.
 - `develop`은 `baseVersion=0.4.0`을 사용한다. `0.4.0` milestone은 아직 개발
   중이며 release되지 않았다.
-- 이 로드맵 갱신은
-  [#271](https://github.com/bluetape4k/bluetape4k-image/issues/271)에서
-  추적한다. 이 변경이 merge된 뒤에는 아래 changelog backfill이 남은
-  `0.4.0` milestone closeout 항목이다.
+- 현재 `0.4.0` milestone에는 문서 후속 작업인
+  [#462](https://github.com/bluetape4k/bluetape4k-image/issues/462)만 열린
+  상태로 남아 있다. 이 issue는 한국어 `Fixed` category를 `버그 수정`으로
+  통일하며 runtime behavior, public API, dependency, release를 변경하지 않는다.
+- [#270](https://github.com/bluetape4k/bluetape4k-image/issues/270)의 changelog
+  backfill과 [#271](https://github.com/bluetape4k/bluetape4k-image/issues/271)의
+  roadmap refresh는 완료되었다.
 
 ## 0.4.0 마감 작업
 
 - [#270](https://github.com/bluetape4k/bluetape4k-image/issues/270)은 완료되고
-  추적 가능한 `0.4.0` 작업을 기준으로 `CHANGELOG.md`를 보강한다. release를
-  게시하거나 artifact version을 바꾸지 않는다.
+  추적 가능한 `0.4.0` 작업을 기준으로 `CHANGELOG.md`를 보강했다. release를
+  게시하거나 artifact version을 바꾸지 않았다.
+- [#271](https://github.com/bluetape4k/bluetape4k-image/issues/271)의 roadmap
+  refresh도 완료되어 현재 milestone 상태를 반영한다.
+- [#462](https://github.com/bluetape4k/bluetape4k-image/issues/462)은 한국어
+  changelog의 `Fixed` heading을 `버그 수정`으로 표준화한다. 이 문서 작업은
+  release publication, version 변경, milestone closure를 수행하지 않는다.
 
 ## 연기된 Backlog
 
@@ -43,6 +51,8 @@ line closeout과 Backlog milestone으로 미룬 작업을 분리해서 본다.
 
 ## Release 경계
 
-`0.4.0` release date는 아직 정해지지 않았다. release publication, version 변경,
-milestone closure는 changelog가 완료된 milestone 작업을 반영한 뒤 별도의 검증된
-release workflow로만 진행한다.
+`0.4.0` release date는 아직 정해지지 않았다.
+[#462](https://github.com/bluetape4k/bluetape4k-image/issues/462)를 포함한 문서
+작업의 완료는 release publication, version 변경, milestone closure를 의미하지
+않는다. 이러한 작업은 changelog가 완료된 milestone 작업을 반영한 뒤 별도의
+검증된 release workflow로만 진행한다.

@@ -70,7 +70,7 @@
 - 미완료 `0.4.0` closeout과 Backlog로 미룬 작업이 분리되도록 roadmap을 갱신했다
   ([#271](https://github.com/bluetape4k/bluetape4k-image/issues/271)).
 
-### 수정
+### 버그 수정
 
 - Java 25 FFM derived-image ownership을 수정해 native memory가 `VipsImage`가
   약속한 lifetime 동안 유효하도록 했다
@@ -116,7 +116,7 @@
   documentation을 갱신했다
   ([#175](https://github.com/bluetape4k/bluetape4k-image/issues/175)).
 
-### 수정
+### 버그 수정
 
 - Image golden-chain Nightly coverage를 안정화하고 scheduled CI snapshot dependency
   read가 Central snapshot authentication과 retry failure에 더 강하도록 했다
@@ -197,7 +197,7 @@
   `ImmutableImage.withGraphics { }`와 `HashDistance.hamming(a, b)`를 사용한다
   ([#61](https://github.com/bluetape4k/bluetape4k-image/issues/61)).
 
-### 수정
+### 버그 수정
 
 - Optional S3/CDN auto-configuration fallback behavior와 release workflow catalog
   selection을 강화했다
@@ -288,7 +288,7 @@
   `0.2.0` removal까지 deprecated 상태로 남겼다
   ([#61](https://github.com/bluetape4k/bluetape4k-image/issues/61)).
 
-### 수정
+### 버그 수정
 
 - 모든 published module의 POM license metadata를 Apache 2.0에서 MIT로 정렬했다
   ([PR #38](https://github.com/bluetape4k/bluetape4k-image/pull/38)).
