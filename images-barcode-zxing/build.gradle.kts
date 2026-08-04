@@ -5,8 +5,8 @@ tasks.withType<Test>().configureEach {
 dependencies {
     api(project(":bluetape4k-images-barcode-api"))
 
-    implementation(libs.zxing.core)
-    implementation(libs.zxing.javase)
+    implementation(bt4k.zxing.core)
+    implementation(bt4k.zxing.javase)
 
     testImplementation(bt4k.bluetape4k.junit5)
     testImplementation(testFixtures(project(":bluetape4k-images-barcode-api")))

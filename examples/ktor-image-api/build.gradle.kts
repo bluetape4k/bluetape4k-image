@@ -9,7 +9,7 @@ dependencies {
     implementation(bt4k.bluetape4k.ktor.core)
     implementation(libs.ktor.server.core)
     implementation(libs.ktor.server.netty)
-    runtimeOnly(libs.logback)
+    runtimeOnly(bt4k.logback)
 
     testImplementation(bt4k.bluetape4k.junit5)
     testImplementation(bt4k.bluetape4k.ktor.testing)

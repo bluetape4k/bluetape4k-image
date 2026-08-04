@@ -76,5 +76,5 @@ dependencies {
     testImplementation(libs.kotlinx.coroutines.reactor)
     testImplementation(bt4k.bluetape4k.testcontainers)
     testImplementation(libs.kotlinx.coroutines.test)
-    testImplementation(libs.mockk)
+    testImplementation(bt4k.mockk)
 }
