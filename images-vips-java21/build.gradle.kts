@@ -35,7 +35,7 @@ dependencies {
 
     // JVips JNI bindings (Java 8+; Linux: bundled native / macOS: system libvips required)
     // D8: binding types are internal — use api() only if consumers need VImage directly
-    implementation(libs.jvips)
+    implementation(bt4k.jvips.build69bf715)
 
     // BoundedInputStream for input size limits
     implementation(bt4k.commons.io)

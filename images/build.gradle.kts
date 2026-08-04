@@ -15,17 +15,17 @@ dependencies {
     implementation(libs.scrimage.webp)
 
     // EXIF metadata (required runtime dependency)
-    implementation(libs.metadata.extractor)
+    implementation(bt4k.metadata.extractor)
 
     // TIFF support via TwelveMonkeys ImageIO (auto-registers via SPI)
-    api(libs.twelvemonkeys.imageio.tiff)
-    api(libs.twelvemonkeys.imageio.metadata)
+    api(bt4k.twelvemonkeys.imageio.tiff)
+    api(bt4k.twelvemonkeys.imageio.metadata)
 
     // SVG rasterization via Apache Batik (opt-in; add to your own dependencies if needed)
-    compileOnly(libs.batik.transcoder)
-    compileOnly(libs.batik.codec)
-    testImplementation(libs.batik.transcoder)
-    testImplementation(libs.batik.codec)
+    compileOnly(bt4k.batik.transcoder)
+    compileOnly(bt4k.batik.codec)
+    testImplementation(bt4k.batik.transcoder)
+    testImplementation(bt4k.batik.codec)
 
     // Coroutines
     implementation(bt4k.bluetape4k.coroutines)
