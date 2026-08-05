@@ -8,7 +8,6 @@
 kotlinx-benchmark = "0.4.17"  # https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-benchmark-runtime
 
 # Image processing
-twelvemonkeys-imageio = "3.13.1"  # https://mvnrepository.com/artifact/com.twelvemonkeys.imageio/imageio-tiff
 batik = "1.19"  # https://mvnrepository.com/artifact/org.apache.xmlgraphics/batik-transcoder
 
 # Benchmark
