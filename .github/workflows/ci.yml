@@ -169,6 +169,8 @@ jobs:
         env:
           BLUETAPE4K_DEPENDENCIES_CATALOG_PATH: ${{ github.workspace }}/.catalog/bluetape4k-dependencies/gradle/libs.versions.toml
         run: ./gradlew help --no-daemon
+      - name: Verify release validation contract
+        run: python3 .github/scripts/test-release-validation-contract.py
 
   build:
     name: Build (compile only)
