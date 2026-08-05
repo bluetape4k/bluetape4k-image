@@ -13,7 +13,7 @@ dependencies {
     api(project(":bluetape4k-images"))
 
     implementation(libs.kotlinx.coroutines.core)
-    implementation(libs.tess4j)
+    implementation(bt4k.tess4j)
 
     testImplementation(bt4k.bluetape4k.junit5)
     testImplementation(libs.kotlinx.coroutines.test)

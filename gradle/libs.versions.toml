@@ -5,42 +5,24 @@
 
 
 # Temporary issue #208 exception. Remove after the central catalog publishes this alias in a release-train tag.
-kotlinx-atomicfu = "0.32.1"  # https://mvnrepository.com/artifact/org.jetbrains.kotlinx/atomicfu
 kotlinx-benchmark = "0.4.17"  # https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-benchmark-runtime
 
 # Image processing
-metadata-extractor = "2.20.0"  # https://mvnrepository.com/artifact/com.drewnoakes/metadata-extractor
-twelvemonkeys-imageio = "3.13.1"  # https://mvnrepository.com/artifact/com.twelvemonkeys.imageio/imageio-tiff
 batik = "1.19"  # https://mvnrepository.com/artifact/org.apache.xmlgraphics/batik-transcoder
-jvips = "8.12.2-69bf715"  # https://mvnrepository.com/artifact/com.criteo/jvips
-vips-ffm = "1.9.8"  # https://mvnrepository.com/artifact/app.photofox.vips-ffm/vips-ffm-core
-tess4j = "5.19.0"  # https://mvnrepository.com/artifact/net.sourceforge.tess4j/tess4j
-zxing = "3.5.4"  # https://mvnrepository.com/artifact/com.google.zxing/core
 
 # Benchmark
-jmh = "1.37"  # https://mvnrepository.com/artifact/org.openjdk.jmh/jmh-core
-
-logback = "1.5.32"  # https://mvnrepository.com/artifact/ch.qos.logback/logback-classic
 
 
-junit-jupiter = "6.0.3"  # https://mvnrepository.com/artifact/org.junit/junit-bom
-mockk = "1.14.9"  # https://mvnrepository.com/artifact/io.mockk/mockk
+
 
 # Plugin versions
-detekt = "1.23.8"  # https://mvnrepository.com/artifact/io.gitlab.arturbosch.detekt/detekt-gradle-plugin
-test-logger = "4.0.0"  # https://mvnrepository.com/artifact/com.adarshr/gradle-test-logger-plugin
 
 # ────────────────────────────────────────────────────────────────────────────
 [plugins]
-kotlinx-atomicfu = { id = "org.jetbrains.kotlinx.atomicfu", version.ref = "kotlinx-atomicfu" }
-kotlinx-benchmark = { id = "org.jetbrains.kotlinx.benchmark", version.ref = "kotlinx-benchmark" }
 
-detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
-test-logger = { id = "com.adarshr.test-logger", version.ref = "test-logger" }
 
 # ────────────────────────────────────────────────────────────────────────────
 [libraries]
-jetbrains-annotations = { module = "org.jetbrains:annotations", version = "26.1.0" }  # https://mvnrepository.com/artifact/org.jetbrains/annotations
 
 # Kotlin
 kotlin-bom = { module = "org.jetbrains.kotlin:kotlin-bom" }
@@ -53,11 +35,8 @@ kotlin-test-junit5 = { module = "org.jetbrains.kotlin:kotlin-test-junit5" }
 kotlinx-coroutines-bom = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-bom" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test" }
-kotlinx-atomicfu = { module = "org.jetbrains.kotlinx:atomicfu", version.ref = "kotlinx-atomicfu" }
 
 # Kotlinx Benchmark
-kotlinx-benchmark-runtime = { module = "org.jetbrains.kotlinx:kotlinx-benchmark-runtime", version.ref = "kotlinx-benchmark" }
-kotlinx-benchmark-runtime-jvm = { module = "org.jetbrains.kotlinx:kotlinx-benchmark-runtime-jvm", version.ref = "kotlinx-benchmark" }
 
 # Ktor
 ktor-server-core = { module = "io.ktor:ktor-server-core" }
@@ -74,28 +53,14 @@ ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx
 jcl-over-slf4j = { module = "org.slf4j:jcl-over-slf4j" }
 jul-to-slf4j = { module = "org.slf4j:jul-to-slf4j" }
 log4j-over-slf4j = { module = "org.slf4j:log4j-over-slf4j" }
-logback = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
 
 # Image processing
 scrimage-filters = { module = "com.sksamuel.scrimage:scrimage-filters" }
 scrimage-webp = { module = "com.sksamuel.scrimage:scrimage-webp" }
-metadata-extractor = { module = "com.drewnoakes:metadata-extractor", version.ref = "metadata-extractor" }
-twelvemonkeys-imageio-tiff = { module = "com.twelvemonkeys.imageio:imageio-tiff", version.ref = "twelvemonkeys-imageio" }
-twelvemonkeys-imageio-metadata = { module = "com.twelvemonkeys.imageio:imageio-metadata", version.ref = "twelvemonkeys-imageio" }
-twelvemonkeys-imageio-core = { module = "com.twelvemonkeys.imageio:imageio-core", version.ref = "twelvemonkeys-imageio" }
-batik-transcoder = { module = "org.apache.xmlgraphics:batik-transcoder", version.ref = "batik" }
-batik-codec = { module = "org.apache.xmlgraphics:batik-codec", version.ref = "batik" }
-jvips = { module = "com.criteo:jvips", version.ref = "jvips" }
-vips-ffm = { module = "app.photofox.vips-ffm:vips-ffm-core", version.ref = "vips-ffm" }
-tess4j = { module = "net.sourceforge.tess4j:tess4j", version.ref = "tess4j" }
-zxing-core = { module = "com.google.zxing:core", version.ref = "zxing" }
-zxing-javase = { module = "com.google.zxing:javase", version.ref = "zxing" }
 
 # Commons
 
 # Benchmark
-jmh-core = { module = "org.openjdk.jmh:jmh-core", version.ref = "jmh" }
-jmh-generator-annprocess = { module = "org.openjdk.jmh:jmh-generator-annprocess", version.ref = "jmh" }
 
 # Spring Boot
 spring-boot-dependencies = { module = "org.springframework.boot:spring-boot-dependencies" }
@@ -123,11 +88,9 @@ kotlinx-coroutines-reactor = { module = "org.jetbrains.kotlinx:kotlinx-coroutine
 # bluetape4k testcontainers (version managed by bluetape4k BOM)
 
 # Test
-junit-bom = { module = "org.junit:junit-bom", version.ref = "junit-jupiter" }
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter" }
 junit-jupiter-api = { module = "org.junit.jupiter:junit-jupiter-api" }
 junit-platform-engine = { module = "org.junit.platform:junit-platform-engine" }
-mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 awaitility-kotlin = { module = "org.awaitility:awaitility-kotlin" }
 testcontainers-bom = { module = "org.testcontainers:testcontainers-bom" }
 testcontainers = { module = "org.testcontainers:testcontainers" }

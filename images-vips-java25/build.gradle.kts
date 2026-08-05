@@ -53,7 +53,7 @@ dependencies {
 
     // vips-ffm FFM bindings (JDK 23+; system libvips required on all platforms)
     // D8: binding types are internal — use api() only if consumers need VipsImage directly
-    implementation(libs.vips.ffm)
+    implementation(bt4k.vips.ffm)
 
     // BoundedInputStream for input size limits
     implementation(bt4k.commons.io)

@@ -90,7 +90,7 @@ class BarcodeBenchmarkContractTest {
             "java.vendor",
             "java.version",
             "availableProcessors",
-            "libs.versions.zxing.get()",
+            "bt4k.versions.managed.zxing.core.hca5061ea4926.get()",
             "fixtureManifestSha256",
             "latencySha256",
             "throughputSha256",

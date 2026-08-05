@@ -17,7 +17,7 @@ import org.gradle.jvm.toolchain.JavaToolchainService
 plugins {
     kotlin("plugin.allopen")           // allOpen 필수
     alias(bt4k.plugins.kotlin.serialization)
-    alias(libs.plugins.kotlinx.benchmark)      // kotlinx-benchmark 플러그인
+    alias(bt4k.plugins.kotlinx.benchmark)      // kotlinx-benchmark 플러그인
 }
 
 allOpen {
@@ -692,7 +692,7 @@ benchmark {
     targets {
         register("benchmark") {
             this as kotlinx.benchmark.gradle.JvmBenchmarkTarget
-            jmhVersion = libs.versions.jmh.get()
+            jmhVersion = bt4k.versions.managed.jmh.core.h350a653f63e5.get()
             workingDir = repositoryDirectory.asFile.absolutePath
         }
     }
@@ -739,12 +739,12 @@ dependencies {
     add("benchmarkImplementation", libs.aws2.s3)
     add("benchmarkImplementation", libs.ktor.server.test.host)
     add("benchmarkImplementation", "org.springframework:spring-core")
-    add("benchmarkImplementation", libs.batik.transcoder)
-    add("benchmarkImplementation", libs.batik.codec)
-    add("benchmarkImplementation", libs.kotlinx.benchmark.runtime)
-    add("benchmarkImplementation", libs.kotlinx.benchmark.runtime.jvm)
-    add("benchmarkImplementation", libs.jmh.core)
-    add("benchmarkImplementation", libs.jmh.generator.annprocess)
+    add("benchmarkImplementation", bt4k.batik.transcoder)
+    add("benchmarkImplementation", bt4k.batik.codec)
+    add("benchmarkImplementation", bt4k.kotlinx.benchmark.runtime)
+    add("benchmarkImplementation", bt4k.kotlinx.benchmark.runtime.jvm)
+    add("benchmarkImplementation", bt4k.jmh.core)
+    add("benchmarkImplementation", bt4k.jmh.generator.annprocess)
 }
 
 tasks.withType<Test>().configureEach {
@@ -1025,7 +1025,7 @@ tasks.register("finalizeBarcodeBenchmarkEvidence") {
                 ),
                 "provider" to linkedMapOf(
                     "name" to "ZXing",
-                    "version" to libs.versions.zxing.get(),
+                    "version" to bt4k.versions.managed.zxing.core.hca5061ea4926.get(),
                 ),
                 "fixtures" to linkedMapOf(
                     "path" to "fixture-manifest.json",
