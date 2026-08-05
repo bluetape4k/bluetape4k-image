@@ -113,6 +113,7 @@ jobs:
 
           if [[ -z "$validation_run_id" ]]; then
             validation_run_id="$(gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/nightly-tests.yml/runs" \
+              --method GET \
               -f status=completed \
               -f per_page=100 \
               --jq ".workflow_runs[] | select(.head_sha == \"$release_sha\" and .conclusion == \"success\") | .id" \
