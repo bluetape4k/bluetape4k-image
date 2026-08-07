@@ -79,6 +79,58 @@
       ]
     },
     {
+      "artifact": "io.github.bluetape4k.image:bluetape4k-images-barcode-api",
+      "en": "en/modules/bluetape4k-images-barcode-api.md",
+      "gradlePath": ":bluetape4k-images-barcode-api",
+      "group": "capabilities",
+      "id": "bluetape4k-images-barcode-api",
+      "kind": "library",
+      "ko": "ko/modules/bluetape4k-images-barcode-api.md",
+      "sourceDir": "images-barcode-api",
+      "sourcePaths": [
+        "images-barcode-api/src/main",
+        "images-barcode-api/README.md",
+        "images-barcode-api/README.ko.md"
+      ],
+      "status": "stable",
+      "testPaths": [
+        "images-barcode-api/src/test"
+      ],
+      "title": {
+        "en": "Barcode API",
+        "ko": "바코드 API"
+      },
+      "workshops": [
+
+      ]
+    },
+    {
+      "artifact": "io.github.bluetape4k.image:bluetape4k-images-barcode-zxing",
+      "en": "en/modules/bluetape4k-images-barcode-zxing.md",
+      "gradlePath": ":bluetape4k-images-barcode-zxing",
+      "group": "capabilities",
+      "id": "bluetape4k-images-barcode-zxing",
+      "kind": "library",
+      "ko": "ko/modules/bluetape4k-images-barcode-zxing.md",
+      "sourceDir": "images-barcode-zxing",
+      "sourcePaths": [
+        "images-barcode-zxing/src/main",
+        "images-barcode-zxing/README.md",
+        "images-barcode-zxing/README.ko.md"
+      ],
+      "status": "stable",
+      "testPaths": [
+        "images-barcode-zxing/src/test"
+      ],
+      "title": {
+        "en": "ZXing barcode backend",
+        "ko": "ZXing 바코드 백엔드"
+      },
+      "workshops": [
+
+      ]
+    },
+    {
       "artifact": null,
       "en": "en/modules/bluetape4k-images-benchmark.md",
       "gradlePath": ":bluetape4k-images-benchmark",
@@ -341,6 +393,32 @@
     },
     {
       "artifact": null,
+      "en": "en/modules/spring-boot-barcode-api.md",
+      "gradlePath": ":spring-boot-barcode-api",
+      "group": "workshops",
+      "id": "spring-boot-barcode-api",
+      "kind": "example",
+      "ko": "ko/modules/spring-boot-barcode-api.md",
+      "sourceDir": "examples/spring-boot-barcode-api",
+      "sourcePaths": [
+        "examples/spring-boot-barcode-api/src/main",
+        "examples/spring-boot-barcode-api/README.md",
+        "examples/spring-boot-barcode-api/README.ko.md"
+      ],
+      "status": "stable",
+      "testPaths": [
+        "examples/spring-boot-barcode-api/src/test"
+      ],
+      "title": {
+        "en": "Spring Boot barcode API workshop",
+        "ko": "Spring Boot 바코드 API 워크숍"
+      },
+      "workshops": [
+        "examples/spring-boot-barcode-api"
+      ]
+    },
+    {
+      "artifact": null,
       "en": "en/modules/spring-boot-image-api.md",
       "gradlePath": ":spring-boot-image-api",
       "group": "workshops",
@@ -464,8 +542,8 @@
       ]
     }
   },
-  "releaseCommit": "a571c30004f571fe8cfcddc29670c1404d212ec6",
-  "releaseRef": "0.3.0",
+  "releaseCommit": "ea5175b083babf8880f53cf80c9a264a0c61777e",
+  "releaseRef": "0.4.0",
   "repository": "bluetape4k/bluetape4k-image",
   "schemaVersion": 2
 }

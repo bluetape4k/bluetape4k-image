@@ -2,7 +2,7 @@
 manualId: "immutable-image-model"
 title: "불변 이미지 모델"
 locale: "ko"
-releaseRef: "0.3.0"
+releaseRef: "0.4.0"
 ---
 
 # 불변 이미지 모델
@@ -34,5 +34,5 @@ CAPTCHA와 OCR도 이 모델을 사용한다. 반면 libvips는 닫아야 하는
 
 ## 근거 소스
 
-- [ImmutableImage factory](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/images/src/main/kotlin/io/bluetape4k/images/ImmutableImageSupport.kt)
+- [ImmutableImage factory](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/images/src/main/kotlin/io/bluetape4k/images/ImmutableImageSupport.kt)
 - [모듈 문서](../modules/bluetape4k-images.md)

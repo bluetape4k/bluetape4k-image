@@ -10,6 +10,8 @@ TITLES = {
   "basic-processing" => ["Basic processing workshop", "기본 이미지 처리 워크숍"],
   "bluetape4k-image-bom" => ["Image BOM", "Image BOM"],
   "bluetape4k-images" => ["Immutable image processing", "불변 이미지 처리"],
+  "bluetape4k-images-barcode-api" => ["Barcode API", "바코드 API"],
+  "bluetape4k-images-barcode-zxing" => ["ZXing barcode backend", "ZXing 바코드 백엔드"],
   "bluetape4k-images-benchmark" => ["Image processing benchmarks", "이미지 처리 벤치마크"],
   "bluetape4k-images-captcha" => ["CAPTCHA generation and verification", "CAPTCHA 생성과 검증"],
   "bluetape4k-images-ktor" => ["Ktor image routes", "Ktor 이미지 라우트"],
@@ -21,6 +23,7 @@ TITLES = {
   "ktor-image-api" => ["Ktor image API workshop", "Ktor 이미지 API 워크숍"],
   "ktor-ocr-api" => ["Ktor OCR API workshop", "Ktor OCR API 워크숍"],
   "spring-boot-image-api" => ["Spring Boot image API workshop", "Spring Boot 이미지 API 워크숍"],
+  "spring-boot-barcode-api" => ["Spring Boot barcode API workshop", "Spring Boot 바코드 API 워크숍"],
   "spring-boot-ocr-api" => ["Spring Boot OCR API workshop", "Spring Boot OCR API 워크숍"],
 }.freeze
 
@@ -85,8 +88,8 @@ overview_documents = %w[
 manifest = {
   "schemaVersion" => 2,
   "repository" => "bluetape4k/bluetape4k-image",
-  "releaseRef" => "0.3.0",
-  "releaseCommit" => "a571c30004f571fe8cfcddc29670c1404d212ec6",
+  "releaseRef" => "0.4.0",
+  "releaseCommit" => "ea5175b083babf8880f53cf80c9a264a0c61777e",
   "overview" => {
     "documents" => {
       "en" => overview_documents.map { |path| "en/#{path}" },

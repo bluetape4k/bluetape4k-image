@@ -2,7 +2,7 @@
 manualId: "ocr-setup"
 title: "OCR Setup"
 locale: "en"
-releaseRef: "0.3.0"
+releaseRef: "0.4.0"
 ---
 
 # OCR Setup
@@ -37,5 +37,5 @@ Continue with the [Ktor OCR workshop](../modules/ktor-ocr-api.md) or [Spring Boo
 
 ## Sources
 
-- [OCR runtime guide](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/images-ocr/README.md)
-- [OCR test switches](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/images-ocr/build.gradle.kts)
+- [OCR runtime guide](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/images-ocr/README.md)
+- [OCR test switches](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/images-ocr/build.gradle.kts)

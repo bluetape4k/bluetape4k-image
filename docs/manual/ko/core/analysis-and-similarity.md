@@ -2,12 +2,12 @@
 manualId: "analysis-and-similarity"
 title: "분석과 유사도"
 locale: "ko"
-releaseRef: "0.3.0"
+releaseRef: "0.4.0"
 ---
 
 # 분석과 유사도
 
-0.3.0은 흐림 정도와 대표 색상 분석, 여러 유사도 계열을 제공한다. 제품에서 묻는 질문에 맞춰 지표를 골라야 한다. 어떤 상황에서나 “같은 이미지”를 뜻하는 점수 하나는 없다.
+0.4.0은 흐림 정도와 대표 색상 분석, 여러 유사도 계열을 제공한다. 제품에서 묻는 질문에 맞춰 지표를 골라야 한다. 어떤 상황에서나 “같은 이미지”를 뜻하는 점수 하나는 없다.
 
 ## 분석
 
@@ -30,5 +30,5 @@ releaseRef: "0.3.0"
 
 ## 근거 소스
 
-- [분석 패키지](https://github.com/bluetape4k/bluetape4k-image/tree/a571c30004f571fe8cfcddc29670c1404d212ec6/images/src/main/kotlin/io/bluetape4k/images/analysis)
-- [유사도 패키지](https://github.com/bluetape4k/bluetape4k-image/tree/a571c30004f571fe8cfcddc29670c1404d212ec6/images/src/main/kotlin/io/bluetape4k/images/similarity)
+- [분석 패키지](https://github.com/bluetape4k/bluetape4k-image/tree/ea5175b083babf8880f53cf80c9a264a0c61777e/images/src/main/kotlin/io/bluetape4k/images/analysis)
+- [유사도 패키지](https://github.com/bluetape4k/bluetape4k-image/tree/ea5175b083babf8880f53cf80c9a264a0c61777e/images/src/main/kotlin/io/bluetape4k/images/similarity)

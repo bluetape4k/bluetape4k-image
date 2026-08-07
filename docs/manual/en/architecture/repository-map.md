@@ -2,12 +2,12 @@
 manualId: "repository-map"
 title: "Repository Map"
 locale: "en"
-releaseRef: "0.3.0"
+releaseRef: "0.4.0"
 ---
 
 # Repository Map
 
-The 0.3.0 release contains 15 Gradle projects. Nine are published coordinates, five are runnable examples, and one is a benchmark project. The project directory, Gradle path, and artifact name are intentionally not always the same, so the release registry is the authoritative inventory.
+The 0.4.0 release contains 15 Gradle projects. Nine are published coordinates, five are runnable examples, and one is a benchmark project. The project directory, Gradle path, and artifact name are intentionally not always the same, so the release registry is the authoritative inventory.
 
 ## Platform and foundation
 
@@ -37,24 +37,24 @@ Start from [the learning path](../guides/learning-path.md) instead of reading th
 
 ## Source
 
-- [Exact 0.3.0 project registration](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/settings.gradle.kts#L84-L123)
-- [Publishing inclusion rules](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/build.gradle.kts#L46-L58)
+- [Exact 0.4.0 project registration](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/settings.gradle.kts#L84-L123)
+- [Publishing inclusion rules](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/build.gradle.kts#L46-L58)
 
 <!-- release-readme-diagrams:start -->
 ## Release diagrams {#release-diagrams}
 
-These diagrams are loaded directly from README assets published with the `0.3.0` release and pinned to its immutable commit. They describe this manual's released structure and runtime flows, not later Snapshot changes. Select a preview to open the SVG at the same release commit.
+These diagrams are loaded directly from README assets published with the `0.4.0` release and pinned to its immutable commit. They describe this manual's released structure and runtime flows, not later Snapshot changes. Select a preview to open the SVG at the same release commit.
 
 ### image Architecture diagram
 
-[![image Architecture diagram](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/bluetape4k-image-architecture-01.png)](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/bluetape4k-image-architecture-01.svg)
+[![image Architecture diagram](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/bluetape4k-image-architecture-01.png)](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/bluetape4k-image-architecture-01.svg)
 
-_Release README: [`README.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/README.md)_
+_Release README: [`README.md`](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/README.md)_
 
 ### Bluetape4k Image overview diagram
 
-[![Bluetape4k Image overview diagram](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/root-readme-overview-01.png)](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/root-readme-overview-01.svg)
+[![Bluetape4k Image overview diagram](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/root-readme-overview-01.png)](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/root-readme-overview-01.svg)
 
-_Release README: [`README.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/README.md)_
+_Release README: [`README.md`](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/README.md)_
 
 <!-- release-readme-diagrams:end -->

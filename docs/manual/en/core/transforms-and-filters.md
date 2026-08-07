@@ -2,7 +2,7 @@
 manualId: "transforms-and-filters"
 title: "Transforms and Filters"
 locale: "en"
-releaseRef: "0.3.0"
+releaseRef: "0.4.0"
 ---
 
 # Transforms and Filters
@@ -35,5 +35,5 @@ Use golden images for intent and numeric assertions for dimensions and invariant
 
 ## Sources
 
-- [Filter DSL](https://github.com/bluetape4k/bluetape4k-image/tree/a571c30004f571fe8cfcddc29670c1404d212ec6/images/src/main/kotlin/io/bluetape4k/images/filters/dsl)
-- [Transform implementations](https://github.com/bluetape4k/bluetape4k-image/tree/a571c30004f571fe8cfcddc29670c1404d212ec6/images/src/main/kotlin/io/bluetape4k/images/transforms)
+- [Filter DSL](https://github.com/bluetape4k/bluetape4k-image/tree/ea5175b083babf8880f53cf80c9a264a0c61777e/images/src/main/kotlin/io/bluetape4k/images/filters/dsl)
+- [Transform implementations](https://github.com/bluetape4k/bluetape4k-image/tree/ea5175b083babf8880f53cf80c9a264a0c61777e/images/src/main/kotlin/io/bluetape4k/images/transforms)

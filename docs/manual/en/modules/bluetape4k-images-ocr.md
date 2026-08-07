@@ -6,7 +6,7 @@ locale: "en"
 kind: "library"
 gradlePath: ":bluetape4k-images-ocr"
 sourceDir: "images-ocr"
-releaseRef: "0.3.0"
+releaseRef: "0.4.0"
 artifact: io.github.bluetape4k.image:bluetape4k-images-ocr
 ---
 
@@ -92,31 +92,31 @@ The module does not bundle Tesseract or language data. Coroutine cancellation be
 <!-- release-readme-diagrams:start -->
 ## Release diagrams {#release-diagrams}
 
-These diagrams are loaded directly from README assets published with the `0.3.0` release and pinned to its immutable commit. They describe this manual's released structure and runtime flows, not later Snapshot changes. Select a preview to open the SVG at the same release commit.
+These diagrams are loaded directly from README assets published with the `0.4.0` release and pinned to its immutable commit. They describe this manual's released structure and runtime flows, not later Snapshot changes. Select a preview to open the SVG at the same release commit.
 
 ### images-ocr Architecture
 
-[![images-ocr Architecture](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/images-ocr-architecture-01.png)](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/images-ocr-architecture-01.svg)
+[![images-ocr Architecture](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/images-ocr-architecture-01.png)](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/images-ocr-architecture-01.svg)
 
-_Release README: [`images-ocr/README.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/images-ocr/README.md)_
+_Release README: [`images-ocr/README.md`](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/images-ocr/README.md)_
 
 ### images-ocr Class Diagram
 
-[![images-ocr Class Diagram](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/images-ocr-class-diagram-01.png)](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/images-ocr-class-diagram-01.svg)
+[![images-ocr Class Diagram](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/images-ocr-class-diagram-01.png)](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/images-ocr-class-diagram-01.svg)
 
-_Release README: [`images-ocr/README.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/images-ocr/README.md)_
+_Release README: [`images-ocr/README.md`](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/images-ocr/README.md)_
 
 ### images-ocr Recognition Sequence
 
-[![images-ocr Recognition Sequence](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/images-ocr-sequence-diagram-01.png)](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/images-ocr-sequence-diagram-01.svg)
+[![images-ocr Recognition Sequence](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/images-ocr-sequence-diagram-01.png)](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/images-ocr-sequence-diagram-01.svg)
 
-_Release README: [`images-ocr/README.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/images-ocr/README.md)_
+_Release README: [`images-ocr/README.md`](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/images-ocr/README.md)_
 
 <!-- release-readme-diagrams:end -->
 
 ## Sources {#sources}
 
-- [OCR contract and exceptions](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/images-ocr/src/main/kotlin/io/bluetape4k/images/ocr/OcrEngine.kt)
-- [OCR options](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/images-ocr/src/main/kotlin/io/bluetape4k/images/ocr/OcrOptions.kt)
-- [Tesseract engine](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/images-ocr/src/main/kotlin/io/bluetape4k/images/ocr/TesseractOcrEngine.kt)
-- [Release build and test gates](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/images-ocr/build.gradle.kts)
+- [OCR contract and exceptions](https://github.com/bluetape4k/bluetape4k-image/blob/0.4.0/images-ocr/src/main/kotlin/io/bluetape4k/images/ocr/OcrEngine.kt)
+- [OCR options](https://github.com/bluetape4k/bluetape4k-image/blob/0.4.0/images-ocr/src/main/kotlin/io/bluetape4k/images/ocr/OcrOptions.kt)
+- [Tesseract engine](https://github.com/bluetape4k/bluetape4k-image/blob/0.4.0/images-ocr/src/main/kotlin/io/bluetape4k/images/ocr/TesseractOcrEngine.kt)
+- [Release build and test gates](https://github.com/bluetape4k/bluetape4k-image/blob/0.4.0/images-ocr/build.gradle.kts)

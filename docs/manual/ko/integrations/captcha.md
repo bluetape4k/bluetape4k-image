@@ -2,7 +2,7 @@
 manualId: "captcha"
 title: "CAPTCHA 생성과 검증"
 locale: "ko"
-releaseRef: "0.3.0"
+releaseRef: "0.4.0"
 ---
 
 # CAPTCHA 생성과 검증
@@ -27,5 +27,5 @@ Java2D 생성은 테스트와 서버에서 헤드리스로 실행된다. 결과�
 
 ## 근거 소스
 
-- [CAPTCHA generator 계약](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/images-captcha/src/main/kotlin/io/bluetape4k/images/captcha/CaptchaGenerator.kt)
-- [검증 수명 주기](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/images-captcha/src/main/kotlin/io/bluetape4k/images/captcha/CaptchaVerification.kt)
+- [CAPTCHA generator 계약](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/images-captcha/src/main/kotlin/io/bluetape4k/images/captcha/CaptchaGenerator.kt)
+- [검증 수명 주기](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/images-captcha/src/main/kotlin/io/bluetape4k/images/captcha/CaptchaVerification.kt)

@@ -2,7 +2,7 @@
 manualId: "codec-and-format-selection"
 title: "코덱과 포맷 선택"
 locale: "ko"
-releaseRef: "0.3.0"
+releaseRef: "0.4.0"
 ---
 
 # 코덱과 포맷 선택
@@ -32,5 +32,5 @@ API에서 포맷 이름을 제공하는지, 선택한 백엔드가 실제로 인
 
 ## 근거 소스
 
-- [릴리스 이미지 의존성](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/images/build.gradle.kts)
-- [Vips 이미지 포맷 계약](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/images-vips-api/src/main/kotlin/io/bluetape4k/images/vips/VipsImageFormat.kt)
+- [릴리스 이미지 의존성](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/images/build.gradle.kts)
+- [Vips 이미지 포맷 계약](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/images-vips-api/src/main/kotlin/io/bluetape4k/images/vips/VipsImageFormat.kt)

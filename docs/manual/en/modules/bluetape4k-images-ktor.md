@@ -6,7 +6,7 @@ locale: "en"
 kind: "library"
 gradlePath: ":bluetape4k-images-ktor"
 sourceDir: "images-ktor"
-releaseRef: "0.3.0"
+releaseRef: "0.4.0"
 artifact: io.github.bluetape4k.image:bluetape4k-images-ktor
 ---
 
@@ -92,18 +92,18 @@ The thumbnail endpoint is not a streaming transform: it buffers at most `maxInpu
 <!-- release-readme-diagrams:start -->
 ## Release diagrams {#release-diagrams}
 
-These diagrams are loaded directly from README assets published with the `0.3.0` release and pinned to its immutable commit. They describe this manual's released structure and runtime flows, not later Snapshot changes. Select a preview to open the SVG at the same release commit.
+These diagrams are loaded directly from README assets published with the `0.4.0` release and pinned to its immutable commit. They describe this manual's released structure and runtime flows, not later Snapshot changes. Select a preview to open the SVG at the same release commit.
 
 ### Images Ktor Architecture diagram
 
-[![Images Ktor Architecture diagram](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/images-ktor-architecture-01.png)](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/images-ktor-architecture-01.svg)
+[![Images Ktor Architecture diagram](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/images-ktor-architecture-01.png)](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/images-ktor-architecture-01.svg)
 
-_Release README: [`images-ktor/README.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/images-ktor/README.md)_
+_Release README: [`images-ktor/README.md`](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/images-ktor/README.md)_
 
 <!-- release-readme-diagrams:end -->
 
 ## Sources {#sources}
 
-- [CAPTCHA routes](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/images-ktor/src/main/kotlin/io/bluetape4k/images/ktor/CaptchaKtorRoutes.kt)
-- [Thumbnail route and limits](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/images-ktor/src/main/kotlin/io/bluetape4k/images/ktor/ImageThumbnailKtorRoutes.kt)
-- [Release build](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/images-ktor/build.gradle.kts)
+- [CAPTCHA routes](https://github.com/bluetape4k/bluetape4k-image/blob/0.4.0/images-ktor/src/main/kotlin/io/bluetape4k/images/ktor/CaptchaKtorRoutes.kt)
+- [Thumbnail route and limits](https://github.com/bluetape4k/bluetape4k-image/blob/0.4.0/images-ktor/src/main/kotlin/io/bluetape4k/images/ktor/ImageThumbnailKtorRoutes.kt)
+- [Release build](https://github.com/bluetape4k/bluetape4k-image/blob/0.4.0/images-ktor/build.gradle.kts)

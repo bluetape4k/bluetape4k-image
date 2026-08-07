@@ -6,7 +6,7 @@ locale: "ko"
 kind: "library"
 gradlePath: ":bluetape4k-image-bom"
 sourceDir: "bom"
-releaseRef: "0.3.0"
+releaseRef: "0.4.0"
 artifact: io.github.bluetape4k.image:bluetape4k-image-bom
 ---
 
@@ -70,7 +70,7 @@ Image BOM은 `bluetape4k-dependencies`에 포함됩니다. 단, Maven BOM은 lib
 
 ## 설정 {#configuration}
 
-BOM 자체에는 런타임 설정이 없습니다. 안정판 `0.3.0`은 Maven Central과 중앙 BOM으로 사용합니다. 스냅샷을 쓸 때만 Sonatype Central snapshots 저장소가 별도로 필요합니다.
+BOM 자체에는 런타임 설정이 없습니다. 안정판 `0.4.0`은 Maven Central과 중앙 BOM으로 사용합니다. 스냅샷을 쓸 때만 Sonatype Central snapshots 저장소가 별도로 필요합니다.
 
 ## 실패 유형과 해결 방법 {#failures}
 
@@ -90,22 +90,22 @@ dependency lock이나 해석 테스트로 이미지 아티팩트가 한 버전�
 
 ## 제약 사항 {#limitations}
 
-BOM은 버전만 맞춥니다. Java 25 바이트코드를 Java 21에서 실행하게 만들거나 네이티브 코덱을 제공하지 않습니다. `0.3.0`의 BOM README 모듈 표에는 일부 아티팩트가 빠져 있으므로 실제 제약 목록은 `bom/build.gradle.kts`를 기준으로 봐야 합니다.
+BOM은 버전만 맞춥니다. Java 25 바이트코드를 Java 21에서 실행하게 만들거나 네이티브 코덱을 제공하지 않습니다. `0.4.0`의 BOM README 모듈 표에는 일부 아티팩트가 빠져 있으므로 실제 제약 목록은 `bom/build.gradle.kts`를 기준으로 봐야 합니다.
 
 <!-- release-readme-diagrams:start -->
 ## 배포본 다이어그램 {#release-diagrams}
 
-아래 그림은 `0.3.0` 배포본의 README 자산을 해당 배포 커밋에서 직접 불러옵니다. 이후 SNAPSHOT이 아니라 이 매뉴얼 버전의 구조와 실행 흐름을 보여 줍니다. 미리보기를 누르면 같은 배포 커밋의 SVG 원본이 열립니다.
+아래 그림은 `0.4.0` 배포본의 README 자산을 해당 배포 커밋에서 직접 불러옵니다. 이후 SNAPSHOT이 아니라 이 매뉴얼 버전의 구조와 실행 흐름을 보여 줍니다. 미리보기를 누르면 같은 배포 커밋의 SVG 원본이 열립니다.
 
 ### bom 아키텍처
 
-[![bom 아키텍처](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/bom-architecture-01.png)](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/bom-architecture-01.svg)
+[![bom 아키텍처](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/bom-architecture-01.png)](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/bom-architecture-01.svg)
 
-_배포본 README: [`bom/README.ko.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/bom/README.ko.md)_
+_배포본 README: [`bom/README.ko.md`](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/bom/README.ko.md)_
 
 <!-- release-readme-diagrams:end -->
 
 ## 근거 자료 {#sources}
 
-- [0.3.0 BOM 빌드](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/bom/build.gradle.kts)
-- [0.3.0 모듈 등록 정보](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/settings.gradle.kts)
+- [0.4.0 BOM 빌드](https://github.com/bluetape4k/bluetape4k-image/blob/0.4.0/bom/build.gradle.kts)
+- [0.4.0 모듈 등록 정보](https://github.com/bluetape4k/bluetape4k-image/blob/0.4.0/settings.gradle.kts)

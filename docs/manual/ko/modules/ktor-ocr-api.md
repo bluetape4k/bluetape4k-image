@@ -6,7 +6,7 @@ locale: "ko"
 kind: "example"
 gradlePath: ":ktor-ocr-api"
 sourceDir: "examples/ktor-ocr-api"
-releaseRef: "0.3.0"
+releaseRef: "0.4.0"
 artifact: null
 ---
 
@@ -52,7 +52,7 @@ curl -F "file=@sample-ko.png;type=image/png" \
 
 ## 작업별 API {#api-by-task}
 
-| 작업 | 0.3.0 API |
+| 작업 | 0.4.0 API |
 | --- | --- |
 | route와 런타임 설정 | `KtorOcrApiConfig` |
 | 엔드포인트 설치 | `configureKtorOcrApi(config, ocrEngine)` |
@@ -104,31 +104,31 @@ OCR은 비용이 큰 네이티브 호출로 취급하세요. 인증, 요청률 �
 <!-- release-readme-diagrams:start -->
 ## 배포본 다이어그램 {#release-diagrams}
 
-아래 그림은 `0.3.0` 배포본의 README 자산을 해당 배포 커밋에서 직접 불러옵니다. 이후 SNAPSHOT이 아니라 이 매뉴얼 버전의 구조와 실행 흐름을 보여 줍니다. 미리보기를 누르면 같은 배포 커밋의 SVG 원본이 열립니다.
+아래 그림은 `0.4.0` 배포본의 README 자산을 해당 배포 커밋에서 직접 불러옵니다. 이후 SNAPSHOT이 아니라 이 매뉴얼 버전의 구조와 실행 흐름을 보여 줍니다. 미리보기를 누르면 같은 배포 커밋의 SVG 원본이 열립니다.
 
 ### Ktor OCR API 아키텍처
 
-[![Ktor OCR API 아키텍처](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/examples-ktor-ocr-api-architecture-01.png)](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/examples-ktor-ocr-api-architecture-01.svg)
+[![Ktor OCR API 아키텍처](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/examples-ktor-ocr-api-architecture-01.png)](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/examples-ktor-ocr-api-architecture-01.svg)
 
-_배포본 README: [`examples/ktor-ocr-api/README.ko.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/examples/ktor-ocr-api/README.ko.md)_
+_배포본 README: [`examples/ktor-ocr-api/README.ko.md`](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/examples/ktor-ocr-api/README.ko.md)_
 
 ### Ktor OCR API 실행 시나리오
 
-[![Ktor OCR API 실행 시나리오](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/examples-ktor-ocr-api-scenario-01.png)](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/examples-ktor-ocr-api-scenario-01.svg)
+[![Ktor OCR API 실행 시나리오](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/examples-ktor-ocr-api-scenario-01.png)](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/examples-ktor-ocr-api-scenario-01.svg)
 
-_배포본 README: [`examples/ktor-ocr-api/README.ko.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/examples/ktor-ocr-api/README.ko.md)_
+_배포본 README: [`examples/ktor-ocr-api/README.ko.md`](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/examples/ktor-ocr-api/README.ko.md)_
 
 ### Ktor OCR API 처리 순서
 
-[![Ktor OCR API 처리 순서](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/examples-ktor-ocr-api-sequence-01.png)](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/examples-ktor-ocr-api-sequence-01.svg)
+[![Ktor OCR API 처리 순서](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/examples-ktor-ocr-api-sequence-01.png)](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/examples-ktor-ocr-api-sequence-01.svg)
 
-_배포본 README: [`examples/ktor-ocr-api/README.ko.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/examples/ktor-ocr-api/README.ko.md)_
+_배포본 README: [`examples/ktor-ocr-api/README.ko.md`](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/examples/ktor-ocr-api/README.ko.md)_
 
 <!-- release-readme-diagrams:end -->
 
 ## 근거 자료 {#sources}
 
-- [0.3.0 README](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/examples/ktor-ocr-api/README.ko.md)
-- [애플리케이션 소스](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/examples/ktor-ocr-api/src/main/kotlin/io/bluetape4k/images/examples/ktor/ocr/KtorOcrApiApplication.kt)
-- [Route 테스트](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/examples/ktor-ocr-api/src/test/kotlin/io/bluetape4k/images/examples/ktor/ocr/KtorOcrApiApplicationTest.kt)
-- [Gradle 빌드 파일](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/examples/ktor-ocr-api/build.gradle.kts)
+- [0.4.0 README](https://github.com/bluetape4k/bluetape4k-image/blob/0.4.0/examples/ktor-ocr-api/README.ko.md)
+- [애플리케이션 소스](https://github.com/bluetape4k/bluetape4k-image/blob/0.4.0/examples/ktor-ocr-api/src/main/kotlin/io/bluetape4k/images/examples/ktor/ocr/KtorOcrApiApplication.kt)
+- [Route 테스트](https://github.com/bluetape4k/bluetape4k-image/blob/0.4.0/examples/ktor-ocr-api/src/test/kotlin/io/bluetape4k/images/examples/ktor/ocr/KtorOcrApiApplicationTest.kt)
+- [Gradle 빌드 파일](https://github.com/bluetape4k/bluetape4k-image/blob/0.4.0/examples/ktor-ocr-api/build.gradle.kts)

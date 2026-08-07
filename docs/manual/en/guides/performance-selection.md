@@ -2,7 +2,7 @@
 manualId: "performance-selection"
 title: "Performance Selection"
 locale: "en"
-releaseRef: "0.3.0"
+releaseRef: "0.4.0"
 ---
 
 # Performance Selection
@@ -33,5 +33,5 @@ Do not extrapolate Java 25 FFM results to Java 21 JNI, or a natural-photo fixtur
 
 ## Sources
 
-- [Release benchmark guide](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/benchmark/images-benchmark/README.md)
-- [Release benchmark reports](https://github.com/bluetape4k/bluetape4k-image/tree/a571c30004f571fe8cfcddc29670c1404d212ec6/benchmark/images-benchmark/docs)
+- [Release benchmark guide](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/benchmark/images-benchmark/README.md)
+- [Release benchmark reports](https://github.com/bluetape4k/bluetape4k-image/tree/ea5175b083babf8880f53cf80c9a264a0c61777e/benchmark/images-benchmark/docs)

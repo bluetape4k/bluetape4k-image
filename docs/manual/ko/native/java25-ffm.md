@@ -2,7 +2,7 @@
 manualId: "java25-ffm"
 title: "Java 25 FFM 백엔드"
 locale: "ko"
-releaseRef: "0.3.0"
+releaseRef: "0.4.0"
 ---
 
 # Java 25 FFM 백엔드
@@ -15,7 +15,7 @@ Java 25 도구 체인, 시스템 libvips와 다음 옵션이 필요하다.
 
     --enable-native-access=ALL-UNNAMED
 
-macOS Homebrew 환경에서 0.3.0 Gradle 테스트는 <code>/opt/homebrew/lib</code>가 있으면 <code>DYLD_LIBRARY_PATH</code>로 노출한다. 운영 시작 설정은 Gradle 테스트 환경에 기대지 말고 같은 역할의 라이브러리 경로를 제공해야 한다.
+macOS Homebrew 환경에서 0.4.0 Gradle 테스트는 <code>/opt/homebrew/lib</code>가 있으면 <code>DYLD_LIBRARY_PATH</code>로 노출한다. 운영 시작 설정은 Gradle 테스트 환경에 기대지 말고 같은 역할의 라이브러리 경로를 제공해야 한다.
 
 ## 프로그래밍 모델
 
@@ -29,5 +29,5 @@ JDK 25와 native-access 옵션을 배포 요구사항으로 받아들일 때만 
 
 ## 근거 소스
 
-- [FfmVipsRuntime](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/images-vips-java25/src/main/kotlin/io/bluetape4k/images/vips/java25/FfmVipsRuntime.kt)
-- [Java 25 모듈 설정](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/images-vips-java25/build.gradle.kts)
+- [FfmVipsRuntime](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/images-vips-java25/src/main/kotlin/io/bluetape4k/images/vips/java25/FfmVipsRuntime.kt)
+- [Java 25 모듈 설정](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/images-vips-java25/build.gradle.kts)

@@ -2,7 +2,7 @@
 manualId: "spring-boot-integration"
 title: "Spring Boot 연동"
 locale: "ko"
-releaseRef: "0.3.0"
+releaseRef: "0.4.0"
 ---
 
 # Spring Boot 연동
@@ -31,5 +31,5 @@ releaseRef: "0.3.0"
 
 ## 근거 소스
 
-- [자동 구성 소스](https://github.com/bluetape4k/bluetape4k-image/tree/a571c30004f571fe8cfcddc29670c1404d212ec6/images-spring-boot/src/main/kotlin/io/bluetape4k/images/spring/autoconfigure)
+- [자동 구성 소스](https://github.com/bluetape4k/bluetape4k-image/tree/ea5175b083babf8880f53cf80c9a264a0c61777e/images-spring-boot/src/main/kotlin/io/bluetape4k/images/spring/autoconfigure)
 - [Spring Boot 모듈 문서](../modules/bluetape4k-images-spring-boot.md)

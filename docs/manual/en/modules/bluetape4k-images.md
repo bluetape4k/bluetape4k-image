@@ -6,7 +6,7 @@ locale: "en"
 kind: "library"
 gradlePath: ":bluetape4k-images"
 sourceDir: "images"
-releaseRef: "0.3.0"
+releaseRef: "0.4.0"
 artifact: io.github.bluetape4k.image:bluetape4k-images
 ---
 
@@ -103,55 +103,55 @@ Begin with `examples/basic-processing`, then study `ImageProcessingDsl`, `Thumbn
 
 ## Limitations {#limitations}
 
-Suspend wrappers still bridge to blocking codecs. AVIF/HEIC types in this module are incubating contracts without a pure-JVM implementation in `0.3.0`. Compressed-byte limits do not replace pixel limits, and ImageIO codec availability can vary with the runtime classpath.
+Suspend wrappers still bridge to blocking codecs. AVIF/HEIC types in this module are incubating contracts without a pure-JVM implementation in `0.4.0`. Compressed-byte limits do not replace pixel limits, and ImageIO codec availability can vary with the runtime classpath.
 
 <!-- release-readme-diagrams:start -->
 ## Release diagrams {#release-diagrams}
 
-These diagrams are loaded directly from README assets published with the `0.3.0` release and pinned to its immutable commit. They describe this manual's released structure and runtime flows, not later Snapshot changes. Select a preview to open the SVG at the same release commit.
+These diagrams are loaded directly from README assets published with the `0.4.0` release and pinned to its immutable commit. They describe this manual's released structure and runtime flows, not later Snapshot changes. Select a preview to open the SVG at the same release commit.
 
 ### Processing Pipeline diagram
 
-[![Processing Pipeline diagram](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/images-architecture-01.png)](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/images-architecture-01.svg)
+[![Processing Pipeline diagram](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/images-architecture-01.png)](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/images-architecture-01.svg)
 
-_Release README: [`images/README.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/images/README.md)_
+_Release README: [`images/README.md`](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/images/README.md)_
 
 ### Transform Architecture diagram
 
-[![Transform Architecture diagram](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/images-architecture-03.png)](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/images-architecture-03.svg)
+[![Transform Architecture diagram](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/images-architecture-03.png)](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/images-architecture-03.svg)
 
-_Release README: [`images/README.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/images/README.md)_
+_Release README: [`images/README.md`](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/images/README.md)_
 
 ### Image Analysis diagram
 
-[![Image Analysis diagram](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/images-class-04.png)](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/images-class-04.svg)
+[![Image Analysis diagram](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/images-class-04.png)](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/images-class-04.svg)
 
-_Release README: [`images/README.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/images/README.md)_
+_Release README: [`images/README.md`](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/images/README.md)_
 
 ### Images Core API Classes diagram
 
-[![Images Core API Classes diagram](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/images-class-core-01.png)](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/images-class-core-01.svg)
+[![Images Core API Classes diagram](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/images-class-core-01.png)](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/images-class-core-01.svg)
 
-_Release README: [`images/README.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/images/README.md)_
+_Release README: [`images/README.md`](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/images/README.md)_
 
 ### Images Filter Classes diagram
 
-[![Images Filter Classes diagram](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/images-class-filters-01.png)](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/images-class-filters-01.svg)
+[![Images Filter Classes diagram](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/images-class-filters-01.png)](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/images-class-filters-01.svg)
 
-_Release README: [`images/README.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/images/README.md)_
+_Release README: [`images/README.md`](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/images/README.md)_
 
 ### Images Writer Classes diagram
 
-[![Images Writer Classes diagram](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/images-class-writers-01.png)](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/images-class-writers-01.svg)
+[![Images Writer Classes diagram](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/images-class-writers-01.png)](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/images-class-writers-01.svg)
 
-_Release README: [`images/README.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/images/README.md)_
+_Release README: [`images/README.md`](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/images/README.md)_
 
 <!-- release-readme-diagrams:end -->
 
 ## Sources {#sources}
 
-- [Immutable image factories and ownership](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/images/src/main/kotlin/io/bluetape4k/images/ImmutableImageSupport.kt)
-- [Batch result and options](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/images/src/main/kotlin/io/bluetape4k/images/batch/ImageBatchModels.kt)
-- [Batch flow implementation](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/images/src/main/kotlin/io/bluetape4k/images/batch/ImageBatchFlow.kt)
-- [Processing DSL](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/images/src/main/kotlin/io/bluetape4k/images/batch/ImageProcessingDsl.kt)
-- [Release build](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/images/build.gradle.kts)
+- [Immutable image factories and ownership](https://github.com/bluetape4k/bluetape4k-image/blob/0.4.0/images/src/main/kotlin/io/bluetape4k/images/ImmutableImageSupport.kt)
+- [Batch result and options](https://github.com/bluetape4k/bluetape4k-image/blob/0.4.0/images/src/main/kotlin/io/bluetape4k/images/batch/ImageBatchModels.kt)
+- [Batch flow implementation](https://github.com/bluetape4k/bluetape4k-image/blob/0.4.0/images/src/main/kotlin/io/bluetape4k/images/batch/ImageBatchFlow.kt)
+- [Processing DSL](https://github.com/bluetape4k/bluetape4k-image/blob/0.4.0/images/src/main/kotlin/io/bluetape4k/images/batch/ImageProcessingDsl.kt)
+- [Release build](https://github.com/bluetape4k/bluetape4k-image/blob/0.4.0/images/build.gradle.kts)

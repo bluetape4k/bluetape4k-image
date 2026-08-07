@@ -2,7 +2,7 @@
 manualId: "captcha"
 title: "CAPTCHA Generation and Verification"
 locale: "en"
-releaseRef: "0.3.0"
+releaseRef: "0.4.0"
 ---
 
 # CAPTCHA Generation and Verification
@@ -27,5 +27,5 @@ Do not store or log the plaintext answer longer than required. Bind a challenge 
 
 ## Sources
 
-- [CAPTCHA generator contract](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/images-captcha/src/main/kotlin/io/bluetape4k/images/captcha/CaptchaGenerator.kt)
-- [Verification lifecycle](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/images-captcha/src/main/kotlin/io/bluetape4k/images/captcha/CaptchaVerification.kt)
+- [CAPTCHA generator contract](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/images-captcha/src/main/kotlin/io/bluetape4k/images/captcha/CaptchaGenerator.kt)
+- [Verification lifecycle](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/images-captcha/src/main/kotlin/io/bluetape4k/images/captcha/CaptchaVerification.kt)

@@ -2,7 +2,7 @@
 manualId: "java21-jni"
 title: "Java 21 JVips Backend"
 locale: "en"
-releaseRef: "0.3.0"
+releaseRef: "0.4.0"
 ---
 
 # Java 21 JVips Backend
@@ -27,5 +27,5 @@ Compare with [Java 25 FFM](java25-ffm.md) only on equivalent hosts and fixtures.
 
 ## Sources
 
-- [JVipsRuntime](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/images-vips-java21/src/main/kotlin/io/bluetape4k/images/vips/java21/JVipsRuntime.kt)
-- [Java 21 module configuration](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/images-vips-java21/build.gradle.kts)
+- [JVipsRuntime](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/images-vips-java21/src/main/kotlin/io/bluetape4k/images/vips/java21/JVipsRuntime.kt)
+- [Java 21 module configuration](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/images-vips-java21/build.gradle.kts)

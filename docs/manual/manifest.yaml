@@ -1,8 +1,8 @@
 ---
 schemaVersion: 2
 repository: bluetape4k/bluetape4k-image
-releaseRef: 0.3.0
-releaseCommit: a571c30004f571fe8cfcddc29670c1404d212ec6
+releaseRef: 0.4.0
+releaseCommit: ea5175b083babf8880f53cf80c9a264a0c61777e
 overview:
   documents:
     en:
@@ -127,6 +127,44 @@ modules:
   - images/README.ko.md
   testPaths:
   - images/src/test
+  workshops: []
+- id: bluetape4k-images-barcode-api
+  title:
+    en: Barcode API
+    ko: 바코드 API
+  gradlePath: ":bluetape4k-images-barcode-api"
+  sourceDir: images-barcode-api
+  kind: library
+  group: capabilities
+  status: stable
+  artifact: io.github.bluetape4k.image:bluetape4k-images-barcode-api
+  en: en/modules/bluetape4k-images-barcode-api.md
+  ko: ko/modules/bluetape4k-images-barcode-api.md
+  sourcePaths:
+  - images-barcode-api/src/main
+  - images-barcode-api/README.md
+  - images-barcode-api/README.ko.md
+  testPaths:
+  - images-barcode-api/src/test
+  workshops: []
+- id: bluetape4k-images-barcode-zxing
+  title:
+    en: ZXing barcode backend
+    ko: ZXing 바코드 백엔드
+  gradlePath: ":bluetape4k-images-barcode-zxing"
+  sourceDir: images-barcode-zxing
+  kind: library
+  group: capabilities
+  status: stable
+  artifact: io.github.bluetape4k.image:bluetape4k-images-barcode-zxing
+  en: en/modules/bluetape4k-images-barcode-zxing.md
+  ko: ko/modules/bluetape4k-images-barcode-zxing.md
+  sourcePaths:
+  - images-barcode-zxing/src/main
+  - images-barcode-zxing/README.md
+  - images-barcode-zxing/README.ko.md
+  testPaths:
+  - images-barcode-zxing/src/test
   workshops: []
 - id: bluetape4k-images-benchmark
   title:
@@ -320,6 +358,26 @@ modules:
   - examples/ktor-ocr-api/src/test
   workshops:
   - examples/ktor-ocr-api
+- id: spring-boot-barcode-api
+  title:
+    en: Spring Boot barcode API workshop
+    ko: Spring Boot 바코드 API 워크숍
+  gradlePath: ":spring-boot-barcode-api"
+  sourceDir: examples/spring-boot-barcode-api
+  kind: example
+  group: workshops
+  status: stable
+  artifact:
+  en: en/modules/spring-boot-barcode-api.md
+  ko: ko/modules/spring-boot-barcode-api.md
+  sourcePaths:
+  - examples/spring-boot-barcode-api/src/main
+  - examples/spring-boot-barcode-api/README.md
+  - examples/spring-boot-barcode-api/README.ko.md
+  testPaths:
+  - examples/spring-boot-barcode-api/src/test
+  workshops:
+  - examples/spring-boot-barcode-api
 - id: spring-boot-image-api
   title:
     en: Spring Boot image API workshop

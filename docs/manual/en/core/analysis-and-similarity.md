@@ -2,7 +2,7 @@
 manualId: "analysis-and-similarity"
 title: "Analysis and Similarity"
 locale: "en"
-releaseRef: "0.3.0"
+releaseRef: "0.4.0"
 ---
 
 # Analysis and Similarity
@@ -30,5 +30,5 @@ Do not copy a threshold from an unrelated fixture. Build positive and negative s
 
 ## Sources
 
-- [Analysis package](https://github.com/bluetape4k/bluetape4k-image/tree/a571c30004f571fe8cfcddc29670c1404d212ec6/images/src/main/kotlin/io/bluetape4k/images/analysis)
-- [Similarity package](https://github.com/bluetape4k/bluetape4k-image/tree/a571c30004f571fe8cfcddc29670c1404d212ec6/images/src/main/kotlin/io/bluetape4k/images/similarity)
+- [Analysis package](https://github.com/bluetape4k/bluetape4k-image/tree/ea5175b083babf8880f53cf80c9a264a0c61777e/images/src/main/kotlin/io/bluetape4k/images/analysis)
+- [Similarity package](https://github.com/bluetape4k/bluetape4k-image/tree/ea5175b083babf8880f53cf80c9a264a0c61777e/images/src/main/kotlin/io/bluetape4k/images/similarity)

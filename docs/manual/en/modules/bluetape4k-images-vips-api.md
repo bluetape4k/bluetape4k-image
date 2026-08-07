@@ -6,7 +6,7 @@ locale: "en"
 kind: "library"
 gradlePath: ":bluetape4k-images-vips-api"
 sourceDir: "images-vips-api"
-releaseRef: "0.3.0"
+releaseRef: "0.4.0"
 artifact: io.github.bluetape4k.image:bluetape4k-images-vips-api
 ---
 
@@ -87,25 +87,25 @@ The common API does not discover or instantiate a backend. AVIF/HEIC support dep
 <!-- release-readme-diagrams:start -->
 ## Release diagrams {#release-diagrams}
 
-These diagrams are loaded directly from README assets published with the `0.3.0` release and pinned to its immutable commit. They describe this manual's released structure and runtime flows, not later Snapshot changes. Select a preview to open the SVG at the same release commit.
+These diagrams are loaded directly from README assets published with the `0.4.0` release and pinned to its immutable commit. They describe this manual's released structure and runtime flows, not later Snapshot changes. Select a preview to open the SVG at the same release commit.
 
 ### Processing Pipeline diagram
 
-[![Processing Pipeline diagram](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/images-vips-api-architecture-02.png)](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/images-vips-api-architecture-02.svg)
+[![Processing Pipeline diagram](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/images-vips-api-architecture-02.png)](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/images-vips-api-architecture-02.svg)
 
-_Release README: [`images-vips-api/README.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/images-vips-api/README.md)_
+_Release README: [`images-vips-api/README.md`](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/images-vips-api/README.md)_
 
 ### images vips api Class Structure diagram
 
-[![images vips api Class Structure diagram](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/images-vips-api-class-01.png)](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/images-vips-api-class-01.svg)
+[![images vips api Class Structure diagram](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/images-vips-api-class-01.png)](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/images-vips-api-class-01.svg)
 
-_Release README: [`images-vips-api/README.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/images-vips-api/README.md)_
+_Release README: [`images-vips-api/README.md`](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/images-vips-api/README.md)_
 
 <!-- release-readme-diagrams:end -->
 
 ## Sources {#sources}
 
-- [VipsImage contract](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/images-vips-api/src/main/kotlin/io/bluetape4k/images/vips/VipsImage.kt)
-- [Runtime terminal contract](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/images-vips-api/src/main/kotlin/io/bluetape4k/images/vips/VipsRuntime.kt)
-- [Limits](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/images-vips-api/src/main/kotlin/io/bluetape4k/images/vips/VipsLimits.kt)
-- [Exception policy](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/images-vips-api/src/main/kotlin/io/bluetape4k/images/vips/VipsExceptions.kt)
+- [VipsImage contract](https://github.com/bluetape4k/bluetape4k-image/blob/0.4.0/images-vips-api/src/main/kotlin/io/bluetape4k/images/vips/VipsImage.kt)
+- [Runtime terminal contract](https://github.com/bluetape4k/bluetape4k-image/blob/0.4.0/images-vips-api/src/main/kotlin/io/bluetape4k/images/vips/VipsRuntime.kt)
+- [Limits](https://github.com/bluetape4k/bluetape4k-image/blob/0.4.0/images-vips-api/src/main/kotlin/io/bluetape4k/images/vips/VipsLimits.kt)
+- [Exception policy](https://github.com/bluetape4k/bluetape4k-image/blob/0.4.0/images-vips-api/src/main/kotlin/io/bluetape4k/images/vips/VipsExceptions.kt)

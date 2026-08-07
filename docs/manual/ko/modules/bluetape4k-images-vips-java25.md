@@ -6,7 +6,7 @@ locale: "ko"
 kind: "library"
 gradlePath: ":bluetape4k-images-vips-java25"
 sourceDir: "images-vips-java25"
-releaseRef: "0.3.0"
+releaseRef: "0.4.0"
 artifact: io.github.bluetape4k.image:bluetape4k-images-vips-java25
 ---
 
@@ -74,7 +74,7 @@ Java 25와 `--enable-native-access=ALL-UNNAMED`를 사용합니다. Homebrew mac
 
 ## 운영 {#operations}
 
-Java 힙뿐 아니라 네이티브 메모리를 함께 관찰하세요. `0.3.0` 벤치마크에서 기하 연산의 Java 할당량은 작았지만 libvips 네이티브 메모리는 측정하지 않았습니다. Java 21과 Java 25 측정은 CPU와 네이티브 런타임 간섭을 피하도록 순차 실행합니다.
+Java 힙뿐 아니라 네이티브 메모리를 함께 관찰하세요. `0.4.0` 벤치마크에서 기하 연산의 Java 할당량은 작았지만 libvips 네이티브 메모리는 측정하지 않았습니다. Java 21과 Java 25 측정은 CPU와 네이티브 런타임 간섭을 피하도록 순차 실행합니다.
 
 ## 테스트 {#testing}
 
@@ -91,25 +91,25 @@ Java 25에서 `./gradlew :bluetape4k-images-vips-java25:test`를 실행합니다
 <!-- release-readme-diagrams:start -->
 ## 배포본 다이어그램 {#release-diagrams}
 
-아래 그림은 `0.3.0` 배포본의 README 자산을 해당 배포 커밋에서 직접 불러옵니다. 이후 SNAPSHOT이 아니라 이 매뉴얼 버전의 구조와 실행 흐름을 보여 줍니다. 미리보기를 누르면 같은 배포 커밋의 SVG 원본이 열립니다.
+아래 그림은 `0.4.0` 배포본의 README 자산을 해당 배포 커밋에서 직접 불러옵니다. 이후 SNAPSHOT이 아니라 이 매뉴얼 버전의 구조와 실행 흐름을 보여 줍니다. 미리보기를 누르면 같은 배포 커밋의 SVG 원본이 열립니다.
 
 ### Performance vs scrimage 다이어그램
 
-[![Performance vs scrimage 다이어그램](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/images-vips-java25-architecture-02.png)](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/images-vips-java25-architecture-02.svg)
+[![Performance vs scrimage 다이어그램](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/images-vips-java25-architecture-02.png)](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/images-vips-java25-architecture-02.svg)
 
-_배포본 README: [`images-vips-java25/README.ko.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/images-vips-java25/README.ko.md)_
+_배포본 README: [`images-vips-java25/README.ko.md`](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/images-vips-java25/README.ko.md)_
 
 ### images vips java25 클래스 구조도
 
-[![images vips java25 클래스 구조도](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/images-vips-java25-class-01.png)](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/images-vips-java25-class-01.svg)
+[![images vips java25 클래스 구조도](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/images-vips-java25-class-01.png)](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/images-vips-java25-class-01.svg)
 
-_배포본 README: [`images-vips-java25/README.ko.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/images-vips-java25/README.ko.md)_
+_배포본 README: [`images-vips-java25/README.ko.md`](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/images-vips-java25/README.ko.md)_
 
 <!-- release-readme-diagrams:end -->
 
 ## 근거 자료 {#sources}
 
-- [팩토리와 직접 경로 로딩](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/images-vips-java25/src/main/kotlin/io/bluetape4k/images/vips/java25/FfmVipsImageSupport.kt)
-- [Arena 소유권](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/images-vips-java25/src/main/kotlin/io/bluetape4k/images/vips/java25/FfmVipsImage.kt)
-- [런타임과 native access 검사](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/images-vips-java25/src/main/kotlin/io/bluetape4k/images/vips/java25/FfmVipsRuntime.kt)
-- [Java 25 빌드 설정](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/images-vips-java25/build.gradle.kts)
+- [팩토리와 직접 경로 로딩](https://github.com/bluetape4k/bluetape4k-image/blob/0.4.0/images-vips-java25/src/main/kotlin/io/bluetape4k/images/vips/java25/FfmVipsImageSupport.kt)
+- [Arena 소유권](https://github.com/bluetape4k/bluetape4k-image/blob/0.4.0/images-vips-java25/src/main/kotlin/io/bluetape4k/images/vips/java25/FfmVipsImage.kt)
+- [런타임과 native access 검사](https://github.com/bluetape4k/bluetape4k-image/blob/0.4.0/images-vips-java25/src/main/kotlin/io/bluetape4k/images/vips/java25/FfmVipsRuntime.kt)
+- [Java 25 빌드 설정](https://github.com/bluetape4k/bluetape4k-image/blob/0.4.0/images-vips-java25/build.gradle.kts)
