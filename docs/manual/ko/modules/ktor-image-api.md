@@ -6,7 +6,7 @@ locale: "ko"
 kind: "example"
 gradlePath: ":ktor-image-api"
 sourceDir: "examples/ktor-image-api"
-releaseRef: "0.3.0"
+releaseRef: "0.4.0"
 artifact: null
 ---
 
@@ -67,7 +67,7 @@ curl -F "file=@images/src/test/resources/images/cafe.jpg;type=image/jpeg" \
 
 ## 설정 {#configuration}
 
-기본 포트는 `8080`이며 `PORT`로 바꿀 수 있습니다. 0.3.0 소스는 CAPTCHA를 `/api/captcha`, 이미지 route를 `/api/images`에 연결합니다.
+기본 포트는 `8080`이며 `PORT`로 바꿀 수 있습니다. 0.4.0 소스는 CAPTCHA를 `/api/captcha`, 이미지 route를 `/api/images`에 연결합니다.
 
 ## 실패 유형과 해결 방법 {#failures}
 
@@ -102,31 +102,31 @@ curl -F "file=@images/src/test/resources/images/cafe.jpg;type=image/jpeg" \
 <!-- release-readme-diagrams:start -->
 ## 배포본 다이어그램 {#release-diagrams}
 
-아래 그림은 `0.3.0` 배포본의 README 자산을 해당 배포 커밋에서 직접 불러옵니다. 이후 SNAPSHOT이 아니라 이 매뉴얼 버전의 구조와 실행 흐름을 보여 줍니다. 미리보기를 누르면 같은 배포 커밋의 SVG 원본이 열립니다.
+아래 그림은 `0.4.0` 배포본의 README 자산을 해당 배포 커밋에서 직접 불러옵니다. 이후 SNAPSHOT이 아니라 이 매뉴얼 버전의 구조와 실행 흐름을 보여 줍니다. 미리보기를 누르면 같은 배포 커밋의 SVG 원본이 열립니다.
 
 ### Ktor Image API 아키텍처
 
-[![Ktor Image API 아키텍처](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/examples-ktor-image-api-architecture-01.png)](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/examples-ktor-image-api-architecture-01.svg)
+[![Ktor Image API 아키텍처](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/examples-ktor-image-api-architecture-01.png)](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/examples-ktor-image-api-architecture-01.svg)
 
-_배포본 README: [`examples/ktor-image-api/README.ko.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/examples/ktor-image-api/README.ko.md)_
+_배포본 README: [`examples/ktor-image-api/README.ko.md`](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/examples/ktor-image-api/README.ko.md)_
 
 ### Ktor Image API 실행 시나리오
 
-[![Ktor Image API 실행 시나리오](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/examples-ktor-image-api-scenario-01.png)](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/examples-ktor-image-api-scenario-01.svg)
+[![Ktor Image API 실행 시나리오](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/examples-ktor-image-api-scenario-01.png)](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/examples-ktor-image-api-scenario-01.svg)
 
-_배포본 README: [`examples/ktor-image-api/README.ko.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/examples/ktor-image-api/README.ko.md)_
+_배포본 README: [`examples/ktor-image-api/README.ko.md`](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/examples/ktor-image-api/README.ko.md)_
 
 ### Ktor Image API 처리 순서
 
-[![Ktor Image API 처리 순서](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/examples-ktor-image-api-sequence-01.png)](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/examples-ktor-image-api-sequence-01.svg)
+[![Ktor Image API 처리 순서](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/examples-ktor-image-api-sequence-01.png)](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/examples-ktor-image-api-sequence-01.svg)
 
-_배포본 README: [`examples/ktor-image-api/README.ko.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/examples/ktor-image-api/README.ko.md)_
+_배포본 README: [`examples/ktor-image-api/README.ko.md`](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/examples/ktor-image-api/README.ko.md)_
 
 <!-- release-readme-diagrams:end -->
 
 ## 근거 자료 {#sources}
 
-- [0.3.0 README](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/examples/ktor-image-api/README.ko.md)
-- [애플리케이션 소스](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/examples/ktor-image-api/src/main/kotlin/io/bluetape4k/images/examples/ktor/KtorImageApiApplication.kt)
-- [Route 테스트](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/examples/ktor-image-api/src/test/kotlin/io/bluetape4k/images/examples/ktor/KtorImageApiApplicationTest.kt)
-- [Gradle 빌드 파일](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/examples/ktor-image-api/build.gradle.kts)
+- [0.4.0 README](https://github.com/bluetape4k/bluetape4k-image/blob/0.4.0/examples/ktor-image-api/README.ko.md)
+- [애플리케이션 소스](https://github.com/bluetape4k/bluetape4k-image/blob/0.4.0/examples/ktor-image-api/src/main/kotlin/io/bluetape4k/images/examples/ktor/KtorImageApiApplication.kt)
+- [Route 테스트](https://github.com/bluetape4k/bluetape4k-image/blob/0.4.0/examples/ktor-image-api/src/test/kotlin/io/bluetape4k/images/examples/ktor/KtorImageApiApplicationTest.kt)
+- [Gradle 빌드 파일](https://github.com/bluetape4k/bluetape4k-image/blob/0.4.0/examples/ktor-image-api/build.gradle.kts)

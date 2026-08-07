@@ -6,7 +6,7 @@ locale: "en"
 kind: "library"
 gradlePath: ":bluetape4k-images-vips-java21"
 sourceDir: "images-vips-java21"
-releaseRef: "0.3.0"
+releaseRef: "0.4.0"
 artifact: io.github.bluetape4k.image:bluetape4k-images-vips-java21
 ---
 
@@ -61,7 +61,7 @@ The module implements `bluetape4k-images-vips-api` and uses JVips internally wit
 
 ## Configuration {#configuration}
 
-Run on Java 21. Inputs are capped at 50 MiB, formats are magic-byte allowlisted to JPEG/PNG/WebP/AVIF/HEIC, and decoded pixels are checked against `JVipsRuntime.maxPixels` (150 million by default). Stream and path inputs are materialized into bytes in `0.3.0`.
+Run on Java 21. Inputs are capped at 50 MiB, formats are magic-byte allowlisted to JPEG/PNG/WebP/AVIF/HEIC, and decoded pixels are checked against `JVipsRuntime.maxPixels` (150 million by default). Stream and path inputs are materialized into bytes in `0.4.0`.
 
 ## Failure modes {#failures}
 
@@ -81,30 +81,30 @@ Start with the runtime/image tests on the deployment architecture, add a small e
 
 ## Limitations {#limitations}
 
-HEIC encoding is explicitly unsupported by this backend in `0.3.0`. AVIF and HEIF decoding/AVIF encoding still depend on host codec capability. Path loads read the complete compressed file after enforcing the 50 MiB bound.
+HEIC encoding is explicitly unsupported by this backend in `0.4.0`. AVIF and HEIF decoding/AVIF encoding still depend on host codec capability. Path loads read the complete compressed file after enforcing the 50 MiB bound.
 
 <!-- release-readme-diagrams:start -->
 ## Release diagrams {#release-diagrams}
 
-These diagrams are loaded directly from README assets published with the `0.3.0` release and pinned to its immutable commit. They describe this manual's released structure and runtime flows, not later Snapshot changes. Select a preview to open the SVG at the same release commit.
+These diagrams are loaded directly from README assets published with the `0.4.0` release and pinned to its immutable commit. They describe this manual's released structure and runtime flows, not later Snapshot changes. Select a preview to open the SVG at the same release commit.
 
 ### JVips Processing Pipeline diagram
 
-[![JVips Processing Pipeline diagram](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/images-vips-java21-architecture-01.png)](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/images-vips-java21-architecture-01.svg)
+[![JVips Processing Pipeline diagram](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/images-vips-java21-architecture-01.png)](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/images-vips-java21-architecture-01.svg)
 
-_Release README: [`images-vips-java21/README.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/images-vips-java21/README.md)_
+_Release README: [`images-vips-java21/README.md`](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/images-vips-java21/README.md)_
 
 ### images vips java21 Class Structure 2 diagram
 
-[![images vips java21 Class Structure 2 diagram](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/images-vips-java21-class-02.png)](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/images-vips-java21-class-02.svg)
+[![images vips java21 Class Structure 2 diagram](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/images-vips-java21-class-02.png)](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/images-vips-java21-class-02.svg)
 
-_Release README: [`images-vips-java21/README.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/images-vips-java21/README.md)_
+_Release README: [`images-vips-java21/README.md`](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/images-vips-java21/README.md)_
 
 <!-- release-readme-diagrams:end -->
 
 ## Sources {#sources}
 
-- [Factories and guards](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/images-vips-java21/src/main/kotlin/io/bluetape4k/images/vips/java21/JVipsImageSupport.kt)
-- [JNI image lifecycle](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/images-vips-java21/src/main/kotlin/io/bluetape4k/images/vips/java21/JVipsImage.kt)
-- [Runtime lifecycle](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/images-vips-java21/src/main/kotlin/io/bluetape4k/images/vips/java21/JVipsRuntime.kt)
-- [Release build and test isolation](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/images-vips-java21/build.gradle.kts)
+- [Factories and guards](https://github.com/bluetape4k/bluetape4k-image/blob/0.4.0/images-vips-java21/src/main/kotlin/io/bluetape4k/images/vips/java21/JVipsImageSupport.kt)
+- [JNI image lifecycle](https://github.com/bluetape4k/bluetape4k-image/blob/0.4.0/images-vips-java21/src/main/kotlin/io/bluetape4k/images/vips/java21/JVipsImage.kt)
+- [Runtime lifecycle](https://github.com/bluetape4k/bluetape4k-image/blob/0.4.0/images-vips-java21/src/main/kotlin/io/bluetape4k/images/vips/java21/JVipsRuntime.kt)
+- [Release build and test isolation](https://github.com/bluetape4k/bluetape4k-image/blob/0.4.0/images-vips-java21/build.gradle.kts)

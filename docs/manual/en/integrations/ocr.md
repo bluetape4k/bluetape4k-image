@@ -2,7 +2,7 @@
 manualId: "ocr-integration"
 title: "OCR Integration"
 locale: "en"
-releaseRef: "0.3.0"
+releaseRef: "0.4.0"
 ---
 
 # OCR Integration
@@ -29,5 +29,5 @@ Complete [OCR setup](../guides/ocr-setup.md) first. Then run the [Ktor OCR](../m
 
 ## Sources
 
-- [OCR contracts](https://github.com/bluetape4k/bluetape4k-image/tree/a571c30004f571fe8cfcddc29670c1404d212ec6/images-ocr/src/main/kotlin/io/bluetape4k/images/ocr)
+- [OCR contracts](https://github.com/bluetape4k/bluetape4k-image/tree/ea5175b083babf8880f53cf80c9a264a0c61777e/images-ocr/src/main/kotlin/io/bluetape4k/images/ocr)
 - [OCR module reference](../modules/bluetape4k-images-ocr.md)

@@ -6,7 +6,7 @@ locale: "ko"
 kind: "library"
 gradlePath: ":bluetape4k-images"
 sourceDir: "images"
-releaseRef: "0.3.0"
+releaseRef: "0.4.0"
 artifact: io.github.bluetape4k.image:bluetape4k-images
 ---
 
@@ -72,7 +72,7 @@ output.suspendWrite(
 
 애플리케이션 경계에서는 `ImmutableImage`를 우선 사용하세요. 배치 작업은 전체 디코딩 전에 크기를 탐색하며, 기본값인 `skipFailures=false`로 먼저 검증하는 편이 좋습니다. 실패를 건너뛸 때는 `onFailure`로 반드시 관측하세요.
 
-suspend Okio 오버로드는 기존 코루틴 I/O 경계와 수명 관리를 자연스럽게 연결하기 위한 API입니다. `0.3.0` 벤치마크에서는 로컬 `Path`보다 빠르지 않았으므로 성능 기능처럼 소개하면 안 됩니다.
+suspend Okio 오버로드는 기존 코루틴 I/O 경계와 수명 관리를 자연스럽게 연결하기 위한 API입니다. `0.4.0` 벤치마크에서는 로컬 `Path`보다 빠르지 않았으므로 성능 기능처럼 소개하면 안 됩니다.
 
 ## 연동 {#integrations}
 
@@ -102,54 +102,54 @@ CAPTCHA, OCR, Ktor 모듈이 이 라이브러리를 사용합니다. Spring 저�
 
 ## 제약 사항 {#limitations}
 
-suspend 함수도 내부 블로킹 코덱을 사용합니다. 이 모듈의 AVIF/HEIC 타입은 `0.3.0`에서 구현체가 없는 실험적 계약입니다. ImageIO 코덱 지원 범위는 런타임 클래스패스에 따라 달라질 수 있습니다.
+suspend 함수도 내부 블로킹 코덱을 사용합니다. 이 모듈의 AVIF/HEIC 타입은 `0.4.0`에서 구현체가 없는 실험적 계약입니다. ImageIO 코덱 지원 범위는 런타임 클래스패스에 따라 달라질 수 있습니다.
 
 <!-- release-readme-diagrams:start -->
 ## 배포본 다이어그램 {#release-diagrams}
 
-아래 그림은 `0.3.0` 배포본의 README 자산을 해당 배포 커밋에서 직접 불러옵니다. 이후 SNAPSHOT이 아니라 이 매뉴얼 버전의 구조와 실행 흐름을 보여 줍니다. 미리보기를 누르면 같은 배포 커밋의 SVG 원본이 열립니다.
+아래 그림은 `0.4.0` 배포본의 README 자산을 해당 배포 커밋에서 직접 불러옵니다. 이후 SNAPSHOT이 아니라 이 매뉴얼 버전의 구조와 실행 흐름을 보여 줍니다. 미리보기를 누르면 같은 배포 커밋의 SVG 원본이 열립니다.
 
 ### images 아키텍처
 
-[![images 아키텍처](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/images-architecture-01.png)](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/images-architecture-01.svg)
+[![images 아키텍처](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/images-architecture-01.png)](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/images-architecture-01.svg)
 
-_배포본 README: [`images/README.ko.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/images/README.ko.md)_
+_배포본 README: [`images/README.ko.md`](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/images/README.ko.md)_
 
 ### images Transform 아키텍처
 
-[![images Transform 아키텍처](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/images-architecture-03.png)](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/images-architecture-03.svg)
+[![images Transform 아키텍처](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/images-architecture-03.png)](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/images-architecture-03.svg)
 
-_배포본 README: [`images/README.ko.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/images/README.ko.md)_
+_배포본 README: [`images/README.ko.md`](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/images/README.ko.md)_
 
 ### Bluetape4k Image Analysis 다이어그램
 
-[![Bluetape4k Image Analysis 다이어그램](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/images-class-04.png)](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/images-class-04.svg)
+[![Bluetape4k Image Analysis 다이어그램](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/images-class-04.png)](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/images-class-04.svg)
 
-_배포본 README: [`images/README.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/images/README.md)_
+_배포본 README: [`images/README.md`](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/images/README.md)_
 
 ### Images Core API 클래스 구성도
 
-[![Images Core API 클래스 구성도](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/images-class-core-01.png)](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/images-class-core-01.svg)
+[![Images Core API 클래스 구성도](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/images-class-core-01.png)](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/images-class-core-01.svg)
 
-_배포본 README: [`images/README.ko.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/images/README.ko.md)_
+_배포본 README: [`images/README.ko.md`](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/images/README.ko.md)_
 
 ### Images Filter 클래스 구성도
 
-[![Images Filter 클래스 구성도](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/images-class-filters-01.png)](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/images-class-filters-01.svg)
+[![Images Filter 클래스 구성도](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/images-class-filters-01.png)](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/images-class-filters-01.svg)
 
-_배포본 README: [`images/README.ko.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/images/README.ko.md)_
+_배포본 README: [`images/README.ko.md`](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/images/README.ko.md)_
 
 ### Images Writer 클래스 구성도
 
-[![Images Writer 클래스 구성도](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/images-class-writers-01.png)](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/images-class-writers-01.svg)
+[![Images Writer 클래스 구성도](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/images-class-writers-01.png)](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/images-class-writers-01.svg)
 
-_배포본 README: [`images/README.ko.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/images/README.ko.md)_
+_배포본 README: [`images/README.ko.md`](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/images/README.ko.md)_
 
 <!-- release-readme-diagrams:end -->
 
 ## 근거 자료 {#sources}
 
-- [이미지 팩토리와 자원 소유권](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/images/src/main/kotlin/io/bluetape4k/images/ImmutableImageSupport.kt)
-- [배치 결과와 옵션](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/images/src/main/kotlin/io/bluetape4k/images/batch/ImageBatchModels.kt)
-- [배치 Flow 구현](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/images/src/main/kotlin/io/bluetape4k/images/batch/ImageBatchFlow.kt)
-- [처리 DSL](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/images/src/main/kotlin/io/bluetape4k/images/batch/ImageProcessingDsl.kt)
+- [이미지 팩토리와 자원 소유권](https://github.com/bluetape4k/bluetape4k-image/blob/0.4.0/images/src/main/kotlin/io/bluetape4k/images/ImmutableImageSupport.kt)
+- [배치 결과와 옵션](https://github.com/bluetape4k/bluetape4k-image/blob/0.4.0/images/src/main/kotlin/io/bluetape4k/images/batch/ImageBatchModels.kt)
+- [배치 Flow 구현](https://github.com/bluetape4k/bluetape4k-image/blob/0.4.0/images/src/main/kotlin/io/bluetape4k/images/batch/ImageBatchFlow.kt)
+- [처리 DSL](https://github.com/bluetape4k/bluetape4k-image/blob/0.4.0/images/src/main/kotlin/io/bluetape4k/images/batch/ImageProcessingDsl.kt)

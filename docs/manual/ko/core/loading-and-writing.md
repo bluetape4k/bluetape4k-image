@@ -2,7 +2,7 @@
 manualId: "loading-and-writing"
 title: "로드와 저장"
 locale: "ko"
-releaseRef: "0.3.0"
+releaseRef: "0.4.0"
 ---
 
 # 로드와 저장
@@ -29,5 +29,5 @@ Okio 어댑터는 불필요한 API 변환을 줄이고 파일 경계를 분명�
 
 ## 근거 소스
 
-- [로드와 작성기 지원](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/images/src/main/kotlin/io/bluetape4k/images/ImmutableImageSupport.kt)
-- [핵심 모듈 안내](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/images/README.ko.md)
+- [로드와 작성기 지원](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/images/src/main/kotlin/io/bluetape4k/images/ImmutableImageSupport.kt)
+- [핵심 모듈 안내](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/images/README.ko.md)

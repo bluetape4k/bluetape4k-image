@@ -2,7 +2,7 @@
 manualId: "java21-jni"
 title: "Java 21 JVips 백엔드"
 locale: "ko"
-releaseRef: "0.3.0"
+releaseRef: "0.4.0"
 ---
 
 # Java 21 JVips 백엔드
@@ -21,11 +21,11 @@ releaseRef: "0.3.0"
 
 ## 테스트와 실패 처리
 
-0.3.0 빌드는 네이티브 테스트에 <code>forkEvery = 1</code>과 <code>maxParallelForks = 1</code>을 적용한다. JNI와 네이티브 전역 상태가 테스트 사이에 남을 수 있으므로 이 격리를 유지한다. 라이브러리 누락, 지원하지 않는 코덱, 과도한 픽셀 수와 런타임 종료 후 사용은 분명하게 실패해야 한다.
+0.4.0 빌드는 네이티브 테스트에 <code>forkEvery = 1</code>과 <code>maxParallelForks = 1</code>을 적용한다. JNI와 네이티브 전역 상태가 테스트 사이에 남을 수 있으므로 이 격리를 유지한다. 라이브러리 누락, 지원하지 않는 코덱, 과도한 픽셀 수와 런타임 종료 후 사용은 분명하게 실패해야 한다.
 
 [Java 25 FFM](java25-ffm.md)과 비교할 때는 같은 장비와 테스트 이미지를 사용한다.
 
 ## 근거 소스
 
-- [JVipsRuntime](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/images-vips-java21/src/main/kotlin/io/bluetape4k/images/vips/java21/JVipsRuntime.kt)
-- [Java 21 모듈 설정](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/images-vips-java21/build.gradle.kts)
+- [JVipsRuntime](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/images-vips-java21/src/main/kotlin/io/bluetape4k/images/vips/java21/JVipsRuntime.kt)
+- [Java 21 모듈 설정](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/images-vips-java21/build.gradle.kts)

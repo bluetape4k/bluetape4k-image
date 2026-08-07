@@ -6,7 +6,7 @@ locale: "en"
 kind: "library"
 gradlePath: ":bluetape4k-images-vips-java25"
 sourceDir: "images-vips-java25"
-releaseRef: "0.3.0"
+releaseRef: "0.4.0"
 artifact: io.github.bluetape4k.image:bluetape4k-images-vips-java25
 ---
 
@@ -91,25 +91,25 @@ Derived images share their root arena and cannot outlive it. Non-path input is b
 <!-- release-readme-diagrams:start -->
 ## Release diagrams {#release-diagrams}
 
-These diagrams are loaded directly from README assets published with the `0.3.0` release and pinned to its immutable commit. They describe this manual's released structure and runtime flows, not later Snapshot changes. Select a preview to open the SVG at the same release commit.
+These diagrams are loaded directly from README assets published with the `0.4.0` release and pinned to its immutable commit. They describe this manual's released structure and runtime flows, not later Snapshot changes. Select a preview to open the SVG at the same release commit.
 
 ### Performance vs scrimage diagram
 
-[![Performance vs scrimage diagram](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/images-vips-java25-architecture-02.png)](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/images-vips-java25-architecture-02.svg)
+[![Performance vs scrimage diagram](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/images-vips-java25-architecture-02.png)](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/images-vips-java25-architecture-02.svg)
 
-_Release README: [`images-vips-java25/README.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/images-vips-java25/README.md)_
+_Release README: [`images-vips-java25/README.md`](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/images-vips-java25/README.md)_
 
 ### images vips java25 Class Structure diagram
 
-[![images vips java25 Class Structure diagram](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/images-vips-java25-class-01.png)](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/images-vips-java25-class-01.svg)
+[![images vips java25 Class Structure diagram](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/images-vips-java25-class-01.png)](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/images-vips-java25-class-01.svg)
 
-_Release README: [`images-vips-java25/README.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/images-vips-java25/README.md)_
+_Release README: [`images-vips-java25/README.md`](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/images-vips-java25/README.md)_
 
 <!-- release-readme-diagrams:end -->
 
 ## Sources {#sources}
 
-- [Factories, direct path load, and guards](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/images-vips-java25/src/main/kotlin/io/bluetape4k/images/vips/java25/FfmVipsImageSupport.kt)
-- [Arena ownership](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/images-vips-java25/src/main/kotlin/io/bluetape4k/images/vips/java25/FfmVipsImage.kt)
-- [Runtime and native-access check](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/images-vips-java25/src/main/kotlin/io/bluetape4k/images/vips/java25/FfmVipsRuntime.kt)
-- [Release build](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/images-vips-java25/build.gradle.kts)
+- [Factories, direct path load, and guards](https://github.com/bluetape4k/bluetape4k-image/blob/0.4.0/images-vips-java25/src/main/kotlin/io/bluetape4k/images/vips/java25/FfmVipsImageSupport.kt)
+- [Arena ownership](https://github.com/bluetape4k/bluetape4k-image/blob/0.4.0/images-vips-java25/src/main/kotlin/io/bluetape4k/images/vips/java25/FfmVipsImage.kt)
+- [Runtime and native-access check](https://github.com/bluetape4k/bluetape4k-image/blob/0.4.0/images-vips-java25/src/main/kotlin/io/bluetape4k/images/vips/java25/FfmVipsRuntime.kt)
+- [Release build](https://github.com/bluetape4k/bluetape4k-image/blob/0.4.0/images-vips-java25/build.gradle.kts)

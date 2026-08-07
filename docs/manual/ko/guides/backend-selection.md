@@ -2,7 +2,7 @@
 manualId: "backend-selection"
 title: "백엔드 선택"
 locale: "ko"
-releaseRef: "0.3.0"
+releaseRef: "0.4.0"
 ---
 
 # 백엔드 선택
@@ -37,5 +37,5 @@ JDK 21을 유지해야 하면 [Java 21 JNI](../native/java21-jni.md)를 고른�
 
 ## 근거 소스
 
-- [릴리스 백엔드 개요](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/README.ko.md#아키텍처)
-- [벤치마크 문서](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/benchmark/images-benchmark/README.ko.md)
+- [릴리스 백엔드 개요](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/README.ko.md#아키텍처)
+- [벤치마크 문서](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/benchmark/images-benchmark/README.ko.md)

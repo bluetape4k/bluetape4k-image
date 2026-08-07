@@ -6,7 +6,7 @@ locale: "ko"
 kind: "library"
 gradlePath: ":bluetape4k-images-vips-java21"
 sourceDir: "images-vips-java21"
-releaseRef: "0.3.0"
+releaseRef: "0.4.0"
 artifact: io.github.bluetape4k.image:bluetape4k-images-vips-java21
 ---
 
@@ -61,7 +61,7 @@ vipsImageOf(Path.of("input.jpg")).use { source ->
 
 ## 설정 {#configuration}
 
-Java 21에서 실행합니다. 입력은 최대 50MiB이고 JPEG/PNG/WebP/AVIF/HEIC 매직 바이트만 허용하며, 디코딩 뒤 `JVipsRuntime.maxPixels`를 검사합니다. `0.3.0`에서는 경로 입력도 제한 확인 후 전체 압축 파일을 바이트 배열로 읽습니다.
+Java 21에서 실행합니다. 입력은 최대 50MiB이고 JPEG/PNG/WebP/AVIF/HEIC 매직 바이트만 허용하며, 디코딩 뒤 `JVipsRuntime.maxPixels`를 검사합니다. `0.4.0`에서는 경로 입력도 제한 확인 후 전체 압축 파일을 바이트 배열로 읽습니다.
 
 ## 실패 유형과 해결 방법 {#failures}
 
@@ -69,7 +69,7 @@ Java 21에서 실행합니다. 입력은 최대 50MiB이고 JPEG/PNG/WebP/AVIF/H
 
 ## 운영 {#operations}
 
-libvips 설치와 JVM/네이티브 아키텍처를 함께 확인하세요. JNI 테스트는 클래스마다 JVM을 새로 띄우고 병렬 fork를 1로 제한합니다. `0.3.0` macOS arm64 벤치마크 호스트에서는 JVips dylib가 x86_64여서 JNI 결과를 측정하지 않았습니다.
+libvips 설치와 JVM/네이티브 아키텍처를 함께 확인하세요. JNI 테스트는 클래스마다 JVM을 새로 띄우고 병렬 fork를 1로 제한합니다. `0.4.0` macOS arm64 벤치마크 호스트에서는 JVips dylib가 x86_64여서 JNI 결과를 측정하지 않았습니다.
 
 ## 테스트 {#testing}
 
@@ -81,30 +81,30 @@ libvips 설치와 JVM/네이티브 아키텍처를 함께 확인하세요. JNI �
 
 ## 제약 사항 {#limitations}
 
-`0.3.0`의 Java 21 백엔드는 HEIC 인코딩을 지원하지 않습니다. AVIF/HEIF 디코딩과 AVIF 인코딩도 호스트 코덱에 따라 달라집니다. 경로 로딩은 50MiB 제한 안에서 전체 압축 파일을 메모리에 올립니다.
+`0.4.0`의 Java 21 백엔드는 HEIC 인코딩을 지원하지 않습니다. AVIF/HEIF 디코딩과 AVIF 인코딩도 호스트 코덱에 따라 달라집니다. 경로 로딩은 50MiB 제한 안에서 전체 압축 파일을 메모리에 올립니다.
 
 <!-- release-readme-diagrams:start -->
 ## 배포본 다이어그램 {#release-diagrams}
 
-아래 그림은 `0.3.0` 배포본의 README 자산을 해당 배포 커밋에서 직접 불러옵니다. 이후 SNAPSHOT이 아니라 이 매뉴얼 버전의 구조와 실행 흐름을 보여 줍니다. 미리보기를 누르면 같은 배포 커밋의 SVG 원본이 열립니다.
+아래 그림은 `0.4.0` 배포본의 README 자산을 해당 배포 커밋에서 직접 불러옵니다. 이후 SNAPSHOT이 아니라 이 매뉴얼 버전의 구조와 실행 흐름을 보여 줍니다. 미리보기를 누르면 같은 배포 커밋의 SVG 원본이 열립니다.
 
 ### JVips 다이어그램
 
-[![JVips 다이어그램](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/images-vips-java21-architecture-01.png)](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/images-vips-java21-architecture-01.svg)
+[![JVips 다이어그램](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/images-vips-java21-architecture-01.png)](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/images-vips-java21-architecture-01.svg)
 
-_배포본 README: [`images-vips-java21/README.ko.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/images-vips-java21/README.ko.md)_
+_배포본 README: [`images-vips-java21/README.ko.md`](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/images-vips-java21/README.ko.md)_
 
 ### images vips java21 클래스 구조도 2
 
-[![images vips java21 클래스 구조도 2](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/images-vips-java21-class-02.png)](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/images-vips-java21-class-02.svg)
+[![images vips java21 클래스 구조도 2](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/images-vips-java21-class-02.png)](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/images-vips-java21-class-02.svg)
 
-_배포본 README: [`images-vips-java21/README.ko.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/images-vips-java21/README.ko.md)_
+_배포본 README: [`images-vips-java21/README.ko.md`](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/images-vips-java21/README.ko.md)_
 
 <!-- release-readme-diagrams:end -->
 
 ## 근거 자료 {#sources}
 
-- [팩토리와 입력 검증](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/images-vips-java21/src/main/kotlin/io/bluetape4k/images/vips/java21/JVipsImageSupport.kt)
-- [JNI 이미지 수명](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/images-vips-java21/src/main/kotlin/io/bluetape4k/images/vips/java21/JVipsImage.kt)
-- [런타임 수명](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/images-vips-java21/src/main/kotlin/io/bluetape4k/images/vips/java21/JVipsRuntime.kt)
-- [테스트 격리 설정](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/images-vips-java21/build.gradle.kts)
+- [팩토리와 입력 검증](https://github.com/bluetape4k/bluetape4k-image/blob/0.4.0/images-vips-java21/src/main/kotlin/io/bluetape4k/images/vips/java21/JVipsImageSupport.kt)
+- [JNI 이미지 수명](https://github.com/bluetape4k/bluetape4k-image/blob/0.4.0/images-vips-java21/src/main/kotlin/io/bluetape4k/images/vips/java21/JVipsImage.kt)
+- [런타임 수명](https://github.com/bluetape4k/bluetape4k-image/blob/0.4.0/images-vips-java21/src/main/kotlin/io/bluetape4k/images/vips/java21/JVipsRuntime.kt)
+- [테스트 격리 설정](https://github.com/bluetape4k/bluetape4k-image/blob/0.4.0/images-vips-java21/build.gradle.kts)

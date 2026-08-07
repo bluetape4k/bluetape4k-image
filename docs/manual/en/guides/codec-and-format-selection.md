@@ -2,7 +2,7 @@
 manualId: "codec-and-format-selection"
 title: "Codec and Format Selection"
 locale: "en"
-releaseRef: "0.3.0"
+releaseRef: "0.4.0"
 ---
 
 # Codec and Format Selection
@@ -32,5 +32,5 @@ Record accepted input formats separately from generated output formats. A servic
 
 ## Sources
 
-- [Release image dependencies](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/images/build.gradle.kts)
-- [Vips image format contract](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/images-vips-api/src/main/kotlin/io/bluetape4k/images/vips/VipsImageFormat.kt)
+- [Release image dependencies](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/images/build.gradle.kts)
+- [Vips image format contract](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/images-vips-api/src/main/kotlin/io/bluetape4k/images/vips/VipsImageFormat.kt)

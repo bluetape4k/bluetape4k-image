@@ -2,7 +2,7 @@
 manualId: "transforms-and-filters"
 title: "변환과 필터"
 locale: "ko"
-releaseRef: "0.3.0"
+releaseRef: "0.4.0"
 ---
 
 # 변환과 필터
@@ -11,7 +11,7 @@ releaseRef: "0.3.0"
 
 ## 기하 변환
 
-0.3.0에는 리사이즈, 분할, 여백 추가, 회전과 뒤집기, 원근 변환, 자동 자르기, 중요 영역 자르기, CLAHE와 전역 히스토그램 평활화가 있다. 꾸미기 필터보다 목표 크기와 자르기 정책을 먼저 정한다. 기하 변환은 이후 분석이 볼 픽셀 자체를 바꾼다.
+0.4.0에는 리사이즈, 분할, 여백 추가, 회전과 뒤집기, 원근 변환, 자동 자르기, 중요 영역 자르기, CLAHE와 전역 히스토그램 평활화가 있다. 꾸미기 필터보다 목표 크기와 자르기 정책을 먼저 정한다. 기하 변환은 이후 분석이 볼 픽셀 자체를 바꾼다.
 
 ## Filter chain
 
@@ -35,5 +35,5 @@ releaseRef: "0.3.0"
 
 ## 근거 소스
 
-- [Filter DSL](https://github.com/bluetape4k/bluetape4k-image/tree/a571c30004f571fe8cfcddc29670c1404d212ec6/images/src/main/kotlin/io/bluetape4k/images/filters/dsl)
-- [Transform 구현](https://github.com/bluetape4k/bluetape4k-image/tree/a571c30004f571fe8cfcddc29670c1404d212ec6/images/src/main/kotlin/io/bluetape4k/images/transforms)
+- [Filter DSL](https://github.com/bluetape4k/bluetape4k-image/tree/ea5175b083babf8880f53cf80c9a264a0c61777e/images/src/main/kotlin/io/bluetape4k/images/filters/dsl)
+- [Transform 구현](https://github.com/bluetape4k/bluetape4k-image/tree/ea5175b083babf8880f53cf80c9a264a0c61777e/images/src/main/kotlin/io/bluetape4k/images/transforms)

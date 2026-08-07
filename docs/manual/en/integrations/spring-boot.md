@@ -2,7 +2,7 @@
 manualId: "spring-boot-integration"
 title: "Spring Boot Integration"
 locale: "en"
-releaseRef: "0.3.0"
+releaseRef: "0.4.0"
 ---
 
 # Spring Boot Integration
@@ -31,5 +31,5 @@ Read [storage and CDN](storage-and-cdn.md) before selecting an operational backe
 
 ## Sources
 
-- [Auto-configuration source](https://github.com/bluetape4k/bluetape4k-image/tree/a571c30004f571fe8cfcddc29670c1404d212ec6/images-spring-boot/src/main/kotlin/io/bluetape4k/images/spring/autoconfigure)
+- [Auto-configuration source](https://github.com/bluetape4k/bluetape4k-image/tree/ea5175b083babf8880f53cf80c9a264a0c61777e/images-spring-boot/src/main/kotlin/io/bluetape4k/images/spring/autoconfigure)
 - [Spring Boot module reference](../modules/bluetape4k-images-spring-boot.md)

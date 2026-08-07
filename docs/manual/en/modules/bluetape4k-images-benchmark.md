@@ -6,7 +6,7 @@ locale: "en"
 kind: "benchmark"
 gradlePath: ":bluetape4k-images-benchmark"
 sourceDir: "benchmark/images-benchmark"
-releaseRef: "0.3.0"
+releaseRef: "0.4.0"
 artifact: null
 ---
 
@@ -24,7 +24,7 @@ Use it before claiming that a backend or IO boundary is faster, when checking a 
 
 ## Coordinates {#coordinates}
 
-The benchmark is repository-only and publishes no artifact. Its project dependencies are aligned from the same `bluetape4k-dependencies` release catalog used by the 0.3.0 source.
+The benchmark is repository-only and publishes no artifact. Its project dependencies are aligned from the same `bluetape4k-dependencies` release catalog used by the 0.4.0 source.
 
 ## Core concepts {#concepts}
 
@@ -79,13 +79,13 @@ The complete benchmark uses three warmups, five measurements, one fork, average-
 ## Failure modes {#failures}
 
 - Near-zero vips rows: verify native availability; unavailable methods consume `null` and return immediately.
-- Java 21 JNI skips on macOS arm64: the recorded 0.3.0 host found an incompatible x86_64 JVips dylib; use a compatible host.
+- Java 21 JNI skips on macOS arm64: the recorded 0.4.0 host found an incompatible x86_64 JVips dylib; use a compatible host.
 - Large variance: avoid parallel benchmark processes, check thermal/load state, and keep fixtures and forks identical.
 - Native load failure: verify system libvips and the FFM/JNI library path before interpreting results.
 
 ## Operations {#operations}
 
-Representative 0.3.0 evidence on macOS arm64, GraalVM Java 25.0.3 found the full libvips `Path` pipeline at `7.13 ms/op` for `large-photo` and `5.47 ms/op` for `ocr-document`; Scrimage `Path` measured `223.19` and `145.13 ms/op`. These are local comparable snapshots, not a universal ranking. Scrimage suspended boundaries were slower in both boundary and many-file tests, so they are documented as lifecycle/integration APIs rather than performance optimizations.
+Representative 0.4.0 evidence on macOS arm64, GraalVM Java 25.0.3 found the full libvips `Path` pipeline at `7.13 ms/op` for `large-photo` and `5.47 ms/op` for `ocr-document`; Scrimage `Path` measured `223.19` and `145.13 ms/op`. These are local comparable snapshots, not a universal ranking. Scrimage suspended boundaries were slower in both boundary and many-file tests, so they are documented as lifecycle/integration APIs rather than performance optimizations.
 
 ## Testing {#testing}
 
@@ -108,7 +108,7 @@ For publishable evidence, retain generated JSON, record the exact command/enviro
 
 ## Limitations {#limitations}
 
-- The 0.3.0 reports mix a fresh macOS Java 25 run with explicitly historical Linux rows; they are not one experiment.
+- The 0.4.0 reports mix a fresh macOS Java 25 run with explicitly historical Linux rows; they are not one experiment.
 - The macOS arm64 run did not produce compatible Java 21 JNI measurements.
 - `vips_resize` does not encode its result; libvips lazy evaluation means geometry-only speedups do not equal completed pixel-pipeline speedups.
 - GC allocation excludes native memory.
@@ -118,22 +118,22 @@ For publishable evidence, retain generated JSON, record the exact command/enviro
 <!-- release-readme-diagrams:start -->
 ## Release diagrams {#release-diagrams}
 
-These diagrams are loaded directly from README assets published with the `0.3.0` release and pinned to its immutable commit. They describe this manual's released structure and runtime flows, not later Snapshot changes. Select a preview to open the SVG at the same release commit.
+These diagrams are loaded directly from README assets published with the `0.4.0` release and pinned to its immutable commit. They describe this manual's released structure and runtime flows, not later Snapshot changes. Select a preview to open the SVG at the same release commit.
 
 ### images benchmark Architecture diagram
 
-[![images benchmark Architecture diagram](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/images-benchmark-architecture-01.png)](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/images-benchmark-architecture-01.svg)
+[![images benchmark Architecture diagram](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/images-benchmark-architecture-01.png)](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/images-benchmark-architecture-01.svg)
 
-_Release README: [`benchmark/images-benchmark/README.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/benchmark/images-benchmark/README.md)_
+_Release README: [`benchmark/images-benchmark/README.md`](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/benchmark/images-benchmark/README.md)_
 
 <!-- release-readme-diagrams:end -->
 
 ## Sources {#sources}
 
-- [Benchmark README](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/benchmark/images-benchmark/README.md)
-- [Natural-photo results](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/benchmark/images-benchmark/docs/benchmark-results-2026-05-28-natural-photos.md)
-- [IO-boundary baseline](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/benchmark/images-benchmark/docs/io-boundary-baseline-2026-05-29.md)
-- [File IO throughput](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/benchmark/images-benchmark/docs/file-io-throughput-2026-05-29.md)
-- [Memory profile](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/benchmark/images-benchmark/docs/memory-profile-2026-05-29.md)
-- [Large streaming pipeline](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/benchmark/images-benchmark/docs/large-streaming-2026-06-05.md)
-- [Gradle build file](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/benchmark/images-benchmark/build.gradle.kts)
+- [Benchmark README](https://github.com/bluetape4k/bluetape4k-image/blob/0.4.0/benchmark/images-benchmark/README.md)
+- [Natural-photo results](https://github.com/bluetape4k/bluetape4k-image/blob/0.4.0/benchmark/images-benchmark/docs/benchmark-results-2026-05-28-natural-photos.md)
+- [IO-boundary baseline](https://github.com/bluetape4k/bluetape4k-image/blob/0.4.0/benchmark/images-benchmark/docs/io-boundary-baseline-2026-05-29.md)
+- [File IO throughput](https://github.com/bluetape4k/bluetape4k-image/blob/0.4.0/benchmark/images-benchmark/docs/file-io-throughput-2026-05-29.md)
+- [Memory profile](https://github.com/bluetape4k/bluetape4k-image/blob/0.4.0/benchmark/images-benchmark/docs/memory-profile-2026-05-29.md)
+- [Large streaming pipeline](https://github.com/bluetape4k/bluetape4k-image/blob/0.4.0/benchmark/images-benchmark/docs/large-streaming-2026-06-05.md)
+- [Gradle build file](https://github.com/bluetape4k/bluetape4k-image/blob/0.4.0/benchmark/images-benchmark/build.gradle.kts)

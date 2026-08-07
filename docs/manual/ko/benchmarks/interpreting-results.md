@@ -2,12 +2,12 @@
 manualId: "interpreting-benchmark-results"
 title: "벤치마크 결과 해석"
 locale: "ko"
-releaseRef: "0.3.0"
+releaseRef: "0.4.0"
 ---
 
 # 벤치마크 결과 해석
 
-벤치마크 프로젝트는 실행 가능한 근거 자료이며 배포 의존성이 아니다. 0.3.0에서 제공하는 Scrimage와 libvips 처리, I/O와 메모리 할당 경계를 비교한다.
+벤치마크 프로젝트는 실행 가능한 근거 자료이며 배포 의존성이 아니다. 0.4.0에서 제공하는 Scrimage와 libvips 처리, I/O와 메모리 할당 경계를 비교한다.
 
 ![벤치마크 질문과 실행 조건을 확인한 뒤 제한된 결론을 내리는 해석 경로](../../assets/benchmarks/benchmark-interpretation-map.svg)
 
@@ -36,5 +36,5 @@ JDK, 운영체제, CPU, libvips 버전, 선택한 <code>vips.impl</code>, 이미
 
 ## 근거 소스
 
-- [벤치마크 모듈 안내](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/benchmark/images-benchmark/README.ko.md)
-- [0.3.0 보고서와 raw 자료](https://github.com/bluetape4k/bluetape4k-image/tree/a571c30004f571fe8cfcddc29670c1404d212ec6/benchmark/images-benchmark/docs)
+- [벤치마크 모듈 안내](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/benchmark/images-benchmark/README.ko.md)
+- [0.4.0 보고서와 raw 자료](https://github.com/bluetape4k/bluetape4k-image/tree/ea5175b083babf8880f53cf80c9a264a0c61777e/benchmark/images-benchmark/docs)

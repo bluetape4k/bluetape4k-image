@@ -2,7 +2,7 @@
 manualId: "getting-started"
 title: "시작하기"
 locale: "ko"
-releaseRef: "0.3.0"
+releaseRef: "0.4.0"
 ---
 
 # 시작하기
@@ -43,5 +43,5 @@ releaseRef: "0.3.0"
 
 ## 근거 소스
 
-- [릴리스 빌드 설정](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/build.gradle.kts)
-- [릴리스 의존성 예제](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/README.ko.md#의존성-추가)
+- [릴리스 빌드 설정](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/build.gradle.kts)
+- [릴리스 의존성 예제](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/README.ko.md#의존성-추가)

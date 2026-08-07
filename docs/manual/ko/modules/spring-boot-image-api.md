@@ -6,7 +6,7 @@ locale: "ko"
 kind: "example"
 gradlePath: ":spring-boot-image-api"
 sourceDir: "examples/spring-boot-image-api"
-releaseRef: "0.3.0"
+releaseRef: "0.4.0"
 artifact: null
 ---
 
@@ -47,7 +47,7 @@ curl -F "file=@images/src/test/resources/images/cafe.jpg;type=image/jpeg" \
 
 ## 작업별 API {#api-by-task}
 
-| 작업 | 0.3.0 API |
+| 작업 | 0.4.0 API |
 | --- | --- |
 | 업로드 | `POST /api/images?maxSide=320` |
 | 다운로드 | `GET /api/images/{prefix}/{name}` |
@@ -110,32 +110,32 @@ MockMvc로 JPEG를 업로드하고 두 키 접두사와 URL, 원본과 썸네일
 <!-- release-readme-diagrams:start -->
 ## 배포본 다이어그램 {#release-diagrams}
 
-아래 그림은 `0.3.0` 배포본의 README 자산을 해당 배포 커밋에서 직접 불러옵니다. 이후 SNAPSHOT이 아니라 이 매뉴얼 버전의 구조와 실행 흐름을 보여 줍니다. 미리보기를 누르면 같은 배포 커밋의 SVG 원본이 열립니다.
+아래 그림은 `0.4.0` 배포본의 README 자산을 해당 배포 커밋에서 직접 불러옵니다. 이후 SNAPSHOT이 아니라 이 매뉴얼 버전의 구조와 실행 흐름을 보여 줍니다. 미리보기를 누르면 같은 배포 커밋의 SVG 원본이 열립니다.
 
 ### Spring Boot Image API 아키텍처
 
-[![Spring Boot Image API 아키텍처](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/examples-spring-boot-image-api-architecture-01.png)](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/examples-spring-boot-image-api-architecture-01.svg)
+[![Spring Boot Image API 아키텍처](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/examples-spring-boot-image-api-architecture-01.png)](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/examples-spring-boot-image-api-architecture-01.svg)
 
-_배포본 README: [`examples/spring-boot-image-api/README.ko.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/examples/spring-boot-image-api/README.ko.md)_
+_배포본 README: [`examples/spring-boot-image-api/README.ko.md`](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/examples/spring-boot-image-api/README.ko.md)_
 
 ### Spring Boot Image API 실행 시나리오
 
-[![Spring Boot Image API 실행 시나리오](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/examples-spring-boot-image-api-scenario-01.png)](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/examples-spring-boot-image-api-scenario-01.svg)
+[![Spring Boot Image API 실행 시나리오](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/examples-spring-boot-image-api-scenario-01.png)](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/examples-spring-boot-image-api-scenario-01.svg)
 
-_배포본 README: [`examples/spring-boot-image-api/README.ko.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/examples/spring-boot-image-api/README.ko.md)_
+_배포본 README: [`examples/spring-boot-image-api/README.ko.md`](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/examples/spring-boot-image-api/README.ko.md)_
 
 ### Spring Boot Image API 처리 순서
 
-[![Spring Boot Image API 처리 순서](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/examples-spring-boot-image-api-sequence-01.png)](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/examples-spring-boot-image-api-sequence-01.svg)
+[![Spring Boot Image API 처리 순서](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/examples-spring-boot-image-api-sequence-01.png)](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/examples-spring-boot-image-api-sequence-01.svg)
 
-_배포본 README: [`examples/spring-boot-image-api/README.ko.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/examples/spring-boot-image-api/README.ko.md)_
+_배포본 README: [`examples/spring-boot-image-api/README.ko.md`](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/examples/spring-boot-image-api/README.ko.md)_
 
 <!-- release-readme-diagrams:end -->
 
 ## 근거 자료 {#sources}
 
-- [0.3.0 README](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/examples/spring-boot-image-api/README.ko.md)
-- [Controller와 service](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/examples/spring-boot-image-api/src/main/kotlin/io/bluetape4k/images/examples/spring/SpringBootImageApiApplication.kt)
-- [애플리케이션 설정](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/examples/spring-boot-image-api/src/main/resources/application.yml)
-- [통합 테스트](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/examples/spring-boot-image-api/src/test/kotlin/io/bluetape4k/images/examples/spring/SpringBootImageApiApplicationTest.kt)
-- [Gradle 빌드 파일](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/examples/spring-boot-image-api/build.gradle.kts)
+- [0.4.0 README](https://github.com/bluetape4k/bluetape4k-image/blob/0.4.0/examples/spring-boot-image-api/README.ko.md)
+- [Controller와 service](https://github.com/bluetape4k/bluetape4k-image/blob/0.4.0/examples/spring-boot-image-api/src/main/kotlin/io/bluetape4k/images/examples/spring/SpringBootImageApiApplication.kt)
+- [애플리케이션 설정](https://github.com/bluetape4k/bluetape4k-image/blob/0.4.0/examples/spring-boot-image-api/src/main/resources/application.yml)
+- [통합 테스트](https://github.com/bluetape4k/bluetape4k-image/blob/0.4.0/examples/spring-boot-image-api/src/test/kotlin/io/bluetape4k/images/examples/spring/SpringBootImageApiApplicationTest.kt)
+- [Gradle 빌드 파일](https://github.com/bluetape4k/bluetape4k-image/blob/0.4.0/examples/spring-boot-image-api/build.gradle.kts)

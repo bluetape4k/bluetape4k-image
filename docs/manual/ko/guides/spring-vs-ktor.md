@@ -2,7 +2,7 @@
 manualId: "spring-vs-ktor"
 title: "Spring Boot와 Ktor"
 locale: "ko"
-releaseRef: "0.3.0"
+releaseRef: "0.4.0"
 ---
 
 # Spring Boot와 Ktor
@@ -29,5 +29,5 @@ Ktor OCR은 [Ktor OCR 워크숍](../modules/ktor-ocr-api.md)에서 직접 조립
 
 ## 근거 소스
 
-- [Ktor 릴리스 모듈](https://github.com/bluetape4k/bluetape4k-image/tree/a571c30004f571fe8cfcddc29670c1404d212ec6/images-ktor)
-- [Spring Boot 릴리스 모듈](https://github.com/bluetape4k/bluetape4k-image/tree/a571c30004f571fe8cfcddc29670c1404d212ec6/images-spring-boot)
+- [Ktor 릴리스 모듈](https://github.com/bluetape4k/bluetape4k-image/tree/ea5175b083babf8880f53cf80c9a264a0c61777e/images-ktor)
+- [Spring Boot 릴리스 모듈](https://github.com/bluetape4k/bluetape4k-image/tree/ea5175b083babf8880f53cf80c9a264a0c61777e/images-spring-boot)

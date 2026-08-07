@@ -6,7 +6,7 @@ locale: "ko"
 kind: "library"
 gradlePath: ":bluetape4k-images-spring-boot"
 sourceDir: "images-spring-boot"
-releaseRef: "0.3.0"
+releaseRef: "0.4.0"
 artifact: io.github.bluetape4k.image:bluetape4k-images-spring-boot
 ---
 
@@ -18,7 +18,7 @@ artifact: io.github.bluetape4k.image:bluetape4k-images-spring-boot
 
 Spring Boot 4에서 이미지 객체 저장소, 서명 URL, reactive health와 Micrometer 메트릭을 구성합니다. 코루틴 기반 `ImageStorage` 계약을 제공하고 설정에 따라 로컬 또는 S3 구현체를 선택합니다.
 
-이름과 달리 `0.3.0`의 처리 자동 구성은 프로퍼티만 바인딩하며 실제 이미지 처리기나 필터 파이프라인 빈은 등록하지 않습니다.
+이름과 달리 `0.4.0`의 처리 자동 구성은 프로퍼티만 바인딩하며 실제 이미지 처리기나 필터 파이프라인 빈은 등록하지 않습니다.
 
 ## 사용하기 좋은 경우 {#when-to-use}
 
@@ -69,7 +69,7 @@ val saved = storage.download(key)
 
 로컬 저장소는 임시 디렉터리 기본값 대신 영속 경로를 명시하세요. `ValidationException`은 입력 문제, `NotFoundException`은 없음으로 처리하고 일반적인 재시도는 `TransientException`에만 적용합니다. 사용자 구현체도 코루틴 취소를 그대로 전파해야 합니다.
 
-인터페이스에는 원자적 업로드 계약이 있지만 `0.3.0` 로컬 구현은 임시 파일과 atomic rename이 아니라 `Files.write`/`Files.copy(REPLACE_EXISTING)`를 사용합니다. 장애 시 원자성을 보장한다고 문서화하면 안 됩니다.
+인터페이스에는 원자적 업로드 계약이 있지만 `0.4.0` 로컬 구현은 임시 파일과 atomic rename이 아니라 `Files.write`/`Files.copy(REPLACE_EXISTING)`를 사용합니다. 장애 시 원자성을 보장한다고 문서화하면 안 됩니다.
 
 ## 연동 {#integrations}
 
@@ -77,7 +77,7 @@ S3는 `bluetape4k-aws-spring-boot`의 `S3Operations`를 사용합니다. CloudFr
 
 ## 설정 {#configuration}
 
-저장소는 기본 활성화, `LOCAL`, 업로드·다운로드 50MiB 제한, JVM 임시 디렉터리 아래 로컬 경로를 사용합니다. `backend=s3`이고 `S3Operations`가 있으면 버킷이 필수입니다. S3를 선택했지만 해당 빈이 없으면 `0.3.0`은 로컬 저장소로 대체합니다.
+저장소는 기본 활성화, `LOCAL`, 업로드·다운로드 50MiB 제한, JVM 임시 디렉터리 아래 로컬 경로를 사용합니다. `backend=s3`이고 `S3Operations`가 있으면 버킷이 필수입니다. S3를 선택했지만 해당 빈이 없으면 `0.4.0`은 로컬 저장소로 대체합니다.
 
 CDN은 기본 비활성화이며 `s3_presign`, `cloudfront` 중에서 고릅니다. CloudFront 개인 키는 한 경로만 설정하고 가능하면 `privateKeyPath`를 사용하세요.
 
@@ -104,18 +104,18 @@ S3 401/403은 권한 오류, 404는 없음, 409는 충돌, 나머지는 일시 �
 <!-- release-readme-diagrams:start -->
 ## 배포본 다이어그램 {#release-diagrams}
 
-아래 그림은 `0.3.0` 배포본의 README 자산을 해당 배포 커밋에서 직접 불러옵니다. 이후 SNAPSHOT이 아니라 이 매뉴얼 버전의 구조와 실행 흐름을 보여 줍니다. 미리보기를 누르면 같은 배포 커밋의 SVG 원본이 열립니다.
+아래 그림은 `0.4.0` 배포본의 README 자산을 해당 배포 커밋에서 직접 불러옵니다. 이후 SNAPSHOT이 아니라 이 매뉴얼 버전의 구조와 실행 흐름을 보여 줍니다. 미리보기를 누르면 같은 배포 커밋의 SVG 원본이 열립니다.
 
 ### Images Spring Boot 아키텍처
 
-[![Images Spring Boot 아키텍처](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/images-spring-boot-architecture-01.png)](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/images-spring-boot-architecture-01.svg)
+[![Images Spring Boot 아키텍처](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/images-spring-boot-architecture-01.png)](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/images-spring-boot-architecture-01.svg)
 
-_배포본 README: [`images-spring-boot/README.ko.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/images-spring-boot/README.ko.md)_
+_배포본 README: [`images-spring-boot/README.ko.md`](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/images-spring-boot/README.ko.md)_
 
 <!-- release-readme-diagrams:end -->
 
 ## 근거 자료 {#sources}
 
-- [저장소 계약](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/images-spring-boot/src/main/kotlin/io/bluetape4k/images/spring/storage/ImageStorage.kt)
-- [저장소 자동 구성](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/images-spring-boot/src/main/kotlin/io/bluetape4k/images/spring/autoconfigure/ImagesStorageAutoConfiguration.kt)
-- [S3 구현과 제약](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/images-spring-boot/src/main/kotlin/io/bluetape4k/images/spring/storage/s3/S3ImageStorage.kt)
+- [저장소 계약](https://github.com/bluetape4k/bluetape4k-image/blob/0.4.0/images-spring-boot/src/main/kotlin/io/bluetape4k/images/spring/storage/ImageStorage.kt)
+- [저장소 자동 구성](https://github.com/bluetape4k/bluetape4k-image/blob/0.4.0/images-spring-boot/src/main/kotlin/io/bluetape4k/images/spring/autoconfigure/ImagesStorageAutoConfiguration.kt)
+- [S3 구현과 제약](https://github.com/bluetape4k/bluetape4k-image/blob/0.4.0/images-spring-boot/src/main/kotlin/io/bluetape4k/images/spring/storage/s3/S3ImageStorage.kt)

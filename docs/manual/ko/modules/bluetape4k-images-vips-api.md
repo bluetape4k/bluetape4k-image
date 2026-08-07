@@ -6,7 +6,7 @@ locale: "ko"
 kind: "library"
 gradlePath: ":bluetape4k-images-vips-api"
 sourceDir: "images-vips-api"
-releaseRef: "0.3.0"
+releaseRef: "0.4.0"
 artifact: io.github.bluetape4k.image:bluetape4k-images-vips-api
 ---
 
@@ -87,25 +87,25 @@ dependencies {
 <!-- release-readme-diagrams:start -->
 ## 배포본 다이어그램 {#release-diagrams}
 
-아래 그림은 `0.3.0` 배포본의 README 자산을 해당 배포 커밋에서 직접 불러옵니다. 이후 SNAPSHOT이 아니라 이 매뉴얼 버전의 구조와 실행 흐름을 보여 줍니다. 미리보기를 누르면 같은 배포 커밋의 SVG 원본이 열립니다.
+아래 그림은 `0.4.0` 배포본의 README 자산을 해당 배포 커밋에서 직접 불러옵니다. 이후 SNAPSHOT이 아니라 이 매뉴얼 버전의 구조와 실행 흐름을 보여 줍니다. 미리보기를 누르면 같은 배포 커밋의 SVG 원본이 열립니다.
 
 ### images vips api 아키텍처 2 다이어그램
 
-[![images vips api 아키텍처 2 다이어그램](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/images-vips-api-architecture-02.png)](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/images-vips-api-architecture-02.svg)
+[![images vips api 아키텍처 2 다이어그램](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/images-vips-api-architecture-02.png)](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/images-vips-api-architecture-02.svg)
 
-_배포본 README: [`images-vips-api/README.ko.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/images-vips-api/README.ko.md)_
+_배포본 README: [`images-vips-api/README.ko.md`](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/images-vips-api/README.ko.md)_
 
 ### images vips api 클래스 구조도
 
-[![images vips api 클래스 구조도](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/images-vips-api-class-01.png)](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/images-vips-api-class-01.svg)
+[![images vips api 클래스 구조도](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/images-vips-api-class-01.png)](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/images-vips-api-class-01.svg)
 
-_배포본 README: [`images-vips-api/README.ko.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/images-vips-api/README.ko.md)_
+_배포본 README: [`images-vips-api/README.ko.md`](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/images-vips-api/README.ko.md)_
 
 <!-- release-readme-diagrams:end -->
 
 ## 근거 자료 {#sources}
 
-- [VipsImage 계약](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/images-vips-api/src/main/kotlin/io/bluetape4k/images/vips/VipsImage.kt)
-- [런타임 종료 계약](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/images-vips-api/src/main/kotlin/io/bluetape4k/images/vips/VipsRuntime.kt)
-- [입력 제한](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/images-vips-api/src/main/kotlin/io/bluetape4k/images/vips/VipsLimits.kt)
-- [예외 정책](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/images-vips-api/src/main/kotlin/io/bluetape4k/images/vips/VipsExceptions.kt)
+- [VipsImage 계약](https://github.com/bluetape4k/bluetape4k-image/blob/0.4.0/images-vips-api/src/main/kotlin/io/bluetape4k/images/vips/VipsImage.kt)
+- [런타임 종료 계약](https://github.com/bluetape4k/bluetape4k-image/blob/0.4.0/images-vips-api/src/main/kotlin/io/bluetape4k/images/vips/VipsRuntime.kt)
+- [입력 제한](https://github.com/bluetape4k/bluetape4k-image/blob/0.4.0/images-vips-api/src/main/kotlin/io/bluetape4k/images/vips/VipsLimits.kt)
+- [예외 정책](https://github.com/bluetape4k/bluetape4k-image/blob/0.4.0/images-vips-api/src/main/kotlin/io/bluetape4k/images/vips/VipsExceptions.kt)

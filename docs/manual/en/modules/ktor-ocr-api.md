@@ -6,7 +6,7 @@ locale: "en"
 kind: "example"
 gradlePath: ":ktor-ocr-api"
 sourceDir: "examples/ktor-ocr-api"
-releaseRef: "0.3.0"
+releaseRef: "0.4.0"
 artifact: null
 ---
 
@@ -104,31 +104,31 @@ The workshop does not include authentication, persistence, batch OCR, preprocess
 <!-- release-readme-diagrams:start -->
 ## Release diagrams {#release-diagrams}
 
-These diagrams are loaded directly from README assets published with the `0.3.0` release and pinned to its immutable commit. They describe this manual's released structure and runtime flows, not later Snapshot changes. Select a preview to open the SVG at the same release commit.
+These diagrams are loaded directly from README assets published with the `0.4.0` release and pinned to its immutable commit. They describe this manual's released structure and runtime flows, not later Snapshot changes. Select a preview to open the SVG at the same release commit.
 
 ### Ktor OCR API Architecture
 
-[![Ktor OCR API Architecture](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/examples-ktor-ocr-api-architecture-01.png)](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/examples-ktor-ocr-api-architecture-01.svg)
+[![Ktor OCR API Architecture](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/examples-ktor-ocr-api-architecture-01.png)](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/examples-ktor-ocr-api-architecture-01.svg)
 
-_Release README: [`examples/ktor-ocr-api/README.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/examples/ktor-ocr-api/README.md)_
+_Release README: [`examples/ktor-ocr-api/README.md`](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/examples/ktor-ocr-api/README.md)_
 
 ### Ktor OCR API Scenario
 
-[![Ktor OCR API Scenario](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/examples-ktor-ocr-api-scenario-01.png)](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/examples-ktor-ocr-api-scenario-01.svg)
+[![Ktor OCR API Scenario](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/examples-ktor-ocr-api-scenario-01.png)](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/examples-ktor-ocr-api-scenario-01.svg)
 
-_Release README: [`examples/ktor-ocr-api/README.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/examples/ktor-ocr-api/README.md)_
+_Release README: [`examples/ktor-ocr-api/README.md`](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/examples/ktor-ocr-api/README.md)_
 
 ### Ktor OCR API Sequence
 
-[![Ktor OCR API Sequence](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/examples-ktor-ocr-api-sequence-01.png)](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/examples-ktor-ocr-api-sequence-01.svg)
+[![Ktor OCR API Sequence](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/examples-ktor-ocr-api-sequence-01.png)](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/examples-ktor-ocr-api-sequence-01.svg)
 
-_Release README: [`examples/ktor-ocr-api/README.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/examples/ktor-ocr-api/README.md)_
+_Release README: [`examples/ktor-ocr-api/README.md`](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/examples/ktor-ocr-api/README.md)_
 
 <!-- release-readme-diagrams:end -->
 
 ## Sources {#sources}
 
-- [Release README](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/examples/ktor-ocr-api/README.md)
-- [Application source](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/examples/ktor-ocr-api/src/main/kotlin/io/bluetape4k/images/examples/ktor/ocr/KtorOcrApiApplication.kt)
-- [Route tests](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/examples/ktor-ocr-api/src/test/kotlin/io/bluetape4k/images/examples/ktor/ocr/KtorOcrApiApplicationTest.kt)
-- [Gradle build file](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/examples/ktor-ocr-api/build.gradle.kts)
+- [Release README](https://github.com/bluetape4k/bluetape4k-image/blob/0.4.0/examples/ktor-ocr-api/README.md)
+- [Application source](https://github.com/bluetape4k/bluetape4k-image/blob/0.4.0/examples/ktor-ocr-api/src/main/kotlin/io/bluetape4k/images/examples/ktor/ocr/KtorOcrApiApplication.kt)
+- [Route tests](https://github.com/bluetape4k/bluetape4k-image/blob/0.4.0/examples/ktor-ocr-api/src/test/kotlin/io/bluetape4k/images/examples/ktor/ocr/KtorOcrApiApplicationTest.kt)
+- [Gradle build file](https://github.com/bluetape4k/bluetape4k-image/blob/0.4.0/examples/ktor-ocr-api/build.gradle.kts)

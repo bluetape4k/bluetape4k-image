@@ -6,7 +6,7 @@ locale: "ko"
 kind: "library"
 gradlePath: ":bluetape4k-images-captcha"
 sourceDir: "images-captcha"
-releaseRef: "0.3.0"
+releaseRef: "0.4.0"
 artifact: io.github.bluetape4k.image:bluetape4k-images-captcha
 ---
 
@@ -96,18 +96,18 @@ Java2D 렌더링은 CPU 작업입니다. `generateSuspend`는 렌더링 시작 �
 <!-- release-readme-diagrams:start -->
 ## 배포본 다이어그램 {#release-diagrams}
 
-아래 그림은 `0.3.0` 배포본의 README 자산을 해당 배포 커밋에서 직접 불러옵니다. 이후 SNAPSHOT이 아니라 이 매뉴얼 버전의 구조와 실행 흐름을 보여 줍니다. 미리보기를 누르면 같은 배포 커밋의 SVG 원본이 열립니다.
+아래 그림은 `0.4.0` 배포본의 README 자산을 해당 배포 커밋에서 직접 불러옵니다. 이후 SNAPSHOT이 아니라 이 매뉴얼 버전의 구조와 실행 흐름을 보여 줍니다. 미리보기를 누르면 같은 배포 커밋의 SVG 원본이 열립니다.
 
 ### CAPTCHA challenge preview
 
-[![CAPTCHA challenge preview](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/images-captcha-example-01.png)](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/images-captcha-example-01.svg)
+[![CAPTCHA challenge preview](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/images-captcha-example-01.png)](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/images-captcha-example-01.svg)
 
-_배포본 README: [`images-captcha/README.ko.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/images-captcha/README.ko.md)_
+_배포본 README: [`images-captcha/README.ko.md`](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/images-captcha/README.ko.md)_
 
 <!-- release-readme-diagrams:end -->
 
 ## 근거 자료 {#sources}
 
-- [생성기 계약](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/images-captcha/src/main/kotlin/io/bluetape4k/images/captcha/CaptchaGenerator.kt)
-- [옵션과 범위](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/images-captcha/src/main/kotlin/io/bluetape4k/images/captcha/CaptchaOptions.kt)
-- [한 번만 사용하는 검증](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/images-captcha/src/main/kotlin/io/bluetape4k/images/captcha/CaptchaVerification.kt)
+- [생성기 계약](https://github.com/bluetape4k/bluetape4k-image/blob/0.4.0/images-captcha/src/main/kotlin/io/bluetape4k/images/captcha/CaptchaGenerator.kt)
+- [옵션과 범위](https://github.com/bluetape4k/bluetape4k-image/blob/0.4.0/images-captcha/src/main/kotlin/io/bluetape4k/images/captcha/CaptchaOptions.kt)
+- [한 번만 사용하는 검증](https://github.com/bluetape4k/bluetape4k-image/blob/0.4.0/images-captcha/src/main/kotlin/io/bluetape4k/images/captcha/CaptchaVerification.kt)

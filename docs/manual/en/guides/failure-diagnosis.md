@@ -2,7 +2,7 @@
 manualId: "failure-diagnosis"
 title: "Failure Diagnosis"
 locale: "en"
-releaseRef: "0.3.0"
+releaseRef: "0.4.0"
 ---
 
 # Failure Diagnosis
@@ -33,5 +33,5 @@ Capture the failing input safely, backend, codec, dimensions, elapsed time, exce
 
 ## Sources
 
-- [Release troubleshooting guide](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/README.md#troubleshooting-libvips-startup)
-- [Storage exception hierarchy](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/images-spring-boot/src/main/kotlin/io/bluetape4k/images/spring/ImageStorageException.kt)
+- [Release troubleshooting guide](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/README.md#troubleshooting-libvips-startup)
+- [Storage exception hierarchy](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/images-spring-boot/src/main/kotlin/io/bluetape4k/images/spring/ImageStorageException.kt)

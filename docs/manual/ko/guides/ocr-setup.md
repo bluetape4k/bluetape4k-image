@@ -2,7 +2,7 @@
 manualId: "ocr-setup"
 title: "OCR 설정"
 locale: "ko"
-releaseRef: "0.3.0"
+releaseRef: "0.4.0"
 ---
 
 # OCR 설정
@@ -37,5 +37,5 @@ Ubuntu 또는 Debian:
 
 ## 근거 소스
 
-- [OCR 런타임 안내](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/images-ocr/README.ko.md)
-- [OCR 테스트 옵션](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/images-ocr/build.gradle.kts)
+- [OCR 런타임 안내](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/images-ocr/README.ko.md)
+- [OCR 테스트 옵션](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/images-ocr/build.gradle.kts)

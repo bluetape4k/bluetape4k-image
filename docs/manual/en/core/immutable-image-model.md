@@ -2,7 +2,7 @@
 manualId: "immutable-image-model"
 title: "Immutable Image Model"
 locale: "en"
-releaseRef: "0.3.0"
+releaseRef: "0.4.0"
 ---
 
 # Immutable Image Model
@@ -34,5 +34,5 @@ CAPTCHA and OCR consume the same model, while libvips uses a separate closeable 
 
 ## Sources
 
-- [ImmutableImage factories](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/images/src/main/kotlin/io/bluetape4k/images/ImmutableImageSupport.kt)
+- [ImmutableImage factories](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/images/src/main/kotlin/io/bluetape4k/images/ImmutableImageSupport.kt)
 - [Module reference](../modules/bluetape4k-images.md)

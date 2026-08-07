@@ -2,7 +2,7 @@
 manualId: "repository-overview"
 title: "Bluetape4k Image Manual"
 locale: "en"
-releaseRef: "0.3.0"
+releaseRef: "0.4.0"
 ---
 
 # Bluetape4k Image Manual
@@ -24,13 +24,13 @@ This manual is organized around decisions and production tasks rather than packa
 
 Applications select one central BOM version: <code>io.github.bluetape4k:bluetape4k-dependencies:&lt;version&gt;</code>. They do not need to align the image BOM, Scrimage, Ktor, Spring Boot, or native binding versions independently.
 
-The technical baseline is the immutable <code>0.3.0</code> release. It contains 8 published libraries, 1 published image BOM, 5 runnable examples, and 1 non-published benchmark project.
+The technical baseline is the immutable <code>0.4.0</code> release. It contains 8 published libraries, 1 published image BOM, 5 runnable examples, and 1 non-published benchmark project.
 
-- [Release tag 0.3.0](https://github.com/bluetape4k/bluetape4k-image/tree/0.3.0)
-- [Release commit a571c300](https://github.com/bluetape4k/bluetape4k-image/commit/a571c30004f571fe8cfcddc29670c1404d212ec6)
+- [Release tag 0.4.0](https://github.com/bluetape4k/bluetape4k-image/tree/0.4.0)
+- [Release commit a571c300](https://github.com/bluetape4k/bluetape4k-image/commit/ea5175b083babf8880f53cf80c9a264a0c61777e)
 - Runtime baseline: JDK 21 for the Scrimage, OCR, framework, and JNI paths; JDK 25 for the FFM backend
 
-Features added after this tag are deliberately absent. Every source link in this manual resolves against the `0.3.0` release tag or its pinned commit.
+Features added after this tag are deliberately absent. Every source link in this manual resolves against the `0.4.0` release tag or its pinned commit.
 
 ## Where to start
 
@@ -46,5 +46,5 @@ The library owns image adapters, common operations, and framework wiring. The ap
 
 ## Sources
 
-- [Release project registry](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/settings.gradle.kts)
-- [Release repository guide](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/README.md)
+- [Release project registry](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/settings.gradle.kts)
+- [Release repository guide](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/README.md)

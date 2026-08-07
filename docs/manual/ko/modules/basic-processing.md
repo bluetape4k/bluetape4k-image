@@ -6,7 +6,7 @@ locale: "ko"
 kind: "example"
 gradlePath: ":basic-processing"
 sourceDir: "examples/basic-processing"
-releaseRef: "0.3.0"
+releaseRef: "0.4.0"
 artifact: null
 ---
 
@@ -46,7 +46,7 @@ JDK 21 이상이면 됩니다. 외부 서비스나 네이티브 패키지는 필
 
 ## 작업별 API {#api-by-task}
 
-| 작업 | 0.3.0 구현 |
+| 작업 | 0.4.0 구현 |
 | --- | --- |
 | 테스트 이미지 읽기 | `suspendLoadImage(resourcePath(...))` |
 | 비율 유지 | `image.fit(width, height)` |
@@ -99,31 +99,31 @@ JDK 21 이상이면 됩니다. 외부 서비스나 네이티브 패키지는 필
 <!-- release-readme-diagrams:start -->
 ## 배포본 다이어그램 {#release-diagrams}
 
-아래 그림은 `0.3.0` 배포본의 README 자산을 해당 배포 커밋에서 직접 불러옵니다. 이후 SNAPSHOT이 아니라 이 매뉴얼 버전의 구조와 실행 흐름을 보여 줍니다. 미리보기를 누르면 같은 배포 커밋의 SVG 원본이 열립니다.
+아래 그림은 `0.4.0` 배포본의 README 자산을 해당 배포 커밋에서 직접 불러옵니다. 이후 SNAPSHOT이 아니라 이 매뉴얼 버전의 구조와 실행 흐름을 보여 줍니다. 미리보기를 누르면 같은 배포 커밋의 SVG 원본이 열립니다.
 
 ### 기본 처리 아키텍처
 
-[![기본 처리 아키텍처](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/examples-basic-processing-architecture-01.png)](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/examples-basic-processing-architecture-01.svg)
+[![기본 처리 아키텍처](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/examples-basic-processing-architecture-01.png)](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/examples-basic-processing-architecture-01.svg)
 
-_배포본 README: [`examples/basic-processing/README.ko.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/examples/basic-processing/README.ko.md)_
+_배포본 README: [`examples/basic-processing/README.ko.md`](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/examples/basic-processing/README.ko.md)_
 
 ### 기본 처리 실행 시나리오
 
-[![기본 처리 실행 시나리오](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/examples-basic-processing-scenario-01.png)](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/examples-basic-processing-scenario-01.svg)
+[![기본 처리 실행 시나리오](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/examples-basic-processing-scenario-01.png)](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/examples-basic-processing-scenario-01.svg)
 
-_배포본 README: [`examples/basic-processing/README.ko.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/examples/basic-processing/README.ko.md)_
+_배포본 README: [`examples/basic-processing/README.ko.md`](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/examples/basic-processing/README.ko.md)_
 
 ### 기본 처리 순서
 
-[![기본 처리 순서](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/examples-basic-processing-sequence-01.png)](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/docs/images/readme-diagrams/examples-basic-processing-sequence-01.svg)
+[![기본 처리 순서](https://raw.githubusercontent.com/bluetape4k/bluetape4k-image/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/examples-basic-processing-sequence-01.png)](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/docs/images/readme-diagrams/examples-basic-processing-sequence-01.svg)
 
-_배포본 README: [`examples/basic-processing/README.ko.md`](https://github.com/bluetape4k/bluetape4k-image/blob/a571c30004f571fe8cfcddc29670c1404d212ec6/examples/basic-processing/README.ko.md)_
+_배포본 README: [`examples/basic-processing/README.ko.md`](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/examples/basic-processing/README.ko.md)_
 
 <!-- release-readme-diagrams:end -->
 
 ## 근거 자료 {#sources}
 
-- [0.3.0 README](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/examples/basic-processing/README.ko.md)
-- [Quickstart 소스](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/examples/basic-processing/src/main/kotlin/io/bluetape4k/images/examples/basic/BasicImageProcessingQuickstart.kt)
-- [결과 검증 테스트](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/examples/basic-processing/src/test/kotlin/io/bluetape4k/images/examples/basic/BasicImageProcessingQuickstartTest.kt)
-- [Gradle 빌드 파일](https://github.com/bluetape4k/bluetape4k-image/blob/0.3.0/examples/basic-processing/build.gradle.kts)
+- [0.4.0 README](https://github.com/bluetape4k/bluetape4k-image/blob/0.4.0/examples/basic-processing/README.ko.md)
+- [Quickstart 소스](https://github.com/bluetape4k/bluetape4k-image/blob/0.4.0/examples/basic-processing/src/main/kotlin/io/bluetape4k/images/examples/basic/BasicImageProcessingQuickstart.kt)
+- [결과 검증 테스트](https://github.com/bluetape4k/bluetape4k-image/blob/0.4.0/examples/basic-processing/src/test/kotlin/io/bluetape4k/images/examples/basic/BasicImageProcessingQuickstartTest.kt)
+- [Gradle 빌드 파일](https://github.com/bluetape4k/bluetape4k-image/blob/0.4.0/examples/basic-processing/build.gradle.kts)
