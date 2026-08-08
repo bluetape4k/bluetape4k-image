@@ -1,10 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1580" height="980" viewBox="0 0 1580 980" role="img" aria-label="Bluetape4k Image Architecture">
 <defs>
-  <marker markerUnits="userSpaceOnUse" id="arrow-blue" markerWidth="10" markerHeight="10" refX="9" refY="3.5" orient="auto" viewBox="0 0 10 7" data-role="secondary" data-tip-direction="positive-x"><path d="M 0.8 0.7 L 9.2 3.5 L 0.8 6.3 Z" fill="#2563eb" stroke="#2563eb" stroke-width="0" stroke-dasharray="none"/></marker>
-  <marker markerUnits="userSpaceOnUse" id="arrow-green" markerWidth="10" markerHeight="10" refX="9" refY="3.5" orient="auto" viewBox="0 0 10 7" data-role="secondary" data-tip-direction="positive-x"><path d="M 0.8 0.7 L 9.2 3.5 L 0.8 6.3 Z" fill="#16a34a" stroke="#16a34a" stroke-width="0" stroke-dasharray="none"/></marker>
-  <marker markerUnits="userSpaceOnUse" id="arrow-orange" markerWidth="10" markerHeight="10" refX="9" refY="3.5" orient="auto" viewBox="0 0 10 7" data-role="secondary" data-tip-direction="positive-x"><path d="M 0.8 0.7 L 9.2 3.5 L 0.8 6.3 Z" fill="#ea580c" stroke="#ea580c" stroke-width="0" stroke-dasharray="none"/></marker>
-  <marker markerUnits="userSpaceOnUse" id="arrow-purple" markerWidth="10" markerHeight="10" refX="9" refY="3.5" orient="auto" viewBox="0 0 10 7" data-role="secondary" data-tip-direction="positive-x"><path d="M 0.8 0.7 L 9.2 3.5 L 0.8 6.3 Z" fill="#9333ea" stroke="#9333ea" stroke-width="0" stroke-dasharray="none"/></marker>
-  <marker markerUnits="userSpaceOnUse" id="arrow-gray" markerWidth="10" markerHeight="10" refX="9" refY="3.5" orient="auto" viewBox="0 0 10 7" data-role="secondary" data-tip-direction="positive-x"><path d="M 0.8 0.7 L 9.2 3.5 L 0.8 6.3 Z" fill="#6b7280" stroke="#6b7280" stroke-width="0" stroke-dasharray="none"/></marker>
+  <marker markerUnits="userSpaceOnUse" id="arrow-blue" markerWidth="14" markerHeight="14" viewBox="0 0 14 14" refX="12" refY="7" orient="auto" data-role="primary" data-tip-direction="positive-x"><path data-arrowhead="true" data-role="primary" data-size="14x14" data-solid-head="true" d="M 1 1 L 13 7 L 1 13 Z" fill="#2563eb" stroke="#2563eb" stroke-width="0" stroke-dasharray="none"/></marker>
+  <marker markerUnits="userSpaceOnUse" id="arrow-green" markerWidth="14" markerHeight="14" viewBox="0 0 14 14" refX="12" refY="7" orient="auto" data-role="primary" data-tip-direction="positive-x"><path data-arrowhead="true" data-role="primary" data-size="14x14" data-solid-head="true" d="M 1 1 L 13 7 L 1 13 Z" fill="#16a34a" stroke="#16a34a" stroke-width="0" stroke-dasharray="none"/></marker>
+  <marker markerUnits="userSpaceOnUse" id="arrow-orange" markerWidth="14" markerHeight="14" viewBox="0 0 14 14" refX="12" refY="7" orient="auto" data-role="primary" data-tip-direction="positive-x"><path data-arrowhead="true" data-role="primary" data-size="14x14" data-solid-head="true" d="M 1 1 L 13 7 L 1 13 Z" fill="#ea580c" stroke="#ea580c" stroke-width="0" stroke-dasharray="none"/></marker>
+  <marker markerUnits="userSpaceOnUse" id="arrow-purple" markerWidth="14" markerHeight="14" viewBox="0 0 14 14" refX="12" refY="7" orient="auto" data-role="primary" data-tip-direction="positive-x"><path data-arrowhead="true" data-role="primary" data-size="14x14" data-solid-head="true" d="M 1 1 L 13 7 L 1 13 Z" fill="#9333ea" stroke="#9333ea" stroke-width="0" stroke-dasharray="none"/></marker>
+  <marker markerUnits="userSpaceOnUse" id="arrow-gray" markerWidth="10" markerHeight="10" viewBox="0 0 10 10" refX="8" refY="5" orient="auto" data-role="secondary" data-tip-direction="positive-x"><path data-arrowhead="true" data-role="secondary" data-size="10x10" data-solid-head="true" d="M 1 1 L 9 5 L 1 9 Z" fill="#6b7280" stroke="#6b7280" stroke-width="0" stroke-dasharray="none"/></marker>
   <style>
     .bg{fill:#ffffff}.title{font-family:"Architects Daughter";font-size:42px;fill:#111827;font-weight:400}.subtitle{font-family:"Comic Mono";font-size:16px;fill:#6b7280;font-weight:400}
     .layer{fill:#f3f6fa;stroke:#cbd5e1;stroke-width:1.4;stroke-dasharray:8 6}.layer-title{font-family:"Comic Mono";font-size:16px;fill:#4b5563;font-weight:700;letter-spacing:0.8px}
@@ -27,27 +27,27 @@
 <rect class="layer" x="88" y="704" width="1404" height="150" rx="8"/>
 <text class="layer-title" x="108" y="724">NATIVE ACCELERATION + MEASUREMENT</text>
 <g id="edges">
-<path data-connector="true" class="edge-blue" d="M 435 260 L 630 260"/>
+<path data-connector="true" marker-end="url(#arrow-blue)" class="edge-blue" d="M 435 260 L 630 260"/>
 <text class="label" x="533.0" y="226.0" text-anchor="middle">platform</text>
-<path data-connector="true" class="edge-blue" d="M 950 260 L 1145 260"/>
+<path data-connector="true" marker-end="url(#arrow-blue)" class="edge-blue" d="M 950 260 L 1145 260"/>
 <text class="label" x="1047.0" y="226.0" text-anchor="middle">try locally</text>
-<path data-connector="true" class="edge-blue" d="M 790 310 L 790 365"/>
+<path data-connector="true" marker-end="url(#arrow-blue)" class="edge-blue" d="M 790 310 L 790 365"/>
 <text class="label" x="834.0" y="337.0" text-anchor="middle">aligns</text>
-<path data-connector="true" class="edge-orange" d="M 630 423 L 467 423 Q 449 423 449 441 L 449 576.5 Q 449 592 433.5 592 L 418 592"/>
+<path data-connector="true" marker-end="url(#arrow-orange)" class="edge-orange" d="M 630 423 L 467 423 Q 449 423 449 441 L 449 576.5 Q 449 592 433.5 592 L 418 592"/>
 <text class="label" x="533.0" y="455.0" text-anchor="middle">challenge</text>
-<path data-connector="true" class="edge-purple" d="M 710 481 L 710 498 Q 710 515 693 515 L 629.5 515 Q 617 515 617 527.5 L 617 540"/>
+<path data-connector="true" marker-end="url(#arrow-purple)" class="edge-purple" d="M 710 481 L 710 498 Q 710 515 693 515 L 629.5 515 Q 617 515 617 524 L 617 540"/>
 <text class="label" x="664.0" y="500.0" text-anchor="middle">text</text>
-<path data-connector="true" class="edge-blue" d="M 870 481 L 870 498 Q 870 515 887 515 L 950.5 515 Q 963 515 963 527.5 L 963 540"/>
+<path data-connector="true" marker-end="url(#arrow-blue)" class="edge-blue" d="M 870 481 L 870 498 Q 870 515 887 515 L 950.5 515 Q 963 515 963 524 L 963 540"/>
 <text class="label" x="918.0" y="500.0" text-anchor="middle">routes</text>
-<path data-connector="true" class="edge-green" d="M 950 448 L 1118 448 Q 1136 448 1136 466 L 1136 579 Q 1136 592 1149 592 L 1162 592"/>
+<path data-connector="true" marker-end="url(#arrow-green)" class="edge-green" d="M 950 448 L 1118 448 Q 1136 448 1136 466 L 1136 579 Q 1136 592 1147 592 L 1162 592"/>
 <text class="label" x="1063.0" y="390.0" text-anchor="middle">auto config</text>
-<path data-connector="true" class="edge-purple" d="M 790 481 L 790 657 Q 790 675 772 675 L 635 675 Q 617 675 617 693 L 617 736"/>
+<path data-connector="true" marker-end="url(#arrow-purple)" class="edge-purple" d="M 790 481 L 790 657 Q 790 675 772 675 L 635 675 Q 617 675 617 693 L 617 736"/>
 <text class="label" x="703.0" y="656.0" text-anchor="middle">native option</text>
-<path data-connector="true" class="edge-orange" d="M 466 790 L 418 790"/>
+<path data-connector="true" marker-end="url(#arrow-orange)" class="edge-orange" d="M 466 790 L 418 790"/>
 <text class="label" x="443.0" y="756.0" text-anchor="middle">JNI</text>
-<path data-connector="true" class="edge-green" d="M 768 790 L 812 790"/>
+<path data-connector="true" marker-end="url(#arrow-green)" class="edge-green" d="M 768 790 L 812 790"/>
 <text class="label" x="790.0" y="756.0" text-anchor="middle">FFM</text>
-<path data-connector="true" class="edge-gray" d="M 950 423 L 1463 423 Q 1481 423 1481 441 L 1481 781.5 Q 1481 790 1472.5 790 L 1464 790"/>
+<path data-connector="true" marker-end="url(#arrow-gray)" class="edge-gray" d="M 950 423 L 1463 423 Q 1481 423 1481 441 L 1481 781.5 Q 1481 790 1473 790 L 1462 790"/>
 <text class="label" x="1127.0" y="650.0" text-anchor="middle">measure</text>
 </g><g id="cards">
 <g id="apps">
@@ -143,10 +143,10 @@
 </g>
 </g>
 <g id="legend" transform="translate(108 895)">
-<line x1="0" y1="8" x2="34" y2="8" class="edge-blue"/><text class="legend" x="46" y="12">adoption path</text>
-<line x1="170" y1="8" x2="204" y2="8" class="edge-green"/><text class="legend" x="216" y="12">service integration</text>
-<line x1="390" y1="8" x2="424" y2="8" class="edge-purple"/><text class="legend" x="436" y="12">native option</text>
-<line x1="580" y1="8" x2="614" y2="8" class="edge-gray"/><text class="legend" x="626" y="12">benchmark feedback</text>
+<line data-connector="true" marker-end="url(#arrow-blue)" x1="0" y1="8" x2="34" y2="8" class="edge-blue"/><text class="legend" x="46" y="12">adoption path</text>
+<line data-connector="true" marker-end="url(#arrow-green)" x1="170" y1="8" x2="204" y2="8" class="edge-green"/><text class="legend" x="216" y="12">service integration</text>
+<line data-connector="true" marker-end="url(#arrow-purple)" x1="390" y1="8" x2="424" y2="8" class="edge-purple"/><text class="legend" x="436" y="12">native option</text>
+<line data-connector="true" marker-end="url(#arrow-gray)" x1="580" y1="8" x2="614" y2="8" class="edge-gray"/><text class="legend" x="626" y="12">benchmark feedback</text>
 </g>
 <text class="note" x="790.0" y="948" text-anchor="middle">https://github.com/bluetape4k/bluetape4k-image | project: bluetape4k-image | module: root</text>
 </svg>
