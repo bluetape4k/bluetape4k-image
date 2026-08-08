@@ -154,11 +154,11 @@ def header(width: int, height: int, title: str, subtitle: str) -> list[str]:
     return [
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}" role="img" aria-label="{esc(title)}">',
         "<defs>",
-        '  <marker id="arrow-blue" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#2563eb"/></marker>',
-        '  <marker id="arrow-green" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#16a34a"/></marker>',
-        '  <marker id="arrow-orange" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#ea580c"/></marker>',
-        '  <marker id="arrow-purple" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#9333ea"/></marker>',
-        '  <marker id="arrow-gray" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#6b7280"/></marker>',
+        '  <marker markerUnits="userSpaceOnUse" id="arrow-blue" markerWidth="14" markerHeight="14" viewBox="0 0 14 14" refX="12" refY="7" orient="auto" data-role="primary" data-tip-direction="positive-x"><path data-arrowhead="true" data-role="primary" data-size="14x14" data-solid-head="true" d="M 1 1 L 13 7 L 1 13 Z" fill="#2563eb" stroke="#2563eb" stroke-width="0" stroke-dasharray="none"/></marker>',
+        '  <marker markerUnits="userSpaceOnUse" id="arrow-green" markerWidth="14" markerHeight="14" viewBox="0 0 14 14" refX="12" refY="7" orient="auto" data-role="primary" data-tip-direction="positive-x"><path data-arrowhead="true" data-role="primary" data-size="14x14" data-solid-head="true" d="M 1 1 L 13 7 L 1 13 Z" fill="#16a34a" stroke="#16a34a" stroke-width="0" stroke-dasharray="none"/></marker>',
+        '  <marker markerUnits="userSpaceOnUse" id="arrow-orange" markerWidth="14" markerHeight="14" viewBox="0 0 14 14" refX="12" refY="7" orient="auto" data-role="primary" data-tip-direction="positive-x"><path data-arrowhead="true" data-role="primary" data-size="14x14" data-solid-head="true" d="M 1 1 L 13 7 L 1 13 Z" fill="#ea580c" stroke="#ea580c" stroke-width="0" stroke-dasharray="none"/></marker>',
+        '  <marker markerUnits="userSpaceOnUse" id="arrow-purple" markerWidth="14" markerHeight="14" viewBox="0 0 14 14" refX="12" refY="7" orient="auto" data-role="primary" data-tip-direction="positive-x"><path data-arrowhead="true" data-role="primary" data-size="14x14" data-solid-head="true" d="M 1 1 L 13 7 L 1 13 Z" fill="#9333ea" stroke="#9333ea" stroke-width="0" stroke-dasharray="none"/></marker>',
+        '  <marker markerUnits="userSpaceOnUse" id="arrow-gray" markerWidth="10" markerHeight="10" viewBox="0 0 10 10" refX="8" refY="5" orient="auto" data-role="secondary" data-tip-direction="positive-x"><path data-arrowhead="true" data-role="secondary" data-size="10x10" data-solid-head="true" d="M 1 1 L 9 5 L 1 9 Z" fill="#6b7280" stroke="#6b7280" stroke-width="0" stroke-dasharray="none"/></marker>',
         "  <style>",
         '    .canvas{fill:#ffffff}.panel{fill:#f3f6fa;stroke:#cbd5e1;stroke-width:1.4;stroke-dasharray:8 6}.chart-panel{fill:#ffffff;stroke:#bfdbfe;stroke-width:1.7}.card{fill:#ffffff;stroke:#94a3b8;stroke-width:1.9}.badge-text{font-family:"Comic Mono";font-size:11px;fill:#374151;font-weight:700}',
         '    .edge-blue{stroke:#2563eb;stroke-width:2.1;fill:none;marker-end:url(#arrow-blue);stroke-linecap:round;stroke-linejoin:round}.edge-green{stroke:#16a34a;stroke-width:2.1;fill:none;marker-end:url(#arrow-green);stroke-linecap:round;stroke-linejoin:round}.edge-orange{stroke:#ea580c;stroke-width:2;fill:none;marker-end:url(#arrow-orange);stroke-linecap:round;stroke-linejoin:round}.edge-purple{stroke:#9333ea;stroke-width:2;fill:none;marker-end:url(#arrow-purple);stroke-linecap:round;stroke-linejoin:round}.edge-gray{stroke:#6b7280;stroke-width:1.8;fill:none;marker-end:url(#arrow-gray);stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:6 4}.dashed{stroke-dasharray:6 4}',
@@ -259,7 +259,9 @@ def edge_points(edge: Edge, cards: dict[str, Card]) -> tuple[tuple[int, int], ..
 def render_edge(edge: Edge, cards: dict[str, Card]) -> list[str]:
     points = edge_points(edge, cards)
     d = " ".join([f"M {points[0][0]} {points[0][1]}", *(f"L {x} {y}" for x, y in points[1:])])
-    out = [f'<path class="{edge_css(edge.color, edge.dashed)}" d="{d}"/>']
+    css = edge_css(edge.color, edge.dashed)
+    marker = {"edge-blue": "arrow-blue", "edge-green": "arrow-green", "edge-orange": "arrow-orange", "edge-purple": "arrow-purple", "edge-gray": "arrow-gray"}[css]
+    out = [f'<path data-connector="true" marker-end="url(#{marker})" class="{css}" d="{d}"/>']
     if edge.label:
         if edge.label_pos is not None:
             x, y = edge.label_pos
@@ -487,11 +489,11 @@ def render_fireworks_architecture(spec: DiagramSpec) -> str:
     out = [
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{HEIGHT}" viewBox="0 0 {width} {HEIGHT}" role="img" aria-label="{esc(spec.title)}">',
         "<defs>",
-        '  <marker id="arrow-blue" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#2563eb"/></marker>',
-        '  <marker id="arrow-green" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#16a34a"/></marker>',
-        '  <marker id="arrow-orange" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#ea580c"/></marker>',
-        '  <marker id="arrow-purple" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#9333ea"/></marker>',
-        '  <marker id="arrow-gray" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#6b7280"/></marker>',
+        '  <marker markerUnits="userSpaceOnUse" id="arrow-blue" markerWidth="14" markerHeight="14" viewBox="0 0 14 14" refX="12" refY="7" orient="auto" data-role="primary" data-tip-direction="positive-x"><path data-arrowhead="true" data-role="primary" data-size="14x14" data-solid-head="true" d="M 1 1 L 13 7 L 1 13 Z" fill="#2563eb" stroke="#2563eb" stroke-width="0" stroke-dasharray="none"/></marker>',
+        '  <marker markerUnits="userSpaceOnUse" id="arrow-green" markerWidth="14" markerHeight="14" viewBox="0 0 14 14" refX="12" refY="7" orient="auto" data-role="primary" data-tip-direction="positive-x"><path data-arrowhead="true" data-role="primary" data-size="14x14" data-solid-head="true" d="M 1 1 L 13 7 L 1 13 Z" fill="#16a34a" stroke="#16a34a" stroke-width="0" stroke-dasharray="none"/></marker>',
+        '  <marker markerUnits="userSpaceOnUse" id="arrow-orange" markerWidth="14" markerHeight="14" viewBox="0 0 14 14" refX="12" refY="7" orient="auto" data-role="primary" data-tip-direction="positive-x"><path data-arrowhead="true" data-role="primary" data-size="14x14" data-solid-head="true" d="M 1 1 L 13 7 L 1 13 Z" fill="#ea580c" stroke="#ea580c" stroke-width="0" stroke-dasharray="none"/></marker>',
+        '  <marker markerUnits="userSpaceOnUse" id="arrow-purple" markerWidth="14" markerHeight="14" viewBox="0 0 14 14" refX="12" refY="7" orient="auto" data-role="primary" data-tip-direction="positive-x"><path data-arrowhead="true" data-role="primary" data-size="14x14" data-solid-head="true" d="M 1 1 L 13 7 L 1 13 Z" fill="#9333ea" stroke="#9333ea" stroke-width="0" stroke-dasharray="none"/></marker>',
+        '  <marker markerUnits="userSpaceOnUse" id="arrow-gray" markerWidth="10" markerHeight="10" viewBox="0 0 10 10" refX="8" refY="5" orient="auto" data-role="secondary" data-tip-direction="positive-x"><path data-arrowhead="true" data-role="secondary" data-size="10x10" data-solid-head="true" d="M 1 1 L 9 5 L 1 9 Z" fill="#6b7280" stroke="#6b7280" stroke-width="0" stroke-dasharray="none"/></marker>',
         "  <style>",
         '    .bg{fill:#ffffff}.title{font-family:"Architects Daughter";font-size:42px;fill:#111827;font-weight:400}.subtitle{font-family:"Comic Mono";font-size:16px;fill:#6b7280;font-weight:400}',
         '    .layer{fill:#f3f6fa;stroke:#cbd5e1;stroke-width:1.4;stroke-dasharray:8 6}.layer-title{font-family:"Comic Mono";font-size:16px;fill:#4b5563;font-weight:700;letter-spacing:0.8px}',
@@ -531,7 +533,8 @@ def render_fireworks_architecture(spec: DiagramSpec) -> str:
         css = edge_styles.get(edge.color, "edge-blue")
         if edge.dashed:
             css = "edge-gray"
-        out.append(f'<path class="{css}" d="{d}"/>')
+        marker = {"edge-blue": "arrow-blue", "edge-green": "arrow-green", "edge-orange": "arrow-orange", "edge-purple": "arrow-purple", "edge-gray": "arrow-gray"}[css]
+        out.append(f'<path data-connector="true" marker-end="url(#{marker})" class="{css}" d="{d}"/>')
         if edge.label:
             if edge.label_pos is not None:
                 x, y = edge.label_pos
@@ -573,10 +576,10 @@ def render_fireworks_architecture(spec: DiagramSpec) -> str:
         [
             "</g>",
             '<g id="legend" transform="translate(108 895)">',
-            '<line x1="0" y1="8" x2="34" y2="8" class="edge-blue"/><text class="legend" x="46" y="12">adoption path</text>',
-            '<line x1="170" y1="8" x2="204" y2="8" class="edge-green"/><text class="legend" x="216" y="12">service integration</text>',
-            '<line x1="390" y1="8" x2="424" y2="8" class="edge-purple"/><text class="legend" x="436" y="12">native option</text>',
-            '<line x1="580" y1="8" x2="614" y2="8" class="edge-gray"/><text class="legend" x="626" y="12">benchmark feedback</text>',
+            '<line data-connector="true" marker-end="url(#arrow-blue)" x1="0" y1="8" x2="34" y2="8" class="edge-blue"/><text class="legend" x="46" y="12">adoption path</text>',
+            '<line data-connector="true" marker-end="url(#arrow-green)" x1="170" y1="8" x2="204" y2="8" class="edge-green"/><text class="legend" x="216" y="12">service integration</text>',
+            '<line data-connector="true" marker-end="url(#arrow-purple)" x1="390" y1="8" x2="424" y2="8" class="edge-purple"/><text class="legend" x="436" y="12">native option</text>',
+            '<line data-connector="true" marker-end="url(#arrow-gray)" x1="580" y1="8" x2="614" y2="8" class="edge-gray"/><text class="legend" x="626" y="12">benchmark feedback</text>',
             "</g>",
             f'<text class="note" x="{width / 2:.1f}" y="948" text-anchor="middle">{esc(footer_text(spec.base))}</text>',
             "</svg>",
