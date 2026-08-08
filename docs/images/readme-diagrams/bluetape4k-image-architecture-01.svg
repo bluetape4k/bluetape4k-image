@@ -35,9 +35,9 @@
 <text class="label" x="834.0" y="337.0" text-anchor="middle">aligns</text>
 <path data-connector="true" marker-end="url(#arrow-orange)" class="edge-orange" d="M 630 423 L 467 423 Q 449 423 449 441 L 449 576.5 Q 449 592 433.5 592 L 418 592"/>
 <text class="label" x="533.0" y="455.0" text-anchor="middle">challenge</text>
-<path data-connector="true" marker-end="url(#arrow-purple)" class="edge-purple" d="M 710 481 L 710 498 Q 710 515 693 515 L 629.5 515 Q 617 515 617 524 L 617 540"/>
+<path data-connector="true" marker-end="url(#arrow-purple)" class="edge-purple" d="M 710 481 L 710 498 Q 710 515 693 515 L 629.5 515 Q 617 515 617 525 L 617 540"/>
 <text class="label" x="664.0" y="500.0" text-anchor="middle">text</text>
-<path data-connector="true" marker-end="url(#arrow-blue)" class="edge-blue" d="M 870 481 L 870 498 Q 870 515 887 515 L 950.5 515 Q 963 515 963 524 L 963 540"/>
+<path data-connector="true" marker-end="url(#arrow-blue)" class="edge-blue" d="M 870 481 L 870 498 Q 870 515 887 515 L 950.5 515 Q 963 515 963 525 L 963 540"/>
 <text class="label" x="918.0" y="500.0" text-anchor="middle">routes</text>
 <path data-connector="true" marker-end="url(#arrow-green)" class="edge-green" d="M 950 448 L 1118 448 Q 1136 448 1136 466 L 1136 579 Q 1136 592 1147 592 L 1162 592"/>
 <text class="label" x="1063.0" y="390.0" text-anchor="middle">auto config</text>
@@ -47,7 +47,7 @@
 <text class="label" x="443.0" y="756.0" text-anchor="middle">JNI</text>
 <path data-connector="true" marker-end="url(#arrow-green)" class="edge-green" d="M 768 790 L 812 790"/>
 <text class="label" x="790.0" y="756.0" text-anchor="middle">FFM</text>
-<path data-connector="true" marker-end="url(#arrow-gray)" class="edge-gray" d="M 950 423 L 1463 423 Q 1481 423 1481 441 L 1481 781.5 Q 1481 790 1473 790 L 1462 790"/>
+<path data-connector="true" marker-end="url(#arrow-gray)" class="edge-gray" d="M 950 423 L 1463 423 Q 1481 423 1481 441 L 1481 780.5 Q 1481 790 1473 790 L 1462 790"/>
 <text class="label" x="1127.0" y="650.0" text-anchor="middle">measure</text>
 </g><g id="cards">
 <g id="apps">
