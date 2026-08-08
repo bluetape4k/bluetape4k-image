@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="2100" height="1540" viewBox="0 0 2100 1540" role="img" aria-label="Ktor OCR API Architecture">
 <defs>
-  <marker markerUnits="userSpaceOnUse" id="arrow-blue" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#2563eb" stroke="#2563eb" stroke-width="0" stroke-dasharray="none" style="stroke-dasharray:none"/></marker>
-  <marker markerUnits="userSpaceOnUse" id="arrow-gray" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#6b7280" stroke="#6b7280" stroke-width="0" stroke-dasharray="none" style="stroke-dasharray:none"/></marker>
+  <marker markerUnits="userSpaceOnUse" id="arrow-blue" markerWidth="10" markerHeight="10" refX="9" refY="3.5" orient="auto" viewBox="0 0 10 7" data-role="secondary" data-tip-direction="positive-x"><path d="M 0.8 0.7 L 9.2 3.5 L 0.8 6.3 Z" fill="#2563eb" stroke="#2563eb" stroke-width="0" stroke-dasharray="none"/></marker>
+  <marker markerUnits="userSpaceOnUse" id="arrow-gray" markerWidth="10" markerHeight="10" refX="9" refY="3.5" orient="auto" viewBox="0 0 10 7" data-role="secondary" data-tip-direction="positive-x"><path d="M 0.8 0.7 L 9.2 3.5 L 0.8 6.3 Z" fill="#6b7280" stroke="#6b7280" stroke-width="0" stroke-dasharray="none"/></marker>
   <style>
     .canvas{fill:#ffffff}
     .title{font-family:"Architects Daughter";font-size:42px;fill:#111827;font-weight:400}

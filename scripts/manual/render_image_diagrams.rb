@@ -21,8 +21,8 @@ end
 def defs
   markers = COLORS.slice(:cyan, :teal, :purple, :amber, :rose).map do |name, color|
     <<~SVG
-      <marker id="arrow-#{name}" viewBox="0 0 14 14" refX="13" refY="7" markerWidth="14" markerHeight="14" orient="auto" markerUnits="userSpaceOnUse">
-        <path d="M0 0 L14 7 L0 14 Z" fill="#{color}" stroke="#{color}"/>
+      <marker id="arrow-#{name}" viewBox="0 0 14 14" refX="13" refY="7" markerWidth="14" markerHeight="14" orient="auto" markerUnits="userSpaceOnUse" data-role="primary" data-tip-direction="positive-x">
+        <path d="M0 0 L14 7 L0 14 Z" fill="#{color}" stroke="#{color}" stroke-dasharray="none"/>
       </marker>
     SVG
   end.join
@@ -178,11 +178,11 @@ end
 def benchmark_interpretation_map
   body = <<~SVG
     <g id="connectors" filter="url(#glow)">
-      #{edge("question-resize", "M800 285 V335 H190 V390", color: :cyan)}
-      #{edge("question-encode", "M800 285 V335 H495 V390", color: :teal)}
+      #{edge("question-resize", "M800 285 V327 Q800 335 792 335 H198 Q190 335 190 343 V390", color: :cyan)}
+      #{edge("question-encode", "M800 285 V327 Q800 335 792 335 H503 Q495 335 495 343 V390", color: :teal)}
       #{edge("question-pipeline", "M800 285 V390", color: :purple)}
-      #{edge("question-io", "M800 285 V335 H1105 V390", color: :amber)}
-      #{edge("question-memory", "M800 285 V335 H1410 V390", color: :rose)}
+      #{edge("question-io", "M800 285 V327 Q800 335 808 335 H1097 Q1105 335 1105 343 V390", color: :amber)}
+      #{edge("question-memory", "M800 285 V327 Q800 335 808 335 H1402 Q1410 335 1410 343 V390", color: :rose)}
       #{edge("cases-env", "M800 610 V675", color: :purple)}
       #{edge("env-decision", "M800 795 V850", color: :teal)}
     </g>
