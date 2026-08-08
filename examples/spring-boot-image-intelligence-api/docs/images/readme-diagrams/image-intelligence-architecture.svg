@@ -1,11 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1080" viewBox="0 0 1800 1080" role="img" aria-label="Image Intelligence API architecture">
   <defs>
-    <marker id="arrow-blue" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" refX="13" refY="7" orient="auto">
-      <polygon points="0,0 14,7 0,14" fill="#75a7d9"/>
-    </marker>
-    <marker id="arrow-green" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" refX="13" refY="7" orient="auto">
-      <polygon points="0,0 14,7 0,14" fill="#7fb68f"/>
-    </marker>
+    <marker id="arrow-blue" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" refX="13" refY="7" orient="auto" viewBox="0 0 14 14" data-role="primary" data-tip-direction="positive-x"><path d="M 1.12 1.4 L 12.88 7 L 1.12 12.6 Z" fill="#75a7d9" stroke="#75a7d9" stroke-width="0" stroke-dasharray="none"/></marker>
+    <marker id="arrow-green" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" refX="13" refY="7" orient="auto" viewBox="0 0 14 14" data-role="primary" data-tip-direction="positive-x"><path d="M 1.12 1.4 L 12.88 7 L 1.12 12.6 Z" fill="#7fb68f" stroke="#7fb68f" stroke-width="0" stroke-dasharray="none"/></marker>
     <filter id="shadow" x="-12%" y="-12%" width="124%" height="136%">
       <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#020617" flood-opacity="0.5"/>
     </filter>
