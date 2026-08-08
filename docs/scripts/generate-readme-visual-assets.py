@@ -256,9 +256,69 @@ def edge_points(edge: Edge, cards: dict[str, Card]) -> tuple[tuple[int, int], ..
     return ((source.cx, source.y), (target.cx, target.bottom))
 
 
+def _format_coordinate(value: float) -> str:
+    if float(value).is_integer():
+        return str(int(value))
+    return f"{value:.1f}".rstrip("0").rstrip(".")
+
+
+def rounded_orthogonal_path(
+    points: tuple[tuple[int, int], ...], radius: float = 18.0, terminal_clearance: float = 15.0
+) -> str:
+    if len(points) < 2:
+        raise ValueError("an edge route needs at least two points")
+    if radius <= 0:
+        raise ValueError("edge bend radius must be positive")
+    if terminal_clearance < 0:
+        raise ValueError("terminal clearance must be non-negative")
+
+    def unit_vector(delta: tuple[int, int]) -> tuple[int, int]:
+        if (delta[0] == 0) == (delta[1] == 0):
+            raise ValueError("edge routes must be orthogonal")
+        return (
+            0 if delta[0] == 0 else (1 if delta[0] > 0 else -1),
+            0 if delta[1] == 0 else (1 if delta[1] > 0 else -1),
+        )
+
+    commands = [f"M {points[0][0]} {points[0][1]}"]
+    for source, corner, target in zip(points, points[1:], points[2:]):
+        incoming = (corner[0] - source[0], corner[1] - source[1])
+        outgoing = (target[0] - corner[0], target[1] - corner[1])
+        incoming_unit = unit_vector(incoming)
+        outgoing_unit = unit_vector(outgoing)
+        if incoming_unit[0] * outgoing_unit[0] + incoming_unit[1] * outgoing_unit[1] != 0:
+            raise ValueError("edge turns must change axis at each corner")
+
+        bend = min(
+            radius,
+            max(abs(incoming[0]), abs(incoming[1])) / 2,
+            max(abs(outgoing[0]), abs(outgoing[1])) / 2,
+        )
+        approach = (
+            corner[0] - incoming_unit[0] * bend,
+            corner[1] - incoming_unit[1] * bend,
+        )
+        departure_bend = bend
+        if target == points[-1]:
+            out_length = max(abs(outgoing[0]), abs(outgoing[1]))
+            if out_length < terminal_clearance:
+                raise ValueError("edge route is too short for terminal arrowhead clearance")
+            departure_bend = min(bend, out_length - terminal_clearance)
+        departure = (
+            corner[0] + outgoing_unit[0] * departure_bend,
+            corner[1] + outgoing_unit[1] * departure_bend,
+        )
+        commands.append(f"L {_format_coordinate(approach[0])} {_format_coordinate(approach[1])}")
+        commands.append(
+            f"Q {corner[0]} {corner[1]} {_format_coordinate(departure[0])} {_format_coordinate(departure[1])}"
+        )
+    commands.append(f"L {points[-1][0]} {points[-1][1]}")
+    return " ".join(commands)
+
+
 def render_edge(edge: Edge, cards: dict[str, Card]) -> list[str]:
     points = edge_points(edge, cards)
-    d = " ".join([f"M {points[0][0]} {points[0][1]}", *(f"L {x} {y}" for x, y in points[1:])])
+    d = rounded_orthogonal_path(points, terminal_clearance=11.0 if edge.dashed else 15.0)
     css = edge_css(edge.color, edge.dashed)
     marker = {"edge-blue": "arrow-blue", "edge-green": "arrow-green", "edge-orange": "arrow-orange", "edge-purple": "arrow-purple", "edge-gray": "arrow-gray"}[css]
     out = [f'<path data-connector="true" marker-end="url(#{marker})" class="{css}" d="{d}"/>']
@@ -529,7 +589,7 @@ def render_fireworks_architecture(spec: DiagramSpec) -> str:
     }
     for edge in shifted_edges:
         points = edge_points(edge, cards)
-        d = " ".join([f"M {points[0][0]} {points[0][1]}", *(f"L {x} {y}" for x, y in points[1:])])
+        d = rounded_orthogonal_path(points, terminal_clearance=11.0 if edge.dashed else 15.0)
         css = edge_styles.get(edge.color, "edge-blue")
         if edge.dashed:
             css = "edge-gray"
@@ -592,7 +652,7 @@ def save_diagram(spec: DiagramSpec) -> str:
     margins = validate_diagram(spec)
     svg = DIAGRAM_OUT / f"{spec.base}.svg"
     svg.write_text(render_diagram(spec), encoding="utf-8")
-    subprocess.run(["rsvg-convert", str(svg), "-o", str(svg.with_suffix(".png"))], check=True)
+    subprocess.run(["rsvg-convert", "-z", "2", str(svg), "-o", str(svg.with_suffix(".png"))], check=True)
     return (
         f"{spec.base}: nodes={len(spec.cards)} routes={len(spec.edges)} segments={len(spec.edges)} "
         f"badEndpointAngle=0 badBends=0 interiorCrossings=0 nodeOverlaps=0 laneClearance=0 "
@@ -654,7 +714,7 @@ def bluetape4k_image_architecture_spec() -> DiagramSpec:
         Edge("images", "vipsApi", "native option", "#8A72D6", points=((880, 481), (880, 675), (685, 675), (685, 736)), label_pos=(782, 656)),
         Edge("vipsApi", "java21", "JNI", "#D6A441", points=((515, 790), (460, 790)), label_pos=(488, 756)),
         Edge("vipsApi", "java25", "FFM", "#45A7A1", points=((855, 790), (905, 790)), label_pos=(880, 756)),
-        Edge("images", "bench", "measure", "#B88A44", True, points=((1060, 423), (1660, 423), (1660, 790), (1640, 790)), label_pos=(1260, 650)),
+        Edge("images", "bench", "measure", "#B88A44", True, points=((1060, 423), (1660, 423), (1660, 790), (1638, 790)), label_pos=(1260, 650)),
     )
     return DiagramSpec(
         "bluetape4k-image-architecture-01",
