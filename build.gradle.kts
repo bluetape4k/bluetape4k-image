@@ -4,7 +4,9 @@ import nmcp.NmcpAggregationExtension
 import nmcp.NmcpExtension
 import org.gradle.api.artifacts.repositories.MavenArtifactRepository
 import org.gradle.api.artifacts.repositories.PasswordCredentials
+import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.authentication.http.BasicAuthentication
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 import java.util.concurrent.TimeUnit
 
@@ -102,6 +104,9 @@ allprojects {
 }
 
 subprojects {
+    tasks.withType<JavaCompile>().configureEach {
+        options.release.set(25)
+    }
     if (!isNonPublishedModule()) {
         apply(plugin = "com.gradleup.nmcp")
     }
@@ -147,10 +152,11 @@ subprojects {
 
     pluginManager.withPlugin("org.jetbrains.kotlin.jvm") {
         kotlin {
-            jvmToolchain(21)
+            jvmToolchain(25)
             compilerOptions {
-                languageVersion.set(KotlinVersion.KOTLIN_2_3)
-                apiVersion.set(KotlinVersion.KOTLIN_2_3)
+                languageVersion.set(KotlinVersion.KOTLIN_2_4)
+                apiVersion.set(KotlinVersion.KOTLIN_2_4)
+                jvmTarget.set(JvmTarget.JVM_25)
                 freeCompilerArgs = listOf(
                     "-Xjsr305=strict",
                     "-jvm-default=enable",

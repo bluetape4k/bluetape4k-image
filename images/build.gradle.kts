@@ -7,6 +7,8 @@ dependencies {
     api(bt4k.bluetape4k.io)
     api(bt4k.bluetape4k.okio)
     testImplementation(bt4k.bluetape4k.junit5)
+    // JDK 25에서 StructuredTaskScope 테스트를 실행할 provider
+    testRuntimeOnly(bt4k.bluetape4k.virtualthread.jdk25)
 
     // Images
     // https://mvnrepository.com/artifact/com.sksamuel.scrimage/scrimage-core

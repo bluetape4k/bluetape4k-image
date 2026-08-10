@@ -9,7 +9,7 @@ configurations {
 }
 
 kotlin {
-    jvmToolchain(21)
+    jvmToolchain(25)
     compilerOptions {
         freeCompilerArgs.add("-Xjsr305=strict")
         freeCompilerArgs.add("-jvm-default=enable")

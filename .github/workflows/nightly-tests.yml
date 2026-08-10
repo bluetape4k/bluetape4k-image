@@ -16,7 +16,7 @@ on:
           - full
 
 env:
-  JAVA_VERSION: '21'
+  JAVA_VERSION: '25'
   JAVA_DISTRIBUTION: 'temurin'
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
   CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
@@ -502,7 +502,8 @@ jobs:
 
       - uses: actions/setup-java@v5.6.0
         with:
-          java-version: '21'
+          # The module targets Java 21; Gradle/buildSrc runs on the repository baseline JDK 25.
+          java-version: '25'
           distribution: ${{ env.JAVA_DISTRIBUTION }}
 
       - name: Install libvips
