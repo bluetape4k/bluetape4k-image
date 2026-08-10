@@ -1,5 +1,6 @@
 import groovy.util.Node
 import org.gradle.api.tasks.compile.JavaCompile
+import org.gradle.api.tasks.testing.Test
 import org.gradle.api.publish.PublishingExtension
 import org.gradle.api.publish.maven.MavenPublication
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
@@ -41,6 +42,29 @@ tasks.named<JavaCompile>("compileTestFixturesJava") {
 }
 
 tasks.named<KotlinJvmCompile>("compileTestFixturesKotlin") {
+    kotlinJavaToolchain.toolchain.use(javaToolchains.launcherFor {
+        languageVersion.set(JavaLanguageVersion.of(25))
+    })
+    compilerOptions.jvmTarget.set(JvmTarget.JVM_25)
+}
+
+// The test fixtures consume the regular images module, whose bytecode target
+// is Java 25. Keep the shared API itself on Java 21, but run this verification
+// task on JDK 25 so Gradle selects the matching test-fixtures variant.
+tasks.named<Test>("test") {
+    javaLauncher.set(javaToolchains.launcherFor {
+        languageVersion.set(JavaLanguageVersion.of(25))
+    })
+}
+
+tasks.named<JavaCompile>("compileTestJava") {
+    javaCompiler.set(javaToolchains.compilerFor {
+        languageVersion.set(JavaLanguageVersion.of(25))
+    })
+    options.release.set(25)
+}
+
+tasks.named<KotlinJvmCompile>("compileTestKotlin") {
     kotlinJavaToolchain.toolchain.use(javaToolchains.launcherFor {
         languageVersion.set(JavaLanguageVersion.of(25))
     })

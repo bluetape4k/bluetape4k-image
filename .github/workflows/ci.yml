@@ -580,7 +580,8 @@ jobs:
       - uses: actions/checkout@v7
       - uses: actions/setup-java@v5.6.0
         with:
-          java-version: '21'
+          # The module targets Java 21; Gradle/buildSrc runs on the repository baseline JDK 25.
+          java-version: '25'
           distribution: ${{ env.JAVA_DISTRIBUTION }}
       - name: Install libvips
         run: sudo apt-get update && sudo apt-get install -y libvips-dev
