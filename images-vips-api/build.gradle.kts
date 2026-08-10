@@ -1,10 +1,50 @@
 import groovy.util.Node
+import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.api.publish.PublishingExtension
 import org.gradle.api.publish.maven.MavenPublication
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 import org.gradle.kotlin.dsl.configure
 
 plugins {
     `java-test-fixtures`
+}
+
+// The API is consumed by both the Java 21 JNI implementation and the Java 25
+// FFM implementation, so keep this shared contract on the lowest supported
+// bytecode level while the rest of the repository defaults to Java 25.
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(21))
+    }
+}
+
+kotlin {
+    jvmToolchain(21)
+    compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_21)
+    }
+}
+
+tasks.withType<JavaCompile>().configureEach {
+    options.release.set(21)
+}
+
+// Test fixtures compare against the regular images module, which targets JDK
+// 25. Keep the published API/JNI contract on 21 while compiling this internal
+// verification-only source set on the dependency's bytecode level.
+tasks.named<JavaCompile>("compileTestFixturesJava") {
+    javaCompiler.set(javaToolchains.compilerFor {
+        languageVersion.set(JavaLanguageVersion.of(25))
+    })
+    options.release.set(25)
+}
+
+tasks.named<KotlinJvmCompile>("compileTestFixturesKotlin") {
+    kotlinJavaToolchain.toolchain.use(javaToolchains.launcherFor {
+        languageVersion.set(JavaLanguageVersion.of(25))
+    })
+    compilerOptions.jvmTarget.set(JvmTarget.JVM_25)
 }
 
 configurations {

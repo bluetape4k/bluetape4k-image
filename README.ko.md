@@ -1,8 +1,8 @@
 # bluetape4k-image
 
 [![CI](https://github.com/bluetape4k/bluetape4k-image/actions/workflows/ci.yml/badge.svg)](https://github.com/bluetape4k/bluetape4k-image/actions/workflows/ci.yml)
-[![Kotlin](https://img.shields.io/badge/Kotlin-2.3-7F52FF?logo=kotlin)](https://kotlinlang.org)
-[![JVM](https://img.shields.io/badge/JVM-21-ED8B00?logo=openjdk)](https://openjdk.org)
+[![Kotlin](https://img.shields.io/badge/Kotlin-2.4-7F52FF?logo=kotlin)](https://kotlinlang.org)
+[![JVM](https://img.shields.io/badge/JVM-25-ED8B00?logo=openjdk)](https://openjdk.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 [English](./README.md) | 한국어
@@ -127,15 +127,19 @@ API와 lifecycle 선택입니다. 호출자가 이미 non-file stream이나
 
 | 모듈                   | JDK    | Native package | JVM 플래그                          |
 |-----------------------|--------|----------------|-------------------------------------|
-| `images`              | 21+    | —              | —                                   |
-| `images-barcode-api`  | 21+    | —              | —                                   |
-| `images-barcode-zxing` | 21+   | —              | —                                   |
-| `images-captcha`      | 21+    | —              | —                                   |
-| `images-ocr`          | 21+    | Tesseract + traineddata | —                          |
-| `images-ktor`         | 21+    | —              | —                                   |
+| `images`              | 25+    | —              | —                                   |
+| `images-barcode-api`  | 25+    | —              | —                                   |
+| `images-barcode-zxing` | 25+   | —              | —                                   |
+| `images-captcha`      | 25+    | —              | —                                   |
+| `images-ocr`          | 25+    | Tesseract + traineddata | —                          |
+| `images-ktor`         | 25+    | —              | —                                   |
 | `images-vips-api`     | 21+    | —              | —                                   |
 | `images-vips-java21`  | 21+    | libvips        | —                                   |
 | `images-vips-java25`  | 25+    | libvips        | `--enable-native-access=ALL-UNNAMED` |
+
+일반 라이브러리 모듈은 JDK 25를 대상으로 합니다. `images-vips-api`와
+`images-vips-java21` JNI 구현은 Java 25 FFM 백엔드와 공존하는 JNI 호환성
+라인을 위해 의도적으로 JDK 21을 유지합니다.
 
 ### OCR용 Tesseract 설치
 
@@ -252,22 +256,22 @@ Java 25는 `heifload_buffer`, `heifsave_buffer` native operation availability를
 ```kotlin
 // build.gradle.kts
 dependencies {
-    // Scrimage 기반 이미지 처리 (Java 21+)
+    // Scrimage 기반 이미지 처리 (Java 25+)
     implementation("io.github.bluetape4k.image:bluetape4k-images:0.3.0")
 
-    // Provider-neutral barcode/QR 추출 contract (Java 21+, 0.4.0+)
+    // Provider-neutral barcode/QR 추출 contract (Java 25+, 0.4.0+)
     implementation("io.github.bluetape4k.image:bluetape4k-images-barcode-api:<version>")
 
-    // ZXing barcode provider (Java 21+, 0.4.0+)
+    // ZXing barcode provider (Java 25+, 0.4.0+)
     implementation("io.github.bluetape4k.image:bluetape4k-images-barcode-zxing:<version>")
 
-    // Java2D CAPTCHA 생성 (Java 21+)
+    // Java2D CAPTCHA 생성 (Java 25+)
     implementation("io.github.bluetape4k.image:bluetape4k-images-captcha:0.3.0")
 
-    // Tess4J/Tesseract OCR 추출 (Java 21+)
+    // Tess4J/Tesseract OCR 추출 (Java 25+)
     implementation("io.github.bluetape4k.image:bluetape4k-images-ocr:0.3.0")
 
-    // CAPTCHA 발급과 검증을 위한 Ktor route helper (Java 21+)
+    // CAPTCHA 발급과 검증을 위한 Ktor route helper (Java 25+)
     implementation("io.github.bluetape4k.image:bluetape4k-images-ktor:0.3.0")
 
     // Spring Boot 4 자동 구성 (스토리지, CDN, 헬스, 메트릭)

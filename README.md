@@ -1,8 +1,8 @@
 # bluetape4k-image
 
 [![CI](https://github.com/bluetape4k/bluetape4k-image/actions/workflows/ci.yml/badge.svg)](https://github.com/bluetape4k/bluetape4k-image/actions/workflows/ci.yml)
-[![Kotlin](https://img.shields.io/badge/Kotlin-2.3-7F52FF?logo=kotlin)](https://kotlinlang.org)
-[![JVM](https://img.shields.io/badge/JVM-21-ED8B00?logo=openjdk)](https://openjdk.org)
+[![Kotlin](https://img.shields.io/badge/Kotlin-2.4-7F52FF?logo=kotlin)](https://kotlinlang.org)
+[![JVM](https://img.shields.io/badge/JVM-25-ED8B00?logo=openjdk)](https://openjdk.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 English | [한국어](./README.ko.md)
@@ -140,15 +140,19 @@ shows benchmark comparison.
 
 | Module                | JDK    | Native package | JVM flag                        |
 |-----------------------|--------|----------------|----------------------------------|
-| `images`              | 21+    | —              | —                                |
-| `images-barcode-api`  | 21+    | —              | —                                |
-| `images-barcode-zxing` | 21+   | —              | —                                |
-| `images-captcha`      | 21+    | —              | —                                |
-| `images-ocr`          | 21+    | Tesseract + traineddata | —                         |
-| `images-ktor`         | 21+    | —              | —                                |
+| `images`              | 25+    | —              | —                                |
+| `images-barcode-api`  | 25+    | —              | —                                |
+| `images-barcode-zxing` | 25+   | —              | —                                |
+| `images-captcha`      | 25+    | —              | —                                |
+| `images-ocr`          | 25+    | Tesseract + traineddata | —                         |
+| `images-ktor`         | 25+    | —              | —                                |
 | `images-vips-api`     | 21+    | —              | —                                |
 | `images-vips-java21`  | 21+    | libvips        | —                                |
 | `images-vips-java25`  | 25+    | libvips        | `--enable-native-access=ALL-UNNAMED` |
+
+The regular library modules target JDK 25. `images-vips-api` and the
+`images-vips-java21` JNI implementation intentionally remain on JDK 21 so the
+JNI compatibility line can coexist with the Java 25 FFM backend.
 
 ### Install Tesseract for OCR
 
@@ -268,22 +272,22 @@ with the current image release version:
 ```kotlin
 // build.gradle.kts
 dependencies {
-    // Scrimage-based image processing (Java 21+)
+    // Scrimage-based image processing (Java 25+)
     implementation("io.github.bluetape4k.image:bluetape4k-images:0.3.0")
 
-    // Provider-neutral barcode/QR extraction contracts (Java 21+, 0.4.0+)
+    // Provider-neutral barcode/QR extraction contracts (Java 25+, 0.4.0+)
     implementation("io.github.bluetape4k.image:bluetape4k-images-barcode-api:<version>")
 
-    // ZXing barcode provider (Java 21+, 0.4.0+)
+    // ZXing barcode provider (Java 25+, 0.4.0+)
     implementation("io.github.bluetape4k.image:bluetape4k-images-barcode-zxing:<version>")
 
-    // Java2D CAPTCHA generation (Java 21+)
+    // Java2D CAPTCHA generation (Java 25+)
     implementation("io.github.bluetape4k.image:bluetape4k-images-captcha:0.3.0")
 
-    // Tess4J/Tesseract OCR extraction (Java 21+)
+    // Tess4J/Tesseract OCR extraction (Java 25+)
     implementation("io.github.bluetape4k.image:bluetape4k-images-ocr:0.3.0")
 
-    // Ktor route helpers for CAPTCHA issue and verification (Java 21+)
+    // Ktor route helpers for CAPTCHA issue and verification (Java 25+)
     implementation("io.github.bluetape4k.image:bluetape4k-images-ktor:0.3.0")
 
     // Spring Boot 4 auto-configuration (storage, CDN, health, metrics)
