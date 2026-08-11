@@ -12,44 +12,80 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
+import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.io.Serializable
+import java.nio.ByteBuffer
+import java.nio.channels.Channels
+import java.nio.channels.FileChannel
+import java.nio.channels.SeekableByteChannel
+import java.nio.file.AccessDeniedException as NioAccessDeniedException
+import java.nio.file.DirectoryStream
 import java.nio.file.Files
+import java.nio.file.LinkOption
 import java.nio.file.NoSuchFileException
+import java.nio.file.OpenOption
 import java.nio.file.Path
-import java.nio.file.StandardCopyOption
+import java.nio.file.SecureDirectoryStream
+import java.nio.file.StandardOpenOption
+import java.nio.file.attribute.BasicFileAttributeView
+import java.nio.file.attribute.BasicFileAttributes
 import java.time.Instant
+import java.util.UUID
+import kotlin.jvm.Transient
 
 /**
  * local filesystem 기반 [ImageStorage]입니다.
  *
  * ## 동작/계약
  * - 모든 suspend method는 [Dispatchers.IO]로 이동합니다.
- * - path traversal을 방지합니다. 모든 key는 [rootDir] 아래로 resolve되고 resolved path는
- *   normalized [rootDir]로 시작해야 합니다. 그렇지 않으면 [ImageStorageException.ValidationException]을 던집니다.
+ * - path traversal과 root 내부 symbolic link 우회를 방지합니다. 모든 key는 real root 아래로
+ *   resolve되고 기존 경로 segment에 symbolic link가 있으면
+ *   [ImageStorageException.ValidationException]을 던집니다.
+ *   실제 파일 열기·임시 파일 생성·교체·삭제는 [SecureDirectoryStream]의 descriptor-relative
+ *   operation으로 수행해 검사와 사용 사이의 symbolic-link 교체 경합을 차단합니다.
  * - [maxSizeBytes]보다 큰 upload는 byte를 쓰기 전에 거부합니다.
  * - [maxSizeBytes]보다 큰 object download는 byte를 읽기 전에 거부합니다.
  * - [delete]는 idempotent입니다. missing key는 예외를 일으키지 않습니다.
- * - [list]는 [rootDir] 기준 상대 경로로 resolve된 [ImageObjectKey]의 cold [Flow]를 반환합니다.
+ * - [list]는 storage root 기준 상대 경로로 resolve된 [ImageObjectKey]의 cold [Flow]를 반환합니다.
  *   cancellation은 underlying directory walk를 중단합니다.
- * - 모든 catch block은 [CancellationException]을 먼저 다시 던집니다. [IOException]은
+ * - 모든 catch block은 [CancellationException]을 먼저 다시 던집니다. permission 오류는
+ *   [ImageStorageException.AccessDeniedException]으로, 일반 [IOException]은
  *   [ImageStorageException.TransientException]으로, [NoSuchFileException]은
  *   [ImageStorageException.NotFoundException]으로 wrap합니다.
  */
 class LocalImageStorage(
-    private val rootDir: Path,
+    rootDir: Path,
     private val maxSizeBytes: Long,
-) : ImageStorage, Serializable {
+) : ImageStorage, Serializable, AutoCloseable {
 
     companion object : KLogging() {
         private const val serialVersionUID: Long = 1L
     }
 
-    private val normalizedRoot: Path = rootDir.toAbsolutePath().normalize()
+    private val normalizedRootPath: String = rootDir.toAbsolutePath().normalize().toString()
+    private val realRootPath: String = run {
+        val normalizedRoot = Path.of(normalizedRootPath)
+        Files.createDirectories(normalizedRoot)
+        normalizedRoot.toRealPath().toString()
+    }
+
+    private val realRoot: Path
+        get() = Path.of(realRootPath)
+    private val realRootFileKey: String? = Files.readAttributes(
+        realRoot,
+        BasicFileAttributes::class.java,
+        LinkOption.NOFOLLOW_LINKS,
+    ).fileKey()?.toString()
+
+    @Transient
+    private var rootDirectoryHandle: SecureDirectoryStream<Path>? = null
+
+    @Transient
+    private var rootDirectoryLock: Any? = Any()
 
     init {
         require(maxSizeBytes > 0) { "maxSizeBytes must be positive: $maxSizeBytes" }
-        Files.createDirectories(normalizedRoot)
     }
 
     /**
@@ -58,13 +94,15 @@ class LocalImageStorage(
      * traversal attempt에서는 [ImageStorageException.ValidationException]을 던집니다.
      */
     private fun resolveKey(key: ImageObjectKey): Path {
-        val resolved = normalizedRoot.resolve(key.fullKey).normalize()
-        if (!resolved.startsWith(normalizedRoot)) {
+        ensureRootPathAnchored(key)
+        val resolved = realRoot.resolve(key.fullKey).normalize()
+        if (!resolved.startsWith(realRoot)) {
             throw ImageStorageException.ValidationException(
                 key = key,
                 message = "Path traversal detected for key: ${key.fullKey}",
             )
         }
+        rejectSymbolicLinks(key, resolved)
         return resolved
     }
 
@@ -80,24 +118,21 @@ class LocalImageStorage(
             )
         }
         val target = resolveKey(key)
-        try {
-            target.parent?.let { Files.createDirectories(it) }
-            Files.write(target, bytes)
-            ImageUploadResult(
-                key = key,
-                etag = bytes.size.toString(),
-                sizeBytes = bytes.size.toLong(),
-                contentType = options.contentType,
-                uploadedAt = Instant.now(),
-            )
-        } catch (e: CancellationException) {
-            // cancellation을 전파하기 전에 best-effort partial cleanup을 수행합니다.
-            deletePartialQuietly(target)
-            throw e
-        } catch (e: IOException) {
-            deletePartialQuietly(target)
-            throw ImageStorageException.TransientException(key = key, cause = e)
+        atomicWrite(key, target) { staged ->
+            val channel = staged
+            val buffer = ByteBuffer.wrap(bytes)
+            while (buffer.hasRemaining()) {
+                channel.write(buffer)
+            }
+            forceChannel(channel)
         }
+        ImageUploadResult(
+            key = key,
+            etag = bytes.size.toString(),
+            sizeBytes = bytes.size.toLong(),
+            contentType = options.contentType,
+            uploadedAt = Instant.now(),
+        )
     }
 
     override suspend fun upload(
@@ -111,6 +146,8 @@ class LocalImageStorage(
             throw e
         } catch (e: NoSuchFileException) {
             throw ImageStorageException.NotFoundException(key, cause = e)
+        } catch (e: NioAccessDeniedException) {
+            throw ImageStorageException.AccessDeniedException(key = key, cause = e)
         } catch (e: IOException) {
             throw ImageStorageException.TransientException(key = key, cause = e)
         }
@@ -121,37 +158,42 @@ class LocalImageStorage(
             )
         }
         val target = resolveKey(key)
-        try {
-            target.parent?.let { Files.createDirectories(it) }
-            Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING)
-            ImageUploadResult(
-                key = key,
-                etag = size.toString(),
-                sizeBytes = size,
-                contentType = options.contentType,
-                uploadedAt = Instant.now(),
-            )
-        } catch (e: CancellationException) {
-            deletePartialQuietly(target)
-            throw e
-        } catch (e: IOException) {
-            deletePartialQuietly(target)
-            throw ImageStorageException.TransientException(key = key, cause = e)
+        var actualSize = 0L
+        atomicWrite(key, target) { staged ->
+            Files.newInputStream(source, LinkOption.NOFOLLOW_LINKS).use { input ->
+                actualSize = copyToChannel(input, staged, key)
+            }
         }
+        ImageUploadResult(
+            key = key,
+            etag = actualSize.toString(),
+            sizeBytes = actualSize,
+            contentType = options.contentType,
+            uploadedAt = Instant.now(),
+        )
     }
 
     override suspend fun download(key: ImageObjectKey): ByteArray = withContext(Dispatchers.IO) {
         val path = resolveKey(key)
-        if (!Files.exists(path)) {
+        val attributes = readObjectAttributes(key, path)
+        if (attributes == null) {
             throw ImageStorageException.NotFoundException(key)
         }
         try {
-            validateStoredSize(key, path)
-            Files.readAllBytes(path)
+            validateStoredSize(key, attributes.size())
+            val bytes = withSecureStorageFile(path, setOf(StandardOpenOption.READ)) { channel ->
+                Channels.newInputStream(channel).use { input ->
+                    readBoundedBytes(input, key)
+                }
+            }
+            validateStoredSize(key, bytes.size.toLong())
+            bytes
         } catch (e: CancellationException) {
             throw e
         } catch (e: NoSuchFileException) {
             throw ImageStorageException.NotFoundException(key, cause = e)
+        } catch (e: NioAccessDeniedException) {
+            throw ImageStorageException.AccessDeniedException(key = key, cause = e)
         } catch (e: IOException) {
             throw ImageStorageException.TransientException(key = key, cause = e)
         }
@@ -160,21 +202,26 @@ class LocalImageStorage(
     override suspend fun download(key: ImageObjectKey, destination: Path): Unit =
         withContext(Dispatchers.IO) {
             val path = resolveKey(key)
-            if (!Files.exists(path)) {
+            val attributes = readObjectAttributes(key, path)
+            if (attributes == null) {
                 throw ImageStorageException.NotFoundException(key)
             }
             try {
-                validateStoredSize(key, path)
-                destination.parent?.let { Files.createDirectories(it) }
-                Files.newInputStream(path).use { input ->
-                    Files.newOutputStream(destination).use { output ->
-                        input.copyTo(output)
+                validateStoredSize(key, attributes.size())
+                val target = destination.toAbsolutePath().normalize()
+                atomicWrite(key, target, suffix = "download") { staged ->
+                    withSecureStorageFile(path, setOf(StandardOpenOption.READ)) { sourceChannel ->
+                        Channels.newInputStream(sourceChannel).use { input ->
+                            copyToChannel(input, staged, key)
+                        }
                     }
                 }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: NoSuchFileException) {
                 throw ImageStorageException.NotFoundException(key, cause = e)
+            } catch (e: NioAccessDeniedException) {
+                throw ImageStorageException.AccessDeniedException(key = key, cause = e)
             } catch (e: IOException) {
                 throw ImageStorageException.TransientException(key = key, cause = e)
             }
@@ -182,18 +229,36 @@ class LocalImageStorage(
 
     override suspend fun delete(key: ImageObjectKey): Unit = withContext(Dispatchers.IO) {
         try {
-            Files.deleteIfExists(resolveKey(key))
+            val path = resolveKey(key)
+            withSecureDirectory(path) { directory, fileName ->
+                directory.deleteFile(fileName)
+            }
         } catch (e: CancellationException) {
             throw e
+        } catch (e: NoSuchFileException) {
+            // idempotent: a missing parent or object is already deleted.
+        } catch (e: NioAccessDeniedException) {
+            throw ImageStorageException.AccessDeniedException(key = key, cause = e)
         } catch (e: IOException) {
             throw ImageStorageException.TransientException(key = key, cause = e)
         }
     }
 
+    /** descriptor-relative root handle을 닫습니다. Spring lifecycle 또는 명시적 소유자가 호출할 수 있습니다. */
+    override fun close() {
+        val lock = rootDirectoryLock ?: Any().also { rootDirectoryLock = it }
+        synchronized(lock) {
+            rootDirectoryHandle?.close()
+            rootDirectoryHandle = null
+        }
+    }
+
     override suspend fun exists(key: ImageObjectKey): Boolean = withContext(Dispatchers.IO) {
         try {
-            Files.exists(resolveKey(key))
+            readObjectAttributes(key, resolveKey(key)) != null
         } catch (e: CancellationException) {
+            throw e
+        } catch (e: ImageStorageException.AccessDeniedException) {
             throw e
         } catch (e: IOException) {
             throw ImageStorageException.TransientException(key = key, cause = e)
@@ -206,31 +271,28 @@ class LocalImageStorage(
         } catch (e: ImageStorageException.ValidationException) {
             throw e
         }
-        if (!Files.exists(prefixPath)) {
+        val prefixAttributes = readSecureAttributes(prefix, prefixPath)
+        if (prefixAttributes == null || !prefixAttributes.isDirectory) {
             return@flow
         }
         try {
-            Files.walk(prefixPath).use { stream ->
-                val iterator = stream.filter { Files.isRegularFile(it) }.iterator()
-                while (iterator.hasNext()) {
-                    val file = iterator.next()
-                    val relative = normalizedRoot.relativize(file.toAbsolutePath().normalize())
-                    val relativePath = relative.toString().replace('\\', '/')
-                    val parts = relativePath.split("/", limit = 2)
-                    if (parts.size == 2 && parts[0].isNotBlank() && parts[1].isNotBlank()) {
-                        emit(ImageObjectKey.of(parts[0], parts[1]))
-                    }
+            val listedKeys = mutableListOf<ImageObjectKey>()
+            withSecureStorageDirectory(prefixPath) { directory ->
+                collectSecureFiles(directory, realRoot.relativize(prefixPath).toList()) { key ->
+                    listedKeys += key
                 }
             }
+            listedKeys.forEach { emit(it) }
         } catch (e: CancellationException) {
             throw e
+        } catch (e: NioAccessDeniedException) {
+            throw ImageStorageException.AccessDeniedException(key = prefix, cause = e)
         } catch (e: IOException) {
             throw ImageStorageException.TransientException(key = prefix, cause = e)
         }
     }.flowOn(Dispatchers.IO)
 
-    private fun validateStoredSize(key: ImageObjectKey, path: Path) {
-        val size = Files.size(path)
+    private fun validateStoredSize(key: ImageObjectKey, size: Long) {
         if (size > maxSizeBytes) {
             throw ImageStorageException.ValidationException(
                 key = key,
@@ -239,14 +301,308 @@ class LocalImageStorage(
         }
     }
 
-    /** partially-written file을 best-effort로 정리합니다. 예외를 일으키지 않습니다. */
-    private fun deletePartialQuietly(target: Path) {
+    private fun atomicWrite(
+        key: ImageObjectKey,
+        target: Path,
+        suffix: String = "upload",
+        write: (SeekableByteChannel) -> Unit,
+    ) {
+        val parent = target.parent ?: throw ImageStorageException.ValidationException(
+            key = key,
+            message = "Storage target has no parent directory: ${key.fullKey}",
+        )
         try {
-            Files.deleteIfExists(target)
+            if (target.startsWith(realRoot)) {
+                ensureRootPathAnchored(key)
+            }
+            Files.createDirectories(parent)
+            if (target.startsWith(realRoot)) {
+                // SecureDirectoryStream has no mkdirat equivalent in the JDK API. Re-check
+                // the root and every created segment before any object is opened or replaced.
+                ensureRootPathAnchored(key)
+                rejectSymbolicLinks(key, parent)
+            }
+            withSecureDirectory(target) { directory, fileName ->
+                val stagedName = Path.of(".${target.fileName}.${UUID.randomUUID()}.$suffix")
+                var staged = false
+                try {
+                    directory.newByteChannel(
+                        stagedName,
+                        setOf(StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE),
+                    ).use { channel ->
+                        staged = true
+                        write(channel)
+                        forceChannel(channel)
+                    }
+                    directory.move(stagedName, directory, fileName)
+                    staged = false
+                } finally {
+                    if (staged) {
+                        deleteSecurePartialQuietly(directory, stagedName)
+                    }
+                }
+            }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: NioAccessDeniedException) {
+            throw ImageStorageException.AccessDeniedException(key = key, cause = e)
+        } catch (e: IOException) {
+            throw ImageStorageException.TransientException(key = key, cause = e)
+        }
+    }
+
+    private fun forceChannel(channel: SeekableByteChannel) {
+        if (channel is FileChannel) {
+            channel.force(true)
+        }
+    }
+
+    private fun copyToChannel(input: java.io.InputStream, output: SeekableByteChannel, key: ImageObjectKey): Long {
+        val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
+        var copied = 0L
+        while (true) {
+            val count = input.read(buffer)
+            if (count < 0) break
+            if (count == 0) continue
+            copied += count
+            validateStoredSize(key, copied)
+            var pending = ByteBuffer.wrap(buffer, 0, count)
+            while (pending.hasRemaining()) {
+                output.write(pending)
+            }
+        }
+        return copied
+    }
+
+    private fun readBoundedBytes(input: java.io.InputStream, key: ImageObjectKey): ByteArray {
+        val output = ByteArrayOutputStream()
+        val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
+        var copied = 0L
+        while (true) {
+            val count = input.read(buffer)
+            if (count < 0) break
+            if (count == 0) continue
+            copied += count
+            validateStoredSize(key, copied)
+            if (copied > Int.MAX_VALUE) {
+                throw ImageStorageException.ValidationException(
+                    key = key,
+                    message = "File cannot be represented as a ByteArray: $copied",
+                )
+            }
+            output.write(buffer, 0, count)
+        }
+        return output.toByteArray()
+    }
+
+    private fun <T> withSecureStorageFile(
+        path: Path,
+        options: Set<OpenOption>,
+        block: (SeekableByteChannel) -> T,
+    ): T = withSecureDirectory(path) { directory, fileName ->
+        directory.newByteChannel(fileName, options + LinkOption.NOFOLLOW_LINKS).use(block)
+    }
+
+    private fun <T> withSecureStorageDirectory(
+        path: Path,
+        block: (SecureDirectoryStream<Path>) -> T,
+    ): T = withSecureDirectory(path) { directory, fileName ->
+        directory.newDirectoryStream(fileName, LinkOption.NOFOLLOW_LINKS).use { childDirectory ->
+            block(childDirectory.asSecureDirectory())
+        }
+    }
+
+    private fun collectSecureFiles(
+        directory: SecureDirectoryStream<Path>,
+        relativePrefix: List<Path>,
+        emit: (ImageObjectKey) -> Unit,
+    ) {
+        val iterator = directory.iterator()
+        while (iterator.hasNext()) {
+            val entry = iterator.next()
+            val attributes = directory.getFileAttributeView(
+                entry,
+                BasicFileAttributeView::class.java,
+                LinkOption.NOFOLLOW_LINKS,
+            ).readAttributes()
+            val relative = relativePrefix + entry.fileName
+            when {
+                attributes.isDirectory ->
+                    directory.newDirectoryStream(entry, LinkOption.NOFOLLOW_LINKS).use { childDirectory ->
+                        collectSecureFiles(childDirectory.asSecureDirectory(), relative, emit)
+                    }
+                attributes.isRegularFile -> {
+                    val parts = relative.map(Path::toString)
+                    if (parts.size >= 2 && parts[0].isNotBlank() && parts[1].isNotBlank()) {
+                        emit(ImageObjectKey.of(parts[0], parts.drop(1).joinToString("/")))
+                    }
+                }
+            }
+        }
+    }
+
+    private fun <T> withSecureDirectory(
+        target: Path,
+        block: (SecureDirectoryStream<Path>, Path) -> T,
+    ): T {
+        val parent = target.parent ?: throw IOException("Target has no parent: $target")
+        val stream = if (target.startsWith(realRoot)) {
+            withSecureDirectory(rootDirectory(), realRoot.relativize(parent).toList(), target.fileName, block)
+        } else {
+            Files.newDirectoryStream(parent).use { parentDirectory ->
+                block(parentDirectory.asSecureDirectory(), target.fileName)
+            }
+        }
+        return stream
+    }
+
+    /**
+     * Root path는 pathname 재해석에 의존하지 않도록 한 번 연 descriptor를 사용합니다.
+     * 직렬화 후에는 transient handle을 다시 열되, file key가 생성 시 root와 다르면 fail closed합니다.
+     */
+    private fun rootDirectory(): SecureDirectoryStream<Path> {
+        val lock = rootDirectoryLock ?: Any().also { rootDirectoryLock = it }
+        return synchronized(lock) {
+            rootDirectoryHandle ?: run {
+                val opened = Files.newDirectoryStream(realRoot).asSecureDirectory()
+                try {
+                    val attributes = opened.getFileAttributeView(
+                        Path.of("."),
+                        BasicFileAttributeView::class.java,
+                        LinkOption.NOFOLLOW_LINKS,
+                    ).readAttributes()
+                    if (realRootFileKey == null || attributes.fileKey()?.toString() != realRootFileKey) {
+                        throw IOException("Storage root changed while opening: $realRoot")
+                    }
+                    opened.also { rootDirectoryHandle = it }
+                } catch (e: Throwable) {
+                    opened.close()
+                    throw e
+                }
+            }
+        }
+    }
+
+    private fun ensureRootPathAnchored(key: ImageObjectKey) {
+        try {
+            val attributes = Files.readAttributes(
+                realRoot,
+                BasicFileAttributes::class.java,
+                LinkOption.NOFOLLOW_LINKS,
+            )
+            if (attributes.isSymbolicLink ||
+                realRootFileKey == null ||
+                attributes.fileKey()?.toString() != realRootFileKey
+            ) {
+                throw ImageStorageException.ValidationException(
+                    key = key,
+                    message = "Storage root changed or became a symbolic link: $realRoot",
+                )
+            }
+        } catch (e: ImageStorageException.ValidationException) {
+            throw e
+        } catch (e: NioAccessDeniedException) {
+            throw ImageStorageException.AccessDeniedException(key = key, cause = e)
+        } catch (e: IOException) {
+            throw ImageStorageException.TransientException(key = key, cause = e)
+        }
+    }
+
+    private fun <T> withSecureDirectory(
+        current: SecureDirectoryStream<Path>,
+        segments: List<Path>,
+        fileName: Path,
+        block: (SecureDirectoryStream<Path>, Path) -> T,
+    ): T {
+        if (segments.isEmpty()) {
+            return block(current, fileName)
+        }
+        return current.newDirectoryStream(segments.first(), LinkOption.NOFOLLOW_LINKS).use { childDirectory ->
+            withSecureDirectory(childDirectory.asSecureDirectory(), segments.drop(1), fileName, block)
+        }
+    }
+
+    private fun DirectoryStream<Path>.asSecureDirectory(): SecureDirectoryStream<Path> {
+        if (this !is SecureDirectoryStream<*>) {
+            throw IOException("Atomic storage operations require SecureDirectoryStream support")
+        }
+        @Suppress("UNCHECKED_CAST")
+        return this as SecureDirectoryStream<Path>
+    }
+
+    private fun deleteSecurePartialQuietly(directory: SecureDirectoryStream<Path>, staged: Path) {
+        try {
+            directory.deleteFile(staged)
         } catch (e: CancellationException) {
             throw e
         } catch (e: IOException) {
-            log.warn(e) { "Failed to delete partial upload: $target" }
+            log.warn(e) { "Failed to delete partial upload: $staged" }
         }
     }
+
+    /*
+     * The remaining helpers intentionally inspect paths with NOFOLLOW_LINKS before
+     * opening descriptor-relative streams. They provide a friendly validation error
+     * for ordinary callers while SecureDirectoryStream closes the TOCTOU window.
+     */
+    private fun rejectSymbolicLinks(key: ImageObjectKey, path: Path) {
+        var current = realRoot
+        for (segment in realRoot.relativize(path)) {
+            current = current.resolve(segment)
+            try {
+                val attributes = Files.readAttributes(
+                    current,
+                    BasicFileAttributes::class.java,
+                    LinkOption.NOFOLLOW_LINKS,
+                )
+                if (attributes.isSymbolicLink) {
+                    throw ImageStorageException.ValidationException(
+                        key = key,
+                        message = "Symbolic link is not allowed in storage path: ${key.fullKey}",
+                    )
+                }
+            } catch (_: NoSuchFileException) {
+                return
+            } catch (e: NioAccessDeniedException) {
+                throw ImageStorageException.AccessDeniedException(key = key, cause = e)
+            } catch (e: IOException) {
+                throw ImageStorageException.TransientException(key = key, cause = e)
+            }
+        }
+    }
+
+    private fun readObjectAttributes(key: ImageObjectKey, path: Path): BasicFileAttributes? {
+        val attributes = readSecureAttributes(key, path) ?: return null
+        if (attributes.isSymbolicLink) {
+            throw ImageStorageException.ValidationException(
+                key = key,
+                message = "Symbolic link is not allowed in storage path: ${key.fullKey}",
+            )
+        }
+        if (!attributes.isRegularFile) {
+            throw ImageStorageException.ValidationException(
+                key = key,
+                message = "Storage object is not a regular file: ${key.fullKey}",
+            )
+        }
+        return attributes
+    }
+
+    private fun readSecureAttributes(key: ImageObjectKey, path: Path): BasicFileAttributes? =
+        try {
+            withSecureDirectory(path) { directory, fileName ->
+                directory.getFileAttributeView(
+                    fileName,
+                    BasicFileAttributeView::class.java,
+                    LinkOption.NOFOLLOW_LINKS,
+                ).readAttributes()
+            }
+        } catch (_: NoSuchFileException) {
+            null
+        } catch (e: NioAccessDeniedException) {
+            throw ImageStorageException.AccessDeniedException(key = key, cause = e)
+        } catch (e: IOException) {
+            throw ImageStorageException.TransientException(key = key, cause = e)
+        }
+
 }

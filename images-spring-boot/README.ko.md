@@ -86,6 +86,11 @@ bluetape4k:
 파일시스템으로 조용히 대체하지 않고 시작 단계에서 실패합니다. 애플리케이션이
 S3 저장소 구현을 의도적으로 대체하려면 별도의 `ImageStorage` 빈을 제공하세요.
 
+`Path` 업로드는 먼저 bounded streaming snapshot을 만든 뒤 선택적인
+`S3TransferOperations` 파일 전송 capability가 있을 때 이를 사용합니다. capability가
+없으면 source 전체를 `ByteArray`로 적재하지 않고 fail closed합니다. `Path` 다운로드는
+S3 resource를 통해 스트리밍한 뒤 destination 파일을 atomic replace합니다.
+
 ```yaml
 bluetape4k.images.storage:
   backend: s3

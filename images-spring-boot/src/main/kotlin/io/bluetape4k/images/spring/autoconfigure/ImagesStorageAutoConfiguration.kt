@@ -1,6 +1,7 @@
 package io.bluetape4k.images.spring.autoconfigure
 
 import io.bluetape4k.aws.spring.s3.S3Operations
+import io.bluetape4k.aws.spring.s3.S3TransferOperations
 import io.bluetape4k.images.spring.storage.ImageStorage
 import io.bluetape4k.images.spring.storage.LocalImageStorage
 import io.bluetape4k.images.spring.storage.s3.S3ImageStorage
@@ -11,6 +12,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.context.properties.EnableConfigurationProperties
+import org.springframework.beans.factory.ObjectProvider
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import java.nio.file.Path
@@ -50,14 +52,20 @@ import java.nio.file.Path
 class ImagesStorageAutoConfiguration {
 
     /**
-     * S3-backed storage입니다. [S3Operations]가 classpath에 있고 `bluetape4k.images.storage.backend=s3`일 때만
-     * 활성화됩니다.
+     * S3-backed storage입니다. [S3Operations]와 [S3TransferOperations]가 classpath에 있고
+     * `bluetape4k.images.storage.backend=s3`일 때만 활성화됩니다. transfer bean은 선택 사항이며,
+     * 없을 때 [S3ImageStorage]의 [java.nio.file.Path] upload는 fail closed합니다.
      *
      * [S3Operations] 참조는 이 nested class 안에만 둡니다. 외부 `@AutoConfiguration` class가 class-load 시점에
      * `compileOnly` SDK type을 직접 참조하지 않게 하기 위해서입니다.
      */
     @Configuration(proxyBeanMethods = false)
-    @ConditionalOnClass(name = ["io.bluetape4k.aws.spring.s3.S3Operations"])
+    @ConditionalOnClass(
+        name = [
+            "io.bluetape4k.aws.spring.s3.S3Operations",
+            "io.bluetape4k.aws.spring.s3.S3TransferOperations",
+        ],
+    )
     @ConditionalOnProperty(
         prefix = "bluetape4k.images.storage",
         name = ["backend"],
@@ -71,9 +79,10 @@ class ImagesStorageAutoConfiguration {
         fun s3ImageStorage(
             operations: S3Operations,
             properties: ImageStorageProperties,
+            transferOperations: ObjectProvider<S3TransferOperations>,
         ): ImageStorage {
             properties.bucket.requireNotBlank("bluetape4k.images.storage.bucket")
-            return S3ImageStorage(operations, properties)
+            return S3ImageStorage(operations, properties, transferOperations.getIfAvailable())
         }
     }
 

@@ -12,6 +12,7 @@ import java.nio.file.Path
  * ## 동작
  * - 모든 operation은 suspend이며 coroutine context에서 호출해도 안전합니다.
  * - upload operation은 atomic해야 합니다. partial write가 reader에게 보여서는 안 됩니다.
+ *   구현체는 동일한 디렉터리의 임시 파일에 기록하고 flush한 뒤 최종 object를 교체해야 합니다.
  * - key가 없으면 [download]는 [io.bluetape4k.images.spring.ImageStorageException.NotFoundException]을 던집니다.
  * - [delete]는 idempotent입니다. key가 없어도 예외를 던지지 않습니다.
  * - permission error에서 [exists]는 `false`가 아니라
@@ -34,7 +35,8 @@ interface ImageStorage {
      * file path에서 image를 upload합니다.
      *
      * ## 동작
-     * - file content를 stream하므로 large image에 적합합니다.
+     * - file content를 stream하므로 large image에 적합합니다. 구현체는 전체 파일을
+     *   `ByteArray`로 적재해서는 안 됩니다.
      * - file size가 configured maximum을 초과하면
      *   [io.bluetape4k.images.spring.ImageStorageException.ValidationException]을 던집니다.
      */
@@ -54,7 +56,8 @@ interface ImageStorage {
      * image를 destination path로 download합니다.
      *
      * ## 동작
-     * - content를 stream하므로 large image에 적합합니다.
+     * - content를 stream하므로 large image에 적합합니다. 구현체는 destination을
+     *   partial file로 노출하지 않아야 합니다.
      * - key가 없으면 [io.bluetape4k.images.spring.ImageStorageException.NotFoundException]을 던집니다.
      */
     suspend fun download(key: ImageObjectKey, destination: Path)

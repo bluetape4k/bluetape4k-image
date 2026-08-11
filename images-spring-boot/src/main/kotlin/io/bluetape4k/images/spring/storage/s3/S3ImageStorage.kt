@@ -1,6 +1,7 @@
 package io.bluetape4k.images.spring.storage.s3
 
 import io.bluetape4k.aws.spring.s3.S3Operations
+import io.bluetape4k.aws.spring.s3.S3TransferOperations
 import io.bluetape4k.images.spring.ImageObjectKey
 import io.bluetape4k.images.spring.ImageStorageException
 import io.bluetape4k.images.spring.ImageUploadResult
@@ -18,18 +19,28 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
 import software.amazon.awssdk.services.s3.model.NoSuchBucketException
 import software.amazon.awssdk.services.s3.model.NoSuchKeyException
+import software.amazon.awssdk.services.s3.model.PutObjectRequest
 import software.amazon.awssdk.services.s3.model.S3Exception
 import java.io.IOException
 import java.io.Serializable
+import java.nio.ByteBuffer
+import java.nio.channels.FileChannel
+import java.nio.file.AccessDeniedException as NioAccessDeniedException
 import java.nio.file.Files
+import java.nio.file.LinkOption
+import java.nio.file.NoSuchFileException
 import java.nio.file.Path
+import java.nio.file.StandardCopyOption
+import java.nio.file.StandardOpenOption
 import java.time.Instant
+import kotlin.jvm.JvmOverloads
 
 /**
  * S3를 backend로 사용하는 [ImageStorage] 구현체입니다.
  *
  * ## 동작 / 계약
- * - 모든 S3 호출은 `bluetape4k-aws-spring-boot`의 [S3Operations]에 위임합니다.
+ * - byte/object 작업은 `bluetape4k-aws-spring-boot`의 [S3Operations]에 위임하고,
+ *   [Path] 작업은 [S3TransferOperations] 또는 S3 resource stream을 사용합니다.
  * - 모든 suspend method는 blocking SDK 경로를 격리하기 위해 [Dispatchers.IO]에서 실행합니다.
  * - 모든 catch block은 [CancellationException]을 먼저 다시 던집니다. SDK exception은 file-local
  *   `toImageStorageException` extension을 통해 [ImageStorageException] 하위 type으로 매핑합니다.
@@ -38,6 +49,10 @@ import java.time.Instant
  * - payload size가 [ImageStorageProperties.maxSizeBytes]를 초과하면 upload는
  *   [ImageStorageException.ValidationException]으로 거부됩니다. download는 시작 전에 object size를 확인할 수
  *   없으면 실패로 닫고, byte를 반환하거나 destination file에 쓰기 전에 downloaded byte count를 다시 검사합니다.
+ * - [Path] upload는 source를 bounded streaming 임시 snapshot으로 고정한 뒤 [S3TransferOperations]의 file
+ *   transfer를 사용합니다. transfer bean이 없으면 source를 `ByteArray`로 적재하지 않고
+ *   [ImageStorageException.TransientException]으로 fail closed합니다.
+ * - [Path] download는 S3 resource input stream을 destination 임시 파일로 복사한 뒤 atomic replace합니다.
  * - [ImageStorageProperties.S3]의 SDK timeout/retry knob은 `S3Client` 생성 지점에서 적용되어야 합니다
  *   ([toClientOverrideConfig] 참고). 현재 [S3Operations] API는 per-request override hook을 노출하지 않으므로,
  *   이 class는 호출 시점에 override config를 전달하지 않습니다.
@@ -45,9 +60,10 @@ import java.time.Instant
  *   내부 [S3Operations.upload]가 해당 값을 노출하지 않기 때문입니다. 이 header가 필요하면 lower-level AWS S3
  *   client를 직접 사용해야 합니다.
  */
-class S3ImageStorage(
+class S3ImageStorage @JvmOverloads constructor(
     private val operations: S3Operations,
     private val properties: ImageStorageProperties,
+    private val transferOperations: S3TransferOperations? = null,
 ) : ImageStorage, Serializable {
 
     companion object : KLogging() {
@@ -120,6 +136,10 @@ class S3ImageStorage(
             Files.size(source)
         } catch (e: CancellationException) {
             throw e
+        } catch (e: NoSuchFileException) {
+            throw ImageStorageException.NotFoundException(key, cause = e)
+        } catch (e: NioAccessDeniedException) {
+            throw ImageStorageException.AccessDeniedException(key = key, cause = e)
         } catch (e: IOException) {
             throw ImageStorageException.TransientException(key = key, cause = e)
         }
@@ -129,26 +149,37 @@ class S3ImageStorage(
                 message = "Upload file exceeds maxSizeBytes (${properties.maxSizeBytes}): $size",
             )
         }
-        // S3Operations.upload는 ByteArray만 받습니다. 매우 큰 file은 이 storage를 우회하고
-        // lower-level AWS S3 transfer manager를 직접 사용해야 합니다.
-        val bytes = try {
-            Files.readAllBytes(source)
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: IOException) {
-            throw ImageStorageException.TransientException(key = key, cause = e)
-        }
+        val transfer = transferOperations ?: throw ImageStorageException.TransientException(
+            key = key,
+            message = "S3 path upload requires S3TransferOperations",
+        )
+        var staged: Path? = null
         try {
-            val response = operations.upload(
+            val parent = source.toAbsolutePath().normalize().parent ?: Path.of(".").toAbsolutePath()
+            staged = Files.createTempFile(parent, ".${source.fileName}.", ".s3-upload")
+            val stagedSize = Files.newInputStream(source, LinkOption.NOFOLLOW_LINKS).use { input ->
+                Files.newOutputStream(staged).use { output ->
+                    copyWithLimit(input, output, key)
+                }
+            }
+            forceFile(staged)
+            val response = transfer.uploadFile(
                 bucket = bucket,
                 key = objectKey(key),
-                bytes = bytes,
-                contentType = options.contentType,
-            )
+                source = staged,
+            ) {
+                putObjectRequest(
+                    PutObjectRequest.builder()
+                        .bucket(bucket)
+                        .key(objectKey(key))
+                        .contentType(options.contentType)
+                        .build(),
+                )
+            }.response()
             ImageUploadResult(
                 key = key,
                 etag = response.eTag().orEmpty(),
-                sizeBytes = size,
+                sizeBytes = stagedSize,
                 contentType = options.contentType,
                 uploadedAt = Instant.now(),
             )
@@ -156,6 +187,8 @@ class S3ImageStorage(
             throw e
         } catch (e: Throwable) {
             throw e.toImageStorageException(key)
+        } finally {
+            staged?.let(::deletePartialQuietly)
         }
     }
 
@@ -174,14 +207,36 @@ class S3ImageStorage(
 
     override suspend fun download(key: ImageObjectKey, destination: Path): Unit =
         withContext(Dispatchers.IO) {
-            val bytes = download(key)
-            try {
-                destination.parent?.let { Files.createDirectories(it) }
-                Files.write(destination, bytes)
+            val resource = try {
+                operations.resource(bucket = bucket, key = objectKey(key))
             } catch (e: CancellationException) {
                 throw e
-            } catch (e: IOException) {
-                throw ImageStorageException.TransientException(key = key, cause = e)
+            } catch (e: Throwable) {
+                throw e.toImageStorageException(key)
+            }
+            val destinationParent = destination.toAbsolutePath().parent ?: Path.of(".").toAbsolutePath()
+            var staged: Path? = null
+            try {
+                validateDownloadSize(key, resource.contentLength())
+                Files.createDirectories(destinationParent)
+                staged = Files.createTempFile(destinationParent, ".${destination.fileName}.", ".download")
+                resource.getInputStream().use { input ->
+                    Files.newOutputStream(staged).use { output ->
+                        copyWithLimit(input, output, key)
+                    }
+                }
+                Files.move(
+                    staged,
+                    destination.toAbsolutePath(),
+                    StandardCopyOption.ATOMIC_MOVE,
+                    StandardCopyOption.REPLACE_EXISTING,
+                )
+            } catch (e: CancellationException) {
+                staged?.let(::deletePartialQuietly)
+                throw e
+            } catch (e: Throwable) {
+                staged?.let(::deletePartialQuietly)
+                throw e.toImageStorageException(key)
             }
         }
 
@@ -270,6 +325,36 @@ class S3ImageStorage(
         }
     }
 
+    private fun copyWithLimit(input: java.io.InputStream, output: java.io.OutputStream, key: ImageObjectKey): Long {
+        val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
+        var copied = 0L
+        while (true) {
+            val count = input.read(buffer)
+            if (count < 0) break
+            if (count == 0) continue
+            copied += count
+            validateDownloadSize(key, copied)
+            output.write(buffer, 0, count)
+        }
+        return copied
+    }
+
+    private fun forceFile(path: Path) {
+        FileChannel.open(path, StandardOpenOption.WRITE).use { channel ->
+            channel.force(true)
+        }
+    }
+
+    private fun deletePartialQuietly(path: Path) {
+        try {
+            Files.deleteIfExists(path)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: IOException) {
+            log.debug(e) { "Failed to delete partial download: $path" }
+        }
+    }
+
     /**
      * SDK [Throwable]을 [ImageStorageException] 하위 type으로 변환합니다. SDK type을 이 file 안에 가둬
      * [ImageStorageException] 자체가 SDK-free contract로 남도록 합니다.
@@ -280,6 +365,7 @@ class S3ImageStorage(
     private fun Throwable.toImageStorageException(key: ImageObjectKey): ImageStorageException =
         when (this) {
             is ImageStorageException -> this
+            is NioAccessDeniedException -> ImageStorageException.AccessDeniedException(key, cause = this)
             is NoSuchKeyException    -> ImageStorageException.NotFoundException(key, cause = this)
             is NoSuchBucketException -> ImageStorageException.AccessDeniedException(key, cause = this)
             is S3Exception           -> when (statusCode()) {

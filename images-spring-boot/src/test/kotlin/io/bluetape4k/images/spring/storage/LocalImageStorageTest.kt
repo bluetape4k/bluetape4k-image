@@ -11,6 +11,10 @@ import io.bluetape4k.images.spring.UploadOptions
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
+import java.io.ObjectInputStream
+import java.io.ObjectOutputStream
 import java.nio.file.Files
 import java.nio.file.Path
 
@@ -77,6 +81,68 @@ class LocalImageStorageTest {
         assertFailsWith<ImageStorageException.NotFoundException> {
             storage.upload(key, missingPath, options)
         }
+    }
+
+    @Test
+    fun `upload path preserves existing object when staging source fails`() = runTest {
+        val pathKey = ImageObjectKey.of("originals", "preserved.jpg")
+        storage.upload(pathKey, sampleBytes, options)
+        val invalidSource = Files.createTempDirectory(tempDir, "invalid-source-")
+
+        assertFailsWith<ImageStorageException.TransientException> {
+            storage.upload(pathKey, invalidSource, options)
+        }
+
+        storage.download(pathKey).contentEquals(sampleBytes).shouldBeTrue()
+    }
+
+    @Test
+    fun `upload rejects a key path that traverses a symbolic link`() = runTest {
+        val outsideDir = Files.createTempDirectory("local-image-storage-outside")
+        val link = tempDir.resolve("linked-root")
+        Files.createSymbolicLink(link, outsideDir)
+        val linkedKey = ImageObjectKey.of("linked-root", "escaped.jpg")
+
+        assertFailsWith<ImageStorageException.ValidationException> {
+            storage.upload(linkedKey, sampleBytes, options)
+        }
+
+        Files.exists(outsideDir.resolve("escaped.jpg")).shouldBeFalse()
+    }
+
+    @Test
+    fun `upload fails closed when the storage root is replaced after descriptor anchoring`() = runTest {
+        val originalRoot = Files.createTempDirectory("local-image-storage-root")
+        val outsideDir = Files.createTempDirectory("local-image-storage-root-outside")
+        val movedRoot = originalRoot.resolveSibling("${originalRoot.fileName}-moved")
+        val anchoredStorage = LocalImageStorage(originalRoot, maxSizeBytes = 1024 * 1024L)
+        val existingKey = ImageObjectKey.of("uploads", "existing.jpg")
+        anchoredStorage.upload(existingKey, sampleBytes, options)
+
+        Files.move(originalRoot, movedRoot)
+        Files.createSymbolicLink(originalRoot, outsideDir)
+        try {
+            val escapedKey = ImageObjectKey.of("uploads", "escaped.jpg")
+            assertFailsWith<ImageStorageException.ValidationException> {
+                anchoredStorage.upload(escapedKey, sampleBytes, options)
+            }
+            Files.exists(outsideDir.resolve("uploads").resolve("escaped.jpg")).shouldBeFalse()
+        } finally {
+            Files.deleteIfExists(originalRoot)
+            Files.move(movedRoot, originalRoot)
+        }
+    }
+
+    @Test
+    fun `storage remains serializable with a runtime root descriptor`() = runTest {
+        val serialized = ByteArrayOutputStream()
+        ObjectOutputStream(serialized).use { output -> output.writeObject(storage) }
+
+        val restored = ObjectInputStream(ByteArrayInputStream(serialized.toByteArray())).use { input ->
+            input.readObject() as LocalImageStorage
+        }
+
+        restored.exists(ImageObjectKey.of("missing", "after-restore.jpg")).shouldBeFalse()
     }
 
     @Test
@@ -196,6 +262,19 @@ class LocalImageStorageTest {
 
         listed.any { it.fullKey == key1.fullKey }.shouldBeTrue()
         listed.any { it.fullKey == key2.fullKey }.shouldBeTrue()
+    }
+
+    @Test
+    fun `list does not follow symbolic link directories`() = runTest {
+        val outsideDir = Files.createTempDirectory("local-image-storage-list-outside")
+        Files.write(outsideDir.resolve("escaped.jpg"), sampleBytes)
+        val gallery = tempDir.resolve("photos").resolve("gallery")
+        Files.createDirectories(gallery)
+        Files.createSymbolicLink(gallery.resolve("external"), outsideDir)
+
+        val listed = storage.list(ImageObjectKey.of("photos", "gallery")).toList()
+
+        listed.none { it.fullKey.contains("escaped.jpg") }.shouldBeTrue()
     }
 
     @Test

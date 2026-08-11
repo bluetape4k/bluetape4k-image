@@ -75,6 +75,7 @@ spring-boot-starter-test = { module = "org.springframework.boot:spring-boot-star
 
 # AWS SDK v2
 aws2-s3 = { module = "software.amazon.awssdk:s3" }
+aws2-s3-transfer-manager = { module = "software.amazon.awssdk:s3-transfer-manager" }
 aws2-cloudfront = { module = "software.amazon.awssdk:cloudfront" }
 
 # bluetape4k-aws
