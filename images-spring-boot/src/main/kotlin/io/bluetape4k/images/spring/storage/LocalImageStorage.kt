@@ -202,16 +202,34 @@ class LocalImageStorage(
             try {
                 validateStoredSize(key, attributes.size())
                 val target = destination.toAbsolutePath().normalize()
-                atomicWrite(key, target, suffix = "download") { staged, rootDirectory ->
-                    val copySource: (SeekableByteChannel) -> Unit = { sourceChannel ->
-                        Channels.newInputStream(sourceChannel).use { input ->
+                // Snapshot the source before opening the destination descriptor. A target inside
+                // the storage root otherwise requires two live SecureDirectoryStreams in one
+                // operation, which some Linux providers reject even when both paths are valid.
+                // The snapshot remains bounded streaming and is removed before this method returns.
+                val sourceSnapshot = Files.createTempFile("bluetape4k-image-download-", ".tmp")
+                try {
+                    withSecureStorageFile(path, setOf(StandardOpenOption.READ)) { sourceChannel ->
+                        Files.newByteChannel(
+                            sourceSnapshot,
+                            setOf(StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING),
+                        ).use { snapshotChannel ->
+                            Channels.newInputStream(sourceChannel).use { input ->
+                                copyToChannel(input, snapshotChannel, key)
+                            }
+                        }
+                    }
+                    atomicWrite(key, target, suffix = "download") { staged, _ ->
+                        Files.newInputStream(sourceSnapshot, LinkOption.NOFOLLOW_LINKS).use { input ->
                             copyToChannel(input, staged, key)
                         }
                     }
-                    if (rootDirectory == null) {
-                        withSecureStorageFile(path, setOf(StandardOpenOption.READ), copySource)
-                    } else {
-                        withSecureStorageFile(rootDirectory, path, setOf(StandardOpenOption.READ), copySource)
+                } finally {
+                    try {
+                        Files.deleteIfExists(sourceSnapshot)
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (e: IOException) {
+                        log.warn(e) { "Failed to delete download source snapshot: $sourceSnapshot" }
                     }
                 }
             } catch (e: CancellationException) {

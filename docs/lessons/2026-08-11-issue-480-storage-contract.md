@@ -27,8 +27,10 @@ symbolic link와 permission 오류를 각각 validation/access-denied 계약으�
 descriptor-relative `NOFOLLOW_LINKS` 경로로 통일해 검사와 사용 사이의 symbolic-link 교체
 경합을 차단한다. 연산별 descriptor는 블록이 끝나면 닫히며, 직렬화 상태에는
 provider-specific `Path`/file-key 객체를 저장하지 않는다. Local path download가 root 내부를
-복사할 때는 target/source를 동일한 root descriptor에서 열어 provider별 중첩 descriptor
-한계를 피한다. JDK의 `SecureDirectoryStream`에
+root 내부 destination으로 복사할 때는 source를 먼저 bounded temporary snapshot으로
+스트리밍해 source descriptor를 닫은 뒤 target을 atomic replace한다. 일부 Linux provider는
+target/source를 동시에 descriptor-relative로 열 때 유효한 경로도 `NoSuchFileException`으로
+거부할 수 있으므로, 두 descriptor를 중첩하지 않는다. JDK의 `SecureDirectoryStream`에
 mkdirat가 없으므로 parent directory 생성 뒤 root와 모든 segment를 다시 검증하고, 검증을
 통과한 경우에만 descriptor-relative object operation을 시작한다.
 
