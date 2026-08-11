@@ -111,7 +111,7 @@ class LocalImageStorage(
             )
         }
         val target = resolveKey(key)
-        atomicWrite(key, target) { staged ->
+        atomicWrite(key, target) { staged, _ ->
             val channel = staged
             val buffer = ByteBuffer.wrap(bytes)
             while (buffer.hasRemaining()) {
@@ -152,7 +152,7 @@ class LocalImageStorage(
         }
         val target = resolveKey(key)
         var actualSize = 0L
-        atomicWrite(key, target) { staged ->
+        atomicWrite(key, target) { staged, _ ->
             Files.newInputStream(source, LinkOption.NOFOLLOW_LINKS).use { input ->
                 actualSize = copyToChannel(input, staged, key)
             }
@@ -202,11 +202,16 @@ class LocalImageStorage(
             try {
                 validateStoredSize(key, attributes.size())
                 val target = destination.toAbsolutePath().normalize()
-                atomicWrite(key, target, suffix = "download") { staged ->
-                    withSecureStorageFile(path, setOf(StandardOpenOption.READ)) { sourceChannel ->
+                atomicWrite(key, target, suffix = "download") { staged, rootDirectory ->
+                    val copySource: (SeekableByteChannel) -> Unit = { sourceChannel ->
                         Channels.newInputStream(sourceChannel).use { input ->
                             copyToChannel(input, staged, key)
                         }
+                    }
+                    if (rootDirectory == null) {
+                        withSecureStorageFile(path, setOf(StandardOpenOption.READ), copySource)
+                    } else {
+                        withSecureStorageFile(rootDirectory, path, setOf(StandardOpenOption.READ), copySource)
                     }
                 }
             } catch (e: CancellationException) {
@@ -292,7 +297,7 @@ class LocalImageStorage(
         key: ImageObjectKey,
         target: Path,
         suffix: String = "upload",
-        write: (SeekableByteChannel) -> Unit,
+        write: (SeekableByteChannel, SecureDirectoryStream<Path>?) -> Unit,
     ) {
         val parent = target.parent ?: throw ImageStorageException.ValidationException(
             key = key,
@@ -309,7 +314,7 @@ class LocalImageStorage(
                 ensureRootPathAnchored(key)
                 rejectSymbolicLinks(key, parent)
             }
-            withSecureDirectory(target) { directory, fileName ->
+            withSecureDirectoryContext(target) { rootDirectory, directory, fileName ->
                 val stagedName = Path.of(".${target.fileName}.${UUID.randomUUID()}.$suffix")
                 var staged = false
                 try {
@@ -318,7 +323,7 @@ class LocalImageStorage(
                         setOf(StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE),
                     ).use { channel ->
                         staged = true
-                        write(channel)
+                        write(channel, rootDirectory)
                         forceChannel(channel)
                     }
                     directory.move(stagedName, directory, fileName)
@@ -390,6 +395,22 @@ class LocalImageStorage(
         directory.newByteChannel(fileName, options + LinkOption.NOFOLLOW_LINKS).use(block)
     }
 
+    private fun <T> withSecureStorageFile(
+        rootDirectory: SecureDirectoryStream<Path>,
+        path: Path,
+        options: Set<OpenOption>,
+        block: (SeekableByteChannel) -> T,
+    ): T {
+        val parent = path.parent ?: throw IOException("Storage path has no parent: $path")
+        return withSecureDirectory(
+            rootDirectory,
+            realRoot.relativize(parent).toList(),
+            path.fileName,
+        ) { directory, fileName ->
+            directory.newByteChannel(fileName, options + LinkOption.NOFOLLOW_LINKS).use(block)
+        }
+    }
+
     private fun <T> withSecureStorageDirectory(
         path: Path,
         block: (SecureDirectoryStream<Path>) -> T,
@@ -431,15 +452,28 @@ class LocalImageStorage(
     private fun <T> withSecureDirectory(
         target: Path,
         block: (SecureDirectoryStream<Path>, Path) -> T,
+    ): T = withSecureDirectoryContext(target) { _, directory, fileName ->
+        block(directory, fileName)
+    }
+
+    private fun <T> withSecureDirectoryContext(
+        target: Path,
+        block: (SecureDirectoryStream<Path>?, SecureDirectoryStream<Path>, Path) -> T,
     ): T {
         val parent = target.parent ?: throw IOException("Target has no parent: $target")
         return if (target.startsWith(realRoot)) {
             withRootDirectory { rootDirectory ->
-                withSecureDirectory(rootDirectory, realRoot.relativize(parent).toList(), target.fileName, block)
+                withSecureDirectory(
+                    rootDirectory,
+                    realRoot.relativize(parent).toList(),
+                    target.fileName,
+                ) { directory, fileName ->
+                    block(rootDirectory, directory, fileName)
+                }
             }
         } else {
             Files.newDirectoryStream(parent).use { parentDirectory ->
-                block(parentDirectory.asSecureDirectory(), target.fileName)
+                block(null, parentDirectory.asSecureDirectory(), target.fileName)
             }
         }
     }
