@@ -988,6 +988,8 @@ val vipsAwareReport = publicReport.withBackendHeaderFields(
 )
 ```
 
+Use `readImageMetadataReportStrict` when metadata absence is part of an enforcement decision. It returns `ImageMetadataReadResult.Success` or a bounded `Failure` classification (`SIZE_LIMIT`, `IO`, or `PARSE`) instead of collapsing an unreadable output to `ImageMetadataReport.EMPTY`. `ImageMetadataReport.containsExif` and `containsGps` are directory-presence flags, so unknown EXIF tags and partial GPS directories are still visible to policy code without exposing raw values.
+
 #### Key Files
 
 | File                                     | Description                                      |
@@ -1104,6 +1106,8 @@ val derivative = image.suspendPrivacyDerivative(
 
 // Return derivative.bytes as image/jpeg and persist derivative.report for audit.
 ```
+
+Every derivative output is re-read with the strict metadata reader. If the writer emits malformed bytes, or a requested category remains, `PrivacyDerivativeVerificationException` is thrown and the derivative is not reported as successful. The `PrivacyDerivativeReport.metadataVerification` field records requested, source-present, remaining categories, and `verified`; `verified=true` means the output was readable and no requested category remained. It contains no raw metadata or parser exception. Even when all metadata-removal options are disabled, the output is still parsed so an unreadable writer cannot be treated as verified.
 
 For file batches, keep the same privacy policy and let `ImageProcessingOptions` control parallelism, failure handling, and in-flight pixel pressure:
 

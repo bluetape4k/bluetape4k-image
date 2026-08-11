@@ -15,6 +15,7 @@ import java.io.ByteArrayInputStream
 import java.io.File
 import java.io.IOException
 import java.io.InputStream
+import java.io.Serializable
 import java.nio.file.Files
 import java.nio.file.Path
 import java.time.LocalDateTime
@@ -67,7 +68,7 @@ data class ExifData(
     val flashFired: Boolean? = null,
     /** 화이트 밸런스 설명 */
     val whiteBalance: String? = null,
-) {
+) : Serializable {
     /** GPS 좌표가 존재하면 true */
     val hasGps: Boolean get() = gpsLatitude != null && gpsLongitude != null
 
@@ -83,6 +84,8 @@ data class ExifData(
     companion object {
         /** EXIF 정보가 없거나 파싱 실패 시 반환되는 빈 인스턴스 */
         val EMPTY = ExifData()
+
+        private const val serialVersionUID: Long = 1L
     }
 }
 

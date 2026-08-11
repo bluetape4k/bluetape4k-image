@@ -2,6 +2,10 @@ package io.bluetape4k.images.analysis
 
 import com.drew.metadata.Metadata
 import com.drew.metadata.exif.ExifIFD0Directory
+import com.drew.metadata.exif.ExifImageDirectory
+import com.drew.metadata.exif.ExifInteropDirectory
+import com.drew.metadata.exif.ExifThumbnailDirectory
+import com.drew.metadata.exif.GpsDirectory
 import com.drew.metadata.icc.IccDirectory
 import com.drew.metadata.iptc.IptcDirectory
 import com.drew.metadata.jpeg.JpegDirectory
@@ -9,14 +13,19 @@ import com.drew.metadata.xmp.XmpDirectory
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeInstanceOf
 import io.bluetape4k.assertions.shouldBeNull
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldNotBeEmpty
+import kotlinx.coroutines.CancellationException
 import org.junit.jupiter.api.Test
 import java.awt.Color
 import java.awt.image.BufferedImage
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
+import java.io.InputStream
+import java.io.ObjectInputStream
+import java.io.ObjectOutputStream
 import java.nio.file.Files
 import javax.imageio.ImageIO
 
@@ -27,6 +36,53 @@ class ImageMetadataReportTest {
         val report = readImageMetadataReport(ByteArray(64) { 0x7F.toByte() })
 
         report shouldBeEqualTo ImageMetadataReport.EMPTY
+    }
+
+    @Test
+    fun `strict metadata report preserves malformed input as failure`() {
+        val result = readImageMetadataReportStrict(ByteArray(64) { 0x7F.toByte() })
+
+        val failure = result.shouldBeInstanceOf<ImageMetadataReadResult.Failure>()
+        failure.kind shouldBeEqualTo ImageMetadataReadFailureKind.PARSE
+    }
+
+    @Test
+    fun `strict metadata report returns success for a valid image`() {
+        val result = readImageMetadataReportStrict(noMetadataJpeg(width = 12, height = 8))
+
+        val success = result.shouldBeInstanceOf<ImageMetadataReadResult.Success>()
+        success.report.dimensions shouldBeEqualTo ImageMetadataDimensions(width = 12, height = 8)
+    }
+
+    @Test
+    fun `strict metadata success round trips through Java serialization`() {
+        val original = ImageMetadataReadResult.Success(
+            ImageMetadataReport(
+                exif = ExifData(
+                    gpsLatitude = 37.5665,
+                    gpsLongitude = 126.9780,
+                    dateTimeOriginal = java.time.LocalDateTime.of(2024, 1, 2, 3, 4, 5),
+                    cameraMake = "Canon",
+                ),
+                containsExif = true,
+                containsGps = true,
+            ),
+        )
+        val bytes = ByteArrayOutputStream().use { output ->
+            ObjectOutputStream(output).use { it.writeObject(original) }
+            output.toByteArray()
+        }
+
+        val restored = ObjectInputStream(bytes.inputStream()).use { it.readObject() }
+
+        restored shouldBeEqualTo original
+    }
+
+    @Test
+    fun `strict metadata reader rethrows cancellation`() {
+        assertFailsWith<CancellationException> {
+            CancellingInputStream().readImageMetadataReportStrict()
+        }
     }
 
     @Test
@@ -83,6 +139,8 @@ class ImageMetadataReportTest {
         report.containsXmp.shouldBeTrue()
         report.containsIptc.shouldBeTrue()
         report.containsIccProfile.shouldBeTrue()
+        report.containsExif.shouldBeTrue()
+        report.containsGps.shouldBeFalse()
         report.iccProfile?.byteCount shouldBeEqualTo 3144
         report.iccProfile?.colorSpace shouldBeEqualTo "RGB"
         report.exif.cameraMake shouldBeEqualTo "Canon"
@@ -126,6 +184,41 @@ class ImageMetadataReportTest {
         safeReport.dimensions shouldBeEqualTo ImageMetadataDimensions(width = 640, height = 480)
         safeReport.orientation shouldBeEqualTo 6
         safeReport.containsXmp.shouldBeTrue()
+    }
+
+    @Test
+    fun `metadata report tracks EXIF and GPS directories even when known fields are absent`() {
+        val metadata = Metadata().apply {
+            addDirectory(
+                ExifIFD0Directory().apply {
+                    setString(ExifIFD0Directory.TAG_SOFTWARE, "camera-firmware")
+                },
+            )
+            addDirectory(GpsDirectory())
+        }
+
+        val report = metadata.toImageMetadataReport(
+            ImageMetadataReadOptions(stripSensitiveMetadata = false),
+        )
+
+        report.containsExif.shouldBeTrue()
+        report.containsGps.shouldBeTrue()
+        report.exif.hasGps.shouldBeFalse()
+    }
+
+    @Test
+    fun `metadata report recognizes every EXIF directory variant`() {
+        val metadata = Metadata().apply {
+            addDirectory(ExifImageDirectory())
+            addDirectory(ExifInteropDirectory())
+            addDirectory(ExifThumbnailDirectory(0))
+        }
+
+        val report = metadata.toImageMetadataReport(
+            ImageMetadataReadOptions(stripSensitiveMetadata = false),
+        )
+
+        report.containsExif.shouldBeTrue()
     }
 
     @Test
@@ -221,5 +314,12 @@ class ImageMetadataReportTest {
             closed = true
             super.close()
         }
+    }
+
+    private class CancellingInputStream : InputStream() {
+        override fun read(): Int = throw CancellationException("cancelled")
+
+        override fun read(buffer: ByteArray, offset: Int, length: Int): Int =
+            throw CancellationException("cancelled")
     }
 }

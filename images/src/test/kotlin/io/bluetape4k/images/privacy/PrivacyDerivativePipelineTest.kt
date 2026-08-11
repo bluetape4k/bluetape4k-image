@@ -1,6 +1,8 @@
 package io.bluetape4k.images.privacy
 
+import com.sksamuel.scrimage.AwtImage
 import com.sksamuel.scrimage.ImmutableImage
+import com.sksamuel.scrimage.metadata.ImageMetadata
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeGreaterThan
@@ -9,7 +11,12 @@ import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldHaveSize
 import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.images.analysis.ExifData
+import io.bluetape4k.images.analysis.ImageMetadataReadOptions
+import io.bluetape4k.images.analysis.ImageMetadataReadResult
+import io.bluetape4k.images.analysis.readImageMetadataReportStrict
 import io.bluetape4k.images.batch.ImageProcessingOptions
+import io.bluetape4k.images.coroutines.SuspendImageWriter
+import io.bluetape4k.images.immutableImageOf
 import io.bluetape4k.images.moderation.SensitiveCoordinateSpace
 import io.bluetape4k.images.moderation.SensitiveRegion
 import io.bluetape4k.images.moderation.SensitiveRegionGeometry
@@ -21,6 +28,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.awt.Color
 import java.awt.image.BufferedImage
+import java.io.OutputStream
 import java.nio.file.Files
 import javax.imageio.ImageIO
 import kotlin.time.Duration.Companion.seconds
@@ -49,6 +57,11 @@ class PrivacyDerivativePipelineTest {
             result.report.appliedActions shouldContain PrivacyDerivativeAction.METADATA_STRIPPED
             result.report.appliedActions shouldContain PrivacyDerivativeAction.ENCODED
             result.report.failures shouldHaveSize 0
+            result.report.metadataVerification.requested shouldContain PrivacyMetadataCategory.XMP
+            result.report.metadataVerification.sourcePresent shouldContain PrivacyMetadataCategory.GPS
+            result.report.metadataVerification.sourcePresent shouldContain PrivacyMetadataCategory.EXIF
+            result.report.metadataVerification.remaining shouldHaveSize 0
+            result.report.metadataVerification.verified shouldBeEqualTo true
         }
 
     @Test
@@ -121,6 +134,132 @@ class PrivacyDerivativePipelineTest {
         }
 
     @Test
+    fun `suspendPrivacyDerivative fails closed when encoded output cannot be verified`() =
+        runTest(timeout = 30.seconds) {
+            val error = assertFailsWith<PrivacyDerivativeVerificationException> {
+                testImage().suspendPrivacyDerivative(
+                    options = PrivacyDerivativeOptions(
+                        outputFormat = PrivacyDerivativeFormat(
+                            writer = MalformedImageWriter,
+                            extension = "bin",
+                        ),
+                    ),
+                )
+            }
+
+            error.message.shouldNotBeNull()
+            error.message shouldContain "metadata verification"
+            error.remainingCategories shouldHaveSize 0
+        }
+
+    @Test
+    fun `suspendPrivacyDerivative still verifies output when no metadata removal is requested`() =
+        runTest(timeout = 30.seconds) {
+            val error = assertFailsWith<PrivacyDerivativeVerificationException> {
+                testImage().suspendPrivacyDerivative(
+                    options = PrivacyDerivativeOptions(
+                        stripMetadata = false,
+                        removeGps = false,
+                        normalizeOrientation = false,
+                        outputFormat = PrivacyDerivativeFormat(MalformedImageWriter, "bin"),
+                    ),
+                )
+            }
+
+            error.message.shouldNotBeNull()
+            error.message shouldContain "metadata verification"
+        }
+
+    @Test
+    fun `processPrivacyDerivatives reports output inspection failures at verify stage`() =
+        runTest(timeout = 30.seconds) {
+            val source = Files.createTempFile("privacy-derivative", ".png")
+            ImageIO.write(testBufferedImage(width = 24, height = 18, color = Color.ORANGE), "png", source.toFile())
+
+            val result = flowOf(source)
+                .processPrivacyDerivatives(
+                    privacyOptions = PrivacyDerivativeOptions(
+                        outputFormat = PrivacyDerivativeFormat(MalformedImageWriter, "bin"),
+                    ),
+                    processingOptions = ImageProcessingOptions(
+                        parallelism = 1,
+                        skipFailures = true,
+                        onFailure = {},
+                    ),
+                )
+                .toList()
+                .single()
+
+            result shouldBeInstanceOf PrivacyDerivativeBatchResult.Failure::class
+            (result as PrivacyDerivativeBatchResult.Failure).stage shouldBeEqualTo PrivacyDerivativeFailureStage.VERIFY
+        }
+
+    @Test
+    fun `suspendPrivacyDerivative verifies metadata-bearing JPEG fixture for JPEG and PNG outputs`() =
+        runTest(timeout = 30.seconds) {
+            val sourceBytes = requireNotNull(
+                javaClass.getResourceAsStream("/images/filters/debop.jpg"),
+            ).use { it.readBytes() }
+            val sourceReport = readImageMetadataReportStrict(
+                sourceBytes,
+                ImageMetadataReadOptions(stripSensitiveMetadata = false),
+            ).shouldBeInstanceOf<ImageMetadataReadResult.Success>().report
+
+            sourceReport.containsXmp shouldBeEqualTo true
+            sourceReport.containsIptc shouldBeEqualTo true
+            sourceReport.containsIccProfile shouldBeEqualTo true
+            sourceReport.exif.hasGps shouldBeEqualTo true
+            sourceReport.exif.cameraMake.shouldNotBeNull()
+
+            listOf(PrivacyDerivativeFormat.Jpeg, PrivacyDerivativeFormat.Png).forEach { format ->
+                val result = immutableImageOf(sourceBytes).suspendPrivacyDerivative(
+                    options = PrivacyDerivativeOptions(outputFormat = format),
+                    sourceExif = sourceReport.exif,
+                    sourceMetadata = sourceReport,
+                )
+
+                result.report.metadataVerification.sourcePresent shouldContain PrivacyMetadataCategory.GPS
+                result.report.metadataVerification.sourcePresent shouldContain PrivacyMetadataCategory.EXIF
+                result.report.metadataVerification.sourcePresent shouldContain PrivacyMetadataCategory.XMP
+                result.report.metadataVerification.sourcePresent shouldContain PrivacyMetadataCategory.IPTC
+                result.report.metadataVerification.sourcePresent shouldContain PrivacyMetadataCategory.ICC
+                result.report.metadataVerification.remaining shouldHaveSize 0
+                result.report.metadataVerification.verified shouldBeEqualTo true
+            }
+        }
+
+    @Test
+    fun `suspendPrivacyDerivative rejects requested metadata that the writer preserves`() =
+        runTest(timeout = 30.seconds) {
+            val sourceBytes = requireNotNull(
+                javaClass.getResourceAsStream("/images/filters/debop.jpg"),
+            ).use { it.readBytes() }
+            val sourceReport = readImageMetadataReportStrict(
+                sourceBytes,
+                ImageMetadataReadOptions(stripSensitiveMetadata = false),
+            ).shouldBeInstanceOf<ImageMetadataReadResult.Success>().report
+
+            val error = assertFailsWith<PrivacyDerivativeVerificationException> {
+                immutableImageOf(sourceBytes).suspendPrivacyDerivative(
+                    options = PrivacyDerivativeOptions(
+                        outputFormat = PrivacyDerivativeFormat(
+                            writer = PreservingImageWriter(sourceBytes),
+                            extension = "jpg",
+                        ),
+                    ),
+                    sourceExif = sourceReport.exif,
+                    sourceMetadata = sourceReport,
+                )
+            }
+
+            error.remainingCategories shouldContain PrivacyMetadataCategory.GPS
+            error.remainingCategories shouldContain PrivacyMetadataCategory.EXIF
+            error.remainingCategories shouldContain PrivacyMetadataCategory.XMP
+            error.remainingCategories shouldContain PrivacyMetadataCategory.IPTC
+            error.remainingCategories shouldContain PrivacyMetadataCategory.ICC
+        }
+
+    @Test
     fun `processPrivacyDerivatives emits failures when skipFailures is true`() =
         runTest(timeout = 30.seconds) {
             val source = Files.createTempFile("privacy-derivative", ".txt")
@@ -184,5 +323,19 @@ class PrivacyDerivativePipelineTest {
             graphics.dispose()
         }
         return image
+    }
+
+    private object MalformedImageWriter : SuspendImageWriter {
+        override fun write(image: AwtImage, metadata: ImageMetadata, out: OutputStream) {
+            out.write(byteArrayOf(0x00, 0x01, 0x02))
+        }
+    }
+
+    private class PreservingImageWriter(
+        private val bytes: ByteArray,
+    ) : SuspendImageWriter {
+        override fun write(image: AwtImage, metadata: ImageMetadata, out: OutputStream) {
+            out.write(bytes)
+        }
     }
 }
