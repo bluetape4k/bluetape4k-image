@@ -288,7 +288,7 @@ class LocalImageStorage(
         try {
             val listedKeys = mutableListOf<ImageObjectKey>()
             withSecureStorageDirectory(prefixPath) { directory ->
-                collectSecureFiles(directory, realRoot.relativize(prefixPath).toList()) { key ->
+                collectSecureFiles(directory, relativeRootSegments(prefixPath)) { key ->
                     listedKeys += key
                 }
             }
@@ -422,7 +422,7 @@ class LocalImageStorage(
         val parent = path.parent ?: throw IOException("Storage path has no parent: $path")
         return withSecureDirectory(
             rootDirectory,
-            realRoot.relativize(parent).toList(),
+            relativeRootSegments(parent),
             path.fileName,
         ) { directory, fileName ->
             directory.newByteChannel(fileName, options + LinkOption.NOFOLLOW_LINKS).use(block)
@@ -483,7 +483,7 @@ class LocalImageStorage(
             withRootDirectory { rootDirectory ->
                 withSecureDirectory(
                     rootDirectory,
-                    realRoot.relativize(parent).toList(),
+                    relativeRootSegments(parent),
                     target.fileName,
                 ) { directory, fileName ->
                     block(rootDirectory, directory, fileName)
@@ -518,6 +518,20 @@ class LocalImageStorage(
             opened.close()
         }
     }
+
+    /**
+     * Returns descriptor-relative segments below [realRoot].
+     *
+     * The JDK represents `realRoot.relativize(realRoot)` as an empty path whose
+     * [Path.nameCount] is one. Iterating that path therefore yields an empty
+     * segment, which Linux `SecureDirectoryStream` rejects as a missing child.
+     */
+    private fun relativeRootSegments(path: Path): List<Path> =
+        if (path == realRoot) {
+            emptyList()
+        } else {
+            realRoot.relativize(path).toList()
+        }
 
     private fun ensureRootPathAnchored(key: ImageObjectKey) {
         try {
@@ -583,7 +597,7 @@ class LocalImageStorage(
      */
     private fun rejectSymbolicLinks(key: ImageObjectKey, path: Path) {
         var current = realRoot
-        for (segment in realRoot.relativize(path)) {
+        for (segment in relativeRootSegments(path)) {
             current = current.resolve(segment)
             try {
                 val attributes = Files.readAttributes(
