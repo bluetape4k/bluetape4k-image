@@ -1014,6 +1014,8 @@ val vipsAwareReport = publicReport.withBackendHeaderFields(
 )
 ```
 
+metadata 부재 자체가 enforcement 판단의 근거라면 `readImageMetadataReportStrict`를 사용하세요. 이 함수는 읽을 수 없는 output을 `ImageMetadataReport.EMPTY`로 축약하지 않고 `ImageMetadataReadResult.Success` 또는 제한된 `Failure` 분류(`SIZE_LIMIT`, `IO`, `PARSE`)를 반환합니다. `ImageMetadataReport.containsExif`와 `containsGps`는 directory 존재 여부를 나타내므로, 알려지지 않은 EXIF tag나 일부 필드만 있는 GPS directory도 raw 값 노출 없이 policy 코드에서 확인할 수 있습니다.
+
 #### 주요 파일
 
 | 파일                                     | 설명                                              |
@@ -1130,6 +1132,8 @@ val derivative = image.suspendPrivacyDerivative(
 
 // derivative.bytes를 image/jpeg로 반환하고 derivative.report를 audit용으로 저장합니다.
 ```
+
+모든 derivative output은 strict metadata reader로 다시 읽습니다. writer가 malformed bytes를 만들거나 요청한 category가 남아 있으면 `PrivacyDerivativeVerificationException`을 던지며 derivative를 성공으로 보고하지 않습니다. `PrivacyDerivativeReport.metadataVerification`에는 요청 category, 원본에 존재한 category, 잔존 category와 `verified`를 기록하며, `verified=true`는 output을 읽을 수 있고 요청한 category가 남지 않았다는 뜻입니다. raw metadata나 parser exception은 포함하지 않습니다. metadata 제거 option을 모두 끈 경우에도 output을 파싱하므로 읽을 수 없는 writer가 검증된 것으로 처리되지 않습니다.
 
 파일 batch에서는 같은 privacy policy를 유지하고, 병렬도·실패 처리·동시 처리 픽셀 압력은 `ImageProcessingOptions`로 제어하세요.
 

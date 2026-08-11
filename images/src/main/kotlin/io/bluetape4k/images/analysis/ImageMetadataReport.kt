@@ -3,8 +3,7 @@ package io.bluetape4k.images.analysis
 import com.drew.imaging.ImageMetadataReader
 import com.drew.metadata.Directory
 import com.drew.metadata.Metadata
-import com.drew.metadata.exif.ExifIFD0Directory
-import com.drew.metadata.exif.ExifSubIFDDirectory
+import com.drew.metadata.exif.ExifDirectoryBase
 import com.drew.metadata.exif.GpsDirectory
 import com.drew.metadata.gif.GifHeaderDirectory
 import com.drew.metadata.gif.GifImageDirectory
@@ -21,6 +20,7 @@ import io.bluetape4k.logging.debug
 import io.bluetape4k.logging.warn
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.requirePositiveNumber
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.ByteArrayInputStream
@@ -64,6 +64,42 @@ data class ImageMetadataReadOptions(
         const val DEFAULT_MAX_DIAGNOSTIC_VALUE_LENGTH: Int = 256
 
         private const val serialVersionUID: Long = 1L
+    }
+}
+
+/**
+ * strict metadata inspection이 실패한 이유를 나타내는 제한된 분류입니다.
+ *
+ * parser가 반환한 원시 예외와 메시지는 public contract에 노출하지 않습니다.
+ */
+enum class ImageMetadataReadFailureKind {
+    SIZE_LIMIT,
+    IO,
+    PARSE,
+}
+
+/**
+ * metadata reader의 성공과 검증 불가 상태를 구분하는 strict 결과입니다.
+ *
+ * 기존 [readImageMetadataReport]는 진단 도구 호환성을 위해 실패 시
+ * [ImageMetadataReport.EMPTY]를 반환합니다. privacy enforcement 같은 fail-closed
+ * 호출자는 이 결과를 사용해 `Failure`를 absence로 오인하지 않아야 합니다.
+ * 이 결과는 bounded report 또는 제한된 실패 분류만 담으므로 직렬화할 수 있지만,
+ * parser 예외·원시 payload·caller-owned stream은 보존하지 않습니다.
+ */
+sealed interface ImageMetadataReadResult : Serializable {
+    /** metadata를 정상적으로 읽은 결과입니다. */
+    data class Success(val report: ImageMetadataReport): ImageMetadataReadResult {
+        companion object {
+            private const val serialVersionUID: Long = 1L
+        }
+    }
+
+    /** metadata를 읽을 수 없어 검증을 진행할 수 없는 결과입니다. */
+    data class Failure(val kind: ImageMetadataReadFailureKind): ImageMetadataReadResult {
+        companion object {
+            private const val serialVersionUID: Long = 1L
+        }
     }
 }
 
@@ -148,21 +184,25 @@ data class ImageMetadataReport(
     val iccProfile: ImageMetadataIccProfile? = null,
     val hdrHints: ImageMetadataHdrHints = ImageMetadataHdrHints.EMPTY,
     val diagnostics: List<ImageMetadataDirectoryReport> = emptyList(),
+    /** EXIF directory가 존재했는지 나타내며, 알 수 없는 tag도 포함합니다. */
+    val containsExif: Boolean = false,
+    /** GPS directory가 존재했는지 나타내며, 부분적으로만 채워진 GPS도 포함합니다. */
+    val containsGps: Boolean = false,
 ) : Serializable {
 
     val hasAnyMetadata: Boolean
         get() = this != EMPTY
 
     val hasSensitiveMetadata: Boolean
-        get() = exif.hasGps
+        get() = containsGps || exif.hasGps
 
     fun withoutSensitiveMetadata(): ImageMetadataReport =
-        copy(exif = exif.withoutGps())
+        copy(exif = exif.withoutGps(), containsGps = false)
 
     companion object {
         val EMPTY = ImageMetadataReport()
 
-        private const val serialVersionUID: Long = 1L
+        private const val serialVersionUID: Long = 2L
     }
 }
 
@@ -221,6 +261,26 @@ fun readImageMetadataReport(
 }
 
 /**
+ * 인코딩 이미지 바이트를 strict하게 검사합니다.
+ *
+ * parse/I/O 실패를 [ImageMetadataReport.EMPTY]로 축약하지 않고 [ImageMetadataReadResult.Failure]로
+ * 반환합니다. 따라서 privacy-safe output 검증은 실패를 metadata 부재로 오인하지 않고
+ * fail-closed 정책을 적용할 수 있습니다.
+ */
+fun readImageMetadataReportStrict(
+    bytes: ByteArray,
+    options: ImageMetadataReadOptions = ImageMetadataReadOptions(),
+): ImageMetadataReadResult {
+    if (bytes.size > options.maxBytes) {
+        return ImageMetadataReadResult.Failure(ImageMetadataReadFailureKind.SIZE_LIMIT)
+    }
+
+    return ByteArrayInputStream(bytes).use { input ->
+        readStrictMetadata(input, options)
+    }
+}
+
+/**
  * [File]에서 privacy-aware metadata report를 읽습니다.
  */
 fun File.readImageMetadataReport(
@@ -257,6 +317,30 @@ fun Path.readImageMetadataReport(
     }
 
 /**
+ * [Path]의 metadata를 strict하게 검사합니다.
+ *
+ * 파일 크기·I/O·parser 실패를 각각 제한된 [ImageMetadataReadFailureKind]로 보존합니다.
+ */
+fun Path.readImageMetadataReportStrict(
+    options: ImageMetadataReadOptions = ImageMetadataReadOptions(),
+): ImageMetadataReadResult =
+    try {
+        if (Files.size(this) > options.maxBytes) {
+            ImageMetadataReadResult.Failure(ImageMetadataReadFailureKind.SIZE_LIMIT)
+        } else {
+            Files.newInputStream(this).use { input ->
+                readStrictMetadata(input, options)
+            }
+        }
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: IOException) {
+        ImageMetadataReadResult.Failure(ImageMetadataReadFailureKind.IO)
+    } catch (e: Exception) {
+        ImageMetadataReadResult.Failure(ImageMetadataReadFailureKind.PARSE)
+    }
+
+/**
  * [InputStream]에서 privacy-aware metadata report를 읽습니다.
  *
  * stream은 계속 호출자가 소유하며 이 함수는 stream을 닫지 않습니다.
@@ -265,6 +349,27 @@ fun InputStream.readImageMetadataReport(
     options: ImageMetadataReadOptions = ImageMetadataReadOptions(),
 ): ImageMetadataReport =
     readImageMetadataReport(readBoundedBytes(options.maxBytes), options)
+
+/**
+ * caller-owned [InputStream]의 metadata를 strict하게 검사합니다.
+ *
+ * stream은 닫지 않으며, bounded read나 parser 실패는 [ImageMetadataReadResult.Failure]로
+ * 반환합니다.
+ */
+fun InputStream.readImageMetadataReportStrict(
+    options: ImageMetadataReadOptions = ImageMetadataReadOptions(),
+): ImageMetadataReadResult =
+    try {
+        readImageMetadataReportStrict(readBoundedBytes(options.maxBytes), options)
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: IllegalArgumentException) {
+        ImageMetadataReadResult.Failure(ImageMetadataReadFailureKind.SIZE_LIMIT)
+    } catch (e: IOException) {
+        ImageMetadataReadResult.Failure(ImageMetadataReadFailureKind.IO)
+    } catch (e: Exception) {
+        ImageMetadataReadResult.Failure(ImageMetadataReadFailureKind.PARSE)
+    }
 
 /**
  * [Dispatchers.IO] 위에서 [File]의 metadata report를 읽습니다.
@@ -301,6 +406,8 @@ internal fun Metadata.toImageMetadataReport(
         iccProfile = iccProfile,
         hdrHints = hdrHints,
         diagnostics = if (options.includeDiagnosticTags) toDiagnostics(options) else emptyList(),
+        containsExif = containsDirectoryOfType(ExifDirectoryBase::class.java),
+        containsGps = containsDirectoryOfType(GpsDirectory::class.java),
     )
     return if (report.hasAnyMetadata) report else ImageMetadataReport.EMPTY
 }
@@ -323,6 +430,22 @@ private fun readImageMetadataReport(
     } catch (e: Exception) {
         metadataLog.debug(e) { "Metadata report parse failure (InputStream)" }
         ImageMetadataReport.EMPTY
+    }
+
+private fun readStrictMetadata(
+    input: InputStream,
+    options: ImageMetadataReadOptions,
+): ImageMetadataReadResult =
+    try {
+        ImageMetadataReadResult.Success(
+            ImageMetadataReader.readMetadata(input).toImageMetadataReport(options),
+        )
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: IOException) {
+        ImageMetadataReadResult.Failure(ImageMetadataReadFailureKind.IO)
+    } catch (e: Exception) {
+        ImageMetadataReadResult.Failure(ImageMetadataReadFailureKind.PARSE)
     }
 
 private fun File.requireLengthWithin(maxBytes: Int, subject: String) {

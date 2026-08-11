@@ -4,7 +4,10 @@ import com.sksamuel.scrimage.ImmutableImage
 import io.bluetape4k.coroutines.flow.extensions.mapParallel
 import io.bluetape4k.images.ImageDimensions
 import io.bluetape4k.images.analysis.ExifData
-import io.bluetape4k.images.analysis.readExif
+import io.bluetape4k.images.analysis.ImageMetadataReadOptions
+import io.bluetape4k.images.analysis.ImageMetadataReadResult
+import io.bluetape4k.images.analysis.ImageMetadataReport
+import io.bluetape4k.images.analysis.readImageMetadataReportStrict
 import io.bluetape4k.images.batch.DEFAULT_MAX_PIXELS
 import io.bluetape4k.images.batch.ImageProcessingOptions
 import io.bluetape4k.images.batch.PixelPermitLimiter
@@ -49,6 +52,7 @@ enum class PrivacyDerivativeFailureStage {
     LOAD,
     TRANSFORM,
     WRITE,
+    VERIFY,
 }
 
 /**
@@ -58,6 +62,9 @@ enum class PrivacyMetadataCategory {
     GPS,
     EXIF,
     ORIENTATION,
+    XMP,
+    IPTC,
+    ICC,
 }
 
 /**
@@ -85,7 +92,8 @@ enum class PrivacyRedactionMode {
  *
  * ## 동작/계약
  * - [writer]는 derivative를 다시 인코딩하는 coroutine-aware encoder입니다.
- * - re-encoding은 새 byte를 쓰며 source EXIF payload를 복사하지 않습니다.
+ * - re-encoding 뒤 bounded metadata reader가 output을 다시 검사하며, 요청된 metadata가
+ *   남거나 reader가 실패하면 derivative를 성공으로 반환하지 않습니다.
  * - [extension]은 caller-side naming을 위해 정규화됩니다. 이 class는 storage path를
  *   선택하지 않습니다.
  */
@@ -146,8 +154,8 @@ data class PrivacyRedaction(
  *
  * ## 동작/계약
  * - 비용이 큰 transform 전에 source 크기를 검증합니다.
- * - metadata 및 GPS 제거는 report 가능한 policy decision입니다. derivative re-encoding은
- *   source metadata를 복사하지 않고 새 byte를 씁니다.
+ * - metadata 및 GPS 제거는 report 가능한 policy decision이며, output 재검증 결과만
+ *   `strippedMetadataCategories`에 기록합니다.
  * - [thumbnailSize]는 기존 thumbnail model을 사용해 public preview 크기 정책을
  *   thumbnail pipeline과 일관되게 유지합니다.
  */
@@ -226,6 +234,7 @@ data class PrivacyDerivativeReport(
     val redactions: List<AppliedPrivacyRedaction>,
     val failures: List<PrivacyDerivativeFailure>,
     val elapsedMillis: Long,
+    val metadataVerification: PrivacyMetadataVerification = PrivacyMetadataVerification(),
 ) : Serializable {
 
     init {
@@ -234,9 +243,39 @@ data class PrivacyDerivativeReport(
     }
 
     companion object {
-        private const val serialVersionUID: Long = 270973442118913329L
+        private const val serialVersionUID: Long = 270973442118913330L
     }
 }
+
+/**
+ * derivative output metadata에 대한 요청·원본·잔존·검증 결과입니다.
+ *
+ * raw metadata payload나 parser 예외는 포함하지 않습니다. [verified]가 `true`인 경우에만
+ * 요청된 category가 output에 남아 있지 않다는 뜻입니다.
+ */
+data class PrivacyMetadataVerification(
+    val requested: Set<PrivacyMetadataCategory> = emptySet(),
+    val sourcePresent: Set<PrivacyMetadataCategory> = emptySet(),
+    val remaining: Set<PrivacyMetadataCategory> = emptySet(),
+    val verified: Boolean = true,
+) : Serializable {
+
+    companion object {
+        private const val serialVersionUID: Long = 1L
+    }
+}
+
+/**
+ * derivative output metadata를 strict하게 검증할 수 없거나, 요청된 category가 남은 경우의
+ * fail-closed 예외입니다.
+ *
+ * parser의 원시 오류와 output byte는 노출하지 않고 제한된 잔존 category만 제공합니다.
+ */
+class PrivacyDerivativeVerificationException(
+    val remainingCategories: Set<PrivacyMetadataCategory> = emptySet(),
+    message: String,
+    cause: Throwable? = null,
+) : IllegalStateException(message, cause)
 
 /**
  * 성공한 privacy derivative payload입니다.
@@ -288,12 +327,15 @@ sealed interface PrivacyDerivativeBatchResult : Serializable {
  * - source image는 mutate하지 않습니다.
  * - resize/redaction 작업 전에 source 크기를 검증합니다.
  * - 반환되는 byte는 [PrivacyDerivativeOptions.outputFormat]으로 새로 인코딩됩니다.
+ * - 요청된 metadata category가 output에 남거나 output reader가 실패하면
+ *   [PrivacyDerivativeVerificationException]을 던져 fail-closed 처리합니다.
  * - cancellation은 변경하지 않고 다시 던집니다.
  */
 suspend fun ImmutableImage.suspendPrivacyDerivative(
     options: PrivacyDerivativeOptions = PrivacyDerivativeOptions(),
     sourceExif: ExifData = ExifData.EMPTY,
     source: Path? = null,
+    sourceMetadata: ImageMetadataReport? = null,
 ): PrivacyDerivativeResult {
     val started = TimeSource.Monotonic.markNow()
     val sourceDimensions = PrivacyImageDimensions(width = width, height = height)
@@ -303,16 +345,22 @@ suspend fun ImmutableImage.suspendPrivacyDerivative(
         val transformed = applyDerivativeTransforms(options, sourceDimensions, sourceExif.orientation)
         val bytes = transformed.image.suspendBytes(options.outputFormat.writer)
         val outputDimensions = PrivacyImageDimensions(width = transformed.image.width, height = transformed.image.height)
-        val strippedMetadata = sourceExif.strippedMetadataCategories(options)
+        val metadataVerification = verifyDerivativeMetadata(
+            bytes = bytes,
+            options = options,
+            sourceExif = sourceExif,
+            sourceMetadata = sourceMetadata,
+        )
+        val strippedMetadata = metadataVerification.verifiedRemovedCategories()
         val redactions = transformed.redactions
         val actions = buildList {
-            if (options.removeGps && sourceExif.hasGps) {
+            if (PrivacyMetadataCategory.GPS in strippedMetadata) {
                 add(PrivacyDerivativeAction.GPS_REMOVED)
             }
-            if (options.stripMetadata && sourceExif.hasExifMetadata()) {
+            if (strippedMetadata.any { it in METADATA_STRIPPED_CATEGORIES }) {
                 add(PrivacyDerivativeAction.METADATA_STRIPPED)
             }
-            if (options.normalizeOrientation && sourceExif.orientation.needsOrientationNormalization()) {
+            if (PrivacyMetadataCategory.ORIENTATION in strippedMetadata) {
                 add(PrivacyDerivativeAction.ORIENTATION_NORMALIZED)
             }
             if (options.thumbnailSize != null) {
@@ -336,6 +384,7 @@ suspend fun ImmutableImage.suspendPrivacyDerivative(
                 redactions = redactions,
                 failures = emptyList(),
                 elapsedMillis = started.elapsedNow().inWholeMilliseconds,
+                metadataVerification = metadataVerification,
             ),
         )
     } catch (e: CancellationException) {
@@ -383,17 +432,38 @@ private suspend fun processOnePrivacyDerivative(
             val image = runDerivativeStage(source, PrivacyDerivativeFailureStage.LOAD) {
                 withContext(processingOptions.ioDispatcher) { immutableImageOf(source) }
             }
-            val sourceExif = runDerivativeStage(source, PrivacyDerivativeFailureStage.LOAD) {
-                withContext(processingOptions.ioDispatcher) { source.readExif() }
+            val sourceMetadata = runDerivativeStage(source, PrivacyDerivativeFailureStage.LOAD) {
+                withContext(processingOptions.ioDispatcher) {
+                    when (val inspection = source.readImageMetadataReportStrict(
+                        ImageMetadataReadOptions(stripSensitiveMetadata = false),
+                    )) {
+                        is ImageMetadataReadResult.Success -> inspection.report
+                        is ImageMetadataReadResult.Failure ->
+                            throw IllegalStateException(
+                                "Privacy source metadata inspection failed: ${inspection.kind}.",
+                            )
+                    }
+                }
             }
+            val sourceExif = sourceMetadata.exif
             image.privacyDimensions().requireWithin(privacyOptions, source.toString())
 
             val result = runDerivativeStage(source, PrivacyDerivativeFailureStage.TRANSFORM) {
-                withContext(processingOptions.transformDispatcher) {
-                    image.suspendPrivacyDerivative(
-                        options = privacyOptions,
-                        sourceExif = sourceExif,
+                try {
+                    withContext(processingOptions.transformDispatcher) {
+                        image.suspendPrivacyDerivative(
+                            options = privacyOptions,
+                            sourceExif = sourceExif,
+                            source = source,
+                            sourceMetadata = sourceMetadata,
+                        )
+                    }
+                } catch (e: PrivacyDerivativeVerificationException) {
+                    throw PrivacyDerivativeException(
                         source = source,
+                        stage = PrivacyDerivativeFailureStage.VERIFY,
+                        message = "Privacy derivative verification failed. source=$source",
+                        cause = e,
                     )
                 }
             }
@@ -439,6 +509,44 @@ private class PrivacyDerivativeException(
 
 private fun Throwable.derivativeStage(): PrivacyDerivativeFailureStage =
     (this as? PrivacyDerivativeException)?.stage ?: PrivacyDerivativeFailureStage.TRANSFORM
+
+private fun verifyDerivativeMetadata(
+    bytes: ByteArray,
+    options: PrivacyDerivativeOptions,
+    sourceExif: ExifData,
+    sourceMetadata: ImageMetadataReport?,
+): PrivacyMetadataVerification {
+    val requested = options.requestedMetadataCategories()
+    val sourcePresent = sourceMetadata?.privacyMetadataCategories()
+        ?: sourceExif.privacyMetadataCategories()
+    val outputReport = when (
+        val inspection = readImageMetadataReportStrict(
+            bytes,
+            ImageMetadataReadOptions(stripSensitiveMetadata = false),
+        )
+    ) {
+        is ImageMetadataReadResult.Success -> inspection.report
+        is ImageMetadataReadResult.Failure ->
+            throw PrivacyDerivativeVerificationException(
+                message = "Privacy derivative metadata verification failed: output metadata could not be inspected.",
+            )
+    }
+    val remaining = outputReport.privacyMetadataCategories()
+    val unstripped = remaining.intersect(requested)
+    if (unstripped.isNotEmpty()) {
+        throw PrivacyDerivativeVerificationException(
+            remainingCategories = unstripped,
+            message = "Privacy derivative metadata verification failed: requested metadata remains in output ($unstripped).",
+        )
+    }
+
+    return PrivacyMetadataVerification(
+        requested = requested,
+        sourcePresent = sourcePresent,
+        remaining = remaining,
+        verified = true,
+    )
+}
 
 private fun ImmutableImage.applyDerivativeTransforms(
     options: PrivacyDerivativeOptions,
@@ -587,24 +695,62 @@ private fun PrivacyImageDimensions.requireWithin(
 private fun ImmutableImage.privacyDimensions(): PrivacyImageDimensions =
     PrivacyImageDimensions(width = width, height = height)
 
-private fun ExifData.strippedMetadataCategories(options: PrivacyDerivativeOptions): Set<PrivacyMetadataCategory> =
+private fun PrivacyDerivativeOptions.requestedMetadataCategories(): Set<PrivacyMetadataCategory> =
     buildSet {
-        if (options.removeGps && hasGps) {
+        if (removeGps) {
             add(PrivacyMetadataCategory.GPS)
         }
-        if (options.stripMetadata && hasExifMetadata()) {
+        if (stripMetadata) {
             add(PrivacyMetadataCategory.EXIF)
+            add(PrivacyMetadataCategory.XMP)
+            add(PrivacyMetadataCategory.IPTC)
+            add(PrivacyMetadataCategory.ICC)
         }
-        if (options.normalizeOrientation && orientation != null) {
+        if (normalizeOrientation) {
             add(PrivacyMetadataCategory.ORIENTATION)
         }
     }
 
-private fun ExifData.hasExifMetadata(): Boolean =
+private fun PrivacyMetadataVerification.verifiedRemovedCategories(): Set<PrivacyMetadataCategory> =
+    sourcePresent.intersect(requested).subtract(remaining)
+
+private fun ExifData.privacyMetadataCategories(): Set<PrivacyMetadataCategory> =
+    buildSet {
+        if (hasAnyGpsMetadata()) {
+            add(PrivacyMetadataCategory.GPS)
+        }
+        if (hasPrivacyExifMetadata()) {
+            add(PrivacyMetadataCategory.EXIF)
+        }
+        if (orientation != null) {
+            add(PrivacyMetadataCategory.ORIENTATION)
+        }
+    }
+
+private fun ImageMetadataReport.privacyMetadataCategories(): Set<PrivacyMetadataCategory> =
+    buildSet {
+        if (containsGps || exif.hasAnyGpsMetadata()) {
+            add(PrivacyMetadataCategory.GPS)
+        }
+        if (containsExif || exif.hasPrivacyExifMetadata()) {
+            add(PrivacyMetadataCategory.EXIF)
+        }
+        if (orientation != null) {
+            add(PrivacyMetadataCategory.ORIENTATION)
+        }
+        if (containsXmp) {
+            add(PrivacyMetadataCategory.XMP)
+        }
+        if (containsIptc) {
+            add(PrivacyMetadataCategory.IPTC)
+        }
+        if (containsIccProfile) {
+            add(PrivacyMetadataCategory.ICC)
+        }
+    }
+
+private fun ExifData.hasPrivacyExifMetadata(): Boolean =
     listOf(
-        gpsLatitude,
-        gpsLongitude,
-        gpsAltitude,
         dateTimeOriginal,
         cameraMake,
         cameraModel,
@@ -614,15 +760,12 @@ private fun ExifData.hasExifMetadata(): Boolean =
         aperture,
         focalLength,
         focalLength35mm,
-        orientation,
-        width,
-        height,
         flashFired,
         whiteBalance,
     ).any { it != null }
 
-private fun Int?.needsOrientationNormalization(): Boolean =
-    this != null && this != 1
+private fun ExifData.hasAnyGpsMetadata(): Boolean =
+    gpsLatitude != null || gpsLongitude != null || gpsAltitude != null
 
 private fun Int.requireNonNegative(name: String) {
     require(this >= 0) { "$name must be >= 0, but was $this" }
@@ -640,3 +783,10 @@ private fun String?.requireNotBlankIfPresent(name: String) {
 
 private const val OPACITY_MIN = 0.0
 private const val OPACITY_MAX = 1.0
+
+private val METADATA_STRIPPED_CATEGORIES = setOf(
+    PrivacyMetadataCategory.EXIF,
+    PrivacyMetadataCategory.XMP,
+    PrivacyMetadataCategory.IPTC,
+    PrivacyMetadataCategory.ICC,
+)
