@@ -32,7 +32,10 @@ root 내부 destination으로 복사할 때는 source를 먼저 bounded temporar
 target/source를 동시에 descriptor-relative로 열 때 유효한 경로도 `NoSuchFileException`으로
 거부할 수 있으므로, 두 descriptor를 중첩하지 않는다. JDK의 `SecureDirectoryStream`에
 mkdirat가 없으므로 parent directory 생성 뒤 root와 모든 segment를 다시 검증하고, 검증을
-통과한 경우에만 descriptor-relative object operation을 시작한다.
+통과한 경우에만 descriptor-relative object operation을 시작한다. 또한
+`realRoot.relativize(realRoot)`가 iterable 빈 segment를 노출할 수 있으므로, root 바로 아래
+destination을 열 때는 상대 segment를 명시적으로 빈 목록으로 정규화한다. Linux provider는
+이 빈 segment를 child 경로로 해석해 `NoSuchFileException`을 반환할 수 있다.
 
 ## 결과
 
