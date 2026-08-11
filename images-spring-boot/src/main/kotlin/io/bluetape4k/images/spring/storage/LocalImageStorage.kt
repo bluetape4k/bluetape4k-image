@@ -32,7 +32,6 @@ import java.nio.file.attribute.BasicFileAttributeView
 import java.nio.file.attribute.BasicFileAttributes
 import java.time.Instant
 import java.util.UUID
-import kotlin.jvm.Transient
 
 /**
  * local filesystem 기반 [ImageStorage]입니다.
@@ -77,12 +76,6 @@ class LocalImageStorage(
         BasicFileAttributes::class.java,
         LinkOption.NOFOLLOW_LINKS,
     ).fileKey()?.toString()
-
-    @Transient
-    private var rootDirectoryHandle: SecureDirectoryStream<Path>? = null
-
-    @Transient
-    private var rootDirectoryLock: Any? = Any()
 
     init {
         require(maxSizeBytes > 0) { "maxSizeBytes must be positive: $maxSizeBytes" }
@@ -244,14 +237,8 @@ class LocalImageStorage(
         }
     }
 
-    /** descriptor-relative root handle을 닫습니다. Spring lifecycle 또는 명시적 소유자가 호출할 수 있습니다. */
-    override fun close() {
-        val lock = rootDirectoryLock ?: Any().also { rootDirectoryLock = it }
-        synchronized(lock) {
-            rootDirectoryHandle?.close()
-            rootDirectoryHandle = null
-        }
-    }
+    /** 호출별로 root descriptor를 열고 닫으므로 유지할 런타임 리소스가 없습니다. */
+    override fun close() = Unit
 
     override suspend fun exists(key: ImageObjectKey): Boolean = withContext(Dispatchers.IO) {
         try {
@@ -446,40 +433,37 @@ class LocalImageStorage(
         block: (SecureDirectoryStream<Path>, Path) -> T,
     ): T {
         val parent = target.parent ?: throw IOException("Target has no parent: $target")
-        val stream = if (target.startsWith(realRoot)) {
-            withSecureDirectory(rootDirectory(), realRoot.relativize(parent).toList(), target.fileName, block)
+        return if (target.startsWith(realRoot)) {
+            withRootDirectory { rootDirectory ->
+                withSecureDirectory(rootDirectory, realRoot.relativize(parent).toList(), target.fileName, block)
+            }
         } else {
             Files.newDirectoryStream(parent).use { parentDirectory ->
                 block(parentDirectory.asSecureDirectory(), target.fileName)
             }
         }
-        return stream
     }
 
     /**
-     * Root path는 pathname 재해석에 의존하지 않도록 한 번 연 descriptor를 사용합니다.
-     * 직렬화 후에는 transient handle을 다시 열되, file key가 생성 시 root와 다르면 fail closed합니다.
+     * Root descriptor를 호출마다 열고 닫습니다.
+     * descriptor를 캐시하지 않아, 이전 조회 시점에 없었던 child directory가 이후 생성되어도
+     * 모든 연산이 최신 디렉터리 상태를 관찰합니다. 열린 descriptor의 file key가 생성 시 root와
+     * 다르면 fail closed하여 root 교체·심볼릭 링크 우회를 허용하지 않습니다.
      */
-    private fun rootDirectory(): SecureDirectoryStream<Path> {
-        val lock = rootDirectoryLock ?: Any().also { rootDirectoryLock = it }
-        return synchronized(lock) {
-            rootDirectoryHandle ?: run {
-                val opened = Files.newDirectoryStream(realRoot).asSecureDirectory()
-                try {
-                    val attributes = opened.getFileAttributeView(
-                        Path.of("."),
-                        BasicFileAttributeView::class.java,
-                        LinkOption.NOFOLLOW_LINKS,
-                    ).readAttributes()
-                    if (realRootFileKey == null || attributes.fileKey()?.toString() != realRootFileKey) {
-                        throw IOException("Storage root changed while opening: $realRoot")
-                    }
-                    opened.also { rootDirectoryHandle = it }
-                } catch (e: Throwable) {
-                    opened.close()
-                    throw e
-                }
+    private fun <T> withRootDirectory(block: (SecureDirectoryStream<Path>) -> T): T {
+        val opened = Files.newDirectoryStream(realRoot).asSecureDirectory()
+        try {
+            val attributes = opened.getFileAttributeView(
+                Path.of("."),
+                BasicFileAttributeView::class.java,
+                LinkOption.NOFOLLOW_LINKS,
+            ).readAttributes()
+            if (realRootFileKey == null || attributes.fileKey()?.toString() != realRootFileKey) {
+                throw IOException("Storage root changed while opening: $realRoot")
             }
+            return block(opened)
+        } finally {
+            opened.close()
         }
     }
 

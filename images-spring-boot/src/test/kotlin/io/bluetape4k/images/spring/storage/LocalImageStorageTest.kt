@@ -134,7 +134,7 @@ class LocalImageStorageTest {
     }
 
     @Test
-    fun `storage remains serializable with a runtime root descriptor`() = runTest {
+    fun `storage remains serializable after descriptor-scoped operations`() = runTest {
         val serialized = ByteArrayOutputStream()
         ObjectOutputStream(serialized).use { output -> output.writeObject(storage) }
 
@@ -244,6 +244,17 @@ class LocalImageStorageTest {
         val missingKey = ImageObjectKey.of("ghost", "image.jpg")
 
         storage.exists(missingKey).shouldBeFalse()
+    }
+
+    @Test
+    fun `upload creates a parent directory after a missing lookup`() = runTest {
+        val missingKey = ImageObjectKey.of("created-after-lookup", "missing.jpg")
+        val createdKey = ImageObjectKey.of("created-after-lookup", "photo.jpg")
+
+        storage.exists(missingKey).shouldBeFalse()
+        storage.upload(createdKey, sampleBytes, options)
+
+        storage.download(createdKey).contentEquals(sampleBytes).shouldBeTrue()
     }
 
     @Test

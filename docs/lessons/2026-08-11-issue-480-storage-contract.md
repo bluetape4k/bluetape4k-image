@@ -23,9 +23,9 @@ S3 `Path` upload는 source를 bounded streaming 임시 snapshot으로 고정한 
 `Path` download는 `S3Resource` input stream을 임시 destination으로 복사한 뒤 atomic
 replace한다. Local key는 real root와 `NOFOLLOW_LINKS` attribute를 기준으로 검사하고
 symbolic link와 permission 오류를 각각 validation/access-denied 계약으로 보존한다. Local의
-root descriptor를 file-key로 고정하고 모든 exists/read/list/delete 경로를 같은
+각 연산마다 root descriptor를 열어 file-key를 재검증하고, 모든 exists/read/list/delete 경로를
 descriptor-relative `NOFOLLOW_LINKS` 경로로 통일해 검사와 사용 사이의 symbolic-link 교체
-경합도 차단한다. descriptor는 `AutoCloseable` lifecycle을 제공하며, 직렬화 상태에는
+경합을 차단한다. 연산별 descriptor는 블록이 끝나면 닫히며, 직렬화 상태에는
 provider-specific `Path`/file-key 객체를 저장하지 않는다. JDK의 `SecureDirectoryStream`에
 mkdirat가 없으므로 parent directory 생성 뒤 root와 모든 segment를 다시 검증하고, 검증을
 통과한 경우에만 descriptor-relative object operation을 시작한다.
@@ -38,10 +38,10 @@ constructor에는 `@JvmOverloads`를 유지한다.
 
 ## 검증
 
-- Local storage 회귀 테스트 24개 통과
+- Local storage 회귀 테스트 25개 통과
 - S3 storage 회귀 테스트 9개 통과
 - storage auto-configuration 테스트 9개 통과
-- `images-spring-boot` 전체 테스트 136개 통과
+- `images-spring-boot` 전체 테스트 137개 통과
 - 실패 overwrite 보존, symbolic-link 거부, descriptor-relative atomic write, transfer fail-closed, resource streaming,
   bounded ByteArray read, root 교체 fail-closed, serialization round-trip, oversized precheck,
   cancellation destination 보존을 고정
