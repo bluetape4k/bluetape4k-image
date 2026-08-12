@@ -1,12 +1,12 @@
 package io.bluetape4k.images.examples.ktor.ocr
 
-import io.bluetape4k.images.immutableImageOf
+import io.bluetape4k.images.ImageDecodeLimits
+import io.bluetape4k.images.immutableExternalImageOf
 import io.bluetape4k.images.ocr.OcrEngine
 import io.bluetape4k.images.ocr.OcrException
 import io.bluetape4k.images.ocr.OcrOptions
 import io.bluetape4k.images.ocr.TesseractOcrEngine
 import io.bluetape4k.images.ocr.suspendExtractText
-import io.bluetape4k.images.probeImageDimensions
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.requirePositiveNumber
 import io.ktor.http.ContentType
@@ -64,6 +64,7 @@ fun Application.configureKtorOcrApi(
     val ocrService = KtorOcrService(
         ocrEngine = ocrEngine,
         tessdataPath = config.tessdataPath,
+        decodeLimits = config.toDecodeLimits(),
     )
 
     routing {
@@ -123,10 +124,11 @@ data class KtorOcrApiConfig(
 class KtorOcrService(
     private val ocrEngine: OcrEngine,
     private val tessdataPath: String?,
+    private val decodeLimits: ImageDecodeLimits = ImageDecodeLimits.ExternalInput,
 ) {
 
     suspend fun recognize(uploadBytes: ByteArray, languages: List<String>): OcrTextResponse {
-        val text = immutableImageOf(uploadBytes).suspendExtractText(
+        val text = immutableExternalImageOf(uploadBytes, decodeLimits).suspendExtractText(
             options = OcrOptions(
                 languages = languages,
                 tessdataPath = tessdataPath,
@@ -207,10 +209,6 @@ private suspend fun ApplicationCall.receiveOcrUpload(config: KtorOcrApiConfig): 
                 require(bytes.isNotEmpty()) {
                     "OCR upload must not be empty."
                 }
-                probeImageDimensions(bytes)
-                    ?.requireMaxPixels(config.maxInputPixels, "OCR upload")
-                    ?.requireMaxSide(config.maxInputSide, "OCR upload")
-
                 return OcrUpload(bytes)
             }
 
@@ -231,7 +229,14 @@ private suspend fun ApplicationCall.receiveOcrUpload(config: KtorOcrApiConfig): 
 }
 
 private suspend fun ByteReadChannel.readUploadBytes(config: KtorOcrApiConfig): ByteArray =
-    readRemaining(config.maxInputBytes + 1).readByteArray()
+    readRemaining(config.maxInputBytes.coerceAtMost(Long.MAX_VALUE - 1L) + 1L).readByteArray()
+
+private fun KtorOcrApiConfig.toDecodeLimits(): ImageDecodeLimits =
+    ImageDecodeLimits(
+        maxEncodedBytes = maxInputBytes,
+        maxDecodedPixels = maxInputPixels,
+        maxDecodedSide = maxInputSide,
+    )
 
 private fun parseLanguages(value: String): List<String> {
     val languages = value.split(LANGUAGE_SEPARATOR)

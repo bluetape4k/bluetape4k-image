@@ -1,6 +1,9 @@
 package io.bluetape4k.images
 
 import com.sksamuel.scrimage.ImmutableImage
+import io.bluetape4k.images.analysis.ImageMetadataReadOptions
+import io.bluetape4k.images.analysis.ImageMetadataReadResult
+import io.bluetape4k.images.analysis.readImageMetadataReportStrict
 import io.bluetape4k.images.coroutines.SuspendImageWriter
 import io.bluetape4k.images.coroutines.SuspendWriteContext
 import io.bluetape4k.okio.buffered
@@ -10,6 +13,7 @@ import io.bluetape4k.okio.coroutines.SuspendedSink
 import io.bluetape4k.okio.coroutines.SuspendedSource
 import io.bluetape4k.okio.coroutines.asBlocking
 import io.bluetape4k.okio.coroutines.buffered as bufferedSuspended
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okio.BufferedSink
@@ -53,8 +57,8 @@ fun immutableImageOf(bytes: ByteArray): ImmutableImage =
  *   크기를 확인합니다.
  * - Scrimage가 이미지를 반환한 뒤 디코딩된 크기를 다시 확인합니다.
  *
- * 외부 입력 경계에서는 이 overload를 사용합니다. 인자 하나만 받는 overload는
- * source compatibility와 신뢰된 in-process payload를 위해 유지됩니다.
+ * 기존 bounded overload는 source compatibility와 신뢰된 in-process payload를 위해
+ * 유지됩니다. 신뢰하지 않는 외부 입력은 [immutableExternalImageOf]를 사용합니다.
  */
 fun immutableImageOf(
     bytes: ByteArray,
@@ -65,6 +69,36 @@ fun immutableImageOf(
 
     return ImmutableImage.loader().fromBytes(bytes)
         .also { it.requireWithinDecodeLimits(limits, "Decoded image") }
+}
+
+/**
+ * 신뢰하지 않는 외부 입력을 strict하게 검증한 뒤 [ImmutableImage]로 읽습니다.
+ *
+ * ImageIO가 헤더를 읽지 못하는 포맷은 제한 없는 decoder 호출로 넘기지 않습니다.
+ * bounded metadata reader를 한 번 더 사용해 크기를 확인하고, 두 경로 모두 실패하면
+ * decode 전에 거부합니다. 기존 [immutableImageOf] overload의 동작은 유지됩니다.
+ */
+fun immutableExternalImageOf(
+    bytes: ByteArray,
+    limits: ImageDecodeLimits = ImageDecodeLimits.ExternalInput,
+): ImmutableImage {
+    bytes.requireWithinEncodedLimit(limits, "Image input")
+
+    val dimensions = probeImageDimensions(bytes)
+        ?: readImageMetadataDimensions(bytes, limits)
+        ?: throw IllegalArgumentException("Image input dimensions could not be determined.")
+    dimensions.requireWithinDecodeLimits(limits, "Image input")
+
+    return try {
+        ImmutableImage.loader().fromBytes(bytes)
+            .also { it.requireWithinDecodeLimits(limits, "Decoded image") }
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: IllegalArgumentException) {
+        throw e
+    } catch (e: Exception) {
+        throw IllegalArgumentException("Image input could not be decoded.", e)
+    }
 }
 
 /**
@@ -501,6 +535,22 @@ private fun ImageDimensions.requireWithinDecodeLimits(
 ): ImageDimensions =
     requireMaxPixels(limits.maxDecodedPixels, subject)
         .requireMaxSide(limits.maxDecodedSide, subject)
+
+private fun readImageMetadataDimensions(
+    bytes: ByteArray,
+    limits: ImageDecodeLimits,
+): ImageDimensions? {
+    val maxBytes = limits.maxEncodedBytes.coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
+    return when (
+        val result = readImageMetadataReportStrict(
+            bytes,
+            ImageMetadataReadOptions(maxBytes = maxBytes),
+        )
+    ) {
+        is ImageMetadataReadResult.Success -> result.report.dimensions
+        is ImageMetadataReadResult.Failure -> null
+    }
+}
 
 private fun ImmutableImage.requireWithinDecodeLimits(
     limits: ImageDecodeLimits,

@@ -140,6 +140,42 @@ internal class KtorOcrApiApplicationTest {
     }
 
     @Test
+    fun `rejects upload when image dimensions cannot be probed before OCR engine is called`() = testApplication {
+        application {
+            configureTestKtorOcrApi()
+        }
+        val client = jsonClient()
+
+        val response = client.post("/api/ocr") {
+            setBody(imageMultipart("file", "not an encoded image".toByteArray(), ContentType.Image.PNG))
+        }
+
+        response.status shouldBeEqualTo HttpStatusCode.BadRequest
+        val body = response.body<OcrApiErrorResponse>()
+        body.error shouldBeEqualTo "bad_request"
+        body.message shouldContain "dimensions could not be determined"
+        testOcrEngine.lastOptions.get().shouldBeNull()
+    }
+
+    @Test
+    fun `rejects header-valid malformed image before OCR engine is called`() = testApplication {
+        application {
+            configureTestKtorOcrApi()
+        }
+        val client = jsonClient()
+
+        val response = client.post("/api/ocr") {
+            setBody(imageMultipart("file", pngHeaderBytes(width = 10, height = 10), ContentType.Image.PNG))
+        }
+
+        response.status shouldBeEqualTo HttpStatusCode.BadRequest
+        val body = response.body<OcrApiErrorResponse>()
+        body.error shouldBeEqualTo "bad_request"
+        body.message shouldContain "could not be decoded"
+        testOcrEngine.lastOptions.get().shouldBeNull()
+    }
+
+    @Test
     fun `maps OCR failures to service unavailable`() = testApplication {
         application {
             configureTestKtorOcrApi()
