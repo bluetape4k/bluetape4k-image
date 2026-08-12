@@ -126,6 +126,48 @@ class SpringBootImageApiApplicationTest(
         error.readJsonPath<String>("$.message") shouldContain "decodedPixels"
     }
 
+    @Test
+    fun `rejects upload when image dimensions cannot be probed before thumbnail generation`() {
+        val malformedImage = MockMultipartFile(
+            "file",
+            "malformed.png",
+            MediaType.IMAGE_PNG_VALUE,
+            "not an encoded image".toByteArray(),
+        )
+
+        val result = mockMvc.perform(multipart("/api/images").file(malformedImage))
+            .andExpect(request().asyncStarted())
+            .andReturn()
+            .dispatch()
+            .andExpect(status().isBadRequest)
+            .andReturn()
+
+        val error = result.response.contentAsString
+        error.readJsonPath<String>("$.error") shouldBeEqualTo "bad_request"
+        error.readJsonPath<String>("$.message") shouldContain "dimensions could not be determined"
+    }
+
+    @Test
+    fun `rejects header-valid malformed image before thumbnail generation`() {
+        val malformedImage = MockMultipartFile(
+            "file",
+            "malformed.png",
+            MediaType.IMAGE_PNG_VALUE,
+            pngHeaderBytes(width = 10, height = 10),
+        )
+
+        val result = mockMvc.perform(multipart("/api/images").file(malformedImage))
+            .andExpect(request().asyncStarted())
+            .andReturn()
+            .dispatch()
+            .andExpect(status().isBadRequest)
+            .andReturn()
+
+        val error = result.response.contentAsString
+        error.readJsonPath<String>("$.error") shouldBeEqualTo "bad_request"
+        error.readJsonPath<String>("$.message") shouldContain "could not be decoded"
+    }
+
     private inline fun <reified T> String.readJsonPath(path: String): T =
         JsonPath.read(this, path)
 

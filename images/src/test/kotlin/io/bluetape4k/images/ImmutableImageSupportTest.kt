@@ -1,5 +1,6 @@
 package io.bluetape4k.images
 
+import com.sksamuel.scrimage.webp.WebpWriter
 import io.bluetape4k.images.coroutines.SuspendJpegWriter
 import io.bluetape4k.images.coroutines.SuspendPngWriter
 import io.bluetape4k.junit5.coroutines.runSuspendIO
@@ -163,6 +164,45 @@ class ImmutableImageSupportTest: AbstractImageTest() {
         assertFailsWith<IllegalArgumentException> {
             immutableImageOf(bytes, limits)
         }.message shouldBeEqualTo "Image input decodedPixels=256 exceeds maxInputPixels=255 (dimensions=16x16)."
+    }
+
+    @Test
+    fun `strict external loader rejects payload when dimensions are unknown`() {
+        val bytes = "not an encoded image".toByteArray()
+        val limits = ImageDecodeLimits(maxEncodedBytes = bytes.size.toLong())
+
+        assertFailsWith<IllegalArgumentException> {
+            immutableExternalImageOf(bytes, limits)
+        }.message shouldBeEqualTo "Image input dimensions could not be determined."
+    }
+
+    @Test
+    fun `strict external loader preserves encoded byte limit`() {
+        val bytes = whiteTestImage(16, 16)
+        val limits = ImageDecodeLimits(maxEncodedBytes = bytes.size - 1L)
+
+        assertFailsWith<IllegalArgumentException> {
+            immutableExternalImageOf(bytes, limits)
+        }.message shouldBeEqualTo "Image input encodedBytes=${bytes.size} exceeds maxEncodedBytes=${limits.maxEncodedBytes}."
+    }
+
+    @Test
+    fun `strict external loader accepts WebP when metadata supplies dimensions`() {
+        val bytes = immutableImageOf(whiteTestImage(24, 16))
+            .forWriter(WebpWriter.DEFAULT)
+            .bytes()
+
+        val image = immutableExternalImageOf(
+            bytes,
+            ImageDecodeLimits(
+                maxEncodedBytes = bytes.size.toLong(),
+                maxDecodedPixels = 24L * 16L,
+                maxDecodedSide = 24,
+            )
+        )
+
+        image.width shouldBeEqualTo 24
+        image.height shouldBeEqualTo 16
     }
 
     @Test

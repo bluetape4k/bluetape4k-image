@@ -1,12 +1,12 @@
 package io.bluetape4k.images.examples.spring.ocr
 
-import io.bluetape4k.images.immutableImageOf
+import io.bluetape4k.images.ImageDecodeLimits
+import io.bluetape4k.images.immutableExternalImageOf
 import io.bluetape4k.images.ocr.OcrEngine
 import io.bluetape4k.images.ocr.OcrException
 import io.bluetape4k.images.ocr.OcrOptions
 import io.bluetape4k.images.ocr.TesseractOcrEngine
 import io.bluetape4k.images.ocr.suspendExtractText
-import io.bluetape4k.images.probeImageDimensions
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.requirePositiveNumber
 import kotlinx.coroutines.Dispatchers
@@ -140,11 +140,10 @@ class SpringBootOcrService(
         require(uploadBytes.size <= properties.maxInputBytes) {
             "OCR upload exceeds maxInputBytes=${properties.maxInputBytes}."
         }
-        probeImageDimensions(uploadBytes)
-            ?.requireMaxPixels(properties.maxInputPixels, "OCR upload")
-            ?.requireMaxSide(properties.maxInputSide, "OCR upload")
-
-        val text = immutableImageOf(uploadBytes).suspendExtractText(
+        val text = immutableExternalImageOf(
+            uploadBytes,
+            properties.toDecodeLimits(),
+        ).suspendExtractText(
             options = OcrOptions(
                 languages = parsedLanguages,
                 tessdataPath = properties.tessdataPath?.takeIf { it.isNotBlank() },
@@ -210,3 +209,10 @@ data class ApiErrorResponse(
         private const val serialVersionUID: Long = 1L
     }
 }
+
+private fun ExampleOcrProperties.toDecodeLimits(): ImageDecodeLimits =
+    ImageDecodeLimits(
+        maxEncodedBytes = maxInputBytes,
+        maxDecodedPixels = maxInputPixels,
+        maxDecodedSide = maxInputSide,
+    )
