@@ -49,6 +49,7 @@ bluetape4k:
       max-size-bytes: 52428800
       local:
         root-dir: /var/lib/app/images
+        bootstrap-prefixes: [avatars]
 ```
 
 ```kotlin
@@ -56,6 +57,12 @@ val key = ImageObjectKey.of("avatars", "user-42.jpg")
 storage.upload(key, bytes, UploadOptions(contentType = "image/jpeg"))
 val saved = storage.download(key)
 ```
+
+로컬 저장소는 trusted startup 단계에서 `local.bootstrap-prefixes`만 준비합니다.
+JDK `SecureDirectoryStream`에 descriptor-relative `mkdirat` 연산이 없으므로
+runtime 업로드 중에는 누락된 parent directory를 만들지 않습니다. 요청을 받기
+전에 고정 prefix를 모두 준비해야 하며, 준비되지 않은 parent는 외부 directory
+부작용 없이 `ValidationException`으로 종료합니다.
 
 ## 작업별 API {#api-by-task}
 

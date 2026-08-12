@@ -1,6 +1,7 @@
 package io.bluetape4k.images.spring.autoconfigure
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeInstanceOf
 import io.bluetape4k.assertions.shouldBeSameInstanceAs
 import io.bluetape4k.assertions.shouldBeTrue
@@ -16,6 +17,9 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.boot.autoconfigure.AutoConfigurations
 import org.springframework.boot.test.context.runner.ApplicationContextRunner
+import java.nio.file.Files
+import java.nio.file.Path
+import java.util.Comparator
 
 class ImagesStorageAutoConfigurationTest {
 
@@ -121,6 +125,27 @@ class ImagesStorageAutoConfigurationTest {
                 val props = ctx.getBean(ImageStorageProperties::class.java)
                 props.local.rootDir shouldBeEqualTo "/tmp/custom-images"
             }
+    }
+
+    @Test
+    fun `provisions only explicitly configured local bootstrap prefixes`() {
+        val root = Files.createTempDirectory("images-storage-bootstrap-test")
+        try {
+            contextRunner
+                .withPropertyValues(
+                    "bluetape4k.images.storage.local.root-dir=$root",
+                    "bluetape4k.images.storage.local.bootstrap-prefixes=originals,thumbnails/nested",
+                )
+                .run {
+                    Files.isDirectory(root.resolve("originals")).shouldBeTrue()
+                    Files.isDirectory(root.resolve("thumbnails/nested")).shouldBeTrue()
+                    Files.exists(root.resolve("unconfigured")).shouldBeFalse()
+                }
+        } finally {
+            Files.walk(root).use { paths ->
+                paths.sorted(Comparator.reverseOrder()).forEach(Files::deleteIfExists)
+            }
+        }
     }
 
     @Test

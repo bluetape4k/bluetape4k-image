@@ -66,8 +66,10 @@ class ImageStorageBenchmark {
         oversizedPayload = ByteArray(MAX_SIZE_BYTES + 1)
         key = ImageObjectKey.of("bench/items", "payload.$format")
         localRoot = Files.createTempDirectory("bluetape4k-storage-benchmark-")
+        val localStorageRoot = localRoot.resolve("local")
+        Files.createDirectories(localStorageRoot.resolve("bench/items"))
         destination = localRoot.resolve("download.$format")
-        local = LocalImageStorage(localRoot.resolve("local"), MAX_SIZE_BYTES.toLong())
+        local = LocalImageStorage(localStorageRoot, MAX_SIZE_BYTES.toLong())
         s3 = S3ImageStorage(
             InMemoryS3Operations(),
             ImageStorageProperties(

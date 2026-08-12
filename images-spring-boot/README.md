@@ -52,6 +52,8 @@ bluetape4k:
       health-probe-key: .health-probe
       local:
         root-dir: /tmp/images
+        # Runtime parent creation is fail-closed; provision fixed prefixes at startup.
+        bootstrap-prefixes: [originals, thumbnails]
       # S3 backend (requires bluetape4k-aws-spring-boot):
       bucket: my-image-bucket
       key-prefix: images/
@@ -79,6 +81,10 @@ bluetape4k:
 
 No additional dependencies. Files stored under `local.root-dir`.
 Path traversal is prevented — `ImageObjectKey` rejects `..` segments.
+Local parent directories are not created during an upload. Configure
+`local.bootstrap-prefixes` with fixed relative prefixes, or provision them
+before constructing `LocalImageStorage`; missing parents fail with
+`ValidationException` without creating files or directories.
 
 #### S3
 

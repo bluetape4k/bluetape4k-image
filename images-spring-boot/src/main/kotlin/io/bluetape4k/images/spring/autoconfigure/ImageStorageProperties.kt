@@ -41,9 +41,12 @@ data class ImageStorageProperties(
      *
      * ## 동작
      * - [rootDir] 기본값은 JVM temporary directory입니다. persistent storage에는 명시적인 path를 사용해야 합니다.
+     * - [bootstrapPrefixes]는 trusted startup 단계에서 미리 생성할 상대 directory 목록입니다.
+     *   runtime upload는 이 목록에 해당하는 parent가 없으면 fail closed합니다.
      */
     data class Local(
         val rootDir: String = System.getProperty("java.io.tmpdir") + "/bluetape4k-images",
+        val bootstrapPrefixes: Set<String> = emptySet(),
     ) : Serializable {
         companion object {
             private const val serialVersionUID: Long = 1L

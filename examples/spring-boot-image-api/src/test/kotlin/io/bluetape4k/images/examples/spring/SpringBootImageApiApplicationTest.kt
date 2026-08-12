@@ -30,6 +30,7 @@ import javax.imageio.ImageIO
 @TestPropertySource(
     properties = [
         "bluetape4k.images.storage.local.root-dir=build/tmp/spring-boot-image-api-test/storage",
+        "bluetape4k.images.storage.local.bootstrap-prefixes=originals,thumbnails",
     ]
 )
 class SpringBootImageApiApplicationTest(
