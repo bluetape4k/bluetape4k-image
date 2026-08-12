@@ -16,7 +16,7 @@ artifact: io.github.bluetape4k.image:bluetape4k-images-vips-api
 
 ## 제공하는 기능 {#problem}
 
-libvips 바인딩에 의존하지 않는 공통 계약입니다. 애플리케이션 코드는 `VipsImage`, `VipsRuntime`만 바라보고 실제 실행 환경에서 Java 21 JNI 또는 Java 25 FFM 백엔드를 선택할 수 있습니다.
+libvips 바인딩에 의존하지 않는 공통 계약입니다. 애플리케이션 코드는 `VipsImage`, `VipsRuntime`만 바라보고 실제 실행 환경에서 JDK 25 JVips JNI 또는 JDK 25 FFM 백엔드를 선택할 수 있습니다. JNI 구현은 호환성을 위해 `java21` 모듈 이름으로 배포됩니다.
 
 ## 사용하기 좋은 경우 {#when-to-use}
 
@@ -78,7 +78,7 @@ dependencies {
 
 ## 학습 경로와 예제 {#workshops}
 
-공통 API를 읽은 뒤 선택한 백엔드의 자원 수명 문서를 살펴보고, 마지막으로 벤치마크를 비교하세요. Java 21과 Java 25 팩토리 이름이 달라 구성 시점에 선택이 분명하게 드러납니다.
+공통 API를 읽은 뒤 선택한 백엔드의 자원 수명 문서를 살펴보고, 마지막으로 벤치마크를 비교하세요. JDK 25 JVips와 FFM 팩토리 이름이 달라 구성 시점에 선택이 분명하게 드러나며, JNI artifact는 호환성을 위해 `java21` 이름을 유지합니다.
 
 ## 제약 사항 {#limitations}
 

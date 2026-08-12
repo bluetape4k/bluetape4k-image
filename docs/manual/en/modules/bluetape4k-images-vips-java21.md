@@ -1,7 +1,7 @@
 ---
 manualId: "bluetape4k-images-vips-java21"
 id: "bluetape4k-images-vips-java21"
-title: "Java 21 JVips backend"
+title: "JDK 25 JVips JNI backend (legacy java21 artifact)"
 locale: "en"
 kind: "library"
 gradlePath: ":bluetape4k-images-vips-java21"
@@ -10,17 +10,17 @@ releaseRef: "0.4.0"
 artifact: io.github.bluetape4k.image:bluetape4k-images-vips-java21
 ---
 
-# Java 21 JVips backend
+# JDK 25 JVips JNI backend (legacy `java21` artifact)
 
 > Library module
 
 ## Problem {#problem}
 
-This module implements the common libvips API with JVips and JNI on Java 21. It is the native option for services that stay on the Java 21 toolchain.
+This module implements the common libvips API with JVips and JNI on JDK 25. The published artifact and package names remain `java21` for compatibility.
 
 ## When to use it {#when-to-use}
 
-Choose it when Java 21 compatibility is required and a matching JVips/libvips native library is available. Prefer the pure-JVM module when native deployment is undesirable; evaluate the Java 25 backend separately rather than assuming one binding is universally faster.
+Choose it when the service runs on JDK 25 and a matching JVips/libvips native library is available. Prefer the pure-JVM module when native deployment is undesirable; evaluate the JDK 25 FFM backend separately rather than assuming one binding is universally faster.
 
 ## Coordinates {#coordinates}
 
@@ -61,7 +61,7 @@ The module implements `bluetape4k-images-vips-api` and uses JVips internally wit
 
 ## Configuration {#configuration}
 
-Run on Java 21. Inputs are capped at 50 MiB, formats are magic-byte allowlisted to JPEG/PNG/WebP/AVIF/HEIC, and decoded pixels are checked against `JVipsRuntime.maxPixels` (150 million by default). Stream and path inputs are materialized into bytes in `0.4.0`.
+Run on JDK 25. Inputs are capped at 50 MiB, formats are magic-byte allowlisted to JPEG/PNG/WebP/AVIF/HEIC, and decoded pixels are checked against `JVipsRuntime.maxPixels` (150 million by default). Stream and path inputs are materialized into bytes in `0.4.0`.
 
 ## Failure modes {#failures}
 
@@ -77,11 +77,11 @@ Run `./gradlew :bluetape4k-images-vips-java21:test`. Tests auto-detect libvips a
 
 ## Workshops and learning path {#workshops}
 
-Start with the runtime/image tests on the deployment architecture, add a small encode smoke test, then run the benchmark sequentially with `-Pvips.impl=java21`.
+Start with the runtime/image tests on the deployment architecture, add a small encode smoke test, then run the benchmark sequentially with `-Pvips.impl=java21`; this property is the legacy backend selector, not a JDK 21 requirement.
 
 ## Limitations {#limitations}
 
-HEIC encoding is explicitly unsupported by this backend in `0.4.0`. AVIF and HEIF decoding/AVIF encoding still depend on host codec capability. Path loads read the complete compressed file after enforcing the 50 MiB bound.
+HEIC encoding is explicitly unsupported by this legacy-named backend in `0.4.0`. AVIF and HEIF decoding/AVIF encoding still depend on host codec capability. Path loads read the complete compressed file after enforcing the 50 MiB bound.
 
 <!-- release-readme-diagrams:start -->
 ## Release diagrams {#release-diagrams}

@@ -24,8 +24,8 @@ releaseRef: "0.4.0"
 
 - JVM만으로 로드, 저장, 필터, 변환과 분석을 처리하려면 [불변 이미지 처리](modules/bluetape4k-images.md)를 선택한다.
 - 애플리케이션에 필요한 경우에만 [CAPTCHA](modules/bluetape4k-images-captcha.md), [OCR](modules/bluetape4k-images-ocr.md), [Ktor](modules/bluetape4k-images-ktor.md), [Spring Boot](modules/bluetape4k-images-spring-boot.md)를 더한다.
-- JDK 21 서비스에서 libvips를 설치할 수 있다면 [Java 21 JVips](modules/bluetape4k-images-vips-java21.md)를 검토한다.
-- JDK 25와 native-access 옵션을 받아들일 수 있다면 [Java 25 FFM](modules/bluetape4k-images-vips-java25.md)을 검토한다.
+- libvips를 설치할 수 있으면 [JDK 25 JVips JNI](modules/bluetape4k-images-vips-java21.md)를 검토한다. 배포 JNI artifact는 호환성을 위해 `java21` 이름을 유지한다.
+- native-access 옵션을 받아들일 수 있으면 [JDK 25 FFM](modules/bluetape4k-images-vips-java25.md)을 검토한다.
 
 비교 기준은 [백엔드 선택](guides/backend-selection.md)에 정리했다.
 

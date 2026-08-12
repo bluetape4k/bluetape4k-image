@@ -1,10 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1280" height="980" viewBox="0 0 1280 980" role="img" aria-label="Benchmark Architecture">
 <defs>
-  <marker markerUnits="userSpaceOnUse" id="arrow-blue" markerWidth="10" markerHeight="10" refX="9" refY="3.5" orient="auto" viewBox="0 0 10 7" data-role="secondary" data-tip-direction="positive-x"><path d="M 0.8 0.7 L 9.2 3.5 L 0.8 6.3 Z" fill="#2563eb" stroke="#2563eb" stroke-width="0" stroke-dasharray="none"/></marker>
-  <marker markerUnits="userSpaceOnUse" id="arrow-green" markerWidth="10" markerHeight="10" refX="9" refY="3.5" orient="auto" viewBox="0 0 10 7" data-role="secondary" data-tip-direction="positive-x"><path d="M 0.8 0.7 L 9.2 3.5 L 0.8 6.3 Z" fill="#16a34a" stroke="#16a34a" stroke-width="0" stroke-dasharray="none"/></marker>
-  <marker markerUnits="userSpaceOnUse" id="arrow-orange" markerWidth="10" markerHeight="10" refX="9" refY="3.5" orient="auto" viewBox="0 0 10 7" data-role="secondary" data-tip-direction="positive-x"><path d="M 0.8 0.7 L 9.2 3.5 L 0.8 6.3 Z" fill="#ea580c" stroke="#ea580c" stroke-width="0" stroke-dasharray="none"/></marker>
-  <marker markerUnits="userSpaceOnUse" id="arrow-purple" markerWidth="10" markerHeight="10" refX="9" refY="3.5" orient="auto" viewBox="0 0 10 7" data-role="secondary" data-tip-direction="positive-x"><path d="M 0.8 0.7 L 9.2 3.5 L 0.8 6.3 Z" fill="#9333ea" stroke="#9333ea" stroke-width="0" stroke-dasharray="none"/></marker>
-  <marker markerUnits="userSpaceOnUse" id="arrow-gray" markerWidth="10" markerHeight="10" refX="9" refY="3.5" orient="auto" viewBox="0 0 10 7" data-role="secondary" data-tip-direction="positive-x"><path d="M 0.8 0.7 L 9.2 3.5 L 0.8 6.3 Z" fill="#6b7280" stroke="#6b7280" stroke-width="0" stroke-dasharray="none"/></marker>
+  <marker markerUnits="userSpaceOnUse" id="arrow-blue" markerWidth="14" markerHeight="14" viewBox="0 0 14 14" refX="12" refY="7" orient="auto" data-role="primary" data-tip-direction="positive-x"><path data-arrowhead="true" data-role="primary" data-size="14x14" data-solid-head="true" d="M 1 1 L 13 7 L 1 13 Z" fill="#2563eb" stroke="#2563eb" stroke-width="0" stroke-dasharray="none"/></marker>
+  <marker markerUnits="userSpaceOnUse" id="arrow-green" markerWidth="14" markerHeight="14" viewBox="0 0 14 14" refX="12" refY="7" orient="auto" data-role="primary" data-tip-direction="positive-x"><path data-arrowhead="true" data-role="primary" data-size="14x14" data-solid-head="true" d="M 1 1 L 13 7 L 1 13 Z" fill="#16a34a" stroke="#16a34a" stroke-width="0" stroke-dasharray="none"/></marker>
+  <marker markerUnits="userSpaceOnUse" id="arrow-orange" markerWidth="14" markerHeight="14" viewBox="0 0 14 14" refX="12" refY="7" orient="auto" data-role="primary" data-tip-direction="positive-x"><path data-arrowhead="true" data-role="primary" data-size="14x14" data-solid-head="true" d="M 1 1 L 13 7 L 1 13 Z" fill="#ea580c" stroke="#ea580c" stroke-width="0" stroke-dasharray="none"/></marker>
+  <marker markerUnits="userSpaceOnUse" id="arrow-purple" markerWidth="14" markerHeight="14" viewBox="0 0 14 14" refX="12" refY="7" orient="auto" data-role="primary" data-tip-direction="positive-x"><path data-arrowhead="true" data-role="primary" data-size="14x14" data-solid-head="true" d="M 1 1 L 13 7 L 1 13 Z" fill="#9333ea" stroke="#9333ea" stroke-width="0" stroke-dasharray="none"/></marker>
+  <marker markerUnits="userSpaceOnUse" id="arrow-gray" markerWidth="10" markerHeight="10" viewBox="0 0 10 10" refX="8" refY="5" orient="auto" data-role="secondary" data-tip-direction="positive-x"><path data-arrowhead="true" data-role="secondary" data-size="10x10" data-solid-head="true" d="M 1 1 L 9 5 L 1 9 Z" fill="#6b7280" stroke="#6b7280" stroke-width="0" stroke-dasharray="none"/></marker>
   <style>
     .canvas{fill:#ffffff}.panel{fill:#f3f6fa;stroke:#cbd5e1;stroke-width:1.4;stroke-dasharray:8 6}.chart-panel{fill:#ffffff;stroke:#bfdbfe;stroke-width:1.7}.card{fill:#ffffff;stroke:#94a3b8;stroke-width:1.9}.badge-text{font-family:"Comic Mono";font-size:11px;fill:#374151;font-weight:700}
     .edge-blue{stroke:#2563eb;stroke-width:2.1;fill:none;marker-end:url(#arrow-blue);stroke-linecap:round;stroke-linejoin:round}.edge-green{stroke:#16a34a;stroke-width:2.1;fill:none;marker-end:url(#arrow-green);stroke-linecap:round;stroke-linejoin:round}.edge-orange{stroke:#ea580c;stroke-width:2;fill:none;marker-end:url(#arrow-orange);stroke-linecap:round;stroke-linejoin:round}.edge-purple{stroke:#9333ea;stroke-width:2;fill:none;marker-end:url(#arrow-purple);stroke-linecap:round;stroke-linejoin:round}.edge-gray{stroke:#6b7280;stroke-width:1.8;fill:none;marker-end:url(#arrow-gray);stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:6 4}.dashed{stroke-dasharray:6 4}
@@ -18,14 +18,14 @@
 <rect class="panel" x="88" y="158" width="1104" height="746" rx="8"/>
 <text class="panel-title" x="108" y="188" dominant-baseline="middle">ARCHITECTURE</text>
 <g id="edges">
-<path data-connector="true" class="edge-gray" d="M 420 254 L 480 254"/>
-<path data-connector="true" class="edge-gray" d="M 800 254 L 860 254"/>
-<path data-connector="true" class="edge-gray" d="M 420 510 L 480 510"/>
-<path data-connector="true" class="edge-gray" d="M 800 510 L 860 510"/>
-<path data-connector="true" class="edge-gray" d="M 640 308 L 640 456"/>
-<path data-connector="true" class="edge-gray" d="M 420 766 L 480 766"/>
-<path data-connector="true" class="edge-gray" d="M 800 766 L 860 766"/>
-<path data-connector="true" class="edge-gray" d="M 640 564 L 640 712"/>
+<path data-connector="true" marker-end="url(#arrow-gray)" class="edge-gray" d="M 420 254 L 480 254"/>
+<path data-connector="true" marker-end="url(#arrow-gray)" class="edge-gray" d="M 800 254 L 860 254"/>
+<path data-connector="true" marker-end="url(#arrow-gray)" class="edge-gray" d="M 420 510 L 480 510"/>
+<path data-connector="true" marker-end="url(#arrow-gray)" class="edge-gray" d="M 800 510 L 860 510"/>
+<path data-connector="true" marker-end="url(#arrow-gray)" class="edge-gray" d="M 640 308 L 640 456"/>
+<path data-connector="true" marker-end="url(#arrow-gray)" class="edge-gray" d="M 420 766 L 480 766"/>
+<path data-connector="true" marker-end="url(#arrow-gray)" class="edge-gray" d="M 800 766 L 860 766"/>
+<path data-connector="true" marker-end="url(#arrow-gray)" class="edge-gray" d="M 640 564 L 640 712"/>
 </g><g id="cards">
 <g id="fixtures">
 <rect class="card" x="100" y="200" width="320" height="108" rx="8"/>
@@ -62,7 +62,7 @@
 <rect x="496" y="486" width="48" height="48" rx="8" fill="#f0fdfa" stroke="#ccfbf1" stroke-width="1.3"/>
 <text class="badge-text" x="520" y="514" text-anchor="middle">IO</text>
 <text class="card-title" x="562" y="499.0" dominant-baseline="middle">libvips path</text>
-<text class="detail" x="562" y="521.0" dominant-baseline="middle">Java21/Java25</text>
+<text class="detail" x="562" y="521.0" dominant-baseline="middle">JDK25 backends</text>
 </g>
 <g id="gc">
 <rect class="card" x="860" y="456" width="320" height="108" rx="8"/>

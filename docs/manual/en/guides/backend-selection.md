@@ -9,13 +9,13 @@ releaseRef: "0.4.0"
 
 Choose a backend from deployment constraints and measured workload, not from the expectation that native code is always faster.
 
-![Decision map for choosing Scrimage, Java 21 JVips, or Java 25 FFM](../../assets/backends/backend-decision-map.svg)
+![Decision map for choosing Scrimage, JDK 25 JVips, or JDK 25 FFM](../../assets/backends/backend-decision-map.svg)
 
 | Path | Best fit | Runtime cost | Ownership |
 |---|---|---|---|
-| <code>bluetape4k-images</code> | portable filters, transforms, analysis, JVM services | JDK 21; no libvips | JVM values and caller-owned streams |
-| Java 21 JVips | native resize, thumbnail, crop, encode on JDK 21 | system libvips and JNI | close every <code>VipsImage</code> |
-| Java 25 FFM | native processing on a JDK 25 deployment | system libvips and native-access flag | close every image and manage runtime shutdown |
+| <code>bluetape4k-images</code> | portable filters, transforms, analysis, JVM services | JDK 25; no libvips | JVM values and caller-owned streams |
+| JDK 25 JVips JNI (legacy <code>java21</code> artifact) | native resize, thumbnail, crop, encode on JDK 25 | system libvips and JNI | close every <code>VipsImage</code> |
+| JDK 25 FFM | native processing on a JDK 25 deployment | system libvips and native-access flag | close every image and manage runtime shutdown |
 
 ## Choose Scrimage when
 
@@ -25,7 +25,7 @@ The application needs the broad immutable-image helpers, Java2D drawing, filter 
 
 The workload is dominated by native-supported resize, crop, thumbnail, or encoding operations and the service can install and monitor libvips. Validate the exact codec on the target host. Library support and the host libvips build are separate facts.
 
-Choose [Java 21 JNI](../native/java21-jni.md) if the application must stay on JDK 21. Choose [Java 25 FFM](../native/java25-ffm.md) only if JDK 25 and <code>--enable-native-access=ALL-UNNAMED</code> are part of the deployment contract.
+Choose [JDK 25 JVips JNI](../native/java21-jni.md) when the application can provide system libvips and wants the legacy JNI binding. Choose [JDK 25 FFM](../native/java25-ffm.md) when JDK 25 and <code>--enable-native-access=ALL-UNNAMED</code> are part of the deployment contract.
 
 ## Avoid accidental dual backends
 

@@ -4,7 +4,7 @@
 
 JPG, PNG, GIF, WebP, **TIFF/SVG** (Issue #134) 등의 이미지를 로드, 변환, 크기 조절, 분할, 필터 적용 등의 조작을 지원하는 라이브러리입니다.
 [Scrimage](https://github.com/sksamuel/scrimage) 라이브러리를 기반으로 하며, Coroutines를 활용한 비동기 이미지 처리를 제공합니다.
-AVIF·HEIC는 incubating 인터페이스로 제공되며, libvips 지원은 `images-vips-api`에서 노출하고 런타임 백엔드는 `images-vips-java21` 또는 `images-vips-java25`가 제공합니다.
+AVIF·HEIC는 incubating 인터페이스로 제공되며, libvips 지원은 `images-vips-api`에서 노출하고 런타임은 JDK 25 JVips JNI 백엔드(호환성을 위해 `images-vips-java21` 이름으로 배포) 또는 JDK 25 FFM 백엔드(`images-vips-java25`)를 사용합니다.
 
 ## 아키텍처
 

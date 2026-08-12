@@ -30,7 +30,7 @@ The benchmark is repository-only and publishes no artifact. Its project dependen
 
 - `AverageTime` is lower-is-better; throughput is higher-is-better.
 - Fixture, host, JVM, backend, warmups, iterations, fork count, command, and raw JSON belong to every comparison.
-- Java 25 selects the FFM backend; `-Pvips.impl=java21` selects the Java 21 JNI backend.
+- The benchmark runs on JDK 25. `-Pvips.impl=java25` selects FFM, while `-Pvips.impl=java21` selects the legacy JVips JNI backend; the property is a backend name and does not select a JDK 21 toolchain.
 - GC-profiler results cover managed heap only, not libvips native memory.
 - Full pipelines provide stronger application evidence than isolated, potentially lazy geometry operations.
 
@@ -50,7 +50,7 @@ Focused large-file evidence:
   -Pvips.impl=java25 --console=plain
 ```
 
-Run backends sequentially on the same compatible host when comparing Java 21 JNI with Java 25 FFM.
+Run the JDK 25 backends sequentially on the same compatible host. Historical JDK 21 JNI rows remain frozen benchmark evidence and are not the current runtime baseline.
 
 ## API by task {#api-by-task}
 
@@ -70,16 +70,16 @@ Start with the production-shaped scenario, then isolate a suspected boundary. Pr
 
 ## Integrations {#integrations}
 
-The suite compares [`bluetape4k-images`](./bluetape4k-images.md) with the binding-neutral [`vips API`](./bluetape4k-images-vips-api.md) and the [Java 21 JNI](./bluetape4k-images-vips-java21.md) or [Java 25 FFM](./bluetape4k-images-vips-java25.md) runtime.
+The suite compares [`bluetape4k-images`](./bluetape4k-images.md) with the binding-neutral [`vips API`](./bluetape4k-images-vips-api.md) and the [JDK 25 JVips JNI](./bluetape4k-images-vips-java21.md) or [JDK 25 FFM](./bluetape4k-images-vips-java25.md) runtime.
 
 ## Configuration {#configuration}
 
-The complete benchmark uses three warmups, five measurements, one fork, average-time mode, and milliseconds. Focused configurations use one warmup and three one-second measurements. The build selects a JDK 21 or 25 toolchain from `vips.impl` and adds `--enable-native-access=ALL-UNNAMED` for benchmark forks.
+The complete benchmark uses three warmups, five measurements, one fork, average-time mode, and milliseconds. Focused configurations use one warmup and three one-second measurements. The build uses the JDK 25 toolchain; `vips.impl` selects the backend and adds `--enable-native-access=ALL-UNNAMED` for FFM benchmark forks.
 
 ## Failure modes {#failures}
 
 - Near-zero vips rows: verify native availability; unavailable methods consume `null` and return immediately.
-- Java 21 JNI skips on macOS arm64: the recorded 0.4.0 host found an incompatible x86_64 JVips dylib; use a compatible host.
+- Historical Java 21 JNI row skips on macOS arm64: the recorded 0.4.0 host found an incompatible x86_64 JVips dylib; use a compatible host for reproductions and label the result as historical.
 - Large variance: avoid parallel benchmark processes, check thermal/load state, and keep fixtures and forks identical.
 - Native load failure: verify system libvips and the FFM/JNI library path before interpreting results.
 
@@ -109,7 +109,7 @@ For publishable evidence, retain generated JSON, record the exact command/enviro
 ## Limitations {#limitations}
 
 - The 0.4.0 reports mix a fresh macOS Java 25 run with explicitly historical Linux rows; they are not one experiment.
-- The macOS arm64 run did not produce compatible Java 21 JNI measurements.
+- The macOS arm64 run did not produce compatible historical Java 21 JNI measurements; this does not change the current JDK 25 requirement.
 - `vips_resize` does not encode its result; libvips lazy evaluation means geometry-only speedups do not equal completed pixel-pipeline speedups.
 - GC allocation excludes native memory.
 - IO API convenience, latency, throughput, and backend selection are separate questions.

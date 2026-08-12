@@ -35,7 +35,7 @@ The workshop is not published. Applications should choose one `bluetape4k-depend
 
 ## Quick start {#quick-start}
 
-Prerequisite: JDK 21 or newer. No external service is required.
+Prerequisite: JDK 25 or newer. No external service is required.
 
 ```bash
 ./gradlew :ktor-image-api:run

@@ -2,7 +2,7 @@
 
 English | [한국어](./README.ko.md)
 
-FFM (Foreign Function & Memory) API backend for libvips image processing on Java 23+. Uses zero JNI, pure FFM bindings via `vips-ffm`. Requires Java 25 recommended and system-installed libvips library.
+FFM (Foreign Function & Memory) API backend for libvips image processing on JDK 25+. Uses zero JNI, pure FFM bindings via `vips-ffm`. Requires a system-installed libvips library.
 
 > **CRITICAL:** This module requires the JVM flag `--enable-native-access=ALL-UNNAMED` to be set at startup. Without this flag, the FFM API will fail. See [JVM Configuration](#jvm-configuration) below.
 
@@ -15,8 +15,8 @@ FFM (Foreign Function & Memory) API backend for libvips image processing on Java
 ## Prerequisites
 
 ### Java Version
-- **Minimum:** Java 23
-- **Recommended:** Java 25
+- **Minimum:** JDK 25
+- **Recommended:** JDK 25
 
 ### System Requirements
 - **macOS:** `brew install vips`
@@ -97,7 +97,7 @@ Runtime.getRuntime().addShutdownHook(Thread {
 
 ## Features
 
-- **FFM-based (JDK 23+):** No JNI, pure Foreign Function & Memory API
+- **FFM-based (JDK 25+):** No JNI, pure Foreign Function & Memory API
 - **Thread-safe initialization:** CAS-based state machine prevents race conditions
 - **Image decoding:** JPEG, PNG, WebP, capability-gated AVIF/HEIC (magic byte allowlist)
 - **Image operations:** Resize, thumbnail, crop
@@ -492,12 +492,12 @@ class ImageController(
 }
 ```
 
-## Comparison with Java 21 (java21 module)
+## Comparison with the JDK 25 JVips JNI backend (legacy `java21` module name)
 
-| Feature | java25 (FFM) | java21 (JNI) |
+| Feature | java25 (FFM) | java21 (JNI, legacy name) |
 |---------|------|------|
 | **Binding** | vips-ffm (FFM API) | libjvips (JNI) |
-| **Java Version** | 23+ | 21+ |
+| **Java Version** | 25+ | 25+ |
 | **JVM Flag** | `--enable-native-access=ALL-UNNAMED` | None |
 | **Memory Model** | Arena-based auto-cleanup | JNI reference counting |
 | **Platform** | macOS + Linux | Linux only (no macOS native binary) |

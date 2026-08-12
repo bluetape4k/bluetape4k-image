@@ -7,7 +7,7 @@ releaseRef: "0.4.0"
 
 # libvips 공통 API
 
-<code>bluetape4k-images-vips-api</code>는 이미지 처리 계약을 Java 21 JVips와 Java 25 FFM 바인딩에서 분리한다. 애플리케이션 코드는 <code>VipsImage</code>와 <code>VipsRuntime</code>을 기준으로 컴파일하고 런타임 구현 하나를 선택한다.
+<code>bluetape4k-images-vips-api</code>는 이미지 처리 계약을 JDK 25 JVips JNI와 JDK 25 FFM 바인딩에서 분리한다. 애플리케이션 코드는 <code>VipsImage</code>와 <code>VipsRuntime</code>을 기준으로 컴파일하고 런타임 구현 하나를 선택한다. JNI artifact는 호환성을 위해 <code>java21</code> 이름을 유지한다.
 
 ## 핵심 계약
 

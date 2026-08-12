@@ -35,7 +35,7 @@ This runnable example is not published. Consumers should select one `bluetape4k-
 
 ## Quick start {#quick-start}
 
-Prerequisite: JDK 21 or newer. No service or native package is required.
+Prerequisite: JDK 25 or newer. No service or native package is required.
 
 ```bash
 ./gradlew :basic-processing:run

@@ -2,7 +2,7 @@
 
 English | [한국어](./README.ko.md)
 
-A library for loading, converting, resizing, splitting, and applying filters to images in formats such as JPG, PNG, GIF, WebP, and **TIFF/SVG** (Issue #134). Built on the [Scrimage](https://github.com/sksamuel/scrimage) library with asynchronous image processing via Coroutines. AVIF and HEIC are incubating interfaces; libvips support is exposed by `images-vips-api` and runtime-backed by `images-vips-java21` or `images-vips-java25`.
+A library for loading, converting, resizing, splitting, and applying filters to images in formats such as JPG, PNG, GIF, WebP, and **TIFF/SVG** (Issue #134). Built on the [Scrimage](https://github.com/sksamuel/scrimage) library with asynchronous image processing via Coroutines. AVIF and HEIC are incubating interfaces; libvips support is exposed by `images-vips-api` and backed at runtime by the JDK 25 JVips JNI backend (published under the legacy `images-vips-java21` name) or the JDK 25 FFM backend (`images-vips-java25`).
 
 ## Architecture
 

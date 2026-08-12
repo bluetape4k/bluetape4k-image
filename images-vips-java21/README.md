@@ -2,7 +2,7 @@
 
 English | [한국어](./README.ko.md)
 
-JVips (JNI) backend implementation for libvips image processing. Provides fast, memory-efficient image manipulation on Java 21+ via native bindings. On Linux, JVips bundles native `.so` libraries. On macOS, system libvips is required.
+JVips (JNI) backend implementation for libvips image processing. Provides fast, memory-efficient image manipulation on JDK 25+ via native bindings. The `java21` module and package names are retained for artifact compatibility. On Linux, JVips bundles native `.so` libraries. On macOS, system libvips is required.
 
 ## Architecture
 
@@ -281,7 +281,7 @@ HEIC encoding is not exposed by the JVips binding; use the Java 25 FFM backend w
 | AVIF | Capability-gated | Capability-gated | libvips with libheif and an AV1 encoder such as libaom |
 | HEIC | Capability-gated | N/A | libvips with libheif for decode; JVips does not expose HEIC encode |
 
-The Java 21 backend allowlists AVIF/HEIC ISO BMFF brands before decoding.
+The JVips backend allowlists AVIF/HEIC ISO BMFF brands before decoding.
 Unsupported bytes fail before libvips is called. Valid AVIF/HEIC containers still
 depend on the host libvips codec set; missing native support is reported as a
 sanitized `VipsDecodeException` or `VipsEncodeException`.

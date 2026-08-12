@@ -24,8 +24,8 @@ The 0.4.0 release contains 15 Gradle projects. Nine are published coordinates, f
 ## Native processing
 
 - [Vips API](../modules/bluetape4k-images-vips-api.md) defines <code>VipsImage</code>, <code>VipsRuntime</code>, formats, writers, and lifecycle rules.
-- [Java 21 JVips](../modules/bluetape4k-images-vips-java21.md) implements that API with JNI.
-- [Java 25 FFM](../modules/bluetape4k-images-vips-java25.md) implements it with the Foreign Function and Memory API.
+- [JDK 25 JVips JNI](../modules/bluetape4k-images-vips-java21.md) implements that API with JNI; the published module keeps the legacy `java21` name.
+- [JDK 25 FFM](../modules/bluetape4k-images-vips-java25.md) implements it with the Foreign Function and Memory API.
 
 The common API does not select or initialize a backend for the application. Deploy exactly one runtime implementation unless a measured migration requires both.
 

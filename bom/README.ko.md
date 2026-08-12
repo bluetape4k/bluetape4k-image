@@ -24,7 +24,7 @@ BOM은 Gradle `java-platform` 으로 `<dependencyManagement>` constraint 만 게
 | `images` | 이미지 처리 코어 (scrimage / Java2D 백엔드) |
 | `images-spring-boot` | Spring Boot 4 자동 구성: 스토리지, CDN, 헬스, 메트릭 |
 | `images-vips-api` | libvips API 표면 (백엔드 중립) |
-| `images-vips-java21` | libvips JNI 바인딩 (Java 21) |
+| `images-vips-java21` | libvips JNI 바인딩 (JDK 25, legacy artifact name) |
 | `images-vips-java25` | libvips FFM (Project Panama) 바인딩 (Java 25) |
 
 ## 사용 예제

@@ -7,7 +7,7 @@ releaseRef: "0.4.0"
 
 # libvips Common API
 
-<code>bluetape4k-images-vips-api</code> separates image-processing contracts from the Java 21 JVips and Java 25 FFM bindings. Compile application code against <code>VipsImage</code> and <code>VipsRuntime</code>, then select one implementation at runtime.
+<code>bluetape4k-images-vips-api</code> separates image-processing contracts from the JDK 25 JVips JNI and JDK 25 FFM bindings. Compile application code against <code>VipsImage</code> and <code>VipsRuntime</code>, then select one implementation at runtime. The JNI artifact keeps the legacy <code>java21</code> name for compatibility.
 
 ## Core contracts
 

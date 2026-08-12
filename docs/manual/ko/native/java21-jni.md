@@ -1,17 +1,17 @@
 ---
 manualId: "java21-jni"
-title: "Java 21 JVips 백엔드"
+title: "JDK 25 JVips JNI 백엔드 (legacy java21 artifact)"
 locale: "ko"
 releaseRef: "0.4.0"
 ---
 
-# Java 21 JVips 백엔드
+# JDK 25 JVips JNI 백엔드 (legacy `java21` artifact)
 
-<code>bluetape4k-images-vips-java21</code>은 JVips/JNI로 공통 Vips 계약을 구현한다. 애플리케이션을 JDK 21에서 실행해야 하고 시스템 libvips를 제공할 수 있을 때 선택한다.
+<code>bluetape4k-images-vips-java21</code>은 JVips/JNI로 공통 Vips 계약을 구현한다. 호환성을 위해 artifact와 package 이름은 <code>java21</code>로 유지하지만 이 release line은 JDK 25를 요구한다.
 
 ## 런타임 조건
 
-대상 실행 환경에 libvips를 설치하고 JVM에서 공유 라이브러리를 찾을 수 있게 해야 한다. Linux와 macOS의 패키지 구성이 다르므로 운영에 쓸 것과 같은 이미지에서 시작 검사를 실행한다. 모듈은 Java 21 도구 체인으로 컴파일하고 테스트한다.
+대상 실행 환경에 libvips를 설치하고 JVM에서 공유 라이브러리를 찾을 수 있게 해야 한다. Linux와 macOS의 패키지 구성이 다르므로 운영에 쓸 것과 같은 이미지에서 시작 검사를 실행한다. 모듈은 JDK 25 도구 체인으로 컴파일하고 테스트한다.
 
 ## 프로그래밍 모델
 
@@ -23,9 +23,9 @@ releaseRef: "0.4.0"
 
 0.4.0 빌드는 네이티브 테스트에 <code>forkEvery = 1</code>과 <code>maxParallelForks = 1</code>을 적용한다. JNI와 네이티브 전역 상태가 테스트 사이에 남을 수 있으므로 이 격리를 유지한다. 라이브러리 누락, 지원하지 않는 코덱, 과도한 픽셀 수와 런타임 종료 후 사용은 분명하게 실패해야 한다.
 
-[Java 25 FFM](java25-ffm.md)과 비교할 때는 같은 장비와 테스트 이미지를 사용한다.
+[JDK 25 FFM](java25-ffm.md)과 비교할 때는 같은 장비와 테스트 이미지를 사용한다.
 
 ## 근거 소스
 
 - [JVipsRuntime](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/images-vips-java21/src/main/kotlin/io/bluetape4k/images/vips/java21/JVipsRuntime.kt)
-- [Java 21 모듈 설정](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/images-vips-java21/build.gradle.kts)
+- [JDK 25 모듈 설정(legacy java21 모듈)](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/images-vips-java21/build.gradle.kts)

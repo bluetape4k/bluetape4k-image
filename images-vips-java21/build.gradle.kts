@@ -9,24 +9,23 @@ configurations {
 
 java {
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(21))
+        languageVersion.set(JavaLanguageVersion.of(25))
     }
 }
 
 kotlin {
-    jvmToolchain(21)
+    jvmToolchain(25)
     compilerOptions {
-        jvmTarget.set(JvmTarget.JVM_21)
+        jvmTarget.set(JvmTarget.JVM_25)
     }
 }
 
 tasks.withType<JavaCompile>().configureEach {
-    options.release.set(21)
+    options.release.set(25)
 }
 
 tasks.withType<Test>().configureEach {
-    // The production module remains Java 21 for the JNI contract, while its
-    // tests consume Java 25 test fixtures from the shared API module.
+    // The production module and its tests use the repository JDK 25 baseline.
     javaLauncher.set(javaToolchains.launcherFor {
         languageVersion.set(JavaLanguageVersion.of(25))
     })
@@ -56,8 +55,7 @@ dependencies {
     api(project(":bluetape4k-images-vips-api"))
     testImplementation(bt4k.bluetape4k.junit5)
     testImplementation(testFixtures(project(":bluetape4k-images-vips-api")))
-    // Tests run on the repository JDK 25 even though this production module
-    // stays Java 21; use the matching structured-concurrency provider.
+    // Use the JDK 25 structured-concurrency provider for the test runtime.
     testRuntimeOnly(bt4k.bluetape4k.virtualthread.jdk25)
 
     // JVips JNI bindings (Java 8+; Linux: bundled native / macOS: system libvips required)

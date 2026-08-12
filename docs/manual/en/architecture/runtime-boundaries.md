@@ -19,7 +19,7 @@ Image processing crosses heap, file, network, and native-memory boundaries. A su
 
 <code>VipsImage</code> implements <code>AutoCloseable</code>. Every loaded image and derived native image must be closed, normally with <code>use</code>. Initialize the selected <code>VipsRuntime</code> once per process and shut it down only after all images and workers have finished.
 
-The Java 21 implementation requires JVips/JNI and a visible system libvips installation. The Java 25 implementation requires JDK 25, system libvips, and <code>--enable-native-access=ALL-UNNAMED</code>. See [native resource lifecycle](../guides/native-resource-lifecycle.md).
+The JVips JNI implementation (published under the legacy <code>java21</code> module name) requires JDK 25, JVips/JNI, and a visible system libvips installation. The FFM implementation also requires JDK 25, system libvips, and <code>--enable-native-access=ALL-UNNAMED</code>. See [native resource lifecycle](../guides/native-resource-lifecycle.md).
 
 ## OCR boundary
 

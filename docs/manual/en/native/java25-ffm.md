@@ -21,7 +21,7 @@ On macOS with Homebrew, the Gradle test config exposes <code>/opt/homebrew/lib</
 
 Use <code>FfmVipsRuntime</code> and <code>FfmVipsImage</code> behind the common API. Close source and derived images with <code>use</code>. Supported operations include loading, resize, thumbnail, crop, coroutine helpers, Okio sources, and JPEG/PNG/WebP/HEIF-family writing as supported by the native installation.
 
-The module disables AtomicFU JVM transformation because the FFM dependency uses Java 25 class files that a Java 21 build JVM cannot transform safely. Preserve this build constraint.
+The module disables AtomicFU JVM transformation because the FFM dependency uses Java 25 class files that the transformation step cannot safely rewrite. Preserve this build constraint.
 
 ## Choose deliberately
 

@@ -2,7 +2,7 @@
 
 [English](./README.md) | 한국어
 
-JVips(JNI) 백엔드로 libvips 이미지 처리 구현. Java 21+ 환경에서 네이티브 바인딩을 통한 고속, 메모리 효율적 이미지 조작을 제공합니다. Linux에서는 JVips가 네이티브 `.so` 라이브러리를 번들로 제공하며, macOS에서는 시스템 libvips가 필요합니다.
+JVips(JNI) 백엔드로 libvips 이미지 처리 구현. JDK 25+ 환경에서 네이티브 바인딩을 통한 고속, 메모리 효율적 이미지 조작을 제공합니다. `java21` 모듈 및 package 이름은 artifact 호환성을 위해 유지합니다. Linux에서는 JVips가 네이티브 `.so` 라이브러리를 번들로 제공하며, macOS에서는 시스템 libvips가 필요합니다.
 
 ## 아키텍처
 
@@ -280,7 +280,7 @@ HEIC 인코딩은 JVips 바인딩에서 노출되지 않으므로 HEIC 출력이
 | AVIF | Capability-gated | Capability-gated | libheif와 libaom 같은 AV1 인코더가 포함된 libvips |
 | HEIC | Capability-gated | N/A | Decode는 libheif 포함 libvips 필요. JVips는 HEIC encode 미노출 |
 
-Java 21 백엔드는 decode 전에 AVIF/HEIC ISO BMFF brand를 allowlist로 검사합니다.
+JVips 백엔드는 decode 전에 AVIF/HEIC ISO BMFF brand를 allowlist로 검사합니다.
 지원하지 않는 바이트는 libvips 호출 전에 실패합니다. 유효한 AVIF/HEIC 컨테이너라도 실제
 처리는 호스트 libvips codec set에 의존하며, native 지원이 없으면 sanitized
 `VipsDecodeException` 또는 `VipsEncodeException`으로 보고됩니다.

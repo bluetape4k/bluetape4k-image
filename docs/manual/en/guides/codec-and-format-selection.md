@@ -17,7 +17,7 @@ Animated GIF-to-WebP, TIFF, and SVG deserve explicit fixture tests. Metadata, an
 
 ## libvips path
 
-The common [Vips API](../native/vips-api.md) exposes image formats and encoding options, while the Java 21 and Java 25 implementations delegate capability to their native binding and installed libvips. AVIF and HEIC are incubating paths. Verify the target machine with real encode and decode fixtures; do not infer support from a developer laptop.
+The common [Vips API](../native/vips-api.md) exposes image formats and encoding options, while the two JDK 25 implementations delegate capability to their native binding and installed libvips. AVIF and HEIC are incubating paths. Verify the target machine with real encode and decode fixtures; do not infer support from a developer laptop.
 
 ## Selection rules
 

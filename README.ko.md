@@ -11,8 +11,8 @@
 
 Kotlin/JVM 이미지 처리 라이브러리 — [bluetape4k](https://github.com/bluetape4k) 생태계의 일부입니다.
 두 가지 백엔드를 제공합니다: 코루틴 비동기 I/O를 갖춘 순수 JVM [scrimage](https://github.com/sksamuel/scrimage)
-경로(Java2D)와, JNI(Java 21) 및 Panama 외부 함수 & 메모리 API(Java 25)를 통해 제공되는 고성능
-[libvips](https://www.libvips.org/) 경로입니다.
+경로(Java2D)와, JVips JNI 백엔드(JDK 25, legacy `java21` artifact name) 및 Panama 외부 함수 &
+메모리 API(JDK 25)를 통해 제공되는 고성능 [libvips](https://www.libvips.org/) 경로입니다.
 
 ## 개요
 
@@ -35,7 +35,8 @@ native codec이 중요해질 때 libvips 백엔드로 확장할 수 있는 단�
   Runtime, TensorFlow Lite, MediaPipe, 외부 서비스 중 하나를 선택하기 전에 안정적인
   결과 모델이 필요하면 `images`의 runtime-free detector contract를 사용합니다.
 - **Native acceleration** — libvips 처리량, 메모리 동작, AVIF/HEIC 가능 native codec 지원이
-  필요하면 `images-vips-api`에 맞춰 작성하고 Java 21 JNI 또는 Java 25 FFM backend를 선택합니다.
+  필요하면 `images-vips-api`에 맞춰 작성하고 JDK 25 JVips JNI(legacy `java21` artifact) 또는
+  Java 25 FFM backend를 선택합니다.
 
 BOM은 artifact version을 정렬하고, runnable example은 local API 형태를 보여 주며,
 benchmark module은 scrimage/libvips trade-off를 추측이 아니라 측정 가능한 증거로 남깁니다.
@@ -66,7 +67,7 @@ README는 현재 저장소의 모습을 요약합니다. 버전별 매뉴얼은 
   `ImmutableImage` sync/suspend 진입점 제공
 - **Ktor 통합** — Ktor 서비스에서 CAPTCHA 이미지 발급과 one-shot 답변 검증을 처리하는 route helper
 - **libvips 추상화** — binding-neutral `VipsImage`, `VipsRuntime` 계약
-- **두 native backend** — Java 21 JVips/JNI와 Java 25 FFM/Panama 선택지
+- **두 native backend** — JDK 25 JVips/JNI(legacy `java21` artifact)와 Java 25 FFM/Panama 선택지
 - **Benchmark lane** — scrimage와 libvips resize/encode 경로를 비교하는
   `kotlinx-benchmark` 벤치마크
 
@@ -115,7 +116,7 @@ API와 lifecycle 선택입니다. 호출자가 이미 non-file stream이나
 | `images-ktor`         | `bluetape4k-images-ktor`             | 썸네일 생성과 CAPTCHA 검증을 위한 Ktor route helper        |
 | `images-spring-boot`  | `bluetape4k-images-spring-boot`      | Spring Boot 4 자동 구성: 스토리지, CDN, 헬스, 메트릭          |
 | `images-vips-api`     | `bluetape4k-images-vips-api`         | 공유 `VipsImage` / `VipsRuntime` 인터페이스 (바인딩 중립)     |
-| `images-vips-java21`  | `bluetape4k-images-vips-java21`      | JVips JNI 백엔드 — Java 21+, 시스템 libvips 필요           |
+| `images-vips-java21`  | `bluetape4k-images-vips-java21`      | JVips JNI 백엔드 — JDK 25+, 시스템 libvips 필요 (legacy artifact name) |
 | `images-vips-java25`  | `bluetape4k-images-vips-java25`      | vips-ffm FFM 백엔드 — Java 25+, `--enable-native-access` |
 | `benchmark/images-benchmark` | `bluetape4k-images-benchmark`        | `kotlinx-benchmark`: scrimage vs libvips                  |
 
@@ -133,13 +134,13 @@ API와 lifecycle 선택입니다. 호출자가 이미 non-file stream이나
 | `images-captcha`      | 25+    | —              | —                                   |
 | `images-ocr`          | 25+    | Tesseract + traineddata | —                          |
 | `images-ktor`         | 25+    | —              | —                                   |
-| `images-vips-api`     | 21+    | —              | —                                   |
-| `images-vips-java21`  | 21+    | libvips        | —                                   |
+| `images-vips-api`     | 25+    | —              | —                                   |
+| `images-vips-java21`  | 25+    | libvips        | —                                   |
 | `images-vips-java25`  | 25+    | libvips        | `--enable-native-access=ALL-UNNAMED` |
 
-일반 라이브러리 모듈은 JDK 25를 대상으로 합니다. `images-vips-api`와
-`images-vips-java21` JNI 구현은 Java 25 FFM 백엔드와 공존하는 JNI 호환성
-라인을 위해 의도적으로 JDK 21을 유지합니다.
+`images-vips-api`와 `images-vips-java21`로 published되는 JVips JNI 구현을
+포함한 모든 라이브러리 모듈은 JDK 25를 대상으로 합니다. 기존 artifact/module 및
+package 이름은 호환성을 위해 유지하며, 지원 bytecode/runtime 기준만 변경되었습니다.
 
 ### OCR용 Tesseract 설치
 
@@ -228,8 +229,8 @@ val smoke = runtime.smokeTestCodec(
 }
 ```
 
-Java 25는 `heifload_buffer`, `heifsave_buffer` native operation availability를
-보고합니다. Java 21은 JVips 한계를 명시하고, binding이 native libvips 빌드를 직접 검사할
+두 JDK 25 백엔드는 `heifload_buffer`, `heifsave_buffer` native operation availability를
+보고합니다. JVips binding은 한계를 명시하고, binding이 native libvips 빌드를 직접 검사할
 수 없는 항목은 `UNKNOWN`으로 보고합니다.
 
 ### libvips 시작 문제 해결
@@ -281,7 +282,7 @@ dependencies {
     implementation("io.github.bluetape4k.image:bluetape4k-images-vips-api:0.3.0")
 
     // 아래 vips 백엔드 중 하나를 선택:
-    // Java 21 JNI 백엔드
+    // JVips JNI 백엔드 (JDK 25, legacy java21 artifact)
     runtimeOnly("io.github.bluetape4k.image:bluetape4k-images-vips-java21:0.3.0")
     // 또는 Java 25 FFM 백엔드
     runtimeOnly("io.github.bluetape4k.image:bluetape4k-images-vips-java25:0.3.0")
@@ -553,7 +554,7 @@ FfmVipsImageSupport.ffmVipsImageOf(Path.of("photo.jpg")).use { image ->
 > **참고**: `images-vips-java25` 사용 시 JVM 시작 플래그에 `--enable-native-access=ALL-UNNAMED`를
 > 추가해야 합니다. `java -jar`에서는 `-jar` 앞에 배치하세요.
 
-### Java 21 JNI 백엔드 (`images-vips-java21`)
+### JVips JNI 백엔드 (JDK 25, `images-vips-java21`)
 
 ```kotlin
 import io.bluetape4k.images.vips.java21.*

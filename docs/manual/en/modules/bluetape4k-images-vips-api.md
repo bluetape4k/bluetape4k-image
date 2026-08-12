@@ -16,7 +16,7 @@ artifact: io.github.bluetape4k.image:bluetape4k-images-vips-api
 
 ## Problem {#problem}
 
-This module is the binding-neutral contract for libvips processing. Applications can compile against `VipsImage` and `VipsRuntime`, then select the Java 21 JNI or Java 25 FFM backend without exposing binding classes in domain code.
+This module is the binding-neutral contract for libvips processing. Applications can compile against `VipsImage` and `VipsRuntime`, then select the JDK 25 JVips JNI or JDK 25 FFM backend without exposing binding classes in domain code. The JNI implementation is published under the legacy `java21` module name.
 
 ## When to use it {#when-to-use}
 
@@ -78,7 +78,7 @@ The API tests cover option validation and Okio ownership. Backend golden, proper
 
 ## Workshops and learning path {#workshops}
 
-Read the API first, then the lifecycle guide for the chosen backend, then compare benchmark evidence. The Java 21 and Java 25 factories have deliberately different names, making backend selection visible at composition time.
+Read the API first, then the lifecycle guide for the chosen backend, then compare benchmark evidence. The JDK 25 JVips and FFM factories have deliberately different names, making backend selection visible at composition time while the JNI artifact retains its legacy `java21` name.
 
 ## Limitations {#limitations}
 
