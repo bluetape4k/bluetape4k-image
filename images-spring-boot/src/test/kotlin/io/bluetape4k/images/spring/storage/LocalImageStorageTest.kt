@@ -27,8 +27,13 @@ class LocalImageStorageTest {
     private val options = UploadOptions()
     private val sampleBytes = "fake image bytes".toByteArray()
 
+    private fun provisionParent(key: ImageObjectKey) {
+        Files.createDirectories(tempDir.resolve(key.fullKey).parent)
+    }
+
     @Test
     fun `upload bytes stores data and returns correct result`() = runTest {
+        provisionParent(key)
         val result = storage.upload(key, sampleBytes, options)
 
         result.key shouldBeEqualTo key
@@ -54,6 +59,7 @@ class LocalImageStorageTest {
         Files.write(sourceFile, sampleBytes)
 
         val pathKey = ImageObjectKey.of("originals", "source.jpg")
+        provisionParent(pathKey)
         val result = storage.upload(pathKey, sourceFile, options)
 
         result.key shouldBeEqualTo pathKey
@@ -86,6 +92,7 @@ class LocalImageStorageTest {
     @Test
     fun `upload path preserves existing object when staging source fails`() = runTest {
         val pathKey = ImageObjectKey.of("originals", "preserved.jpg")
+        provisionParent(pathKey)
         storage.upload(pathKey, sampleBytes, options)
         val invalidSource = Files.createTempDirectory(tempDir, "invalid-source-")
 
@@ -117,6 +124,7 @@ class LocalImageStorageTest {
         val movedRoot = originalRoot.resolveSibling("${originalRoot.fileName}-moved")
         val anchoredStorage = LocalImageStorage(originalRoot, maxSizeBytes = 1024 * 1024L)
         val existingKey = ImageObjectKey.of("uploads", "existing.jpg")
+        Files.createDirectories(originalRoot.resolve(existingKey.fullKey).parent)
         anchoredStorage.upload(existingKey, sampleBytes, options)
 
         Files.move(originalRoot, movedRoot)
@@ -134,6 +142,37 @@ class LocalImageStorageTest {
     }
 
     @Test
+    fun `upload rejects an unprovisioned parent without creating directories`() = runTest {
+        val missingKey = ImageObjectKey.of("unprovisioned", "nested/escaped.jpg")
+
+        val error = assertFailsWith<ImageStorageException.ValidationException> {
+            storage.upload(missingKey, sampleBytes, options)
+        }
+
+        error.message.orEmpty().contains("must be provisioned").shouldBeTrue()
+        Files.exists(tempDir.resolve(missingKey.fullKey)).shouldBeFalse()
+    }
+
+    @Test
+    fun `bootstrap rejects symbolic link prefixes without touching the target`() {
+        val root = Files.createTempDirectory("local-image-storage-bootstrap-root")
+        val outside = Files.createTempDirectory("local-image-storage-bootstrap-outside")
+        val link = root.resolve("linked")
+        Files.createSymbolicLink(link, outside)
+
+        try {
+            assertFailsWith<IllegalArgumentException> {
+                LocalImageStorage.provisionRoot(root, setOf("linked/nested"))
+            }
+            Files.exists(outside.resolve("nested")).shouldBeFalse()
+        } finally {
+            Files.deleteIfExists(link)
+            Files.deleteIfExists(root)
+            Files.deleteIfExists(outside)
+        }
+    }
+
+    @Test
     fun `storage remains serializable after descriptor-scoped operations`() = runTest {
         val serialized = ByteArrayOutputStream()
         ObjectOutputStream(serialized).use { output -> output.writeObject(storage) }
@@ -147,6 +186,7 @@ class LocalImageStorageTest {
 
     @Test
     fun `download returns uploaded bytes`() = runTest {
+        provisionParent(key)
         storage.upload(key, sampleBytes, options)
 
         val downloaded = storage.download(key)
@@ -169,6 +209,7 @@ class LocalImageStorageTest {
         val permissiveStorage = LocalImageStorage(tempDir, maxSizeBytes = 1024 * 1024L * 10)
         val bigBytes = ByteArray(10) { it.toByte() }
         val bigKey = ImageObjectKey.of("big", "file.jpg")
+        provisionParent(bigKey)
         permissiveStorage.upload(bigKey, bigBytes, options)
 
         // 같은 directory를 바라보는 restrictive storage로 download 제한을 검증합니다.
@@ -181,6 +222,7 @@ class LocalImageStorageTest {
 
     @Test
     fun `download to path copies content to destination`() = runTest {
+        provisionParent(key)
         storage.upload(key, sampleBytes, options)
 
         val destination = Files.createTempFile(tempDir, "dest-", ".jpg")
@@ -204,6 +246,7 @@ class LocalImageStorageTest {
         val permissiveStorage = LocalImageStorage(tempDir, maxSizeBytes = 1024 * 1024L * 10)
         val bigBytes = ByteArray(10) { it.toByte() }
         val bigKey = ImageObjectKey.of("big", "dest-file.jpg")
+        provisionParent(bigKey)
         permissiveStorage.upload(bigKey, bigBytes, options)
 
         val restrictiveStorage = LocalImageStorage(tempDir, maxSizeBytes = 4L)
@@ -216,6 +259,7 @@ class LocalImageStorageTest {
 
     @Test
     fun `delete removes an existing file`() = runTest {
+        provisionParent(key)
         storage.upload(key, sampleBytes, options)
         storage.exists(key).shouldBeTrue()
 
@@ -234,6 +278,7 @@ class LocalImageStorageTest {
 
     @Test
     fun `exists returns true for existing key`() = runTest {
+        provisionParent(key)
         storage.upload(key, sampleBytes, options)
 
         storage.exists(key).shouldBeTrue()
@@ -247,13 +292,11 @@ class LocalImageStorageTest {
     }
 
     @Test
-    fun `upload creates a parent directory after a missing lookup`() = runTest {
-        val missingKey = ImageObjectKey.of("created-after-lookup", "missing.jpg")
-        val createdKey = ImageObjectKey.of("created-after-lookup", "photo.jpg")
+    fun `upload succeeds when a nested parent was provisioned`() = runTest {
+        val createdKey = ImageObjectKey.of("created-after-lookup", "nested/photo.jpg")
+        provisionParent(createdKey)
 
-        storage.exists(missingKey).shouldBeFalse()
         storage.upload(createdKey, sampleBytes, options)
-
         storage.download(createdKey).contentEquals(sampleBytes).shouldBeTrue()
     }
 
@@ -264,6 +307,7 @@ class LocalImageStorageTest {
         // list는 fullKey가 "photos/gallery" directory로 해석되는 ImageObjectKey로 호출됩니다.
         val key1 = ImageObjectKey.of("photos/gallery", "img1.jpg")
         val key2 = ImageObjectKey.of("photos/gallery", "img2.jpg")
+        provisionParent(key1)
         storage.upload(key1, sampleBytes, options)
         storage.upload(key2, sampleBytes, options)
 

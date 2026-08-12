@@ -127,10 +127,15 @@ class ImagesStorageAutoConfiguration {
     }
 
     companion object {
-        private fun localImageStorageOf(properties: ImageStorageProperties): ImageStorage =
-            LocalImageStorage(
+        private fun localImageStorageOf(properties: ImageStorageProperties): ImageStorage {
+            val root = LocalImageStorage.provisionRoot(
                 rootDir = Path.of(properties.local.rootDir),
+                prefixes = properties.local.bootstrapPrefixes,
+            )
+            return LocalImageStorage(
+                rootDir = root,
                 maxSizeBytes = properties.maxSizeBytes,
             )
+        }
     }
 }

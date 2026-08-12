@@ -21,6 +21,7 @@ import java.nio.channels.FileChannel
 import java.nio.channels.SeekableByteChannel
 import java.nio.file.AccessDeniedException as NioAccessDeniedException
 import java.nio.file.DirectoryStream
+import java.nio.file.FileAlreadyExistsException
 import java.nio.file.Files
 import java.nio.file.LinkOption
 import java.nio.file.NoSuchFileException
@@ -43,6 +44,9 @@ import java.util.UUID
  *   [ImageStorageException.ValidationException]을 던집니다.
  *   실제 파일 열기·임시 파일 생성·교체·삭제는 [SecureDirectoryStream]의 descriptor-relative
  *   operation으로 수행해 검사와 사용 사이의 symbolic-link 교체 경합을 차단합니다.
+ * - storage root 아래 parent directory는 trusted bootstrap 단계에서 미리 생성되어 있어야 합니다.
+ *   JDK [SecureDirectoryStream]에 `mkdirat`가 없으므로 operation 중 missing parent를 생성하지
+ *   않고 [ImageStorageException.ValidationException]으로 fail closed합니다.
  * - [maxSizeBytes]보다 큰 upload는 byte를 쓰기 전에 거부합니다.
  * - [maxSizeBytes]보다 큰 object download는 byte를 읽기 전에 거부합니다.
  * - [delete]는 idempotent입니다. missing key는 예외를 일으키지 않습니다.
@@ -60,12 +64,108 @@ class LocalImageStorage(
 
     companion object : KLogging() {
         private const val serialVersionUID: Long = 1L
+
+        /**
+         * trusted startup 단계에서 local root와 고정된 bootstrap prefix를 준비합니다.
+         *
+         * 호출이 완료된 뒤 [LocalImageStorage]는 runtime에 missing parent를 생성하지 않습니다.
+         * prefix는 설정 파일에서 고정된 상대 경로로만 받아야 하며, 이 함수는 symbolic link를
+         * directory segment로 허용하지 않습니다.
+         */
+        fun provisionRoot(rootDir: Path, prefixes: Set<String>): Path {
+            val normalizedRoot = rootDir.toAbsolutePath().normalize()
+            ensureBootstrapRoot(normalizedRoot)
+            val realRoot = normalizedRoot.toRealPath()
+            prefixes.sorted().map { prefix ->
+                prefix to validateBootstrapPrefix(prefix)
+            }.forEach { (prefix, relative) ->
+                var current = realRoot
+                relative.forEach { segment ->
+                    current = current.resolve(segment)
+                    ensureBootstrapDirectory(current, "bootstrap prefix: $prefix")
+                }
+            }
+            return realRoot
+        }
+
+        private fun validateBootstrapPrefix(prefix: String): List<Path> {
+            require(prefix.isNotBlank()) { "local.bootstrap-prefixes must not contain blank values" }
+            val candidate = ImageObjectKey.of(prefix, ".bootstrap")
+            val relative = Path.of(candidate.prefix).normalize()
+            require(!relative.isAbsolute && relative.nameCount > 0) {
+                "local.bootstrap-prefixes must be relative paths: $prefix"
+            }
+            return relative.toList()
+        }
+
+        private fun ensureBootstrapDirectory(path: Path, description: String) {
+            try {
+                val existing = Files.readAttributes(
+                    path,
+                    BasicFileAttributes::class.java,
+                    LinkOption.NOFOLLOW_LINKS,
+                )
+                require(!existing.isSymbolicLink && existing.isDirectory) {
+                    "$description must be a real directory: $path"
+                }
+            } catch (_: NoSuchFileException) {
+                try {
+                    Files.createDirectory(path)
+                } catch (e: FileAlreadyExistsException) {
+                    val raced = Files.readAttributes(
+                        path,
+                        BasicFileAttributes::class.java,
+                        LinkOption.NOFOLLOW_LINKS,
+                    )
+                    require(!raced.isSymbolicLink && raced.isDirectory) {
+                        "$description must be a real directory: $path"
+                    }
+                }
+            }
+        }
+
+        private fun ensureBootstrapRoot(path: Path) {
+            try {
+                val existing = Files.readAttributes(
+                    path,
+                    BasicFileAttributes::class.java,
+                    LinkOption.NOFOLLOW_LINKS,
+                )
+                require(!existing.isSymbolicLink && existing.isDirectory) {
+                    "storage root must be a real directory: $path"
+                }
+            } catch (_: NoSuchFileException) {
+                Files.createDirectories(path)
+                val created = Files.readAttributes(
+                    path,
+                    BasicFileAttributes::class.java,
+                    LinkOption.NOFOLLOW_LINKS,
+                )
+                require(!created.isSymbolicLink && created.isDirectory) {
+                    "storage root must be a real directory: $path"
+                }
+            }
+        }
     }
 
     private val normalizedRootPath: String = rootDir.toAbsolutePath().normalize().toString()
     private val realRootPath: String = run {
         val normalizedRoot = Path.of(normalizedRootPath)
-        Files.createDirectories(normalizedRoot)
+        val attributes = try {
+            Files.readAttributes(
+                normalizedRoot,
+                BasicFileAttributes::class.java,
+                LinkOption.NOFOLLOW_LINKS,
+            )
+        } catch (e: NoSuchFileException) {
+            throw IllegalArgumentException(
+                "Storage root must be provisioned before LocalImageStorage construction: $normalizedRoot",
+                e,
+            )
+        }
+        require(!attributes.isSymbolicLink && attributes.isDirectory) {
+            "Storage root must be a real directory: $normalizedRoot"
+        }
         normalizedRoot.toRealPath().toString()
     }
 
@@ -324,13 +424,9 @@ class LocalImageStorage(
         try {
             if (target.startsWith(realRoot)) {
                 ensureRootPathAnchored(key)
-            }
-            Files.createDirectories(parent)
-            if (target.startsWith(realRoot)) {
-                // SecureDirectoryStream has no mkdirat equivalent in the JDK API. Re-check
-                // the root and every created segment before any object is opened or replaced.
-                ensureRootPathAnchored(key)
-                rejectSymbolicLinks(key, parent)
+                requireProvisionedParent(key, parent)
+            } else {
+                Files.createDirectories(parent)
             }
             withSecureDirectoryContext(target) { rootDirectory, directory, fileName ->
                 val stagedName = Path.of(".${target.fileName}.${UUID.randomUUID()}.$suffix")
@@ -358,6 +454,43 @@ class LocalImageStorage(
             throw ImageStorageException.AccessDeniedException(key = key, cause = e)
         } catch (e: IOException) {
             throw ImageStorageException.TransientException(key = key, cause = e)
+        }
+    }
+
+    /**
+     * Parent directory는 trusted bootstrap 단계에서 미리 준비되어 있어야 합니다.
+     *
+     * JDK [SecureDirectoryStream]에는 `mkdirat`에 해당하는 API가 없습니다. 따라서
+     * operation 중 missing parent를 path 기반으로 생성하면 root 또는 parent rename 경합에서
+     * storage root 밖에 directory를 만들 수 있습니다. 이 경계에서는 생성 대신 descriptor-
+     * relative 조회로 parent가 이미 root 안에 존재하는지 확인하고, 없으면 fail closed합니다.
+     */
+    private fun requireProvisionedParent(key: ImageObjectKey, parent: Path) {
+        try {
+            withRootDirectory { rootDirectory ->
+                if (parent == realRoot) return@withRootDirectory
+                withSecureDirectory(
+                    rootDirectory,
+                    relativeRootSegments(parent),
+                    parent.fileName,
+                ) { _, _ -> }
+            }
+        } catch (e: ImageStorageException.ValidationException) {
+            throw e
+        } catch (e: NoSuchFileException) {
+            throw ImageStorageException.ValidationException(
+                key = key,
+                message = "Storage parent directory must be provisioned before upload: ${parent}",
+                cause = e,
+            )
+        } catch (e: NioAccessDeniedException) {
+            throw ImageStorageException.AccessDeniedException(key = key, cause = e)
+        } catch (e: IOException) {
+            throw ImageStorageException.ValidationException(
+                key = key,
+                message = "Storage parent directory is not a secure directory: ${parent}",
+                cause = e,
+            )
         }
     }
 

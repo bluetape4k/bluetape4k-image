@@ -51,6 +51,8 @@ bluetape4k:
       health-probe-key: .health-probe
       local:
         root-dir: /tmp/images
+        # 업로드 중 parent는 만들지 않으며 startup에서 고정 prefix를 준비합니다.
+        bootstrap-prefixes: [originals, thumbnails]
       # S3 백엔드 (bluetape4k-aws-spring-boot 필요):
       bucket: my-image-bucket
       key-prefix: images/
@@ -78,6 +80,9 @@ bluetape4k:
 
 추가 의존성 없음. `local.root-dir` 아래에 파일 저장.
 `ImageObjectKey`가 `..` 경로 세그먼트를 거부하여 경로 탐색 공격 방지.
+업로드 중에는 로컬 parent directory를 생성하지 않습니다. 고정된 상대 경로를
+`local.bootstrap-prefixes`에 설정하거나 `LocalImageStorage` 생성 전에 직접 준비하세요.
+준비되지 않은 parent는 파일·directory를 만들지 않고 `ValidationException`으로 종료합니다.
 
 #### S3
 
