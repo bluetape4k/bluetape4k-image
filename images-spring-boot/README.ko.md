@@ -127,6 +127,15 @@ bluetape4k.images.cdn:
 
 `privateKeyPem`은 인라인 설정 가능하지만 파일 경로 사용을 권장합니다. 힙 메모리의 PEM 값은 초기화할 수 없어 힙 덤프에 노출될 수 있습니다.
 
+### 0.5.0 직렬화 경계
+
+`LocalImageStorage`, `S3ImageStorage`, URL signer, `CdnProperties`는 runtime 설정과
+collaborator를 보유하는 객체이므로 Java 직렬화 상태가 아닙니다. `ObjectOutputStream`
+graph에 넣지 말고 Spring 설정으로 startup 시 다시 생성하세요. CloudFront private-key
+PEM과 path property는 Jackson wire view에서 제외하고 `toString()`과 Actuator 진단에서도
+마스킹합니다. 기존 runtime 직렬화 사용은 애플리케이션 snapshot으로 migration해야 하며,
+남아 있는 직렬화 시도는 `NotSerializableException`으로 실패합니다.
+
 ### 헬스 체크
 
 `ImageStorageHealthIndicator`가 `storage.exists()` 호출로 접근성을 확인합니다.

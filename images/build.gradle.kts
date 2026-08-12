@@ -33,4 +33,11 @@ dependencies {
     implementation(bt4k.bluetape4k.coroutines)
     implementation(libs.kotlinx.coroutines.core)
     testImplementation(libs.kotlinx.coroutines.test)
+
+    // Public snapshot codec uses Jackson 3 internally; the public API remains Jackson-neutral.
+    implementation(platform("tools.jackson:jackson-bom:${bt4k.versions.jackson3.get()}"))
+    implementation("tools.jackson.core:jackson-databind")
+    implementation("tools.jackson.module:jackson-module-kotlin")
+    // Jackson 3 reuses the stable Jackson 2 annotation artifact for wire-property aliases.
+    compileOnly("com.fasterxml.jackson.core:jackson-annotations:${bt4k.versions.jackson.annotations.get()}")
 }

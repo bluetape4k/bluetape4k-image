@@ -35,6 +35,9 @@ dependencies {
     // images module — non-transitive (consumers use :images directly)
     implementation(project(":bluetape4k-images"))
 
+    // Jackson 3 still consumes the stable Jackson 2 annotation artifact for @JsonIgnore.
+    compileOnly("com.fasterxml.jackson.core:jackson-annotations:${bt4k.versions.jackson.annotations.get()}")
+
     // Spring Boot AutoConfig (compileOnly — consumers bring their own Spring Boot)
     compileOnly(libs.spring.boot.autoconfigure)
     compileOnly(libs.spring.boot.actuator)

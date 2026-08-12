@@ -14,7 +14,6 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
 import java.io.ByteArrayOutputStream
 import java.io.IOException
-import java.io.Serializable
 import java.nio.ByteBuffer
 import java.nio.channels.Channels
 import java.nio.channels.FileChannel
@@ -60,11 +59,9 @@ import java.util.UUID
 class LocalImageStorage(
     rootDir: Path,
     private val maxSizeBytes: Long,
-) : ImageStorage, Serializable, AutoCloseable {
+) : ImageStorage, AutoCloseable {
 
     companion object : KLogging() {
-        private const val serialVersionUID: Long = 1L
-
         /**
          * trusted startup 단계에서 local root와 고정된 bootstrap prefix를 준비합니다.
          *

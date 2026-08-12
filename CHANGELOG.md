@@ -7,6 +7,14 @@
 
 ## [Unreleased]
 
+### 변경
+
+- privacy pipeline의 runtime 객체와 Spring storage/CDN collaborator에서 허위
+  `Serializable` 계약을 제거하고, Jackson 3 기반 `schemaVersion=1` snapshot codec,
+  bounded stream decode, 방어적 byte/collection copy를 추가했다. 기존 runtime Java
+  serialization 사용자는 `PrivacyDerivativePayload`/report/batch snapshot으로
+  migration해야 한다 ([#481](https://github.com/bluetape4k/bluetape4k-image/issues/481)).
+
 ## [0.4.0] - 2026-08-06
 
 ### 추가

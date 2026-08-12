@@ -11,9 +11,7 @@ import io.bluetape4k.images.spring.UploadOptions
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
-import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
-import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
 import java.nio.file.Files
 import java.nio.file.Path
@@ -173,15 +171,12 @@ class LocalImageStorageTest {
     }
 
     @Test
-    fun `storage remains serializable after descriptor-scoped operations`() = runTest {
+    fun `runtime storage serialization is an intentional migration failure`() = runTest {
         val serialized = ByteArrayOutputStream()
-        ObjectOutputStream(serialized).use { output -> output.writeObject(storage) }
-
-        val restored = ObjectInputStream(ByteArrayInputStream(serialized.toByteArray())).use { input ->
-            input.readObject() as LocalImageStorage
+        val error = assertFailsWith<java.io.NotSerializableException> {
+            ObjectOutputStream(serialized).use { output -> output.writeObject(storage) }
         }
-
-        restored.exists(ImageObjectKey.of("missing", "after-restore.jpg")).shouldBeFalse()
+        error.message shouldBeEqualTo "io.bluetape4k.images.spring.storage.LocalImageStorage"
     }
 
     @Test

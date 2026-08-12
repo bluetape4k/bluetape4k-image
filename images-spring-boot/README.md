@@ -132,6 +132,16 @@ bluetape4k.images.cdn:
 `privateKeyPem` can be set inline but a file path is preferred — PEM values in heap memory
 cannot be zeroed and will appear in heap dumps.
 
+### 0.5.0 Serialization Boundary
+
+`LocalImageStorage`, `S3ImageStorage`, URL signers, and `CdnProperties` are runtime
+configuration/collaborator objects, not Java-serializable state. Do not put them in an
+`ObjectOutputStream` graph; reconstruct them from Spring configuration on startup. In
+addition, CloudFront private-key PEM and path properties are excluded from Jackson wire
+views and redacted from `toString()`/Actuator diagnostics. Existing runtime serialization
+must be migrated to explicit application snapshots; a stale attempt fails with
+`NotSerializableException`.
+
 ### Health
 
 The `ImageStorageHealthIndicator` calls `storage.exists()` to probe reachability.
