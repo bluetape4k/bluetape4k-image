@@ -88,6 +88,12 @@ bean exists, startup fails instead of silently falling back to local filesystem
 storage. Provide a custom `ImageStorage` bean if an application intentionally
 replaces the S3 storage implementation.
 
+`Path` uploads first create a bounded streaming snapshot and then use the
+optional `S3TransferOperations` file-transfer capability when it is available;
+without that capability they fail closed instead of loading the entire source
+into a `ByteArray`. `Path` downloads stream through an S3 resource and
+atomically replace the destination file.
+
 ```yaml
 bluetape4k.images.storage:
   backend: s3

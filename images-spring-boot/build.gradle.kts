@@ -45,6 +45,8 @@ dependencies {
 
     // AWS SDK v2 (compileOnly — optional S3/CloudFront support)
     compileOnly(libs.aws2.s3)
+    // S3 Path upload uses the optional transfer-manager contract without making it runtime-mandatory.
+    compileOnly(libs.aws2.s3.transfer.manager)
     compileOnly(libs.aws2.cloudfront)
 
     // bluetape4k-aws spring-boot integration (compileOnly — optional)
@@ -69,6 +71,7 @@ dependencies {
     testImplementation(bt4k.bluetape4k.junit5)
     testImplementation(bt4k.bluetape4k.aws.spring.boot)
     testImplementation(libs.aws2.s3)
+    testImplementation(libs.aws2.s3.transfer.manager)
     testImplementation(libs.aws2.cloudfront)
     testImplementation(libs.micrometer.core)
     testImplementation(libs.spring.boot.actuator)
