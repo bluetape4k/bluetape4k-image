@@ -35,7 +35,7 @@ Ktor 서비스에 OCR을 넣거나 네이티브 의존성을 인터페이스 뒤
 
 ## 빠르게 시작하기 {#quick-start}
 
-테스트는 JDK 21 이상만 있으면 됩니다. 실제 OCR에는 Tesseract와 요청 언어의 traineddata가 필요합니다.
+테스트에는 JDK 25 이상이 필요합니다. 실제 OCR에는 Tesseract와 요청 언어의 traineddata가 필요합니다.
 
 ```bash
 brew install tesseract tesseract-lang

@@ -32,7 +32,7 @@ Large streaming and memory reports deserve special care: managed-heap allocation
 
 ## Reproduction
 
-The benchmark module selects Java 21 or Java 25 from <code>-Pvips.impl</code>. Run focused tasks from the release guide and keep raw JSON with the environment note. Do not mix results from changed source into a frozen 0.3 manual claim.
+The current benchmark module runs on JDK 25 and uses <code>-Pvips.impl</code> to select the backend. Historical JDK 21 rows may remain in the frozen release evidence; keep their labels and environment notes, and do not present them as the current runtime baseline. Run focused tasks from the release guide and keep raw JSON with the environment note. Do not mix results from changed source into a frozen manual claim.
 
 ## Sources
 

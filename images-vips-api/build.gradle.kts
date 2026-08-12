@@ -11,24 +11,24 @@ plugins {
     `java-test-fixtures`
 }
 
-// The API is consumed by both the Java 21 JNI implementation and the Java 25
-// FFM implementation, so keep this shared contract on the lowest supported
-// bytecode level while the rest of the repository defaults to Java 25.
+// The API is consumed by the JVips JNI implementation (whose legacy artifact
+// name contains java21) and the Java 25 FFM implementation. Keep the shared
+// contract on the repository-wide Java 25 bytecode level.
 java {
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(21))
+        languageVersion.set(JavaLanguageVersion.of(25))
     }
 }
 
 kotlin {
-    jvmToolchain(21)
+    jvmToolchain(25)
     compilerOptions {
-        jvmTarget.set(JvmTarget.JVM_21)
+        jvmTarget.set(JvmTarget.JVM_25)
     }
 }
 
 tasks.withType<JavaCompile>().configureEach {
-    options.release.set(21)
+    options.release.set(25)
 }
 
 // Test fixtures compare against the regular images module, which targets JDK
@@ -49,8 +49,8 @@ tasks.named<KotlinJvmCompile>("compileTestFixturesKotlin") {
 }
 
 // The test fixtures consume the regular images module, whose bytecode target
-// is Java 25. Keep the shared API itself on Java 21, but run this verification
-// task on JDK 25 so Gradle selects the matching test-fixtures variant.
+// The shared API and its verification fixtures use the same Java 25 bytecode
+// level, so Gradle selects one consistent variant for all consumers.
 tasks.named<Test>("test") {
     javaLauncher.set(javaToolchains.launcherFor {
         languageVersion.set(JavaLanguageVersion.of(25))

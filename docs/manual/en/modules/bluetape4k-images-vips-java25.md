@@ -74,7 +74,7 @@ Decode, operation, encode, and initialization failures use the common exception 
 
 ## Operations {#operations}
 
-Monitor native memory as well as managed heap. The release benchmark showed very low Java-side allocation for geometry operations, but explicitly did not measure native libvips memory. Run Java 21 and Java 25 benchmark lanes sequentially to avoid native-runtime and CPU contention.
+Monitor native memory as well as managed heap. The release benchmark showed very low Java-side allocation for geometry operations, but explicitly did not measure native libvips memory. When interpreting its historical rows, run the JDK 21 and JDK 25 benchmark lanes sequentially to avoid native-runtime and CPU contention; the current release line runs on JDK 25.
 
 ## Testing {#testing}
 
@@ -86,7 +86,7 @@ First prove native startup and parent/child lifetime in unit tests, then smoke-t
 
 ## Limitations {#limitations}
 
-Derived images share their root arena and cannot outlive it. Non-path input is buffered under the 50 MiB guard. AVIF/HEIC API availability does not prove host codec support. The backend cannot run on a Java 21 JVM.
+Derived images share their root arena and cannot outlive it. Non-path input is buffered under the 50 MiB guard. AVIF/HEIC API availability does not prove host codec support. The backend cannot run on a JVM older than JDK 25.
 
 <!-- release-readme-diagrams:start -->
 ## Release diagrams {#release-diagrams}

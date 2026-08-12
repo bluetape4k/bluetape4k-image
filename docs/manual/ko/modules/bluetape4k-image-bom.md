@@ -51,7 +51,7 @@ dependencies {
 }
 ```
 
-libvips 백엔드는 Java 21 JNI와 Java 25 FFM 가운데 실행 환경에 맞는 하나만 선택합니다.
+libvips 백엔드는 JDK 25 JVips JNI(호환성을 위해 `java21` 이름 유지)와 JDK 25 FFM 가운데 하나만 선택합니다.
 
 ## 작업별 API {#api-by-task}
 
@@ -90,7 +90,7 @@ dependency lock이나 해석 테스트로 이미지 아티팩트가 한 버전�
 
 ## 제약 사항 {#limitations}
 
-BOM은 버전만 맞춥니다. Java 25 바이트코드를 Java 21에서 실행하게 만들거나 네이티브 코덱을 제공하지 않습니다. `0.4.0`의 BOM README 모듈 표에는 일부 아티팩트가 빠져 있으므로 실제 제약 목록은 `bom/build.gradle.kts`를 기준으로 봐야 합니다.
+BOM은 버전만 맞춥니다. JDK 25 바이트코드를 이전 JVM에서 실행하게 만들거나 네이티브 코덱을 제공하지 않습니다. `0.4.0`의 BOM README 모듈 표에는 일부 아티팩트가 빠져 있으므로 실제 제약 목록은 `bom/build.gradle.kts`를 기준으로 봐야 합니다.
 
 <!-- release-readme-diagrams:start -->
 ## 배포본 다이어그램 {#release-diagrams}

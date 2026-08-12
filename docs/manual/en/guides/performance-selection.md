@@ -29,7 +29,7 @@ Record:
 
 Then run a service-level test that includes storage and framework overhead. If Scrimage meets the budget, its simpler deployment can outweigh a lower native kernel time. If it does not, test one libvips backend on the real host.
 
-Do not extrapolate Java 25 FFM results to Java 21 JNI, or a natural-photo fixture to documents and alpha-heavy graphics. See [interpreting benchmark results](../benchmarks/interpreting-results.md).
+Do not extrapolate current JDK 25 FFM results to the historical JDK 21 JNI rows, or a natural-photo fixture to documents and alpha-heavy graphics. The published JNI backend now also requires JDK 25. See [interpreting benchmark results](../benchmarks/interpreting-results.md).
 
 ## Sources
 

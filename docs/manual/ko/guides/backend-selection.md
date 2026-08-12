@@ -9,13 +9,13 @@ releaseRef: "0.4.0"
 
 네이티브 코드가 언제나 빠를 거라는 기대만으로 백엔드를 고르면 안 된다. 배포 조건과 실제 작업을 측정한 결과로 결정한다.
 
-![Scrimage, Java 21 JVips, Java 25 FFM 백엔드 선택 지도](../../assets/backends/backend-decision-map.svg)
+![Scrimage, JDK 25 JVips, JDK 25 FFM 백엔드 선택 지도](../../assets/backends/backend-decision-map.svg)
 
 | 경로 | 잘 맞는 작업 | 런타임 조건 | 자원 소유 |
 |---|---|---|---|
-| <code>bluetape4k-images</code> | 이식 가능한 필터, 변환, 분석, JVM 서비스 | JDK 21, libvips 불필요 | JVM 값과 호출자가 관리하는 스트림 |
-| Java 21 JVips | JDK 21에서 네이티브 리사이즈, 썸네일, 자르기, 인코딩 | 시스템 libvips와 JNI | 모든 <code>VipsImage</code>를 닫음 |
-| Java 25 FFM | JDK 25 배포 환경의 네이티브 처리 | 시스템 libvips와 native-access 옵션 | 이미지와 런타임 종료를 관리 |
+| <code>bluetape4k-images</code> | 이식 가능한 필터, 변환, 분석, JVM 서비스 | JDK 25, libvips 불필요 | JVM 값과 호출자가 관리하는 스트림 |
+| JDK 25 JVips JNI (legacy <code>java21</code> artifact) | JDK 25에서 네이티브 리사이즈, 썸네일, 자르기, 인코딩 | 시스템 libvips와 JNI | 모든 <code>VipsImage</code>를 닫음 |
+| JDK 25 FFM | JDK 25 배포 환경의 네이티브 처리 | 시스템 libvips와 native-access 옵션 | 이미지와 런타임 종료를 관리 |
 
 ## Scrimage가 맞는 경우
 
@@ -25,7 +25,7 @@ releaseRef: "0.4.0"
 
 리사이즈, 자르기, 썸네일이나 인코딩이 작업의 대부분을 차지하고 서비스에서 libvips를 설치하고 관측할 수 있다면 검토한다. 대상 실행 환경에서 실제 코덱을 확인해야 한다. 라이브러리 API가 포맷을 안다는 사실과 설치된 libvips가 그 포맷을 처리한다는 사실은 다르다.
 
-JDK 21을 유지해야 하면 [Java 21 JNI](../native/java21-jni.md)를 고른다. JDK 25와 <code>--enable-native-access=ALL-UNNAMED</code>을 배포 계약에 넣을 수 있을 때만 [Java 25 FFM](../native/java25-ffm.md)을 쓴다.
+시스템 libvips와 JNI 바인딩을 사용할 수 있으면 [JDK 25 JVips JNI](../native/java21-jni.md)를 고른다. JDK 25와 <code>--enable-native-access=ALL-UNNAMED</code>을 배포 계약에 넣을 수 있으면 [JDK 25 FFM](../native/java25-ffm.md)을 고른다.
 
 ## 백엔드 둘을 무심코 배포하지 않기
 

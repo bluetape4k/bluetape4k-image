@@ -53,7 +53,7 @@ dependencies {
 }
 ```
 
-Choose either the Java 21 JNI backend or the Java 25 FFM backend for one runtime. Do not add both merely because both are constrained.
+Choose either the JDK 25 JVips JNI backend (published under the legacy `java21` name) or the JDK 25 FFM backend for one runtime. Do not add both merely because both are constrained.
 
 ## API by task {#api-by-task}
 
@@ -92,7 +92,7 @@ Start with `bluetape4k-images`, then add one service adapter or one libvips back
 
 ## Limitations {#limitations}
 
-The BOM aligns artifacts; it does not make Java 25 bytecode run on Java 21, provide native codecs, or make optional Spring/AWS classes available. The module list in the release BOM README is incomplete; the release `bom/build.gradle.kts` constraint loop is authoritative.
+The BOM aligns artifacts; it does not make JDK 25 bytecode run on an earlier JVM, provide native codecs, or make optional Spring/AWS classes available. The module list in the release BOM README is incomplete; the release `bom/build.gradle.kts` constraint loop is authoritative.
 
 <!-- release-readme-diagrams:start -->
 ## Release diagrams {#release-diagrams}

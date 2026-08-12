@@ -24,8 +24,8 @@ The repository also publishes <code>bluetape4k-image-bom</code>, but normal ecos
 
 - Choose [immutable image processing](modules/bluetape4k-images.md) for portable JVM loading, writing, filters, transforms, and analysis.
 - Add [CAPTCHA](modules/bluetape4k-images-captcha.md), [OCR](modules/bluetape4k-images-ocr.md), [Ktor](modules/bluetape4k-images-ktor.md), or [Spring Boot](modules/bluetape4k-images-spring-boot.md) only when the application uses that capability.
-- Choose [Java 21 JVips](modules/bluetape4k-images-vips-java21.md) when the service already runs JDK 21 and can install libvips.
-- Choose [Java 25 FFM](modules/bluetape4k-images-vips-java25.md) when JDK 25 and native-access flags are acceptable.
+- Choose [JDK 25 JVips JNI](modules/bluetape4k-images-vips-java21.md) when the service can install libvips; the published JNI artifact keeps the legacy `java21` name.
+- Choose [JDK 25 FFM](modules/bluetape4k-images-vips-java25.md) when native-access flags are acceptable.
 
 Use [Backend selection](guides/backend-selection.md) for a fuller comparison.
 

@@ -12,7 +12,8 @@ English | [한국어](./README.ko.md)
 Kotlin/JVM image processing library — part of the [bluetape4k](https://github.com/bluetape4k) ecosystem.
 Provides two backends: a pure-JVM [scrimage](https://github.com/sksamuel/scrimage) path (Java2D) for
 standard formats with coroutine async I/O, and a high-performance [libvips](https://www.libvips.org/)
-path available via both JNI (Java 21) and the Panama Foreign Function & Memory API (Java 25).
+path available via both the JVips JNI backend (JDK 25; legacy `java21` artifact name)
+and the Panama Foreign Function & Memory API (JDK 25).
 
 ## Overview
 
@@ -39,7 +40,7 @@ The repository is organized around several adoption lanes:
   before choosing OpenCV, ONNX Runtime, TensorFlow Lite, MediaPipe, or an
   external service.
 - **Native acceleration** — program against `images-vips-api` and choose the
-  Java 21 JNI or Java 25 FFM backend when libvips throughput, memory behavior,
+  JDK 25 JVips JNI (legacy `java21` artifact) or Java 25 FFM backend when libvips throughput, memory behavior,
   or AVIF/HEIC-capable native codec support is required.
 
 The BOM keeps artifact versions aligned, runnable examples show local API
@@ -78,7 +79,7 @@ describes the exact `0.3.0` release and links every claim to that release source
   one-shot answers in Ktor services.
 - **libvips abstraction** — binding-neutral `VipsImage` and `VipsRuntime`
   contracts.
-- **Two native backends** — Java 21 JVips/JNI and Java 25 FFM/Panama options.
+- **Two native backends** — JDK 25 JVips/JNI (legacy `java21` artifact) and Java 25 FFM/Panama options.
 - **Benchmark lane** — `kotlinx-benchmark` comparisons for scrimage and
   libvips resize/encode paths.
 
@@ -128,7 +129,7 @@ shows benchmark comparison.
 | `images-ktor`         | `bluetape4k-images-ktor`             | Ktor route helpers for thumbnails and CAPTCHA verification |
 | `images-spring-boot`  | `bluetape4k-images-spring-boot`      | Spring Boot 4 auto-configuration: storage, CDN, health, metrics |
 | `images-vips-api`     | `bluetape4k-images-vips-api`         | Shared `VipsImage` / `VipsRuntime` interfaces (binding-neutral) |
-| `images-vips-java21`  | `bluetape4k-images-vips-java21`      | JVips JNI backend — Java 21+, system libvips             |
+| `images-vips-java21`  | `bluetape4k-images-vips-java21`      | JVips JNI backend — JDK 25+, system libvips (legacy artifact name) |
 | `images-vips-java25`  | `bluetape4k-images-vips-java25`      | vips-ffm FFM backend — Java 25+, `--enable-native-access` |
 | `benchmark/images-benchmark` | `bluetape4k-images-benchmark`        | `kotlinx-benchmark`: scrimage vs libvips                 |
 
@@ -146,13 +147,14 @@ shows benchmark comparison.
 | `images-captcha`      | 25+    | —              | —                                |
 | `images-ocr`          | 25+    | Tesseract + traineddata | —                         |
 | `images-ktor`         | 25+    | —              | —                                |
-| `images-vips-api`     | 21+    | —              | —                                |
-| `images-vips-java21`  | 21+    | libvips        | —                                |
+| `images-vips-api`     | 25+    | —              | —                                |
+| `images-vips-java21`  | 25+    | libvips        | —                                |
 | `images-vips-java25`  | 25+    | libvips        | `--enable-native-access=ALL-UNNAMED` |
 
-The regular library modules target JDK 25. `images-vips-api` and the
-`images-vips-java21` JNI implementation intentionally remain on JDK 21 so the
-JNI compatibility line can coexist with the Java 25 FFM backend.
+All library modules, including `images-vips-api` and the JVips JNI implementation
+published as `images-vips-java21`, target JDK 25. The legacy artifact/module and
+package names remain unchanged for compatibility; only the supported
+bytecode/runtime baseline moved.
 
 ### Install Tesseract for OCR
 
@@ -244,8 +246,9 @@ val smoke = runtime.smokeTestCodec(
 }
 ```
 
-Java 25 reports native operation availability through `heifload_buffer` and
-`heifsave_buffer`. Java 21 reports JVips limitations explicitly and uses
+Both JDK 25 backends report native operation availability through
+`heifload_buffer` and `heifsave_buffer`. The JVips binding reports its
+limitations explicitly and uses
 `UNKNOWN` where the binding cannot inspect the native libvips build.
 
 ### Troubleshooting libvips startup
@@ -297,7 +300,7 @@ dependencies {
     implementation("io.github.bluetape4k.image:bluetape4k-images-vips-api:0.3.0")
 
     // Choose ONE vips backend:
-    // Java 21 JNI backend
+    // JVips JNI backend (JDK 25; legacy java21 artifact)
     runtimeOnly("io.github.bluetape4k.image:bluetape4k-images-vips-java21:0.3.0")
     // OR Java 25 FFM backend
     runtimeOnly("io.github.bluetape4k.image:bluetape4k-images-vips-java25:0.3.0")
@@ -573,7 +576,7 @@ FfmVipsImageSupport.ffmVipsImageOf(Path.of("photo.jpg")).use { image ->
 > **Note**: Add `--enable-native-access=ALL-UNNAMED` to your JVM startup flags when using
 > `images-vips-java25`. For `java -jar`, place it before `-jar`.
 
-### Java 21 JNI Backend (`images-vips-java21`)
+### JVips JNI Backend (JDK 25, `images-vips-java21`)
 
 ```kotlin
 import io.bluetape4k.images.vips.java21.*

@@ -142,7 +142,7 @@ def backend_decision_map
     #{card(430, 175, 740, 105, "What must the pipeline optimize?", ["choose the runtime only after the workload is clear"], color: COLORS[:purple])}
     #{card(540, 340, 520, 115, "Which runtime can the application own?", ["pure JVM / JNI + libvips / Java 25 FFM"], color: COLORS[:purple])}
     #{card(90, 545, 380, 145, "Scrimage + Java2D", ["portable immutable model", "simple deploy and broad codecs"], color: COLORS[:cyan])}
-    #{card(610, 545, 380, 145, "JVips on Java 21", ["mature JNI integration", "explicit native lifetime"], color: COLORS[:teal])}
+    #{card(610, 545, 380, 145, "JVips on JDK 25", ["mature JNI integration", "legacy java21 artifact name", "explicit native lifetime"], color: COLORS[:teal])}
     #{card(1130, 545, 380, 145, "vips-ffm on Java 25", ["Foreign Function and Memory API", "root arena owns child handles"], color: COLORS[:amber])}
     #{card(310, 790, 480, 120, "Capability check", ["verify codec support on the target host", "HEIC encode is not universal"], color: COLORS[:cyan])}
     #{card(810, 790, 480, 120, "Lifetime contract", ["use / close every native root deterministically", "never return a child after the root closes"], color: COLORS[:teal])}

@@ -24,8 +24,8 @@ releaseRef: "0.4.0"
 ## Native 처리
 
 - [Vips API](../modules/bluetape4k-images-vips-api.md)는 <code>VipsImage</code>, <code>VipsRuntime</code>, 포맷, 작성기와 수명 주기 규칙을 정의한다.
-- [Java 21 JVips](../modules/bluetape4k-images-vips-java21.md)는 JNI로 공통 API를 구현한다.
-- [Java 25 FFM](../modules/bluetape4k-images-vips-java25.md)은 Foreign Function and Memory API로 구현한다.
+- [JDK 25 JVips JNI](../modules/bluetape4k-images-vips-java21.md)는 JNI로 공통 API를 구현한다. 배포 모듈은 호환성을 위해 `java21` 이름을 유지한다.
+- [JDK 25 FFM](../modules/bluetape4k-images-vips-java25.md)은 Foreign Function and Memory API로 구현한다.
 
 공통 API가 애플리케이션 대신 백엔드를 고르거나 초기화하지는 않는다. 측정된 마이그레이션 요구가 없다면 런타임 구현은 하나만 배포한다.
 

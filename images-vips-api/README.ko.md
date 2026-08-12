@@ -2,7 +2,7 @@
 
 [English](./README.md) | 한국어
 
-libvips 기반 이미지 처리를 위한 바인딩 중립(binding-neutral) API입니다. Java 21(JVips)과 Java 25(vips-ffm) 백엔드 구현체에서 공유하는 인터페이스와 값 타입을 정의합니다. 기본 libvips 바인딩에 관계없이 통일된 인터페이스가 필요할 때 이 모듈을 사용하세요.
+libvips 기반 이미지 처리를 위한 바인딩 중립(binding-neutral) API입니다. JDK 25 백엔드 구현체인 JVips JNI(legacy `java21` artifact)와 vips-ffm에서 공유하는 인터페이스와 값 타입을 정의합니다. 기본 libvips 바인딩에 관계없이 통일된 인터페이스가 필요할 때 이 모듈을 사용하세요.
 
 ## 아키텍처
 
@@ -67,7 +67,7 @@ VipsEncodeOptions(quality = 80, effort = 5, lossless = false, stripMetadata = tr
 
 | 백엔드 | AVIF decode | AVIF encode | HEIC decode | HEIC encode | 비고 |
 |--------|-------------|-------------|-------------|-------------|------|
-| Java 21 JVips/JNI | Capability-gated | Capability-gated | Capability-gated | N/A | JVips는 HEIC 인코딩을 노출하지 않음. HEIC 출력은 Java 25 사용 |
+| JDK 25 JVips/JNI (legacy `java21` artifact) | Capability-gated | Capability-gated | Capability-gated | N/A | JVips는 HEIC 인코딩을 노출하지 않음. HEIC 출력은 FFM 백엔드 사용 |
 | Java 25 FFM | Capability-gated | Capability-gated | Capability-gated | Capability-gated | AVIF는 HEIF AV1 compression, HEIC는 HEIF HEVC compression 사용 |
 
 Native AVIF/HEIC 지원은 libheif가 포함된 libvips 빌드가 필요합니다. AVIF 출력은 libaom
@@ -357,7 +357,7 @@ dependencies {
     api("io.github.bluetape4k.image:bluetape4k-images-vips-api:${version}")
     
     // 다음 중 하나를 선택하세요:
-    runtimeOnly("io.github.bluetape4k.image:bluetape4k-images-vips-java21:${version}")  // JVips (Java 21+)
+    runtimeOnly("io.github.bluetape4k.image:bluetape4k-images-vips-java21:${version}")  // JVips (JDK 25+, legacy artifact name)
     // 또는
     runtimeOnly("io.github.bluetape4k.image:bluetape4k-images-vips-java25:${version}")  // vips-ffm (Java 25+)
 }
@@ -401,6 +401,6 @@ VipsGoldenAssert(goldenDir = Path.of("src/testFixtures/resources/golden/vips"))
 
 ## 참고
 
-- `bluetape4k-images-vips-java21` — Java 21+ 용 JVips 바인딩
+- `bluetape4k-images-vips-java21` — JDK 25+ 용 JVips 바인딩 (legacy artifact name)
 - `bluetape4k-images-vips-java25` — Java 25+ 용 Foreign Function Memory 바인딩
 - `bluetape4k-images` — 고수준 이미지 조작 (Scrimage 기반, incubating AVIF/HEIC 인터페이스)

@@ -36,8 +36,8 @@
 
 ### Vips Backend Comparison
 
-`VipsBackendBenchmark` and `VipsBackendEncodeBenchmark` compare the Java 21
-JVips JNI backend and the Java 25 FFM backend with stable benchmark names
+`VipsBackendBenchmark` and `VipsBackendEncodeBenchmark` compare the legacy-named
+JVips JNI backend and the FFM backend on JDK 25 with stable benchmark names
 across both runs.
 
 ![Vips backend comparison benchmark chart](../../docs/images/readme-charts/images-benchmark-vips-backend-comparison-chart-01.png)
@@ -316,7 +316,7 @@ RUN_ID="local-$(date +%Y%m%d-%H%M%S)"
 ./gradlew :bluetape4k-images-benchmark:benchmarkBenchmark \
   -Pcodec.matrix.runId="$RUN_ID" -Pvips.impl=java25
 
-# Java 21 - selected JVips JNI-compatible benchmarks (Linux only; excludes FFM-only large streaming)
+# JDK 25 - selected legacy JVips JNI backend benchmarks (Linux only; excludes FFM-only large streaming)
 ./gradlew :bluetape4k-images-benchmark:benchmarkPipelineAllocationBenchmark :bluetape4k-images-benchmark:benchmarkMemoryProfileBenchmark :bluetape4k-images-benchmark:benchmarkIoBoundaryBenchmark :bluetape4k-images-benchmark:benchmarkIoThroughputBenchmark -Pvips.impl=java21
 
 # Focused evidence used by the 2026-05-29 reports
@@ -367,7 +367,7 @@ Fresh report workflow:
 1. Install native prerequisites for vips rows.
    - macOS: `brew install vips`
    - Linux: install `libvips-tools` and `libvips-dev`
-2. Run one backend at a time. Do not run Java 21 and Java 25 benchmark
+2. Run one backend at a time. Do not run the JVips JNI and FFM backend
    processes in parallel on the same host.
 3. Copy the generated JMH JSON from
    `benchmark/images-benchmark/build/reports/benchmarks/<target>/<timestamp>/benchmark.json`
@@ -526,7 +526,7 @@ generated during JMH setup to avoid committing large binary files.
 ### `VipsBenchmarkState`
 
 JMH `@State(Scope.Thread)` — initializes the vips runtime once per trial via reflection
-(supports both `FfmVipsRuntime` Java 25 and `JVipsRuntime` Java 21).
+(supports both `FfmVipsRuntime` and the legacy-named `JVipsRuntime` on JDK 25).
 
 ```kotlin
 @Setup(Level.Trial)

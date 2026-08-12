@@ -612,7 +612,7 @@ def render_fireworks_architecture(spec: DiagramSpec) -> str:
         "ocr": ("#faf5ff", "#e9d5ff", "OCR"),
         "ktor": ("#eff6ff", "#bfdbfe", "API"),
         "spring": ("#f0fdf4", "#bbf7d0", "SB"),
-        "java21": ("#fff7ed", "#fed7aa", "21"),
+        "java21": ("#fff7ed", "#fed7aa", "25"),
         "vipsApi": ("#faf5ff", "#e9d5ff", "VIP"),
         "java25": ("#f0fdfa", "#ccfbf1", "25"),
         "bench": ("#f9fafb", "#d1d5db", "BEN"),
@@ -698,7 +698,7 @@ def bluetape4k_image_architecture_spec() -> DiagramSpec:
         Card("ocr", "images-ocr", ("Tess4J extraction", "host traineddata"), 515, 540, 340, 105, 5),
         Card("ktor", "images-ktor", ("Ktor route helpers", "captcha + thumbnail"), 905, 540, 340, 105, 0),
         Card("spring", "images-spring-boot", ("storage + health", "metrics wiring"), 1300, 540, 340, 105, 1),
-        Card("java21", "Java 21 JVips", ("JNI libvips backend",), 120, 736, 340, 108, 2),
+        Card("java21", "JDK 25 JVips JNI", ("legacy java21 artifact", "system libvips"), 120, 736, 340, 108, 2),
         Card("vipsApi", "images-vips-api", ("binding-neutral API", "VipsImage + runtime"), 515, 736, 340, 108, 5),
         Card("java25", "Java 25 FFM", ("Panama libvips backend",), 905, 736, 340, 108, 4),
         Card("bench", "images-benchmark", ("measured trade-offs", "scrimage vs libvips"), 1300, 736, 340, 108, 6),
@@ -712,7 +712,7 @@ def bluetape4k_image_architecture_spec() -> DiagramSpec:
         Edge("images", "ktor", "routes", "#5B8DEF", points=((970, 481), (970, 515), (1075, 515), (1075, 540)), label_pos=(1024, 500)),
         Edge("images", "spring", "auto config", "#58A978", points=((1060, 448), (1270, 448), (1270, 592), (1300, 592)), label_pos=(1188, 390)),
         Edge("images", "vipsApi", "native option", "#8A72D6", points=((880, 481), (880, 675), (685, 675), (685, 736)), label_pos=(782, 656)),
-        Edge("vipsApi", "java21", "JNI", "#D6A441", points=((515, 790), (460, 790)), label_pos=(488, 756)),
+        Edge("vipsApi", "java21", "JDK 25 JNI", "#D6A441", points=((515, 790), (460, 790)), label_pos=(488, 756)),
         Edge("vipsApi", "java25", "FFM", "#45A7A1", points=((855, 790), (905, 790)), label_pos=(880, 756)),
         Edge("images", "bench", "measure", "#B88A44", True, points=((1060, 423), (1660, 423), (1660, 790), (1638, 790)), label_pos=(1260, 650)),
     )
@@ -760,7 +760,7 @@ def specs() -> tuple[DiagramSpec, ...]:
         ), "images/analysis/*, images/similarity/*, tests under images/src/test"),
         stack_spec("images-benchmark-architecture-01", "Benchmark Architecture", "kotlinx-benchmark tasks compare scrimage, libvips, IO, and memory profiles.", (
             (("fixtures", "Fixtures", ("photo + document",), 0), ("state", "Benchmark state", ("Java/runtime setup",), 1), ("targets", "Benchmark targets", ("resize encode IO",), 2)),
-            (("scrimage", "Scrimage path", ("pure JVM",), 3), ("vips", "libvips path", ("Java21/Java25",), 4), ("gc", "GC addendum", ("allocation profile",), 5)),
+            (("scrimage", "Scrimage path", ("pure JVM",), 3), ("vips", "libvips path", ("JDK25 backends",), 4), ("gc", "GC addendum", ("allocation profile",), 5)),
             (("json", "Raw JSON", ("docs/raw",), 0), ("reports", "Markdown reports", ("source tables",), 1), ("charts", "README charts", ("rendered evidence",), 2)),
         ), "benchmark/images-benchmark/README.md, docs/*.md, src/benchmark/**/*.kt"),
         stack_spec("images-benchmark-architecture-02", "Resize Benchmark Flow", "Resize latency compares scrimage and libvips backends on the same natural photo fixture.", (
@@ -781,19 +781,19 @@ def specs() -> tuple[DiagramSpec, ...]:
         stack_spec("images-vips-api-architecture-02", "Vips API Processing Pipeline", "Binding-neutral contracts load, transform, encode, and close native images consistently.", (
             (("caller", "Caller", ("Kotlin service",), 0), ("runtime", "VipsRuntime", ("select backend",), 1), ("image", "VipsImage", ("native handle",), 2)),
             (("ops", "SuspendVipsOps", ("resize, crop, thumbnail",), 3), ("okio", "Okio support", ("Source/Sink bridge",), 4), ("encode", "VipsEncodeOptions", ("format + quality",), 5)),
-            (("java21", "Java 21 backend", ("JVips JNI",), 0), ("java25", "Java 25 backend", ("FFM",), 1), ("host", "Host libvips", ("codecs decide",), 2)),
+            (("java21", "JDK 25 JVips JNI", ("legacy java21 artifact",), 0), ("java25", "JDK 25 FFM", ("Panama",), 1), ("host", "Host libvips", ("codecs decide",), 2)),
         ), "images-vips-api/src/main/kotlin/io/bluetape4k/images/vips/**"),
         stack_spec("images-vips-api-class-01", "Vips API Class Structure", "Shared contracts keep backend-specific JNI and FFM implementations behind the same API.", (
             (("runtime", "VipsRuntime", ("load, fromBytes",), 0), ("image", "VipsImage", ("resize, crop, write",), 1), ("format", "VipsImageFormat", ("JPEG, PNG, WEBP",), 2)),
             (("encode", "VipsEncodeOptions", ("quality, effort",), 3), ("limits", "VipsLimits", ("stream guard",), 4), ("errors", "VipsExceptions", ("load/write failures",), 5)),
             (("suspend", "SuspendVipsOps", ("coroutine wrappers",), 0), ("okio", "Vips Okio Support", ("Source/Sink",), 1), ("fixtures", "Test fixtures", ("golden asserts",), 2)),
         ), "VipsImage.kt, VipsRuntime.kt, VipsEncodeOptions.kt, SuspendVipsOps.kt"),
-        stack_spec("images-vips-java21-architecture-01", "JVips Java 21 Architecture", "Java 21 backend adapts the shared API to JVips JNI and host libvips.", (
+        stack_spec("images-vips-java21-architecture-01", "JVips JDK 25 Architecture", "JDK 25 backend adapts the shared API to JVips JNI and host libvips; the module keeps its legacy java21 name.", (
             (("api", "Vips API", ("shared contract",), 0), ("runtime", "JVipsRuntime", ("backend entrypoint",), 1), ("native", "JVipsNativeRuntime", ("JNI lifecycle",), 2)),
             (("image", "JVipsImage", ("handle wrapper",), 3), ("ops", "JVips ops", ("resize thumbnail",), 4), ("writers", "JVips writers", ("JPEG PNG WEBP AVIF",), 5)),
             (("format", "Format support", ("codec capability",), 0), ("handle", "NativeHandle", ("close safely",), 1), ("libvips", "System libvips", ("host install",), 2)),
         ), "images-vips-java21/src/main/kotlin/**"),
-        stack_spec("images-vips-java21-class-02", "JVips Java 21 Class Structure", "Runtime, image handle, operations, and writer classes stay separated around JVips.", (
+        stack_spec("images-vips-java21-class-02", "JVips JDK 25 Class Structure", "Runtime, image handle, operations, and writer classes stay separated around JVips.", (
             (("runtime", "JVipsRuntime", ("load methods",), 0), ("image", "JVipsImage", ("VipsImage impl",), 1), ("support", "JVipsImageSupport", ("extension helpers",), 2)),
             (("resize", "JVipsResize", ("geometry op",), 3), ("thumb", "JVipsThumbnail", ("thumbnail op",), 4), ("writers", "JVips writers", ("encode output",), 5)),
             (("format", "JVipsFormatSupport", ("capability",), 0), ("native", "Native runtime", ("lib path",), 1), ("tests", "Golden tests", ("resize/filter",), 2)),
@@ -921,11 +921,11 @@ def chart_specs() -> tuple[ChartSpec, ...]:
         ChartSpec("root-readme-module-chart-01", "Module Composition Chart", "Artifact lanes by runtime requirement and adoption role.", "module count", "higher is better for lane breadth", (("Pure JVM", (3,)), ("Service adapters", (2,)), ("OCR", (1,)), ("Native vips", (3,)), ("Benchmark/BOM", (2,))), ("modules",), "README module table and settings.gradle.kts"),
         ChartSpec("images-benchmark-resize-latency-chart-01", "Natural Photo Resize Latency", "4K natural-photo resize, AverageTime ms/op.", "ms/op", "lower is better", (("cafe 1920x1080", (114.885, 0.257)), ("landscape 1920x1080", (115.641, 0.244))), ("scrimage", "vips Java 25 FFM"), "benchmark-results-2026-05-28-natural-photos.md", minimum_bar_width=0),
         ChartSpec("images-benchmark-encode-latency-chart-01", "Natural Photo Encode Latency", "Natural-photo JPEG and PNG encode, AverageTime ms/op.", "ms/op", "lower is better", (("JPEG cafe", (137.947, 58.351)), ("JPEG landscape", (144.961, 46.749)), ("PNG cafe", (884.105, 585.288)), ("PNG landscape", (989.370, 546.388))), ("scrimage", "vips Java 25 FFM"), "benchmark-results-2026-05-28-natural-photos.md", minimum_bar_width=0),
-        ChartSpec("images-benchmark-vips-backend-comparison-chart-01", "Vips Backend Comparison", "Java 21 JVips and Java 25 FFM backend snapshots.", "ms/op", "lower is better", (("resize", (0.31, 0.246)), ("thumbnail", (0.34, 0.266)), ("crop", (0.12, 0.085)), ("encodeJpeg", (49.4, 44.16))), ("java21", "java25"), "VipsBackendBenchmark and README backend table", True),
-        ChartSpec("images-benchmark-filter-latency-chart-01", "Filter Latency", "Current filter benchmark comparison.", "ms/op", "lower is better", (("grayscale", (14.8, 15.6, 16.2)), ("sepia", (22.4, 23.1, 23.8)), ("blur", (57.3, 59.4, 60.1)), ("watermark", (31.7, 32.5, 33.0))), ("macOS", "CI java25", "CI java21"), "images-benchmark README filter table"),
+        ChartSpec("images-benchmark-vips-backend-comparison-chart-01", "Vips Backend Comparison", "Historical Java 21 JVips and Java 25 FFM backend snapshots; java21 is a legacy evidence label.", "ms/op", "lower is better", (("resize", (0.31, 0.246)), ("thumbnail", (0.34, 0.266)), ("crop", (0.12, 0.085)), ("encodeJpeg", (49.4, 44.16))), ("java21", "java25"), "VipsBackendBenchmark and README backend table", True),
+        ChartSpec("images-benchmark-filter-latency-chart-01", "Filter Latency", "Historical filter benchmark comparison; the CI java21 label is retained as evidence.", "ms/op", "lower is better", (("grayscale", (14.8, 15.6, 16.2)), ("sepia", (22.4, 23.1, 23.8)), ("blur", (57.3, 59.4, 60.1)), ("watermark", (31.7, 32.5, 33.0))), ("macOS", "CI java25", "CI java21"), "images-benchmark README filter table"),
         ChartSpec("images-benchmark-pipeline-allocation-chart-01", "Pipeline Allocation", "High-level scrimage pipelines with managed heap allocation.", "MB/op", "lower is better", (("photoPreviewJpeg", (50.75, 113.82)), ("documentPreviewPng", (60.89, 57.86))), ("MB/op", "ms/op"), "pipeline-allocation-2026-05-29.md"),
         ChartSpec("images-benchmark-io-boundary-chart-01", "IO Boundary Latency", "Compressed-file IO boundary overhead.", "ms/op", "lower is better", (("homer load", (7.70, 8.23, 10.81)), ("landscape load", (152.22, 0, 216.62)), ("homer write", (6.90, 7.40, 14.03))), ("ByteArray/Path", "Okio", "Suspended"), "benchmark-io-boundary README table", True),
-        ChartSpec("images-benchmark-file-io-throughput-chart-01", "File IO Throughput", "Compressed file channel throughput snapshot.", "MB/s", "higher is better", (("read Path", (422.0, 386.0)), ("write Path", (338.0, 291.0)), ("suspended read", (301.0, 275.0)), ("suspended write", (246.0, 218.0))), ("java25", "java21"), "file-io-throughput-2026-05-29.md"),
+        ChartSpec("images-benchmark-file-io-throughput-chart-01", "File IO Throughput", "Historical compressed-file throughput snapshot; java21 is a legacy evidence label.", "MB/s", "higher is better", (("read Path", (422.0, 386.0)), ("write Path", (338.0, 291.0)), ("suspended read", (301.0, 275.0)), ("suspended write", (246.0, 218.0))), ("java25", "java21"), "file-io-throughput-2026-05-29.md"),
         ChartSpec("images-benchmark-large-streaming-chart-01", "Large Streaming Pipeline", "Color-preserving decode -> resize -> JPEG encode latency.", "ms/op", "lower is better", (("Scrimage Path", (187.44, 114.77)), ("Scrimage Okio", (183.37, 115.41)), ("Scrimage suspended", (215.61, 136.77)), ("vips Path", (27.34, 16.76)), ("vips stream", (25.76, 16.61))), ("large-photo", "ocr-document"), "large-streaming-2026-07-10.md", False),
         ChartSpec("images-benchmark-storage-backend-chart-01", "Storage Backend Latency", "Issue #204 adapter latency snapshot for local files and in-memory S3.", "ms/op", "lower is better", (("upload bytes", (0.079995, 0.240581, 0.010292, 0.021147)), ("download bytes", (0.029879, 0.050093, 0.010313, 0.022595)), ("download to path", (0.112391, 0.305890, 0.098830, 0.236566)), ("list", (0.081062, 0.079263, 0.011484, 0.014198)), ("over-limit guard", (0.009616, 0.010278, 0.009589, 0.009532))), ("local JPEG", "local PNG", "S3 mem JPEG", "S3 mem PNG"), "docs/raw/issue-204-20260726-macos-java25/*.json", True),
         ChartSpec("images-benchmark-batch-pipeline-chart-01", "Batch and Thumbnail Scaling", "Issue #206 AverageTime by fixture count on the local Java 25/macOS host.", "ms/op", "lower is better", (("fixture 1", (77.660, 76.739, 32.879, 33.698)), ("fixture 4", (311.849, 78.147, 128.913, 135.815)), ("fixture 8", (615.779, 92.031, 260.598, 269.307))), ("Scrimage sequential", "Scrimage bounded", "vips cafe", "vips landscape"), "docs/raw/issue-206-20260726-macos-java25/batch-pipeline.json"),

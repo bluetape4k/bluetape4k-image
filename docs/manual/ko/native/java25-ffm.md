@@ -21,7 +21,7 @@ macOS Homebrew 환경에서 0.4.0 Gradle 테스트는 <code>/opt/homebrew/lib</c
 
 공통 API 뒤에서 <code>FfmVipsRuntime</code>과 <code>FfmVipsImage</code>를 쓴다. 원본과 연산 결과를 <code>use</code>로 닫는다. 이미지 읽기, 리사이즈, 썸네일, 자르기, 코루틴 도우미, Okio 소스와 JPEG/PNG/WebP/HEIF 계열 작성기를 제공하며 실제 지원 범위는 네이티브 설치에 달려 있다.
 
-FFM 의존성은 Java 25 클래스 파일을 사용한다. Java 21 빌드 JVM의 AtomicFU 변환기가 이를 안전하게 처리할 수 없으므로 이 모듈은 AtomicFU JVM 변환을 끈다. 이 빌드 제약을 유지해야 한다.
+FFM 의존성은 Java 25 클래스 파일을 사용한다. AtomicFU 변환 단계가 이를 안전하게 처리할 수 없으므로 이 모듈은 AtomicFU JVM 변환을 끈다. 이 빌드 제약을 유지해야 한다.
 
 ## 배포 조건으로 선택하기
 

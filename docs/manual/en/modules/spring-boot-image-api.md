@@ -35,7 +35,7 @@ The application is not published. Consumers choose one `bluetape4k-dependencies`
 
 ## Quick start {#quick-start}
 
-Prerequisite: JDK 21+. No external service is required.
+Prerequisite: JDK 25+. No external service is required.
 
 ```bash
 ./gradlew :spring-boot-image-api:bootRun

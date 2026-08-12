@@ -25,7 +25,7 @@ The BOM is a Gradle `java-platform` that publishes only `<dependencyManagement>`
 | `images` | Image processing core with scrimage (Java2D) backend |
 | `images-spring-boot` | Spring Boot 4 auto-configuration: storage, CDN, health, metrics |
 | `images-vips-api` | libvips API surface (backend-neutral) |
-| `images-vips-java21` | libvips JNI binding for Java 21 |
+| `images-vips-java21` | libvips JNI binding for JDK 25 (legacy artifact name) |
 | `images-vips-java25` | libvips FFM (Project Panama) binding for Java 25 |
 
 ## Usage Examples

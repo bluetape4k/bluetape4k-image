@@ -19,7 +19,7 @@ releaseRef: "0.4.0"
 
 <code>VipsImage</code>는 <code>AutoCloseable</code>을 구현한다. 읽어 온 이미지와 연산으로 만든 네이티브 이미지는 모두 닫아야 하며, 보통 <code>use</code>로 범위를 묶는다. 선택한 <code>VipsRuntime</code>은 프로세스에서 한 번 초기화하고, 이미지와 작업 실행이 모두 끝난 뒤 종료한다.
 
-Java 21 구현은 JVips/JNI와 시스템 libvips가 필요하다. Java 25 구현은 JDK 25, 시스템 libvips와 <code>--enable-native-access=ALL-UNNAMED</code>이 필요하다. 자세한 내용은 [native 자원 수명 주기](../guides/native-resource-lifecycle.md)를 참고한다.
+호환성을 위해 <code>java21</code> 모듈 이름으로 배포하는 JVips JNI 구현은 JDK 25, JVips/JNI와 시스템 libvips가 필요하다. FFM 구현도 JDK 25, 시스템 libvips와 <code>--enable-native-access=ALL-UNNAMED</code>이 필요하다. 자세한 내용은 [native 자원 수명 주기](../guides/native-resource-lifecycle.md)를 참고한다.
 
 ## OCR 경계
 

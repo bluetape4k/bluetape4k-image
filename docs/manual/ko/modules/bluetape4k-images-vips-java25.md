@@ -74,7 +74,7 @@ Java 25와 `--enable-native-access=ALL-UNNAMED`를 사용합니다. Homebrew mac
 
 ## 운영 {#operations}
 
-Java 힙뿐 아니라 네이티브 메모리를 함께 관찰하세요. `0.4.0` 벤치마크에서 기하 연산의 Java 할당량은 작았지만 libvips 네이티브 메모리는 측정하지 않았습니다. Java 21과 Java 25 측정은 CPU와 네이티브 런타임 간섭을 피하도록 순차 실행합니다.
+Java 힙뿐 아니라 네이티브 메모리를 함께 관찰하세요. `0.4.0` 벤치마크에서 기하 연산의 Java 할당량은 작았지만 libvips 네이티브 메모리는 측정하지 않았습니다. 과거 결과 행을 해석할 때 JDK 21과 JDK 25 측정은 CPU와 네이티브 런타임 간섭을 피하도록 순차 실행하며, 현재 release line은 JDK 25에서 실행합니다.
 
 ## 테스트 {#testing}
 
@@ -86,7 +86,7 @@ Java 25에서 `./gradlew :bluetape4k-images-vips-java25:test`를 실행합니다
 
 ## 제약 사항 {#limitations}
 
-파생 이미지는 루트 arena를 공유하므로 루트보다 오래 살 수 없습니다. `Path`가 아닌 입력은 50MiB 제한 안에서 버퍼링합니다. AVIF/HEIC enum이 있다는 사실만으로 호스트 코덱 지원을 보장하지 않으며 Java 21 JVM에서는 실행할 수 없습니다.
+파생 이미지는 루트 arena를 공유하므로 루트보다 오래 살 수 없습니다. `Path`가 아닌 입력은 50MiB 제한 안에서 버퍼링합니다. AVIF/HEIC enum이 있다는 사실만으로 호스트 코덱 지원을 보장하지 않으며 JDK 25보다 이전 JVM에서는 실행할 수 없습니다.
 
 <!-- release-readme-diagrams:start -->
 ## 배포본 다이어그램 {#release-diagrams}

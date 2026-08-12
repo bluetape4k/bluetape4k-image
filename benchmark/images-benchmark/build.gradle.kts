@@ -25,9 +25,8 @@ allOpen {
     annotation("kotlinx.benchmark.State")
 }
 
-// This harness switches its Kotlin target between Java 21 and Java 25. The
-// module does not use atomicfu, and its transformer cannot load stale Java 25
-// classes when a Java 21 verification follows in the same worktree.
+// The selector changes only the VIPS backend. Both backend lanes compile and
+// run on the repository-wide JDK 25 baseline. This module does not use atomicfu.
 atomicfu {
     transformJvm = false
 }
@@ -40,7 +39,7 @@ val vipsImpl = providers.gradleProperty("vips.impl").orElse("java25").get()
 require(vipsImpl == "java21" || vipsImpl == "java25") {
     "vips.impl must be java21 or java25: $vipsImpl"
 }
-val javaVersion = if (vipsImpl == "java21") 21 else 25
+val javaVersion = 25
 val codecMatrixRunId = providers.gradleProperty("codec.matrix.runId")
 val codecMatrixSupersedes = providers.gradleProperty("codec.matrix.supersedes")
 val codecMatrixReplacesFailedAttempt = providers.gradleProperty("codec.matrix.replacesFailedAttempt")
@@ -851,7 +850,7 @@ tasks.register<JavaExec>("finalizeCodecMatrixEvidence") {
         val preflightFiles = requireNotNull(codecMatrixRunDirectory().listFiles())
             .filter { file -> file.isFile && file.name.matches(Regex("preflight-java(?:21|25)\\.json")) }
         require(preflightFiles.map { file -> file.name }.toSet() == setOf("preflight-java21.json", "preflight-java25.json")) {
-            "finalization requires Java 21 and Java 25 preflight evidence"
+            "finalization requires legacy java21 and java25 backend preflight evidence"
         }
         preflightFiles.forEach { preflight ->
             copyCodecMatrixInputImmutable(preflight, stagingDirectory.resolve(preflight.name))

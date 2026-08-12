@@ -29,7 +29,7 @@ releaseRef: "0.4.0"
 
 ## 4. 이유가 있을 때 native 처리로 옮기기
 
-[백엔드 선택](backend-selection.md), [Vips API](../native/vips-api.md), [native 자원 수명 주기](native-resource-lifecycle.md)를 읽는다. 실제 배포 JDK와 패키지 조건에 맞춰 Java 21 JNI 또는 Java 25 FFM을 고른다. 연산으로 만든 이미지도 빠짐없이 닫는다.
+[백엔드 선택](backend-selection.md), [Vips API](../native/vips-api.md), [native 자원 수명 주기](native-resource-lifecycle.md)를 읽는다. 네이티브 패키지 조건에 맞춰 JDK 25 JVips JNI(legacy `java21` artifact) 또는 JDK 25 FFM을 고른다. 연산으로 만든 이미지도 빠짐없이 닫는다.
 
 ## 5. 운영 경계 검증하기
 

@@ -35,7 +35,7 @@ Spring MVC 애플리케이션에 OCR을 넣거나 Tess4J/Tesseract 경계를 테
 
 ## 빠르게 시작하기 {#quick-start}
 
-테스트는 JDK 21 이상만 필요합니다. 실제 OCR에는 Tesseract와 언어별 traineddata가 필요합니다.
+테스트에는 JDK 25 이상이 필요합니다. 실제 OCR에는 Tesseract와 언어별 traineddata가 필요합니다.
 
 ```bash
 brew install tesseract tesseract-lang

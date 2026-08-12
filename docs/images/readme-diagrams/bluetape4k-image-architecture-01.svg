@@ -44,7 +44,7 @@
 <path data-connector="true" marker-end="url(#arrow-purple)" class="edge-purple" d="M 790 481 L 790 657 Q 790 675 772 675 L 635 675 Q 617 675 617 693 L 617 736"/>
 <text class="label" x="703.0" y="656.0" text-anchor="middle">native option</text>
 <path data-connector="true" marker-end="url(#arrow-orange)" class="edge-orange" d="M 466 790 L 418 790"/>
-<text class="label" x="443.0" y="756.0" text-anchor="middle">JNI</text>
+<text class="label" x="443.0" y="756.0" text-anchor="middle">JDK 25 JNI</text>
 <path data-connector="true" marker-end="url(#arrow-green)" class="edge-green" d="M 768 790 L 812 790"/>
 <text class="label" x="790.0" y="756.0" text-anchor="middle">FFM</text>
 <path data-connector="true" marker-end="url(#arrow-gray)" class="edge-gray" d="M 950 423 L 1463 423 Q 1481 423 1481 441 L 1481 780.5 Q 1481 790 1473 790 L 1462 790"/>
@@ -114,9 +114,10 @@
 <g id="java21">
 <rect class="card" x="116" y="736" width="301" height="108" rx="8"/>
 <rect x="132" y="754" width="48" height="48" rx="8" fill="#fff7ed" stroke="#fed7aa" stroke-width="1.3"/>
-<text class="label" x="156" y="784" text-anchor="middle">21</text>
-<text class="card-title" x="198" y="772">Java 21 JVips</text>
-<text class="detail" x="198" y="798">JNI libvips backend</text>
+<text class="label" x="156" y="784" text-anchor="middle">25</text>
+<text class="card-title" x="198" y="772">JDK 25 JVips JNI</text>
+<text class="detail" x="198" y="798">legacy java21 artifact</text>
+<text class="detail" x="198" y="820">system libvips</text>
 </g>
 <g id="vipsApi">
 <rect class="card" x="466" y="736" width="301" height="108" rx="8"/>

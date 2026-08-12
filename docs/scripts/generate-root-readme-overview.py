@@ -130,8 +130,8 @@ def nodes() -> tuple[Node, ...]:
         Node("captcha", "CAPTCHA Generation", ("images-captcha", "Java2D challenge images", "bounded options"), 560, 455, 380, 172, "orange"),
         Node("service", "Service Integrations", ("images-ktor", "images-spring-boot", "routes, storage, health, metrics"), 990, 455, 430, 172, "pink"),
         Node("vipsApi", "Vips Runtime API", ("images-vips-api", "VipsImage / VipsRuntime", "binding-neutral contract"), 1470, 455, 360, 172, "lavender"),
-        Node("jni", "Java 21 JNI Backend", ("images-vips-java21", "JVips + system libvips"), 1030, 750, 360, 142, "blue"),
-        Node("ffm", "Java 25 FFM Backend", ("images-vips-java25", "Panama FFM + native access"), 1480, 750, 360, 142, "green"),
+        Node("jni", "JDK 25 JVips JNI", ("images-vips-java21", "legacy name + system libvips"), 1030, 750, 360, 142, "blue"),
+        Node("ffm", "JDK 25 FFM Backend", ("images-vips-java25", "Panama FFM + native access"), 1480, 750, 360, 142, "green"),
         Node("host", "Native Host Capability", ("libvips codecs decide", "AVIF / HEIC availability"), 520, 750, 430, 142, "amber"),
     )
 
@@ -146,7 +146,7 @@ def edges() -> tuple[Edge, ...]:
         Edge("scrimage", "service", "thumbnail bytes", ((300, 627), (300, 670), (1205, 670), (1205, 627)), "#45A7A1"),
         Edge("captcha", "service", "verify", ((940, 541), (990, 541)), "#E58554"),
         Edge("service", "vipsApi", "", ((1420, 541), (1470, 541)), "#DC6B82"),
-        Edge("vipsApi", "jni", "Java 21+", ((1650, 627), (1650, 690), (1210, 690), (1210, 750)), "#8A72D6"),
+        Edge("vipsApi", "jni", "JDK 25+", ((1650, 627), (1650, 690), (1210, 690), (1210, 750)), "#8A72D6"),
         Edge("vipsApi", "ffm", "Java 25+", ((1650, 627), (1650, 750)), "#8A72D6"),
         Edge("host", "jni", "libvips", ((950, 821), (1030, 821)), "#D6A441"),
         Edge("host", "ffm", "libvips", ((735, 892), (735, 950), (1660, 950), (1660, 892)), "#D6A441"),

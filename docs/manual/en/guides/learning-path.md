@@ -29,7 +29,7 @@ Use [Spring Boot versus Ktor](spring-vs-ktor.md). Complete one framework worksho
 
 ## 4. Move to native processing only with a reason
 
-Read [backend selection](backend-selection.md), [Vips API](../native/vips-api.md), and [native lifecycle](native-resource-lifecycle.md). Choose Java 21 JNI or Java 25 FFM from the actual deployment JDK and package constraints. Close every derived image.
+Read [backend selection](backend-selection.md), [Vips API](../native/vips-api.md), and [native lifecycle](native-resource-lifecycle.md). Choose JDK 25 JVips JNI (the legacy `java21` artifact) or JDK 25 FFM from the native package constraints. Close every derived image.
 
 ## 5. Validate the production boundary
 

@@ -1,7 +1,7 @@
 ---
 manualId: "bluetape4k-images-vips-java21"
 id: "bluetape4k-images-vips-java21"
-title: "Java 21 JVips 백엔드"
+title: "JDK 25 JVips JNI 백엔드 (legacy java21 artifact)"
 locale: "ko"
 kind: "library"
 gradlePath: ":bluetape4k-images-vips-java21"
@@ -10,17 +10,17 @@ releaseRef: "0.4.0"
 artifact: io.github.bluetape4k.image:bluetape4k-images-vips-java21
 ---
 
-# Java 21 JVips 백엔드
+# JDK 25 JVips JNI 백엔드 (legacy `java21` artifact)
 
 > 라이브러리 모듈
 
 ## 제공하는 기능 {#problem}
 
-Java 21에서 JVips와 JNI로 공통 libvips API를 구현합니다. Java 21 도구 체계를 유지하는 서비스가 선택할 수 있는 네이티브 백엔드입니다.
+JDK 25에서 JVips와 JNI로 공통 libvips API를 구현합니다. 호환성을 위해 배포 artifact와 package 이름은 `java21`로 유지합니다.
 
 ## 사용하기 좋은 경우 {#when-to-use}
 
-Java 21 호환성이 필수이고 JVM 아키텍처에 맞는 JVips/libvips 네이티브 라이브러리를 준비할 수 있을 때 선택하세요. 네이티브 배포를 피하려면 핵심 이미지 모듈을 사용하고, Java 25 FFM과의 성능은 실제 환경에서 따로 측정해야 합니다.
+JDK 25를 사용하고 JVM 아키텍처에 맞는 JVips/libvips 네이티브 라이브러리를 준비할 수 있을 때 선택하세요. 네이티브 배포를 피하려면 핵심 이미지 모듈을 사용하고, JDK 25 FFM과의 성능은 실제 환경에서 따로 측정해야 합니다.
 
 ## 의존성 좌표 {#coordinates}
 
@@ -61,7 +61,7 @@ vipsImageOf(Path.of("input.jpg")).use { source ->
 
 ## 설정 {#configuration}
 
-Java 21에서 실행합니다. 입력은 최대 50MiB이고 JPEG/PNG/WebP/AVIF/HEIC 매직 바이트만 허용하며, 디코딩 뒤 `JVipsRuntime.maxPixels`를 검사합니다. `0.4.0`에서는 경로 입력도 제한 확인 후 전체 압축 파일을 바이트 배열로 읽습니다.
+JDK 25에서 실행합니다. 입력은 최대 50MiB이고 JPEG/PNG/WebP/AVIF/HEIC 매직 바이트만 허용하며, 디코딩 뒤 `JVipsRuntime.maxPixels`를 검사합니다. `0.4.0`에서는 경로 입력도 제한 확인 후 전체 압축 파일을 바이트 배열로 읽습니다.
 
 ## 실패 유형과 해결 방법 {#failures}
 
@@ -77,11 +77,11 @@ libvips 설치와 JVM/네이티브 아키텍처를 함께 확인하세요. JNI �
 
 ## 학습 경로와 예제 {#workshops}
 
-배포 아키텍처에서 런타임/이미지 테스트와 작은 인코딩 확인 테스트를 먼저 실행하세요. 그 다음 `-Pvips.impl=java21` 벤치마크를 다른 네이티브 실행과 겹치지 않게 돌립니다.
+배포 아키텍처에서 런타임/이미지 테스트와 작은 인코딩 확인 테스트를 먼저 실행하세요. 그 다음 `-Pvips.impl=java21` 벤치마크를 다른 네이티브 실행과 겹치지 않게 돌립니다. 이 property는 legacy backend selector이며 JDK 21을 요구한다는 뜻이 아닙니다.
 
 ## 제약 사항 {#limitations}
 
-`0.4.0`의 Java 21 백엔드는 HEIC 인코딩을 지원하지 않습니다. AVIF/HEIF 디코딩과 AVIF 인코딩도 호스트 코덱에 따라 달라집니다. 경로 로딩은 50MiB 제한 안에서 전체 압축 파일을 메모리에 올립니다.
+`0.4.0`의 legacy 이름 JVips 백엔드는 HEIC 인코딩을 지원하지 않습니다. AVIF/HEIF 디코딩과 AVIF 인코딩도 호스트 코덱에 따라 달라집니다. 경로 로딩은 50MiB 제한 안에서 전체 압축 파일을 메모리에 올립니다.
 
 <!-- release-readme-diagrams:start -->
 ## 배포본 다이어그램 {#release-diagrams}

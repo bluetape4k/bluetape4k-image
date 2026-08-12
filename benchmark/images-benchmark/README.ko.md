@@ -36,8 +36,8 @@
 
 ### Vips 백엔드 비교
 
-`VipsBackendBenchmark`와 `VipsBackendEncodeBenchmark`는 Java 21 JVips JNI
-백엔드와 Java 25 FFM 백엔드를 같은 벤치마크 이름으로 반복 실행해 나란히
+`VipsBackendBenchmark`와 `VipsBackendEncodeBenchmark`는 레거시 이름의 JVips JNI
+백엔드와 FFM 백엔드를 JDK 25에서 같은 벤치마크 이름으로 반복 실행해 나란히
 비교할 수 있게 합니다.
 
 ![Vips backend comparison benchmark chart](../../docs/images/readme-charts/images-benchmark-vips-backend-comparison-chart-01.png)
@@ -318,7 +318,7 @@ RUN_ID="local-$(date +%Y%m%d-%H%M%S)"
 ./gradlew :bluetape4k-images-benchmark:benchmarkBenchmark \
   -Pcodec.matrix.runId="$RUN_ID" -Pvips.impl=java25
 
-# Java 21 - 선택한 JVips JNI 호환 benchmark (Linux 전용, FFM 전용 large streaming 제외)
+# JDK 25 - 선택한 레거시 JVips JNI backend benchmark (Linux 전용, FFM 전용 large streaming 제외)
 ./gradlew :bluetape4k-images-benchmark:benchmarkPipelineAllocationBenchmark :bluetape4k-images-benchmark:benchmarkMemoryProfileBenchmark :bluetape4k-images-benchmark:benchmarkIoBoundaryBenchmark :bluetape4k-images-benchmark:benchmarkIoThroughputBenchmark -Pvips.impl=java21
 
 # 2026-05-29 리포트에 사용한 focused evidence
@@ -369,7 +369,7 @@ Gradle `kotlinx-benchmark` task를 기본 실행 경로로 사용하세요. benc
 1. vips 행 측정을 위한 native prerequisite을 설치합니다.
    - macOS: `brew install vips`
    - Linux: `libvips-tools`, `libvips-dev` 설치
-2. 백엔드는 한 번에 하나씩 실행합니다. 같은 호스트에서 Java 21과 Java 25 benchmark
+2. 백엔드는 한 번에 하나씩 실행합니다. 같은 호스트에서 JVips JNI와 FFM backend benchmark
    프로세스를 병렬 실행하지 마세요.
 3. 생성된 JMH JSON을
    `benchmark/images-benchmark/build/reports/benchmarks/<target>/<timestamp>/benchmark.json`에서
@@ -528,7 +528,7 @@ repository에 추가하지 않도록 fixture는 JMH setup에서 생성합니다.
 ### `VipsBenchmarkState`
 
 JMH `@State(Scope.Thread)` — 리플렉션으로 vips 런타임을 Trial당 1회 초기화합니다
-(`FfmVipsRuntime` Java 25 또는 `JVipsRuntime` Java 21 자동 탐색).
+(`FfmVipsRuntime` 또는 레거시 이름의 `JVipsRuntime`을 JDK 25에서 자동 탐색).
 
 ```kotlin
 @Setup(Level.Trial)

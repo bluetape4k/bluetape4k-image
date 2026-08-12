@@ -35,7 +35,7 @@ artifact: null
 
 ## 빠르게 시작하기 {#quick-start}
 
-JDK 21 이상이면 됩니다. 외부 서비스나 네이티브 패키지는 필요하지 않습니다.
+JDK 25 이상이면 됩니다. 외부 서비스나 네이티브 패키지는 필요하지 않습니다.
 
 ```bash
 ./gradlew :basic-processing:run

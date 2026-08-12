@@ -35,7 +35,7 @@ The example is not published. Select one `bluetape4k-dependencies` version for t
 
 ## Quick start {#quick-start}
 
-JDK 21+ is sufficient for tests. Real OCR also requires Tesseract and the requested traineddata packages.
+JDK 25+ is required for tests. Real OCR also requires Tesseract and the requested traineddata packages.
 
 ```bash
 brew install tesseract tesseract-lang

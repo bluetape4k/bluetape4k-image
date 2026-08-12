@@ -306,8 +306,8 @@
         "images-vips-java21/src/test"
       ],
       "title": {
-        "en": "Java 21 JVips backend",
-        "ko": "Java 21 JVips 백엔드"
+        "en": "JDK 25 JVips JNI backend (legacy java21 artifact)",
+        "ko": "JDK 25 JVips JNI 백엔드 (legacy java21 artifact)"
       },
       "workshops": [
 

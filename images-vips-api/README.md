@@ -2,7 +2,7 @@
 
 English | [한국어](./README.ko.md)
 
-Binding-neutral API for libvips-backed image processing. Defines shared interfaces and value types for both Java 21 (JVips) and Java 25 (vips-ffm) backend implementations. Use this module when you need a unified interface independent of the underlying libvips binding.
+Binding-neutral API for libvips-backed image processing. Defines shared interfaces and value types for both JDK 25 backend implementations: JVips JNI (legacy `java21` artifact) and vips-ffm. Use this module when you need a unified interface independent of the underlying libvips binding.
 
 ## Architecture
 
@@ -67,7 +67,7 @@ guarantee that every backend can decode or encode those formats on every host.
 
 | Backend | AVIF decode | AVIF encode | HEIC decode | HEIC encode | Notes |
 |---------|-------------|-------------|-------------|-------------|-------|
-| Java 21 JVips/JNI | Capability-gated | Capability-gated | Capability-gated | N/A | JVips does not expose HEIC encoding; use Java 25 when HEIC output is required |
+| JDK 25 JVips/JNI (legacy `java21` artifact) | Capability-gated | Capability-gated | Capability-gated | N/A | JVips does not expose HEIC encoding; use the FFM backend when HEIC output is required |
 | Java 25 FFM | Capability-gated | Capability-gated | Capability-gated | Capability-gated | AVIF uses HEIF AV1 compression; HEIC uses HEIF HEVC compression |
 
 Native AVIF/HEIC support requires libvips built with libheif. AVIF output also
@@ -357,7 +357,7 @@ dependencies {
     api("io.github.bluetape4k.image:bluetape4k-images-vips-api:${version}")
     
     // Choose ONE implementation:
-    runtimeOnly("io.github.bluetape4k.image:bluetape4k-images-vips-java21:${version}")  // JVips (Java 21+)
+    runtimeOnly("io.github.bluetape4k.image:bluetape4k-images-vips-java21:${version}")  // JVips (JDK 25+; legacy artifact name)
     // OR
     runtimeOnly("io.github.bluetape4k.image:bluetape4k-images-vips-java25:${version}")  // vips-ffm (Java 25+)
 }
@@ -401,6 +401,6 @@ VipsGoldenAssert(goldenDir = Path.of("src/testFixtures/resources/golden/vips"))
 
 ## See Also
 
-- `bluetape4k-images-vips-java21` — JVips binding for Java 21+
+- `bluetape4k-images-vips-java21` — JVips binding for JDK 25+ (legacy artifact name)
 - `bluetape4k-images-vips-java25` — Foreign Function Memory binding for Java 25+
 - `bluetape4k-images` — High-level image operations (Scrimage-based, incubating AVIF/HEIC interfaces)
