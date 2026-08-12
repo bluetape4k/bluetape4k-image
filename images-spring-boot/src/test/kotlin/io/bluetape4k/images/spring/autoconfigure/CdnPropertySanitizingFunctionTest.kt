@@ -15,7 +15,7 @@ class CdnPropertySanitizingFunctionTest {
     @Test
     fun `cloudfront toString redacts both private key sources`() {
         val value = CdnProperties.CloudFront(
-            privateKeyPem = "-----BEGIN PRIVATE KEY-----secret",
+            privateKeyPem = "fixture-private-key",
             privateKeyPath = "/run/secrets/cloudfront-private-key.pem",
         )
 
@@ -39,7 +39,7 @@ class CdnPropertySanitizingFunctionTest {
         val data = SanitizableData(
             null,
             "bluetape4k.images.cdn.cloudfront.private-key-pem",
-            "-----BEGIN PRIVATE KEY-----...",
+            "fixture-private-key",
         )
         val result = sanitizer.apply(data)
         result.value shouldBeEqualTo SanitizableData.SANITIZED_VALUE
