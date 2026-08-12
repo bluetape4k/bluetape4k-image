@@ -3,6 +3,7 @@ package io.bluetape4k.images.barcode
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.requireNotEmpty
 import java.io.Serializable
+import java.util.Collections
 
 /**
  * bluetape4k barcode provider가 이해하는 안정적인 barcode symbology입니다.
@@ -100,7 +101,7 @@ data class BarcodeProviderIdentity private constructor(
             backend: String? = null,
             metadata: Map<String, String> = emptyMap(),
         ): BarcodeProviderIdentity =
-            BarcodeProviderIdentity(name, version, backend, metadata)
+            BarcodeProviderIdentity(name, version, backend, metadata.immutableMapSnapshot())
     }
 }
 
@@ -226,7 +227,7 @@ data class BarcodeRegion private constructor(
             coordinateSpace: BarcodeCoordinateSpace,
             boundingBox: BarcodeBoundingBox? = null,
         ): BarcodeRegion =
-            BarcodeRegion(points, coordinateSpace, boundingBox)
+            BarcodeRegion(points.immutableListSnapshot(), coordinateSpace, boundingBox)
     }
 }
 
@@ -279,7 +280,13 @@ data class BarcodeOptions private constructor(
             minimumConfidence: Double? = null,
             metadata: Map<String, String> = emptyMap(),
         ): BarcodeOptions =
-            BarcodeOptions(formats, tryHarder, includeRawBytes, minimumConfidence, metadata)
+            BarcodeOptions(
+                formats.immutableSetSnapshot(),
+                tryHarder,
+                includeRawBytes,
+                minimumConfidence,
+                metadata.immutableMapSnapshot(),
+            )
     }
 }
 
@@ -289,20 +296,29 @@ data class BarcodeOptions private constructor(
  * ## 동작/계약
  * [text]는 디코딩된 payload입니다. [format]은 bluetape4k normalized format이고,
  * [rawBackendFormat]은 provider-native format string을 담을 수 있습니다. [rawBytes]는
- * 선택값이며 요청되었고 사용 가능한 경우에만 제공해야 합니다.
+ * 선택값이며 요청되었고 사용 가능한 경우에만 제공해야 합니다. 입력 배열은 생성 시
+ * snapshot하고 조회 시 새 배열을 반환하므로 결과의 equality/hash가 외부 mutation에
+ * 영향을 받지 않습니다.
  */
-@ConsistentCopyVisibility
-data class BarcodeResult private constructor(
+class BarcodeResult private constructor(
     val text: String,
     val format: BarcodeFormat,
     val provider: BarcodeProviderIdentity,
     val region: BarcodeRegion? = null,
     val confidence: Double? = null,
     val quality: Double? = null,
-    val rawBytes: ByteArray? = null,
-    val rawBackendFormat: String? = null,
-    val metadata: Map<String, String> = emptyMap(),
+    rawBytes: ByteArray? = null,
+    rawBackendFormat: String? = null,
+    metadata: Map<String, String> = emptyMap(),
 ): Serializable {
+
+    var rawBytes: ByteArray? = rawBytes?.copyOf()
+        get() = field?.copyOf()
+        private set(value) {
+            field = value?.copyOf()
+        }
+    val rawBackendFormat: String? = rawBackendFormat
+    val metadata: Map<String, String> = metadata.immutableMapSnapshot()
 
     init {
         text.requireNotBlank("text")
@@ -345,6 +361,29 @@ data class BarcodeResult private constructor(
         return result
     }
 
+    operator fun component1(): String = text
+
+    operator fun component2(): BarcodeFormat = format
+
+    operator fun component3(): BarcodeProviderIdentity = provider
+
+    operator fun component4(): BarcodeRegion? = region
+
+    operator fun component5(): Double? = confidence
+
+    operator fun component6(): Double? = quality
+
+    operator fun component7(): ByteArray? = rawBytes
+
+    operator fun component8(): String? = rawBackendFormat
+
+    operator fun component9(): Map<String, String> = metadata
+
+    override fun toString(): String =
+        "BarcodeResult(text=$text, format=$format, provider=$provider, region=$region, " +
+            "confidence=$confidence, quality=$quality, rawBytes=${rawBytes?.contentToString()}, " +
+            "rawBackendFormat=$rawBackendFormat, metadata=$metadata)"
+
     companion object {
         private const val serialVersionUID: Long = 8448839205622304997L
 
@@ -362,6 +401,15 @@ data class BarcodeResult private constructor(
             BarcodeResult(text, format, provider, region, confidence, quality, rawBytes, rawBackendFormat, metadata)
     }
 }
+
+private fun <K, V> Map<K, V>.immutableMapSnapshot(): Map<K, V> =
+    Collections.unmodifiableMap(toMap())
+
+private fun <T> List<T>.immutableListSnapshot(): List<T> =
+    Collections.unmodifiableList(toList())
+
+private fun <T> Set<T>.immutableSetSnapshot(): Set<T> =
+    Collections.unmodifiableSet(toSet())
 
 private const val NORMALIZED_MIN: Double = 0.0
 private const val NORMALIZED_MAX: Double = 1.0

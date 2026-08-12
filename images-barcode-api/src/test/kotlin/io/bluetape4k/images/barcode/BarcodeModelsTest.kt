@@ -13,14 +13,17 @@ class BarcodeModelsTest {
 
     @Test
     fun `provider identity validates metadata`() {
+        val metadata = mutableMapOf("decoder" to "MultiFormatReader")
         val provider = BarcodeProviderIdentity(
             name = "ZXing",
             version = "3.5.4",
             backend = "java",
-            metadata = mapOf("decoder" to "MultiFormatReader"),
+            metadata = metadata,
         )
 
         provider.name shouldBeEqualTo "ZXing"
+        provider.metadata["decoder"] shouldBeEqualTo "MultiFormatReader"
+        metadata["decoder"] = "mutated"
         provider.metadata["decoder"] shouldBeEqualTo "MultiFormatReader"
 
         assertFailsWith<IllegalArgumentException> {
@@ -37,6 +40,7 @@ class BarcodeModelsTest {
     @Test
     fun `geometry validates coordinate spaces`() {
         val point = BarcodePoint(x = 10.0, y = 12.0)
+        val points = mutableListOf(point)
         val box = BarcodeBoundingBox(
             x = 4.0,
             y = 8.0,
@@ -45,13 +49,15 @@ class BarcodeModelsTest {
             coordinateSpace = BarcodeCoordinateSpace.PIXEL,
         )
         val region = BarcodeRegion(
-            points = listOf(point),
+            points = points,
             coordinateSpace = BarcodeCoordinateSpace.PIXEL,
             boundingBox = box,
         )
 
         region.points shouldContain point
         region.boundingBox shouldBeEqualTo box
+        points.clear()
+        region.points shouldContain point
 
         assertFailsWith<IllegalArgumentException> {
             BarcodePoint(x = Double.NaN, y = 1.0)
@@ -95,10 +101,18 @@ class BarcodeModelsTest {
             confidence = 0.40,
         )
 
+        val formats = mutableSetOf(BarcodeFormat.QR_CODE)
+        val metadata = mutableMapOf("source" to "test")
         val options = BarcodeOptions(
-            formats = setOf(BarcodeFormat.QR_CODE),
+            formats = formats,
             minimumConfidence = 0.80,
+            metadata = metadata,
         )
+
+        formats += BarcodeFormat.CODE_128
+        metadata["source"] = "mutated"
+        options.formats shouldBeEqualTo setOf(BarcodeFormat.QR_CODE)
+        options.metadata["source"] shouldBeEqualTo "test"
 
         options.accepts(accepted) shouldBeEqualTo true
         options.accepts(rejectedFormat) shouldBeEqualTo false
@@ -149,6 +163,34 @@ class BarcodeModelsTest {
     }
 
     @Test
+    fun `result keeps raw bytes immutable across input and getter mutations`() {
+        val provider = BarcodeProviderIdentity(name = "fake")
+        val source = byteArrayOf(1, 2, 3)
+        val metadata = mutableMapOf("source" to "test")
+        val result = BarcodeResult(
+            text = "BT4K",
+            format = BarcodeFormat.CODE_128,
+            provider = provider,
+            rawBytes = source,
+            metadata = metadata,
+        )
+        val expected = source.copyOf()
+        val initialHash = result.hashCode()
+        val results = hashSetOf(result)
+
+        source[0] = 9
+        result.rawBytes.contentEquals(expected) shouldBeEqualTo true
+        metadata["source"] = "mutated"
+        result.metadata["source"] shouldBeEqualTo "test"
+
+        val exposed = result.rawBytes ?: error("rawBytes should be present")
+        exposed[1] = 8
+        result.rawBytes?.contentEquals(expected) shouldBeEqualTo true
+        result.hashCode() shouldBeEqualTo initialHash
+        results.contains(result) shouldBeEqualTo true
+    }
+
+    @Test
     fun `barcode exception exposes reason and sanitized message`() {
         val error = BarcodeException(
             reason = BarcodeFailureReason.DECODE_FAILED,
@@ -170,6 +212,7 @@ class BarcodeModelsTest {
                 coordinateSpace = BarcodeCoordinateSpace.NORMALIZED,
             ),
             confidence = 1.0,
+            rawBytes = byteArrayOf(7, 8, 9),
         )
 
         @Suppress("UNCHECKED_CAST")
@@ -178,6 +221,11 @@ class BarcodeModelsTest {
         restored.text shouldBeEqualTo result.text
         restored.format shouldBeEqualTo result.format
         restored.region?.points shouldBeEqualTo result.region?.points
+        restored.rawBytes?.contentEquals(byteArrayOf(7, 8, 9)) shouldBeEqualTo true
+
+        val exposed = restored.rawBytes ?: error("rawBytes should be present")
+        exposed[0] = 0
+        restored.rawBytes?.contentEquals(byteArrayOf(7, 8, 9)) shouldBeEqualTo true
     }
 
     private fun roundTrip(value: Any): Any {
