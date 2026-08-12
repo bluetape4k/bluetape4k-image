@@ -1,7 +1,7 @@
 package io.bluetape4k.images.spring.autoconfigure
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import org.springframework.boot.context.properties.ConfigurationProperties
-import java.io.Serializable
 import java.time.Duration
 
 /**
@@ -18,11 +18,7 @@ data class CdnProperties(
     val enabled: Boolean = false,
     val provider: String = "s3_presign",
     val cloudfront: CloudFront = CloudFront(),
-) : Serializable {
-
-    companion object {
-        private const val serialVersionUID: Long = 1L
-    }
+) {
 
     /**
      * CloudFront URL signing configuration입니다.
@@ -39,15 +35,11 @@ data class CdnProperties(
     data class CloudFront(
         val distributionDomain: String? = null,
         val keyPairId: String? = null,
-        val privateKeyPem: String? = null,
-        val privateKeyPath: String? = null,
+        @get:JsonIgnore val privateKeyPem: String? = null,
+        @get:JsonIgnore val privateKeyPath: String? = null,
         val defaultExpiry: Duration = Duration.ofMinutes(10),
         val maxExpiry: Duration = Duration.ofHours(1),
-    ) : Serializable {
-
-        companion object {
-            private const val serialVersionUID: Long = 1L
-        }
+    ) {
 
         /**
          * [privateKeyPem]이 log와 toString() 호출로 유출되지 않도록 막습니다.
@@ -56,7 +48,7 @@ data class CdnProperties(
          */
         override fun toString(): String =
             "CloudFront(domain=$distributionDomain, keyPairId=$keyPairId, " +
-                "privateKeyPem=[REDACTED], privateKeyPath=$privateKeyPath, " +
+                "privateKeyPem=[REDACTED], privateKeyPath=[REDACTED], " +
                 "defaultExpiry=$defaultExpiry, maxExpiry=$maxExpiry)"
     }
 }

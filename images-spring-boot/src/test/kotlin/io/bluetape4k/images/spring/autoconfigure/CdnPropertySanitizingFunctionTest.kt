@@ -1,13 +1,38 @@
 package io.bluetape4k.images.spring.autoconfigure
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeSameInstanceAs
+import io.bluetape4k.assertions.shouldContain
+import io.bluetape4k.assertions.shouldNotContain
 import org.junit.jupiter.api.Test
 import org.springframework.boot.actuate.endpoint.SanitizableData
 
 class CdnPropertySanitizingFunctionTest {
 
     private val sanitizer = CdnPropertySanitizingFunction()
+
+    @Test
+    fun `cloudfront toString redacts both private key sources`() {
+        val value = CdnProperties.CloudFront(
+            privateKeyPem = "-----BEGIN PRIVATE KEY-----secret",
+            privateKeyPath = "/run/secrets/cloudfront-private-key.pem",
+        )
+
+        value.toString() shouldNotContain "secret"
+        value.toString() shouldNotContain "/run/secrets/cloudfront-private-key.pem"
+        value.toString() shouldContain "[REDACTED]"
+    }
+
+    @Test
+    fun `cloudfront private key getters are excluded from Jackson views`() {
+        val pemIgnored = CdnProperties.CloudFront::class.java.getMethod("getPrivateKeyPem")
+            .getAnnotation(JsonIgnore::class.java) != null
+        val pathIgnored = CdnProperties.CloudFront::class.java.getMethod("getPrivateKeyPath")
+            .getAnnotation(JsonIgnore::class.java) != null
+        pemIgnored shouldBeEqualTo true
+        pathIgnored shouldBeEqualTo true
+    }
 
     @Test
     fun `redacts privateKeyPem property`() {

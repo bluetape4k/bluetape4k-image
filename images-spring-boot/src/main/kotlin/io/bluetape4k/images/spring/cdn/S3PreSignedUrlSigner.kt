@@ -9,7 +9,6 @@ import io.bluetape4k.support.requireNotBlank
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import java.io.Serializable
 import java.net.URI
 import java.net.URISyntaxException
 import java.time.Duration
@@ -37,11 +36,9 @@ class S3PreSignedUrlSigner(
     private val operations: S3Operations,
     private val bucket: String,
     private val keyPrefix: String,
-) : CdnReadSigner, CdnWriteSigner, Serializable {
+) : CdnReadSigner, CdnWriteSigner {
 
     companion object : KLogging() {
-        private const val serialVersionUID: Long = 1L
-
         /** presigned URL expiry에 대한 AWS SigV4 hard limit입니다. */
         private val MAX_EXPIRY: Duration = Duration.ofDays(7)
     }

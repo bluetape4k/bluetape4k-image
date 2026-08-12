@@ -34,7 +34,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
 import java.awt.AlphaComposite
 import java.awt.Color
-import java.io.Serializable
 import java.nio.file.Path
 import kotlin.math.roundToInt
 import kotlin.time.TimeSource
@@ -98,9 +97,9 @@ enum class PrivacyRedactionMode {
  *   선택하지 않습니다.
  */
 data class PrivacyDerivativeFormat(
-    @Transient val writer: SuspendImageWriter,
+    val writer: SuspendImageWriter,
     val extension: String,
-) : Serializable {
+) {
 
     val normalizedExtension: String = extension.trim().removePrefix(".").lowercase()
 
@@ -111,7 +110,6 @@ data class PrivacyDerivativeFormat(
     }
 
     companion object {
-        private const val serialVersionUID: Long = 5543586672644358734L
         private const val PATH_SEPARATOR = '/'
         private const val WINDOWS_PATH_SEPARATOR = '\\'
 
@@ -137,15 +135,11 @@ data class PrivacyRedaction(
     val mode: PrivacyRedactionMode = PrivacyRedactionMode.SOLID_MASK,
     val maskColorArgb: Int = Color.BLACK.rgb,
     val maskOpacity: Double = 1.0,
-) : Serializable {
+) {
 
     init {
         require(maskOpacity.isFinite()) { "maskOpacity must be finite, but was $maskOpacity" }
         require(maskOpacity in OPACITY_MIN..OPACITY_MAX) { "maskOpacity must be in 0.0..1.0, but was $maskOpacity" }
-    }
-
-    companion object {
-        private const val serialVersionUID: Long = -8893722484044437024L
     }
 }
 
@@ -169,15 +163,11 @@ data class PrivacyDerivativeOptions(
     val thumbnailCrop: ThumbnailCrop = ThumbnailCrop.Fit,
     val outputFormat: PrivacyDerivativeFormat = PrivacyDerivativeFormat.Jpeg,
     val redactions: List<PrivacyRedaction> = emptyList(),
-) : Serializable {
+) {
 
     init {
         maxPixels.requirePositiveNumber("maxPixels")
         maxSide?.requirePositiveNumber("maxSide")
-    }
-
-    companion object {
-        private const val serialVersionUID: Long = 4532641171246800582L
     }
 }
 
@@ -187,14 +177,10 @@ data class PrivacyDerivativeOptions(
 data class PrivacyDerivativeFailure(
     val stage: PrivacyDerivativeFailureStage,
     val message: String,
-) : Serializable {
+) {
 
     init {
         message.requireNotBlank("message")
-    }
-
-    companion object {
-        private const val serialVersionUID: Long = -6318078195129524167L
     }
 }
 
@@ -208,17 +194,13 @@ data class AppliedPrivacyRedaction(
     val y: Int,
     val width: Int,
     val height: Int,
-) : Serializable {
+) {
 
     init {
         x.requireNonNegative("x")
         y.requireNonNegative("y")
         width.requirePositiveNumber("width")
         height.requirePositiveNumber("height")
-    }
-
-    companion object {
-        private const val serialVersionUID: Long = 8179781583223543732L
     }
 }
 
@@ -235,15 +217,11 @@ data class PrivacyDerivativeReport(
     val failures: List<PrivacyDerivativeFailure>,
     val elapsedMillis: Long,
     val metadataVerification: PrivacyMetadataVerification = PrivacyMetadataVerification(),
-) : Serializable {
+) {
 
     init {
         source.requireNotBlankIfPresent("source")
         elapsedMillis.requireNonNegative("elapsedMillis")
-    }
-
-    companion object {
-        private const val serialVersionUID: Long = 270973442118913330L
     }
 }
 
@@ -258,12 +236,7 @@ data class PrivacyMetadataVerification(
     val sourcePresent: Set<PrivacyMetadataCategory> = emptySet(),
     val remaining: Set<PrivacyMetadataCategory> = emptySet(),
     val verified: Boolean = true,
-) : Serializable {
-
-    companion object {
-        private const val serialVersionUID: Long = 1L
-    }
-}
+)
 
 /**
  * derivative output metadata를 strict하게 검증할 수 없거나, 요청된 category가 남은 경우의
@@ -284,17 +257,12 @@ data class PrivacyDerivativeResult(
     val image: ImmutableImage,
     val bytes: ByteArray,
     val report: PrivacyDerivativeReport,
-) : Serializable {
-
-    companion object {
-        private const val serialVersionUID: Long = -5269759565320199140L
-    }
-}
+)
 
 /**
  * [processPrivacyDerivatives]의 batch result입니다.
  */
-sealed interface PrivacyDerivativeBatchResult : Serializable {
+sealed interface PrivacyDerivativeBatchResult {
     /** 이 result를 생성한 source path입니다. */
     val source: Path
 
@@ -302,22 +270,14 @@ sealed interface PrivacyDerivativeBatchResult : Serializable {
     data class Success(
         override val source: Path,
         val result: PrivacyDerivativeResult,
-    ) : PrivacyDerivativeBatchResult {
-        companion object {
-            private const val serialVersionUID: Long = -4865455572333443922L
-        }
-    }
+    ) : PrivacyDerivativeBatchResult
 
     /** derivative 생성 실패 item입니다. */
     data class Failure(
         override val source: Path,
         val stage: PrivacyDerivativeFailureStage,
         val cause: Throwable,
-    ) : PrivacyDerivativeBatchResult {
-        companion object {
-            private const val serialVersionUID: Long = 6204453107661915775L
-        }
-    }
+    ) : PrivacyDerivativeBatchResult
 }
 
 /**
@@ -649,37 +609,25 @@ private fun SensitiveRegionGeometry.Rectangle.toAppliedRedaction(
 private data class PrivacyDerivativeTransformResult(
     val image: ImmutableImage,
     val redactions: List<AppliedPrivacyRedaction>,
-) : Serializable {
-    companion object {
-        private const val serialVersionUID: Long = -8691864136817785402L
-    }
-}
+)
 
 private data class RenderablePrivacyRedaction(
     val request: PrivacyRedaction,
     val applied: AppliedPrivacyRedaction,
-) : Serializable {
-    companion object {
-        private const val serialVersionUID: Long = 3452957474318152798L
-    }
-}
+)
 
 private data class PixelBounds(
     val x: Int,
     val y: Int,
     val width: Int,
     val height: Int,
-) : Serializable {
+) {
     fun coerceWithin(dimensions: PrivacyImageDimensions): PixelBounds {
         val safeX = x.coerceIn(0, dimensions.width - 1)
         val safeY = y.coerceIn(0, dimensions.height - 1)
         val safeWidth = width.coerceAtMost(dimensions.width - safeX).coerceAtLeast(1)
         val safeHeight = height.coerceAtMost(dimensions.height - safeY).coerceAtLeast(1)
         return PixelBounds(safeX, safeY, safeWidth, safeHeight)
-    }
-
-    companion object {
-        private const val serialVersionUID: Long = 1015043856143229369L
     }
 }
 

@@ -1144,6 +1144,26 @@ val results = sourcePaths.processPrivacyDerivatives(
 )
 ```
 
+### Privacy Snapshot 직렬화 (0.5.0)
+
+Privacy runtime 객체는 의도적으로 Java 직렬화를 제공하지 않습니다. 보존하거나 전송할
+때는 concrete snapshot DTO만 사용하고 Jackson 3 codec을 명시적으로 호출하세요.
+
+```kotlin
+val snapshot = derivative.toPayload(sourceId = "upload-42")
+val json = PrivacyDerivativeJackson.encodePayload(snapshot)
+val restored = PrivacyDerivativeJackson.decodePayload(json)
+check(restored.bytes.contentEquals(snapshot.bytes))
+```
+
+JSON 계약은 `schemaVersion=1` typed envelope입니다. 고정 codec은 unknown field, 지원하지
+않는 version, trailing document, 안전하지 않은 source identifier, `PrivacyDerivativeJsonLimits`
+초과 입력을 거부하며 streaming decode가 caller의 `InputStream`을 닫지 않습니다.
+`PrivacyDerivativeFormat`, `PrivacyDerivativeResult`, batch result, Spring storage/CDN runtime
+collaborator는 0.5.0부터 `Serializable`을 선언하지 않습니다. 해당 runtime 객체를 기존 Java
+직렬화로 저장하던 사용자는 snapshot으로 migration해야 하며, 이제는 부분적인 객체 graph를
+만드는 대신 `NotSerializableException`이 발생합니다.
+
 ## 테스트 & 품질
 
 ### 골든 이미지 테스트

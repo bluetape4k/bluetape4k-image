@@ -1118,6 +1118,26 @@ val results = sourcePaths.processPrivacyDerivatives(
 )
 ```
 
+### Privacy Snapshot Serialization (0.5.0)
+
+Privacy runtime objects are intentionally not Java-serializable. Persist or transfer only
+the concrete snapshot DTOs, and use the Jackson 3 codec explicitly:
+
+```kotlin
+val snapshot = derivative.toPayload(sourceId = "upload-42")
+val json = PrivacyDerivativeJackson.encodePayload(snapshot)
+val restored = PrivacyDerivativeJackson.decodePayload(json)
+check(restored.bytes.contentEquals(snapshot.bytes))
+```
+
+The JSON contract is a typed `schemaVersion=1` envelope. The fixed codec rejects unknown
+fields, unsupported versions, trailing documents, unsafe source identifiers, and inputs above
+`PrivacyDerivativeJsonLimits`; streaming decode does not close the caller's `InputStream`.
+`PrivacyDerivativeFormat`, `PrivacyDerivativeResult`, batch results, and Spring storage/CDN
+runtime collaborators no longer advertise `Serializable` in 0.5.0. Existing Java serialization
+of those runtime objects must be migrated to snapshots; it fails with `NotSerializableException`
+instead of producing a partial object graph.
+
 ## Testing & Quality
 
 ### Golden Image Testing

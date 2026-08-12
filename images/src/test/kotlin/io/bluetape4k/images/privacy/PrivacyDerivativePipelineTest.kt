@@ -65,6 +65,19 @@ class PrivacyDerivativePipelineTest {
         }
 
     @Test
+    fun `snapshot restored options can rerun the privacy pipeline`() =
+        runTest(timeout = 30.seconds) {
+            val restoredOptions = PrivacyDerivativeJackson.decodeOptions(
+                PrivacyDerivativeJackson.encodeOptions(PrivacyDerivativeOptions().toSnapshot()),
+            ).toOptions()
+
+            val result = testImage().suspendPrivacyDerivative(restoredOptions)
+
+            result.bytes.size shouldBeGreaterThan 0
+            result.report.failures shouldHaveSize 0
+        }
+
+    @Test
     fun `suspendPrivacyDerivative normalizes exif orientation`() =
         runTest(timeout = 30.seconds) {
             val result = testImage(width = 120, height = 80).suspendPrivacyDerivative(

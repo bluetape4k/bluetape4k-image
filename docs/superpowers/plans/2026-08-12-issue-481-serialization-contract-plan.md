@@ -19,18 +19,17 @@ bean 재생성 경계를 검증한다.
   `implementation("tools.jackson.core:jackson-databind")`,
   `implementation("tools.jackson.module:jackson-module-kotlin")`를 추가한다. helper
   runtime graph인 `bluetape4k-jackson3`는 사용하지 않고 공개 API에도 추가하지 않으며 Jackson 2 alias나
-  새 dependency version을 만들지 않는다. 변경 전후 `apiElements`, `runtimeClasspath`,
-  POM/GMM artifact 수·총 byte size를 plain-JVM consumer에서 비교한다.
+  새 dependency version을 만들지 않는다. 변경 후 `apiElements`, `runtimeClasspath`,
+  POM/GMM의 Jackson 좌표와 public `javap` surface를 이 PR에서 검증한다. 이전 stable artifact를
+  사용한 old-compiled consumer 비교는 릴리즈 전 별도 호환성 증거 범위로 남긴다.
 - Jackson 3 codec은 `images/src/main/kotlin/io/bluetape4k/images/privacy/` 아래에 둔다.
   Ktor content negotiation에는 자동 등록하지 않는다. Ktor/Spring/plain-JVM caller가
   `PrivacyDerivativeJackson`을 명시적으로 호출한다.
 - 기본 mapper는 lazy singleton이며 Kotlin module, unknown/null strict features,
   disabled default typing, Jackson stream/read constraints를 고정한다.
-- 외부 decode는 고정 mapper만 허용한다. trusted mapper는 `internal` capability에서
-  `mapper.rebuild().enable(...).disable(...).build()`로 한 번 복제해 immutable typed
-  reader/writer를 반환한다. 원본 mapper를 변경하거나 caller identity를 전역 캐시하지
-  않으며, custom polymorphic class-name/default typing/base64 설정·임의 module/mixin/
-  deserializer를 허용하지 않는다.
+- 외부 decode는 codec 내부의 고정 mapper만 사용한다. 원본 mapper 주입이나 caller identity
+  전역 캐시는 제공하지 않으며, custom polymorphic class-name/default typing/base64 설정과
+  임의 module/mixin/deserializer를 허용하지 않는다.
 - snapshot은 runtime 모델을 직접 참조하지 않는 concrete wire DTO를 사용한다. 각
   `Serializable` concrete class에 실제 `serialVersionUID` JVM field를 두고 collection과
   byte array를 방어적으로 복사한다. batch는 payload/failure 정확히 하나 불변식을 생성자와
@@ -116,23 +115,21 @@ bean 재생성 경계를 검증한다.
   고정한다. 모든 문서는 `schemaVersion=1`, `kind`, `value`의 typed envelope를 사용하며
   unknown version, kind/decoder mismatch, missing envelope를 조기 거부한다. String/ByteArray는
   편의 API이고 large payload는 streaming API를 사용한다.
-- `InputStream` bounded wrapper, `StreamReadConstraints`, token preflight/custom
-  deserializer와 bounded base64 sink로 JSON document length, string/array/object/reference
-  count, nesting depth, decoded byte length를 materialization 전에 제한한다. caller limit은
-  기본 hard cap보다 클 수 없다. 전체 JSON/base64를 먼저 String/ByteArray로 복제하는
-  구현은 실패로 처리한다. one-shot stream API는 caller stream을 close하지 않고 encode는
-  implicit flush를 하지 않으며, decode는 한 문서 뒤 trailing non-whitespace를
+- `InputStream` bounded wrapper와 `StreamReadConstraints`로 JSON document length, nesting
+  depth, token/string 상한을 읽는 동안 제한하고, typed snapshot을 caller에게 반환하기 전에
+  caller limit을 적용한다. caller limit은 기본 hard cap보다 클 수 없다. InputStream 경로는 전체 JSON을
+  먼저 String/ByteArray로 복제하지 않는다. one-shot stream API는 caller stream을 close하지
+  않고 encode는 implicit flush를 하지 않으며, decode는 한 문서 뒤 trailing non-whitespace를
   `TRAILING_DATA`로 거부한다. truncated input, partial write/`IOException`, limit 초과와
   stream ownership을 명시 테스트한다.
 - `PrivacyDerivativeJsonLimits` 기본값은 snapshot에서 확정한 64 MiB decoded payload,
   96 MiB UTF-8 JSON, redaction 1,024, report action/failure 각 256, metadata 256,
   source/code 4 KiB, depth 32, maxPixels 100,000,000, maxSide 65,536,
   thumbnail dimension 16,384이다. caller는 더 작은 limit만 사용할 수 있다.
-- 외부 decode는 fixed mapper만 사용한다. `internal trustedMapper`는 strict rebuild copy를
-  codec 생성 시 한 번만 수행하고 typed reader/writer를 재사용한다. per-request rebuild와
-  caller mapper identity 전역 캐시는 금지하며 default typing, arbitrary subtype, 임의 module/
-  mixin/custom deserializer, custom base64 variant를 끈다. malicious `@JsonTypeInfo`와
-  unknown-field/null primitive negative test를 포함한다.
+- 외부 decode는 codec 내부의 fixed mapper만 사용한다. per-request rebuild와 caller mapper
+  identity 전역 캐시는 금지하며 default typing, arbitrary subtype, 임의 module/mixin/custom
+  deserializer, custom base64 variant를 끈다. malicious `@JsonTypeInfo`와 unknown-field/null
+  primitive negative test를 포함한다.
 - malformed/oversized/unknown/null input은 내부 class/path/stack trace를 노출하지 않는
   `PrivacyDerivativeCodecException` reason으로 매핑하고 `CancellationException`은
   재전파한다. reason enum은 `MALFORMED_JSON`, `UNSUPPORTED_SCHEMA_VERSION`,
@@ -143,8 +140,8 @@ bean 재생성 경계를 검증한다.
 
 `images-spring-boot/src/main/kotlin/io/bluetape4k/images/spring/`과 해당 테스트를 갱신한다.
 
-- `images-spring-boot/build.gradle.kts`에는 중앙 Jackson 3 BOM과
-  `compileOnly("tools.jackson.core:jackson-annotations")`만 추가해 annotation class를
+- `images-spring-boot/build.gradle.kts`에는 중앙 version catalog로 고정한 Jackson
+  annotation 좌표 `compileOnly("com.fasterxml.jackson.core:jackson-annotations:${bt4k.versions.jackson.annotations}")`만 추가해 annotation class를
   제공하고, databind runtime을 Spring 모듈의 public/runtime dependency로 만들지 않는다.
 
 - `LocalImageStorage`, `S3ImageStorage`, `S3PreSignedUrlSigner`, `CloudFrontUrlSigner`,
@@ -160,39 +157,26 @@ bean 재생성 경계를 검증한다.
   user-provided signer로 고정한다. enabled provider의 required collaborator/class 누락은
   startup failure이고, disabled provider와 사용자 signer는 no-op/override 경로다.
 - `CdnProperties.CloudFront.privateKeyPem`/`privateKeyPath`는 generic Jackson wire에서
-  Jackson 3 `@get:JsonIgnore`와 compileOnly `tools.jackson.core:jackson-annotations`
+  Jackson 3 호환 `@get:JsonIgnore`와 compileOnly `com.fasterxml.jackson.core:jackson-annotations`
   좌표로 제외하고 `toString()`, startup failure, signer exception, Actuator/metrics 진단에서 값·경로·
   원본 cause가 사라지는지 검증한다. 기존 Local serialization success test는
   `NotSerializableException` migration test로 변경하고, missing collaborator의 “bean 생략”과
   “startup failure” 상태를 구현 계약과 정확히 맞춘다.
 
-### 5. 문서·ABI·benchmark 증거
+### 5. 문서·공개 API 증거
 
 - `images/README.md`, `images/README.ko.md`, `images-spring-boot/README.md`,
   `images-spring-boot/README.ko.md`, 해당 `CHANGELOG.md`에 0.5.0 migration을 추가한다.
   plain JVM/Ktor route/Spring bean 세 가지 호출 예제, `NotSerializableException` 전환,
   rollback 경로, Ktor 기존 kotlinx serializer 유지와 explicit codec 호출을 설명한다.
 - 기존 README의 runtime bytes 예제는 snapshot codec 예제와 locale parity를 갖춘다.
-- `docs/superpowers/fixtures/issue-481/plain-jvm/`의 Java `@JvmStatic`/Kotlin object 호출,
-  `docs/superpowers/fixtures/issue-481/ktor/`의 기존 kotlinx DTO 변환, 그리고
-  `docs/superpowers/fixtures/issue-481/spring/`의 `ApplicationContextRunner` fixture를
-  각각 Gradle smoke task로 실행한다. plain-JVM fixture는 runtimeClasspath에 Jackson3
-  implementation이 존재하는지, Ktor fixture는 기존 response serializer가 유지되는지,
-  Spring fixture는 provider matrix와 missing collaborator startup result를 assertion한다.
-- 최신 stable `0.4.x` artifact coordinate와 그 checksum을 baseline으로 고정하고,
-  `docs/superpowers/fixtures/issue-481/` 아래 Java/Kotlin source compile fixture와
-  old-compiled→new-runtime binary fixture를 추가한다. `japicmp` 또는 classfile 동등
-  diff로 source/binary ABI matrix를 기록하며, old serialized bytes read, current runtime
-  write, removed `Serializable` consumer의 정확한 `NotSerializableException`/linkage
-  기대 결과를 명시한다. Jackson 3.2.1 dependency가 published POM/GMM/BOM/runtimeClasspath에
-  의도한 `implementation` 범위로만 나타나고 public API에 Jackson 타입이 없는지 확인한다.
-- benchmark 모듈에 JSON String/bytes/streaming, cold/warm mapper, concurrent encode/decode
-  baseline을 추가한다. `1 KiB / 1 MiB / 64 MiB` payload × concurrency `1 / 4 / 16`의
-  bytes/String/streaming별 `gc.alloc.rate.norm`, peak live heap/JFR, latency, throughput을
-  측정한다. benchmark class, Gradle task, fork 수, warmup/measurement, profiler, report
-  경로와 freshness validator를 고정하고, OOME·timeout·deadlock·결과 불일치는 실패로
-  처리한다. cold mapper construction은 public warm path와 분리한 control benchmark로
-  측정한다. benchmark 미실행 상태는 fixture나 후속 이슈로 대체할 수 없다.
+- generated POM/GMM의 Jackson 3 좌표가 runtime variant에만 나타나고, public
+  `PrivacyDerivativeJackson` signature에 Jackson mapper 타입이 없음을 `javap`와 dependency
+  report로 확인한다. README/CHANGELOG에는 runtime graph 제거, snapshot migration,
+  stream ownership과 Jackson 3 explicit call 경계를 기록한다.
+- plain-JVM/Ktor/Spring consumer fixture, 0.4.x old-compiled ABI/serialized-stream 비교,
+  1/4/16 concurrency benchmark는 이 코드 변경의 수용 기준이 아니라 0.5.0 릴리즈 전
+  호환성·성능 증거로 별도 추적한다. 해당 증거 없이는 성능/ABI 보장을 주장하지 않는다.
 
 ## 검증 순서
 
@@ -205,16 +189,15 @@ bean 재생성 경계를 검증한다.
 ./gradlew :bluetape4k-images:test :bluetape4k-images-spring-boot:test --no-daemon
 ./gradlew detekt
 ./gradlew :bluetape4k-images:generatePomFileForMavenJavaPublication :bluetape4k-images:generateMetadataFileForMavenJavaPublication
-./gradlew :bluetape4k-images-benchmark:jmh --no-daemon
 ./gradlew :bluetape4k-images:dependencies --configuration apiElements
 ./gradlew :bluetape4k-images:dependencies --configuration runtimeClasspath
-./gradlew :issue481PlainJvmSmoke :issue481KtorSmoke :issue481SpringSmoke --no-daemon
 git diff --check
 ```
 
-benchmark report가 없거나 freshness validator가 실패하면 Step 4-P를 닫지 않으며,
-`apiElements`/`runtimeClasspath` 및 생성된 POM/GMM의 artifact 수·총 byte size가 계획한
-최소 Jackson 좌표와 다르면 dependency scope를 임의로 바꾸지 않고 계획을 재개정한다.
+`apiElements`/`runtimeClasspath` 및 생성된 POM/GMM의 Jackson 좌표가 계획한 implementation
+범위와 다르거나 public API에 Jackson 타입이 나타나면 dependency scope를 임의로 바꾸지
+않고 계획을 재개정한다. benchmark/old-compiled fixture가 없는 상태에서는 해당 보장을
+완료했다고 보고하지 않는다.
 
 그 후 6관점 코드 리뷰, lesson 문서/commit, PR 생성, PR 후 리뷰, exact-head job 확인을
 순서대로 수행한다. CI가 green이어도 merge는 별도 게이트로 유지하며, 사용자의 fresh

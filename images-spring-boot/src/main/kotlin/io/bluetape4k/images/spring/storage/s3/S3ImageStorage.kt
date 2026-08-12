@@ -22,7 +22,6 @@ import software.amazon.awssdk.services.s3.model.NoSuchKeyException
 import software.amazon.awssdk.services.s3.model.PutObjectRequest
 import software.amazon.awssdk.services.s3.model.S3Exception
 import java.io.IOException
-import java.io.Serializable
 import java.nio.ByteBuffer
 import java.nio.channels.FileChannel
 import java.nio.file.AccessDeniedException as NioAccessDeniedException
@@ -64,11 +63,9 @@ class S3ImageStorage @JvmOverloads constructor(
     private val operations: S3Operations,
     private val properties: ImageStorageProperties,
     private val transferOperations: S3TransferOperations? = null,
-) : ImageStorage, Serializable {
+) : ImageStorage {
 
     companion object : KLogging() {
-        private const val serialVersionUID: Long = 1L
-
         private const val STATUS_UNAUTHORIZED: Int = 401
         private const val STATUS_FORBIDDEN: Int = 403
         private const val STATUS_NOT_FOUND: Int = 404

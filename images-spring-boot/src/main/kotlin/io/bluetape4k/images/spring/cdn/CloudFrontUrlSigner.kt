@@ -11,7 +11,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import software.amazon.awssdk.services.cloudfront.CloudFrontUtilities
 import software.amazon.awssdk.services.cloudfront.model.CannedSignerRequest
-import java.io.Serializable
 import java.net.URI
 import java.net.URISyntaxException
 import java.nio.file.Files
@@ -42,11 +41,9 @@ import java.util.Base64
  *
  * 의도적으로 read-only입니다. CloudFront는 PUT URL에 서명할 수 없으므로 이 class는 [CdnWriteSigner]를 구현하지 않습니다.
  */
-class CloudFrontUrlSigner(properties: CdnProperties.CloudFront) : CdnReadSigner, Serializable {
+class CloudFrontUrlSigner(properties: CdnProperties.CloudFront) : CdnReadSigner {
 
     companion object : KLogging() {
-        private const val serialVersionUID: Long = 1L
-
         private const val PEM_BEGIN = "-----BEGIN"
         private const val PEM_END = "-----END"
 
@@ -100,10 +97,9 @@ class CloudFrontUrlSigner(properties: CdnProperties.CloudFront) : CdnReadSigner,
                 parsePkcs8PrivateKey(pem)
             } catch (e: CancellationException) {
                 throw e
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 throw ImageStorageException.ValidationException(
                     message = "Failed to parse CloudFront private-key-pem (inline value redacted)",
-                    cause = e,
                 )
             }
         }
@@ -156,22 +152,26 @@ class CloudFrontUrlSigner(properties: CdnProperties.CloudFront) : CdnReadSigner,
      * buffer를 zero-fill합니다.
      */
     private fun loadPrivateKeyFromPath(path: String): PrivateKey {
-        val keyPath: Path = Path.of(path)
+        val keyPath: Path = try {
+            Path.of(path)
+        } catch (_: Exception) {
+            throw ImageStorageException.ValidationException(
+                message = "Failed to read CloudFront private-key-path (value redacted)",
+            )
+        }
         val bytes = try {
             Files.readAllBytes(keyPath)
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             throw ImageStorageException.ValidationException(
-                message = "Failed to read CloudFront private-key-path: $path",
-                cause = e,
+                message = "Failed to read CloudFront private-key-path (value redacted)",
             )
         }
         try {
             val pem = String(bytes, Charsets.US_ASCII)
             return parsePkcs8PrivateKey(pem)
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             throw ImageStorageException.ValidationException(
-                message = "Failed to parse CloudFront private key at: $path",
-                cause = e,
+                message = "Failed to parse CloudFront private key from private-key-path (value redacted)",
             )
         } finally {
             Arrays.fill(bytes, 0)
