@@ -1,11 +1,13 @@
 package io.bluetape4k.images.examples.ktor.ocr
 
 import com.sksamuel.scrimage.ImmutableImage
+import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeNull
 import io.bluetape4k.assertions.shouldBeGreaterThan
 import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldNotContain
 import io.bluetape4k.images.ocr.OcrEngine
 import io.bluetape4k.images.ocr.OcrException
 import io.bluetape4k.images.ocr.OcrOptions
@@ -29,6 +31,7 @@ import java.awt.Color
 import java.awt.Font
 import java.awt.image.BufferedImage
 import java.io.ByteArrayOutputStream
+import java.io.IOException
 import java.util.zip.CRC32
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
@@ -55,6 +58,13 @@ internal class KtorOcrApiApplicationTest {
     }
 
     @Test
+    fun `rejects non-positive input limit`() {
+        assertFailsWith<IllegalArgumentException> {
+            KtorOcrApiConfig(maxInputBytes = 0)
+        }
+    }
+
+    @Test
     fun `recognizes uploaded image with parsed languages`() = testApplication {
         application {
             configureTestKtorOcrApi()
@@ -74,6 +84,26 @@ internal class KtorOcrApiApplicationTest {
         val options = requireNotNull(testOcrEngine.lastOptions.get())
         options.languages shouldBeEqualTo listOf("eng", "kor")
         options.tessdataPath shouldBeEqualTo "/tmp/example-tessdata"
+    }
+
+    @Test
+    fun `accepts Long MAX_VALUE input limit without overflowing bounded read`() = testApplication {
+        application {
+            configureKtorOcrApi(
+                config = KtorOcrApiConfig(
+                    maxInputBytes = Long.MAX_VALUE,
+                    tessdataPath = "/tmp/example-tessdata",
+                ),
+                ocrEngine = testOcrEngine,
+            )
+        }
+        val client = jsonClient()
+
+        val response = client.post("/api/ocr") {
+            setBody(imageMultipart("file", samplePngBytes(), ContentType.Image.PNG))
+        }
+
+        response.status shouldBeEqualTo HttpStatusCode.OK
     }
 
     @Test
@@ -191,7 +221,27 @@ internal class KtorOcrApiApplicationTest {
         val body = response.body<OcrApiErrorResponse>()
         body.error shouldBeEqualTo "ocr_unavailable"
         body.status shouldBeEqualTo HttpStatusCode.ServiceUnavailable.value
-        body.message shouldBeEqualTo "Test OCR runtime is unavailable."
+        body.message shouldBeEqualTo "OCR runtime is unavailable."
+        body.message.shouldNotContain("/srv/private/tessdata")
+    }
+
+    @Test
+    fun `maps image IO failures to sanitized bad request`() = testApplication {
+        testOcrEngine.failWithIo.set(true)
+        application {
+            configureTestKtorOcrApi()
+        }
+        val client = jsonClient()
+
+        val response = client.post("/api/ocr") {
+            setBody(imageMultipart("file", samplePngBytes(), ContentType.Image.PNG))
+        }
+
+        response.status shouldBeEqualTo HttpStatusCode.BadRequest
+        val body = response.body<OcrApiErrorResponse>()
+        body.error shouldBeEqualTo "bad_request"
+        body.message shouldBeEqualTo "Invalid image payload."
+        body.message.shouldNotContain("/srv/private/native-codec")
     }
 
     private fun io.ktor.server.application.Application.configureTestKtorOcrApi() {
@@ -291,17 +341,22 @@ internal class KtorOcrApiApplicationTest {
 
         val lastOptions: AtomicReference<OcrOptions?> = AtomicReference()
         val failNext: AtomicBoolean = AtomicBoolean(false)
+        val failWithIo: AtomicBoolean = AtomicBoolean(false)
 
         fun reset() {
             lastOptions.set(null)
             failNext.set(false)
+            failWithIo.set(false)
         }
 
         override fun recognize(image: ImmutableImage, options: OcrOptions): OcrResult {
             image.width shouldBeGreaterThan 0
             lastOptions.set(options)
+            if (failWithIo.getAndSet(false)) {
+                throw IOException("native codec failed at /srv/private/native-codec")
+            }
             if (failNext.getAndSet(false)) {
-                throw OcrException("Test OCR runtime is unavailable.")
+                throw OcrException("native OCR failed at /srv/private/tessdata")
             }
             return OcrResult(
                 text = "BLUETAPE OCR",

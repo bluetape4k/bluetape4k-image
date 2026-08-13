@@ -7,6 +7,8 @@ import io.bluetape4k.images.ocr.OcrException
 import io.bluetape4k.images.ocr.OcrOptions
 import io.bluetape4k.images.ocr.TesseractOcrEngine
 import io.bluetape4k.images.ocr.suspendExtractText
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.warn
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.requirePositiveNumber
 import kotlinx.coroutines.Dispatchers
@@ -26,6 +28,7 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.multipart.MultipartFile
+import java.io.IOException
 import java.io.Serializable
 
 fun main(args: Array<String>) {
@@ -91,6 +94,8 @@ class OcrApiController(
     private val ocrService: SpringBootOcrService,
 ) {
 
+    companion object : KLogging()
+
     @PostMapping(consumes = [MediaType.MULTIPART_FORM_DATA_VALUE])
     suspend fun recognize(
         @RequestParam("file") file: MultipartFile,
@@ -108,13 +113,26 @@ class OcrApiController(
         )
 
     @ExceptionHandler(OcrException::class)
-    fun ocrUnavailable(e: OcrException): ResponseEntity<ApiErrorResponse> =
-        ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(
+    fun ocrUnavailable(e: OcrException): ResponseEntity<ApiErrorResponse> {
+        log.warn(e) { "Spring OCR request failed. reason=ocr_runtime_failure" }
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(
             ApiErrorResponse(
                 error = "ocr_unavailable",
-                message = e.message ?: "OCR runtime is unavailable.",
+                message = OCR_UNAVAILABLE_MESSAGE,
             )
         )
+    }
+
+    @ExceptionHandler(IOException::class)
+    fun invalidImagePayload(e: IOException): ResponseEntity<ApiErrorResponse> {
+        log.warn(e) { "Spring OCR request failed. reason=io_failure" }
+        return ResponseEntity.badRequest().body(
+            ApiErrorResponse(
+                error = "bad_request",
+                message = INVALID_IMAGE_PAYLOAD_MESSAGE,
+            )
+        )
+    }
 }
 
 /**
@@ -216,3 +234,6 @@ private fun ExampleOcrProperties.toDecodeLimits(): ImageDecodeLimits =
         maxDecodedPixels = maxInputPixels,
         maxDecodedSide = maxInputSide,
     )
+
+private const val INVALID_IMAGE_PAYLOAD_MESSAGE = "Invalid image payload."
+private const val OCR_UNAVAILABLE_MESSAGE = "OCR runtime is unavailable."
