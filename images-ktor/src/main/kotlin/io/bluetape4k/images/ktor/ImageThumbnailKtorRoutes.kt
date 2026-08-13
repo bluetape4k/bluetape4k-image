@@ -9,6 +9,8 @@ import io.bluetape4k.images.toByteArray
 import io.bluetape4k.ktor.core.ApiErrorResponse
 import io.bluetape4k.ktor.core.intQueryParameter
 import io.bluetape4k.ktor.core.respondApiError
+import io.bluetape4k.logging.KotlinLogging
+import io.bluetape4k.logging.warn
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.requirePositiveNumber
 import io.ktor.http.ContentType
@@ -35,6 +37,9 @@ private const val DEFAULT_MAX_INPUT_PIXELS = 16_777_216L
 private const val DEFAULT_MAX_INPUT_SIDE = 8_192
 private const val DEFAULT_THUMBNAIL_SIDE = 320
 private const val DEFAULT_MAX_THUMBNAIL_SIDE = 2_048
+private const val INVALID_IMAGE_PAYLOAD_MESSAGE = "Invalid image payload."
+
+private val log = KotlinLogging.logger {}
 
 /**
  * compact image thumbnail endpoint를 위한 Ktor route configuration입니다.
@@ -163,7 +168,7 @@ private suspend fun ApplicationCall.receiveImageUpload(config: ImageThumbnailKto
 }
 
 private suspend fun ByteReadChannel.readImageBytes(config: ImageThumbnailKtorRoutesConfig): ByteArray =
-    readRemaining(config.maxInputBytes + 1).readByteArray()
+    readRemaining(config.maxInputBytes.coerceAtMost(Long.MAX_VALUE - 1L) + 1L).readByteArray()
 
 private fun ImageThumbnailKtorRoutesConfig.toDecodeLimits(): ImageDecodeLimits =
     ImageDecodeLimits(
@@ -191,10 +196,13 @@ private suspend fun ApplicationCall.respondImageRoute(block: suspend () -> Unit)
             message = e.message ?: "Invalid image request."
         )
     } catch (e: IOException) {
+        log.warn(e) {
+            "Image thumbnail request failed. reason=io_failure path=${request.local.uri}"
+        }
         respondApiError(
             status = HttpStatusCode.BadRequest,
             error = "bad_request",
-            message = e.message ?: "Invalid image payload."
+            message = INVALID_IMAGE_PAYLOAD_MESSAGE,
         )
     }
 }

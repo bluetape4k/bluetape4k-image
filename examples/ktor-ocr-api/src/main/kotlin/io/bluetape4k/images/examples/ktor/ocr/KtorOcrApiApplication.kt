@@ -7,6 +7,8 @@ import io.bluetape4k.images.ocr.OcrException
 import io.bluetape4k.images.ocr.OcrOptions
 import io.bluetape4k.images.ocr.TesseractOcrEngine
 import io.bluetape4k.images.ocr.suspendExtractText
+import io.bluetape4k.logging.KotlinLogging
+import io.bluetape4k.logging.warn
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.requirePositiveNumber
 import io.ktor.http.ContentType
@@ -32,6 +34,11 @@ import kotlinx.io.readByteArray
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import java.io.IOException
+
+private const val INVALID_IMAGE_PAYLOAD_MESSAGE = "Invalid image payload."
+private const val OCR_UNAVAILABLE_MESSAGE = "OCR runtime is unavailable."
+
+private val log = KotlinLogging.logger {}
 
 /**
  * local-only Ktor OCR API quickstart를 실행합니다.
@@ -261,16 +268,22 @@ private suspend fun ApplicationCall.respondOcrRoute(block: suspend () -> Unit) {
             message = e.message ?: "Invalid OCR request.",
         )
     } catch (e: IOException) {
+        log.warn(e) {
+            "Ktor OCR request failed. reason=io_failure path=${request.local.uri}"
+        }
         respondOcrApiError(
             status = HttpStatusCode.BadRequest,
             error = "bad_request",
-            message = e.message ?: "Invalid image payload.",
+            message = INVALID_IMAGE_PAYLOAD_MESSAGE,
         )
     } catch (e: OcrException) {
+        log.warn(e) {
+            "Ktor OCR request failed. reason=ocr_runtime_failure path=${request.local.uri}"
+        }
         respondOcrApiError(
             status = HttpStatusCode.ServiceUnavailable,
             error = "ocr_unavailable",
-            message = e.message ?: "OCR runtime is unavailable.",
+            message = OCR_UNAVAILABLE_MESSAGE,
         )
     }
 }

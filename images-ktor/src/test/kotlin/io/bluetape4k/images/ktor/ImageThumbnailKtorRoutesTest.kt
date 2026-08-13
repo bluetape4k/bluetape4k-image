@@ -1,8 +1,13 @@
 package io.bluetape4k.images.ktor
 
+import com.sksamuel.scrimage.AwtImage
+import com.sksamuel.scrimage.metadata.ImageMetadata
+import com.sksamuel.scrimage.nio.ImageWriter
+import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeLessOrEqualTo
 import io.bluetape4k.assertions.shouldContain
+import io.bluetape4k.assertions.shouldNotContain
 import io.bluetape4k.images.immutableImageOf
 import io.bluetape4k.ktor.core.ApiErrorResponse
 import io.bluetape4k.ktor.core.Bluetape4kKtorCoreConfig
@@ -24,10 +29,19 @@ import org.junit.jupiter.api.Test
 import java.awt.Color
 import java.awt.image.BufferedImage
 import java.io.ByteArrayOutputStream
+import java.io.IOException
+import java.io.OutputStream
 import java.util.zip.CRC32
 import javax.imageio.ImageIO
 
 class ImageThumbnailKtorRoutesTest {
+
+    @Test
+    fun `rejects non-positive input limit`() {
+        assertFailsWith<IllegalArgumentException> {
+            ImageThumbnailKtorRoutesConfig(maxInputBytes = 0)
+        }
+    }
 
     @Test
     fun `creates thumbnail from multipart image upload`() = testApplication {
@@ -47,6 +61,41 @@ class ImageThumbnailKtorRoutesTest {
         val thumbnail = immutableImageOf(response.bodyAsBytes())
         thumbnail.width shouldBeLessOrEqualTo 32
         thumbnail.height shouldBeLessOrEqualTo 32
+    }
+
+    @Test
+    fun `accepts Long MAX_VALUE input limit without overflowing bounded read`() = testApplication {
+        installBluetape4kKtorCoreForTest(testCoreConfig) {
+            bluetape4kImageThumbnailRoutes(
+                ImageThumbnailKtorRoutesConfig(maxInputBytes = Long.MAX_VALUE)
+            )
+        }
+        val client = bluetape4kJsonClient()
+
+        val response = client.post("/images/thumbnail") {
+            setBody(imageMultipart(pngBytes(width = 16, height = 16)))
+        }
+
+        response shouldHaveStatus HttpStatusCode.OK
+    }
+
+    @Test
+    fun `redacts image writer failure details from HTTP response`() = testApplication {
+        installBluetape4kKtorCoreForTest(testCoreConfig) {
+            bluetape4kImageThumbnailRoutes(
+                ImageThumbnailKtorRoutesConfig(writer = FailingImageWriter)
+            )
+        }
+        val client = bluetape4kJsonClient()
+
+        val response = client.post("/images/thumbnail") {
+            setBody(imageMultipart(pngBytes(width = 16, height = 16)))
+        }
+
+        response shouldHaveStatus HttpStatusCode.BadRequest
+        val body = response.body<ApiErrorResponse>()
+        body.message shouldBeEqualTo "Invalid image payload."
+        body.message.shouldNotContain("/srv/private/native-codec")
     }
 
     @Test
@@ -121,7 +170,8 @@ class ImageThumbnailKtorRoutesTest {
         response shouldHaveStatus HttpStatusCode.BadRequest
         val body = response.body<ApiErrorResponse>()
         body.error shouldBeEqualTo "bad_request"
-        body.message shouldContain "Image parsing failed"
+        body.message shouldBeEqualTo "Invalid image payload."
+        body.message.shouldNotContain("Image parsing failed")
     }
 
     private fun imageMultipart(bytes: ByteArray): MultiPartFormDataContent =
@@ -186,6 +236,12 @@ class ImageThumbnailKtorRoutesTest {
         write((value ushr 16) and 0xFF)
         write((value ushr 8) and 0xFF)
         write(value and 0xFF)
+    }
+
+    private object FailingImageWriter : ImageWriter {
+        override fun write(image: AwtImage, metadata: ImageMetadata, out: OutputStream) {
+            throw IOException("native codec failed at /srv/private/native-codec")
+        }
     }
 
     private companion object {

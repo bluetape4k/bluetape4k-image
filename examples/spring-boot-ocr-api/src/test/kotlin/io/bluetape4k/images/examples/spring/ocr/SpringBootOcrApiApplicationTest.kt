@@ -2,10 +2,12 @@ package io.bluetape4k.images.examples.spring.ocr
 
 import com.jayway.jsonpath.JsonPath
 import com.sksamuel.scrimage.ImmutableImage
+import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeNull
 import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldNotContain
 import io.bluetape4k.images.ocr.OcrEngine
 import io.bluetape4k.images.ocr.OcrException
 import io.bluetape4k.images.ocr.OcrOptions
@@ -31,6 +33,7 @@ import java.awt.Color
 import java.awt.Font
 import java.awt.image.BufferedImage
 import java.io.ByteArrayOutputStream
+import java.io.IOException
 import java.util.zip.CRC32
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
@@ -77,6 +80,18 @@ internal class SpringBootOcrApiApplicationTest(
     }
 
     @Test
+    fun `accepts Long MAX_VALUE input limit`() {
+        ExampleOcrProperties(maxInputBytes = Long.MAX_VALUE)
+    }
+
+    @Test
+    fun `rejects non-positive input limit`() {
+        assertFailsWith<IllegalArgumentException> {
+            ExampleOcrProperties(maxInputBytes = 0)
+        }
+    }
+
+    @Test
     fun `rejects unsupported content type`() {
         val textFile = MockMultipartFile(
             "file",
@@ -110,7 +125,25 @@ internal class SpringBootOcrApiApplicationTest(
 
         val error = result.response.contentAsString
         error.readJsonPath<String>("$.error") shouldBeEqualTo "ocr_unavailable"
-        error.readJsonPath<String>("$.message") shouldBeEqualTo "Test OCR runtime is unavailable."
+        error.readJsonPath<String>("$.message") shouldBeEqualTo "OCR runtime is unavailable."
+        error.shouldNotContain("/srv/private/tessdata")
+    }
+
+    @Test
+    fun `maps image IO failures to sanitized bad request`() {
+        testOcrEngine.failWithIo.set(true)
+
+        val result = mockMvc.perform(multipart("/api/ocr").file(pngFile()))
+            .andExpect(request().asyncStarted())
+            .andReturn()
+            .dispatch()
+            .andExpect(status().isBadRequest)
+            .andReturn()
+
+        val error = result.response.contentAsString
+        error.readJsonPath<String>("$.error") shouldBeEqualTo "bad_request"
+        error.readJsonPath<String>("$.message") shouldBeEqualTo "Invalid image payload."
+        error.shouldNotContain("/srv/private/native-codec")
     }
 
     @Test
@@ -280,16 +313,21 @@ internal class TestOcrEngine : OcrEngine {
 
     val lastOptions: AtomicReference<OcrOptions?> = AtomicReference()
     val failNext: AtomicBoolean = AtomicBoolean(false)
+    val failWithIo: AtomicBoolean = AtomicBoolean(false)
 
     fun reset() {
         lastOptions.set(null)
         failNext.set(false)
+        failWithIo.set(false)
     }
 
     override fun recognize(image: ImmutableImage, options: OcrOptions): OcrResult {
         lastOptions.set(options)
+        if (failWithIo.getAndSet(false)) {
+            throw IOException("native codec failed at /srv/private/native-codec")
+        }
         if (failNext.getAndSet(false)) {
-            throw OcrException("Test OCR runtime is unavailable.")
+            throw OcrException("native OCR failed at /srv/private/tessdata")
         }
         return OcrResult(
             text = "BLUETAPE OCR",
