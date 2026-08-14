@@ -1,6 +1,7 @@
 package io.bluetape4k.images.io
 
 import kotlinx.coroutines.test.runTest
+import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import org.junit.jupiter.api.Test
 import java.io.ByteArrayInputStream
@@ -10,7 +11,6 @@ import javax.imageio.stream.ImageInputStream
 import javax.imageio.stream.ImageOutputStream
 import javax.imageio.stream.MemoryCacheImageInputStream
 import javax.imageio.stream.MemoryCacheImageOutputStream
-import kotlin.test.assertFailsWith
 
 class ImageStreamSupportTest {
 

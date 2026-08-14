@@ -1,11 +1,11 @@
 package io.bluetape4k.images.tiles
 
 import com.sksamuel.scrimage.ImmutableImage
+import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.images.AbstractImageTest
 import org.junit.jupiter.api.Test
 import java.awt.image.BufferedImage
-import kotlin.test.assertFailsWith
 
 class TileModelsTest : AbstractImageTest() {
 

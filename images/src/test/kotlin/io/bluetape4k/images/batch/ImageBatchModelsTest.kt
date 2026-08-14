@@ -1,5 +1,6 @@
 package io.bluetape4k.images.batch
 
+import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeNullOrEmpty
 import io.bluetape4k.assertions.shouldBeTrue
@@ -8,7 +9,6 @@ import io.bluetape4k.images.AbstractImageTest
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import java.nio.file.Path
-import kotlin.test.assertFailsWith
 
 class ImageBatchModelsTest : AbstractImageTest() {
 

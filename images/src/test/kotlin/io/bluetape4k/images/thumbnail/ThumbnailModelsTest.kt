@@ -1,5 +1,6 @@
 package io.bluetape4k.images.thumbnail
 
+import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeNull
 import io.bluetape4k.assertions.shouldBeTrue
@@ -9,7 +10,6 @@ import io.bluetape4k.images.batch.ImageBatchFailureStage
 import io.bluetape4k.images.coroutines.SuspendJpegWriter
 import org.junit.jupiter.api.Test
 import java.nio.file.Path
-import kotlin.test.assertFailsWith
 
 class ThumbnailModelsTest : AbstractImageTest() {
 
