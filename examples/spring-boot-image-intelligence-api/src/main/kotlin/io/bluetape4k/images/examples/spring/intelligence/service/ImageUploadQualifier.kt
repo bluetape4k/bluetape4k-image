@@ -1,14 +1,14 @@
 package io.bluetape4k.images.examples.spring.intelligence.service
 
 import com.sksamuel.scrimage.ImmutableImage
+import io.bluetape4k.images.ImageDimensionProbeResult
 import io.bluetape4k.images.ImageDimensions
-import io.bluetape4k.images.analysis.ImageMetadataReadFailureKind
+import io.bluetape4k.images.analysis.ImageMetadataReadOutcome
 import io.bluetape4k.images.analysis.ImageMetadataReadOptions
-import io.bluetape4k.images.analysis.ImageMetadataReadResult
-import io.bluetape4k.images.analysis.readImageMetadataReportStrict
+import io.bluetape4k.images.analysis.readImageMetadataReportDetailed
 import io.bluetape4k.images.examples.spring.intelligence.config.ImageIntelligenceProperties
 import io.bluetape4k.images.immutableImageOf
-import io.bluetape4k.images.probeImageDimensions
+import io.bluetape4k.images.probeImageDimensionsDetailed
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.warn
 import kotlinx.coroutines.CancellationException
@@ -17,9 +17,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.springframework.http.MediaType
 import org.springframework.web.multipart.MultipartFile
-import java.io.IOException
 import java.util.Locale
-import javax.imageio.IIOException
 
 internal val ALLOWED_IMAGE_CONTENT_TYPES: Set<String> = setOf(
     MediaType.IMAGE_PNG_VALUE,
@@ -54,19 +52,12 @@ internal class MalformedImageProbeException(
     cause: Throwable? = null,
 ) : RuntimeException("The image probe rejected the encoded input.", cause)
 
-private class MetadataProbeFailureException(
-    kind: ImageMetadataReadFailureKind,
-) : IOException("Metadata probe failed: $kind")
-
-private fun probeImageDimensionsSafely(bytes: ByteArray): ImageDimensions? =
-    try {
-        probeImageDimensions(bytes)
-    } catch (exception: CancellationException) {
-        throw exception
-    } catch (exception: IIOException) {
-        throw MalformedImageProbeException(exception)
-    } catch (exception: IllegalArgumentException) {
-        throw MalformedImageProbeException(exception)
+private fun probeImageDimensionsForUpload(bytes: ByteArray): ImageDimensions? =
+    when (val result = probeImageDimensionsDetailed(bytes)) {
+        is ImageDimensionProbeResult.Success -> result.dimensions
+        ImageDimensionProbeResult.Unavailable -> null
+        is ImageDimensionProbeResult.Malformed -> throw MalformedImageProbeException(result.cause)
+        is ImageDimensionProbeResult.Failure -> throw result.cause
     }
 
 /**
@@ -87,23 +78,18 @@ internal class ImageUploadQualifier(
     private val properties: ImageIntelligenceProperties,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
     private val cpuDispatcher: CoroutineDispatcher = Dispatchers.Default,
-    private val dimensionProbe: (ByteArray) -> ImageDimensions? = ::probeImageDimensionsSafely,
-    // strict metadata 결과로 parser 실패와 빈 report를 구분합니다.
+    private val dimensionProbe: (ByteArray) -> ImageDimensions? = ::probeImageDimensionsForUpload,
+    // 상세 metadata 결과로 parser 실패와 내부 실패를 구분합니다.
     private val metadataDimensionProbe: (ByteArray, Int) -> ImageDimensions? = { bytes, maxBytes ->
         when (
-            val result = readImageMetadataReportStrict(
+            val result = readImageMetadataReportDetailed(
                 bytes,
                 ImageMetadataReadOptions(maxBytes = maxBytes),
             )
         ) {
-            is ImageMetadataReadResult.Success -> result.report.dimensions
-            is ImageMetadataReadResult.Failure -> when (result.kind) {
-                ImageMetadataReadFailureKind.PARSE,
-                ImageMetadataReadFailureKind.SIZE_LIMIT,
-                -> throw MalformedImageProbeException()
-                ImageMetadataReadFailureKind.IO ->
-                    throw MetadataProbeFailureException(result.kind)
-            }
+            is ImageMetadataReadOutcome.Success -> result.report.dimensions
+            is ImageMetadataReadOutcome.Malformed -> throw MalformedImageProbeException(result.cause)
+            is ImageMetadataReadOutcome.Failure -> throw result.cause
         }
     },
     private val imageDecoder: (ByteArray) -> ImmutableImage = ::immutableImageOf,

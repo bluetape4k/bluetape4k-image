@@ -2,6 +2,7 @@ package io.bluetape4k.images
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeInstanceOf
 import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldNotBeNull
 import org.junit.jupiter.api.Test
@@ -9,6 +10,7 @@ import java.awt.Color
 import java.awt.image.BufferedImage
 import java.io.ByteArrayOutputStream
 import javax.imageio.ImageIO
+import javax.imageio.IIOException
 
 class ImageDimensionProbeTest {
 
@@ -20,6 +22,34 @@ class ImageDimensionProbeTest {
         dimensions.width shouldBeEqualTo 120
         dimensions.height shouldBeEqualTo 80
         dimensions.pixelCount shouldBeEqualTo 9_600L
+    }
+
+    @Test
+    fun `probeImageDimensionsDetailed reports successful header probe`() {
+        val result = probeImageDimensionsDetailed(pngBytes(width = 120, height = 80))
+
+        val success = result.shouldBeInstanceOf<ImageDimensionProbeResult.Success>()
+        success.dimensions shouldBeEqualTo ImageDimensions(width = 120, height = 80)
+    }
+
+    @Test
+    fun `probeImageDimensionsDetailed distinguishes unavailable and malformed input`() {
+        probeImageDimensionsDetailed(ByteArray(32) { 0x7F.toByte() }) shouldBeEqualTo
+            ImageDimensionProbeResult.Unavailable
+
+        val truncatedPng = byteArrayOf(
+            0x89.toByte(),
+            0x50,
+            0x4E,
+            0x47,
+            0x0D,
+            0x0A,
+            0x1A,
+            0x0A,
+        )
+        val malformed = probeImageDimensionsDetailed(truncatedPng)
+            .shouldBeInstanceOf<ImageDimensionProbeResult.Malformed>()
+        malformed.cause.shouldBeInstanceOf<IIOException>()
     }
 
     @Test

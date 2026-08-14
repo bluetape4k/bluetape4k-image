@@ -1,6 +1,7 @@
 package io.bluetape4k.images.analysis
 
 import com.drew.imaging.ImageMetadataReader
+import com.drew.imaging.ImageProcessingException
 import com.drew.metadata.Directory
 import com.drew.metadata.Metadata
 import com.drew.metadata.exif.ExifDirectoryBase
@@ -101,6 +102,25 @@ sealed interface ImageMetadataReadResult : Serializable {
             private const val serialVersionUID: Long = 1L
         }
     }
+}
+
+/**
+ * metadata reader의 상세 결과입니다.
+ *
+ * 기존 [ImageMetadataReadResult]는 호환성을 위해 제한된 enum만 반환하지만, 입력
+ * 검증 경계에서는 parser가 입력을 거부한 경우와 내부 실패를 구분해야 합니다. 이
+ * 결과는 두 경우의 원인을 보존하되, 원인 메시지를 HTTP 응답에 직접 노출하지 않는
+ * 호출자 책임을 명확히 합니다.
+ */
+sealed interface ImageMetadataReadOutcome {
+    /** metadata를 정상적으로 읽은 결과입니다. */
+    data class Success(val report: ImageMetadataReport) : ImageMetadataReadOutcome
+
+    /** metadata parser가 인코딩 입력을 거부한 결과입니다. */
+    data class Malformed(val cause: Throwable) : ImageMetadataReadOutcome
+
+    /** parser 또는 I/O의 내부 실패입니다. */
+    data class Failure(val cause: Throwable) : ImageMetadataReadOutcome
 }
 
 /**
@@ -281,6 +301,28 @@ fun readImageMetadataReportStrict(
 }
 
 /**
+ * 인코딩 이미지 바이트를 상세 결과로 검사합니다.
+ *
+ * [ImageProcessingException]은 malformed 입력으로, I/O 및 그 밖의 예외는 내부
+ * [ImageMetadataReadOutcome.Failure]로 분류합니다. 모든 원인은 진단용으로 보존하며
+ * 외부 응답에는 고정된 reason code만 사용해야 합니다.
+ */
+fun readImageMetadataReportDetailed(
+    bytes: ByteArray,
+    options: ImageMetadataReadOptions = ImageMetadataReadOptions(),
+): ImageMetadataReadOutcome {
+    if (bytes.size > options.maxBytes) {
+        return ImageMetadataReadOutcome.Malformed(
+            IllegalArgumentException("Image byte array exceeds ${options.maxBytes} bytes: ${bytes.size} bytes"),
+        )
+    }
+
+    return ByteArrayInputStream(bytes).use { input ->
+        readMetadataDetailed(input, options)
+    }
+}
+
+/**
  * [File]에서 privacy-aware metadata report를 읽습니다.
  */
 fun File.readImageMetadataReport(
@@ -436,16 +478,30 @@ private fun readStrictMetadata(
     input: InputStream,
     options: ImageMetadataReadOptions,
 ): ImageMetadataReadResult =
+    when (val outcome = readMetadataDetailed(input, options)) {
+        is ImageMetadataReadOutcome.Success -> ImageMetadataReadResult.Success(outcome.report)
+        is ImageMetadataReadOutcome.Malformed ->
+            ImageMetadataReadResult.Failure(ImageMetadataReadFailureKind.PARSE)
+        is ImageMetadataReadOutcome.Failure ->
+            ImageMetadataReadResult.Failure(ImageMetadataReadFailureKind.IO)
+    }
+
+private fun readMetadataDetailed(
+    input: InputStream,
+    options: ImageMetadataReadOptions,
+): ImageMetadataReadOutcome =
     try {
-        ImageMetadataReadResult.Success(
+        ImageMetadataReadOutcome.Success(
             ImageMetadataReader.readMetadata(input).toImageMetadataReport(options),
         )
     } catch (e: CancellationException) {
         throw e
+    } catch (e: ImageProcessingException) {
+        ImageMetadataReadOutcome.Malformed(e)
     } catch (e: IOException) {
-        ImageMetadataReadResult.Failure(ImageMetadataReadFailureKind.IO)
+        ImageMetadataReadOutcome.Failure(e)
     } catch (e: Exception) {
-        ImageMetadataReadResult.Failure(ImageMetadataReadFailureKind.PARSE)
+        ImageMetadataReadOutcome.Failure(e)
     }
 
 private fun File.requireLengthWithin(maxBytes: Int, subject: String) {

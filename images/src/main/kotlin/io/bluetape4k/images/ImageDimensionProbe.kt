@@ -1,10 +1,12 @@
 package io.bluetape4k.images
 
 import io.bluetape4k.support.requirePositiveNumber
+import kotlinx.coroutines.CancellationException
 import java.io.ByteArrayInputStream
 import java.io.Serializable
 import java.nio.file.Path
 import javax.imageio.ImageIO
+import javax.imageio.IIOException
 import javax.imageio.stream.ImageInputStream
 
 /**
@@ -64,6 +66,28 @@ data class ImageDimensions(
 }
 
 /**
+ * 인코딩 이미지 바이트의 헤더 probe 결과입니다.
+ *
+ * `Unavailable`은 ImageIO reader가 없다는 뜻이고, `Malformed`는 reader가 입력을
+ * 형식 오류로 거부했다는 뜻입니다. 그 밖의 예외는 [Failure]로 유지해 내부 parser
+ * 또는 runtime 실패가 잘못된 400 응답으로 축약되지 않도록 합니다. [Failure.cause]와
+ * [Malformed.cause]는 로그·진단용이며 외부 응답에 직접 노출하지 않아야 합니다.
+ */
+sealed interface ImageDimensionProbeResult {
+    /** 헤더에서 유효한 크기를 읽은 결과입니다. */
+    data class Success(val dimensions: ImageDimensions) : ImageDimensionProbeResult
+
+    /** 지원되는 ImageIO reader를 찾지 못한 결과입니다. */
+    data object Unavailable : ImageDimensionProbeResult
+
+    /** reader가 인코딩 입력을 형식 오류로 거부한 결과입니다. */
+    data class Malformed(val cause: Throwable) : ImageDimensionProbeResult
+
+    /** 입력 형식 외의 내부 probe 실패입니다. */
+    data class Failure(val cause: Throwable) : ImageDimensionProbeResult
+}
+
+/**
  * 픽셀을 디코딩하지 않고 인코딩 이미지 바이트에서 첫 번째 프레임 크기를 읽습니다.
  *
  * ImageIO reader로 이미지 헤더만 탐색하므로 전체 픽셀 버퍼를 할당하지 않습니다.
@@ -75,6 +99,26 @@ fun probeImageDimensions(bytes: ByteArray): ImageDimensions? {
     val input = ImageIO.createImageInputStream(ByteArrayInputStream(bytes)) ?: return null
     return input.use(::probeImageDimensions)
 }
+
+/**
+ * 인코딩 이미지 바이트를 헤더만 읽어 명시적인 결과로 분류합니다.
+ *
+ * 바이트 배열은 caller-owned I/O가 없는 입력이므로 ImageIO reader가 발생시킨
+ * [IIOException]은 인코딩 parser의 입력 거부([ImageDimensionProbeResult.Malformed])로
+ * 분류합니다. 취소는 그대로 재전파하고, 그 밖의 예외는 원인을 보존한
+ * [ImageDimensionProbeResult.Failure]로 반환합니다.
+ */
+fun probeImageDimensionsDetailed(bytes: ByteArray): ImageDimensionProbeResult =
+    try {
+        probeImageDimensions(bytes)?.let(ImageDimensionProbeResult::Success)
+            ?: ImageDimensionProbeResult.Unavailable
+    } catch (exception: CancellationException) {
+        throw exception
+    } catch (exception: IIOException) {
+        ImageDimensionProbeResult.Malformed(exception)
+    } catch (exception: Exception) {
+        ImageDimensionProbeResult.Failure(exception)
+    }
 
 /**
  * 픽셀을 디코딩하지 않고 이미지 경로에서 첫 번째 프레임 크기를 읽습니다.

@@ -245,7 +245,6 @@ class ImageUploadQualifierTest {
         val error = assertFailsWith<InvalidImageUploadException> {
             ImageUploadQualifier(
                 properties = ImageIntelligenceProperties(),
-                dimensionProbe = { null },
                 imageDecoder = { error("decoder must not run") },
             ).qualify(multipart("image/png", truncatedPng))
         }
