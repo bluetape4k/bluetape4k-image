@@ -1,12 +1,12 @@
 package io.bluetape4k.images.filters.dsl
 
 import com.sksamuel.scrimage.ImmutableImage
+import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.images.filters.AbstractFilterTest
 import org.junit.jupiter.api.Test
 import java.awt.image.BufferedImage
-import kotlin.test.assertFailsWith
 
 class ImageFilterChainBlurOpsTest : AbstractFilterTest() {
 

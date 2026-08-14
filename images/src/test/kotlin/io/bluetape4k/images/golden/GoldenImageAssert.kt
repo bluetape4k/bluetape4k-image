@@ -3,6 +3,7 @@ package io.bluetape4k.images.golden
 import com.sksamuel.scrimage.ImmutableImage
 import com.sksamuel.scrimage.nio.ImmutableImageLoader
 import com.sksamuel.scrimage.nio.PngWriter
+import io.bluetape4k.assertions.fail
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.logging.warn
@@ -10,7 +11,6 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import kotlin.math.abs
-import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Assumptions
 import org.opentest4j.TestAbortedException
 
@@ -129,7 +129,7 @@ object GoldenImageAssert : KLogging() {
     private fun compareImages(actual: ImmutableImage, expected: ImmutableImage, key: String, tolerance: Int) {
         if (actual.width != expected.width || actual.height != expected.height) {
             saveDiff(key, actual)
-            Assertions.fail<Unit>(
+            fail(
                 "골든 이미지와 크기 불일치: actual=(${actual.width}x${actual.height}) " +
                     "expected=(${expected.width}x${expected.height}) key=$key"
             )
@@ -148,7 +148,7 @@ object GoldenImageAssert : KLogging() {
                 val x = i % actual.width
                 val y = i / actual.width
                 saveDiff(key, actual)
-                Assertions.fail<Unit>(
+                fail(
                     "픽셀 ($x, $y) 에서 허용 오차($tolerance) 초과: " +
                         "actual=(${a.red()},${a.green()},${a.blue()}) " +
                         "expected=(${e.red()},${e.green()},${e.blue()}) " +

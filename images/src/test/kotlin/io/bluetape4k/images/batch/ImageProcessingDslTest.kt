@@ -1,6 +1,7 @@
 package io.bluetape4k.images.batch
 
 import com.sksamuel.scrimage.ImmutableImage
+import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeGreaterThan
 import io.bluetape4k.assertions.shouldBeNull
@@ -10,7 +11,6 @@ import io.bluetape4k.images.AbstractImageTest
 import io.bluetape4k.images.coroutines.SuspendJpegWriter
 import org.junit.jupiter.api.Test
 import java.awt.image.BufferedImage
-import kotlin.test.assertFailsWith
 
 class ImageProcessingDslTest : AbstractImageTest() {
 

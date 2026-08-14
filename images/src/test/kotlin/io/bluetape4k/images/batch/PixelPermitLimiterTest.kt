@@ -1,5 +1,6 @@
 package io.bluetape4k.images.batch
 
+import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.images.AbstractImageTest
 import kotlinx.coroutines.cancelAndJoin
@@ -9,7 +10,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import java.util.concurrent.atomic.AtomicInteger
-import kotlin.test.assertFailsWith
 
 class PixelPermitLimiterTest : AbstractImageTest() {
 

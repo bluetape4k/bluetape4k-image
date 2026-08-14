@@ -6,8 +6,8 @@ import io.bluetape4k.images.immutableImageOf
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.utils.Resourcex
 import kotlin.math.abs
+import io.bluetape4k.assertions.fail
 import io.bluetape4k.assertions.shouldBeEqualTo
-import org.junit.jupiter.api.Assertions.fail
 
 abstract class AbstractFilterTest: AbstractImageTest() {
 
@@ -39,7 +39,7 @@ abstract class AbstractFilterTest: AbstractImageTest() {
         tolerance: Int = 2,
     ) {
         if (actual.width != expected.width || actual.height != expected.height) {
-            fail<Unit>(
+            fail(
                 "이미지 크기 불일치: actual=(${actual.width}x${actual.height}) " +
                     "expected=(${expected.width}x${expected.height})"
             )
@@ -57,7 +57,7 @@ abstract class AbstractFilterTest: AbstractImageTest() {
             if (dr > tolerance || dg > tolerance || db > tolerance) {
                 val x = i % actual.width
                 val y = i / actual.width
-                fail<Unit>(
+                fail(
                     "픽셀 ($x, $y) 에서 허용 오차($tolerance) 초과: " +
                         "actual=(${a.red()},${a.green()},${a.blue()}) " +
                         "expected=(${e.red()},${e.green()},${e.blue()}) " +
@@ -102,7 +102,7 @@ abstract class AbstractFilterTest: AbstractImageTest() {
             }
         }
 
-        fail<Unit>("두 이미지가 threshold($threshold) 이하로 너무 비슷합니다. 다른 이미지여야 합니다.")
+        fail("두 이미지가 threshold($threshold) 이하로 너무 비슷합니다. 다른 이미지여야 합니다.")
     }
 
     /**

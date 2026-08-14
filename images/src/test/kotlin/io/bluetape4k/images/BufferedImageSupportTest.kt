@@ -3,6 +3,7 @@ package io.bluetape4k.images
 import io.bluetape4k.junit5.tempfolder.TempFolder
 import io.bluetape4k.junit5.tempfolder.TempFolderTest
 import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeGreaterThan
 import io.bluetape4k.assertions.shouldBeTrue
@@ -11,7 +12,6 @@ import org.junit.jupiter.api.Test
 import java.awt.Color
 import java.io.ByteArrayOutputStream
 import javax.imageio.ImageIO
-import kotlin.test.assertFailsWith
 
 @TempFolderTest
 class BufferedImageSupportTest: AbstractImageTest() {
