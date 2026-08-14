@@ -13,7 +13,6 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import java.io.File
-import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.coroutines.CoroutineContext
 
@@ -137,13 +136,7 @@ suspend fun ImageBatchResult.WritableImage.writeTo(
     output: Path,
     ioDispatcher: CoroutineContext,
 ): Long =
-    withContext(ioDispatcher) {
-        output.parent?.let(Files::createDirectories)
-        Files.newOutputStream(output).use { stream ->
-            writer.write(image, stream)
-        }
-        Files.size(output)
-    }
+    writeAtomically(output, ioDispatcher, writer = { stream -> writer.write(image, stream) })
 
 private suspend fun processOneImage(
     source: Path,
@@ -154,10 +147,15 @@ private suspend fun processOneImage(
     try {
         val probedPixels = runStage(source, ImageBatchFailureStage.VALIDATION) {
             withContext(options.ioDispatcher) { probeImagePixelCount(source) }
+                ?: throw ImageBatchException(
+                    source = source,
+                    stage = ImageBatchFailureStage.VALIDATION,
+                    message = "이미지 크기를 확인할 수 없어 처리를 중단합니다. source=$source",
+                )
         }
-        probedPixels?.requireWithinMaxPixels(source, options.maxPixels)
+        probedPixels.requireWithinMaxPixels(source, options.maxPixels)
 
-        val permitPixels = probedPixels ?: options.maxPixels
+        val permitPixels = probedPixels
         return limiter.withPermit(permitPixels) {
             val image = runStage(source, ImageBatchFailureStage.LOAD) {
                 withContext(options.ioDispatcher) { immutableImageOf(source) }

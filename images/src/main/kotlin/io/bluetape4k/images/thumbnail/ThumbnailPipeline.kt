@@ -7,6 +7,7 @@ import io.bluetape4k.images.batch.ImageBatchException
 import io.bluetape4k.images.batch.ImageProcessingOptions
 import io.bluetape4k.images.batch.PixelPermitLimiter
 import io.bluetape4k.images.batch.probeImagePixelCount
+import io.bluetape4k.images.batch.writeAtomically
 import io.bluetape4k.images.coroutines.SuspendImageWriter
 import io.bluetape4k.images.immutableImageOf
 import io.bluetape4k.images.transforms.smartCropTo
@@ -19,7 +20,6 @@ import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.flatMapConcat
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
-import java.nio.file.Files
 import java.nio.file.Path
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.coroutines.CoroutineContext
@@ -157,11 +157,17 @@ class ThumbnailPipeline private constructor(
 
             val probedPixels = runStage(source, output, ImageBatchFailureStage.VALIDATION) {
                 withContext(ioDispatcher) { probeImagePixelCount(source) }
+                    ?: throw ImageBatchException(
+                        source = source,
+                        stage = ImageBatchFailureStage.VALIDATION,
+                        output = output,
+                        message = "이미지 크기를 확인할 수 없어 처리를 중단합니다. source=$source, output=$output",
+                    )
             }
             runStage(source, output, ImageBatchFailureStage.VALIDATION) {
-                probedPixels?.requireWithinMaxPixels(source)
+                probedPixels.requireWithinMaxPixels(source)
             }
-            val permitPixels = probedPixels ?: maxPixels
+            val permitPixels = probedPixels
 
             return limiter.withPermit(permitPixels) {
                 val image = runStage(source, output, ImageBatchFailureStage.LOAD) {
@@ -243,13 +249,7 @@ class ThumbnailPipeline private constructor(
         }
 
     private suspend fun writeThumbnail(image: ImmutableImage, output: Path): Long =
-        withContext(ioDispatcher) {
-            output.parent?.let(Files::createDirectories)
-            Files.newOutputStream(output).use { stream ->
-                format.writer.write(image, stream)
-            }
-            Files.size(output)
-        }
+        writeAtomically(output, ioDispatcher, writer = { stream -> format.writer.write(image, stream) })
 
     private fun ImmutableImage.toThumbnail(size: ThumbnailSize, crop: ThumbnailCrop): ImmutableImage =
         when (crop) {

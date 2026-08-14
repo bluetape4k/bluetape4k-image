@@ -1,23 +1,31 @@
 package io.bluetape4k.images.batch
 
+import com.sksamuel.scrimage.AwtImage
+import com.sksamuel.scrimage.metadata.ImageMetadata
+import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeGreaterThan
+import io.bluetape4k.assertions.shouldBeInstanceOf
+import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.images.AbstractImageTest
+import io.bluetape4k.images.coroutines.SuspendImageWriter
 import io.bluetape4k.junit5.tempfolder.TempFolder
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.info
 import io.bluetape4k.utils.Resourcex
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import kotlin.time.Duration.Companion.seconds
-import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldBeGreaterThan
-import io.bluetape4k.assertions.shouldBeInstanceOf
-import io.bluetape4k.assertions.shouldBeTrue
 import org.junit.jupiter.api.Test
 import java.awt.Color
 import java.awt.image.BufferedImage
+import java.io.IOException
+import java.io.OutputStream
 import java.nio.file.Files
 import javax.imageio.ImageIO
 import kotlin.system.measureTimeMillis
@@ -48,6 +56,7 @@ class ImageBatchFlowTest: AbstractImageTest() {
     ) = runTest(timeout = 30.seconds) {
         val source = tempFolder.copyResource(CAFE_JPG, SOURCE_IMAGE_NAME)
         val output = tempFolder.root.toPath().resolve(OUTPUT_IMAGE_NAME)
+        Files.write(output, byteArrayOf(9, 8, 7))
 
         val result = flowOf(source)
             .processImages(ImageProcessingOptions(parallelism = TEST_PARALLELISM)) {
@@ -68,7 +77,7 @@ class ImageBatchFlowTest: AbstractImageTest() {
     }
 
     @Test
-    fun `processImages emits failure and invokes callback when skipFailures is true`(
+    fun `processImages fails closed when dimension probe is unavailable`(
         tempFolder: TempFolder,
     ) = runTest(timeout = 30.seconds) {
         val source = tempFolder.createFile(BROKEN_IMAGE_NAME).toPath()
@@ -88,7 +97,79 @@ class ImageBatchFlowTest: AbstractImageTest() {
             .toList()
 
         results.single() shouldBeInstanceOf ImageBatchResult.Failure::class
-        failures.single().stage shouldBeEqualTo ImageBatchFailureStage.LOAD
+        failures.single().stage shouldBeEqualTo ImageBatchFailureStage.VALIDATION
+    }
+
+    @Test
+    fun `writeImagesTo preserves existing output when writer fails`(
+        tempFolder: TempFolder,
+    ) = runTest(timeout = 30.seconds) {
+        val source = tempFolder.copyResource(CAFE_JPG, SOURCE_IMAGE_NAME)
+        val outputDirectory = tempFolder.createDirectory("outputs").toPath()
+        val output = outputDirectory.resolve(OUTPUT_IMAGE_NAME)
+        val existing = byteArrayOf(9, 8, 7)
+        Files.write(output, existing)
+        val failures = mutableListOf<ImageBatchResult.Failure>()
+        val options = ImageProcessingOptions(
+            parallelism = TEST_PARALLELISM,
+            skipFailures = true,
+            onFailure = { failures += it },
+        )
+
+        val outputs = flowOf(source)
+            .processImages(options) { writer(FailingImageWriter) }
+            .writeImagesTo(outputDirectory, options) { OUTPUT_IMAGE_NAME }
+            .toList()
+
+        outputs.size shouldBeEqualTo 0
+        failures.single().stage shouldBeEqualTo ImageBatchFailureStage.WRITE
+        failures.single().output shouldBeEqualTo output
+        Files.readAllBytes(output).contentEquals(existing).shouldBeTrue()
+        Files.list(outputDirectory).use { stream -> stream.count() shouldBeEqualTo 1L }
+    }
+
+    @Test
+    fun `writeImagesTo preserves existing output when writer is cancelled`(
+        tempFolder: TempFolder,
+    ) = runTest(timeout = 30.seconds) {
+        val source = tempFolder.copyResource(CAFE_JPG, SOURCE_IMAGE_NAME)
+        val outputDirectory = tempFolder.createDirectory("outputs").toPath()
+        val output = outputDirectory.resolve(OUTPUT_IMAGE_NAME)
+        val existing = byteArrayOf(9, 8, 7)
+        Files.write(output, existing)
+        val options = ImageProcessingOptions(parallelism = TEST_PARALLELISM)
+
+        assertFailsWith<CancellationException> {
+            flowOf(source)
+                .processImages(options) {
+                    writer(CancellingImageWriter)
+                }
+                .writeImagesTo(outputDirectory, options) { OUTPUT_IMAGE_NAME }
+                .toList()
+        }
+
+        Files.readAllBytes(output).contentEquals(existing).shouldBeTrue()
+        Files.list(outputDirectory).use { stream -> stream.count() shouldBeEqualTo 1L }
+    }
+
+    @Test
+    fun `atomic output preserves cancellation when temporary cleanup fails`(
+        tempFolder: TempFolder,
+    ) = runTest(timeout = 30.seconds) {
+        val output = tempFolder.root.toPath().resolve(OUTPUT_IMAGE_NAME)
+        val cleanupFailure = IOException("fixture cleanup failure")
+
+        val error = assertFailsWith<CancellationException> {
+            writeAtomically(
+                output = output,
+                ioDispatcher = ImageProcessingOptions().ioDispatcher,
+                writer = { throw CancellationException("fixture cancellation") },
+                deleteTemporary = { throw cleanupFailure },
+            )
+        }
+
+        error.suppressed.single().message shouldBeEqualTo cleanupFailure.message
+        Files.exists(output).shouldBeFalse()
     }
 
     @Test
@@ -212,5 +293,19 @@ class ImageBatchFlowTest: AbstractImageTest() {
             }
             ImageIO.write(image, TEST_IMAGE_FORMAT, target.toFile())
         }
+
+    private object FailingImageWriter : SuspendImageWriter {
+        override fun write(image: AwtImage, metadata: ImageMetadata, out: OutputStream) {
+            out.write(byteArrayOf(0x00, 0x01, 0x02))
+            throw IOException("fixture writer failure")
+        }
+    }
+
+    private object CancellingImageWriter : SuspendImageWriter {
+        override fun write(image: AwtImage, metadata: ImageMetadata, out: OutputStream) {
+            out.write(byteArrayOf(0x00, 0x01, 0x02))
+            throw CancellationException("fixture cancellation")
+        }
+    }
 
 }
