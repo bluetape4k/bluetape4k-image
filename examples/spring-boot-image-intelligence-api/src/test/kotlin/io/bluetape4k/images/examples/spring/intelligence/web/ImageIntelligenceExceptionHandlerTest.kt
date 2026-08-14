@@ -1,9 +1,12 @@
 package io.bluetape4k.images.examples.spring.intelligence.web
 
+import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldNotContain
 import io.bluetape4k.images.examples.spring.intelligence.service.ImageIntelligenceOperations
+import io.bluetape4k.images.examples.spring.intelligence.service.ImageProbeFailureException
 import io.bluetape4k.images.examples.spring.intelligence.service.ImageWorkflowException
 import org.junit.jupiter.api.Test
+import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.mock.web.MockMultipartFile
 import org.springframework.test.web.servlet.MockMvc
@@ -51,6 +54,19 @@ class ImageIntelligenceExceptionHandlerTest {
         result.response.contentAsString.shouldNotContain("secret-context-value")
         result.response.contentAsString.shouldNotContain("/private/native")
         result.response.contentAsString.shouldNotContain("stackTrace")
+    }
+
+    @Test
+    fun `probe failure returns an internal sanitized problem detail`() {
+        val problem = ImageIntelligenceExceptionHandler().invalidUpload(
+            ImageProbeFailureException(IllegalStateException("parser-secret=/private/native")),
+        )
+
+        problem.status shouldBeEqualTo HttpStatus.INTERNAL_SERVER_ERROR.value()
+        problem.detail shouldBeEqualTo "The uploaded image could not be inspected."
+        problem.properties?.get("reasonCode") shouldBeEqualTo "image_probe_failed"
+        problem.detail.shouldNotContain("parser-secret")
+        problem.detail.shouldNotContain("/private/native")
     }
 
     private fun ResultActions.dispatch(): ResultActions {
