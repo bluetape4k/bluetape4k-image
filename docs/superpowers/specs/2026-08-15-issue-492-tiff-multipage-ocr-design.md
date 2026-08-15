@@ -21,7 +21,7 @@ page를 반환합니다. core는 SuspendTiffMultiPageWriter로 다중 페이지 
 이번 변경은 0.5.0에서 결정적인 3-page TIFF 문서 OCR 경계를 제공합니다.
 
 - TIFF 문서 page를 순서대로 열거하고 기존 StructuredOcrEngine에 한 page씩 전달한다.
-- 입력·페이지·픽셀 예산을 decode 전에 확인하고, 한계를 알 수 없으면 fail-closed 한다.
+- 입력·페이지·픽셀 예산을 모든 page metadata preflight에서 확인한 뒤 첫 decode를 시작하고, 한계를 알 수 없으면 fail-closed 한다.
 - 기존 단일 이미지 API와 Tesseract provider의 source/binary compatibility를 유지한다.
 - 전체 페이지가 성공한 경우에만 하나의 OcrStructuredResult를 반환한다.
 
@@ -41,6 +41,7 @@ GIF animation frame OCR, PaddleOCR runtime/model 도입, 새로운 OCR provider 
 | images/src/main/kotlin/io/bluetape4k/images/ImmutableImageSupport.kt | immutableExternalImageOf는 decode 전 encoded/dimension 검증을 수행한다. | 페이지 decode 전 동일한 fail-closed 원칙을 따른다. |
 | images/src/main/kotlin/io/bluetape4k/images/coroutines/SuspendTiffMultiPageWriter.kt | TwelveMonkeys ImageIO TIFF writer로 page sequence를 생성한다. | 테스트 fixture와 실제 입력은 동일한 ImageIO provider 계열을 사용한다. |
 | images/src/main/kotlin/io/bluetape4k/images/ImageDimensionProbe.kt | 일반 probe는 첫 frame만 읽는다. | 다중 페이지 경계에서 첫 frame probe를 반복 호출하지 않고 TIFF ImageReader sequence를 직접 사용한다. |
+| images/build.gradle.kts | TwelveMonkeys `imageio-tiff`와 metadata가 `bluetape4k-images`에 API로 정렬되어 있다. | OCR 모듈은 기존 transitive 계약을 재사용하고 새 native/runtime dependency를 추가하지 않는다. |
 
 ## 선택한 API와 경계
 
@@ -67,6 +68,9 @@ data class TiffMultiPageOcrLimits(
     val maxPixelsPerPage: Long = ImageDecodeLimits.DEFAULT_MAX_DECODED_PIXELS,
     val maxTotalPixels: Long = 64_000_000L,
     val maxDecodedSide: Int = ImageDecodeLimits.DEFAULT_MAX_DECODED_SIDE,
+    val maxMetadataBytes: Long = 2L * 1024L * 1024L,
+    val maxResultTextChars: Int = 1_000_000,
+    val maxResultEntries: Int = 100_000,
 )
 
 class TiffMultiPageOcr(
@@ -86,6 +90,42 @@ class TiffMultiPageOcr(
     ): OcrStructuredResult
 }
 
+enum class TiffMultiPageOcrFailureReason {
+    INPUT_TOO_LARGE,
+    READER_UNAVAILABLE,
+    UNSUPPORTED_FORMAT,
+    PAGE_COUNT_UNKNOWN,
+    PAGE_LIMIT_EXCEEDED,
+    DIMENSIONS_UNAVAILABLE,
+    SIDE_LIMIT_EXCEEDED,
+    PIXELS_PER_PAGE_LIMIT_EXCEEDED,
+    TOTAL_PIXELS_LIMIT_EXCEEDED,
+    METADATA_LIMIT_EXCEEDED,
+    DECODE_FAILED,
+    ENGINE_FAILED,
+    RESULT_LIMIT_EXCEEDED,
+}
+
+class TiffMultiPageOcrValidationException(
+    val reason: TiffMultiPageOcrFailureReason,
+    val pageIndex: Int?,
+    message: String,
+) : IllegalArgumentException(message) {
+    companion object {
+        private const val serialVersionUID: Long = 1L
+    }
+}
+
+class TiffMultiPageOcrException(
+    val reason: TiffMultiPageOcrFailureReason,
+    val pageIndex: Int?,
+    message: String,
+) : OcrException(message) {
+    companion object {
+        private const val serialVersionUID: Long = 1L
+    }
+}
+
 ~~~
 
 TiffMultiPageOcr는 StructuredOcrEngine을 구현하지 않는다. 기존 단일 이미지
@@ -93,18 +133,37 @@ TiffMultiPageOcr는 StructuredOcrEngine을 구현하지 않는다. 기존 단일
 혼합되기 때문이다. 기존 extractOcr, suspendExtractOcr, recognize,
 recognizeStructured 시그니처는 그대로 둔다.
 
+테스트 가능성과 reader lifecycle 검증을 위해 구현체 내부에는 `TiffImageReaderFactory`
+seam을 둔다. 이는 `internal` 범위이며 published ABI에 노출하지 않는다. 기본 factory는
+`IIORegistryUtils.registerApplicationClasspathSpis()` 이후 `ImageIO.getImageReaders`에서
+   format name이 `tiff` 또는 `tif`인 reader만 선택한다. reader가 없으면
+   `READER_UNAVAILABLE`, reader는 있지만 format name이 TIFF/TIF가 아니면
+   `UNSUPPORTED_FORMAT`으로 거부한다. production 경로는 TwelveMonkeys ImageIO TIFF 3.14.0
+catalog entry를 사용하고, test fake는 unknown count·invalid dimension·cleanup failure를
+결정적으로 재현한다. `MetadataBudgetInputStream`은 metadata phase에서
+maxMetadataBytes를 넘는 read를 거부한 뒤, 동일 stream의 payload phase에서만 전체
+encoded bytes를 허용한다.
+
 ### 제한값
 
 TiffMultiPageOcrLimits 생성자는 모든 제한값이 양수인지 검증한다.
 
 - maxEncodedBytes: TIFF 입력 ByteArray.size의 최대값. decode나 reader 생성보다 먼저 확인한다.
-- maxPages: TIFF ImageReader.getNumImages(true) 결과의 최대값. 결과가 0 또는 음수로
-  알려지면 page 수를 신뢰할 수 없으므로 거부한다.
+- maxPages: TIFF ImageReader.getNumImages(false) 결과의 최대값. reader가 page 수를
+  아직 알 수 없어 음수를 반환하면 전체 IFD를 무제한 탐색하지 않고 거부한다. 결과가
+  0이면 page 수를 신뢰할 수 없으므로 거부한다.
 - maxPixelsPerPage: 각 page의 header width/height 곱에 적용한다.
 - maxTotalPixels: 이미 확인한 page pixel 합계에 적용한다. total + next를 직접 계산하지
   않고 next > maxTotalPixels - total 비교로 overflow를 방지한다.
 - maxDecodedSide: 각 page의 width와 height에 적용한다. 이는 #483 외부 입력의 side
   제한과 같은 의미를 유지한다.
+- maxMetadataBytes: TIFF IFD/page metadata preflight가 읽을 수 있는 최대 byte 수이다.
+  TwelveMonkeys reader가 `getNumImages(false)`에서도 전체 IFD를 탐색할 수 있으므로,
+  `maxPages`만으로 metadata 비용을 제한한다고 가정하지 않는다. 한계를 넘는 reader는
+  `METADATA_LIMIT_EXCEEDED`로 fail-closed 한다.
+- maxResultTextChars와 maxResultEntries: provider가 반환한 aggregate text와
+  structured page/block/line/word entry를 저장할 수 있는 상한이다. provider 내부 native
+  작업의 byte 상한을 의미하지 않으며, orchestration 결과 집계 memory bomb를 방지한다.
 
 기본값은 보수적인 외부 입력 한계로 문서화한다. `maxPages` 기본값은 `16`,
 `maxTotalPixels` 기본값은 `64_000_000L`로 고정하고 `maxPages * maxPixelsPerPage`를
@@ -112,26 +171,48 @@ TiffMultiPageOcrLimits 생성자는 모든 제한값이 양수인지 검증한�
 
 ## 처리 흐름
 
-1. bytes.size가 maxEncodedBytes를 넘으면 즉시 IllegalArgumentException을 던진다.
-2. ImageIO.createImageInputStream(ByteArrayInputStream(bytes))를 만들고 reader를 찾는다.
-   reader가 없거나 format name이 TIFF/TIF가 아니면 입력을 거부한다. GIF reader를
-   TIFF 문서로 처리하지 않는다.
-3. reader의 getNumImages(true)를 호출한다. page 수가 양수이고 maxPages 이하인지
-   확인한다. unknown page count는 fail-closed 한다.
-4. 각 page index에 대해 다음을 순서대로 수행한다.
-   - getWidth(index)와 getHeight(index)로 pixel을 디코드하기 전에 dimensions를 읽는다.
+1. bytes.size가 maxEncodedBytes를 넘으면 즉시
+   `TiffMultiPageOcrValidationException(INPUT_TOO_LARGE)`를 던진다.
+2. `maxMetadataBytes`를 넘지 않도록 감싼 preflight ImageInputStream을 만들고 reader를
+   찾는다. reader가 없거나 format name이 TIFF/TIF가 아니면
+   입력을 거부한다. GIF reader를 TIFF 문서로 처리하지 않는다.
+3. preflight reader의 `getNumImages(false)`를 호출한다. reader가 아직 page 수를 알 수
+   없어 음수를 반환하거나 metadata byte 상한을 넘으면 전체 IFD를 신뢰하지 않고
+   fail-closed 한다. page 수가 양수이고 maxPages 이하인지 확인한다. `getNumImages(false)`
+   구현이 allowSearch를 무시하는 provider도 있으므로 bounded stream이 비용 경계를
+   담당한다.
+4. 첫 `read` 또는 engine 호출 전에 모든 page index에 대해 metadata preflight를
+   순서대로 수행한다.
+   - getWidth(index)와 getHeight(index)로 pixel을 디코드하지 않고 dimensions를 읽는다.
+   - width와 height가 양수인지 확인하고, `Math.multiplyExact(width.toLong(), height.toLong())`
+     로 page pixel을 계산한다. 곱셈 overflow는 제한 위반으로 fail-closed 한다.
    - width/height가 maxDecodedSide, page pixel, total pixel 예산을 넘지 않는지 확인한다.
+     total은 `next > maxTotalPixels - total` 비교를 사용한다.
+   - 모든 page metadata와 누적 pixel이 확인된 뒤에만 decode phase로 진입한다.
+5. metadata preflight가 성공하면 같은 reader와 stream의 metadata cache를 재사용하고,
+   bounded input의 `allowPayloadReads()` phase를 연다. decode phase는 preflight 목록의
+   순서대로 한 page씩 수행한다. 새 reader를 만들지 않으므로 `read()`가 metadata를 다시
+   탐색해 maxMetadataBytes를 우회하지 않는다.
    - reader.read(index)로 한 page만 decode하고 ImmutableImage.fromAwt로 변환한다.
    - decoded image의 실제 width/height를 다시 확인한다.
    - 현재 page에서 engine.recognizeStructured(image, options)를 호출한다.
+   - 반환 text 길이와 pages/blocks/lines/words entry 수를 누적 합계에 더하기 전에
+     `maxResultTextChars - accumulatedTextChars` 및
+     `maxResultEntries - accumulatedEntryCount`와 overflow-safe 비교를 수행한다.
+     page별 값이 한도 이내여도 누적 합계가 넘으면 `RESULT_LIMIT_EXCEEDED`로 실패하고
+     aggregate에 추가하지 않는다.
    - 반환된 pages, blocks, lines, words의 page index를 현재 TIFF index로 매핑해
      aggregate 목록에 추가한다.
+   - page의 decoded image와 임시 AWT 자원은 다음 page로 이동하기 전에 참조를 해제한다.
    - 다음 page로 이동하기 전에 suspend 경로는 ensureActive()를 호출한다.
-5. 모든 page가 성공한 뒤 page text를 \n\n으로 결합하고 aggregate
+6. 모든 page가 성공한 뒤 page text를 \n\n으로 결합하고 aggregate
    OcrStructuredResult를 만든다. 중간 실패에서는 aggregate를 반환하지 않는다.
-6. ImageReader.dispose()와 ImageInputStream.close()는 성공·실패·취소 모든 경로에서
-   실행한다. CancellationException은 catch해서 일반 OCR 오류로 바꾸지 않고 그대로
-   재전파한다.
+7. preflight와 decode의 각 ImageReader.dispose()와 ImageInputStream.close()는 성공·실패·취소 모든 경로에서
+   실행한다. 주 예외가 있으면 cleanup 예외는 `Throwable.addSuppressed`로 보존하고,
+   주 예외가 없을 때만 cleanup 예외를 전파한다. createImageInputStream의 `null`, reader
+   부재, reader의 `getNumImages/getWidth/getHeight/read` 실패는 각각 안정적인 입력/metadata/
+   decode 단계 메시지로 분류한다. CancellationException은 catch해서 일반 OCR 오류로
+   바꾸지 않고 그대로 재전파한다.
 
 ## 결과 계약
 
@@ -146,16 +227,29 @@ TiffMultiPageOcrLimits 생성자는 모든 제한값이 양수인지 검증한�
 
 ## 오류와 취소
 
-입력 형식·제한 위반은 IllegalArgumentException으로 분류하고, ImageIO decode 실패와
-engine 실패는 page index를 포함한 sanitized OcrException으로 감싼다. 원인 예외는
-diagnostic cause로 연결하되 파일 경로, native path, 입력 payload를 오류 메시지에 넣지
-않는다.
+입력 형식·제한 위반은 `TiffMultiPageOcrValidationException`으로 분류하고, 이 예외도
+nullable page index를 가진다. ImageIO
+decode·engine·aggregate result 실패는 page index와 안정적인
+`TiffMultiPageOcrFailureReason`을 가진 `TiffMultiPageOcrException`으로 감싼다. 전자는
+`IllegalArgumentException` 하위 타입이고 후자는 `OcrException` 하위 타입이다. 모든
+reason·retryability·외부 응답 매핑은 다음과 같이 고정한다: 입력/metadata/format/page/pixel
+한계는 non-retryable reject, decode/engine은 page index를 포함한 sanitized failure,
+cancel은 `CancellationException` 그대로 재전파한다. raw cause는 public exception에
+연결하지 않고 신뢰 경계 내부 로그에서만 redacted context로 기록한다. `INPUT_TOO_LARGE`,
+`READER_UNAVAILABLE`, `UNSUPPORTED_FORMAT`, `PAGE_COUNT_UNKNOWN`, `PAGE_LIMIT_EXCEEDED`,
+`DIMENSIONS_UNAVAILABLE`, `SIDE_LIMIT_EXCEEDED`, `PIXELS_PER_PAGE_LIMIT_EXCEEDED`,
+`TOTAL_PIXELS_LIMIT_EXCEEDED`, `METADATA_LIMIT_EXCEEDED`, `DECODE_FAILED`,
+`ENGINE_FAILED`, `RESULT_LIMIT_EXCEEDED` reason code와 nullable page index는 caller가
+재시도·관찰 정책을 결정할 수 있는 최소 계약으로 고정한다.
 
 - reader 없음, non-TIFF, unknown page count/dimension, malformed/truncated page는 decode
   이전 또는 해당 page 경계에서 거부한다.
 - CancellationException은 모든 broad catch보다 먼저 재전파한다.
 - blocking API는 호출 스레드에서 순차 처리한다. suspend API는 dispatcher에서 blocking
-  ImageIO/OCR 작업을 수행하고 페이지 사이에서 취소를 확인한다.
+  ImageIO/OCR 작업을 수행하고, preflight와 각 page 작업을 `runInterruptible` 경계로
+  감싸며 페이지 사이에서 취소를 확인한다. ImageIO 또는 provider가 interrupt를 무시하면
+  취소 지연은 최악의 단일 page decode/OCR 시간까지일 수 있으므로 caller는 coroutine
+  timeout을 함께 설정해야 한다. 이 API는 강제 native abort를 보장하지 않는다.
 - OCR engine이 실패하면 재시도하지 않는다. fail-fast가 기본이며 partial result batch
   계약은 후속 이슈로 남긴다.
 
@@ -165,10 +259,31 @@ diagnostic cause로 연결하되 파일 경로, native path, 입력 payload를 �
   extension 함수의 source/binary compatibility를 유지한다.
 - Tesseract native 초기화, traineddata 탐색, provider별 structured metadata 의미는
   변경하지 않는다.
+- TIFF 지원은 현재 `bluetape4k-images`가 제공하는 TwelveMonkeys ImageIO TIFF reader의
+  지원 범위에 따른다. BigTIFF, 특수 압축/tiling, orientation 보정은 별도 capability로
+  약속하지 않으며 reader가 거부하면 안정적인 unsupported/decode 오류로 종료한다.
 - GIF animation frame OCR은 TIFF document page와 의미가 다르므로 이 이슈에서 구현하지
   않는다. GIF 호출은 명시적 unsupported input으로 종료한다.
 - PaddleOCR, GPU/model download, page 병렬 처리, partial-result streaming, Path/InputStream
   overload, 새로운 published module은 이번 범위에 포함하지 않는다.
+- ByteArray-only 선택은 #483 외부 업로드 경계에서 encoded byte를 decode 전에 검사하고
+  caller-owned stream lifecycle을 만들지 않기 위한 것이다. 대용량 파일/stream caller는
+  application boundary에서 동일한 `maxEncodedBytes`로 bounded read 후 이 entry point를
+  호출하며, zero-copy streaming은 후속 이슈로 분리한다.
+
+### 운영·릴리스 증적
+
+- PR merge gate는 `test-images-ocr` CI job의 exact commit check와
+  `-Docr.container.enabled=true` 실행 결과를 필수로 기록한다. container smoke는
+  3-page TIFF를 실제 container Tesseract CLI에 전달하고 page별 OCR text와 aggregate
+  separator를 검증하는 테스트 경로를 갖는다.
+- release candidate gate는 exact commit SHA, workflow run URL, test-result artifact URL,
+  `./gradlew :bluetape4k-images-ocr:test -Docr.enabled=true --no-daemon` native 결과를
+  release checklist에 함께 기록한다. native gate 실패 시 publish를 중단하고 이전
+  catalog/artifact pin으로 복귀하며, 호출자는 기존 single-image API로 되돌린다.
+- 운영 integration이 metric을 붙일 때 event 이름은
+  `images.ocr.tiff.accepted|rejected|failed|cancelled`로 고정하고 reason code는
+  label cardinality를 제한한다. payload·파일 경로·tessdata 경로는 기록하지 않는다.
 
 ## 검증 계획
 
@@ -179,12 +294,22 @@ diagnostic cause로 연결하되 파일 경로, native path, 입력 payload를 �
 - aggregate text separator와 page/block/line/word의 page index를 확인한다.
 - confidence와 bounding box가 null인 entry가 그대로 유지되는지 확인한다.
 - maxEncodedBytes, maxPages, maxPixelsPerPage, maxTotalPixels,
-  maxDecodedSide 초과가 engine 호출 전에 거부되는지 확인한다.
+  maxDecodedSide, maxMetadataBytes 초과가 engine 호출 전에 거부되는지 확인한다.
+- maxResultTextChars와 maxResultEntries의 page별·누적 초과가 aggregate에 추가되기
+  전에 `RESULT_LIMIT_EXCEEDED`로 종료되는지 확인한다.
 - page count/dimension을 알 수 없는 입력, malformed/truncated TIFF, GIF 입력이 fail-closed
   하는지 확인한다.
+- no-reader, non-TIFF reader, unknown count, page 0/page N dimension·pixel·side limit의
+  reason과 nullable pageIndex가 각각 `READER_UNAVAILABLE`, `UNSUPPORTED_FORMAT`,
+  `PAGE_COUNT_UNKNOWN`, 해당 page index로 매핑되는지 확인한다.
+- TwelveMonkeys reader가 allowSearch를 무시하는 경우에도 bounded preflight stream이
+  metadata byte 상한을 지키고, decode phase에서 새 reader 없이 같은 stream budget을
+  재사용하는지 확인한다.
 - page 1 engine 실패 시 page 0 결과가 반환되지 않고, page 2가 호출되지 않는지 확인한다.
 - suspend 경로에서 page 사이 취소가 발생하면 CancellationException이 전파되고 이후
   page가 호출되지 않는지 확인한다.
+- reader/stream cleanup failure가 주 예외를 덮지 않고 suppressed로 보존되는지, public
+  exception cause/message에 path·payload·tessdata 경로가 노출되지 않는지 확인한다.
 - 기존 단일 이미지 engine/extension 테스트를 변경 없이 통과시킨다.
 
 ### 모듈 및 문서 검증
@@ -195,8 +320,13 @@ diagnostic cause로 연결하되 파일 경로, native path, 입력 payload를 �
 - git diff --check
 - images-ocr/README.md와 README.ko.md에 ByteArray TIFF 예제, 제한값, GIF 제외를
   동일한 구조로 반영한다.
-- native Tesseract와 Testcontainers OCR 테스트는 이번 pure-JVM orchestration의 필수
-  gate가 아니며, 기존 환경 gate를 유지하고 별도 순차 실행 여부를 결과에 기록한다.
+- pure-JVM orchestration 단위 테스트는 항상 실행한다. 저장소 CI의 `test-images-ocr`
+  job은 `-Docr.container.enabled=true`로 Testcontainers Tesseract smoke를 필수 실행하며,
+  이 issue는 그 기존 gate를 유지하고 3-page TIFF fixture를 container smoke 입력으로
+  추가한다. Ubuntu host의 native Tesseract는 Leptonica ABI 차이로 CI 필수 gate로 만들지
+  않고, release 후보에서 `-Docr.enabled=true`를 별도 순차 실행해 결과를 기록한다.
+- 운영 integration은 payload·경로를 남기지 않고 reason code, page index, 입력 byte 수,
+  preflight pixel 합계, elapsed time, reject/failure/cancel 카운터만 기록해야 한다.
 
 ## 대안과 기각 근거
 
@@ -207,12 +337,20 @@ diagnostic cause로 연결하되 파일 경로, native path, 입력 payload를 �
 | StructuredOcrEngine 시그니처에 page list 추가 | 기존 provider의 source/binary compatibility를 깨뜨리고 단일 이미지와 문서 입력 책임을 섞는다. |
 | page 병렬 OCR | native provider 동시성·메모리 배수·결정적 순서 보장이 이번 이슈의 bounded safety 목표와 충돌한다. |
 | GIF frame을 TIFF page와 같은 API로 처리 | animation frame과 문서 page의 의미·metadata·재생 순서 계약이 다르므로 후속 capability로 분리한다. |
+| `getNumImages(true)` 전체 스캔 | 전체 IFD를 탐색하는 동안 maxPages/취소 경계를 보장할 수 없으므로 `false` 조회에서 unknown을 거부한다. |
 
 ## DoD
 
 - [ ] 공개 ByteArray TIFF entry point와 제한값 계약이 구현·KDoc·양 locale README에 반영된다.
 - [ ] 3-page TIFF fixture가 순서·결정적 separator·structured page index를 증명한다.
 - [ ] 입력/페이지/픽셀 budget, unknown/malformed/truncated/GIF, fail-fast, cancellation 테스트가 통과한다.
+- [ ] 모든 page metadata preflight가 decode/engine보다 먼저 수행되고, late budget 초과도 engine 0회로 종료된다.
 - [ ] 기존 단일 이미지 API와 Tesseract provider 테스트가 회귀 없이 통과한다.
+- [ ] Testcontainers Tesseract가 실제 3-page TIFF를 받아 page별 text와 aggregate를 검증한다.
+- [ ] CI Testcontainers Tesseract smoke와 release 후보 native Tesseract 결과가 별도 기록된다.
 - [ ] 독립 6-lane spec/plan/code review에서 P0/P1이 0으로 수렴한다.
+- [ ] validation/OCR exception의 reason·retryability·serialVersionUID·KDoc과 Java
+  explicit-argument 호출 경로가 문서화된다.
+- [ ] release candidate checklist에 exact SHA, workflow run, artifact, native 결과와
+  rollback trigger가 기록된다.
 - [ ] PR #492 링크, milestone 0.5.0, assignee debop, labels parity, ## DoD Status가 확인된다.
