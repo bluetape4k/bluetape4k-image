@@ -1,12 +1,15 @@
 package io.bluetape4k.images.spring.storage.s3
 
 import io.bluetape4k.aws.spring.s3.S3Operations
+import io.bluetape4k.aws.spring.s3.S3ObjectMetadata as AwsS3ObjectMetadata
 import io.bluetape4k.aws.spring.s3.S3TransferOperations
 import io.bluetape4k.images.spring.ImageObjectKey
+import io.bluetape4k.images.spring.ImageObjectMetadata
 import io.bluetape4k.images.spring.ImageStorageException
 import io.bluetape4k.images.spring.ImageUploadResult
 import io.bluetape4k.images.spring.UploadOptions
 import io.bluetape4k.images.spring.autoconfigure.ImageStorageProperties
+import io.bluetape4k.images.spring.storage.ImageObjectMetadataReader
 import io.bluetape4k.images.spring.storage.ImageStorage
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
@@ -46,12 +49,14 @@ import kotlin.jvm.JvmOverloads
  * - [bucket]은 생성 시 [ImageStorageProperties.bucket]에서 한 번만 해석합니다. 값이 없거나 blank이면
  *   [IllegalArgumentException]을 던집니다.
  * - payload size가 [ImageStorageProperties.maxSizeBytes]를 초과하면 upload는
- *   [ImageStorageException.ValidationException]으로 거부됩니다. download는 시작 전에 object size를 확인할 수
- *   없으면 실패로 닫고, byte를 반환하거나 destination file에 쓰기 전에 downloaded byte count를 다시 검사합니다.
+ *   [ImageStorageException.ValidationException]으로 거부됩니다. download는 단일 `headObject` snapshot으로
+ *   시작 전에 object size를 확인하고, body를 반환하거나 destination file을 교체하기 전에 limit과 snapshot의
+ *   실제 byte count를 다시 검사합니다. 두 값이 다르면 object 교체 경합으로 보고 fail closed합니다.
  * - [Path] upload는 source를 bounded streaming 임시 snapshot으로 고정한 뒤 [S3TransferOperations]의 file
  *   transfer를 사용합니다. transfer bean이 없으면 source를 `ByteArray`로 적재하지 않고
  *   [ImageStorageException.TransientException]으로 fail closed합니다.
  * - [Path] download는 S3 resource input stream을 destination 임시 파일로 복사한 뒤 atomic replace합니다.
+ *   resource property를 metadata source로 사용하거나 `listPage`로 fallback하지 않습니다.
  * - [ImageStorageProperties.S3]의 SDK timeout/retry knob은 `S3Client` 생성 지점에서 적용되어야 합니다
  *   ([toClientOverrideConfig] 참고). 현재 [S3Operations] API는 per-request override hook을 노출하지 않으므로,
  *   이 class는 호출 시점에 override config를 전달하지 않습니다.
@@ -63,7 +68,7 @@ class S3ImageStorage @JvmOverloads constructor(
     private val operations: S3Operations,
     private val properties: ImageStorageProperties,
     private val transferOperations: S3TransferOperations? = null,
-) : ImageStorage {
+) : ImageStorage, ImageObjectMetadataReader {
 
     companion object : KLogging() {
         private const val STATUS_UNAUTHORIZED: Int = 401
@@ -190,10 +195,12 @@ class S3ImageStorage @JvmOverloads constructor(
     }
 
     override suspend fun download(key: ImageObjectKey): ByteArray = withContext(Dispatchers.IO) {
-        validateDownloadSize(key, verifiedObjectSize(key))
+        val metadata = headObject(key)
+        validateDownloadSize(key, metadata.sizeBytes)
         try {
             val bytes = operations.downloadBytes(bucket = bucket, key = objectKey(key))
             validateDownloadSize(key, bytes.size.toLong())
+            validateSnapshotSize(key, metadata.sizeBytes, bytes.size.toLong())
             bytes
         } catch (e: CancellationException) {
             throw e
@@ -202,8 +209,14 @@ class S3ImageStorage @JvmOverloads constructor(
         }
     }
 
+    override suspend fun readMetadata(key: ImageObjectKey): ImageObjectMetadata = withContext(Dispatchers.IO) {
+        headObject(key).toImageMetadata(key)
+    }
+
     override suspend fun download(key: ImageObjectKey, destination: Path): Unit =
         withContext(Dispatchers.IO) {
+            val metadata = headObject(key)
+            validateDownloadSize(key, metadata.sizeBytes)
             val resource = try {
                 operations.resource(bucket = bucket, key = objectKey(key))
             } catch (e: CancellationException) {
@@ -214,14 +227,14 @@ class S3ImageStorage @JvmOverloads constructor(
             val destinationParent = destination.toAbsolutePath().parent ?: Path.of(".").toAbsolutePath()
             var staged: Path? = null
             try {
-                validateDownloadSize(key, resource.contentLength())
                 Files.createDirectories(destinationParent)
                 staged = Files.createTempFile(destinationParent, ".${destination.fileName}.", ".download")
-                resource.getInputStream().use { input ->
+                val actualSize = resource.getInputStream().use { input ->
                     Files.newOutputStream(staged).use { output ->
                         copyWithLimit(input, output, key)
                     }
                 }
+                validateSnapshotSize(key, metadata.sizeBytes, actualSize)
                 Files.move(
                     staged,
                     destination.toAbsolutePath(),
@@ -294,21 +307,31 @@ class S3ImageStorage @JvmOverloads constructor(
         }
     }.flowOn(Dispatchers.IO)
 
-    /** byte-array download를 시작하기 전에 `listPage`로 object size를 검증합니다. */
-    private suspend fun verifiedObjectSize(key: ImageObjectKey): Long {
-        val fullKey = objectKey(key)
-        return try {
-            val page = operations.listPage(bucket = bucket, prefix = fullKey, maxKeys = 1)
-            page.objects.firstOrNull { it.key() == fullKey }?.size()
-                ?: throw ImageStorageException.NotFoundException(
-                    key = key,
-                    message = "Image not found during size pre-check: ${key.fullKey}",
-                )
+    private suspend fun headObject(key: ImageObjectKey): AwsS3ObjectMetadata =
+        try {
+            operations.headObject(bucket = bucket, key = objectKey(key))
         } catch (e: CancellationException) {
             throw e
         } catch (e: Throwable) {
-            log.debug(e) { "Size pre-check failed for ${key.fullKey}; failing closed" }
+            log.debug(e) { "Metadata HEAD failed for ${key.fullKey}; failing closed" }
             throw e.toImageStorageException(key)
+        }
+
+    private fun AwsS3ObjectMetadata.toImageMetadata(key: ImageObjectKey): ImageObjectMetadata =
+        ImageObjectMetadata(
+            key = key,
+            sizeBytes = sizeBytes,
+            etag = etag,
+            contentType = contentType,
+            lastModified = lastModified,
+        )
+
+    private fun validateSnapshotSize(key: ImageObjectKey, expected: Long, actual: Long) {
+        if (actual != expected) {
+            throw ImageStorageException.ValidationException(
+                key = key,
+                message = "Object size changed during download: expected $expected but received $actual",
+            )
         }
     }
 

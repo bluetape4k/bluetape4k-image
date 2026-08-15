@@ -2,17 +2,20 @@ package io.bluetape4k.images.spring.storage.s3
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.aws.spring.s3.S3ListPage
 import io.bluetape4k.aws.spring.s3.S3Operations
+import io.bluetape4k.aws.spring.s3.S3ObjectMetadata
 import io.bluetape4k.aws.spring.s3.S3Resource
 import io.bluetape4k.aws.spring.s3.S3TransferOperations
 import io.bluetape4k.images.spring.ImageObjectKey
+import io.bluetape4k.images.spring.ImageObjectMetadata
 import io.bluetape4k.images.spring.ImageStorageException
 import io.bluetape4k.images.spring.UploadOptions
 import io.bluetape4k.images.spring.autoconfigure.ImageStorageProperties
+import io.bluetape4k.images.spring.storage.ImageObjectMetadataReader
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.coVerifyOrder
 import io.mockk.confirmVerified
 import io.mockk.every
 import io.mockk.mockk
@@ -23,11 +26,11 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
-import software.amazon.awssdk.services.s3.model.S3Object
 import java.io.ByteArrayInputStream
 import java.nio.file.Files
 import java.nio.file.Path
 import software.amazon.awssdk.services.s3.model.PutObjectResponse
+import software.amazon.awssdk.services.s3.model.S3Exception
 import software.amazon.awssdk.transfer.s3.model.CompletedFileUpload
 
 class S3ImageStorageTest {
@@ -53,10 +56,10 @@ class S3ImageStorageTest {
     }
 
     @Test
-    fun `download fails closed when size precheck fails`() = runTest {
+    fun `download fails closed when HEAD precheck fails`() = runTest {
         coEvery {
-            operations.listPage(bucket = bucket, prefix = objectKey, maxKeys = 1)
-        } throws RuntimeException("list unavailable")
+            operations.headObject(bucket = bucket, key = objectKey)
+        } throws RuntimeException("HEAD unavailable")
         coEvery { operations.downloadBytes(bucket = bucket, key = objectKey) } returns ByteArray(8)
 
         val error = assertFailsWith<ImageStorageException.TransientException> {
@@ -64,16 +67,16 @@ class S3ImageStorageTest {
         }
 
         error.key shouldBeEqualTo key
-        verifySizePrecheck()
+        verifyHeadPrecheck()
         verifyDownloadNotStarted()
         confirmVerified(operations)
     }
 
     @Test
-    fun `download fails closed when size precheck cannot find exact key`() = runTest {
+    fun `download maps a missing object from HEAD without reading the body`() = runTest {
         coEvery {
-            operations.listPage(bucket = bucket, prefix = objectKey, maxKeys = 1)
-        } returns s3Page()
+            operations.headObject(bucket = bucket, key = objectKey)
+        } throws software.amazon.awssdk.services.s3.model.NoSuchKeyException.builder().build()
         coEvery { operations.downloadBytes(bucket = bucket, key = objectKey) } returns ByteArray(8)
 
         val error = assertFailsWith<ImageStorageException.NotFoundException> {
@@ -81,23 +84,40 @@ class S3ImageStorageTest {
         }
 
         error.key shouldBeEqualTo key
-        verifySizePrecheck()
+        verifyHeadPrecheck()
         verifyDownloadNotStarted()
         confirmVerified(operations)
     }
 
     @Test
-    fun `download rejects bytes that exceed maxSizeBytes after successful precheck`() = runTest {
+    fun `download maps HEAD access denial without reading the body`() = runTest {
         coEvery {
-            operations.listPage(bucket = bucket, prefix = objectKey, maxKeys = 1)
-        } returns s3Page(s3Object(objectKey, size = 4L))
+            operations.headObject(bucket = bucket, key = objectKey)
+        } throws S3Exception.builder().statusCode(403).build()
+        coEvery { operations.downloadBytes(bucket = bucket, key = objectKey) } returns ByteArray(4)
+
+        val error = assertFailsWith<ImageStorageException.AccessDeniedException> {
+            storage.download(key)
+        }
+
+        error.key shouldBeEqualTo key
+        verifyHeadPrecheck()
+        verifyDownloadNotStarted()
+        confirmVerified(operations)
+    }
+
+    @Test
+    fun `download rejects bytes that exceed maxSizeBytes after successful HEAD`() = runTest {
+        coEvery {
+            operations.headObject(bucket = bucket, key = objectKey)
+        } returns S3ObjectMetadata(sizeBytes = 4L)
         coEvery { operations.downloadBytes(bucket = bucket, key = objectKey) } returns ByteArray(8)
 
         assertFailsWith<ImageStorageException.ValidationException> {
             storage.download(key)
         }
 
-        verifySizePrecheck()
+        verifyHeadPrecheck()
         verifyDownloadedOnce()
         confirmVerified(operations)
     }
@@ -106,31 +126,160 @@ class S3ImageStorageTest {
     fun `download to destination rejects oversized bytes before writing`(@TempDir tempDir: Path) = runTest {
         val destination = tempDir.resolve("oversized.jpg")
         val resource = mockk<S3Resource>()
+        coEvery {
+            operations.headObject(bucket = bucket, key = objectKey)
+        } returns S3ObjectMetadata(sizeBytes = 8L)
         every { operations.resource(bucket, objectKey) } returns resource
-        every { resource.contentLength() } returns 8L
 
         assertFailsWith<ImageStorageException.ValidationException> {
             storage.download(key, destination)
         }
 
         Files.exists(destination) shouldBeEqualTo false
-        verify(exactly = 1) { operations.resource(bucket, objectKey) }
-        verify(exactly = 1) { resource.contentLength() }
+        coVerify(exactly = 1) { operations.headObject(bucket = bucket, key = objectKey) }
+        verify(exactly = 0) { operations.resource(any(), any()) }
         confirmVerified(operations, resource)
     }
 
     @Test
-    fun `download propagates cancellation from size precheck`() = runTest {
+    fun `download propagates cancellation from HEAD precheck`() = runTest {
         coEvery {
-            operations.listPage(bucket = bucket, prefix = objectKey, maxKeys = 1)
+            operations.headObject(bucket = bucket, key = objectKey)
         } throws CancellationException("cancelled")
 
         assertFailsWith<CancellationException> {
             storage.download(key)
         }
 
-        verifySizePrecheck()
+        verifyHeadPrecheck()
         verifyDownloadNotStarted()
+        confirmVerified(operations)
+    }
+
+    @Test
+    fun `reads metadata with one HEAD and no body read`() = runTest {
+        val lastModified = java.time.Instant.parse("2026-08-15T00:00:01.123Z")
+        coEvery {
+            operations.headObject(bucket = bucket, key = objectKey)
+        } returns S3ObjectMetadata(
+            sizeBytes = 4,
+            etag = "\"opaque\"",
+            contentType = "image/jpeg",
+            lastModified = lastModified,
+        )
+
+        val metadata = (storage as ImageObjectMetadataReader).readMetadata(key)
+
+        metadata shouldBeEqualTo ImageObjectMetadata(
+            key = key,
+            sizeBytes = 4,
+            etag = "\"opaque\"",
+            contentType = "image/jpeg",
+            lastModified = lastModified,
+        )
+        coVerify(exactly = 1) { operations.headObject(bucket = bucket, key = objectKey) }
+        coVerify(exactly = 0) { operations.downloadBytes(any(), any()) }
+        verify(exactly = 0) { operations.resource(any(), any()) }
+        coVerify(exactly = 0) { operations.listPage(any(), any(), any(), any()) }
+        confirmVerified(operations)
+    }
+
+    @Test
+    fun `byte download uses HEAD then body and checks snapshot size`() = runTest {
+        coEvery {
+            operations.headObject(bucket = bucket, key = objectKey)
+        } returns S3ObjectMetadata(sizeBytes = 4)
+        coEvery {
+            operations.downloadBytes(bucket = bucket, key = objectKey)
+        } returns ByteArray(4) { it.toByte() }
+
+        storage.download(key).size shouldBeEqualTo 4
+
+        coVerifyOrder {
+            operations.headObject(bucket = bucket, key = objectKey)
+            operations.downloadBytes(bucket = bucket, key = objectKey)
+        }
+        coVerify(exactly = 1) { operations.headObject(bucket = bucket, key = objectKey) }
+        coVerify(exactly = 1) { operations.downloadBytes(bucket = bucket, key = objectKey) }
+        confirmVerified(operations)
+    }
+
+    @Test
+    fun `byte download rejects a smaller body than the HEAD snapshot`() = runTest {
+        coEvery {
+            operations.headObject(bucket = bucket, key = objectKey)
+        } returns S3ObjectMetadata(sizeBytes = 4)
+        coEvery {
+            operations.downloadBytes(bucket = bucket, key = objectKey)
+        } returns ByteArray(3)
+
+        assertFailsWith<ImageStorageException.ValidationException> {
+            storage.download(key)
+        }
+
+        coVerify(exactly = 1) { operations.headObject(bucket = bucket, key = objectKey) }
+        coVerify(exactly = 1) { operations.downloadBytes(bucket = bucket, key = objectKey) }
+        confirmVerified(operations)
+    }
+
+    @Test
+    fun `byte download rejects a larger body than the HEAD snapshot`() = runTest {
+        coEvery {
+            operations.headObject(bucket = bucket, key = objectKey)
+        } returns S3ObjectMetadata(sizeBytes = 4)
+        coEvery {
+            operations.downloadBytes(bucket = bucket, key = objectKey)
+        } returns ByteArray(5)
+
+        assertFailsWith<ImageStorageException.ValidationException> {
+            storage.download(key)
+        }
+
+        coVerify(exactly = 1) { operations.headObject(bucket = bucket, key = objectKey) }
+        coVerify(exactly = 1) { operations.downloadBytes(bucket = bucket, key = objectKey) }
+        confirmVerified(operations)
+    }
+
+    @Test
+    fun `path download preserves destination and cleans staged file on snapshot mismatch`(@TempDir tempDir: Path) = runTest {
+        val destination = tempDir.resolve("photo.jpg")
+        val original = "existing".toByteArray()
+        Files.write(destination, original)
+        val resource = mockk<S3Resource>()
+        coEvery {
+            operations.headObject(bucket = bucket, key = objectKey)
+        } returns S3ObjectMetadata(sizeBytes = 4)
+        every { operations.resource(bucket, objectKey) } returns resource
+        every { resource.getInputStream() } returns ByteArrayInputStream(ByteArray(3))
+
+        assertFailsWith<ImageStorageException.ValidationException> {
+            storage.download(key, destination)
+        }
+
+        Files.readAllBytes(destination).contentEquals(original).shouldBeEqualTo(true)
+        Files.list(tempDir).use { paths ->
+            paths.noneMatch { it.fileName.toString().contains(".download") }.shouldBeEqualTo(true)
+        }
+        coVerify(exactly = 1) { operations.headObject(bucket = bucket, key = objectKey) }
+        verify(exactly = 1) { operations.resource(bucket, objectKey) }
+        verify(exactly = 1) { resource.getInputStream() }
+        verify(exactly = 0) { resource.contentLength() }
+        confirmVerified(operations, resource)
+    }
+
+    @Test
+    fun `cancellation from HEAD is propagated before body read`() = runTest {
+        coEvery {
+            operations.headObject(bucket = bucket, key = objectKey)
+        } throws CancellationException("cancelled")
+
+        assertFailsWith<CancellationException> {
+            storage.download(key)
+        }
+
+        coVerify(exactly = 1) { operations.headObject(bucket = bucket, key = objectKey) }
+        coVerify(exactly = 0) { operations.downloadBytes(any(), any()) }
+        verify(exactly = 0) { operations.resource(any(), any()) }
         confirmVerified(operations)
     }
 
@@ -196,15 +345,17 @@ class S3ImageStorageTest {
     fun `path download streams through resource instead of byte array`() = runTest {
         val destination = Files.createTempFile("s3-image-storage-destination", ".jpg")
         val resource = mockk<S3Resource>()
+        coEvery {
+            operations.headObject(bucket = bucket, key = objectKey)
+        } returns S3ObjectMetadata(sizeBytes = 4L)
         every { operations.resource(bucket, objectKey) } returns resource
-        every { resource.contentLength() } returns 4L
         every { resource.getInputStream() } returns ByteArrayInputStream(ByteArray(4) { it.toByte() })
 
         storage.download(key, destination)
 
         Files.size(destination) shouldBeEqualTo 4L
+        coVerify(exactly = 1) { operations.headObject(bucket = bucket, key = objectKey) }
         verify(exactly = 1) { operations.resource(bucket, objectKey) }
-        verify(exactly = 1) { resource.contentLength() }
         verify(exactly = 1) { resource.getInputStream() }
         coVerify(exactly = 0) {
             operations.downloadBytes(bucket = bucket, key = objectKey)
@@ -223,7 +374,9 @@ class S3ImageStorageTest {
                 throw CancellationException("cancelled")
         }
         every { operations.resource(bucket, objectKey) } returns resource
-        every { resource.contentLength() } returns 4L
+        coEvery {
+            operations.headObject(bucket = bucket, key = objectKey)
+        } returns S3ObjectMetadata(sizeBytes = 4L)
         every { resource.getInputStream() } returns cancelledInput
 
         assertFailsWith<CancellationException> {
@@ -231,15 +384,15 @@ class S3ImageStorageTest {
         }
 
         Files.readAllBytes(destination).contentEquals(original).shouldBeEqualTo(true)
+        coVerify(exactly = 1) { operations.headObject(bucket = bucket, key = objectKey) }
         verify(exactly = 1) { operations.resource(bucket, objectKey) }
-        verify(exactly = 1) { resource.contentLength() }
         verify(exactly = 1) { resource.getInputStream() }
         confirmVerified(operations, resource)
     }
 
-    private fun verifySizePrecheck() {
+    private fun verifyHeadPrecheck() {
         coVerify(exactly = 1) {
-            operations.listPage(bucket = bucket, prefix = objectKey, maxKeys = 1)
+            operations.headObject(bucket = bucket, key = objectKey)
         }
     }
 
@@ -255,17 +408,4 @@ class S3ImageStorageTest {
         }
     }
 
-    private fun s3Page(vararg objects: S3Object): S3ListPage =
-        S3ListPage(
-            objects = objects.toList(),
-            isTruncated = false,
-            nextContinuationToken = null,
-            keyCount = objects.size,
-        )
-
-    private fun s3Object(key: String, size: Long): S3Object =
-        S3Object.builder()
-            .key(key)
-            .size(size)
-            .build()
 }

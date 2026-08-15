@@ -29,7 +29,7 @@ import java.nio.file.Path
  * - `images.storage.download.duration` — 성공/실패 download의 Timer입니다.
  * - `images.storage.download.errors`  — download failure마다 증가하는 Counter입니다.
  */
-class MetricImageStorage(
+open class MetricImageStorage(
     private val delegate: ImageStorage,
     private val registry: MeterRegistry,
 ) : ImageStorage by delegate {
