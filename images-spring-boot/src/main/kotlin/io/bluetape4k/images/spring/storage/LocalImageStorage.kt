@@ -9,6 +9,8 @@ import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.warn
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
@@ -387,23 +389,24 @@ class LocalImageStorage(
     }
 
     override fun list(prefix: ImageObjectKey): Flow<ImageObjectKey> = flow {
+        currentCoroutineContext().ensureActive()
         val prefixPath = try {
             resolveKey(prefix)
         } catch (e: ImageStorageException.ValidationException) {
             throw e
         }
+        currentCoroutineContext().ensureActive()
         val prefixAttributes = readSecureAttributes(prefix, prefixPath)
         if (prefixAttributes == null || !prefixAttributes.isDirectory) {
             return@flow
         }
         try {
-            val listedKeys = mutableListOf<ImageObjectKey>()
             withSecureStorageDirectory(prefixPath) { directory ->
                 collectSecureFiles(directory, relativeRootSegments(prefixPath)) { key ->
-                    listedKeys += key
+                    currentCoroutineContext().ensureActive()
+                    emit(key)
                 }
             }
-            listedKeys.forEach { emit(it) }
         } catch (e: CancellationException) {
             throw e
         } catch (e: NioAccessDeniedException) {
@@ -422,7 +425,7 @@ class LocalImageStorage(
         }
     }
 
-    private fun atomicWrite(
+    private suspend fun atomicWrite(
         key: ImageObjectKey,
         target: Path,
         suffix: String = "upload",
@@ -476,7 +479,7 @@ class LocalImageStorage(
      * storage root 밖에 directory를 만들 수 있습니다. 이 경계에서는 생성 대신 descriptor-
      * relative 조회로 parent가 이미 root 안에 존재하는지 확인하고, 없으면 fail closed합니다.
      */
-    private fun requireProvisionedParent(key: ImageObjectKey, parent: Path) {
+    private suspend fun requireProvisionedParent(key: ImageObjectKey, parent: Path) {
         try {
             withRootDirectory { rootDirectory ->
                 if (parent == realRoot) return@withRootDirectory
@@ -549,7 +552,7 @@ class LocalImageStorage(
         return output.toByteArray()
     }
 
-    private fun <T> withSecureStorageFile(
+    private suspend fun <T> withSecureStorageFile(
         path: Path,
         options: Set<OpenOption>,
         block: (SeekableByteChannel) -> T,
@@ -557,7 +560,7 @@ class LocalImageStorage(
         directory.newByteChannel(fileName, options + LinkOption.NOFOLLOW_LINKS).use(block)
     }
 
-    private fun <T> withSecureStorageFile(
+    private suspend fun <T> withSecureStorageFile(
         rootDirectory: SecureDirectoryStream<Path>,
         path: Path,
         options: Set<OpenOption>,
@@ -573,23 +576,30 @@ class LocalImageStorage(
         }
     }
 
-    private fun <T> withSecureStorageDirectory(
+    private suspend fun <T> withSecureStorageDirectory(
         path: Path,
-        block: (SecureDirectoryStream<Path>) -> T,
+        block: suspend (SecureDirectoryStream<Path>) -> T,
     ): T = withSecureDirectory(path) { directory, fileName ->
         directory.newDirectoryStream(fileName, LinkOption.NOFOLLOW_LINKS).use { childDirectory ->
             block(childDirectory.asSecureDirectory())
         }
     }
 
-    private fun collectSecureFiles(
+    private suspend fun collectSecureFiles(
         directory: SecureDirectoryStream<Path>,
         relativePrefix: List<Path>,
-        emit: (ImageObjectKey) -> Unit,
+        emit: suspend (ImageObjectKey) -> Unit,
     ) {
+        currentCoroutineContext().ensureActive()
         val iterator = directory.iterator()
-        while (iterator.hasNext()) {
+        while (true) {
+            currentCoroutineContext().ensureActive()
+            if (!iterator.hasNext()) {
+                break
+            }
+            currentCoroutineContext().ensureActive()
             val entry = iterator.next()
+            currentCoroutineContext().ensureActive()
             val attributes = directory.getFileAttributeView(
                 entry,
                 BasicFileAttributeView::class.java,
@@ -599,11 +609,13 @@ class LocalImageStorage(
             when {
                 attributes.isDirectory ->
                     directory.newDirectoryStream(entry, LinkOption.NOFOLLOW_LINKS).use { childDirectory ->
+                        currentCoroutineContext().ensureActive()
                         collectSecureFiles(childDirectory.asSecureDirectory(), relative, emit)
                     }
                 attributes.isRegularFile -> {
                     val parts = relative.map(Path::toString)
                     if (parts.size >= 2 && parts[0].isNotBlank() && parts[1].isNotBlank()) {
+                        currentCoroutineContext().ensureActive()
                         emit(ImageObjectKey.of(parts[0], parts.drop(1).joinToString("/")))
                     }
                 }
@@ -611,16 +623,16 @@ class LocalImageStorage(
         }
     }
 
-    private fun <T> withSecureDirectory(
+    private suspend fun <T> withSecureDirectory(
         target: Path,
-        block: (SecureDirectoryStream<Path>, Path) -> T,
+        block: suspend (SecureDirectoryStream<Path>, Path) -> T,
     ): T = withSecureDirectoryContext(target) { _, directory, fileName ->
         block(directory, fileName)
     }
 
-    private fun <T> withSecureDirectoryContext(
+    private suspend fun <T> withSecureDirectoryContext(
         target: Path,
-        block: (SecureDirectoryStream<Path>?, SecureDirectoryStream<Path>, Path) -> T,
+        block: suspend (SecureDirectoryStream<Path>?, SecureDirectoryStream<Path>, Path) -> T,
     ): T {
         val parent = target.parent ?: throw IOException("Target has no parent: $target")
         return if (target.startsWith(realRoot)) {
@@ -646,7 +658,7 @@ class LocalImageStorage(
      * 모든 연산이 최신 디렉터리 상태를 관찰합니다. 열린 descriptor의 file key가 생성 시 root와
      * 다르면 fail closed하여 root 교체·심볼릭 링크 우회를 허용하지 않습니다.
      */
-    private fun <T> withRootDirectory(block: (SecureDirectoryStream<Path>) -> T): T {
+    private suspend fun <T> withRootDirectory(block: suspend (SecureDirectoryStream<Path>) -> T): T {
         val opened = Files.newDirectoryStream(realRoot).asSecureDirectory()
         try {
             val attributes = opened.getFileAttributeView(
@@ -702,11 +714,11 @@ class LocalImageStorage(
         }
     }
 
-    private fun <T> withSecureDirectory(
+    private suspend fun <T> withSecureDirectory(
         current: SecureDirectoryStream<Path>,
         segments: List<Path>,
         fileName: Path,
-        block: (SecureDirectoryStream<Path>, Path) -> T,
+        block: suspend (SecureDirectoryStream<Path>, Path) -> T,
     ): T {
         if (segments.isEmpty()) {
             return block(current, fileName)
@@ -765,7 +777,7 @@ class LocalImageStorage(
         }
     }
 
-    private fun readObjectAttributes(key: ImageObjectKey, path: Path): BasicFileAttributes? {
+    private suspend fun readObjectAttributes(key: ImageObjectKey, path: Path): BasicFileAttributes? {
         val attributes = readSecureAttributes(key, path) ?: return null
         if (attributes.isSymbolicLink) {
             throw ImageStorageException.ValidationException(
@@ -782,7 +794,7 @@ class LocalImageStorage(
         return attributes
     }
 
-    private fun readSecureAttributes(key: ImageObjectKey, path: Path): BasicFileAttributes? =
+    private suspend fun readSecureAttributes(key: ImageObjectKey, path: Path): BasicFileAttributes? =
         try {
             withSecureDirectory(path) { directory, fileName ->
                 directory.getFileAttributeView(
