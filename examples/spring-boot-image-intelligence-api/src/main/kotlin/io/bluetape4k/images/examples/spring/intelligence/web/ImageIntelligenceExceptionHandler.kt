@@ -1,6 +1,7 @@
 package io.bluetape4k.images.examples.spring.intelligence.web
 
 import io.bluetape4k.images.examples.spring.intelligence.service.ImagePayloadTooLargeException
+import io.bluetape4k.images.examples.spring.intelligence.service.ImageProbeFailureException
 import io.bluetape4k.images.examples.spring.intelligence.service.ImageWorkflowException
 import io.bluetape4k.images.examples.spring.intelligence.service.InvalidImageUploadException
 import org.springframework.http.HttpStatus
@@ -17,12 +18,16 @@ internal class ImageIntelligenceExceptionHandler {
     @ExceptionHandler(InvalidImageUploadException::class)
     fun invalidUpload(exception: InvalidImageUploadException): ProblemDetail =
         problem(
-            status = if (exception is ImagePayloadTooLargeException) {
-                HttpStatus.CONTENT_TOO_LARGE
-            } else {
-                HttpStatus.BAD_REQUEST
+            status = when (exception) {
+                is ImagePayloadTooLargeException -> HttpStatus.CONTENT_TOO_LARGE
+                is ImageProbeFailureException -> HttpStatus.INTERNAL_SERVER_ERROR
+                else -> HttpStatus.BAD_REQUEST
             },
-            title = "Image upload rejected",
+            title = if (exception is ImageProbeFailureException) {
+                "Image inspection failed"
+            } else {
+                "Image upload rejected"
+            },
             detail = exception.safeDetail(),
             reasonCode = exception.reasonCode,
         )
@@ -64,6 +69,7 @@ internal class ImageIntelligenceExceptionHandler {
             "unsupported_image_format" -> "The uploaded image format is not supported."
             "media_type_mismatch" -> "The uploaded content type does not match the image data."
             "image_not_decodable" -> "The uploaded file is not a decodable image."
+            "image_probe_failed" -> "The uploaded image could not be inspected."
             "image_read_failed" -> "The uploaded file could not be read."
             "payload_too_large" -> "The uploaded file exceeds a configured image limit."
             else -> "The uploaded image was rejected."

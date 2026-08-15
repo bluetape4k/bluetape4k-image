@@ -1,5 +1,6 @@
 package io.bluetape4k.images.analysis
 
+import com.drew.imaging.ImageProcessingException
 import com.drew.metadata.Metadata
 import com.drew.metadata.exif.ExifIFD0Directory
 import com.drew.metadata.exif.ExifImageDirectory
@@ -44,6 +45,14 @@ class ImageMetadataReportTest {
 
         val failure = result.shouldBeInstanceOf<ImageMetadataReadResult.Failure>()
         failure.kind shouldBeEqualTo ImageMetadataReadFailureKind.PARSE
+    }
+
+    @Test
+    fun `detailed metadata report preserves malformed parser cause`() {
+        val result = readImageMetadataReportDetailed(ByteArray(64) { 0x7F.toByte() })
+
+        val malformed = result.shouldBeInstanceOf<ImageMetadataReadOutcome.Malformed>()
+        malformed.cause.shouldBeInstanceOf<ImageProcessingException>()
     }
 
     @Test

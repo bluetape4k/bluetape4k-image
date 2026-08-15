@@ -1,12 +1,16 @@
 package io.bluetape4k.images.examples.spring.intelligence.service
 
 import com.sksamuel.scrimage.ImmutableImage
+import io.bluetape4k.images.ImageDimensionProbeResult
 import io.bluetape4k.images.ImageDimensions
+import io.bluetape4k.images.analysis.ImageMetadataReadOutcome
 import io.bluetape4k.images.analysis.ImageMetadataReadOptions
-import io.bluetape4k.images.analysis.readImageMetadataReport
+import io.bluetape4k.images.analysis.readImageMetadataReportDetailed
 import io.bluetape4k.images.examples.spring.intelligence.config.ImageIntelligenceProperties
 import io.bluetape4k.images.immutableImageOf
-import io.bluetape4k.images.probeImageDimensions
+import io.bluetape4k.images.probeImageDimensionsDetailed
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.warn
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -38,16 +42,55 @@ internal class ImagePayloadTooLargeException(
     message: String,
 ) : InvalidImageUploadException(reasonCode, message)
 
+/**
+ * 신뢰하는 image probe adapter가 입력 형식 오류로 분류한 실패입니다.
+ *
+ * [runProbe]는 이 명시적인 분류만 undecodable fallback으로 바꾸며, 임의의
+ * `IIOException`/`IllegalArgumentException`은 내부 실패로 보존합니다.
+ */
+internal class MalformedImageProbeException(
+    cause: Throwable? = null,
+) : RuntimeException("The image probe rejected the encoded input.", cause)
+
+private fun probeImageDimensionsForUpload(bytes: ByteArray): ImageDimensions? =
+    when (val result = probeImageDimensionsDetailed(bytes)) {
+        is ImageDimensionProbeResult.Success -> result.dimensions
+        ImageDimensionProbeResult.Unavailable -> null
+        is ImageDimensionProbeResult.Malformed -> throw MalformedImageProbeException(result.cause)
+        is ImageDimensionProbeResult.Failure -> throw result.cause
+    }
+
+/**
+ * 이미지 헤더 probe 중 입력 오류가 아닌 내부 실패를 나타냅니다.
+ *
+ * 원인은 운영 로그와 예외 cause에만 보존하고, HTTP 응답에는 고정된 reason code와
+ * 정제된 detail만 노출합니다.
+ */
+internal class ImageProbeFailureException(
+    cause: Throwable,
+) : InvalidImageUploadException(
+    reasonCode = "image_probe_failed",
+    message = "The uploaded image could not be inspected.",
+    cause = cause,
+)
+
 internal class ImageUploadQualifier(
     private val properties: ImageIntelligenceProperties,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
     private val cpuDispatcher: CoroutineDispatcher = Dispatchers.Default,
-    private val dimensionProbe: (ByteArray) -> ImageDimensions? = ::probeImageDimensions,
+    private val dimensionProbe: (ByteArray) -> ImageDimensions? = ::probeImageDimensionsForUpload,
+    // 상세 metadata 결과로 parser 실패와 내부 실패를 구분합니다.
     private val metadataDimensionProbe: (ByteArray, Int) -> ImageDimensions? = { bytes, maxBytes ->
-        readImageMetadataReport(
-            bytes,
-            ImageMetadataReadOptions(maxBytes = maxBytes),
-        ).dimensions
+        when (
+            val result = readImageMetadataReportDetailed(
+                bytes,
+                ImageMetadataReadOptions(maxBytes = maxBytes),
+            )
+        ) {
+            is ImageMetadataReadOutcome.Success -> result.report.dimensions
+            is ImageMetadataReadOutcome.Malformed -> throw MalformedImageProbeException(result.cause)
+            is ImageMetadataReadOutcome.Failure -> throw result.cause
+        }
     },
     private val imageDecoder: (ByteArray) -> ImmutableImage = ::immutableImageOf,
 ) {
@@ -98,17 +141,14 @@ internal class ImageUploadQualifier(
                 )
             }
 
-            val dimensions = try {
-                dimensionProbe(bytes)
-                    ?: metadataDimensionProbe(bytes, properties.maxInputBytes.toInt())
-            } catch (exception: CancellationException) {
-                throw exception
-            } catch (exception: Exception) {
-                null
-            } ?: throw invalidUpload(
-                reasonCode = "image_not_decodable",
-                message = "The uploaded file is not a decodable image.",
-            )
+            val dimensions = runProbe("dimension", dimensionProbe, bytes)
+                ?: runProbe("metadata", { input ->
+                    metadataDimensionProbe(input, properties.maxInputBytes.toInt())
+                }, bytes)
+                ?: throw invalidUpload(
+                    reasonCode = "image_not_decodable",
+                    message = "The uploaded file is not a decodable image.",
+                )
             requireDecodedSize(dimensions)
 
             val image = try {
@@ -162,6 +202,24 @@ internal class ImageUploadQualifier(
     ): InvalidImageUploadException =
         InvalidImageUploadException(reasonCode, message, cause)
 
+    private fun runProbe(
+        stage: String,
+        probe: (ByteArray) -> ImageDimensions?,
+        bytes: ByteArray,
+    ): ImageDimensions? =
+        try {
+            probe(bytes)
+        } catch (exception: CancellationException) {
+            throw exception
+        } catch (_: MalformedImageProbeException) {
+            null
+        } catch (exception: Exception) {
+            log.warn(exception) {
+                "Image upload probe failed. stage=$stage reason=image_probe_failed"
+            }
+            throw ImageProbeFailureException(exception)
+        }
+
     private fun detectMediaType(bytes: ByteArray): String? =
         when {
             bytes.hasPrefix(PNG_SIGNATURE) -> MediaType.IMAGE_PNG_VALUE
@@ -179,7 +237,7 @@ internal class ImageUploadQualifier(
             copyOfRange(0, 4).contentEquals(RIFF_SIGNATURE) &&
             copyOfRange(8, 12).contentEquals(WEBP_SIGNATURE)
 
-    private companion object {
+    private companion object : KLogging() {
         private val PNG_SIGNATURE: IntArray = intArrayOf(
             0x89,
             0x50,
