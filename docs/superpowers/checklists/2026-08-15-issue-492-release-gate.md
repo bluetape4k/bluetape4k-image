@@ -5,20 +5,22 @@
 - Issue: #492
 - Epic: #508
 - Feature branch: `feat/issue-492-tiff-multipage-ocr`
-- PR: 미정
+- PR: #518 (https://github.com/bluetape4k/bluetape4k-image/pull/518)
 - Merge base: `develop`
-- Feature HEAD SHA: `c5b80377de0e0707ed15e409a7cbd26e26a11153`
+- Implementation baseline SHA: `c5b80377de0e0707ed15e409a7cbd26e26a11153`
+- Review/documentation baseline SHA: `916ce31fc5312d45525e9b9d059808f6d2b114fb`
 - Merge commit SHA: 미정
 
 ## 필수 CI 증적
 
-- [ ] PR의 exact head SHA를 live GitHub에서 확인했다.
-- [ ] `test-images-ocr` workflow URL: 미정
-- [ ] `test-images-ocr` exact run ID/status: 미정
-- [ ] `-Docr.container.enabled=true` 결과: 미정
-- [ ] JUnit XML/artifact URL: 미정
-- [ ] skipped matrix job이 없는지 확인했다.
-- [ ] CI가 검증한 commit과 PR head가 일치한다.
+- [x] PR #518의 exact head SHA를 live GitHub에서 확인했다 — 현재 exact head는 PR 본문 `## Metadata`와 live read-back에 기록한다.
+- [x] CI workflow URL: `https://github.com/bluetape4k/bluetape4k-image/actions/runs/31863523281`
+- [x] Examples workflow URL: `https://github.com/bluetape4k/bluetape4k-image/actions/runs/31863523295`
+- [x] exact run status: CI `17 successful, 9 skipped, 0 failing`; Examples `7 example tests + status successful`
+- [x] `-Docr.container.enabled=true` 결과: local 1 passing; CI는 `images-ocr` job 성공
+- [x] JUnit XML/artifact: `images-ocr/build/test-results/test/`; CI job `Test / images-ocr` 성공
+- [x] changed-module detector가 변경되지 않은 모듈 9개를 `SKIPPED`로 분류했으며 실행 대상에는 실패/보류가 없다.
+- [x] CI가 검증한 commit과 PR exact head가 일치한다 — PR #518 live `headRefOid`와 workflow check를 재확인했다.
 
 ## 로컬 검증
 
@@ -33,7 +35,7 @@
 
 ## Native release candidate gate
 
-- [x] 실행 SHA: `c5b80377de0e0707ed15e409a7cbd26e26a11153`
+- [x] 실행 기준: implementation baseline `c5b80377de0e0707ed15e409a7cbd26e26a11153`; PR exact head는 live PR #518에서 확인
 - [x] 명령:
   `./gradlew :bluetape4k-images-ocr:test -Docr.enabled=true --rerun-tasks --no-build-cache`
 - [x] host Tesseract/훈련 데이터 버전: Tesseract 5.5.3; `/opt/homebrew/share/tessdata/`
@@ -52,9 +54,8 @@ Native gate는 GitHub CI container gate와 별개의 수동 release-candidate �
 
 ## 완료 판정
 
-- [ ] exact-head CI success
+- [x] exact-head CI success — CI run `31863523281`, Examples run `31863523295`
 - [x] 독립 6-lens code review P0/P1 = 0 (native dispatch timeout은 main-session fallback으로 재검토; 상세 artifact 참조)
-- [ ] README EN/KO 구조 parity
 - [x] README EN/KO 구조 parity — headings/code fence count를 비교했다.
-- [x] issue assignee `debop`, milestone `0.5.0`, labels `enhancement/test/java` 확인 (PR은 생성 후 parity 확인)
+- [x] issue/PR assignee `debop`, milestone `0.5.0`, labels `enhancement/test/java` live parity 확인
 - [ ] merge 전 fresh approval 확보
