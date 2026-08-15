@@ -27,7 +27,7 @@
 **Files:**
 - Create: `images-ocr/src/test/kotlin/io/bluetape4k/images/ocr/TiffMultiPageOcrTest.kt`
 
-- [ ] **Step 1: Write a 3-page TIFF fixture and fake engine tests before implementation.**
+- [x] **Step 1: Write a 3-page TIFF fixture and fake engine tests before implementation.**
 
 Use the existing `SuspendTiffMultiPageWriter` and `ImmutableImage.fromAwt` helpers. The fake engine must record the input page dimensions and return distinct `OcrStructuredResult` values with page index `0`, nullable metadata, and the same `options` instance:
 
@@ -58,7 +58,7 @@ private class RecordingStructuredEngine : StructuredOcrEngine {
 
 Create three `textImage("PAGE N")` images, write them to a `ByteArrayOutputStream` with `SuspendTiffMultiPageWriter().suspendWrite`, and run the blocking API from `runBlocking` in the test.
 
-- [ ] **Step 2: Add explicit red tests and run only the new test class.**
+- [x] **Step 2: Add explicit red tests and run only the new test class.**
 
 Required test names and assertions:
 
@@ -81,7 +81,7 @@ Run:
 
 Expected: FAIL because `TiffMultiPageOcr` and its public types do not yet exist.
 
-- [ ] **Step 3: Add red tests for bounded metadata, cumulative result budget, cleanup, and redaction.**
+- [x] **Step 3: Add red tests for bounded metadata, cumulative result budget, cleanup, and redaction.**
 
 Use the internal factory constructor planned in Task 2 with a fake `ImageReader` and a delegating `ImageInputStream` whose `close()`/reader `dispose()` can throw. Add these exact assertions:
 
@@ -95,7 +95,7 @@ Use the internal factory constructor planned in Task 2 with a fake `ImageReader`
 
 Run the same targeted command and keep the output as the red evidence checkpoint.
 
-- [ ] **Step 4: Commit the red tests.**
+- [x] **Step 4: Commit the red tests.**
 
 ```bash
 git add images-ocr/src/test/kotlin/io/bluetape4k/images/ocr/TiffMultiPageOcrTest.kt
@@ -107,27 +107,27 @@ git commit -m "다중 페이지 TIFF OCR 계약의 실패 테스트를 고정한
 **Files:**
 - Create: `images-ocr/src/main/kotlin/io/bluetape4k/images/ocr/TiffMultiPageOcr.kt`
 
-- [ ] **Step 1: Add limits, reason enum, and serializable-safe exceptions.**
+- [x] **Step 1: Add limits, reason enum, and serializable-safe exceptions.**
 
 Implement the exact public types from the spec. Every limit is strictly positive; `maxMetadataBytes`, `maxResultTextChars`, and `maxResultEntries` are validated alongside the existing encoded/page/pixel/side limits. `TiffMultiPageOcrValidationException(reason, pageIndex, message)` extends `IllegalArgumentException` and `TiffMultiPageOcrException(reason, pageIndex, message)` extends `OcrException`; both declare an explicit `serialVersionUID`, Korean KDoc, and never attach raw provider causes. Add `@JvmOverloads` to the public class/limits constructor where it creates a useful Java overload; the Java fixture in Task 4 must compile against the explicit three-argument blocking method.
 
-- [ ] **Step 2: Implement `MetadataBudgetInputStream` and internal factories.**
+- [x] **Step 2: Implement `MetadataBudgetInputStream` and internal factories.**
 
-`MetadataBudgetInputStream` wraps a `ByteArrayInputStream`, counts bytes in metadata phase, throws an internal `MetadataLimitExceededException` once `maxMetadataBytes` would be exceeded, and exposes `allowPayloadReads()` to switch the same stream to full encoded-byte reads. Add internal `TiffImageInput`/`TiffImageInputFactory` and `TiffImageReaderFactory` seams so tests can inject tracking streams/readers without publishing new ABI. The default input factory calls `ImageIO.createImageInputStream`; null maps to `READER_UNAVAILABLE`. The default reader factory registers classpath SPIs, collects ImageIO readers, and the session distinguishes no reader (`READER_UNAVAILABLE`) from a non-TIFF reader (`UNSUPPORTED_FORMAT`). Dispose unselected candidates immediately.
+`MetadataBudgetInputStream` wraps a `ByteArrayInputStream`, counts bytes in metadata phase, throws an internal `MetadataLimitExceededException` once `maxMetadataBytes` would be exceeded, and exposes `allowPayloadReads()` to switch the same stream to full encoded-byte reads. Add internal `TiffImageInput`/`TiffImageInputFactory` and `TiffImageReaderFactory` seams behind an internal companion factory so tests can inject tracking streams/readers without publishing a public constructor. The default input factory calls `ImageIO.createImageInputStream`; null maps to `READER_UNAVAILABLE`. The default reader factory registers classpath SPIs, prefers the TwelveMonkeys TIFF reader when more than one TIFF provider is installed, and the session distinguishes no reader (`READER_UNAVAILABLE`) from a non-TIFF reader (`UNSUPPORTED_FORMAT`). Dispose unselected candidates immediately.
 
-- [ ] **Step 3: Implement metadata preflight on one reader/session.**
+- [x] **Step 3: Implement metadata preflight on one reader/session.**
 
-Open one input/reader, call `getNumImages(false)`, reject unknown/zero/page overflow with the exact validation reason, then read every `getWidth(index)`/`getHeight(index)` before the first `read` or engine call. Require positive dimensions, use `Math.multiplyExact`, check side/page/total limits with subtraction (`next > max - total`), and store immutable `PageMetadata(index, width, height, pixels)`. Catch `MetadataLimitExceededException` as `METADATA_LIMIT_EXCEEDED`; preserve nullable page index (`null` for document-level, `index` for page-level) in every validation error.
+Open one input/reader, call `getNumImages(false)`, reject unknown/zero/page overflow with the exact validation reason, then read every `getWidth(index)`/`getHeight(index)` before the first `read` or engine call. Require positive dimensions, use `Math.multiplyExact`, check side/page/total limits with subtraction (`next > max - total`), and store immutable `PageMetadata(index, width, height, pixels)`. Treat metadata budgets below the 8-byte TIFF header as `METADATA_LIMIT_EXCEEDED`, catch `MetadataLimitExceededException` as the same reason, and preserve nullable page index (`null` for document-level, `index` for page-level) in every validation error.
 
-- [ ] **Step 4: Implement blocking decode/OCR and deterministic result normalization.**
+- [x] **Step 4: Implement blocking decode/OCR and deterministic result normalization.**
 
-After preflight, call `allowPayloadReads()` on the same input and decode exactly one page at a time. Post-check decoded dimensions, call `engine.recognizeStructured(image, options)`, and normalize all returned `pages`, `blocks`, `lines`, and `words` to the TIFF index with `copy(pageIndex = index)`. Before appending, compare cumulative text (including `\n\n` separators) and cumulative entry count against result budgets using subtraction; map overflow to `RESULT_LIMIT_EXCEEDED`. Wrap decode/engine errors in sanitized `TiffMultiPageOcrException` with `DECODE_FAILED`/`ENGINE_FAILED`, rethrow `CancellationException`, and return no partial aggregate.
+After preflight, call `allowPayloadReads()` on the same input and decode exactly one page at a time. Post-check decoded dimensions, call `engine.recognizeStructured(image, options)`, and normalize all returned `pages`, `blocks`, `lines`, and `words` to the TIFF index with `copy(pageIndex = index)`. Before appending, compare cumulative text (including `\n\n` separators) and cumulative entry count against result budgets using subtraction; map overflow to `RESULT_LIMIT_EXCEEDED`. Wrap provider decode exceptions in sanitized `TiffMultiPageOcrException` with `DECODE_FAILED` (truncated `EOFException` is a document-level validation), wrap engine errors with `ENGINE_FAILED`, rethrow `CancellationException`, and return no partial aggregate.
 
-- [ ] **Step 5: Implement resource ownership and suspend cancellation.**
+- [x] **Step 5: Implement resource ownership and suspend cancellation.**
 
 Use a session helper that records the primary throwable and adds only a path-free sanitized cleanup marker as suppressed; send the raw cleanup throwable to an internal redacted log and never expose it publicly. If cleanup is the only failure, propagate the same sanitized marker. The blocking `recognize` uses the helper directly. The suspend `suspendRecognize` runs preflight and each page blocking operation with `runInterruptible(dispatcher)`, calls `currentCoroutineContext().ensureActive()` before each page, and closes in `withContext(NonCancellable + dispatcher)`; document that native providers may ignore interrupts and callers must set a timeout. Keep `CancellationException` untouched.
 
-- [ ] **Step 6: Run the targeted tests to green.**
+- [x] **Step 6: Run the targeted tests to green.**
 
 ```bash
 ./gradlew :bluetape4k-images-ocr:test --tests 'io.bluetape4k.images.ocr.TiffMultiPageOcrTest' --no-build-cache
@@ -149,15 +149,15 @@ git commit -m "다중 페이지 TIFF structured OCR을 구현한다" -m "Constra
 - Modify: `images-ocr/README.md`
 - Modify: `images-ocr/README.ko.md`
 
-- [ ] **Step 1: Add the gated Testcontainers three-page path.**
+- [x] **Step 1: Add the gated Testcontainers three-page path.**
 
 Annotate the test with `@EnabledIfSystemProperty(named = "ocr.container.enabled", matches = "true")`. Build three deterministic text images and a TIFF with `SuspendTiffMultiPageWriter`; inject a test `StructuredOcrEngine` that writes each received page to a temporary PNG, copies it to `TesseractContainerLauncher.container`, executes `tesseract <path> stdout -l eng --psm 7`, and returns the trimmed stdout as an `OcrStructuredResult`. Assert page order, non-empty page text, and aggregate `\n\n`; delete host temp files in `finally`. This test is executed by the existing CI `test-images-ocr` job with `-Docr.container.enabled=true`.
 
-- [ ] **Step 2: Update both README locales in identical structure.**
+- [x] **Step 2: Update both README locales in identical structure.**
 
 Add sections for the ByteArray API, `TiffMultiPageOcrLimits` defaults and result budgets, `TiffMultiPageOcrValidationException`/`TiffMultiPageOcrException` reason handling, suspend dispatcher and best-effort cancellation, deterministic page index/aggregate separator, GIF exclusion, and the container/native test commands. Add a migration note that existing single-image callers remain unchanged; Path/InputStream callers must perform a bounded read before invoking the ByteArray API, and integrations should map stable reasons to retry/HTTP policy. Keep headings and code blocks structurally equivalent; Korean prose must be natural, while API names and commands stay exact.
 
-- [ ] **Step 3: Run documentation and container-aware tests.**
+- [x] **Step 3: Run documentation and container-aware tests.**
 
 ```bash
 ./gradlew :bluetape4k-images-ocr:test --tests 'io.bluetape4k.images.ocr.TiffMultiPageTesseractContainerOcrTest' -Docr.container.enabled=true --no-build-cache
@@ -166,7 +166,7 @@ git diff --check
 
 Expected: the container test PASS when Docker is available; otherwise record the environment-gated result and rely on CI for the merge gate.
 
-- [ ] **Step 4: Commit the smoke/docs slice.**
+- [x] **Step 4: Commit the smoke/docs slice.**
 
 ```bash
 git add images-ocr/src/test/kotlin/io/bluetape4k/images/ocr/TiffMultiPageTesseractContainerOcrTest.kt images-ocr/README.md images-ocr/README.ko.md
@@ -179,7 +179,7 @@ git commit -m "다중 페이지 TIFF OCR 운영 smoke와 문서를 추가한다"
 - Create: `docs/superpowers/checklists/2026-08-15-issue-492-release-gate.md`
 - Test: `images-ocr/src/test/java/io/bluetape4k/images/ocr/TiffMultiPageOcrJavaApiTest.java`
 
-- [ ] **Step 1: Write the release gate checklist.**
+- [x] **Step 1: Write the release gate checklist.**
 
 Pin fields for feature branch HEAD, merged commit, CI workflow URL, exact `test-images-ocr` run, uploaded XML/artifact URL, native command result, failure-rate/ABI rollback trigger, previous artifact/catalog pin, and caller fallback to the unchanged single-image API. Do not invent run IDs before CI exists.
 
@@ -190,6 +190,8 @@ package io.bluetape4k.images.ocr;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 class TiffMultiPageOcrJavaApiTest {
@@ -198,11 +200,16 @@ class TiffMultiPageOcrJavaApiTest {
         TiffMultiPageOcrLimits limits = new TiffMultiPageOcrLimits(
             1_024L, 1, 1_024L, 1_024L, 1_024, 1_024L, 10_000, 100
         );
+        OcrOptions options = new OcrOptions(
+            List.of("eng"), null, TesseractEngineMode.DEFAULT,
+            TesseractPageSegmentationMode.AUTO, Map.of(), List.of(), true,
+            OcrStructuredDetail.PLAIN_TEXT, List.of()
+        );
         TiffMultiPageOcr ocr = new TiffMultiPageOcr();
         assertNotNull(ocr);
         assertNotNull(limits);
         try {
-            ocr.recognize(new byte[0], new OcrOptions(), limits);
+            ocr.recognize(new byte[0], options, limits);
         } catch (TiffMultiPageOcrValidationException expected) {
             // The call is intentionally invalid; compiling this invocation is the ABI smoke.
         }
@@ -210,7 +217,7 @@ class TiffMultiPageOcrJavaApiTest {
 }
 ```
 
-- [ ] **Step 2: Run ordered verification.**
+- [x] **Step 2: Run ordered verification.**
 
 ```bash
 ./gradlew :bluetape4k-images-ocr:test --no-build-cache
@@ -223,7 +230,7 @@ Compile and inspect the Java surface as a separate ABI gate:
 
 ```bash
 ./gradlew :bluetape4k-images-ocr:compileKotlin :bluetape4k-images-ocr:compileTestKotlin :bluetape4k-images-ocr:compileTestJava --no-build-cache
-javap -classpath images-ocr/build/classes/kotlin/main -public io.bluetape4k.images.ocr.TiffMultiPageOcr io.bluetape4k.images.ocr.TiffMultiPageOcrLimits io.bluetape4k.images.ocr.TiffMultiPageOcrValidationException io.bluetape4k.images.ocr.TiffMultiPageOcrException > build/issue-492-public-api.javap
+javap -classpath images-ocr/build/classes/atomicfu/main -public io.bluetape4k.images.ocr.TiffMultiPageOcr io.bluetape4k.images.ocr.TiffMultiPageOcrLimits io.bluetape4k.images.ocr.TiffMultiPageOcrValidationException io.bluetape4k.images.ocr.TiffMultiPageOcrException > build/issue-492-public-api.javap
 git diff --exit-code -- images-ocr/src/main/kotlin/io/bluetape4k/images/ocr/OcrEngine.kt images-ocr/src/main/kotlin/io/bluetape4k/images/ocr/OcrOptions.kt
 ```
 

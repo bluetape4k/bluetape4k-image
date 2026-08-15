@@ -134,6 +134,47 @@ box가 해당 region과 교차하는 structured entry에 matching region을 복�
 PaddleOCR/GPU/model download pipeline 같은 advanced document OCR backend는 이
 모듈의 범위에 넣지 않고 issue #169에서 별도 research/adoption lane으로 추적합니다.
 
+## Bounded 다중 페이지 TIFF OCR
+
+`TiffMultiPageOcr`는 인코딩된 TIFF `ByteArray`를 받아 첫 decode나 engine 호출
+전에 모든 page를 검증하고, 하나의 ImageIO reader로 page를 순서대로 처리합니다.
+기본 한도는 의도적으로 제한되어 있습니다.
+
+```kotlin
+val result = TiffMultiPageOcr()
+    .recognize(
+        tiffBytes,
+        options = OcrOptions(languages = listOf("eng")),
+        limits = TiffMultiPageOcrLimits(
+            maxPages = 16,
+            maxTotalPixels = 64_000_000L,
+            maxResultTextChars = 1_000_000,
+            maxResultEntries = 100_000,
+        ),
+    )
+```
+
+aggregate text는 입력 page 순서를 유지하고 page 사이에 `\n\n`을 넣습니다. 모든
+page, block, line, word entry의 `pageIndex`는 TIFF index로 다시 매핑되며, 실패
+시 partial aggregate를 반환하지 않습니다. `maxEncodedBytes`,
+`maxMetadataBytes`, page/side/pixel 한도와 누적 text/entry 한도는 해당 자원이
+만들어지기 전에 fail-closed 방식으로 확인합니다.
+
+입력과 metadata 거부는 `TiffMultiPageOcrValidationException`, decode·provider·
+engine 실패는 `TiffMultiPageOcrException`으로 전달됩니다. 예외 문장을 비교하지
+말고 안정적인 `TiffMultiPageOcrFailureReason` 값을 처리하세요. 외부 예외에는
+payload, 파일 경로, tessdata 경로, native cause가 포함되지 않습니다.
+`suspendRecognize`는 전달한 dispatcher에서 blocking 작업을 수행하고
+`CancellationException`을 그대로 재전파합니다. native 취소는 best-effort이므로
+신뢰하지 않는 입력에는 caller가 timeout을 함께 설정해야 합니다.
+
+이 API는 다중 페이지 TIFF만 대상으로 합니다. GIF animation frame, page 병렬 OCR,
+`Path`/`InputStream` overload는 포함하지 않습니다. 기존 single-image
+`extractText`와 `extractOcr` 호출자는 변경 없이 사용할 수 있습니다. 파일이나
+stream을 사용하는 caller는 동일한 encoded-byte 한도로 먼저 bounded read를 수행한
+뒤 이 `ByteArray` entry point를 호출하고, 안정적인 reason을 retry 또는 HTTP 정책에
+매핑해야 합니다.
+
 ## 실행 가능한 Quickstart
 
 이 모듈에는 파일 기반 quickstart 테스트가 포함됩니다. 테스트는 작은 이미지를
@@ -182,6 +223,14 @@ Nightly가 사용하는 OCR gate입니다.
 
 ```bash
 ./gradlew :bluetape4k-images-ocr:test -Docr.container.enabled=true
+```
+
+gate가 켜진 `TiffMultiPageTesseractContainerOcrTest`는 각 decode page를 임시 PNG로
+기록해 container의 `tesseract` CLI로 전달하고, page 순서와 aggregate separator를
+확인합니다. Host-native release check는 명시적으로 실행합니다.
+
+```bash
+./gradlew :bluetape4k-images-ocr:test -Docr.enabled=true --no-daemon
 ```
 
 테스트 launcher는 module test JVM마다 재사용하지 않는 Tesseract container 하나를
