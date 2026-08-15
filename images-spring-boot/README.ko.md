@@ -13,6 +13,7 @@
 - **CDN URL 서명**: S3 사전 서명 URL 또는 CloudFront 서명 URL
 - **리액티브 헬스 인디케이터**: 스토리지 접근성을 확인하는 `ReactiveHealthIndicator`
 - **Micrometer 메트릭**: `BeanPostProcessor`를 통한 업로드/다운로드 타이머 및 오류 카운터
+- **선택적 객체 메타데이터**: body를 다운로드하지 않고 크기, ETag, content type, last-modified 조회
 - **Actuator 보호**: `/actuator/configprops`에서 `privateKeyPem` 값을 마스킹하는 `SanitizingFunction`
 
 ## 사용법
@@ -96,6 +97,34 @@ S3 저장소 구현을 의도적으로 대체하려면 별도의 `ImageStorage` 
 없으면 source 전체를 `ByteArray`로 적재하지 않고 fail closed합니다. `Path` 다운로드는
 S3 resource를 통해 스트리밍한 뒤 destination 파일을 atomic replace합니다.
 
+### 객체 메타데이터 capability
+
+기존 `ImageStorage` 메서드 집합은 그대로 유지합니다. 메타데이터를 지원하는
+provider는 선택적인 `ImageObjectMetadataReader` capability를 추가로 구현합니다.
+
+```kotlin
+val metadata = (storage as? ImageObjectMetadataReader)?.readMetadata(key)
+```
+
+`ImageObjectMetadata`는 provider-neutral 모델이며 `sizeBytes`, nullable한
+`contentType`/`lastModified`, opaque한 nullable `etag`를 담습니다. ETag의 따옴표와
+backend token은 그대로 보존하므로 MD5나 content hash로 해석하거나 정규화하지
+마세요. `lastModified` 정밀도는 backend/filesystem이 제공하는 값에 따르며 sub-second
+정밀도를 보장하지 않습니다. 로컬 저장소는 파일 attribute만 읽으므로 ETag과 content
+type은 `null`입니다.
+Micrometer decorator는 capability를 지원하는 provider에서만 이를 보존하고,
+지원하지 않는 custom storage에는 capability를 광고하지 않습니다.
+
+S3 메타데이터는 body를 열지 않고 단일 `S3Operations.headObject` snapshot으로
+조회합니다. byte-array와 `Path` 다운로드 모두 같은 HEAD size를 먼저 확인한 뒤
+실제 스트림 byte 수를 snapshot과 비교하고 결과를 노출합니다. HEAD 실패나 object
+교체로 인한 크기 불일치는 fail closed하며 `listPage` 또는 resource size fallback은
+사용하지 않습니다. 정렬된 `bluetape4k-aws-spring-boot` artifact에는 upstream
+PR [#516](https://github.com/bluetape4k/bluetape4k-aws/pull/516)의 `headObject`
+계약(`24c8039006220de654c732f722f3c7beb9b5b74f`)이 포함되어야 하며, consumer는
+개별 artifact 버전을 따로 맞추지 말고 `bluetape4k-dependencies` catalog을
+사용해야 합니다.
+
 ```yaml
 bluetape4k.images.storage:
   backend: s3
@@ -153,7 +182,8 @@ GET /actuator/health
 
 ### 메트릭
 
-`MeterRegistry` 빈이 있으면 `BeanPostProcessor`가 모든 `ImageStorage` 빈을 `MetricImageStorage`로 래핑합니다.
+`MeterRegistry` 빈이 있으면 `BeanPostProcessor`가 모든 `ImageStorage` 빈을
+`MetricImageStorage`(또는 capability를 보존하는 metadata 변형)로 래핑합니다.
 
 | 메트릭 | 타입 | 설명 |
 |--------|------|------|

@@ -5,9 +5,11 @@ import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.images.spring.ImageObjectKey
+import io.bluetape4k.images.spring.ImageObjectMetadata
 import io.bluetape4k.images.spring.ImageStorageException
 import io.bluetape4k.images.spring.ImageUploadResult
 import io.bluetape4k.images.spring.UploadOptions
+import io.bluetape4k.images.spring.storage.ImageObjectMetadataReader
 import io.bluetape4k.images.spring.storage.ImageStorage
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import io.mockk.coEvery
@@ -98,5 +100,17 @@ class MetricImageStorageTest {
         coEvery { delegate.exists(key) } returns true
         storage.exists(key).shouldBeTrue()
         coVerify { delegate.exists(key) }
+    }
+
+    @Test
+    fun `metadata preserving wrapper delegates optional capability`() = runTest {
+        val metadataReader = mockk<ImageObjectMetadataReader>()
+        val metadata = ImageObjectMetadata(key = key, sizeBytes = 100L, etag = "opaque")
+        coEvery { metadataReader.readMetadata(key) } returns metadata
+        val wrapped = MetricImageStorageWithMetadata(delegate, registry, metadataReader)
+
+        (wrapped as ImageObjectMetadataReader).readMetadata(key) shouldBeEqualTo metadata
+
+        coVerify(exactly = 1) { metadataReader.readMetadata(key) }
     }
 }

@@ -2,12 +2,17 @@ package io.bluetape4k.images.spring.autoconfigure
 
 import io.bluetape4k.assertions.shouldBeInstanceOf
 import io.bluetape4k.assertions.shouldBeSameInstanceAs
+import io.bluetape4k.assertions.shouldBeNull
 import io.bluetape4k.assertions.shouldNotBeInstanceOf
+import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.images.spring.metrics.MetricImageStorage
+import io.bluetape4k.images.spring.metrics.MetricImageStorageWithMetadata
+import io.bluetape4k.images.spring.storage.ImageObjectMetadataReader
 import io.bluetape4k.images.spring.storage.ImageStorage
 import io.bluetape4k.images.spring.storage.LocalImageStorage
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry
+import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
@@ -52,6 +57,28 @@ class ImagesMetricsAutoConfigurationTest {
             .run { ctx ->
                 assertThat(ctx).hasSingleBean(ImageStorage::class.java)
                 ctx.getBean(ImageStorage::class.java) shouldBeInstanceOf MetricImageStorage::class
+            }
+    }
+
+    @Test
+    fun `preserves LocalImageStorage metadata capability through metrics decorator`() {
+        contextRunner
+            .withBean(MeterRegistry::class.java, { SimpleMeterRegistry() })
+            .run { ctx ->
+                ctx.getBean(ImageStorage::class.java) shouldBeInstanceOf MetricImageStorageWithMetadata::class
+                ctx.getBean(ImageStorage::class.java) shouldBeInstanceOf MetricImageStorage::class
+                (ctx.getBean(ImageStorage::class.java) as? ImageObjectMetadataReader).shouldNotBeNull()
+            }
+    }
+
+    @Test
+    fun `does not advertise metadata capability for unsupported custom storage`() {
+        val customStorage = mockk<ImageStorage>(relaxed = true)
+        contextRunner
+            .withBean(MeterRegistry::class.java, { SimpleMeterRegistry() })
+            .withBean(ImageStorage::class.java, { customStorage })
+            .run { ctx ->
+                (ctx.getBean(ImageStorage::class.java) as? ImageObjectMetadataReader).shouldBeNull()
             }
     }
 
@@ -104,6 +131,27 @@ class ImagesMetricsAutoConfigurationTest {
                     .get(storage)
                 delegate shouldNotBeInstanceOf MetricImageStorage::class
                 delegate shouldBeInstanceOf LocalImageStorage::class
+            }
+    }
+
+    @Test
+    fun `does not double-wrap a capability-preserving metrics bean`() {
+        val registry = SimpleMeterRegistry()
+        val inner = LocalImageStorage(tempDir, 10 * 1024 * 1024L)
+        val alreadyWrapped = MetricImageStorageWithMetadata(
+            delegate = inner,
+            registry = registry,
+            metadataDelegate = inner,
+        )
+
+        contextRunner
+            .withBean(MeterRegistry::class.java, { registry })
+            .withBean(ImageStorage::class.java, { alreadyWrapped })
+            .run { ctx ->
+                val storage = ctx.getBean(ImageStorage::class.java)
+                storage shouldBeSameInstanceAs alreadyWrapped
+                storage shouldBeInstanceOf MetricImageStorageWithMetadata::class
+                storage shouldBeInstanceOf ImageObjectMetadataReader::class
             }
     }
 }

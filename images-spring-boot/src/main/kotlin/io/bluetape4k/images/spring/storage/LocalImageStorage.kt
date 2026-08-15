@@ -1,6 +1,7 @@
 package io.bluetape4k.images.spring.storage
 
 import io.bluetape4k.images.spring.ImageObjectKey
+import io.bluetape4k.images.spring.ImageObjectMetadata
 import io.bluetape4k.images.spring.ImageStorageException
 import io.bluetape4k.images.spring.ImageUploadResult
 import io.bluetape4k.images.spring.UploadOptions
@@ -48,6 +49,8 @@ import java.util.UUID
  *   않고 [ImageStorageException.ValidationException]으로 fail closed합니다.
  * - [maxSizeBytes]보다 큰 upload는 byte를 쓰기 전에 거부합니다.
  * - [maxSizeBytes]보다 큰 object download는 byte를 읽기 전에 거부합니다.
+ * - [ImageObjectMetadataReader.readMetadata]는 body를 열지 않고 regular-file attributes만 반환합니다.
+ *   Local backend가 보장하지 않는 ETag과 content type은 null입니다.
  * - [delete]는 idempotent입니다. missing key는 예외를 일으키지 않습니다.
  * - [list]는 storage root 기준 상대 경로로 resolve된 [ImageObjectKey]의 cold [Flow]를 반환합니다.
  *   cancellation은 underlying directory walk를 중단합니다.
@@ -59,7 +62,7 @@ import java.util.UUID
 class LocalImageStorage(
     rootDir: Path,
     private val maxSizeBytes: Long,
-) : ImageStorage, AutoCloseable {
+) : ImageStorage, ImageObjectMetadataReader, AutoCloseable {
 
     companion object : KLogging() {
         /**
@@ -287,6 +290,17 @@ class LocalImageStorage(
         } catch (e: IOException) {
             throw ImageStorageException.TransientException(key = key, cause = e)
         }
+    }
+
+    override suspend fun readMetadata(key: ImageObjectKey): ImageObjectMetadata = withContext(Dispatchers.IO) {
+        val path = resolveKey(key)
+        val attributes = readObjectAttributes(key, path)
+            ?: throw ImageStorageException.NotFoundException(key)
+        ImageObjectMetadata(
+            key = key,
+            sizeBytes = attributes.size(),
+            lastModified = attributes.lastModifiedTime().toInstant(),
+        )
     }
 
     override suspend fun download(key: ImageObjectKey, destination: Path): Unit =

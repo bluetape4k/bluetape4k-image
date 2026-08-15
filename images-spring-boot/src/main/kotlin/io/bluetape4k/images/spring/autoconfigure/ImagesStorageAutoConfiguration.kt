@@ -82,7 +82,27 @@ class ImagesStorageAutoConfiguration {
             transferOperations: ObjectProvider<S3TransferOperations>,
         ): ImageStorage {
             properties.bucket.requireNotBlank("bluetape4k.images.storage.bucket")
+            requireHeadObjectSupport(operations)
             return S3ImageStorage(operations, properties, transferOperations.getIfAvailable())
+        }
+
+        /**
+         * `S3Operations.headObject`는 compileOnly upstream 계약입니다. 구 runtime 구현체가
+         * interface default만 물고 있는 경우 S3ImageStorage를 만들면 첫 호출에서
+         * `UnsupportedOperationException`이 발생하므로, bean 생성 시점에 fail closed합니다.
+         */
+        private fun requireHeadObjectSupport(operations: S3Operations) {
+            val implementationMethod = operations.javaClass.methods.firstOrNull { method ->
+                method.name == "headObject" &&
+                    method.parameterCount == 3 &&
+                    method.parameterTypes[0] == String::class.java &&
+                    method.parameterTypes[1] == String::class.java &&
+                    method.declaringClass != S3Operations::class.java
+            }
+            check(implementationMethod != null) {
+                "bluetape4k.images.storage.backend=s3 requires an S3Operations implementation " +
+                    "with headObject support. Upgrade bluetape4k-aws-spring-boot before creating S3ImageStorage."
+            }
         }
     }
 

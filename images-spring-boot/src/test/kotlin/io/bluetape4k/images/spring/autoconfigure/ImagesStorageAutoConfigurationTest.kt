@@ -17,6 +17,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.boot.autoconfigure.AutoConfigurations
 import org.springframework.boot.test.context.runner.ApplicationContextRunner
+import java.net.URLClassLoader
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.Comparator
@@ -107,6 +108,21 @@ class ImagesStorageAutoConfigurationTest {
     }
 
     @Test
+    fun `s3 backend fails closed when implementation only has the default HEAD method`() {
+        contextRunner
+            .withBean(S3Operations::class.java, { legacyJavaS3Operations() })
+            .withPropertyValues(
+                "bluetape4k.images.storage.backend=s3",
+                "bluetape4k.images.storage.bucket=images",
+            )
+            .run { ctx ->
+                val failure = ctx.startupFailure.shouldNotBeNull()
+                rootCauseMessage(failure) shouldContain "headObject support"
+                rootCauseMessage(failure) shouldContain "Upgrade bluetape4k-aws-spring-boot"
+            }
+    }
+
+    @Test
     fun `user-provided ImageStorage backs off s3 storage even when bucket is absent`() {
         contextRunner
             .withBean(ImageStorage::class.java, { customStorage })
@@ -164,4 +180,15 @@ class ImagesStorageAutoConfigurationTest {
             current = current.cause ?: return current.message.orEmpty()
         }
     }
+
+    /** Java fixture는 atomicfu test output에 포함되지 않으므로 해당 output에서 old ABI를 직접 로드합니다. */
+    private fun legacyJavaS3Operations(): S3Operations {
+        val testClasses = Path.of("build/classes/java/test").toAbsolutePath().toUri().toURL()
+        val loader = URLClassLoader(arrayOf(testClasses), S3Operations::class.java.classLoader)
+        return loader
+            .loadClass("io.bluetape4k.images.spring.autoconfigure.LegacyJavaS3Operations")
+            .getDeclaredConstructor()
+            .newInstance() as S3Operations
+    }
+
 }

@@ -19,6 +19,8 @@ import java.nio.file.Path
  *   [io.bluetape4k.images.spring.ImageStorageException.AccessDeniedException]을 던집니다.
  * - [list]는 cold [Flow]를 반환하며 cancellation을 올바르게 전파합니다.
  * - 모든 구현체는 broad catch보다 먼저 [kotlinx.coroutines.CancellationException]을 다시 던져야 합니다.
+ * - object metadata가 필요하면 선택적 [ImageObjectMetadataReader] capability를 탐색합니다.
+ *   기존 구현체 호환성을 위해 이 interface에는 metadata abstract method를 추가하지 않습니다.
  */
 interface ImageStorage {
 

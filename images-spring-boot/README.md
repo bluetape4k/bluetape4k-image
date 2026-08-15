@@ -14,6 +14,7 @@ reactive health indicators, and Micrometer metrics.
 - **CDN URL signing**: S3 pre-signed URLs or CloudFront signed URLs.
 - **Reactive health indicator**: `ReactiveHealthIndicator` probing storage reachability.
 - **Micrometer metrics**: upload/download duration timers and error counters via `BeanPostProcessor`.
+- **Optional object metadata**: read size, ETag, content type, and last-modified without downloading the body.
 - **Actuator protection**: `SanitizingFunction` redacting `privateKeyPem` from `/actuator/configprops`.
 
 ## Usage
@@ -100,6 +101,34 @@ without that capability they fail closed instead of loading the entire source
 into a `ByteArray`. `Path` downloads stream through an S3 resource and
 atomically replace the destination file.
 
+### Object metadata capability
+
+`ImageStorage` keeps its original method set. Providers that support metadata also
+implement the optional `ImageObjectMetadataReader` capability:
+
+```kotlin
+val metadata = (storage as? ImageObjectMetadataReader)?.readMetadata(key)
+```
+
+`ImageObjectMetadata` is provider-neutral and contains `sizeBytes`, nullable
+`contentType`/`lastModified`, and an opaque nullable `etag`. ETag quotes and other
+backend tokens are preserved; callers must not treat an ETag as an MD5 or content
+hash. `lastModified` precision is backend/filesystem-defined and is not guaranteed
+to retain sub-second precision. Local storage reads filesystem attributes only, so
+its ETag and content type are `null`. The Micrometer decorator preserves this capability for supported
+providers and does not advertise it for custom storage implementations that do not
+implement the interface.
+
+S3 metadata uses one `S3Operations.headObject` snapshot without opening the body.
+Both byte-array and `Path` downloads perform the same HEAD size pre-check and then
+compare the streamed byte count with that snapshot before exposing the result. A
+HEAD failure or a size race fails closed; there is no `listPage` or resource-size
+fallback. The aligned `bluetape4k-aws-spring-boot` artifact must contain the
+`headObject` contract from upstream PR [#516](https://github.com/bluetape4k/bluetape4k-aws/pull/516)
+(`24c8039006220de654c732f722f3c7beb9b5b74f`); consumers should select it through
+the `bluetape4k-dependencies` catalog rather than coordinating an individual
+artifact version.
+
 ```yaml
 bluetape4k.images.storage:
   backend: s3
@@ -160,7 +189,7 @@ GET /actuator/health
 ### Metrics
 
 When a `MeterRegistry` bean is present, the `BeanPostProcessor` wraps every `ImageStorage`
-bean with `MetricImageStorage` which records:
+bean with `MetricImageStorage` (or its capability-preserving metadata variant) which records:
 
 | Metric | Type | Description |
 |--------|------|-------------|
