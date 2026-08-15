@@ -208,8 +208,10 @@ TiffMultiPageOcrLimits 생성자는 모든 제한값이 양수인지 검증한�
 6. 모든 page가 성공한 뒤 page text를 \n\n으로 결합하고 aggregate
    OcrStructuredResult를 만든다. 중간 실패에서는 aggregate를 반환하지 않는다.
 7. preflight와 decode의 각 ImageReader.dispose()와 ImageInputStream.close()는 성공·실패·취소 모든 경로에서
-   실행한다. 주 예외가 있으면 cleanup 예외는 `Throwable.addSuppressed`로 보존하고,
-   주 예외가 없을 때만 cleanup 예외를 전파한다. createImageInputStream의 `null`, reader
+   실행한다. 주 예외가 있으면 raw cleanup throwable 대신 path/native 정보가 없는
+   sanitized cleanup marker만 `Throwable.addSuppressed`로 보존하고, 원인 throwable은
+   신뢰 경계 내부 redacted log에만 남긴다. 주 예외가 없을 때도 같은 sanitized marker를
+   전파한다. createImageInputStream의 `null`, reader
    부재, reader의 `getNumImages/getWidth/getHeight/read` 실패는 각각 안정적인 입력/metadata/
    decode 단계 메시지로 분류한다. CancellationException은 catch해서 일반 OCR 오류로
    바꾸지 않고 그대로 재전파한다.
@@ -308,7 +310,7 @@ cancel은 `CancellationException` 그대로 재전파한다. raw cause는 public
 - page 1 engine 실패 시 page 0 결과가 반환되지 않고, page 2가 호출되지 않는지 확인한다.
 - suspend 경로에서 page 사이 취소가 발생하면 CancellationException이 전파되고 이후
   page가 호출되지 않는지 확인한다.
-- reader/stream cleanup failure가 주 예외를 덮지 않고 suppressed로 보존되는지, public
+- reader/stream cleanup failure가 주 예외를 덮지 않고 sanitized marker로 suppressed 보존되는지, public
   exception cause/message에 path·payload·tessdata 경로가 노출되지 않는지 확인한다.
 - 기존 단일 이미지 engine/extension 테스트를 변경 없이 통과시킨다.
 
