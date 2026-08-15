@@ -135,7 +135,12 @@ Use a session helper that records the primary throwable and adds only a path-fre
 
 Expected: all new pure-JVM tests PASS; no native/container property is required for this checkpoint.
 
-- [ ] **Step 7: Commit the implementation.**
+- [x] **Step 7: Commit the implementation.**
+
+구현과 metadata-reader 오분류 수정을 `5cf8abe`, `4556488`, `c5b8037`에
+Lore trailer와 함께 커밋했다. `c5b8037`은 `maxMetadataBytes=8`인 실제
+TwelveMonkeys 경로에서 `METADATA_LIMIT_EXCEEDED`와 engine 0회를 추가로
+검증한다.
 
 ```bash
 git add images-ocr/src/main/kotlin/io/bluetape4k/images/ocr/TiffMultiPageOcr.kt images-ocr/src/test/kotlin/io/bluetape4k/images/ocr/TiffMultiPageOcrTest.kt
@@ -238,11 +243,20 @@ Expected: Java fixture compiles, `javap` lists the documented blocking overloads
 
 Run native `./gradlew :bluetape4k-images-ocr:test -Docr.enabled=true --no-build-cache` only when host Tesseract/traineddata is available; run container/native checks sequentially and record exact outcomes. Inspect `git diff`, `git status`, and test reports before claiming completion.
 
-- [ ] **Step 3: Run verifier checklist and six code-review lanes.**
+- [x] **Step 3: Run verifier checklist and six code-review lanes.**
+
+최종 diff에서 performance, stability, security, operator/Ops, developer/API,
+user/caller 관점을 각각 재검토했다. 네이티브 reviewer dispatch는 bounded
+timeout으로 종료되어 main-session fallback으로 같은 관점을 검증했으며,
+통합 결과는 P0=0/P1=0이다. 상세 결과는
+`docs/superpowers/reviews/2026-08-15-issue-492-code-review.md`에 기록했다.
 
 Verify public API/KDoc/README parity, same-reader metadata budget, page/result limits, cleanup suppression, cancellation, sanitization, container smoke, and unchanged existing API tests. Obtain independent performance, stability, security, operations, developer/API, and user/caller findings against the final diff; P0/P1 must be zero. Fix any finding and rerun targeted/full tests before proceeding.
 
-- [ ] **Step 4: Commit verification artifacts.**
+- [x] **Step 4: Commit verification artifacts.**
+
+최종 code review와 release gate/lesson을 feature branch에 커밋한다. live CI
+run ID와 artifact URL은 PR 생성 이후에만 채운다.
 
 ```bash
 git add docs/superpowers/checklists/2026-08-15-issue-492-release-gate.md images-ocr/src/test/java/io/bluetape4k/images/ocr/TiffMultiPageOcrJavaApiTest.java
