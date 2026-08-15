@@ -8,8 +8,14 @@ import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.images.spring.ImageObjectKey
 import io.bluetape4k.images.spring.ImageStorageException
 import io.bluetape4k.images.spring.UploadOptions
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
 import org.junit.jupiter.api.Test
 import java.io.ByteArrayOutputStream
 import java.io.ObjectOutputStream
@@ -325,6 +331,41 @@ class LocalImageStorageTest {
         val listed = storage.list(ImageObjectKey.of("photos", "gallery")).toList()
 
         listed.none { it.fullKey.contains("escaped.jpg") }.shouldBeTrue()
+    }
+
+    @Test
+    fun `list는 collector cancellation 뒤에 전체 결과를 materialize하지 않는다`() = runTest {
+        val listPrefix = ImageObjectKey.of("photos", "gallery")
+        val gallery = tempDir.resolve(listPrefix.fullKey)
+        Files.createDirectories(gallery)
+        Files.write(gallery.resolve("first.jpg"), sampleBytes)
+        repeat(50_000) { index ->
+            Files.write(gallery.resolve("late-$index.jpg"), sampleBytes)
+        }
+
+        val listed = withContext(Dispatchers.Default.limitedParallelism(1)) {
+            withTimeout(500) {
+                storage.list(listPrefix).take(1).toList()
+            }
+        }
+
+        listed.size shouldBeEqualTo 1
+    }
+
+    @Test
+    fun `list는 collector가 던진 CancellationException을 그대로 전파한다`() = runTest {
+        val listPrefix = ImageObjectKey.of("photos", "cancellation")
+        val listedKey = ImageObjectKey.of("photos/cancellation", "first.jpg")
+        provisionParent(listedKey)
+        storage.upload(listedKey, sampleBytes, options)
+        val cancellation = CancellationException("collector stopped")
+
+        val thrown = assertFailsWith<CancellationException> {
+            storage.list(listPrefix).collect { throw cancellation }
+        }
+
+        thrown.message shouldBeEqualTo cancellation.message
+        thrown::class shouldBeEqualTo cancellation::class
     }
 
     @Test
