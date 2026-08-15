@@ -135,6 +135,49 @@ bounding boxes intersect it.
 Advanced document OCR backends such as PaddleOCR/GPU/model-download pipelines
 remain out of this module and are tracked separately by issue #169.
 
+## Bounded Multi-page TIFF OCR
+
+`TiffMultiPageOcr` accepts an encoded TIFF `ByteArray`, validates every page
+before the first decode or engine call, and then processes pages sequentially
+with one ImageIO reader. The default limits are deliberately bounded:
+
+```kotlin
+val result = TiffMultiPageOcr()
+    .recognize(
+        tiffBytes,
+        options = OcrOptions(languages = listOf("eng")),
+        limits = TiffMultiPageOcrLimits(
+            maxPages = 16,
+            maxTotalPixels = 64_000_000L,
+            maxResultTextChars = 1_000_000,
+            maxResultEntries = 100_000,
+        ),
+    )
+```
+
+The aggregate text follows input page order and uses `\n\n` between pages. Every
+page, block, line, and word entry is remapped to its TIFF `pageIndex`; no
+partial aggregate is returned after a failure. `maxEncodedBytes`,
+`maxMetadataBytes`, and page/side/pixel limits are checked fail-closed before
+decode; cumulative text/entry budgets are checked before each page is appended
+to the public aggregate.
+
+Input and metadata rejections are reported as
+`TiffMultiPageOcrValidationException`; decode, provider, and engine failures use
+`TiffMultiPageOcrException`. Handle the stable
+`TiffMultiPageOcrFailureReason` values rather than matching exception text.
+Public errors do not expose payload bytes, file paths, tessdata paths, or native
+causes. `suspendRecognize` runs blocking work on the supplied dispatcher and
+rethrows `CancellationException`; native cancellation is best-effort, so callers
+should apply a timeout for untrusted input.
+
+This API intentionally covers multi-page TIFF only. GIF animation frames,
+parallel page OCR, and `Path`/`InputStream` overloads are not included. Existing
+single-image `extractText` and `extractOcr` callers are unchanged. A caller with
+a file or stream should perform a bounded read using the same encoded-byte
+budget before calling this `ByteArray` entry point, then map stable reasons to its
+retry or HTTP policy.
+
 ## Runnable Quickstart
 
 The module includes a file-based quickstart test that creates a small image,
@@ -184,6 +227,14 @@ used by GitHub CI and Nightly:
 
 ```bash
 ./gradlew :bluetape4k-images-ocr:test -Docr.container.enabled=true
+```
+
+The gated `TiffMultiPageTesseractContainerOcrTest` writes each decoded page to a
+temporary PNG, sends it to the container `tesseract` CLI, and verifies page order
+and the aggregate separator. Host-native release checks remain explicit:
+
+```bash
+./gradlew :bluetape4k-images-ocr:test -Docr.enabled=true --no-daemon
 ```
 
 The test launcher starts one non-reusable Tesseract container per module test
