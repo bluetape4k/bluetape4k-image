@@ -208,7 +208,7 @@ class TiffMultiPageOcrTest {
         val inputFactory = object : TiffImageInputFactory {
             override fun open(bytes: ByteArray, maxMetadataBytes: Long): TiffImageInput {
                 val source = ByteArrayInputStream(bytes)
-                val stream = ImageIO.createImageInputStream(source)!!
+                val stream = requireNotNull(ImageIO.createImageInputStream(source))
                 return object : TiffImageInput {
                     override val stream = stream
 
@@ -283,7 +283,7 @@ class TiffMultiPageOcrTest {
     private fun fixedInputFactory(): TiffImageInputFactory = object : TiffImageInputFactory {
         override fun open(bytes: ByteArray, maxMetadataBytes: Long): TiffImageInput {
             val source = ByteArrayInputStream(byteArrayOf(0))
-            val imageInput = ImageIO.createImageInputStream(source)!!
+            val imageInput = requireNotNull(ImageIO.createImageInputStream(source))
             return object : TiffImageInput {
                 override val stream: ImageInputStream = imageInput
 

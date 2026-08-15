@@ -3,6 +3,9 @@ package io.bluetape4k.images.ocr
 import com.sksamuel.scrimage.ImmutableImage
 import io.bluetape4k.images.IIORegistryUtils
 import io.bluetape4k.images.ImageDecodeLimits
+import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.logging.debug
+import io.bluetape4k.support.requirePositiveNumber
 import java.awt.image.BufferedImage
 import java.io.ByteArrayInputStream
 import java.io.EOFException
@@ -10,8 +13,6 @@ import java.io.FilterInputStream
 import java.io.IOException
 import java.io.InputStream
 import java.io.Serializable
-import java.util.logging.Level
-import java.util.logging.Logger
 import javax.imageio.ImageIO
 import javax.imageio.ImageReader
 import javax.imageio.stream.ImageInputStream
@@ -43,14 +44,14 @@ data class TiffMultiPageOcrLimits @JvmOverloads constructor(
 ) : Serializable {
 
     init {
-        require(maxEncodedBytes > 0) { "maxEncodedBytes must be > 0" }
-        require(maxPages > 0) { "maxPages must be > 0" }
-        require(maxPixelsPerPage > 0) { "maxPixelsPerPage must be > 0" }
-        require(maxTotalPixels > 0) { "maxTotalPixels must be > 0" }
-        require(maxDecodedSide > 0) { "maxDecodedSide must be > 0" }
-        require(maxMetadataBytes > 0) { "maxMetadataBytes must be > 0" }
-        require(maxResultTextChars > 0) { "maxResultTextChars must be > 0" }
-        require(maxResultEntries > 0) { "maxResultEntries must be > 0" }
+        maxEncodedBytes.requirePositiveNumber("maxEncodedBytes")
+        maxPages.requirePositiveNumber("maxPages")
+        maxPixelsPerPage.requirePositiveNumber("maxPixelsPerPage")
+        maxTotalPixels.requirePositiveNumber("maxTotalPixels")
+        maxDecodedSide.requirePositiveNumber("maxDecodedSide")
+        maxMetadataBytes.requirePositiveNumber("maxMetadataBytes")
+        maxResultTextChars.requirePositiveNumber("maxResultTextChars")
+        maxResultEntries.requirePositiveNumber("maxResultEntries")
     }
 
     companion object {
@@ -175,8 +176,11 @@ class TiffMultiPageOcr private constructor(
         var session: TiffImageSession? = null
         var primary: Throwable? = null
         try {
-            val opened = runInterruptible(dispatcher) { openSession(bytes, limits) }
+            // session을 만든 뒤 caller cancellation이 발생해도 finally가 소유권을 유지하도록
+            // open 단계만 non-cancellable로 완료합니다. metadata/page 작업은 계속 interruptible입니다.
+            val opened = withContext(NonCancellable + dispatcher) { openSession(bytes, limits) }
             session = opened
+            currentCoroutineContext().ensureActive()
             val pages = runInterruptible(dispatcher) { preflight(opened, limits) }
             currentCoroutineContext().ensureActive()
             opened.input.allowPayloadReads()
@@ -441,7 +445,7 @@ class TiffMultiPageOcr private constructor(
         return null
     }
 
-    internal companion object {
+    internal companion object : KLoggingChannel() {
         @JvmSynthetic
         fun withFactories(
             engine: StructuredOcrEngine,
@@ -450,10 +454,8 @@ class TiffMultiPageOcr private constructor(
         ): TiffMultiPageOcr = TiffMultiPageOcr(engine, inputFactory, readerFactory)
 
         private const val TIFF_HEADER_BYTES: Long = 8L
-        private val logger: Logger = Logger.getLogger(TiffMultiPageOcr::class.java.name)
-
         private fun logCleanup(error: Throwable) {
-            logger.log(Level.FINE, "TIFF OCR resource cleanup failed: ${error::class.java.name}")
+            log.debug { "TIFF OCR resource cleanup failed: ${error::class.java.name}" }
         }
     }
 }

@@ -158,8 +158,9 @@ val result = TiffMultiPageOcr()
 The aggregate text follows input page order and uses `\n\n` between pages. Every
 page, block, line, and word entry is remapped to its TIFF `pageIndex`; no
 partial aggregate is returned after a failure. `maxEncodedBytes`,
-`maxMetadataBytes`, page/side/pixel limits, and cumulative text/entry budgets
-are checked fail-closed before the corresponding resource is materialized.
+`maxMetadataBytes`, and page/side/pixel limits are checked fail-closed before
+decode; cumulative text/entry budgets are checked before each page is appended
+to the public aggregate.
 
 Input and metadata rejections are reported as
 `TiffMultiPageOcrValidationException`; decode, provider, and engine failures use

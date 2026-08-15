@@ -157,8 +157,9 @@ val result = TiffMultiPageOcr()
 aggregate text는 입력 page 순서를 유지하고 page 사이에 `\n\n`을 넣습니다. 모든
 page, block, line, word entry의 `pageIndex`는 TIFF index로 다시 매핑되며, 실패
 시 partial aggregate를 반환하지 않습니다. `maxEncodedBytes`,
-`maxMetadataBytes`, page/side/pixel 한도와 누적 text/entry 한도는 해당 자원이
-만들어지기 전에 fail-closed 방식으로 확인합니다.
+`maxMetadataBytes`, page/side/pixel 한도는 decode 전에 fail-closed 방식으로
+확인하고, 누적 text/entry 한도는 각 page를 public aggregate에 추가하기 전에
+확인합니다.
 
 입력과 metadata 거부는 `TiffMultiPageOcrValidationException`, decode·provider·
 engine 실패는 `TiffMultiPageOcrException`으로 전달됩니다. 예외 문장을 비교하지
