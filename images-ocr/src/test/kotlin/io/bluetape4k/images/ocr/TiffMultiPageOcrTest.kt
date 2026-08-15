@@ -88,7 +88,7 @@ class TiffMultiPageOcrTest {
         val error = assertFailsWith<TiffMultiPageOcrValidationException> {
             TiffMultiPageOcr(engine).recognize(
                 threePageTiff(),
-                limits = TiffMultiPageOcrLimits(maxMetadataBytes = 1),
+                limits = TiffMultiPageOcrLimits(maxMetadataBytes = 8),
             )
         }
 

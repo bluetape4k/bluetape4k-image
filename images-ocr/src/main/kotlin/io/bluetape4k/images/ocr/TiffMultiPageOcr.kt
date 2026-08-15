@@ -243,10 +243,15 @@ class TiffMultiPageOcr private constructor(
             reader.setInput(input.stream, false, false)
             TiffImageSession(input, reader)
         } catch (e: TiffMultiPageOcrValidationException) {
-            closeInputAfterOpenFailure(input, e)
-            throw e
+            val mapped = if (input.metadataLimitExceeded) {
+                validation(TiffMultiPageOcrFailureReason.METADATA_LIMIT_EXCEEDED, null)
+            } else {
+                e
+            }
+            closeInputAfterOpenFailure(input, mapped)
+            throw mapped
         } catch (e: Exception) {
-            val mapped = if (findCause<MetadataLimitExceededException>(e) != null) {
+            val mapped = if (input.metadataLimitExceeded || findCause<MetadataLimitExceededException>(e) != null) {
                 validation(TiffMultiPageOcrFailureReason.METADATA_LIMIT_EXCEEDED, null)
             } else {
                 TiffMultiPageOcrValidationException(
@@ -524,6 +529,9 @@ internal interface TiffImageInputFactory {
 internal interface TiffImageInput : AutoCloseable {
     val stream: ImageInputStream
 
+    val metadataLimitExceeded: Boolean
+        get() = false
+
     fun allowPayloadReads()
 }
 
@@ -540,6 +548,11 @@ private class MetadataBudgetInputStream(
     private var metadataPhase = true
     private var consumedMetadataBytes = 0L
 
+    val metadataLimitExceeded: Boolean
+        get() = limitExceeded
+
+    private var limitExceeded = false
+
     fun allowPayloadReads() {
         metadataPhase = false
     }
@@ -555,7 +568,7 @@ private class MetadataBudgetInputStream(
         if (length == 0) return 0
         val permitted = if (metadataPhase) {
             val remaining = maxMetadataBytes - consumedMetadataBytes
-            if (remaining <= 0) throw MetadataLimitExceededException()
+            if (remaining <= 0) throwMetadataLimit()
             minOf(length.toLong(), remaining).toInt()
         } else {
             length
@@ -568,16 +581,19 @@ private class MetadataBudgetInputStream(
     override fun skip(length: Long): Long {
         if (!metadataPhase) return super.skip(length)
         val remaining = maxMetadataBytes - consumedMetadataBytes
-        if (remaining <= 0) throw MetadataLimitExceededException()
+        if (remaining <= 0) throwMetadataLimit()
         val skipped = super.skip(minOf(length, remaining))
         consumedMetadataBytes += skipped
         return skipped
     }
 
     private fun ensureMetadataCapacity() {
-        if (metadataPhase && consumedMetadataBytes >= maxMetadataBytes) {
-            throw MetadataLimitExceededException()
-        }
+        if (metadataPhase && consumedMetadataBytes >= maxMetadataBytes) throwMetadataLimit()
+    }
+
+    private fun throwMetadataLimit(): Nothing {
+        limitExceeded = true
+        throw MetadataLimitExceededException()
     }
 }
 
@@ -585,6 +601,9 @@ private class DefaultTiffImageInput(
     private val source: MetadataBudgetInputStream,
     override val stream: ImageInputStream,
 ) : TiffImageInput {
+    override val metadataLimitExceeded: Boolean
+        get() = source.metadataLimitExceeded
+
     override fun allowPayloadReads() {
         source.allowPayloadReads()
     }
