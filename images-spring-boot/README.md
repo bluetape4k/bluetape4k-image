@@ -87,6 +87,18 @@ Local parent directories are not created during an upload. Configure
 before constructing `LocalImageStorage`; missing parents fail with
 `ValidationException` without creating files or directories.
 
+Runtime writes require a filesystem provider that exposes `SecureDirectoryStream`
+and atomically replaces an existing target through the descriptor-relative
+`move` operation. The upload stages bytes, forces the channel when supported,
+and replaces the target only after the staged write completes; a failed or
+cancelled write removes the partial stage and never falls back to an unsafe
+path-based move. Providers without this capability (for example, JDK ZipFS)
+are unsupported and fail closed with `ImageStorageException` rather than
+silently weakening the storage contract. The `LocalFileSystemContractTest`
+matrix records the provider probe, root/nested replacement, symlink, permission,
+missing-parent, and cancellation result; POSIX-only checks are reported as N/A
+when the provider or process cannot enforce them.
+
 #### S3
 
 Requires `bluetape4k-aws-spring-boot` dependency and an `S3Operations` bean

@@ -85,6 +85,16 @@ bluetape4k:
 `local.bootstrap-prefixes`에 설정하거나 `LocalImageStorage` 생성 전에 직접 준비하세요.
 준비되지 않은 parent는 파일·directory를 만들지 않고 `ValidationException`으로 종료합니다.
 
+runtime write는 `SecureDirectoryStream`을 제공하고 descriptor-relative `move`로
+기존 target을 atomic replace할 수 있는 filesystem provider에서만 지원합니다. 업로드는
+bytes를 staging한 뒤 가능한 경우 channel을 force하고, staging이 완료된 후에만 target을
+교체합니다. 쓰기나 취소가 실패하면 partial stage를 삭제하며 안전하지 않은 path 기반
+move로 fallback하지 않습니다. 이 capability가 없는 provider(예: JDK ZipFS)는 storage
+계약을 조용히 약화하지 않고 `ImageStorageException`으로 fail closed합니다.
+`LocalFileSystemContractTest` matrix는 provider probe, root/nested replace, symbolic link,
+permission, missing parent, cancellation 결과를 기록하며, provider나 process가 POSIX
+권한을 강제할 수 없으면 해당 검사를 N/A로 보고합니다.
+
 #### S3
 
 `bluetape4k-aws-spring-boot` 의존성과 해당 모듈이 제공하는 `S3Operations`
