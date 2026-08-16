@@ -7,11 +7,11 @@ releaseRef: "0.4.0"
 
 # 저장소 지도
 
-0.4.0 릴리스에는 Gradle 프로젝트 15개가 있다. 9개는 Maven 좌표로 배포하고, 5개는 실행 예제이며, 1개는 벤치마크 프로젝트다. 프로젝트 디렉터리와 Gradle 경로, 아티팩트 이름이 항상 같지는 않으므로 릴리스의 <code>settings.gradle.kts</code>를 정확한 목록으로 삼는다.
+0.4.0 릴리스에는 Gradle 프로젝트 19개가 있다. 10개는 라이브러리 Maven 좌표로 배포하고, 1개는 이미지 BOM이며, 7개는 실행 예제, 1개는 벤치마크 프로젝트다. 프로젝트 디렉터리와 Gradle 경로, 아티팩트 이름이 항상 같지는 않으므로 릴리스의 <code>settings.gradle.kts</code>를 정확한 목록으로 삼는다.
 
 ## 플랫폼과 기반
 
-- [Image BOM](../modules/bluetape4k-image-bom.md)은 이미지 라이브러리 아티팩트 8개의 버전을 맞춘다.
+- [Image BOM](../modules/bluetape4k-image-bom.md)은 이미지 라이브러리 아티팩트 10개의 버전을 맞춘다.
 - [불변 이미지 처리](../modules/bluetape4k-images.md)는 Scrimage와 Java2D를 쓰는 JVM 기반 모듈이다. CAPTCHA, OCR, Ktor, Spring Boot와 libvips API의 테스트 이미지가 이 모듈을 사용한다.
 
 ## 기능과 프레임워크
@@ -31,7 +31,7 @@ releaseRef: "0.4.0"
 
 ## 학습하고 측정하기
 
-워크숍 5개는 JVM 기본 처리, Ktor 이미지/CAPTCHA, Ktor OCR, Spring Boot 스토리지, Spring Boot OCR을 다룬다. [벤치마크 프로젝트](../modules/bluetape4k-images-benchmark.md)는 처리와 I/O 경로를 비교하지만 라이브러리로 배포하지 않는다.
+워크숍 7개는 JVM 기본 처리, Ktor 이미지/CAPTCHA, Ktor OCR, Spring Boot 바코드, 이미지 스토리지, 이미지 인텔리전스, Spring Boot OCR을 다룬다. [벤치마크 프로젝트](../modules/bluetape4k-images-benchmark.md)는 처리와 I/O 경로를 비교하지만 라이브러리로 배포하지 않는다.
 
 프로젝트를 이름순으로 읽기보다 [학습 경로](../guides/learning-path.md)에서 목적에 맞는 순서를 고르는 편이 빠르다.
 

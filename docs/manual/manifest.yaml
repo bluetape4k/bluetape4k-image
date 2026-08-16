@@ -398,6 +398,26 @@ modules:
   - examples/spring-boot-image-api/src/test
   workshops:
   - examples/spring-boot-image-api
+- id: spring-boot-image-intelligence-api
+  title:
+    en: Spring Boot image intelligence API workshop
+    ko: Spring Boot 이미지 인텔리전스 API 워크숍
+  gradlePath: ":spring-boot-image-intelligence-api"
+  sourceDir: examples/spring-boot-image-intelligence-api
+  kind: example
+  group: workshops
+  status: stable
+  artifact:
+  en: en/modules/spring-boot-image-intelligence-api.md
+  ko: ko/modules/spring-boot-image-intelligence-api.md
+  sourcePaths:
+  - examples/spring-boot-image-intelligence-api/src/main
+  - examples/spring-boot-image-intelligence-api/README.md
+  - examples/spring-boot-image-intelligence-api/README.ko.md
+  testPaths:
+  - examples/spring-boot-image-intelligence-api/src/test
+  workshops:
+  - examples/spring-boot-image-intelligence-api
 - id: spring-boot-ocr-api
   title:
     en: Spring Boot OCR API workshop

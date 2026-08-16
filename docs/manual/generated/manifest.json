@@ -445,6 +445,32 @@
     },
     {
       "artifact": null,
+      "en": "en/modules/spring-boot-image-intelligence-api.md",
+      "gradlePath": ":spring-boot-image-intelligence-api",
+      "group": "workshops",
+      "id": "spring-boot-image-intelligence-api",
+      "kind": "example",
+      "ko": "ko/modules/spring-boot-image-intelligence-api.md",
+      "sourceDir": "examples/spring-boot-image-intelligence-api",
+      "sourcePaths": [
+        "examples/spring-boot-image-intelligence-api/src/main",
+        "examples/spring-boot-image-intelligence-api/README.md",
+        "examples/spring-boot-image-intelligence-api/README.ko.md"
+      ],
+      "status": "stable",
+      "testPaths": [
+        "examples/spring-boot-image-intelligence-api/src/test"
+      ],
+      "title": {
+        "en": "Spring Boot image intelligence API workshop",
+        "ko": "Spring Boot 이미지 인텔리전스 API 워크숍"
+      },
+      "workshops": [
+        "examples/spring-boot-image-intelligence-api"
+      ]
+    },
+    {
+      "artifact": null,
       "en": "en/modules/spring-boot-ocr-api.md",
       "gradlePath": ":spring-boot-ocr-api",
       "group": "workshops",

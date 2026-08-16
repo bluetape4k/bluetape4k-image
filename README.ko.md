@@ -43,12 +43,12 @@ benchmark module은 scrimage/libvips trade-off를 추측이 아니라 측정 가
 
 ## 매뉴얼
 
-[Image 0.3 매뉴얼](./docs/manual/ko/index.md)은 학습 경로, 모듈별 계약, 백엔드 선택,
+[Image 0.4 매뉴얼](./docs/manual/ko/index.md)은 학습 경로, 모듈별 계약, 백엔드 선택,
 네이티브 자원 수명, OCR·웹 연동, 실행 가능한 예제, 벤치마크 해석을 자세히 설명하는
 기준 문서입니다. 애플리케이션에서는 `bluetape4k-dependencies` 버전 하나만 선택하면 되며,
 개별 Image 라이브러리 버전은 중앙 BOM이 맞춰 줍니다.
 
-README는 현재 저장소의 모습을 요약합니다. 버전별 매뉴얼은 이와 달리 정확한 `0.3.0`
+README는 현재 저장소의 모습을 요약합니다. 버전별 매뉴얼은 이와 달리 정확한 `0.4.0`
 배포본을 다루며, 각 설명에서 해당 배포 소스로 이동할 수 있습니다.
 
 ## 제공 기능
@@ -257,35 +257,38 @@ val smoke = runtime.smokeTestCodec(
 ```kotlin
 // build.gradle.kts
 dependencies {
+    // 하나의 중앙 BOM 버전만 선택하면 모든 Image artifact 버전이 맞춰집니다.
+    implementation(platform("io.github.bluetape4k:bluetape4k-dependencies:<version>"))
+
     // Scrimage 기반 이미지 처리 (Java 25+)
-    implementation("io.github.bluetape4k.image:bluetape4k-images:0.3.0")
+    implementation("io.github.bluetape4k.image:bluetape4k-images")
 
     // Provider-neutral barcode/QR 추출 contract (Java 25+, 0.4.0+)
-    implementation("io.github.bluetape4k.image:bluetape4k-images-barcode-api:<version>")
+    implementation("io.github.bluetape4k.image:bluetape4k-images-barcode-api")
 
     // ZXing barcode provider (Java 25+, 0.4.0+)
-    implementation("io.github.bluetape4k.image:bluetape4k-images-barcode-zxing:<version>")
+    implementation("io.github.bluetape4k.image:bluetape4k-images-barcode-zxing")
 
     // Java2D CAPTCHA 생성 (Java 25+)
-    implementation("io.github.bluetape4k.image:bluetape4k-images-captcha:0.3.0")
+    implementation("io.github.bluetape4k.image:bluetape4k-images-captcha")
 
     // Tess4J/Tesseract OCR 추출 (Java 25+)
-    implementation("io.github.bluetape4k.image:bluetape4k-images-ocr:0.3.0")
+    implementation("io.github.bluetape4k.image:bluetape4k-images-ocr")
 
     // CAPTCHA 발급과 검증을 위한 Ktor route helper (Java 25+)
-    implementation("io.github.bluetape4k.image:bluetape4k-images-ktor:0.3.0")
+    implementation("io.github.bluetape4k.image:bluetape4k-images-ktor")
 
     // Spring Boot 4 자동 구성 (스토리지, CDN, 헬스, 메트릭)
-    implementation("io.github.bluetape4k.image:bluetape4k-images-spring-boot:0.3.0")
+    implementation("io.github.bluetape4k.image:bluetape4k-images-spring-boot")
 
     // libvips — 공유 API (두 vips 구현체 모두에 필요)
-    implementation("io.github.bluetape4k.image:bluetape4k-images-vips-api:0.3.0")
+    implementation("io.github.bluetape4k.image:bluetape4k-images-vips-api")
 
     // 아래 vips 백엔드 중 하나를 선택:
     // JVips JNI 백엔드 (JDK 25, legacy java21 artifact)
-    runtimeOnly("io.github.bluetape4k.image:bluetape4k-images-vips-java21:0.3.0")
+    runtimeOnly("io.github.bluetape4k.image:bluetape4k-images-vips-java21")
     // 또는 Java 25 FFM 백엔드
-    runtimeOnly("io.github.bluetape4k.image:bluetape4k-images-vips-java25:0.3.0")
+    runtimeOnly("io.github.bluetape4k.image:bluetape4k-images-vips-java25")
 }
 ```
 

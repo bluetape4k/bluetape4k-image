@@ -7,11 +7,11 @@ releaseRef: "0.4.0"
 
 # Repository Map
 
-The 0.4.0 release contains 15 Gradle projects. Nine are published coordinates, five are runnable examples, and one is a benchmark project. The project directory, Gradle path, and artifact name are intentionally not always the same, so the release registry is the authoritative inventory.
+The 0.4.0 release contains 19 Gradle projects. Ten are published library coordinates, one is the published image BOM, seven are runnable examples, and one is a benchmark project. The project directory, Gradle path, and artifact name are intentionally not always the same, so the release registry is the authoritative inventory.
 
 ## Platform and foundation
 
-- [Image BOM](../modules/bluetape4k-image-bom.md) aligns the eight image library artifacts.
+- [Image BOM](../modules/bluetape4k-image-bom.md) aligns the ten image library artifacts.
 - [Immutable image processing](../modules/bluetape4k-images.md) is the portable Scrimage/Java2D foundation used by CAPTCHA, OCR, Ktor, Spring Boot, and the libvips API test fixtures.
 
 ## Capabilities and frameworks
@@ -31,7 +31,7 @@ The common API does not select or initialize a backend for the application. Depl
 
 ## Learn and measure
 
-The five workshops cover basic JVM processing, Ktor image/CAPTCHA, Ktor OCR, Spring Boot storage, and Spring Boot OCR. The [benchmark project](../modules/bluetape4k-images-benchmark.md) compares processing and I/O paths but is not a published library.
+The seven workshops cover basic JVM processing, Ktor image/CAPTCHA, Ktor OCR, Spring Boot barcode, image storage, image intelligence, and Spring Boot OCR. The [benchmark project](../modules/bluetape4k-images-benchmark.md) compares processing and I/O paths but is not a published library.
 
 Start from [the learning path](../guides/learning-path.md) instead of reading the project list alphabetically.
 
