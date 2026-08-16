@@ -49,14 +49,14 @@ instead of implicit.
 
 ## Manual
 
-The [Image 0.3 manual](./docs/manual/en/index.md) is the source of truth for
+The [Image 0.4 manual](./docs/manual/en/index.md) is the source of truth for
 learning paths, module contracts, backend selection, native-resource ownership,
 OCR and web integration, runnable workshops, and benchmark interpretation.
 Applications select only the `bluetape4k-dependencies` version; the central BOM
 keeps the individual Image artifacts aligned.
 
 The README summarizes the current repository. The versioned manual instead
-describes the exact `0.3.0` release and links every claim to that release source.
+describes the exact `0.4.0` release and links every claim to that release source.
 
 ## What It Provides
 
@@ -275,35 +275,38 @@ with the current image release version:
 ```kotlin
 // build.gradle.kts
 dependencies {
+    // Select one version; the central BOM aligns every Image artifact.
+    implementation(platform("io.github.bluetape4k:bluetape4k-dependencies:<version>"))
+
     // Scrimage-based image processing (Java 25+)
-    implementation("io.github.bluetape4k.image:bluetape4k-images:0.3.0")
+    implementation("io.github.bluetape4k.image:bluetape4k-images")
 
     // Provider-neutral barcode/QR extraction contracts (Java 25+, 0.4.0+)
-    implementation("io.github.bluetape4k.image:bluetape4k-images-barcode-api:<version>")
+    implementation("io.github.bluetape4k.image:bluetape4k-images-barcode-api")
 
     // ZXing barcode provider (Java 25+, 0.4.0+)
-    implementation("io.github.bluetape4k.image:bluetape4k-images-barcode-zxing:<version>")
+    implementation("io.github.bluetape4k.image:bluetape4k-images-barcode-zxing")
 
     // Java2D CAPTCHA generation (Java 25+)
-    implementation("io.github.bluetape4k.image:bluetape4k-images-captcha:0.3.0")
+    implementation("io.github.bluetape4k.image:bluetape4k-images-captcha")
 
     // Tess4J/Tesseract OCR extraction (Java 25+)
-    implementation("io.github.bluetape4k.image:bluetape4k-images-ocr:0.3.0")
+    implementation("io.github.bluetape4k.image:bluetape4k-images-ocr")
 
     // Ktor route helpers for CAPTCHA issue and verification (Java 25+)
-    implementation("io.github.bluetape4k.image:bluetape4k-images-ktor:0.3.0")
+    implementation("io.github.bluetape4k.image:bluetape4k-images-ktor")
 
     // Spring Boot 4 auto-configuration (storage, CDN, health, metrics)
-    implementation("io.github.bluetape4k.image:bluetape4k-images-spring-boot:0.3.0")
+    implementation("io.github.bluetape4k.image:bluetape4k-images-spring-boot")
 
     // libvips — shared API (required by both vips implementations)
-    implementation("io.github.bluetape4k.image:bluetape4k-images-vips-api:0.3.0")
+    implementation("io.github.bluetape4k.image:bluetape4k-images-vips-api")
 
     // Choose ONE vips backend:
     // JVips JNI backend (JDK 25; legacy java21 artifact)
-    runtimeOnly("io.github.bluetape4k.image:bluetape4k-images-vips-java21:0.3.0")
+    runtimeOnly("io.github.bluetape4k.image:bluetape4k-images-vips-java21")
     // OR Java 25 FFM backend
-    runtimeOnly("io.github.bluetape4k.image:bluetape4k-images-vips-java25:0.3.0")
+    runtimeOnly("io.github.bluetape4k.image:bluetape4k-images-vips-java25")
 }
 ```
 

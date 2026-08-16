@@ -5,7 +5,7 @@ require "json"
 
 module ManualDocs
   class SettingsInventory
-    PROJECT_DIR_PATTERN = /^\s*project\("(:[^"]+)"\)\.projectDir\s*=\s*file\("([^"]+)"\)\s*$/
+    PROJECT_DIR_PATTERN = /^[ \t]*project\("(:[^"]+)"\)\.projectDir[ \t]*=[ \t]*(?:\n[ \t]*)?file\("([^"]+)"\)[ \t]*(?=\n|\z)/
 
     def initialize(settings_path:, output_path:)
       @settings_path = settings_path
@@ -13,11 +13,7 @@ module ManualDocs
     end
 
     def write
-      rows = File.readlines(@settings_path, chomp: true).each_with_object([]) do |line, result|
-        match = PROJECT_DIR_PATTERN.match(line)
-        next unless match
-
-        gradle_path, source_dir = match.captures
+      rows = File.read(@settings_path).scan(PROJECT_DIR_PATTERN).each_with_object([]) do |(gradle_path, source_dir), result|
         result << {
           "gradlePath" => gradle_path,
           "kind" => kind_for(source_dir),

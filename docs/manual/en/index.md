@@ -24,10 +24,10 @@ This manual is organized around decisions and production tasks rather than packa
 
 Applications select one central BOM version: <code>io.github.bluetape4k:bluetape4k-dependencies:&lt;version&gt;</code>. They do not need to align the image BOM, Scrimage, Ktor, Spring Boot, or native binding versions independently.
 
-The technical baseline is the immutable <code>0.4.0</code> release. It contains 8 published libraries, 1 published image BOM, 5 runnable examples, and 1 non-published benchmark project.
+The technical baseline is the immutable <code>0.4.0</code> release. It contains 10 published libraries, 1 published image BOM, 7 runnable examples, and 1 non-published benchmark project (19 Gradle projects in total).
 
 - [Release tag 0.4.0](https://github.com/bluetape4k/bluetape4k-image/tree/0.4.0)
-- [Release commit a571c300](https://github.com/bluetape4k/bluetape4k-image/commit/ea5175b083babf8880f53cf80c9a264a0c61777e)
+- [Release commit ea5175b0](https://github.com/bluetape4k/bluetape4k-image/commit/ea5175b083babf8880f53cf80c9a264a0c61777e)
 - Runtime baseline: JDK 25 for every published module and native backend
 
 Features added after this tag are deliberately absent. Every source link in this manual resolves against the `0.4.0` release tag or its pinned commit.
@@ -37,7 +37,7 @@ Features added after this tag are deliberately absent. Every source link in this
 - Use [Getting started](getting-started.md) to establish the dependency and runtime baseline.
 - Read [Backend selection](guides/backend-selection.md) before choosing Scrimage, JVips, or the Java 25 FFM binding.
 - Follow the [Learning path](guides/learning-path.md) for an ordered route through processing, framework integration, OCR, and native execution.
-- Open the [Repository map](architecture/repository-map.md) to see how the 15 release projects fit together.
+- Open the [Repository map](architecture/repository-map.md) to see how the 19 release projects fit together.
 - Read [Testing and operations](guides/testing-and-operations.md) before shipping native libraries, OCR data, storage, or CDN configuration.
 
 ## Responsibility boundary

@@ -24,6 +24,7 @@ TITLES = {
   "ktor-ocr-api" => ["Ktor OCR API workshop", "Ktor OCR API 워크숍"],
   "spring-boot-image-api" => ["Spring Boot image API workshop", "Spring Boot 이미지 API 워크숍"],
   "spring-boot-barcode-api" => ["Spring Boot barcode API workshop", "Spring Boot 바코드 API 워크숍"],
+  "spring-boot-image-intelligence-api" => ["Spring Boot image intelligence API workshop", "Spring Boot 이미지 인텔리전스 API 워크숍"],
   "spring-boot-ocr-api" => ["Spring Boot OCR API workshop", "Spring Boot OCR API 워크숍"],
 }.freeze
 

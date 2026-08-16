@@ -24,10 +24,10 @@ releaseRef: "0.4.0"
 
 애플리케이션은 <code>io.github.bluetape4k:bluetape4k-dependencies:&lt;version&gt;</code> 하나만 선택하면 된다. Image BOM, Scrimage, Ktor, Spring Boot, 네이티브 바인딩 버전을 따로 맞출 필요는 없다.
 
-이 매뉴얼의 기술 기준은 변경되지 않는 <code>0.4.0</code> 릴리스다. 이 태그에는 배포 라이브러리 8개, 배포 BOM 1개, 실행 예제 5개, 배포하지 않는 벤치마크 프로젝트 1개가 들어 있다.
+이 매뉴얼의 기술 기준은 변경되지 않는 <code>0.4.0</code> 릴리스다. 이 태그에는 배포 라이브러리 10개, 배포 BOM 1개, 실행 예제 7개, 배포하지 않는 벤치마크 프로젝트 1개가 들어 있으며 Gradle 프로젝트는 모두 19개다.
 
 - [0.4.0 릴리스 태그](https://github.com/bluetape4k/bluetape4k-image/tree/0.4.0)
-- [릴리스 커밋 a571c300](https://github.com/bluetape4k/bluetape4k-image/commit/ea5175b083babf8880f53cf80c9a264a0c61777e)
+- [릴리스 커밋 ea5175b0](https://github.com/bluetape4k/bluetape4k-image/commit/ea5175b083babf8880f53cf80c9a264a0c61777e)
 - 런타임 기준: 모든 배포 모듈과 네이티브 백엔드는 JDK 25
 
 이 태그 이후에 추가된 기능은 다루지 않는다. 매뉴얼의 소스 링크는 `0.4.0` 릴리스 태그나 해당 태그의 고정 커밋을 가리킨다.
@@ -37,7 +37,7 @@ releaseRef: "0.4.0"
 - [시작하기](getting-started.md)에서 의존성과 런타임 기준을 정한다.
 - Scrimage, JVips, Java 25 FFM 중 무엇을 쓸지 정하기 전에 [백엔드 선택](guides/backend-selection.md)을 읽는다.
 - [학습 경로](guides/learning-path.md)를 따라 기본 처리, 프레임워크 연동, OCR, 네이티브 실행 순으로 익힌다.
-- [저장소 지도](architecture/repository-map.md)에서 릴리스 프로젝트 15개의 관계를 확인한다.
+- [저장소 지도](architecture/repository-map.md)에서 릴리스 프로젝트 19개의 관계를 확인한다.
 - 네이티브 라이브러리, OCR 언어 데이터, 스토리지와 CDN 설정을 운영에 넣기 전에 [테스트와 운영](guides/testing-and-operations.md)을 읽는다.
 
 ## 책임 경계

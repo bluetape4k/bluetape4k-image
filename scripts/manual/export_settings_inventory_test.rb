@@ -2,6 +2,7 @@ require "fileutils"
 require "json"
 require "minitest/autorun"
 require "tmpdir"
+require "yaml"
 
 require_relative "export_settings_inventory"
 
@@ -38,6 +39,69 @@ class SettingsInventoryTest < Minitest::Test
         ).write
       end
       assert_match(/no Gradle project directories found/, error.message)
+    end
+  end
+
+  def test_exports_multiline_project_directory_assignments
+    Dir.mktmpdir("settings-inventory-multiline") do |root|
+      settings = File.join(root, "settings.gradle.kts")
+      output = File.join(root, "build/manual/module-inventory.json")
+      File.write(settings, <<~KOTLIN)
+        include("spring-boot-image-intelligence-api")
+        project(":spring-boot-image-intelligence-api").projectDir =
+            file("examples/spring-boot-image-intelligence-api")
+      KOTLIN
+
+      rows = ManualDocs::SettingsInventory.new(settings_path: settings, output_path: output).write
+
+      assert_equal [":spring-boot-image-intelligence-api"], rows.map { |row| row.fetch("gradlePath") }
+      assert_equal "examples/spring-boot-image-intelligence-api", rows.first.fetch("sourceDir")
+      assert_equal "example", rows.first.fetch("kind")
+    end
+  end
+end
+
+class ManualProvenanceTest < Minitest::Test
+  ROOT = File.expand_path("../..", __dir__)
+  EXPECTED_COMMIT = "ea5175b083babf8880f53cf80c9a264a0c61777e"
+
+  def test_manifest_snapshots_share_the_release_topology
+    yaml = YAML.safe_load(File.read(File.join(ROOT, "docs/manual/manifest.yaml")))
+    json = JSON.parse(File.read(File.join(ROOT, "docs/manual/generated/manifest.json")))
+
+    assert_equal "0.4.0", yaml.fetch("releaseRef")
+    assert_equal EXPECTED_COMMIT, yaml.fetch("releaseCommit")
+    assert_equal 19, yaml.fetch("modules").length
+    assert_equal 19, json.fetch("modules").length
+    assert_equal yaml.fetch("modules").map { |entry| entry.fetch("id") }.sort,
+                 json.fetch("modules").map { |entry| entry.fetch("id") }.sort
+    assert_includes yaml.fetch("modules").map { |entry| entry.fetch("id") }, "spring-boot-image-intelligence-api"
+    assert_equal 7, yaml.fetch("modules").count { |entry| entry.fetch("kind") == "example" }
+    assert_equal 1, yaml.fetch("modules").count { |entry| entry.fetch("kind") == "benchmark" }
+    assert_equal 10, yaml.fetch("modules").count { |entry| entry.fetch("kind") == "library" && entry.fetch("group") != "platform" }
+  end
+
+  def test_release_provenance_labels_and_authored_pages_are_current
+    readme = File.read(File.join(ROOT, "README.md"))
+    readme_ko = File.read(File.join(ROOT, "README.ko.md"))
+    index = File.read(File.join(ROOT, "docs/manual/en/index.md"))
+    index_ko = File.read(File.join(ROOT, "docs/manual/ko/index.md"))
+    intelligence_en = File.read(File.join(ROOT, "docs/manual/en/modules/spring-boot-image-intelligence-api.md"))
+    intelligence_ko = File.read(File.join(ROOT, "docs/manual/ko/modules/spring-boot-image-intelligence-api.md"))
+    diagram_source = File.read(File.join(ROOT, "scripts/manual/render_image_diagrams.rb"))
+
+    assert_includes readme, "Image 0.4 manual"
+    assert_includes readme_ko, "Image 0.4 매뉴얼"
+    assert_includes readme, "io.github.bluetape4k:bluetape4k-dependencies:<version>"
+    assert_includes readme_ko, "io.github.bluetape4k:bluetape4k-dependencies:<version>"
+    assert_includes index, "10 published libraries"
+    assert_includes index_ko, "배포 라이브러리 10개"
+    assert_includes index, "Release commit ea5175b0"
+    assert_includes index_ko, "릴리스 커밋 ea5175b0"
+    assert_includes diagram_source, "Image 0.4 / 19 projects / 7 workshops / 1 benchmark"
+    [intelligence_en, intelligence_ko].each do |document|
+      refute_match(/This section will be completed|안정판 소스를 바탕으로 내용을 보강할 예정입니다/, document)
+      assert_includes document, EXPECTED_COMMIT
     end
   end
 end

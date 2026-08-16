@@ -80,12 +80,12 @@ end
 def repository_learning_map
   connectors = [
     edge("deps-core", "M800 270 V325", color: :purple),
-    edge("core-model", "M800 445 V490 H300 V525", color: :cyan),
+    edge("core-model", "M650 445 V475 Q650 490 635 490 H315 Q300 490 300 505 V525", color: :cyan),
     edge("core-backend", "M800 445 V525", color: :teal),
-    edge("core-framework", "M800 445 V490 H1300 V525", color: :amber),
-    edge("model-workshops", "M300 675 V720 H570 V760", color: :cyan),
+    edge("core-framework", "M950 445 V475 Q950 490 965 490 H1285 Q1300 490 1300 505 V525", color: :amber),
+    edge("model-workshops", "M300 675 V700 Q300 715 315 715 H555 Q570 715 570 730 V760", color: :cyan),
     edge("backend-workshops", "M800 675 V760", color: :teal),
-    edge("framework-workshops", "M1300 675 V720 H1030 V760", color: :amber),
+    edge("framework-workshops", "M1300 675 V700 Q1300 715 1285 715 H1045 Q1030 715 1030 730 V760", color: :amber),
   ].join
   body = <<~SVG
     <g id="connectors" filter="url(#glow)">#{connectors}</g>
@@ -94,10 +94,10 @@ def repository_learning_map
     #{card(105, 525, 390, 150, "Pure JVM processing", ["Scrimage immutable images", "Java2D drawing and CAPTCHA", "batch, filters, similarity"], color: COLORS[:cyan])}
     #{card(605, 525, 390, 150, "Native acceleration", ["JVips JNI / vips-ffm FFM", "native memory / codec capability"], color: COLORS[:teal])}
     #{card(1105, 525, 390, 150, "Integrations and ops", ["OCR / Spring Boot / Ktor", "storage / CDN / health / metrics"], color: COLORS[:amber])}
-    #{card(185, 760, 1230, 145, "5 runnable workshops", ["start with basic-processing, then choose a web framework or native backend", "observe output files, OCR failures, native ownership, metrics, and recovery"], color: COLORS[:rose])}
+    #{card(185, 760, 1230, 145, "7 runnable workshops", ["start with basic-processing, then choose a web framework or native backend", "observe output files, OCR failures, native ownership, metrics, and recovery"], color: COLORS[:rose])}
     #{text_lines(800, 955, ["manual path: load -> transform -> encode -> serve -> operate"], size: 17, color: COLORS[:dim])}
   SVG
-  canvas("Learn Image Processing from the Boundary Inward", "Image 0.3 / 9 artifacts / 5 workshops / 1 benchmark", "Repository and learning map for the Image 0.3 manual.", body)
+  canvas("Learn Image Processing from the Boundary Inward", "Image 0.4 / 19 projects / 7 workshops / 1 benchmark", "Repository and learning map for the Image 0.4 manual.", body)
 end
 
 def processing_lifecycle
