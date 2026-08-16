@@ -107,6 +107,23 @@ S3 저장소 구현을 의도적으로 대체하려면 별도의 `ImageStorage` 
 없으면 source 전체를 `ByteArray`로 적재하지 않고 fail closed합니다. `Path` 다운로드는
 S3 resource를 통해 스트리밍한 뒤 destination 파일을 atomic replace합니다.
 
+#### 공통 저장소 계약 matrix
+
+아래 동작은 Local과 S3에서 같은 provider-neutral contract test로 검증합니다.
+filesystem capability와 AWS SDK interaction 세부 사항은 provider별 전용 테스트에 남깁니다.
+
+| 계약 | Local fixture | S3 fixture | CI 범위 |
+| --- | --- | --- | --- |
+| 기본 CRUD와 overwrite | 실제 임시 filesystem | stateful in-memory operations | module test |
+| `Path` 원자성과 destination 보존 | descriptor-relative staging | transfer snapshot과 resource stream | module test |
+| cold listing과 cancellation cleanup | secure directory 순회 | 관찰 가능한 Flow collector | module test |
+| filesystem capability matrix | Linux/macOS provider | N/A | Linux/macOS matrix |
+
+listing의 IO producer와 collector 사이에는 rendezvous 경계를 둡니다. collector가 취소되면
+진행 중인 항목 하나까지 남을 수 있지만 나머지 결과 전체를 materialize하지 않습니다.
+`CancellationException`은 `ImageStorageException`으로 변환하지 않으며, dispatcher
+경계에서는 object identity가 아니라 type과 message를 보존합니다.
+
 ### 객체 메타데이터 capability
 
 기존 `ImageStorage` 메서드 집합은 그대로 유지합니다. 메타데이터를 지원하는

@@ -17,6 +17,7 @@ import io.bluetape4k.support.requireNotBlank
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
@@ -282,7 +283,7 @@ class S3ImageStorage @JvmOverloads constructor(
     }
 
     override fun list(prefix: ImageObjectKey): Flow<ImageObjectKey> = flow {
-        val joinedPrefix = objectKey(prefix)
+        val joinedPrefix = "${objectKey(prefix).trimEnd('/')}/"
         val keyPrefixValue = properties.keyPrefix
         try {
             operations.listFlow(bucket = bucket, prefix = joinedPrefix).collect { obj ->
@@ -305,7 +306,7 @@ class S3ImageStorage @JvmOverloads constructor(
         } catch (e: Throwable) {
             throw e.toImageStorageException(prefix)
         }
-    }.flowOn(Dispatchers.IO)
+    }.buffer(capacity = 0).flowOn(Dispatchers.IO)
 
     private suspend fun headObject(key: ImageObjectKey): AwsS3ObjectMetadata =
         try {

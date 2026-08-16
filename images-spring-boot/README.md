@@ -113,6 +113,24 @@ without that capability they fail closed instead of loading the entire source
 into a `ByteArray`. `Path` downloads stream through an S3 resource and
 atomically replace the destination file.
 
+#### Shared storage contract matrix
+
+Local and S3 run the same provider-neutral contract tests for the behavior below.
+Provider-specific tests retain filesystem capability and AWS SDK interaction details.
+
+| Contract | Local fixture | S3 fixture | CI coverage |
+| --- | --- | --- | --- |
+| Basic CRUD and overwrite | Real temporary filesystem | Stateful in-memory operations | Module test |
+| `Path` atomicity and destination preservation | Descriptor-relative staging | Transfer snapshot and resource stream | Module test |
+| Cold listing and cancellation cleanup | Secure directory traversal | Observable Flow collector | Module test |
+| Filesystem capability matrix | Linux/macOS provider | N/A | Linux/macOS matrix |
+
+Listing uses a rendezvous boundary between the IO producer and collector. A cancelled
+collector may leave at most one in-flight item, but it does not materialize the remaining
+listing. `CancellationException` is propagated without conversion to
+`ImageStorageException`; dispatcher boundaries preserve its type and message rather than
+object identity.
+
 ### Object metadata capability
 
 `ImageStorage` keeps its original method set. Providers that support metadata also

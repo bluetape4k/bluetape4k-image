@@ -355,10 +355,13 @@ jobs:
         with:
           gradle-version: wrapper
           cache-read-only: true
-      - name: Test filesystem capability contract
+      - name: Test filesystem and storage contracts
         run: |
           ./gradlew :bluetape4k-images-spring-boot:test \
             --tests io.bluetape4k.images.spring.storage.LocalFileSystemContractTest \
+            --tests io.bluetape4k.images.spring.storage.LocalImageStorageCrudContractTest \
+            --tests io.bluetape4k.images.spring.storage.LocalImageStoragePathContractTest \
+            --tests io.bluetape4k.images.spring.storage.LocalImageStorageListingContractTest \
             --no-configuration-cache --no-daemon
         env:
           GRADLE_OPTS: "-Dorg.gradle.daemon=false"
