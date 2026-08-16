@@ -76,13 +76,13 @@ configurations {
 }
 
 sourceSets {
-    val main by getting
-    val unoptedVipsOptInFixture by creating {
+    val main = getByName("main")
+    create("unoptedVipsOptInFixture") {
         compileClasspath += main.output
         compileClasspath += main.compileClasspath
         runtimeClasspath += main.output
     }
-    val optedVipsOptInFixture by creating {
+    create("optedVipsOptInFixture") {
         compileClasspath += main.output
         compileClasspath += main.compileClasspath
         runtimeClasspath += main.output
