@@ -6,8 +6,11 @@ import io.bluetape4k.aws.spring.s3.S3Operations
 import io.bluetape4k.aws.spring.s3.S3Resource
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.flow
 import software.amazon.awssdk.services.s3.model.DeleteObjectResponse
 import software.amazon.awssdk.services.s3.model.NoSuchKeyException
 import software.amazon.awssdk.services.s3.model.PutObjectResponse
@@ -20,6 +23,7 @@ import java.time.Duration
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.AtomicReference
 
 /** 네트워크 없이 [S3ImageStorage]의 공통 계약을 실행하기 위한 stateful test fixture입니다. */
 internal class StatefulS3Operations : S3Operations {
@@ -32,6 +36,11 @@ internal class StatefulS3Operations : S3Operations {
     private val objects = ConcurrentHashMap<String, StoredObject>()
     private val reportedSizes = ConcurrentHashMap<String, Long>()
     private val activeInputStreams = AtomicInteger()
+    private val listInvocations = AtomicInteger()
+    private val listEmissions = AtomicInteger()
+    private val listEnumerations = AtomicInteger()
+    private val activeListCollectors = AtomicInteger()
+    private val nextListCancellation = AtomicReference<CancellationException?>()
 
     override suspend fun headObject(bucket: String, key: String): S3ObjectMetadata {
         val stored = objects[key] ?: throw NoSuchKeyException.builder().build()
@@ -89,8 +98,20 @@ internal class StatefulS3Operations : S3Operations {
         )
     }
 
-    override fun listFlow(bucket: String, prefix: String?, pageSize: Int): Flow<S3Object> =
-        listedObjects(prefix).asFlow()
+    override fun listFlow(bucket: String, prefix: String?, pageSize: Int): Flow<S3Object> = flow {
+        listInvocations.incrementAndGet()
+        activeListCollectors.incrementAndGet()
+        try {
+            nextListCancellation.getAndSet(null)?.let { throw it }
+            listedObjectSequence(prefix).forEach { objectMetadata ->
+                currentCoroutineContext().ensureActive()
+                listEmissions.incrementAndGet()
+                emit(objectMetadata)
+            }
+        } finally {
+            activeListCollectors.decrementAndGet()
+        }
+    }
 
     override fun resource(bucket: String, key: String): S3Resource =
         mockk<S3Resource>().also { resource ->
@@ -130,18 +151,38 @@ internal class StatefulS3Operations : S3Operations {
 
     internal fun hasOpenInputStreams(): Boolean = activeInputStreams.get() != 0
 
+    internal fun resetListObservations() {
+        listInvocations.set(0)
+        listEmissions.set(0)
+        listEnumerations.set(0)
+    }
+
+    internal fun listInvocationCount(): Int = listInvocations.get()
+
+    internal fun listEmissionCount(): Int = listEmissions.get()
+
+    internal fun listEnumerationCount(): Int = listEnumerations.get()
+
+    internal fun hasOpenListCollectors(): Boolean = activeListCollectors.get() != 0
+
+    internal fun cancelNextList(cancellation: CancellationException) {
+        nextListCancellation.set(cancellation)
+    }
+
     private fun listedObjects(prefix: String?): List<S3Object> =
+        listedObjectSequence(prefix).sortedBy(S3Object::key).toList()
+
+    private fun listedObjectSequence(prefix: String?): Sequence<S3Object> =
         objects.keys
             .asSequence()
             .filter { prefix == null || it.startsWith(prefix) }
-            .sorted()
             .map { key ->
+                listEnumerations.incrementAndGet()
                 S3Object.builder()
                     .key(key)
                     .size(objects.getValue(key).bytes.size.toLong())
                     .build()
             }
-            .toList()
 
     private fun etag(bytes: ByteArray): String = "fixture-${bytes.contentHashCode()}"
 }

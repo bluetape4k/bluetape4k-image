@@ -12,6 +12,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
@@ -413,7 +414,7 @@ class LocalImageStorage(
         } catch (e: IOException) {
             throw ImageStorageException.TransientException(key = prefix, cause = e)
         }
-    }.flowOn(Dispatchers.IO)
+    }.buffer(capacity = 0).flowOn(Dispatchers.IO)
 
     private fun validateStoredSize(key: ImageObjectKey, size: Long) {
         if (size > maxSizeBytes) {
