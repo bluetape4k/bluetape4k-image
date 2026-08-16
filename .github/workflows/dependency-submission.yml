@@ -15,12 +15,59 @@ concurrency:
 env:
   JAVA_VERSION: '25'
   JAVA_DISTRIBUTION: 'temurin'
+  # Set the repository variable to `enabled` only after GitHub Dependency graph
+  # is enabled for this repository. The default keeps a disabled repository
+  # from reporting a misleading failed submission check.
+  DEPENDENCY_GRAPH_POLICY: ${{ vars.DEPENDENCY_GRAPH_POLICY || 'disabled' }}
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
 
 jobs:
+  dependency_policy:
+    name: Dependency Submission Policy
+    runs-on: ubuntu-latest
+    outputs:
+      enabled: ${{ steps.policy.outputs.enabled }}
+    steps:
+      - name: Resolve repository policy
+        id: policy
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+
+          policy="$(printf '%s' "$DEPENDENCY_GRAPH_POLICY" | tr '[:upper:]' '[:lower:]')"
+          case "$policy" in
+            enabled)
+              enabled=true
+              result="submission enabled"
+              ;;
+            disabled)
+              enabled=false
+              result="submission skipped intentionally; repository Dependency graph is disabled by policy"
+              ;;
+            *)
+              echo "::error::DEPENDENCY_GRAPH_POLICY must be 'enabled' or 'disabled', got '$DEPENDENCY_GRAPH_POLICY'" >&2
+              exit 1
+              ;;
+          esac
+
+          echo "enabled=$enabled" >> "$GITHUB_OUTPUT"
+          {
+            echo "### Dependency Submission policy"
+            echo "- Repository policy: $policy"
+            echo "- Result: $result"
+            if [[ "$enabled" == true ]]; then
+              echo "- The repository Dependency graph must be enabled before submission can succeed."
+            else
+              echo "- To submit snapshots, enable the repository Dependency graph and set DEPENDENCY_GRAPH_POLICY=enabled."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
   dependency-submission:
     name: Dependency Submission
-    if: github.event_name == 'push' || github.ref == 'refs/heads/develop'
+    needs: dependency_policy
+    if: >-
+      needs.dependency_policy.outputs.enabled == 'true' &&
+      (github.event_name == 'push' || github.ref == 'refs/heads/develop')
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
