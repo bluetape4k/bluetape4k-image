@@ -580,6 +580,30 @@ jobs:
           done
         env:
           GRADLE_OPTS: "-Dorg.gradle.daemon=false"
+      - name: Verify Vips opt-in compiler fixtures
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+
+          ./gradlew :bluetape4k-images-vips-api:compileOptedVipsOptInFixtureKotlin \
+            -PverifyVipsOptInFixtures --no-configuration-cache --no-daemon
+
+          unopted_log="$RUNNER_TEMP/unopted-vips-opt-in.log"
+          set +e
+          ./gradlew :bluetape4k-images-vips-api:compileUnoptedVipsOptInFixtureKotlin \
+            -PverifyVipsOptInFixtures --no-configuration-cache --no-daemon \
+            >"$unopted_log" 2>&1
+          unopted_exit=$?
+          set -e
+          cat "$unopted_log"
+
+          if [[ "$unopted_exit" -eq 0 ]]; then
+            echo "unopted Vips fixture unexpectedly compiled" >&2
+            exit 1
+          fi
+          grep -q "VipsIncubatingApi" "$unopted_log"
+        env:
+          GRADLE_OPTS: "-Dorg.gradle.daemon=false"
       - name: Generate Kover XML report
         if: always()
         run: ./gradlew :bluetape4k-images-vips-api:koverXmlReport --no-daemon --no-configuration-cache
