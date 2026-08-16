@@ -32,8 +32,8 @@ tasks.withType<JavaCompile>().configureEach {
 }
 
 // Test fixtures compare against the regular images module, which targets JDK
-// 25. Keep the published API/JNI contract on 21 while compiling this internal
-// verification-only source set on the dependency's bytecode level.
+// 25. Keep the published API/native contract on the repository JDK 25 baseline
+// while compiling this internal verification-only source set at that level.
 tasks.named<JavaCompile>("compileTestFixturesJava") {
     javaCompiler.set(javaToolchains.compilerFor {
         languageVersion.set(JavaLanguageVersion.of(25))
@@ -76,13 +76,13 @@ configurations {
 }
 
 sourceSets {
-    val main by getting
-    val unoptedVipsOptInFixture by creating {
+    val main = getByName("main")
+    create("unoptedVipsOptInFixture") {
         compileClasspath += main.output
         compileClasspath += main.compileClasspath
         runtimeClasspath += main.output
     }
-    val optedVipsOptInFixture by creating {
+    create("optedVipsOptInFixture") {
         compileClasspath += main.output
         compileClasspath += main.compileClasspath
         runtimeClasspath += main.output

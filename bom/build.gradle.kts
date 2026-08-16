@@ -22,7 +22,7 @@ dependencies {
     constraints {
         rootProject.subprojects {
             if (name != "bluetape4k-image-bom" && !isNonPublishedModule()) {
-                api(this)
+                api(rootProject.dependencies.project(path))
             }
         }
     }

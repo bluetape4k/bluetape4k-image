@@ -70,9 +70,9 @@ val centralSnapshotsParallelism: Int = providers
     .orElse(4)
     .get()
 
-val projectGroup: String by project
-val baseVersion: String by project
-val snapshotVersion: String by project
+val projectGroup: String = project.property("projectGroup") as String
+val baseVersion: String = project.property("baseVersion") as String
+val snapshotVersion: String = project.property("snapshotVersion") as String
 
 fun MavenArtifactRepository.configureCentralSnapshotCredentials() {
     if (centralUser.isNotBlank() && centralPassword.isNotBlank()) {
@@ -228,7 +228,7 @@ subprojects {
             showFullStackTraces = true
         }
 
-        val reportMerge by registering(ReportMergeTask::class) {
+        val reportMerge = register<ReportMergeTask>("reportMerge") {
             val file = rootProject.layout.buildDirectory.asFile.get().resolve("reports/detekt/merged.xml")
             output.set(file)
         }
@@ -332,11 +332,6 @@ subprojects {
     }
 
     dependencies {
-        val api by configurations
-        val implementation by configurations
-        val testImplementation by configurations
-        val testRuntimeOnly by configurations
-
         api(rootBt4k.jetbrains.annotations)
 
         implementation(rootLibs.kotlin.stdlib)
@@ -364,11 +359,11 @@ subprojects {
         publishing {
             publications {
                 create<MavenPublication>("BluetapeImage") {
-                    val sourcesJar by tasks.registering(Jar::class) {
+                    val sourcesJar = tasks.register<Jar>("sourcesJar") {
                         archiveClassifier.set("sources")
                         from(sourceSets["main"].allSource)
                     }
-                    val javadocJar by tasks.registering(Jar::class) {
+                    val javadocJar = tasks.register<Jar>("javadocJar") {
                         archiveClassifier.set("javadoc")
                         from(layout.buildDirectory.asFile.get().resolve("javadoc"))
                     }
