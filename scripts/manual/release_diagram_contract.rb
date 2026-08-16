@@ -19,9 +19,10 @@ module ReleaseDiagrams
 
     attr_reader :root, :inventory_path
 
-    def initialize(root:, inventory_path:)
+    def initialize(root:, inventory_path:, require_diagram_provenance: true)
       @root = Pathname.new(root).expand_path
       @inventory_path = Pathname.new(inventory_path).expand_path
+      @require_diagram_provenance = require_diagram_provenance
     end
 
     def entries
@@ -51,7 +52,7 @@ module ReleaseDiagrams
     end
 
     def errors
-      failures = inventory_errors + manifest_errors + mirror_errors
+      failures = inventory_errors + manifest_errors + mirror_errors + diagram_provenance_errors
       provenance = release_provenance_errors
       failures.concat(provenance)
       failures.concat(release_entry_errors) if provenance.empty?
@@ -61,7 +62,7 @@ module ReleaseDiagrams
     end
 
     def sync!
-      blockers = release_provenance_errors
+      blockers = release_provenance_errors + diagram_provenance_errors
       blockers.concat(release_entry_errors) if blockers.empty?
       raise ContractError, blockers.join("\n") unless blockers.empty?
 
@@ -133,6 +134,18 @@ module ReleaseDiagrams
     def mirror_errors
       return [] unless mirror_root.exist?
       ["manual mirror directory still exists: #{MIRROR_ROOT}"]
+    end
+
+    def diagram_provenance_errors
+      manifest = resolved("docs/manual/diagram-provenance.yaml")
+      return [] unless @require_diagram_provenance
+      return ["diagram provenance: provenance manifest missing: #{manifest}"] unless manifest.file?
+
+      require_relative "diagram_provenance"
+      DiagramProvenance::Verifier.new(root: root, manifest_path: manifest).verify!(render: false)
+      []
+    rescue DiagramProvenance::ContractError => error
+      error.message.lines.map { |line| "diagram provenance: #{line.strip}" }
     end
 
     def release_provenance_errors
