@@ -4,17 +4,22 @@ import io.bluetape4k.aws.spring.s3.S3ListPage
 import io.bluetape4k.aws.spring.s3.S3ObjectMetadata
 import io.bluetape4k.aws.spring.s3.S3Operations
 import io.bluetape4k.aws.spring.s3.S3Resource
+import io.mockk.every
+import io.mockk.mockk
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
 import software.amazon.awssdk.services.s3.model.DeleteObjectResponse
 import software.amazon.awssdk.services.s3.model.NoSuchKeyException
 import software.amazon.awssdk.services.s3.model.PutObjectResponse
 import software.amazon.awssdk.services.s3.model.S3Object
+import java.io.ByteArrayInputStream
 import java.net.URI
 import java.net.URL
 import java.nio.charset.Charset
 import java.time.Duration
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
 
 /** 네트워크 없이 [S3ImageStorage]의 공통 계약을 실행하기 위한 stateful test fixture입니다. */
 internal class StatefulS3Operations : S3Operations {
@@ -25,11 +30,13 @@ internal class StatefulS3Operations : S3Operations {
     )
 
     private val objects = ConcurrentHashMap<String, StoredObject>()
+    private val reportedSizes = ConcurrentHashMap<String, Long>()
+    private val activeInputStreams = AtomicInteger()
 
     override suspend fun headObject(bucket: String, key: String): S3ObjectMetadata {
         val stored = objects[key] ?: throw NoSuchKeyException.builder().build()
         return S3ObjectMetadata(
-            sizeBytes = stored.bytes.size.toLong(),
+            sizeBytes = reportedSizes[key] ?: stored.bytes.size.toLong(),
             etag = etag(stored.bytes),
             contentType = stored.contentType,
         )
@@ -43,7 +50,7 @@ internal class StatefulS3Operations : S3Operations {
         bytes: ByteArray,
         contentType: String?,
     ): PutObjectResponse {
-        objects[key] = StoredObject(bytes.copyOf(), contentType)
+        store(key, bytes, contentType)
         return PutObjectResponse.builder().eTag(etag(bytes)).build()
     }
 
@@ -63,6 +70,7 @@ internal class StatefulS3Operations : S3Operations {
 
     override suspend fun delete(bucket: String, key: String): DeleteObjectResponse {
         objects.remove(key)
+        reportedSizes.remove(key)
         return DeleteObjectResponse.builder().build()
     }
 
@@ -85,13 +93,42 @@ internal class StatefulS3Operations : S3Operations {
         listedObjects(prefix).asFlow()
 
     override fun resource(bucket: String, key: String): S3Resource =
-        throw UnsupportedOperationException("Path contract는 STORAGE-3B에서 제공합니다.")
+        mockk<S3Resource>().also { resource ->
+            every { resource.getInputStream() } answers {
+                val bytes = load(key)
+                activeInputStreams.incrementAndGet()
+                object : ByteArrayInputStream(bytes) {
+                    private val closed = AtomicBoolean()
+
+                    override fun close() {
+                        if (closed.compareAndSet(false, true)) {
+                            activeInputStreams.decrementAndGet()
+                        }
+                        super.close()
+                    }
+                }
+            }
+        }
 
     override fun presignGet(bucket: String, key: String, duration: Duration?): URL =
         URI("https://example.com/$bucket/$key").toURL()
 
     override fun presignPut(bucket: String, key: String, duration: Duration?, contentType: String?): URL =
         URI("https://example.com/$bucket/$key").toURL()
+
+    internal fun store(key: String, bytes: ByteArray, contentType: String?) {
+        objects[key] = StoredObject(bytes.copyOf(), contentType)
+        reportedSizes.remove(key)
+    }
+
+    internal fun load(key: String): ByteArray =
+        objects[key]?.bytes?.copyOf() ?: throw NoSuchKeyException.builder().build()
+
+    internal fun overrideReportedSize(key: String, sizeBytes: Long) {
+        reportedSizes[key] = sizeBytes
+    }
+
+    internal fun hasOpenInputStreams(): Boolean = activeInputStreams.get() != 0
 
     private fun listedObjects(prefix: String?): List<S3Object> =
         objects.keys
