@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby
 
 require "rexml/document"
+require_relative "diagram_provenance"
 
 root = File.expand_path("../..", __dir__)
 assets = Dir[File.join(root, "docs/manual/assets/**/*.svg")].sort
@@ -36,5 +37,11 @@ assets.each do |svg_path|
   end
 end
 
+begin
+  DiagramProvenance::Verifier.new(root: root).verify!(render: false)
+rescue DiagramProvenance::ContractError => error
+  errors.concat(error.message.lines.map { |line| "diagram provenance: #{line.strip}" })
+end
+
 abort(errors.join("\n")) unless errors.empty?
-puts "Image diagram contract passed: #{assets.length} SVG/PNG pairs, accessible labels, directed connectors, and 14x14 arrowheads."
+puts "Image diagram contract passed: #{assets.length} SVG/PNG pairs, provenance, accessible labels, directed connectors, and 14x14 arrowheads."

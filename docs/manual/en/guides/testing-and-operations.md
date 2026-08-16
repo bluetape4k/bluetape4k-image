@@ -31,6 +31,19 @@ Measure input bytes, decoded dimensions, processing duration, output bytes, fail
 
 Bound request size before decode. Limit concurrent OCR and native work rather than allowing an unbounded coroutine fanout. Separate benchmark jobs and native test jobs from normal fast CI when their host requirements differ, but keep a scheduled path that proves them.
 
+## Diagram provenance
+
+The manual diagrams use the SVG source in `scripts/manual/render_image_diagrams.rb` and a controlled `rsvg-convert` delivery profile. [`diagram-provenance.yaml`](../../diagram-provenance.yaml) records the renderer version, requested and resolved font inventory, execution environment, source and PNG SHA-256 values, dimensions, color/alpha metadata, and content fingerprints for each of the five SVG/PNG pairs. Each asset keeps both the tracked PNG baseline and a rendered receipt from the recorded toolchain; the receipt is never inferred from the tracked file after the fact.
+
+Run the provenance check before publishing a manual change:
+
+    ruby -I scripts/manual scripts/manual/diagram_provenance_test.rb
+    ruby scripts/manual/verify_diagram_provenance.rb
+    ruby scripts/manual/render_image_diagrams.rb --output-root build/manual/diagram-render
+    ruby scripts/manual/validate_diagrams.rb
+
+The verifier renders the source twice in an isolated directory, requires equal PNG SHA-256 values, and compares that output with the recorded render receipt. It also validates the tracked baseline's content fingerprint, so a same-sized swapped or unrelated PNG fails. The tracked baseline uses the semantic-fingerprint mode because PNG bytes produced by a different renderer, font inventory, operating system, or architecture are not portable; tracked-versus-receipt byte or semantic differences are therefore intentional, non-failing notes in this mode, while renderer and font drift fail with a diagnostic for the recorded delivery profile. `--write-manifest` performs this isolated render before writing a manifest and records the receipt separately from the tracked baseline.
+
 ## Release discipline
 
 This manual targets 0.4.0. Tests and source links must stay on that release commit. A green develop build cannot prove a frozen manual example.

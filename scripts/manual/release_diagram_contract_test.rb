@@ -76,10 +76,36 @@ class ReleaseDiagramContractTest < Minitest::Test
     assert_includes contract.errors, "sample: unsafe canonical path \"../sample\""
   end
 
+  def test_release_check_runs_manual_diagram_provenance_when_manifest_exists
+    write(@root.join("docs/manual/diagram-provenance.yaml"), YAML.dump({"schemaVersion" => 1, "source" => {}}))
+
+    assert_includes strict_contract.errors, "diagram provenance: provenance source script is missing"
+  end
+
+  def test_release_check_rejects_missing_provenance_manifest
+    strict = ReleaseDiagrams::Contract.new(
+      root: @root,
+      inventory_path: @root.join("docs/manual/release-diagrams.yaml"),
+    )
+
+    assert strict.errors.any? { |failure| failure.start_with?("diagram provenance: provenance manifest missing") }
+  end
+
   private
 
   def contract
-    ReleaseDiagrams::Contract.new(root: @root, inventory_path: @root.join("docs/manual/release-diagrams.yaml"))
+    ReleaseDiagrams::Contract.new(
+      root: @root,
+      inventory_path: @root.join("docs/manual/release-diagrams.yaml"),
+      require_diagram_provenance: false,
+    )
+  end
+
+  def strict_contract
+    ReleaseDiagrams::Contract.new(
+      root: @root,
+      inventory_path: @root.join("docs/manual/release-diagrams.yaml"),
+    )
   end
 
   def inventory_data

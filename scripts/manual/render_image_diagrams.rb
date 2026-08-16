@@ -2,6 +2,7 @@
 
 require "cgi"
 require "fileutils"
+require "optparse"
 require "open3"
 
 ROOT = File.expand_path("../..", __dir__)
@@ -167,9 +168,9 @@ def ocr_web_flow
     #{card(590, 865, 420, 115, "Storage and delivery", ["local or S3 object lifecycle", "CDN and cache policy stay explicit"], color: COLORS[:teal])}
     #{card(1055, 865, 420, 115, "Operations", ["limits / failures / latency / health", "test native paths in containers"], color: COLORS[:purple])}
     <g id="comparison-flow" filter="url(#glow)">
-      #{edge("image-ocr", "M680 840 V852 H335 V865", color: :rose)}
+      #{edge("image-ocr", "M680 840 V850 H335 V865", color: :rose)}
       #{edge("image-storage", "M800 840 V865", color: :teal)}
-      #{edge("image-ops", "M920 840 V852 H1265 V865", color: :purple)}
+      #{edge("image-ops", "M920 840 V850 H1265 V865", color: :purple)}
     </g>
   SVG
   canvas("Web Convenience Must Preserve Image Boundaries", "request validation -> framework adapter -> image -> OCR, storage, and operations", "Flow from Spring Boot or Ktor requests to image processing, OCR, storage, and operational boundaries.", body)
@@ -206,14 +207,45 @@ DIAGRAMS = {
   "benchmarks/benchmark-interpretation-map" => benchmark_interpretation_map,
 }.freeze
 
-DIAGRAMS.each do |relative, svg|
-  svg_path = File.join(ASSETS, "#{relative}.svg")
-  png_path = File.join(ASSETS, "#{relative}.png")
+options = { output_root: ASSETS, only: nil }
+OptionParser.new do |parser|
+  parser.banner = "Usage: render_image_diagrams.rb [options]"
+  parser.on("--output-root PATH", "write SVG/PNG pairs below PATH") { |value| options[:output_root] = File.expand_path(value, ROOT) }
+  parser.on("--only IDS", "comma-separated diagram ids, for example overview/repository-learning-map") { |value| options[:only] = value.split(",").map(&:strip) }
+end.parse!
+
+selected = if options[:only]
+             unknown = options[:only] - DIAGRAMS.keys
+             abort("unknown diagram id(s): #{unknown.join(', ')}") unless unknown.empty?
+             DIAGRAMS.select { |relative, _| options[:only].include?(relative) }
+           else
+             DIAGRAMS
+           end
+
+renderer = ENV.fetch("DIAGRAM_RENDERER", "rsvg-convert")
+begin
+  scale = Integer(ENV.fetch("DIAGRAM_SCALE", "2"), 10)
+rescue ArgumentError
+  abort("DIAGRAM_SCALE must be a positive integer")
+end
+abort("DIAGRAM_SCALE must be a positive integer") unless scale.positive?
+
+begin
+  version_stdout, version_stderr, version_status = Open3.capture3(renderer, "--version")
+rescue Errno::ENOENT
+  abort("renderer unavailable: #{renderer}")
+end
+version = (version_stdout.to_s + version_stderr.to_s).lines.first.to_s.strip
+abort("renderer unavailable: #{renderer}") unless version_status.success? && !version.empty?
+
+selected.each do |relative, svg|
+  svg_path = File.join(options[:output_root], "#{relative}.svg")
+  png_path = File.join(options[:output_root], "#{relative}.png")
   FileUtils.mkdir_p(File.dirname(svg_path))
   normalized_svg = svg.each_line.map(&:rstrip).join("\n") + "\n"
   File.write(svg_path, normalized_svg)
-  stdout, stderr, status = Open3.capture3("rsvg-convert", "-w", (W * 2).to_s, "-h", (H * 2).to_s, "-o", png_path, svg_path)
+  stdout, stderr, status = Open3.capture3(renderer, "-w", (W * scale).to_s, "-h", (H * scale).to_s, "-o", png_path, svg_path)
   abort("render failed for #{relative}: #{stdout}#{stderr}") unless status.success?
 end
 
-puts "Rendered #{DIAGRAMS.length} dark Image diagrams as SVG and 2x PNG pairs."
+puts "Rendered #{selected.length} dark Image diagrams as SVG and #{scale}x PNG pairs with #{version}."
