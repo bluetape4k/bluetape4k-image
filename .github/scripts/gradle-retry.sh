@@ -48,7 +48,7 @@ while (( attempt < max_attempts )); do
 done
 
 if [[ -n "${GITHUB_STEP_SUMMARY:-}" ]]; then
-  if ! {
+  if {
     echo "### Gradle retry 결과"
     echo "- 명령: $command_label"
     echo "- 최초 시도: $first_attempt"
@@ -59,7 +59,12 @@ if [[ -n "${GITHUB_STEP_SUMMARY:-}" ]]; then
       echo "- 최종 결과: 실패 (exit $final_status)"
     fi
   } >> "$GITHUB_STEP_SUMMARY"; then
-    echo "warning: unable to write GITHUB_STEP_SUMMARY" >&2
+    :
+  else
+    echo "error: unable to write GITHUB_STEP_SUMMARY" >&2
+    if (( final_status == 0 )); then
+      final_status=1
+    fi
   fi
 fi
 

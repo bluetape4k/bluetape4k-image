@@ -602,6 +602,12 @@ jobs:
             exit 1
           fi
           grep -q "VipsIncubatingApi" "$unopted_log"
+          {
+            echo "### Vips opt-in compiler fixtures"
+            echo "- opted fixture: 성공"
+            echo "- unopted fixture: 의도적 실패"
+            echo "- diagnostic: VipsIncubatingApi"
+          } >> "$GITHUB_STEP_SUMMARY"
         env:
           GRADLE_OPTS: "-Dorg.gradle.daemon=false"
       - name: Generate Kover XML report
@@ -635,7 +641,7 @@ jobs:
       - uses: actions/checkout@v7
       - uses: actions/setup-java@v5.7.0
         with:
-          # The module targets Java 21; Gradle/buildSrc runs on the repository baseline JDK 25.
+          # The module and Gradle/buildSrc use the repository baseline JDK 25.
           java-version: '25'
           distribution: ${{ env.JAVA_DISTRIBUTION }}
       - name: Install libvips

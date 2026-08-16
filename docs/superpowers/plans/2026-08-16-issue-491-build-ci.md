@@ -50,7 +50,7 @@ Use a temporary `GITHUB_STEP_SUMMARY` and fake commands that fail once then succ
 
 - [x] **Step 2: Implement the helper**
 
-The helper must use `set -Eeuo pipefail`, default to five attempts and thirty-second delay, preserve the wrapped command exit code, avoid retrying after the final attempt, and append a Korean summary containing the command, first-attempt status, attempts used, and final status. It must work when `$GITHUB_STEP_SUMMARY` is absent by writing no summary and still returning the command status.
+The helper must use `set -Eeuo pipefail`, default to five attempts and thirty-second delay, preserve the wrapped command exit code, avoid retrying after the final attempt, and append a Korean summary containing the command, first-attempt status, attempts used, and final status. It must work when `$GITHUB_STEP_SUMMARY` is absent by writing no summary and still returning the command status. If the hosted summary path exists but cannot be written, the helper must fail a previously successful command so observability cannot be silently lost.
 
 - [x] **Step 3: Replace only Vips native retry loops**
 
@@ -177,4 +177,4 @@ Read back exact head, CI, reviews, threads, labels, assignee, milestone, and mer
 
 - Spec coverage: dependency submission policy, Gradle 10 warnings, native retry observability, and Vips opt-in fixture behavior each have a dedicated task and command.
 - No intentional negative fixture is weakened; the positive and negative compiler checks are separated.
-- External Detekt `ReportingExtension.file(String)` is not repository-owned; it remains a documented upstream warning unless the selected catalog upgrade is independently proven safe.
+- External Detekt `ReportingExtension.file(String)` is not repository-owned; BUILD-1 records it as an explicit follow-up because the Detekt 2.x migration changes plugin ID, packages, reports, and rules.
