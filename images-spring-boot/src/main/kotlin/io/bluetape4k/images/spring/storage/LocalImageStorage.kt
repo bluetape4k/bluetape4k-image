@@ -150,29 +150,28 @@ class LocalImageStorage(
         }
     }
 
-    private val normalizedRootPath: String = rootDir.toAbsolutePath().normalize().toString()
-    private val realRootPath: String = run {
-        val normalizedRoot = Path.of(normalizedRootPath)
+    // provider-specific Path를 문자열로 round-trip하지 않아 ZipFS 등 non-default provider를 보존합니다.
+    private val normalizedRoot: Path = rootDir.toAbsolutePath().normalize()
+    private val realRoot: Path = run {
+        val normalized = normalizedRoot
         val attributes = try {
             Files.readAttributes(
-                normalizedRoot,
+                normalized,
                 BasicFileAttributes::class.java,
                 LinkOption.NOFOLLOW_LINKS,
             )
         } catch (e: NoSuchFileException) {
             throw IllegalArgumentException(
-                "Storage root must be provisioned before LocalImageStorage construction: $normalizedRoot",
+                "Storage root must be provisioned before LocalImageStorage construction: $normalized",
                 e,
             )
         }
         require(!attributes.isSymbolicLink && attributes.isDirectory) {
-            "Storage root must be a real directory: $normalizedRoot"
+            "Storage root must be a real directory: $normalized"
         }
-        normalizedRoot.toRealPath().toString()
+        normalized.toRealPath()
     }
 
-    private val realRoot: Path
-        get() = Path.of(realRootPath)
     private val realRootFileKey: String? = Files.readAttributes(
         realRoot,
         BasicFileAttributes::class.java,
