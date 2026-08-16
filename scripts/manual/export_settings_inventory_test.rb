@@ -30,15 +30,20 @@ class SettingsInventoryTest < Minitest::Test
   def test_fails_when_settings_has_no_project_directory_assignments
     Dir.mktmpdir("settings-inventory") do |root|
       settings = File.join(root, "settings.gradle.kts")
-      File.write(settings, "rootProject.name = \"empty\"\n")
+      errors = ["\n", "\r\n"].map do |newline|
+        File.binwrite(settings, "rootProject.name = \"empty\"#{newline}")
 
-      error = assert_raises(RuntimeError) do
-        ManualDocs::SettingsInventory.new(
-          settings_path: settings,
-          output_path: File.join(root, "inventory.json"),
-        ).write
+        error = assert_raises(RuntimeError) do
+          ManualDocs::SettingsInventory.new(
+            settings_path: settings,
+            output_path: File.join(root, "inventory.json"),
+          ).write
+        end
+        assert_match(/no Gradle project directories found/, error.message)
+        error.message
       end
-      assert_match(/no Gradle project directories found/, error.message)
+
+      assert_equal 1, errors.uniq.length
     end
   end
 
@@ -57,6 +62,60 @@ class SettingsInventoryTest < Minitest::Test
       assert_equal [":spring-boot-image-intelligence-api"], rows.map { |row| row.fetch("gradlePath") }
       assert_equal "examples/spring-boot-image-intelligence-api", rows.first.fetch("sourceDir")
       assert_equal "example", rows.first.fetch("kind")
+    end
+  end
+
+  def test_exports_crlf_project_directory_assignments_without_changing_classification
+    Dir.mktmpdir("settings-inventory-crlf") do |root|
+      content = <<~KOTLIN
+        project(":not-a-project").name = "not-a-project"
+        val unrelatedSource = file("examples/not-a-project")
+        project(":bluetape4k-images").projectDir = file("images")
+        project(":bluetape4k-images-benchmark").projectDir =
+            file("benchmark/images-benchmark")
+        project(":basic-processing").projectDir = file("examples/basic-processing")
+        project(":spring-boot-image-intelligence-api").projectDir =
+            file("examples/spring-boot-image-intelligence-api")
+      KOTLIN
+      line_endings = { lf: "\n", crlf: "\r\n" }
+      rows_by_line_ending = line_endings.transform_values do |newline|
+        settings = File.join(root, "settings-#{newline == "\n" ? "lf" : "crlf"}.gradle.kts")
+        output = File.join(root, "build", "#{newline == "\n" ? "lf" : "crlf"}", "module-inventory.json")
+        File.binwrite(settings, content.gsub("\n", newline))
+
+        ManualDocs::SettingsInventory.new(settings_path: settings, output_path: output).write
+      end
+
+      assert_equal rows_by_line_ending.fetch(:lf), rows_by_line_ending.fetch(:crlf)
+      rows = rows_by_line_ending.fetch(:crlf)
+
+      assert_equal %w[example library benchmark example], rows.map { |row| row.fetch("kind") }
+      assert_equal [":basic-processing", ":bluetape4k-images", ":bluetape4k-images-benchmark", ":spring-boot-image-intelligence-api"],
+                   rows.map { |row| row.fetch("gradlePath") }
+    end
+  end
+
+  def test_reports_the_same_duplicate_error_for_lf_and_crlf
+    Dir.mktmpdir("settings-inventory-duplicate") do |root|
+      content = <<~KOTLIN
+        project(":duplicate").projectDir = file("images")
+        project(":duplicate").projectDir = file("examples/duplicate")
+      KOTLIN
+      errors = ["\n", "\r\n"].map do |newline|
+        settings = File.join(root, "settings-#{newline == "\n" ? "lf" : "crlf"}.gradle.kts")
+        File.binwrite(settings, content.gsub("\n", newline))
+
+        error = assert_raises(RuntimeError) do
+          ManualDocs::SettingsInventory.new(
+            settings_path: settings,
+            output_path: File.join(root, "inventory.json"),
+          ).write
+        end
+        error.message
+      end
+
+      assert_equal 1, errors.uniq.length
+      assert_match(/duplicate Gradle path: :duplicate/, errors.first)
     end
   end
 end

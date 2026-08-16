@@ -13,7 +13,8 @@ module ManualDocs
     end
 
     def write
-      rows = File.read(@settings_path).scan(PROJECT_DIR_PATTERN).each_with_object([]) do |(gradle_path, source_dir), result|
+      settings = File.read(@settings_path).gsub("\r\n", "\n")
+      rows = settings.scan(PROJECT_DIR_PATTERN).each_with_object([]) do |(gradle_path, source_dir), result|
         result << {
           "gradlePath" => gradle_path,
           "kind" => kind_for(source_dir),
