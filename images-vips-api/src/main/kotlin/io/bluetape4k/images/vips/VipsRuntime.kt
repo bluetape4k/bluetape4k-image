@@ -47,6 +47,10 @@ interface VipsRuntime {
     /** [shutdown] 이후 `true`. 이 상태에서 [init]을 호출하면 예외가 발생합니다. */
     val isShutdown: Boolean
 
+    /** 초기화에서 요청한 concurrency와 backend가 보고한 실제 적용 또는 미지원 상태입니다. */
+    val concurrencyCapability: VipsConcurrencyCapability
+        get() = VipsConcurrencyCapability.unknown("Runtime has not reported concurrency capability")
+
     /**
      * 선택된 libvips backend의 codec capability를 보고합니다.
      *

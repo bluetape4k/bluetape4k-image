@@ -85,9 +85,10 @@ import io.bluetape4k.images.vips.java25.FfmVipsRuntime
 
 // In your main function or Spring Boot @PostConstruct
 FfmVipsRuntime.init(
-    concurrency = Runtime.getRuntime().availableProcessors(),
     maxPixels = 150_000_000L
 )
+
+// vips-ffm 1.9.6 does not expose concurrency tuning; the binding default is used.
 
 // At application shutdown
 Runtime.getRuntime().addShutdownHook(Thread {
@@ -424,7 +425,6 @@ The `suspendFfmVipsImageOf*` variants use `withContext(Dispatchers.IO)` for non-
 app:
   images:
     vips:
-      concurrency: 4
       maxPixels: 150000000
       enableNativeAccess: true  # Ensure this is set
 ```
@@ -439,16 +439,13 @@ import jakarta.annotation.PreDestroy
 
 @Component
 class VipsImageService(
-    @Value("\${app.images.vips.concurrency:4}")
-    private val concurrency: Int,
-    
     @Value("\${app.images.vips.maxPixels:150000000}")
     private val maxPixels: Long,
 ) {
     @PostConstruct
     fun init() {
-        FfmVipsRuntime.init(concurrency, maxPixels)
-        log.info("FfmVipsRuntime initialized: concurrency=$concurrency")
+        FfmVipsRuntime.init(maxPixels = maxPixels)
+        log.info("FfmVipsRuntime initialized: ${FfmVipsRuntime.concurrencyCapability}")
     }
     
     @PreDestroy

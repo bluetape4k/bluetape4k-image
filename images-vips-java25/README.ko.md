@@ -85,9 +85,10 @@ import io.bluetape4k.images.vips.java25.FfmVipsRuntime
 
 // main 함수 또는 Spring Boot @PostConstruct에서
 FfmVipsRuntime.init(
-    concurrency = Runtime.getRuntime().availableProcessors(),
     maxPixels = 150_000_000L
 )
+
+// vips-ffm 1.9.6은 concurrency 조정 API를 제공하지 않으므로 binding 기본값을 사용합니다.
 
 // 애플리케이션 종료 시
 Runtime.getRuntime().addShutdownHook(Thread {
@@ -423,7 +424,6 @@ Thread.ofVirtual().factory().newThread {
 app:
   images:
     vips:
-      concurrency: 4
       maxPixels: 150000000
       enableNativeAccess: true  # 반드시 설정
 ```
@@ -438,16 +438,13 @@ import jakarta.annotation.PreDestroy
 
 @Component
 class VipsImageService(
-    @Value("\${app.images.vips.concurrency:4}")
-    private val concurrency: Int,
-    
     @Value("\${app.images.vips.maxPixels:150000000}")
     private val maxPixels: Long,
 ) {
     @PostConstruct
     fun init() {
-        FfmVipsRuntime.init(concurrency, maxPixels)
-        log.info("FfmVipsRuntime 초기화: concurrency=$concurrency")
+        FfmVipsRuntime.init(maxPixels = maxPixels)
+        log.info("FfmVipsRuntime 초기화: ${FfmVipsRuntime.concurrencyCapability}")
     }
     
     @PreDestroy

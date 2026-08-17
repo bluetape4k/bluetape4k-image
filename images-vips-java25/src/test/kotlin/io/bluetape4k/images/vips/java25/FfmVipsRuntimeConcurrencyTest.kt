@@ -6,6 +6,7 @@ import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.images.vips.VipsInitializationException
+import io.bluetape4k.images.vips.VipsConcurrencySupport
 import io.bluetape4k.images.vips.java25.internal.DefaultFfmVipsNativeRuntime
 import io.bluetape4k.images.vips.java25.internal.FfmVipsNativeRuntime
 import io.bluetape4k.junit5.concurrency.MultithreadingTester
@@ -83,6 +84,16 @@ class FfmVipsRuntimeConcurrencyTest {
     }
 
     @Test
+    fun `initialized runtime reports unsupported effective concurrency explicitly`() {
+        FfmVipsRuntime.init()
+
+        FfmVipsRuntime.concurrencyCapability.support shouldBeEqualTo VipsConcurrencySupport.UNSUPPORTED
+        FfmVipsRuntime.concurrencyCapability.requested shouldBeEqualTo 4
+        FfmVipsRuntime.concurrencyCapability.effective shouldBeEqualTo null
+        FfmVipsRuntime.concurrencyCapability.reason shouldContain "does not expose"
+    }
+
+    @Test
     fun `invalid init arguments are rejected before native initialization`() {
         listOf(0, -1).forEach { concurrency ->
             assertFailsWith<IllegalArgumentException> {
@@ -106,7 +117,8 @@ class FfmVipsRuntimeConcurrencyTest {
         }
 
         error.message shouldContain "requested=2"
-        error.message shouldContain "supported default=4"
+        error.message shouldContain "effective=unknown"
+        error.message shouldContain "support=UNSUPPORTED"
         initCount.get() shouldBeEqualTo 0
         FfmVipsRuntime.isInitialized.shouldBeFalse()
     }
@@ -118,6 +130,22 @@ class FfmVipsRuntimeConcurrencyTest {
 
         assertFailsWith<VipsInitializationException> {
             FfmVipsRuntime.init()
+        }
+    }
+
+    @Test
+    fun `shutdown wins over invalid and unsupported init arguments`() {
+        FfmVipsRuntime.init()
+        FfmVipsRuntime.shutdown()
+
+        assertFailsWith<VipsInitializationException> {
+            FfmVipsRuntime.init(concurrency = 0)
+        }
+        assertFailsWith<VipsInitializationException> {
+            FfmVipsRuntime.init(maxPixels = 0)
+        }
+        assertFailsWith<VipsInitializationException> {
+            FfmVipsRuntime.init(concurrency = 2)
         }
     }
 }

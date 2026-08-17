@@ -4,6 +4,8 @@ import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.images.vips.VipsConcurrencySupport
+import io.bluetape4k.images.vips.VipsInitializationException
 import io.bluetape4k.images.vips.java21.internal.DefaultJVipsNativeRuntime
 import io.bluetape4k.images.vips.java21.internal.JVipsNativeRuntime
 import io.bluetape4k.junit5.concurrency.MultithreadingTester
@@ -81,6 +83,15 @@ class JVipsRuntimeConcurrencyTest {
     }
 
     @Test
+    fun `initialized runtime reports requested and effective concurrency`() {
+        JVipsRuntime.init(concurrency = 3)
+
+        JVipsRuntime.concurrencyCapability.support shouldBeEqualTo VipsConcurrencySupport.CONFIGURABLE
+        JVipsRuntime.concurrencyCapability.requested shouldBeEqualTo 3
+        JVipsRuntime.concurrencyCapability.effective shouldBeEqualTo 3
+    }
+
+    @Test
     fun `invalid init arguments are rejected before native initialization`() {
         listOf(0, -1).forEach { concurrency ->
             assertFailsWith<IllegalArgumentException> {
@@ -95,5 +106,18 @@ class JVipsRuntimeConcurrencyTest {
 
         initCount.get() shouldBeEqualTo 0
         JVipsRuntime.isInitialized.shouldBeFalse()
+    }
+
+    @Test
+    fun `shutdown wins over invalid init arguments`() {
+        JVipsRuntime.init()
+        JVipsRuntime.shutdown()
+
+        assertFailsWith<VipsInitializationException> {
+            JVipsRuntime.init(concurrency = 0)
+        }
+        assertFailsWith<VipsInitializationException> {
+            JVipsRuntime.init(maxPixels = 0)
+        }
     }
 }
