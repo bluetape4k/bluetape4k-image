@@ -61,6 +61,34 @@ class ReleaseDriftTest < Minitest::Test
     end
   end
 
+  def test_rejects_missing_english_repository_map_intelligence_reference
+    with_fixture do |root, paths|
+      map = paths.fetch(:english_map)
+      original = File.read(map)
+      mutated = original.sub("The image intelligence workshop is included. ", "")
+      refute_equal original, mutated
+      File.write(map, mutated)
+
+      errors = contract(root, paths).validate.errors
+
+      assert_includes errors, "docs/manual/en/architecture/repository-map.md: missing intelligence example reference"
+    end
+  end
+
+  def test_rejects_missing_korean_repository_map_intelligence_reference
+    with_fixture do |root, paths|
+      map = paths.fetch(:korean_map)
+      original = File.read(map)
+      mutated = original.sub("이미지 인텔리전스 워크숍도 포함한다. ", "")
+      refute_equal original, mutated
+      File.write(map, mutated)
+
+      errors = contract(root, paths).validate.errors
+
+      assert_includes errors, "docs/manual/ko/architecture/repository-map.md: missing intelligence example reference"
+    end
+  end
+
   def test_rejects_a_moved_tag_even_when_the_old_snapshot_is_self_consistent
     with_fixture do |root, paths|
       moved_commit = "c" * 40
