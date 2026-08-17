@@ -12,9 +12,9 @@ module ManualDocs
       @output_path = output_path
     end
 
-    def write
-      settings = File.read(@settings_path).gsub("\r\n", "\n")
-      rows = settings.scan(PROJECT_DIR_PATTERN).each_with_object([]) do |(gradle_path, source_dir), result|
+    def self.parse(settings)
+      normalized = settings.gsub("\r\n", "\n")
+      rows = normalized.scan(PROJECT_DIR_PATTERN).each_with_object([]) do |(gradle_path, source_dir), result|
         result << {
           "gradlePath" => gradle_path,
           "kind" => kind_for(source_dir),
@@ -23,9 +23,15 @@ module ManualDocs
         }
       end.sort_by { |row| row.fetch("gradlePath") }
 
-      raise "no Gradle project directories found in #{@settings_path}" if rows.empty?
+      raise "no Gradle project directories found" if rows.empty?
       duplicate = rows.group_by { |row| row.fetch("gradlePath") }.find { |_path, matches| matches.length > 1 }
       raise "duplicate Gradle path: #{duplicate.first}" if duplicate
+
+      rows
+    end
+
+    def write
+      rows = self.class.parse(File.read(@settings_path))
 
       FileUtils.mkdir_p(File.dirname(@output_path))
       File.binwrite(@output_path, JSON.pretty_generate(rows) + "\n")
@@ -34,12 +40,14 @@ module ManualDocs
 
     private
 
-    def kind_for(source_dir)
+    def self.kind_for(source_dir)
       return "example" if source_dir.start_with?("examples/")
       return "benchmark" if source_dir == "benchmark" || source_dir.start_with?("benchmark/")
 
       "library"
     end
+
+    private_class_method :kind_for
   end
 end
 

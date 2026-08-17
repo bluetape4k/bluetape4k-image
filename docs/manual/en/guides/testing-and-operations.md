@@ -48,6 +48,20 @@ The verifier renders the source twice in an isolated directory, requires equal P
 
 This manual targets 0.4.0. Tests and source links must stay on that release commit. A green develop build cannot prove a frozen manual example.
 
+Before publishing a manual change, rebuild the tag-scoped inventory and run the drift contract. The validator peels the annotated tag, derives the exact project topology and publishing categories from the tagged `settings.gradle.kts` and `build.gradle.kts`, and compares the result with the YAML/JSON manifests, the English and Korean indexes, repository maps, inventory snapshot, and overview diagram label.
+
+    MANUAL_TAG=0.4.0
+    MANUAL_SHA="$(git rev-parse --verify "refs/tags/${MANUAL_TAG}^{commit}")"
+    ruby scripts/manual/export_settings_inventory.rb settings.gradle.kts build/manual/module-inventory.json
+    ruby scripts/manual/release_inventory.rb "$MANUAL_TAG" "$MANUAL_SHA" build/manual/module-inventory.json build/manual/release-module-inventory.json 19
+    ruby -I scripts/manual scripts/manual/release_inventory_test.rb
+    ruby -I scripts/manual scripts/manual/release_drift_test.rb
+    ruby scripts/manual/validate_release_drift.rb "$MANUAL_TAG"
+    ruby scripts/manual/export_manifest.rb --check
+    ruby scripts/manual/sync_release_diagrams.rb --check
+
+The checks read Git metadata and write only disposable files under `build/manual`; they do not create or move tags, publish artifacts, upload to Maven Central, or dispatch workflows. Update the tag and expected project count together when preparing a new manual baseline.
+
 ## Sources
 
 - [Release test configuration](https://github.com/bluetape4k/bluetape4k-image/blob/ea5175b083babf8880f53cf80c9a264a0c61777e/build.gradle.kts)
