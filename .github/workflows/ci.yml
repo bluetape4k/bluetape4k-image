@@ -140,6 +140,8 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
       - uses: actions/checkout@v7
         with:
           repository: bluetape4k/bluetape4k-dependencies
@@ -171,6 +173,17 @@ jobs:
         run: ./gradlew help --no-daemon
       - name: Verify release validation contract
         run: python3 .github/scripts/test-release-validation-contract.py
+      - name: Verify tag-derived manual release drift
+        run: |
+          MANUAL_TAG=0.4.0
+          MANUAL_SHA="$(git rev-parse --verify "refs/tags/${MANUAL_TAG}^{commit}")"
+          ruby scripts/manual/export_settings_inventory.rb settings.gradle.kts build/manual/module-inventory.json
+          ruby scripts/manual/release_inventory.rb "$MANUAL_TAG" "$MANUAL_SHA" build/manual/module-inventory.json build/manual/release-module-inventory.json 19
+          ruby -I scripts/manual scripts/manual/release_inventory_test.rb
+          ruby -I scripts/manual scripts/manual/release_drift_test.rb
+          ruby scripts/manual/validate_release_drift.rb "$MANUAL_TAG"
+          ruby scripts/manual/export_manifest.rb --check
+          ruby -I scripts/manual scripts/manual/release_diagram_contract_test.rb
 
   build:
     name: Build (compile only)
