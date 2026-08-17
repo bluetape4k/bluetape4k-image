@@ -1,6 +1,8 @@
 package io.bluetape4k.images.vips.java21
 
+import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.images.vips.java21.internal.DefaultJVipsNativeRuntime
 import io.bluetape4k.images.vips.java21.internal.JVipsNativeRuntime
@@ -76,5 +78,22 @@ class JVipsRuntimeConcurrencyTest {
 
         initCount.get() shouldBeEqualTo 1
         JVipsRuntime.isInitialized.shouldBeTrue()
+    }
+
+    @Test
+    fun `invalid init arguments are rejected before native initialization`() {
+        listOf(0, -1).forEach { concurrency ->
+            assertFailsWith<IllegalArgumentException> {
+                JVipsRuntime.init(concurrency = concurrency)
+            }
+        }
+        listOf(0L, -1L).forEach { maxPixels ->
+            assertFailsWith<IllegalArgumentException> {
+                JVipsRuntime.init(maxPixels = maxPixels)
+            }
+        }
+
+        initCount.get() shouldBeEqualTo 0
+        JVipsRuntime.isInitialized.shouldBeFalse()
     }
 }

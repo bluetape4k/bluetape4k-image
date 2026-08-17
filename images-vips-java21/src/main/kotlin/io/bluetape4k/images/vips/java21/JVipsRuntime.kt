@@ -52,6 +52,9 @@ object JVipsRuntime : VipsRuntime, KLogging() {
     val maxPixels: Long get() = _maxPixels
 
     override fun init(concurrency: Int, maxPixels: Long) {
+        require(concurrency > 0) { "concurrency must be positive: $concurrency" }
+        require(maxPixels > 0) { "maxPixels must be positive: $maxPixels" }
+
         // 빠른 경로
         when (state.get()) {
             RuntimeState.INITIALIZED -> return

@@ -57,6 +57,15 @@ object FfmVipsRuntime : VipsRuntime, KLogging() {
     val maxPixels: Long get() = _maxPixels
 
     override fun init(concurrency: Int, maxPixels: Long) {
+        require(concurrency > 0) { "concurrency must be positive: $concurrency" }
+        require(maxPixels > 0) { "maxPixels must be positive: $maxPixels" }
+        if (concurrency != VipsLimits.DEFAULT_CONCURRENCY) {
+            throw VipsInitializationException(
+                "vips-ffm does not support concurrency tuning; " +
+                    "requested=$concurrency, supported default=${VipsLimits.DEFAULT_CONCURRENCY}",
+            )
+        }
+
         when (state.get()) {
             RuntimeState.INITIALIZED -> return
             RuntimeState.SHUTDOWN -> throw VipsInitializationException(

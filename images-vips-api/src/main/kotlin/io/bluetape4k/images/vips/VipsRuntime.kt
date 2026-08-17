@@ -23,11 +23,15 @@ interface VipsRuntime {
      * 이미 초기화된 경우 즉시 반환합니다.
      * 다른 스레드가 초기화 중인 경우 완료될 때까지 스핀 대기합니다.
      *
-     * @param concurrency libvips 내부 스레드 수 (기본값: 4)
+     * @param concurrency libvips 내부 스레드 수 (기본값: [VipsLimits.DEFAULT_CONCURRENCY]).
+     * backend가 스레드 수 조정을 지원하지 않으면 지원되지 않는 값은 명시적으로 거부합니다.
      * @param maxPixels 허용할 최대 픽셀 수 `width × height × bands` (기본값: 1억 5천만)
      * @throws VipsInitializationException 초기화 실패 또는 [shutdown] 이후 재호출 시
      */
-    fun init(concurrency: Int = 4, maxPixels: Long = VipsLimits.DEFAULT_MAX_PIXELS)
+    fun init(
+        concurrency: Int = VipsLimits.DEFAULT_CONCURRENCY,
+        maxPixels: Long = VipsLimits.DEFAULT_MAX_PIXELS,
+    )
 
     /**
      * libvips 런타임을 종료합니다.

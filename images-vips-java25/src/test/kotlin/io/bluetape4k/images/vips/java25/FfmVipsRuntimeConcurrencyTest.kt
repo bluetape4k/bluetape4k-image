@@ -1,7 +1,9 @@
 package io.bluetape4k.images.vips.java25
 
 import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.images.vips.VipsInitializationException
 import io.bluetape4k.images.vips.java25.internal.DefaultFfmVipsNativeRuntime
@@ -78,6 +80,35 @@ class FfmVipsRuntimeConcurrencyTest {
 
         initCount.get() shouldBeEqualTo 1
         FfmVipsRuntime.isInitialized.shouldBeTrue()
+    }
+
+    @Test
+    fun `invalid init arguments are rejected before native initialization`() {
+        listOf(0, -1).forEach { concurrency ->
+            assertFailsWith<IllegalArgumentException> {
+                FfmVipsRuntime.init(concurrency = concurrency)
+            }
+        }
+        listOf(0L, -1L).forEach { maxPixels ->
+            assertFailsWith<IllegalArgumentException> {
+                FfmVipsRuntime.init(maxPixels = maxPixels)
+            }
+        }
+
+        initCount.get() shouldBeEqualTo 0
+        FfmVipsRuntime.isInitialized.shouldBeFalse()
+    }
+
+    @Test
+    fun `unsupported non-default concurrency is rejected before native initialization`() {
+        val error = assertFailsWith<VipsInitializationException> {
+            FfmVipsRuntime.init(concurrency = 2)
+        }
+
+        error.message shouldContain "requested=2"
+        error.message shouldContain "supported default=4"
+        initCount.get() shouldBeEqualTo 0
+        FfmVipsRuntime.isInitialized.shouldBeFalse()
     }
 
     @Test
