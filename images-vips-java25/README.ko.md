@@ -120,7 +120,6 @@ import java.nio.file.Paths
 
 // 1. 런타임 초기화 (시작 시 한 번)
 FfmVipsRuntime.init(
-    concurrency = 4,
     maxPixels = 150_000_000L
 )
 
@@ -317,8 +316,8 @@ Report는 decode용 `heifload_buffer`와 encode용 `heifsave_buffer`를 확인�
 
 ```kotlin
 // 기본값: 150,000,000 픽셀
-// init()를 통해 사용자 정의 가능
-FfmVipsRuntime.init(concurrency = 4, maxPixels = 100_000_000L)
+// 픽셀 제한만 설정할 수 있으며 vips-ffm은 binding 기본 동시성을 사용합니다.
+FfmVipsRuntime.init(maxPixels = 100_000_000L)
 ```
 
 5000x5000 이미지 (3채널): 75,000,000 픽셀 (기본 제한 하)
@@ -385,7 +384,7 @@ import io.bluetape4k.images.vips.VipsInitializationException
 
 // 언제든지 상태 확인
 if (!FfmVipsRuntime.isInitialized) {
-    FfmVipsRuntime.init(concurrency = 4)
+    FfmVipsRuntime.init()
 }
 
 if (FfmVipsRuntime.isShutdown) {
