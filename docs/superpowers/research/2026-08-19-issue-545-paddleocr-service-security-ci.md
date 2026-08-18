@@ -107,11 +107,12 @@ research ordering dependency이다.
 | --- | --- | --- |
 | PaddleOCR release | `v3.7.0`, 2026-06-11 | 버전과 pyproject를 lock하고 구현 직전 재검증 |
 | Python package | Python `>=3.8`, `paddlex[ocr-core]>=3.7.0,<3.8.0`, `requests`, `aiohttp` 등 | facade wheel 크기와 실제 inference runtime 비용을 분리 |
-| inference engine | Paddle/Paddle static·dynamic, OpenVINO, ONNX Runtime, TensorRT 계열 선택 | 한 image에 engine을 혼합하지 않고 하나를 고정 |
+| inference engine | 공식 selector는 `paddle`, `paddle_static`, `paddle_dynamic`, `transformers`, `onnxruntime` | HPI의 OpenVINO·TensorRT backend는 별도 optimization capability로 기록하고, 한 image에 하나의 실제 engine과 정확한 버전을 고정 |
+| HPI optimization backend | OpenVINO·ONNX Runtime·TensorRT 변환/실행 backend | inference engine selector와 별도 identity로 version·provider·cache를 고정; 둘을 한 runtime 선택값으로 합치지 않음 |
 | basic serving | `paddlex --install serving`; `paddlex --serve --pipeline OCR` | JVM과 언어 중립 HTTP 경계로만 검토 |
 | basic default | Uvicorn `0.0.0.0:8080`, GPU가 있으면 GPU, 아니면 CPU | public bind·자동 device 선택을 제품 기본값으로 노출하지 않음 |
 | high-stability serving | Triton 기반; Linux 중심, HTTP 8000/gRPC 8001/metrics 8002 | 별도 운영·GPU lane; basic과 성능을 동일하다고 가정하지 않음 |
-| HPI CPU/GPU | Linux x86-64, Python 3.8–3.12 중심; GPU CUDA 11.8/cuDNN 8.9 또는 CUDA 12.6/cuDNN 9.5 | macOS ARM64와 JVM consumer를 자동 보장하지 않음 |
+| HPI CPU/GPU runtime | Linux x86-64, Python 3.8–3.12 중심; GPU CUDA 11.8/cuDNN 8.9 또는 CUDA 12.6/cuDNN 9.5 | platform·driver·native library matrix를 별도 고정하며 macOS ARM64와 JVM consumer를 자동 보장하지 않음 |
 | model source/cache | source connectivity probe, `paddlex.pretrain_dir`, offline probe disable 환경변수 | name-based download와 first-use network를 금지 |
 | PP-OCRv6 medium | detector 약 59.4MB, recognizer 약 73.3MB; tiny는 약 1.9MB/4.4MB | model·engine cache와 Base64 payload를 RSS 예산에 포함 |
 | 평가 지표 | v6와 v5/v4 문서 수치는 평가셋이 달라 직접 비교 불가 | vendor 수치로 Tesseract 우위를 주장하지 않음 |
@@ -162,11 +163,17 @@ failure는 Tesseract fallback이 아니라 명시적 provider failure로 기록�
 
 ## Runtime·model·container 공급망 계약
 
+이 절은 [#543 AI/ML 공급망 정책](2026-08-19-issue-543-ai-ml-supply-chain-policy.md)을
+normative contract로 상속하고, PaddleX HTTP service에 필요한 차이만 구체화한다.
+#543의 managed cache, descriptor·불변 실행 데이터, atomic no-replace promotion, directory
+밖 파일·symlink·startup download 거부를 완화하거나 다시 정의하지 않는다.
+
 ### 고정해야 하는 manifest
 
-모델 이름이나 mutable tag만 설정에 쓰지 않는다. 다음 manifest는 구현 시 JSON 또는
-동등한 signed artifact로 고정하고, parser가 검증한 동일 bytes를 loader에 전달해야
-한다.
+모델 이름이나 mutable tag만 설정에 쓰지 않는다. 다음은 **schema shape를 설명하는
+연구용 예시**이며, placeholder가 남은 상태는 채택 증거가 아니다. 구현 issue에서는
+resolved lock 파일과 signed manifest를 함께 만들고, parser가 검증한 동일 bytes를
+loader에 전달해야 한다.
 
 ```json
 {
@@ -174,49 +181,122 @@ failure는 Tesseract fallback이 아니라 명시적 provider failure로 기록�
   "provider": "paddleocr-http",
   "pipeline": "OCR",
   "paddleocr": "3.7.0",
-  "paddlex": "3.7.x",
-  "inferenceEngine": "<one locked engine>",
+  "paddlex": "3.7.0",
+  "inferenceEngine": {
+    "name": "<one selected engine>",
+    "version": "<resolved exact version>",
+    "selector": "<exact Paddle/HPI selector>"
+  },
   "container": {
     "image": "<registry/name>",
     "digest": "sha256:<64 lowercase hex>",
     "architecture": "linux/amd64",
     "python": "<locked version>",
-    "paddle": "<locked version>"
+    "paddle": "<locked version>",
+    "lockSha256": "<requirements lock hash>",
+    "packages": [
+      { "name": "paddleocr", "version": "3.7.0", "wheelSha256": "<64 lowercase hex>" },
+      { "name": "paddlex", "version": "<resolved exact version>", "wheelSha256": "<64 lowercase hex>" }
+    ]
   },
   "models": [
     {
       "role": "detector",
       "id": "<exact model id and revision>",
-      "source": "<allowlisted artifact URL or repository ref>",
+      "source": "<allowlisted artifact URL or immutable repository revision>",
       "bytes": 0,
-      "sha256": "<64 lowercase hex>",
+      "downloadSha256": "<64 lowercase hex>",
+      "treeManifestSha256": "<canonical path/size/hash tree digest>",
+      "cacheKey": "<model identity + downloadSha256 + treeManifestSha256 + engine + optimization backend + arch>",
+      "files": [
+        { "path": "<relative model path>", "bytes": 0, "sha256": "<64 lowercase hex>" }
+      ],
       "licenseSpdx": "Apache-2.0",
       "noticePath": "<checked-in or receipt path>"
     }
   ],
   "preprocessSha256": "<repo-owned config hash>",
   "postprocessSha256": "<repo-owned config hash>",
-  "cacheKey": "<model identity + sha256 + engine + arch>",
   "offline": true,
-  "sbom": { "format": "SPDX-JSON", "sha256": "<64 lowercase hex>" },
-  "provenance": { "sha256": "<64 lowercase hex>" }
+  "sbom": {
+    "format": "SPDX-JSON",
+    "sha256": "<64 lowercase hex>",
+    "subjectDigest": "sha256:<container digest>",
+    "predicateType": "https://spdx.dev/Document/v2.3",
+    "issuer": "<OIDC issuer>",
+    "workflow": "<repository/workflow/ref>",
+    "signatureReceipt": "<verification receipt>",
+    "timestamp": "<RFC3339>",
+    "verificationReceiptSha256": "<64 lowercase hex>"
+  },
+  "provenance": {
+    "sha256": "<64 lowercase hex>",
+    "subjectDigest": "sha256:<container digest>",
+    "predicateType": "<in-toto predicate URL>",
+    "issuer": "<OIDC issuer>",
+    "workflow": "<repository/workflow/ref>",
+    "signatureReceipt": "<verification receipt>",
+    "timestamp": "<RFC3339>",
+    "bundleSha256": "<64 lowercase hex>"
+  }
 }
 ```
 
 필수 의미는 다음과 같다.
 
 - `source`는 allowlist된 mirror 또는 release이며 요청 시 임의 URL resolver가 아니다.
+- `signatureReceipt`는 서명 자체가 아니라 verifier가 생성한 검증 결과 receipt를 가리킨다.
+  실제 서명 검증은 subject digest, issuer, workflow/ref, predicate와 timestamp를 함께
+  확인해야 하며 receipt 문자열만으로 통과시키지 않는다.
+- `downloadSha256`은 내려받은 원본 archive/file의 hash이고, `treeManifestSha256`은
+  canonical relative path·size·file hash·role 순서에서 계산한 unpacked tree identity다.
+  둘 중 하나만 기록한 model bundle은 채택 gate를 통과하지 못한다.
 - `bytes`와 SHA-256은 다운로드 후 다시 연 파일이 아니라 실제 loader에 전달한 verified
-  bytes에 대해 계산한다. 검증 뒤 경로를 재개방하여 TOCTOU를 만들지 않는다.
+  bytes에 대해 계산한다. 단일 파일은 검증된 read-only descriptor/stream을 loader에
+  전달하고, 경로만 받는 runtime은 immutable read-only image layer 또는 mount에서만
+  실행한다. 검증 뒤 mutable 경로를 재개방하는 구현은 gate를 통과하지 못한다.
+- multi-file model directory는 archive/tree digest와 모든 상대 파일의 size/hash를
+  기록한다. unpack은 전용 임시 디렉터리에서 `..`, absolute path, symlink, hardlink를
+  거부하고 완료 전에는 loader가 볼 수 없게 한다. 모든 파일을 검증한 뒤에만
+  `model-<manifest-hash>` 디렉터리로 atomic no-replace promotion하고, promotion된
+  디렉터리는 read-only로 bind한다. 기존 디렉터리를 덮어쓰거나 일부 파일만 교체하는
+  loader는 fail-closed 한다.
 - det/rec/orientation/unwarp model은 각각 license와 hash를 가진 독립 항목이다.
 - `preprocessSha256`/`postprocessSha256`는 resize, normalization, threshold, 좌표
   복원과 label mapping을 repo-owned 계약으로 묶는다.
 - portable model cache와 native engine cache는 identity와 eviction을 분리한다.
-- `cacheKey`는 filename, mutable URL, 단순 model name이 아니라 model hash·engine·arch를
-  포함한다.
+- `cacheKey`는 filename, mutable URL, 단순 model name이 아니라 `downloadSha256`·
+  `treeManifestSha256`·engine·optimization backend·arch를 포함한다.
+- `container.packages`는 예시 두 항목으로 끝나는 목록이 아니다. 구현 manifest에는
+  direct/transitive Python·Paddle·PaddleX·inference/optimization runtime package를
+  모두 resolved version과 wheel/source/native artifact hash로 기록하고, `lockSha256`은
+  그 완전한 lock의 hash여야 한다. 플랫폼별 native layer와 license/NOTICE도 별도 항목으로
+  남긴다.
 - `offline=true`는 startup 동안 network source probe와 first-use download를 모두
   금지한다. 실패하면 readiness가 되지 않고 provider가 조용히 기본 모델로 바뀌지
   않는다.
+
+### Multi-file model promotion
+
+Paddle detector·recognizer·orientation 조합은 여러 파일과 directory를 가질 수 있다.
+단순한 archive hash 하나만 기록하면 unpack된 tree와 loader가 읽은 파일을 증명하지
+못하므로 다음 순서를 강제한다.
+
+1. 다운로드 단계는 allowlisted source에서 temporary sibling으로만 쓴다. archive
+   `downloadSha256`, size, source revision을 먼저 기록한다.
+2. 전용 staging directory에서 `..`, absolute path, symlink, hardlink, device file,
+   world-writable ancestor와 manifest에 없는 extra file을 거부한다.
+3. canonical relative path 순서로 모든 파일의 `bytes`/SHA-256/role/license를 계산하고
+   `treeManifestSha256`을 만든다. `downloadSha256`, tree manifest, `files[].sha256`가
+   manifest와 다르면 즉시
+   삭제하고 readiness를 실패한다.
+4. 검증이 끝난 staging tree를 기존 destination에 덮어쓰지 않고,
+   `model-<treeManifestSha256>`로 atomic no-replace promotion한다. promotion 뒤에는
+   owner·permission을 확인하고 read-only mount로 loader에 전달한다.
+5. runtime이 directory path만 받는 경우에도 loader는 이 immutable read-only tree
+   외부를 열 수 없어야 한다. verified staging을 나중에 다시 resolve하거나 일부 파일을
+   in-place 교체하는 provider는 `DEFER`이고, verified bytes와 loader bytes가 다를
+   가능성이 있으면 fail-closed 한다.
 
 ### Image와 SBOM 정책
 
@@ -226,15 +306,19 @@ upstream 문서의 Docker image tag와 model source tag는 immutable 보장이 �
 1. base image와 PaddleX image의 `sha256` digest
 2. lock된 Python/Paddle/PaddleX/inference engine 버전
 3. model artifact별 size/SHA-256/license/NOTICE
-4. BuildKit SPDX SBOM과 provenance attestation
-5. builder, source commit, build timestamp, CVE scan 시점
-6. 가능하면 GitHub artifact/container attestation과 검증 결과
+4. BuildKit SPDX SBOM과 provenance attestation의 **subject image digest**
+5. attestation predicate type, OIDC issuer, repository/workflow/ref, 서명과 timestamp
+6. builder, source commit, build timestamp, CVE scan 시점
+7. 가능하면 GitHub artifact/container attestation과 검증 결과
 
 Docker BuildKit의 `--sbom`/`--provenance`와 GitHub `actions/attest@v4`는 채택 시
-사용할 수 있는 수단이지 현재 저장소가 이미 증명한 기능이 아니다. SBOM이 없거나
-digest·provenance가 서로 맞지 않으면 image를 publish하지 않는다. CVE 숫자 하나를
-자동으로 “안전” 판정으로 사용하지 말고, critical/high 예외·수정 기한·runtime
-exposure를 함께 기록한다.
+사용할 수 있는 수단이지 현재 저장소가 이미 증명한 기능이 아니다. 생성만으로는
+보안 증거가 되지 않는다. 배포 verifier가 attestation subject digest가 실제 image
+digest와 같은지, 허용한 predicate type·issuer·repository/workflow/ref인지, 서명과
+timestamp가 유효한지 확인해야 한다. SBOM/attestation이 없거나 subject·digest가
+서로 맞지 않으면 image를 publish하지 않는다. CVE 숫자 하나를 자동으로 “안전”
+판정으로 사용하지 말고, critical/high 예외·수정 기한·runtime exposure를 함께
+기록한다.
 
 ### License와 NOTICE 경계
 
@@ -253,7 +337,7 @@ model card, inference engine, base image package, fixture dataset, font와 NOTIC
 | 0.0.0.0 무단 OCR | 내부 service가 사설망 전체에 노출 | loopback/private bind, reverse proxy auth, mTLS, network policy |
 | image/PDF memory·CPU bomb | decode와 Base64 응답이 제한 없이 증가 | max body/pages/pixels, timeout, concurrency, cgroup memory/CPU |
 | Base64 응답 inflation | 큰 결과가 proxy·heap을 포화 | response byte cap, page cap, streaming/encoding budget, 413/429 contract |
-| OCR text·image·path 로그 유출 | request/debug/exception에 민감정보 포함 | no-log 기본, redacted reason code, path/native cause 내부 로그 전용 |
+| OCR text·image·path 로그 유출 | request/debug/exception에 민감정보 포함 | payload·URL·OCR text·path·raw native cause를 모든 수집 로그에서 금지하고 sanitized reason만 허용 |
 | model/cache traversal·symlink | writable cache 밖 파일 교체 | managed root, no-follow, owner/permission, verified bytes 단일 open |
 | 악성·교체된 model/image | mutable tag 또는 mirror 변경 | digest/size/hash/signature/SBOM/provenance fail-closed |
 | retry storm/provider outage | upstream timeout이 요청 폭주로 확대 | bounded retry budget, jitter, circuit breaker, backpressure |
@@ -277,13 +361,37 @@ reason code와 HTTP status를 반환한다. 실제 수치는 #544 corpus와 운�
 caller가 timeout을 취소한 뒤에도 native call이 즉시 kill된다고 주장하지 않으며,
 service-side timeout과 process isolation을 별도 acceptance로 검증한다.
 
+### 보안 negative acceptance
+
+최종 구현에서 다음 입력과 배포 구성을 모두 거부하는 fixture를 추가한다. 이 목록은
+방향 설명이 아니라 adoption gate의 필수 negative evidence다.
+
+- reverse proxy를 우회한 직접 service 접근, 무자격·만료 자격·잘못된 principal
+- caller가 지정한 local path, `file` URL, redirect, DNS rebinding, IPv4/IPv6 private
+  및 cloud metadata 주소
+- 허용하지 않은 MIME/magic, polyglot/archive bomb, truncated/decode bomb, temporary
+  disk quota 초과
+- body/page/pixel/text/entry/time/concurrency/response budget 초과와 413/429/timeout
+- cache root 밖 symlink·hardlink·`..`, world-writable ancestor, unknown extra model file
+- `cap-drop=ALL`, `no-new-privileges`, non-root/read-only, seccomp/AppArmor 또는
+  writable tmpfs quota를 위반한 image
+- Uvicorn/Triton/proxy/APM/stdout/stderr/crash/CI artifact에 body·URL·OCR text·path가
+  남는 logging configuration
+
+negative fixture는 응답 reason만 비교하며 raw upstream body나 입력 bytes를 결과물에
+복사하지 않는다. container hardening capability가 선택한 runtime에서 지원되지 않으면
+`N/A`로 축약하지 않고 해당 deployment를 `DEFER`한다.
+
 ### 오류와 관찰성
 
 외부 응답에는 `reason`, `requestId`, `pageIndex` 등 안정적인 필드만 남긴다. Python
 traceback, local path, model cache path, credential, upstream response body와 raw
-OCR text는 공개 exception/cause/suppressed에 넣지 않는다. 내부 redacted log에는
-provider version, image digest, model identity, timeout stage와 correlation id만
-남기며 이미지·원문·secret을 남기지 않는다.
+OCR text는 공개 exception/cause/suppressed에 넣지 않는다. no-log 범위는 Uvicorn/
+Triton access log, reverse proxy, APM span, crash dump, stdout/stderr, CI artifact까지
+포함한다. 내부 redacted log에는 allowlist된 provider version, model identity,
+timeout stage와 correlation id만 남기며 image digest를 포함한 image fingerprint,
+원문·파일 경로·secret을 남기지 않는다. image digest는 로그가 아닌 접근 제한된
+provenance receipt에서만 보존하고 public response와 payload label에는 넣지 않는다.
 
 health/readiness endpoint는 image를 처리하지 않고, verified model identity와
 runtime readiness만 반환한다. metrics label에 OCR text나 filename을 사용하지 않는다.
@@ -343,22 +451,144 @@ GPU availability와 긴 cold-start가 기존 Tesseract 변경을 막을 수 있�
 다음 명령 형태와 증거를 요구한다.
 
 ```bash
+set -euo pipefail
+
+SERVER_NAME=paddle-ocr-server
+NETWORK_NAME=paddle-ocr-smoke
+CURL_IMAGE='curlimages/curl@sha256:<64 lowercase hex>'
+
+capture_logs() {
+  docker logs --since 30s "$SERVER_NAME" > smoke-redacted.log 2>&1
+  log_capture=$?
+  if [ "$log_capture" -ne 0 ]; then
+    negative_scan=not-run
+  elif [ -f smoke-redacted.log ] && rg -n \
+      '(/models|file://|data:image|known-ocr-sentinel|OCR_TEXT_SENTINEL)' \
+      smoke-redacted.log >/dev/null; then
+    negative_scan=fail
+  else
+    negative_scan=pass
+  fi
+}
+
+cleanup() {
+  set +e
+  log_capture=not-run
+  negative_scan=not-run
+  capture_logs
+  docker rm -f "$SERVER_NAME" >/dev/null 2>&1
+  server_cleanup=$?
+  docker network rm "$NETWORK_NAME" >/dev/null 2>&1
+  network_cleanup=$?
+  printf 'log_capture=%s\nnegative_scan=%s\nserver_cleanup=%s\nnetwork_cleanup=%s\n' \
+    "$log_capture" "$negative_scan" "$server_cleanup" "$network_cleanup" \
+    > smoke-cleanup.txt
+}
+trap cleanup EXIT
+
 # PR: fake service, external network가 없는 contract test
 ./gradlew :bluetape4k-images-ocr-api:test :bluetape4k-images-ocr-paddle-http:test
 
 # CPU smoke: digest와 model manifest가 이미 workspace에 존재해야 함
-docker run --rm --network none --read-only \
+docker network create --internal "$NETWORK_NAME"
+docker run -d --pull=never --name "$SERVER_NAME" --network "$NETWORK_NAME" \
+  --user 65532:65532 --cap-drop=ALL --security-opt=no-new-privileges \
+  --read-only --tmpfs /tmp:rw,noexec,nosuid,nodev,size=64m \
   --mount type=bind,src="$MODEL_DIR",dst=/models,ro \
-  <paddle-image>@sha256:<pinned-digest> \
-  paddlex --serve --pipeline OCR
+  <paddle-image>@sha256:<pinned-digest> paddlex --serve --pipeline OCR
 
-# supply-chain evidence: 실제 build 단계에서 digest/attestation 확인
-docker buildx build --sbom=true --provenance=true \
-  --tag <registry/name>@sha256:<pinned-digest> --push .
+# `/health/ready`는 versioned Paddle service wrapper/image가 제공해야 할 readiness 계약이다.
+# Kotlin client adapter는 이 endpoint를 소비할 뿐 자체적으로 대체하지 않는다.
+ready=0
+for attempt in $(seq 1 30); do
+  if docker run --rm --pull=never --network "$NETWORK_NAME" \
+      -v "$FIXTURE_DIR:/fixtures:ro" "$CURL_IMAGE" \
+      --fail --max-time 2 http://$SERVER_NAME:8080/health/ready; then
+    ready=1
+    break
+  fi
+  sleep 1
+done
+test "$ready" -eq 1
+
+docker run --rm --pull=never --network "$NETWORK_NAME" \
+  -v "$FIXTURE_DIR:/fixtures:ro" "$CURL_IMAGE" --fail --max-time 10 \
+  -H 'Content-Type: application/json' --data-binary @/fixtures/smoke.json \
+  http://$SERVER_NAME:8080/ocr
+capture_logs
+! rg -n '(/models|file://|data:image|known-ocr-sentinel|OCR_TEXT_SENTINEL)' smoke-redacted.log
 ```
 
-위 예시의 `<...>` 값은 아직 선택하지 않았으며 실행 결과를 의미하지 않는다. CPU
-smoke는 외부 egress가 차단된 상태에서 model source probe 없이 readiness에 도달해야
+공급망 증거는 위 smoke와 별도의 **하나의 canonical trusted workflow build**에서 만든
+digest만 사용한다. `docker/build-push-action`의 출력 digest를 SBOM 생성, 두 attestation,
+두 verifier에 그대로 전달하며, local Buildx 재빌드의 digest를 서명된 subject로 대체하지
+않는다. action은 major tag가 아니라 조사 시 확인한 commit SHA로 고정한다.
+
+```yaml
+permissions:
+  id-token: write
+  contents: read
+  packages: write
+  attestations: write
+  artifact-metadata: write
+
+steps:
+  - id: image
+    uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+    with:
+      push: true
+      tags: <registry/name>:<immutable-build-tag>
+      sbom: true
+      provenance: true
+
+  - name: Generate build provenance attestation
+    uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4
+    with:
+      subject-name: <registry/name>
+      subject-digest: ${{ steps.image.outputs.digest }}
+      push-to-registry: true
+
+  - name: Generate SPDX SBOM file
+    uses: anchore/sbom-action@f325610c9f50a54015d37c8d16cb3b0e2c8f4de0 # v0.18.0
+    with:
+      image: <registry/name>@${{ steps.image.outputs.digest }}
+      format: spdx-json
+      output-file: sbom.spdx.json
+
+  - name: Generate SBOM attestation
+    uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4
+    with:
+      subject-name: <registry/name>
+      subject-digest: ${{ steps.image.outputs.digest }}
+      sbom-path: sbom.spdx.json
+      push-to-registry: true
+
+  - name: Verify provenance attestation
+    env:
+      IMAGE_DIGEST: ${{ steps.image.outputs.digest }}
+    run: |
+      gh attestation verify "oci://<registry/name>@${IMAGE_DIGEST}" \
+        --repo <owner>/<repo> \
+        --signer-workflow <owner>/<repo>/.github/workflows/<trusted-build>.yml \
+        --source-digest "${GITHUB_SHA}" --source-ref "${GITHUB_REF}" \
+        --predicate-type 'https://slsa.dev/provenance/v1' --format json > provenance.json
+
+  - name: Verify SBOM attestation
+    env:
+      IMAGE_DIGEST: ${{ steps.image.outputs.digest }}
+    run: |
+      gh attestation verify "oci://<registry/name>@${IMAGE_DIGEST}" \
+        --repo <owner>/<repo> \
+        --signer-workflow <owner>/<repo>/.github/workflows/<trusted-build>.yml \
+        --source-digest "${GITHUB_SHA}" --source-ref "${GITHUB_REF}" \
+        --predicate-type 'https://spdx.dev/Document/v2.3' --format json > sbom-attestation.json
+```
+
+위 예시의 `<...>` 값은 아직 선택하지 않았으며 실행 결과를 의미하지 않는다. smoke
+네트워크는 외부 egress가 없는 internal network이고, server와 request client를
+같은 격리망에 둔다. startup-only source-probe 거부와 request/response를 각각
+증명하며, readiness polling, bounded OCR response, redacted log, container/network
+cleanup 결과를 artifact로 보존한다. model source probe 없이 readiness에 도달해야
 하고, manifest hash와 loader bytes가 일치해야 한다. model checksum이 맞지 않으면
 server가 준비되지 않아야 한다.
 
@@ -367,10 +597,20 @@ limit, host architecture, Java/Python/Paddle version, raw/normalized output path
 hash를 포함한 ledger를 저장한다. 서로 다른 attempt가 같은 파일을 덮어쓰지 않도록
 `raw/<fixture-id>/<attempt-id>.json` 또는 동등한 JSONL cardinality를 사용한다.
 
-Tesseract job이 계속 통과하는지와 별개로 Paddle service failure를 별도 job으로
-분류한다. native/container failure가 기존 Tesseract baseline을 차단하지 않아야
-하지만, Paddle adoption PR에서는 해당 conditional gate가 `N/A`인지 `FAIL`인지
-명시적으로 집계한다.
+Tesseract baseline job은 계속 required로 둔다. Paddle service failure는 별도 job으로
+분류하여 Tesseract 회귀를 가리지 않도록 격리하지만, Paddle adoption PR에서는 해당
+gate가 `N/A`이면 채택 불가이고, 실행된 gate의 `FAIL`도 채택 불가다. 격리는 기준선
+면제가 아니라 연구 단계의 실패 원인 분리다.
+
+scheduled/manual 결과는 다음 immutable tuple에 귀속한다.
+
+```text
+(repository, commitSha, workflowRunId, fixtureManifestSha256,
+ modelManifestSha256, containerImageDigest, hostArchitecture, configSha256)
+```
+
+report가 이 tuple을 모두 기록하지 않거나 현재 commit·manifest와 일치하지 않으면
+stale evidence로 간주하고 adoption gate에서 제외한다.
 
 ## 운영·성능 측정 계약
 
@@ -422,8 +662,10 @@ CPU tiny/small/medium은 모델 크기·품질·cold-start trade-off를 보여�
   non-root/read-only, cgroup 정책이 실제 smoke로 증명됨
 - [ ] PR fake contract와 scheduled CPU smoke가 network-independent·deterministic하고
   Tesseract baseline failure를 차단하지 않음
-- [ ] image digest, SPDX SBOM, provenance/attestation, CVE exception, license/NOTICE
-  receipt가 publish gate에 포함됨
+- [ ] scheduled/manual receipt가 exact repository commit, workflow run, fixture/model
+  manifest hash, config hash, host architecture, image digest tuple에 귀속됨
+- [ ] image digest, SPDX SBOM, provenance/attestation(subject·issuer·workflow·서명·
+  timestamp 검증), CVE exception, license/NOTICE receipt가 publish gate에 포함됨
 - [ ] #546 provider-neutral API와 migration/rollback/observability 설계가 승인됨
 
 하나라도 미충족이면 판정은 `DEFER`이며, 미확인 항목을 `PASS` 또는 `N/A`로 축약하지
@@ -431,22 +673,33 @@ CPU tiny/small/medium은 모델 크기·품질·cold-start trade-off를 보여�
 
 ## 조사 근거와 source-to-claim ledger
 
-| 주장 | 공식 근거 | 저장소 영향 |
-| --- | --- | --- |
-| v3.7.0 release와 Python/PaddleX 요구사항 | [release](https://github.com/PaddlePaddle/PaddleOCR/releases/tag/v3.7.0), [pyproject](https://github.com/PaddlePaddle/PaddleOCR/blob/v3.7.0/pyproject.toml) | exact version lock, clean env |
-| basic/high-stability serving 및 Base64/URL 동작 | [PaddleOCR serving](https://www.paddleocr.ai/main/en/version3.x/inference_deployment/serving/serving.html), [PaddleX serving](https://paddlepaddle.github.io/PaddleX/latest/en/pipeline_deploy/serving.html) | HTTP boundary, URL 거부, endpoint version |
-| CPU/GPU/HPI와 cache | [HPI](https://www.paddleocr.ai/main/en/version3.x/inference_deployment/local_inference/high_performance_inference.html), [engine](https://www.paddleocr.ai/main/en/version3.x/inference_deployment/local_inference/inference_engine.html) | platform matrix와 cold/warm 측정 |
-| model source probe와 cache | [PaddleX FAQ](https://paddlepaddle.github.io/PaddleX/3.7/FAQ.html), [update](https://www.paddleocr.ai/latest/en/update/update.html) | offline startup, no first-use download |
-| model size와 metric 비교 주의 | [OCR pipeline](https://www.paddleocr.ai/main/en/version3.x/pipeline_usage/OCR.html) | RSS/payload budget, vendor 수치 재사용 금지 |
-| code/model license | [PaddleOCR LICENSE](https://github.com/PaddlePaddle/PaddleOCR/blob/v3.7.0/LICENSE), [detector card](https://huggingface.co/PaddlePaddle/PP-OCRv6_medium_det_safetensors), [recognizer card](https://huggingface.co/PaddlePaddle/PP-OCRv6_medium_rec_safetensors) | per-artifact license/NOTICE |
-| immutable image digest | [Docker digest concepts](https://docs.docker.com/dhi/explore/security-concepts/digests/) | mutable tag 금지 |
-| SBOM/provenance | [Docker SBOM attestations](https://docs.docker.com/build/metadata/attestations/sbom/), [Docker attestations](https://docs.docker.com/build/metadata/attestations/), [GitHub artifact attestations](https://docs.github.com/en/actions/how-tos/secure-your-work/use-artifact-attestations/use-artifact-attestations) | supply-chain publish gate |
-| 현재 저장소 corpus·artifact 계약 | [#544 연구 문서](2026-08-19-issue-544-ocr-benchmark-corpus.md) | 동일 runId/ledger 재사용 |
-| 현재 Paddle 평가 범위 | [#169 연구 문서](2026-08-18-issue-169-paddleocr-backend-evaluation.md) | provider DEFER와 HTTP 후보 계승 |
+각 source receipt는 `url`, `retrievedAt=2026-08-19`, upstream release/ref 또는 문서
+section anchor, 원문 사본 SHA-256을 기록해야 한다. `v3.7.0`처럼 ref가 고정된
+release·pyproject·license·model card는 채택 근거로 사용할 수 있다. `main`/`latest`
+문서는 조사 시점의 보조 설명으로만 사용하고, 해당 URL만 남은 claim은 구현 gate의
+단독 증거로 인정하지 않는다.
+
+| 주장 | 공식 근거 | 접근·ref·원문 hash | 저장소 영향 |
+| --- | --- | --- | --- |
+| v3.7.0 release와 Python/PaddleX 요구사항 | [release](https://github.com/PaddlePaddle/PaddleOCR/releases/tag/v3.7.0), [pyproject](https://github.com/PaddlePaddle/PaddleOCR/blob/v3.7.0/pyproject.toml) | 2026-08-19 / `v3.7.0` / receipt SHA-256 PENDING | exact version lock, clean env |
+| basic/high-stability serving 및 Base64/URL 동작 | [PaddleOCR serving](https://www.paddleocr.ai/main/en/version3.x/inference_deployment/serving/serving.html), [PaddleX serving](https://paddlepaddle.github.io/PaddleX/latest/en/pipeline_deploy/serving.html) | 2026-08-19 / `version3.x serving` / receipt SHA-256 PENDING | HTTP boundary, URL 거부, endpoint version |
+| CPU/GPU/HPI와 cache | [HPI](https://www.paddleocr.ai/main/en/version3.x/inference_deployment/local_inference/high_performance_inference.html), [engine](https://www.paddleocr.ai/main/en/version3.x/inference_deployment/local_inference/inference_engine.html) | 2026-08-19 / `version3.x local_inference` / receipt SHA-256 PENDING | platform matrix와 cold/warm 측정 |
+| model source probe와 cache | [PaddleX FAQ](https://paddlepaddle.github.io/PaddleX/3.7/FAQ.html), [update](https://www.paddleocr.ai/latest/en/update/update.html) | 2026-08-19 / `PaddleX 3.7 FAQ`; update `latest` 보조 / receipt PENDING | offline startup, no first-use download |
+| model size와 metric 비교 주의 | [OCR pipeline](https://www.paddleocr.ai/main/en/version3.x/pipeline_usage/OCR.html) | 2026-08-19 / `version3.x pipeline_usage/OCR` / receipt SHA-256 PENDING | RSS/payload budget, vendor 수치 재사용 금지 |
+| code/model license | [PaddleOCR LICENSE](https://github.com/PaddlePaddle/PaddleOCR/blob/v3.7.0/LICENSE), [detector card](https://huggingface.co/PaddlePaddle/PP-OCRv6_medium_det_safetensors/tree/4236c2b61741a259c091fd879dcc4edc339e916c), [recognizer card](https://huggingface.co/PaddlePaddle/PP-OCRv6_medium_rec_safetensors/tree/024cad6a831de75c2c3c26e711ba8c4a82ccd24b) | 2026-08-19 / `v3.7.0`, detector `4236c2b61741a259c091fd879dcc4edc339e916c`, recognizer `024cad6a831de75c2c3c26e711ba8c4a82ccd24b` / receipt SHA-256 PENDING | per-artifact license/NOTICE |
+| immutable image digest | [Docker digest concepts](https://docs.docker.com/dhi/explore/security-concepts/digests/) | 2026-08-19 / `digests` section / receipt SHA-256 PENDING | mutable tag 금지 |
+| Buildx digest output | [Docker Buildx build](https://docs.docker.com/reference/cli/docker/buildx/build/) | 2026-08-19 / `build --metadata-file` / receipt SHA-256 PENDING | push 후 output digest를 subject로 사용 |
+| SBOM/provenance | [Docker SBOM attestations](https://docs.docker.com/build/metadata/attestations/sbom/), [Docker attestations](https://docs.docker.com/build/metadata/attestations/), [GitHub artifact attestations](https://docs.github.com/en/actions/how-tos/secure-your-work/use-artifact-attestations/use-artifact-attestations), [GitHub verification concepts](https://docs.github.com/en/actions/concepts/security/artifact-attestations) | 2026-08-19 / SBOM·attestation sections / receipt SHA-256 PENDING | subject digest·predicate·issuer·workflow·signature·timestamp 검증 후 publish gate |
+| signed attestation·SBOM action pin | [actions/attest](https://github.com/actions/attest), [anchore/sbom-action](https://github.com/anchore/sbom-action), [GitHub secure use](https://docs.github.com/en/actions/reference/security/secure-use) | 2026-08-19 / `actions/attest` `1e69f48acb82d1966a394da916b4c1698aa569d6`, `sbom-action` `f325610c9f50a54015d37c8d16cb3b0e2c8f4de0` / receipt SHA-256 PENDING | major tag 금지, producer digest와 SBOM subject 동일성 |
+| 현재 저장소 corpus·artifact 계약 | [#544 연구 문서](2026-08-19-issue-544-ocr-benchmark-corpus.md) | local exact file / commit `a7256af` / hash verified at review | 동일 runId/ledger 재사용 |
+| 현재 Paddle 평가 범위 | [#169 연구 문서](2026-08-18-issue-169-paddleocr-backend-evaluation.md) | local exact file / commit `a7256af` / hash verified at review | provider DEFER와 HTTP 후보 계승 |
 
 공식 source는 기능을 설명하지만 auth/TLS/no-log/egress deny를 자동으로 보장하지
 않는다. 그 항목들은 공식 동작에서 도출한 이 저장소의 architecture requirement이며,
 구현 시 실제 reverse proxy·network policy·container hardening 증거가 필요하다.
+source ledger의 `latest` 문서는 연구용 보조 근거로만 사용하고, 구현 gate에서는
+버전 경로·upstream ref·접근일·원문 사본 hash를 함께 보존한다. mutable URL만
+남은 claim은 채택 증거로 인정하지 않는다.
 
 ## 연구 DoD
 
@@ -463,8 +716,7 @@ CPU tiny/small/medium은 모델 크기·품질·cold-start trade-off를 보여�
 - [ ] #544 corpus에서 Tesseract/PaddleOCR 품질·성능·RSS 비교 실행
 - [ ] provider-neutral API와 HTTP adapter Type-A 구현 승인
 
-**최종 상태: `DONE — RESEARCH-2 SERVICE/CONTAINER CONTRACT`**
+**최종 상태: `CONTRACT SPEC DONE / ISSUE ACCEPTANCE PENDING`**
 
 **판정: `PaddleOCR provider DEFER / self-hosted HTTP service CONDITIONAL / 구현
 PENDING`**
-
