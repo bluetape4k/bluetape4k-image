@@ -14,13 +14,16 @@ import org.junit.jupiter.api.condition.JRE
 /**
  * vips 인코딩 포맷 및 thumbnail + 인코딩 조합의 골든 이미지 비교 테스트.
  *
- * 골든 이미지가 없으면 테스트를 skipped 처리합니다.
- * 갱신 모드 실행은 `-Dbluetape4k.images.golden.update=true`로 활성화하며,
- * 실수로 java21에서 덮어쓰지 않도록 @EnabledForJreRange(min = JRE.JAVA_25)로 보호합니다.
+ * 골든 이미지가 없으면 테스트를 실패 처리합니다.
+ * 갱신 모드는 Java25 FFM 테스트에서만 허용합니다.
+ * Java21 JNI test task는 Gradle fail-fast guard로 canonical fixture 덮어쓰기를 거부합니다.
  */
 class VipsGoldenFilterTest : AbstractJVipsTest() {
 
-    companion object : KLogging()
+    companion object : KLogging() {
+        /** CI와 macOS에서 확인된 libvips/native codec 버전별 손실 thumbnail 출력 편차를 제한하는 경계입니다. */
+        private const val THUMBNAIL_JPEG_TOLERANCE = 6
+    }
 
     // ─── 비교 테스트 ───────────────────────────────────────────────────────────
 
@@ -46,7 +49,11 @@ class VipsGoldenFilterTest : AbstractJVipsTest() {
         vipsImageOf(bytes).use { img ->
             img.thumbnail(128).use { thumb ->
                 val resultBytes = thumb.toBytes(VipsImageFormat.JPEG, VipsEncodeOptions.Default)
-                VipsGoldenAssert.assertSimilarToGolden(resultBytes, "vips-thumbnail-jpeg")
+                VipsGoldenAssert.assertSimilarToGolden(
+                    resultBytes,
+                    "vips-thumbnail-jpeg",
+                    tolerance = THUMBNAIL_JPEG_TOLERANCE,
+                )
             }
         }
     }
@@ -84,7 +91,11 @@ class VipsGoldenFilterTest : AbstractJVipsTest() {
         vipsImageOf(bytes).use { img ->
             img.thumbnail(128).use { thumb ->
                 val resultBytes = thumb.toBytes(VipsImageFormat.JPEG, VipsEncodeOptions.Default)
-                VipsGoldenAssert.assertSimilarToGolden(resultBytes, "vips-thumbnail-jpeg")
+                VipsGoldenAssert.assertSimilarToGolden(
+                    resultBytes,
+                    "vips-thumbnail-jpeg",
+                    tolerance = THUMBNAIL_JPEG_TOLERANCE,
+                )
             }
         }
     }

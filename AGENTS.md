@@ -33,7 +33,7 @@ libvips through JNI or FFM Panama.
 | `bluetape4k-images-ktor` | Ktor route helpers for CAPTCHA issue and verification |
 | `bluetape4k-images-spring-boot` | Spring Boot 4 auto-configuration for local/S3 image storage, CDN, health, and metrics |
 | `bluetape4k-images-vips-api` | Binding-neutral `VipsImage` and `VipsRuntime` contracts |
-| `bluetape4k-images-vips-java21` | JVips JNI backend; Java 21 toolchain; system libvips required |
+| `bluetape4k-images-vips-java21` | JVips JNI backend; Java 25 toolchain (legacy module name); system libvips required |
 | `bluetape4k-images-vips-java25` | vips-ffm FFM backend; Java 25 toolchain; native access required |
 | `bluetape4k-images-benchmark` | kotlinx-benchmark results for scrimage vs libvips |
 | `examples/basic-processing` | Non-published pure JVM image processing quickstart |

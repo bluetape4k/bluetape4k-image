@@ -543,6 +543,9 @@ java25 is the **authoritative source** for vips golden images stored in `images-
 - Update mode enabled only on Java 25+ — guarded by `@EnabledForJreRange(min = JRE.JAVA_25)`
 - Regenerate goldens: `-Dbluetape4k.images.golden.update=true -Dvips.enabled=true`
 - CI guard prevents accidental regeneration in CI environments
+- The thumbnail-to-JPEG golden uses a bounded per-channel tolerance of 6 for the
+  lossy output variation observed across libvips/native codec versions in CI and
+  macOS; PNG and WebP checks keep the shared default tolerance.
 
 ```bash
 # Regenerate golden images (must run on Java 25+)

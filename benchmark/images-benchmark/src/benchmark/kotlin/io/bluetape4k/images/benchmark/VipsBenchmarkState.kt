@@ -52,6 +52,9 @@ class VipsBenchmarkState {
     /** vips runtime이 성공적으로 초기화됐는지 여부입니다. false이면 vips benchmark는 skip합니다. */
     var vipsAvailable: Boolean = false
 
+    private val nativeRuntimeRequired =
+        System.getProperty("vips.benchmark.required", "false").toBoolean()
+
     @Param("cafe", "landscape")
     var imageName: String = "cafe"
 
@@ -79,6 +82,9 @@ class VipsBenchmarkState {
         if (vipsAvailable) {
             log.debug { "VipsBenchmarkState: vips runtime initialized" }
         } else {
+            if (nativeRuntimeRequired) {
+                error("Vips benchmark requires the selected native runtime")
+            }
             log.warn { "VipsBenchmarkState: vips runtime initialization failed; vips benchmarks will skip" }
         }
     }

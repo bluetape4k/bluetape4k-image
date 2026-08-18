@@ -73,6 +73,8 @@ val centralSnapshotsParallelism: Int = providers
 val projectGroup: String = project.property("projectGroup") as String
 val baseVersion: String = project.property("baseVersion") as String
 val snapshotVersion: String = project.property("snapshotVersion") as String
+val vipsConsumerRepositoryDirectory = layout.buildDirectory.dir("tmp/vips-bom-consumer/repository")
+val vipsConsumerPublicationModules = setOf("bluetape4k-images-vips-api", "bluetape4k-images-vips-java21")
 
 fun MavenArtifactRepository.configureCentralSnapshotCredentials() {
     if (centralUser.isNotBlank() && centralPassword.isNotBlank()) {
@@ -401,6 +403,12 @@ subprojects {
                 maven {
                     name = "central-snapshots"
                     url = uri("https://central.sonatype.com/repository/maven-snapshots/")
+                }
+                if (project.name in vipsConsumerPublicationModules) {
+                    maven {
+                        name = "vipsConsumer"
+                        url = uri(vipsConsumerRepositoryDirectory.get().asFile)
+                    }
                 }
             }
         }
