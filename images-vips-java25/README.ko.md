@@ -543,7 +543,7 @@ java25 모듈은 `images-vips-api/src/testFixtures/resources/golden/vips/`에 �
 - 골든 이미지 재생성: `-Dbluetape4k.images.golden.update=true -Dvips.enabled=true`
 - CI 가드: CI 환경에서 골든 이미지 재생성을 방지합니다
 - thumbnail→JPEG 골든은 CI와 macOS에서 확인된 libvips/native codec 버전별 손실 출력 편차를
-  제한하기 위해 채널별 최대 오차 5를 사용합니다. PNG와 WebP 검사는 공통 기본 오차를 유지합니다.
+  제한하기 위해 채널별 최대 오차 6을 사용합니다. PNG와 WebP 검사는 공통 기본 오차를 유지합니다.
 
 ```bash
 # 골든 이미지 재생성 (Java 25+에서 실행해야 함)

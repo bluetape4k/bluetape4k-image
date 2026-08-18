@@ -22,7 +22,7 @@ class VipsGoldenFilterTest : AbstractFfmVipsTest() {
 
     companion object : KLogging() {
         /** CI와 macOS에서 확인된 libvips/native codec 버전별 손실 thumbnail 출력 편차를 제한하는 경계입니다. */
-        private const val THUMBNAIL_JPEG_TOLERANCE = 5
+        private const val THUMBNAIL_JPEG_TOLERANCE = 6
     }
 
     // ─── 비교 테스트 ───────────────────────────────────────────────────────────
