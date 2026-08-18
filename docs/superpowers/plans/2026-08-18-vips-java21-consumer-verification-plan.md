@@ -112,7 +112,7 @@ native/JNI 테스트는 Java25 FFM fixture 생성과 겹치지 않도록 순차 
 
 **구현**
 
-- 임시 file Maven repository publication을 선행하고 임시 외부 Gradle consumer를 생성하는 `verifyVipsBomConsumer` task/test를 추가한다. Maven Local과 project substitution은 사용하지 않는다.
+- 임시 file Maven repository publication을 선행하고, Bluetape 공통 runtime snapshot repository와 Maven Central을 보조 repository로 사용하는 임시 외부 Gradle consumer를 생성하는 `verifyVipsBomConsumer` task/test를 추가한다. image BOM/API/JNI 좌표는 file repository에서 해석되는지 검증하고, Maven Local과 project substitution은 사용하지 않는다.
 - consumer는 platform BOM과 versionless legacy `java21` module coordinate만 선언하고 Java25 toolchain compile/smoke를 수행한다.
 - temp project cleanup, repository allow-list, dependency resolution failure를 명시한다.
 

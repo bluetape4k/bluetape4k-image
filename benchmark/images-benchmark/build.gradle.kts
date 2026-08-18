@@ -80,6 +80,7 @@ val codecMatrixNativeTaskNames = setOf(
     "benchmarkCodecMatrixAvifBenchmark",
     "benchmarkCodecMatrixHeicBenchmark",
     "benchmarkBatchPipelineBenchmark",
+    "benchmarkVipsJava21SmokeBenchmark",
 )
 
 tasks.withType<JavaExec>().matching { task -> task.name in codecMatrixNativeTaskNames }.configureEach {
@@ -430,6 +431,76 @@ val BARCODE_BENCHMARK_ITERATION_SECONDS = 1L
 val OCR_BENCHMARK_WARMUPS = 3
 val OCR_BENCHMARK_ITERATIONS = 5
 val OCR_BENCHMARK_ITERATION_SECONDS = 1L
+val VIPS_JAVA21_BENCHMARK_WARMUPS = 1
+val VIPS_JAVA21_BENCHMARK_ITERATIONS = 1
+val VIPS_JAVA21_BENCHMARK_ITERATION_SECONDS = 1L
+
+fun validateVipsJava21BenchmarkReport(report: File) {
+    require(report.isFile) { "Vips Java21 benchmark report is missing: $report" }
+    val rows = JsonSlurper().parse(report) as? List<*>
+        ?: throw IllegalArgumentException("Vips Java21 benchmark report must be a JSON array")
+    val expectedBenchmarks = setOf(
+        "io.bluetape4k.images.benchmark.VipsBackendBenchmark.vips_resize",
+        "io.bluetape4k.images.benchmark.VipsBackendBenchmark.vips_thumbnail",
+        "io.bluetape4k.images.benchmark.VipsBackendBenchmark.vips_crop",
+    )
+    val expectedResolutions = setOf("1920x1080", "1280x720")
+    val expectedImageNames = setOf("cafe", "landscape")
+    val actualRows = rows.map { value ->
+        val row = value as? Map<*, *>
+            ?: throw IllegalArgumentException("Vips Java21 benchmark row must be an object")
+        val benchmark = row["benchmark"] as? String
+            ?: throw IllegalArgumentException("Vips Java21 benchmark name is missing")
+        require(benchmark in expectedBenchmarks) { "unexpected Vips Java21 benchmark: $benchmark" }
+        require(row["mode"] == "avgt") { "Vips Java21 benchmark mode must be avgt" }
+        require((row["threads"] as? Number)?.toInt() == 1) {
+            "Vips Java21 benchmark threads must be 1"
+        }
+        require((row["forks"] as? Number)?.toInt() == 1) {
+            "Vips Java21 benchmark forks must be 1"
+        }
+        require((row["warmupIterations"] as? Number)?.toInt() == VIPS_JAVA21_BENCHMARK_WARMUPS) {
+            "Vips Java21 benchmark warmups differ"
+        }
+        require((row["measurementIterations"] as? Number)?.toInt() == VIPS_JAVA21_BENCHMARK_ITERATIONS) {
+            "Vips Java21 benchmark measurements differ"
+        }
+        require(row["warmupTime"] == "1 s" && row["measurementTime"] == "1 s") {
+            "Vips Java21 benchmark iteration time differs"
+        }
+        val params = row["params"] as? Map<*, *>
+            ?: throw IllegalArgumentException("Vips Java21 benchmark parameters are missing")
+        val resolution = params["resolution"] as? String
+            ?: throw IllegalArgumentException("Vips Java21 benchmark resolution is missing")
+        require(resolution in expectedResolutions) {
+            "unexpected Vips Java21 benchmark resolution: $resolution"
+        }
+        val imageName = params["imageName"] as? String
+            ?: throw IllegalArgumentException("Vips Java21 benchmark imageName is missing")
+        require(imageName in expectedImageNames) {
+            "unexpected Vips Java21 benchmark imageName: $imageName"
+        }
+        val primaryMetric = row["primaryMetric"] as? Map<*, *>
+            ?: throw IllegalArgumentException("Vips Java21 benchmark primary metric is missing")
+        require(primaryMetric["scoreUnit"] == "ms/op") {
+            "Vips Java21 benchmark score unit must be ms/op"
+        }
+        val score = (primaryMetric["score"] as? Number)?.toDouble()
+            ?: throw IllegalArgumentException("Vips Java21 benchmark score is missing")
+        require(score.isFinite() && score > 0.0) {
+            "Vips Java21 benchmark score must be positive and finite"
+        }
+        "$benchmark|$resolution|$imageName"
+    }.toSet()
+    val expectedRows = expectedBenchmarks.flatMap { benchmark ->
+        expectedResolutions.flatMap { resolution ->
+            expectedImageNames.map { imageName -> "$benchmark|$resolution|$imageName" }
+        }
+    }.toSet()
+    require(rows.size == expectedRows.size && actualRows == expectedRows) {
+        "Vips Java21 benchmark row coverage differs"
+    }
+}
 
 kotlin {
     jvmToolchain(javaVersion)
@@ -492,6 +563,18 @@ benchmark {
             warmups = CODEC_MATRIX_WARMUPS
             iterations = CODEC_MATRIX_ITERATIONS
             iterationTime = CODEC_MATRIX_ITERATION_SECONDS
+            iterationTimeUnit = "s"
+            mode = "avgt"
+            outputTimeUnit = "ms"
+            reportFormat = "json"
+            advanced("jvmForks", 1)
+        }
+
+        register("vipsJava21Smoke") {
+            include(".*VipsBackendBenchmark.*")
+            warmups = VIPS_JAVA21_BENCHMARK_WARMUPS
+            iterations = VIPS_JAVA21_BENCHMARK_ITERATIONS
+            iterationTime = VIPS_JAVA21_BENCHMARK_ITERATION_SECONDS
             iterationTimeUnit = "s"
             mode = "avgt"
             outputTimeUnit = "ms"
@@ -1064,6 +1147,31 @@ tasks.register("finalizeBarcodeBenchmarkEvidence") {
     }
 }
 
+val vipsJava21BenchmarkReportRoot = layout.buildDirectory.dir("reports/benchmarks/vipsJava21Smoke")
+
+tasks.register("verifyVipsJava21BenchmarkReport") {
+    description = "Run and validate the focused Java21 JNI Vips benchmark report"
+    group = "verification"
+    dependsOn("benchmarkVipsJava21SmokeBenchmark")
+    doLast {
+        val reportRoot = vipsJava21BenchmarkReportRoot.get().asFile
+        val reports = if (reportRoot.isDirectory) {
+            Files.walk(reportRoot.toPath()).use { paths ->
+                paths.filter { path ->
+                    Files.isRegularFile(path) && path.fileName.toString() == "benchmark.json"
+                }.map { it.toFile() }.toList()
+            }
+        } else {
+            emptyList()
+        }
+        require(reports.size == 1) {
+            "expected one Vips Java21 smoke benchmark report but found ${reports.size}"
+        }
+        validateVipsJava21BenchmarkReport(reports.single())
+        println("Validated Vips Java21 benchmark report: ${reports.single()}")
+    }
+}
+
 afterEvaluate {
     val codecMatrixExecutionTaskNames = setOf(
         "benchmarkBenchmark",
@@ -1081,6 +1189,19 @@ afterEvaluate {
     val barcodeBenchmarkStarts = ConcurrentHashMap<String, Instant>()
     val ocrBenchmarkStarts = ConcurrentHashMap<String, Instant>()
     val ktorRouteConcurrencyStarts = ConcurrentHashMap<String, Instant>()
+
+    tasks.matching { task -> task.name == "benchmarkVipsJava21SmokeBenchmark" }.configureEach {
+        doFirst {
+            require(vipsImpl == "java21") {
+                "Vips Java21 smoke requires -Pvips.impl=java21"
+            }
+            vipsJava21BenchmarkReportRoot.get().asFile.deleteRecursively()
+        }
+    }
+
+    tasks.withType<JavaExec>().matching { task -> task.name == "benchmarkVipsJava21SmokeBenchmark" }.configureEach {
+        systemProperty("vips.benchmark.required", "true")
+    }
 
     tasks.matching { task -> task.name == "benchmarkKtorRouteConcurrencyBenchmark" }.configureEach {
         doFirst {

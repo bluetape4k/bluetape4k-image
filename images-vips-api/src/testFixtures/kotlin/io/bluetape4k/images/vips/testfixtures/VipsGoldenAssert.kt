@@ -11,7 +11,6 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import kotlin.math.abs
 import org.junit.jupiter.api.Assertions
-import org.junit.jupiter.api.Assumptions
 import org.opentest4j.TestAbortedException
 
 /**
@@ -20,7 +19,7 @@ import org.opentest4j.TestAbortedException
  * ## 동작 모드
  *
  * - **비교 모드** (기본): 골든 이미지가 존재하면 픽셀 단위로 비교합니다.
- *   골든 이미지가 없으면 [Assumptions.assumeTrue]를 통해 [TestAbortedException]을 throw하여 테스트를 skipped 처리합니다.
+ *   골든 이미지가 없으면 [AssertionError]를 throw하여 테스트를 실패 처리합니다.
  * - **갱신 모드**: `-Dbluetape4k.images.golden.update=true` 시스템 프로퍼티로 활성화합니다.
  *   실제 결과를 골든 이미지로 저장한 뒤 [TestAbortedException]을 throw하여 테스트를 skipped 처리합니다.
  *
@@ -61,7 +60,7 @@ object VipsGoldenAssert : KLogging() {
      * 갱신 모드(`-Dbluetape4k.images.golden.update=true`)에서는 실제 결과를 골든 이미지로 저장한 뒤
      * [TestAbortedException]을 throw합니다.
      *
-     * 골든 이미지가 없으면 [org.junit.internal.AssumptionViolatedException]을 throw하여 테스트를 skipped 처리합니다.
+     * 골든 이미지가 없으면 [AssertionError]를 throw하여 테스트를 실패 처리합니다.
      *
      * 픽셀 비교에서 어느 픽셀이든 R/G/B 채널 절대 차이가 [tolerance]를 초과하면 diff 이미지를 저장하고
      * [Assertions.fail]을 호출합니다.
@@ -70,7 +69,8 @@ object VipsGoldenAssert : KLogging() {
      * @param key 골든 이미지 식별 키 (파일명 제외, 예: "resize-320x240")
      * @param tolerance 허용할 최대 픽셀 채널 절대 차이 (기본값 3)
      * @throws IllegalStateException CI 환경에서 갱신 모드 실행 시
-     * @throws TestAbortedException 갱신 모드에서 골든 이미지 저장 완료 시 또는 골든 이미지가 없을 때 (JUnit5 skipped 처리)
+     * @throws TestAbortedException 갱신 모드에서 골든 이미지 저장 완료 시 (JUnit5 skipped 처리)
+     * @throws AssertionError 비교 모드에서 골든 이미지가 없거나 픽셀 비교에 실패할 때
      */
     fun assertSimilarToGolden(actualBytes: ByteArray, key: String, tolerance: Int = 3) {
         if (UPDATE_MODE) {
@@ -83,13 +83,10 @@ object VipsGoldenAssert : KLogging() {
         }
 
         val golden = loadGolden(key)
-            ?: run {
-                Assumptions.assumeTrue(
-                    false,
-                    "골든 이미지 없음: $key. 갱신 모드(-Dbluetape4k.images.golden.update=true)로 실행하여 먼저 생성하세요."
-                )
-                return
-            }
+            ?: Assertions.fail(
+                "골든 이미지 없음: $key (canonical resource: $GOLDEN_BASE/$key.png). " +
+                    "갱신 모드(-Dbluetape4k.images.golden.update=true)로 실행하여 먼저 생성하세요."
+            )
 
         val actual = ImmutableImageLoader.create().fromBytes(actualBytes)
         compareImages(actual, golden, key, tolerance)

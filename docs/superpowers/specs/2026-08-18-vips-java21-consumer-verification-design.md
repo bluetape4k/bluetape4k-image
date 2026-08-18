@@ -47,7 +47,7 @@ production class file major는 69 이하를 전용 Gradle verification task가 �
 
 `images-vips-api/src/testFixtures/resources/golden/vips/`에 Java25 FFM backend가 생성한 canonical PNG 여섯 개를 저장한다. Java21/Java25 양쪽 golden test는 동일 resource를 픽셀 비교한다. `VipsGoldenAssert`는 update mode가 아니면 missing key를 `AssertionError`로 보고한다. native capability 부재는 각 backend의 기존 explicit capability gate에서만 skip하며, capability가 준비된 뒤 resource가 없으면 테스트 실패다.
 
-update mode는 CI에서 계속 금지한다. fixture 재생성은 Java25 FFM authoritative source와 명시적인 local command로만 수행한다.
+update mode는 CI에서 계속 금지한다. Java21 JNI `test` task도 Gradle fail-fast guard로 갱신을 거부하며, fixture 재생성은 Java25 FFM authoritative source와 명시적인 local command로만 수행한다.
 
 ### 3. Benchmark는 짧은 Java21 JNI smoke configuration으로 실행
 
@@ -57,7 +57,7 @@ CI는 benchmark task와 report verification을 순차 실행하고 `build/report
 
 ### 4. BOM consumer는 published coordinate를 실제로 resolve
 
-전용 Gradle verification task가 먼저 현재 version의 BOM/API/JNI publication을 임시 file Maven repository에 게시한 뒤, 임시 디렉터리에 독립 consumer project를 생성한다. consumer는 해당 file repository와 Maven Central만 사용하고 `platform("io.github.bluetape4k.image:bluetape4k-image-bom:<version>")` 및 버전 없는 `bluetape4k-images-vips-java21` coordinate를 선언한다. Java 25 toolchain으로 compile하고, native capability가 명시적으로 활성화된 경우 Java25 smoke main을 실행한다. Maven Local과 project substitution은 사용하지 않는다.
+전용 Gradle verification task가 먼저 현재 version의 BOM/API/JNI publication을 임시 file Maven repository에 게시한 뒤, 임시 디렉터리에 독립 consumer project를 생성한다. consumer는 해당 file repository, Bluetape 공통 snapshot repository, Maven Central만 사용하고 `platform("io.github.bluetape4k.image:bluetape4k-image-bom:<version>")` 및 버전 없는 `bluetape4k-images-vips-java21` coordinate를 선언한다. 공통 Bluetape runtime 의존성은 snapshot repository에서 해석하며, image BOM/API/JNI 좌표는 임시 file repository에서 해석되는지 별도로 확인한다. Java 25 toolchain으로 compile하고, native capability가 명시적으로 활성화된 경우 Java25 smoke main을 실행한다. Maven Local과 project substitution은 사용하지 않는다.
 
 임시 디렉터리는 task 종료 시 삭제하며 repository source에 생성된 consumer 파일을 남기지 않는다. publication 실패, BOM 미해결, versionless constraint 누락, Java 25 compile 실패는 모두 non-zero failure다.
 

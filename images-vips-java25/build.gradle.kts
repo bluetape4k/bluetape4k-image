@@ -1,4 +1,4 @@
-// vips-ffm is compiled for Java 25 (class file version 66.0);
+// vips-ffm is compiled for Java 25 (class file major 69);
 // atomicfu transformer runs on the build JVM (Java 21) and cannot load Java 25 classes.
 atomicfu {
     transformJvm = false
