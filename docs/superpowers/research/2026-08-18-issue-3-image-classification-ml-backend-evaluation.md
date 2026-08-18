@@ -257,4 +257,3 @@ PaddleOCR가 HTTP service 후보라는 RESEARCH-1 결론은 ORT classification�
 - [ ] native CPU/GPU smoke
 
 최종 상태: **RESEARCH-2 DONE / ONNX Runtime Java direct 조건부 ADOPT / Type-A 구현 PENDING**
-

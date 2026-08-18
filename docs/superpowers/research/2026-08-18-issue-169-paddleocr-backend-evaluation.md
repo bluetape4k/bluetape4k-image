@@ -235,4 +235,3 @@ Tesseract/Tess4J baseline을 유지하고 PaddleOCR는 다음 모든 gate를 만
 - [ ] service container CPU smoke
 
 최종 상태: **RESEARCH-1 DONE / PaddleOCR DEFER / 구현 PENDING**
-
