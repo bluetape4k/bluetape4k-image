@@ -16,6 +16,7 @@ import io.bluetape4k.images.vips.VipsImageFormat
 import io.bluetape4k.images.vips.VipsLimits
 import io.bluetape4k.images.vips.VipsRuntime
 import io.bluetape4k.images.vips.java21.internal.DefaultJVipsNativeRuntime
+import io.bluetape4k.images.vips.java21.internal.JVipsNativeLibrarySupport
 import io.bluetape4k.images.vips.java21.internal.JVipsNativeRuntime
 import io.bluetape4k.logging.KLogging
 import kotlinx.coroutines.CancellationException
@@ -99,6 +100,7 @@ object JVipsRuntime : VipsRuntime, KLogging() {
 
         // 이 스레드가 INITIALIZING 슬롯을 소유합니다.
         try {
+            JVipsNativeLibrarySupport.loadBundledLibTiffIfNeeded()
             nativeRuntime.nativeInit(concurrency)
             _maxPixels = maxPixels
             _concurrencyCapability = VipsConcurrencyCapability.configurable(concurrency)

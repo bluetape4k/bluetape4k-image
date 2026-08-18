@@ -32,7 +32,7 @@ vips --version
 
 ### Linux
 
-대부분의 배포판에서 libvips-tools 설치:
+대부분의 배포판에서 나머지 시스템 런타임 의존성을 위해 libvips-tools 설치:
 
 ```bash
 # Debian / Ubuntu
@@ -45,7 +45,10 @@ sudo yum install vips-tools
 apk add vips
 ```
 
-JVips 라이브러리는 네이티브 `.so` 파일을 번들로 제공하므로, 시스템 패키지 설치 이상의 추가 설정이 필요하지 않습니다.
+JVips는 직접 로드하는 네이티브 `.so` 파일을 번들로 제공하며 Linux용 `libtiff.so` 호환
+라이브러리도 포함합니다. 런타임이 libvips보다 먼저 번들 라이브러리를 로드하므로 Ubuntu
+24.04에서는 별도의 `libtiff5` 패키지가 필요하지 않습니다. 번들 libvips가 사용하는
+나머지 공유 라이브러리를 위해 시스템 패키지는 계속 필요합니다.
 
 ### Gradle 의존성
 
@@ -358,7 +361,7 @@ encode는 `UNKNOWN`으로 보고합니다. 배포 호스트에서는 caller-prov
 brew install vips
 ```
 
-**Linux**: libvips-tools 패키지 설치 (JVips가 네이티브 라이브러리 번들 제공)
+**Linux**: 나머지 공유 라이브러리를 위해 libvips-tools 패키지 설치 (JVips가 네이티브 라이브러리를 번들로 제공)
 ```bash
 sudo apt-get install libvips-tools
 ```

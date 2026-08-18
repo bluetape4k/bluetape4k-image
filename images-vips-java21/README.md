@@ -32,7 +32,7 @@ vips --version
 
 ### Linux
 
-On most distributions, install libvips-tools:
+On most distributions, install libvips-tools for the remaining system runtime dependencies:
 
 ```bash
 # Debian / Ubuntu
@@ -45,7 +45,10 @@ sudo yum install vips-tools
 apk add vips
 ```
 
-The JVips library bundles native `.so` files, so no additional setup is needed beyond installing the system package.
+JVips bundles the native `.so` files it loads directly, including a Linux `libtiff.so`
+compatibility library. The runtime preloads that bundled library before libvips, so Ubuntu
+24.04 does not need a separate `libtiff5` package. The system package is still required for
+the other shared libraries used by the bundled libvips build.
 
 ### Gradle Dependency
 
@@ -359,7 +362,7 @@ Compares vips operation results against golden images stored in `images-vips-api
 brew install vips
 ```
 
-**Linux**: Install libvips-tools package (JVips bundles native libs)
+**Linux**: Install the libvips-tools package for the remaining shared libraries (JVips bundles native libs)
 ```bash
 sudo apt-get install libvips-tools
 ```

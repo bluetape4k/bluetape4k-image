@@ -20,7 +20,10 @@ import org.junit.jupiter.api.condition.JRE
  */
 class VipsGoldenFilterTest : AbstractJVipsTest() {
 
-    companion object : KLogging()
+    companion object : KLogging() {
+        /** CI와 macOS에서 확인된 libvips/native codec 버전별 손실 thumbnail 출력 편차를 제한하는 경계입니다. */
+        private const val THUMBNAIL_JPEG_TOLERANCE = 5
+    }
 
     // ─── 비교 테스트 ───────────────────────────────────────────────────────────
 
@@ -46,7 +49,11 @@ class VipsGoldenFilterTest : AbstractJVipsTest() {
         vipsImageOf(bytes).use { img ->
             img.thumbnail(128).use { thumb ->
                 val resultBytes = thumb.toBytes(VipsImageFormat.JPEG, VipsEncodeOptions.Default)
-                VipsGoldenAssert.assertSimilarToGolden(resultBytes, "vips-thumbnail-jpeg")
+                VipsGoldenAssert.assertSimilarToGolden(
+                    resultBytes,
+                    "vips-thumbnail-jpeg",
+                    tolerance = THUMBNAIL_JPEG_TOLERANCE,
+                )
             }
         }
     }
@@ -84,7 +91,11 @@ class VipsGoldenFilterTest : AbstractJVipsTest() {
         vipsImageOf(bytes).use { img ->
             img.thumbnail(128).use { thumb ->
                 val resultBytes = thumb.toBytes(VipsImageFormat.JPEG, VipsEncodeOptions.Default)
-                VipsGoldenAssert.assertSimilarToGolden(resultBytes, "vips-thumbnail-jpeg")
+                VipsGoldenAssert.assertSimilarToGolden(
+                    resultBytes,
+                    "vips-thumbnail-jpeg",
+                    tolerance = THUMBNAIL_JPEG_TOLERANCE,
+                )
             }
         }
     }
