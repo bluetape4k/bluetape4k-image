@@ -217,16 +217,14 @@ private fun decodeAndCheckPixels(bytes: ByteArray): VipsImageApi {
     } catch (e: VipsException) {
         throw VipsDecodeException("Image decode failed: unsupported format or corrupted input", e)
     }
-    // NativeHandle 등록 전 픽셀 검사: 초과 시 nativeImage 해제 후 예외 (Cleaner 없음)
-    val pixelCount = nativeImage.width.toLong() * nativeImage.height.toLong() * nativeImage.bands.toLong()
-    val maxPixels = JVipsRuntime.maxPixels
-    if (pixelCount < 0 || pixelCount > maxPixels) {
-        nativeImage.release()
-        throw VipsDecodeException(
-            "Image exceeds maximum pixel count: $pixelCount > $maxPixels " +
-                "(width=${nativeImage.width}, height=${nativeImage.height}, bands=${nativeImage.bands})"
-        )
-    }
+    // NativeHandle 등록 전 픽셀 검사: 해제 전에 치수를 snapshot합니다 (Cleaner 없음).
+    val dimensions = NativeImagePixelProbe(
+        width = nativeImage.width,
+        height = nativeImage.height,
+        bands = nativeImage.bands,
+        release = nativeImage::release,
+    )
+    checkPixelLimit(dimensions, JVipsRuntime.maxPixels)
     var handle: NativeHandle? = null
     return try {
         handle = NativeHandle(nativeImage)
@@ -240,6 +238,48 @@ private fun decodeAndCheckPixels(bytes: ByteArray): VipsImageApi {
             is VipsDecodeException -> throw e
             else -> throw VipsDecodeException("Image validation failed", e)
         }
+    }
+}
+
+/**
+ * Snapshot한 native image dimensions를 제한과 비교하고, 초과 시 caller가 소유한 native cleanup을 실행합니다.
+ *
+ * dimensions는 callback 이전에 모두 읽혀야 하므로, 해제된 native object를 예외 메시지에서 재접근하지 않습니다.
+ */
+internal fun checkPixelLimit(
+    nativeImage: NativeImagePixelProbe,
+    maxPixels: Long,
+) {
+    checkPixelLimit(
+        width = nativeImage.width,
+        height = nativeImage.height,
+        bands = nativeImage.bands,
+        maxPixels = maxPixels,
+        onLimitExceeded = nativeImage.release,
+    )
+}
+
+internal class NativeImagePixelProbe(
+    val width: Int,
+    val height: Int,
+    val bands: Int,
+    val release: () -> Unit,
+)
+
+internal fun checkPixelLimit(
+    width: Int,
+    height: Int,
+    bands: Int,
+    maxPixels: Long,
+    onLimitExceeded: () -> Unit,
+) {
+    val pixelCount = width.toLong() * height.toLong() * bands.toLong()
+    if (pixelCount < 0 || pixelCount > maxPixels) {
+        val message =
+            "Image exceeds maximum pixel count: $pixelCount > $maxPixels " +
+                "(width=$width, height=$height, bands=$bands)"
+        onLimitExceeded()
+        throw VipsDecodeException(message)
     }
 }
 

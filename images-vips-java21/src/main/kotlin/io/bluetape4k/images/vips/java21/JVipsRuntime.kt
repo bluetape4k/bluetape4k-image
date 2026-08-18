@@ -6,6 +6,7 @@ import io.bluetape4k.images.vips.VipsCodecCapabilityReport
 import io.bluetape4k.images.vips.VipsCodecDirection
 import io.bluetape4k.images.vips.VipsCodecOperationCapability
 import io.bluetape4k.images.vips.VipsCodecSmokeResult
+import io.bluetape4k.images.vips.VipsConcurrencyCapability
 import io.bluetape4k.images.vips.VipsDecodeException
 import io.bluetape4k.images.vips.VipsInitializationException
 import io.bluetape4k.images.vips.VipsEncodeException
@@ -15,6 +16,7 @@ import io.bluetape4k.images.vips.VipsImageFormat
 import io.bluetape4k.images.vips.VipsLimits
 import io.bluetape4k.images.vips.VipsRuntime
 import io.bluetape4k.images.vips.java21.internal.DefaultJVipsNativeRuntime
+import io.bluetape4k.images.vips.java21.internal.JVipsNativeLibrarySupport
 import io.bluetape4k.images.vips.java21.internal.JVipsNativeRuntime
 import io.bluetape4k.logging.KLogging
 import kotlinx.coroutines.CancellationException
@@ -48,8 +50,15 @@ object JVipsRuntime : VipsRuntime, KLogging() {
     @Volatile
     private var _maxPixels: Long = VipsLimits.DEFAULT_MAX_PIXELS
 
+    @Volatile
+    private var _concurrencyCapability: VipsConcurrencyCapability =
+        VipsConcurrencyCapability.unknown("JVips runtime has not been initialized")
+
     /** 허용할 최대 픽셀 수 `width × height × bands` */
     val maxPixels: Long get() = _maxPixels
+
+    override val concurrencyCapability: VipsConcurrencyCapability
+        get() = _concurrencyCapability
 
     override fun init(concurrency: Int, maxPixels: Long) {
         // 빠른 경로
@@ -60,6 +69,9 @@ object JVipsRuntime : VipsRuntime, KLogging() {
             )
             else -> {}
         }
+
+        require(concurrency > 0) { "concurrency must be positive: $concurrency" }
+        require(maxPixels > 0) { "maxPixels must be positive: $maxPixels" }
 
         if (!state.compareAndSet(RuntimeState.UNINITIALIZED, RuntimeState.INITIALIZING)) {
             // 다른 스레드가 CAS에서 이겼습니다. 초기화가 완료될 때까지 스핀 대기합니다.
@@ -88,8 +100,10 @@ object JVipsRuntime : VipsRuntime, KLogging() {
 
         // 이 스레드가 INITIALIZING 슬롯을 소유합니다.
         try {
+            JVipsNativeLibrarySupport.loadBundledLibTiffIfNeeded()
             nativeRuntime.nativeInit(concurrency)
             _maxPixels = maxPixels
+            _concurrencyCapability = VipsConcurrencyCapability.configurable(concurrency)
             state.set(RuntimeState.INITIALIZED)
             log.debug("JVipsRuntime initialized: concurrency=$concurrency, maxPixels=$maxPixels")
         } catch (e: Error) {
@@ -221,6 +235,7 @@ object JVipsRuntime : VipsRuntime, KLogging() {
         state.set(RuntimeState.UNINITIALIZED)
         nativeRuntime = DefaultJVipsNativeRuntime
         _maxPixels = VipsLimits.DEFAULT_MAX_PIXELS
+        _concurrencyCapability = VipsConcurrencyCapability.unknown("JVips runtime has not been initialized")
     }
 
     private const val BACKEND_NAME = "JVips/JNI"

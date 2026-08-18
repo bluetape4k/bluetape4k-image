@@ -8,6 +8,9 @@ package io.bluetape4k.images.vips
  */
 object VipsLimits {
 
+    /** 공통 런타임 초기화의 기본 libvips 스레드 수 */
+    const val DEFAULT_CONCURRENCY: Int = 4
+
     /** 입력 이미지 최대 크기: 50 MB */
     const val MAX_INPUT_BYTES: Long = 50L * 1024 * 1024
 

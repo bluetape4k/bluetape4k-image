@@ -85,9 +85,10 @@ import io.bluetape4k.images.vips.java25.FfmVipsRuntime
 
 // main 함수 또는 Spring Boot @PostConstruct에서
 FfmVipsRuntime.init(
-    concurrency = Runtime.getRuntime().availableProcessors(),
     maxPixels = 150_000_000L
 )
+
+// vips-ffm 1.9.6은 concurrency 조정 API를 제공하지 않으므로 binding 기본값을 사용합니다.
 
 // 애플리케이션 종료 시
 Runtime.getRuntime().addShutdownHook(Thread {
@@ -119,7 +120,6 @@ import java.nio.file.Paths
 
 // 1. 런타임 초기화 (시작 시 한 번)
 FfmVipsRuntime.init(
-    concurrency = 4,
     maxPixels = 150_000_000L
 )
 
@@ -316,8 +316,8 @@ Report는 decode용 `heifload_buffer`와 encode용 `heifsave_buffer`를 확인�
 
 ```kotlin
 // 기본값: 150,000,000 픽셀
-// init()를 통해 사용자 정의 가능
-FfmVipsRuntime.init(concurrency = 4, maxPixels = 100_000_000L)
+// 픽셀 제한만 설정할 수 있으며 vips-ffm은 binding 기본 동시성을 사용합니다.
+FfmVipsRuntime.init(maxPixels = 100_000_000L)
 ```
 
 5000x5000 이미지 (3채널): 75,000,000 픽셀 (기본 제한 하)
@@ -384,7 +384,7 @@ import io.bluetape4k.images.vips.VipsInitializationException
 
 // 언제든지 상태 확인
 if (!FfmVipsRuntime.isInitialized) {
-    FfmVipsRuntime.init(concurrency = 4)
+    FfmVipsRuntime.init()
 }
 
 if (FfmVipsRuntime.isShutdown) {
@@ -423,7 +423,6 @@ Thread.ofVirtual().factory().newThread {
 app:
   images:
     vips:
-      concurrency: 4
       maxPixels: 150000000
       enableNativeAccess: true  # 반드시 설정
 ```
@@ -438,16 +437,13 @@ import jakarta.annotation.PreDestroy
 
 @Component
 class VipsImageService(
-    @Value("\${app.images.vips.concurrency:4}")
-    private val concurrency: Int,
-    
     @Value("\${app.images.vips.maxPixels:150000000}")
     private val maxPixels: Long,
 ) {
     @PostConstruct
     fun init() {
-        FfmVipsRuntime.init(concurrency, maxPixels)
-        log.info("FfmVipsRuntime 초기화: concurrency=$concurrency")
+        FfmVipsRuntime.init(maxPixels = maxPixels)
+        log.info("FfmVipsRuntime 초기화: ${FfmVipsRuntime.concurrencyCapability}")
     }
     
     @PreDestroy
@@ -546,6 +542,8 @@ java25 모듈은 `images-vips-api/src/testFixtures/resources/golden/vips/`에 �
 - 갱신 모드는 Java 25+ 환경에서만 활성화 — `@EnabledForJreRange(min = JRE.JAVA_25)` 가드 적용
 - 골든 이미지 재생성: `-Dbluetape4k.images.golden.update=true -Dvips.enabled=true`
 - CI 가드: CI 환경에서 골든 이미지 재생성을 방지합니다
+- thumbnail→JPEG 골든은 CI와 macOS에서 확인된 libvips/native codec 버전별 손실 출력 편차를
+  제한하기 위해 채널별 최대 오차 6을 사용합니다. PNG와 WebP 검사는 공통 기본 오차를 유지합니다.
 
 ```bash
 # 골든 이미지 재생성 (Java 25+에서 실행해야 함)

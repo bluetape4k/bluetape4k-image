@@ -23,11 +23,15 @@ interface VipsRuntime {
      * 이미 초기화된 경우 즉시 반환합니다.
      * 다른 스레드가 초기화 중인 경우 완료될 때까지 스핀 대기합니다.
      *
-     * @param concurrency libvips 내부 스레드 수 (기본값: 4)
+     * @param concurrency libvips 내부 스레드 수 (기본값: [VipsLimits.DEFAULT_CONCURRENCY]).
+     * backend가 스레드 수 조정을 지원하지 않으면 지원되지 않는 값은 명시적으로 거부합니다.
      * @param maxPixels 허용할 최대 픽셀 수 `width × height × bands` (기본값: 1억 5천만)
      * @throws VipsInitializationException 초기화 실패 또는 [shutdown] 이후 재호출 시
      */
-    fun init(concurrency: Int = 4, maxPixels: Long = VipsLimits.DEFAULT_MAX_PIXELS)
+    fun init(
+        concurrency: Int = VipsLimits.DEFAULT_CONCURRENCY,
+        maxPixels: Long = VipsLimits.DEFAULT_MAX_PIXELS,
+    )
 
     /**
      * libvips 런타임을 종료합니다.
@@ -42,6 +46,10 @@ interface VipsRuntime {
 
     /** [shutdown] 이후 `true`. 이 상태에서 [init]을 호출하면 예외가 발생합니다. */
     val isShutdown: Boolean
+
+    /** 초기화에서 요청한 concurrency와 backend가 보고한 실제 적용 또는 미지원 상태입니다. */
+    val concurrencyCapability: VipsConcurrencyCapability
+        get() = VipsConcurrencyCapability.unknown("Runtime has not reported concurrency capability")
 
     /**
      * 선택된 libvips backend의 codec capability를 보고합니다.

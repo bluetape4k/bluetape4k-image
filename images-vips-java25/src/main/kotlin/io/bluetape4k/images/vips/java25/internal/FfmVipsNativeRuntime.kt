@@ -1,7 +1,6 @@
 package io.bluetape4k.images.vips.java25.internal
 
 import app.photofox.vipsffm.Vips
-import io.bluetape4k.logging.KLogging
 
 /**
  * vips-ffm 네이티브 런타임 어댑터 인터페이스.
@@ -20,15 +19,12 @@ internal interface FfmVipsNativeRuntime {
  * `Vips.allowUntrustedOperations()`를 호출하지 않는 한 안전합니다.
  *
  * **concurrency**: vips-ffm 1.9.6은 concurrency 설정 API를 노출하지 않습니다.
- * libvips 내부 스레드 수는 기본값(논리 CPU 수)으로 동작합니다.
+ * 호출자는 backend default를 사용해야 하며, `FfmVipsRuntime`이 non-default 요청을
+ * native 초기화 전에 명시적으로 거부합니다.
  */
-internal object DefaultFfmVipsNativeRuntime : FfmVipsNativeRuntime, KLogging() {
+internal object DefaultFfmVipsNativeRuntime : FfmVipsNativeRuntime {
     override fun nativeInit(concurrency: Int) {
         Vips.init()
-        // vips-ffm 1.9.6은 concurrency API를 노출하지 않으므로 libvips internal default를 사용합니다.
-        if (concurrency != 4) {
-            log.warn("vips-ffm does not support concurrency tuning in 1.9.6; concurrency=$concurrency parameter ignored")
-        }
     }
 
     override fun nativeShutdown() {

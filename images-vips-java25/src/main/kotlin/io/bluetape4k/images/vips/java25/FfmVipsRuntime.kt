@@ -6,6 +6,7 @@ import io.bluetape4k.images.vips.VipsCodecCapabilityReport
 import io.bluetape4k.images.vips.VipsCodecDirection
 import io.bluetape4k.images.vips.VipsCodecOperationCapability
 import io.bluetape4k.images.vips.VipsCodecSmokeResult
+import io.bluetape4k.images.vips.VipsConcurrencyCapability
 import io.bluetape4k.images.vips.VipsDecodeException
 import io.bluetape4k.images.vips.VipsEncodeException
 import io.bluetape4k.images.vips.VipsEncodeOptions
@@ -53,8 +54,14 @@ object FfmVipsRuntime : VipsRuntime, KLogging() {
     @Volatile
     private var _maxPixels: Long = VipsLimits.DEFAULT_MAX_PIXELS
 
+    @Volatile
+    private var _concurrencyCapability: VipsConcurrencyCapability = unsupportedConcurrencyCapability()
+
     /** 허용할 최대 픽셀 수 `width × height × bands` */
     val maxPixels: Long get() = _maxPixels
+
+    override val concurrencyCapability: VipsConcurrencyCapability
+        get() = _concurrencyCapability
 
     override fun init(concurrency: Int, maxPixels: Long) {
         when (state.get()) {
@@ -63,6 +70,15 @@ object FfmVipsRuntime : VipsRuntime, KLogging() {
                 "libvips has been shut down — restart the process to re-initialize"
             )
             else -> {}
+        }
+
+        require(concurrency > 0) { "concurrency must be positive: $concurrency" }
+        require(maxPixels > 0) { "maxPixels must be positive: $maxPixels" }
+        if (concurrency != VipsLimits.DEFAULT_CONCURRENCY) {
+            throw VipsInitializationException(
+                "vips-ffm does not support concurrency tuning; " +
+                    "requested=$concurrency, effective=unknown, support=UNSUPPORTED",
+            )
         }
 
         if (!state.compareAndSet(RuntimeState.UNINITIALIZED, RuntimeState.INITIALIZING)) {
@@ -92,6 +108,7 @@ object FfmVipsRuntime : VipsRuntime, KLogging() {
             checkNativeAccessEnabled()
             nativeRuntime.nativeInit(concurrency)
             _maxPixels = maxPixels
+            _concurrencyCapability = unsupportedConcurrencyCapability(concurrency)
             state.set(RuntimeState.INITIALIZED)
             log.debug("FfmVipsRuntime initialized: concurrency=$concurrency, maxPixels=$maxPixels")
         } catch (e: Error) {
@@ -208,7 +225,14 @@ object FfmVipsRuntime : VipsRuntime, KLogging() {
         nativeRuntime = DefaultFfmVipsNativeRuntime
         codecProbe = DefaultFfmVipsCodecProbe
         _maxPixels = VipsLimits.DEFAULT_MAX_PIXELS
+        _concurrencyCapability = unsupportedConcurrencyCapability()
     }
+
+    private fun unsupportedConcurrencyCapability(requested: Int? = null): VipsConcurrencyCapability =
+        VipsConcurrencyCapability.unsupported(
+            requested = requested,
+            reason = "vips-ffm 1.9.6 does not expose concurrency tuning; effective native thread count is unknown.",
+        )
 
     private fun heifCapability(
         format: VipsImageFormat,

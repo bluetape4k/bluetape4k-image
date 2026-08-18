@@ -85,9 +85,10 @@ import io.bluetape4k.images.vips.java25.FfmVipsRuntime
 
 // In your main function or Spring Boot @PostConstruct
 FfmVipsRuntime.init(
-    concurrency = Runtime.getRuntime().availableProcessors(),
     maxPixels = 150_000_000L
 )
+
+// vips-ffm 1.9.6 does not expose concurrency tuning; the binding default is used.
 
 // At application shutdown
 Runtime.getRuntime().addShutdownHook(Thread {
@@ -119,7 +120,6 @@ import java.nio.file.Paths
 
 // 1. Initialize runtime (once at startup)
 FfmVipsRuntime.init(
-    concurrency = 4,
     maxPixels = 150_000_000L
 )
 
@@ -316,8 +316,8 @@ Image dimensions are validated against `FfmVipsRuntime.maxPixels`. Exceeding thi
 
 ```kotlin
 // Default: 150,000,000 pixels
-// Customizable via init()
-FfmVipsRuntime.init(concurrency = 4, maxPixels = 100_000_000L)
+// Only the pixel limit is configurable; vips-ffm uses its binding default concurrency.
+FfmVipsRuntime.init(maxPixels = 100_000_000L)
 ```
 
 For a 5000x5000 image with 3 channels: 75,000,000 pixels (under default limit).
@@ -385,7 +385,7 @@ import io.bluetape4k.images.vips.VipsInitializationException
 
 // Check state at any time
 if (!FfmVipsRuntime.isInitialized) {
-    FfmVipsRuntime.init(concurrency = 4)
+    FfmVipsRuntime.init()
 }
 
 if (FfmVipsRuntime.isShutdown) {
@@ -424,7 +424,6 @@ The `suspendFfmVipsImageOf*` variants use `withContext(Dispatchers.IO)` for non-
 app:
   images:
     vips:
-      concurrency: 4
       maxPixels: 150000000
       enableNativeAccess: true  # Ensure this is set
 ```
@@ -439,16 +438,13 @@ import jakarta.annotation.PreDestroy
 
 @Component
 class VipsImageService(
-    @Value("\${app.images.vips.concurrency:4}")
-    private val concurrency: Int,
-    
     @Value("\${app.images.vips.maxPixels:150000000}")
     private val maxPixels: Long,
 ) {
     @PostConstruct
     fun init() {
-        FfmVipsRuntime.init(concurrency, maxPixels)
-        log.info("FfmVipsRuntime initialized: concurrency=$concurrency")
+        FfmVipsRuntime.init(maxPixels = maxPixels)
+        log.info("FfmVipsRuntime initialized: ${FfmVipsRuntime.concurrencyCapability}")
     }
     
     @PreDestroy
@@ -547,6 +543,9 @@ java25 is the **authoritative source** for vips golden images stored in `images-
 - Update mode enabled only on Java 25+ — guarded by `@EnabledForJreRange(min = JRE.JAVA_25)`
 - Regenerate goldens: `-Dbluetape4k.images.golden.update=true -Dvips.enabled=true`
 - CI guard prevents accidental regeneration in CI environments
+- The thumbnail-to-JPEG golden uses a bounded per-channel tolerance of 6 for the
+  lossy output variation observed across libvips/native codec versions in CI and
+  macOS; PNG and WebP checks keep the shared default tolerance.
 
 ```bash
 # Regenerate golden images (must run on Java 25+)

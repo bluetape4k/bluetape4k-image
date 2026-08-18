@@ -502,7 +502,7 @@ jobs:
 
       - uses: actions/setup-java@v5.7.0
         with:
-          # The module targets Java 21; Gradle/buildSrc runs on the repository baseline JDK 25.
+          # The legacy module name is java21; production and test compilation target the repository baseline JDK 25.
           java-version: '25'
           distribution: ${{ env.JAVA_DISTRIBUTION }}
 
@@ -600,7 +600,75 @@ jobs:
           path: '**/build/reports/kover/'
           retention-days: 14
 
-  # ── 11. 커버리지 집계 ────────────────────────────────────────────────────
+  # ── 11. VIPS consumer·benchmark·BOM 검증 (full only) ─────────────────────
+  vips-verification:
+    name: Verify / VIPS consumer·benchmark·BOM
+    if: ${{ (github.event_name == 'schedule' && github.event.schedule == '11 19 * * 0') || (github.event_name == 'workflow_dispatch' && inputs.scope == 'full') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    needs:
+      - build
+      - test-images-vips-api
+      - test-images-vips-java21
+      - test-images-vips-java25
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v5.7.0
+        with:
+          java-version: '25'
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+      - name: Install libvips
+        run: sudo apt-get update && sudo apt-get install -y libvips-dev
+      - uses: gradle/actions/setup-gradle@v6.3.0
+        with:
+          gradle-version: wrapper
+          cache-read-only: true
+      - name: Verify consumer and bytecode contracts
+        id: vips_consumer
+        run: |
+          ./gradlew :bluetape4k-images-vips-java21:consumerTest \
+            -Pvips.consumer.enabled=true -Dvips.enabled=true \
+            --no-configuration-cache --no-daemon
+          ./gradlew :bluetape4k-images-vips-java21:verifyVipsJava21Bytecode \
+            --no-configuration-cache --no-daemon
+      - name: Run Java21 JNI benchmark smoke
+        id: vips_benchmark
+        run: |
+          ./gradlew :bluetape4k-images-benchmark:verifyVipsJava21BenchmarkReport \
+            -Pvips.impl=java21 -Dvips.benchmark.required=true \
+            --no-configuration-cache --no-daemon
+      - name: Run published BOM consumer smoke
+        id: vips_bom
+        run: ./gradlew :bluetape4k-image-bom:verifyVipsBomConsumer --no-configuration-cache --no-daemon
+      - name: Summarize VIPS verification
+        if: always()
+        run: |
+          {
+            echo '### VIPS consumer·benchmark·BOM verification'
+            echo '- Java25 production-only consumer: ${{ steps.vips_consumer.outcome }}'
+            echo '- class-file major ceiling: 69 이하 (${{ steps.vips_consumer.outcome }})'
+            echo '- Java21 JNI benchmark: ${{ steps.vips_benchmark.outcome }}'
+            report_path="$(find benchmark/images-benchmark/build/reports/benchmarks/vipsJava21Smoke -name benchmark.json -type f -print -quit 2>/dev/null || true)"
+            if [ -n "$report_path" ]; then
+              echo "- benchmark report: $report_path"
+              python3 -c 'import json,sys; rows=json.load(open(sys.argv[1],encoding="utf-8")); scores=[row["primaryMetric"]["score"] for row in rows]; print(f"- benchmark backend: java21 JNI; rows: {len(rows)}; score range: {min(scores):.3f}-{max(scores):.3f} ms/op")' "$report_path"
+            else
+              echo '- benchmark report: 산출물 없음 (이전 단계 실패 가능)'
+            fi
+            echo '- published BOM consumer: ${{ steps.vips_bom.outcome }}'
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload VIPS verification evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: nightly-vips-verification-evidence
+          path: |
+            benchmark/images-benchmark/build/reports/benchmarks/vipsJava21Smoke/**
+            images-vips-java21/build/reports/**
+          if-no-files-found: warn
+          retention-days: 14
+
+  # ── 12. 커버리지 집계 ────────────────────────────────────────────────────
   coverage-report:
     name: Coverage Report
     runs-on: ubuntu-latest
@@ -718,6 +786,7 @@ jobs:
       - test-images-vips-api
       - test-images-vips-java21
       - test-images-vips-java25
+      - vips-verification
       - coverage-report
     if: always()
     steps:

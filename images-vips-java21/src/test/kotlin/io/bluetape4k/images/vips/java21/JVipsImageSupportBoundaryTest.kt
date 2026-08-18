@@ -2,6 +2,7 @@ package io.bluetape4k.images.vips.java21
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldContain
+import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.images.vips.VipsDecodeException
 import io.bluetape4k.images.vips.VipsLimits
 import org.junit.jupiter.api.Test
@@ -23,6 +24,28 @@ class JVipsImageSupportBoundaryTest {
         }
 
         error.message shouldContain "exceeds"
+    }
+
+    @Test
+    fun `pixel limit error snapshots dimensions before releasing native image`() {
+        var releaseCount = 0
+
+        val error = assertFailsWith<VipsDecodeException> {
+            checkPixelLimit(
+                nativeImage = NativeImagePixelProbe(
+                    width = 640,
+                    height = 480,
+                    bands = 3,
+                    release = { releaseCount++ },
+                ),
+                maxPixels = 1,
+            )
+        }
+
+        releaseCount shouldBeEqualTo 1
+        error.message shouldContain "width=640"
+        error.message shouldContain "height=480"
+        error.message shouldContain "bands=3"
     }
 
     private fun writeOversizedJpegLikeFile(path: Path) {
