@@ -23,6 +23,7 @@ class ExportManifestTest < Minitest::Test
       assert_equal %w[modules releaseCommit releaseRef repository schemaVersion title], parsed.keys
       assert_equal "bluetape4k/bluetape4k-image", parsed.fetch("repository")
       assert_equal "한국어 매뉴얼", parsed.fetch("title")
+      assert_includes File.binread(output), '"modules": []'
       assert File.binread(output).end_with?("\n")
       assert exporter.current?
     end

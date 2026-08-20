@@ -41,16 +41,12 @@
         "bom/README.ko.md"
       ],
       "status": "stable",
-      "testPaths": [
-
-      ],
+      "testPaths": [],
       "title": {
         "en": "Image BOM",
         "ko": "Image BOM"
       },
-      "workshops": [
-
-      ]
+      "workshops": []
     },
     {
       "artifact": "io.github.bluetape4k.image:bluetape4k-images",
@@ -74,9 +70,7 @@
         "en": "Immutable image processing",
         "ko": "불변 이미지 처리"
       },
-      "workshops": [
-
-      ]
+      "workshops": []
     },
     {
       "artifact": "io.github.bluetape4k.image:bluetape4k-images-barcode-api",
@@ -100,9 +94,7 @@
         "en": "Barcode API",
         "ko": "바코드 API"
       },
-      "workshops": [
-
-      ]
+      "workshops": []
     },
     {
       "artifact": "io.github.bluetape4k.image:bluetape4k-images-barcode-zxing",
@@ -126,9 +118,7 @@
         "en": "ZXing barcode backend",
         "ko": "ZXing 바코드 백엔드"
       },
-      "workshops": [
-
-      ]
+      "workshops": []
     },
     {
       "artifact": null,
@@ -146,16 +136,12 @@
         "benchmark/images-benchmark/README.ko.md"
       ],
       "status": "stable",
-      "testPaths": [
-
-      ],
+      "testPaths": [],
       "title": {
         "en": "Image processing benchmarks",
         "ko": "이미지 처리 벤치마크"
       },
-      "workshops": [
-
-      ]
+      "workshops": []
     },
     {
       "artifact": "io.github.bluetape4k.image:bluetape4k-images-captcha",
@@ -179,9 +165,7 @@
         "en": "CAPTCHA generation and verification",
         "ko": "CAPTCHA 생성과 검증"
       },
-      "workshops": [
-
-      ]
+      "workshops": []
     },
     {
       "artifact": "io.github.bluetape4k.image:bluetape4k-images-ktor",
@@ -205,9 +189,7 @@
         "en": "Ktor image routes",
         "ko": "Ktor 이미지 라우트"
       },
-      "workshops": [
-
-      ]
+      "workshops": []
     },
     {
       "artifact": "io.github.bluetape4k.image:bluetape4k-images-ocr",
@@ -231,9 +213,7 @@
         "en": "Tesseract OCR integration",
         "ko": "Tesseract OCR 연동"
       },
-      "workshops": [
-
-      ]
+      "workshops": []
     },
     {
       "artifact": "io.github.bluetape4k.image:bluetape4k-images-spring-boot",
@@ -257,9 +237,7 @@
         "en": "Spring Boot image platform",
         "ko": "Spring Boot 이미지 플랫폼"
       },
-      "workshops": [
-
-      ]
+      "workshops": []
     },
     {
       "artifact": "io.github.bluetape4k.image:bluetape4k-images-vips-api",
@@ -283,9 +261,7 @@
         "en": "libvips common API",
         "ko": "libvips 공통 API"
       },
-      "workshops": [
-
-      ]
+      "workshops": []
     },
     {
       "artifact": "io.github.bluetape4k.image:bluetape4k-images-vips-java21",
@@ -309,9 +285,7 @@
         "en": "JDK 25 JVips JNI backend (legacy java21 artifact)",
         "ko": "JDK 25 JVips JNI 백엔드 (legacy java21 artifact)"
       },
-      "workshops": [
-
-      ]
+      "workshops": []
     },
     {
       "artifact": "io.github.bluetape4k.image:bluetape4k-images-vips-java25",
@@ -335,9 +309,7 @@
         "en": "Java 25 FFM backend",
         "ko": "Java 25 FFM 백엔드"
       },
-      "workshops": [
-
-      ]
+      "workshops": []
     },
     {
       "artifact": null,
