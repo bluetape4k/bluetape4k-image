@@ -108,17 +108,36 @@ data class OcrRequest(
     val limits: OcrLimits = OcrLimits.Default,
 )
 
-data class OcrImage(
-    val bytes: ByteArray,
+class OcrImage private constructor(
+    private val encodedBytes: ByteArray,
     val mediaType: String?,
-)
+) {
+    fun bytes(): ByteArray = encodedBytes.copyOf()
+
+    override fun equals(other: Any?): Boolean =
+        this === other || (other is OcrImage &&
+            mediaType == other.mediaType &&
+            encodedBytes.contentEquals(other.encodedBytes))
+
+    override fun hashCode(): Int =
+        31 * (mediaType?.hashCode() ?: 0) + encodedBytes.contentHashCode()
+
+    companion object {
+        fun of(bytes: ByteArray, mediaType: String?): OcrImage =
+            OcrImage(bytes.copyOf(), mediaType)
+    }
+}
 ```
 
-위 코드는 실제 구현을 의미하지 않는 wire-level shape 예시다. 구현 시 다음 불변식을
-테스트로 고정한다.
+위 코드는 실제 production source가 아니라 wire-level shape와 불변성 경계를 설명하는
+예시다. `OcrImage`는 `data class`가 아닌 private backing storage를 가진 value object로
+구현해 generated `copy()`·component 함수와 public `ByteArray` getter를 만들지 않는다.
+`of`는 입력을 복사하고 `bytes()`도 매번 복사본을 반환하며, content-based
+`equals`/`hashCode` 의미론은 명시적으로 유지한다. 구현 시 다음 불변식을 테스트로
+고정한다.
 
-- `bytes`는 생성자와 getter에서 방어적으로 복사하며 빈 값, 최대 encoded byte 초과,
-  허용하지 않은 media type은 요청 단계에서 거부한다.
+- `OcrImage.of`는 입력을 방어적으로 복사하고 `bytes()`는 내부 배열의 복사본만 반환한다.
+  빈 값, 최대 encoded byte 초과, 허용하지 않은 media type은 요청 단계에서 거부한다.
 - `languages`는 순서를 보존하되 blank/중복 정책을 명시하고 provider가 이해하지 못한
   language를 성공으로 위장하지 않는다. 기본값 `eng`는 기존 `OcrOptions.DEFAULT_LANGUAGE`
   의미를 보존한다.
@@ -350,9 +369,11 @@ OCR text, image bytes, Authorization, endpoint query와 local/model path는 log/
 
 ### 5.3 WebFlux/Ktor/Spring 호출 경계
 
-현재 저장소에는 OCR WebFlux route/module이 없다(`rg -n -i "webflux|WebFlux"` 결과는 이
-계획 문서뿐). 따라서 WebFlux는 현재 migration 대상이 아닌 N/A surface로 기록하되,
-후속 adapter가 추가될 경우 다음 계약을 반드시 따른다.
+현재 production source/config에는 OCR WebFlux route/module이 없다(`rg -n -i --glob
+'*.kt' --glob '*.kts' 'webflux|WebFlux' images-ocr examples benchmark settings.gradle.kts
+build.gradle.kts` 결과 없음; 계획·review 문서의 언급은 검색 범위에서 제외). 따라서
+WebFlux는 현재 migration 대상이 아닌 N/A surface로 기록하되, 후속 adapter가 추가될
+경우 다음 계약을 반드시 따른다.
 
 - WebFlux `Mono` 또는 Kotlin `suspend` bridge는 event-loop에서 blocking OCR을 실행하지
   않고 bounded scheduler/`Dispatchers.IO`로 격리한다.
@@ -413,7 +434,8 @@ negative fixture와 route test에서 우선순위를 고정한다.
 |---|---|---|
 | `ocr-legacy-plain-text-v1` | 기존 `ImmutableImage.extractText`와 fake Tesseract provider | text, trim, default `eng`, exception type/source compatibility |
 | `ocr-legacy-structured-word-v1` | `extractOcr(OcrStructuredDetail.WORD)` | page 0, block/line/word order, confidence, null geometry |
-| `ocr-common-request-v1` | byte copy, media type, language/region/limit validation | defensive copy, blank/oversize/negative rejection, canonical JSON fixture |
+| `ocr-common-request-v1` | media type, language/region/limit validation | blank/oversize/negative rejection, canonical JSON fixture |
+| `ocr-image-aliasing-v1` | `OcrImage.of` 후 입력 배열 mutate, `bytes()` 반환 배열 mutate, Kotlin/Java에서 generated `copy()`·backing property 접근 시도 | 두 mutate 모두 내부 상태를 바꾸지 않음, public mutable backing array와 generated `copy()`가 없음, content equality/hash가 안정적 |
 | `ocr-image-immutable-roundtrip-v1` | same `ImmutableImage` through legacy direct seam and deterministic PNG byte path | dimensions, alpha, orientation, media type, text/geometry equivalence; metadata stripping and decode failure policy |
 | `ocr-provider-capability-v1` | fake provider가 PLAIN_TEXT만 지원하는데 WORD 요청 | `UNSUPPORTED_CAPABILITY`, silent downgrade 없음 |
 | `ocr-error-sanitization-v1` | Tess4J/HTTP error에 path, URL, secret, stack가 포함된 fake cause | public reason/message에서 민감 token 0건 |
@@ -600,7 +622,7 @@ smoke를 순차 실행한다. #544 benchmark는 PR required가 아니라 schedul
 | coroutine wrapper는 `Dispatchers.IO`에서 blocking call 실행 | `images-ocr/src/main/kotlin/io/bluetape4k/images/ocr/ImmutableImageOcrExtensions.kt:43-81` | pre-dispatch cancellation/timeout test |
 | TIFF coordinator가 preflight·page order·partial-result 금지를 보유 | `images-ocr/src/main/kotlin/io/bluetape4k/images/ocr/TiffMultiPageOcr.kt:35-218` | multipage/limit/cleanup/catch-mapping fixture |
 | Ktor/Spring이 body/pixel/side limit 후 OCR을 호출 | `examples/ktor-ocr-api/src/main/kotlin/io/bluetape4k/images/examples/ktor/ocr/KtorOcrApiApplication.kt:58-144`, `examples/spring-boot-ocr-api/src/main/kotlin/io/bluetape4k/images/examples/spring/ocr/SpringBootOcrApiApplication.kt:69-177` | route integration and 400/413/503/504 matrix |
-| WebFlux OCR surface가 현재 없음 | repository-wide `rg -n -i "webflux|WebFlux"`에서 이 계획 문서 외 결과 없음 | future WebFlux adapter 별도 Type-A issue와 bounded scheduler/cancellation review |
+| WebFlux OCR surface가 현재 production source/module에는 없음 | production source/config에 한정한 `rg -n -i --glob '*.kt' --glob '*.kts' 'webflux|WebFlux' images-ocr examples benchmark settings.gradle.kts build.gradle.kts` 결과 없음; docs/review artifact 언급은 제외 | future WebFlux adapter 별도 Type-A issue와 bounded scheduler/cancellation review |
 | Tess4J dependency가 현재 `images-ocr` 구현에만 있음 | `images-ocr/build.gradle.kts:12-16` | API module POM/GMM and `apiElements` check |
 | BOM이 published subproject를 자동 constraint | `bom/build.gradle.kts:12-33` | generated POM/GMM and isolated Java consumer |
 | benchmark caller가 Tesseract public surface를 직접 사용 | `benchmark/images-benchmark/src/benchmark/kotlin/io/bluetape4k/images/benchmark/TesseractOcrExtractionBenchmark.kt:5-53`, `benchmark/images-benchmark/src/main/kotlin/io/bluetape4k/images/benchmark/OcrBenchmarkFixtures.kt:12-206` | provider migration, manifest/environment hash, scheduled no-network evidence |

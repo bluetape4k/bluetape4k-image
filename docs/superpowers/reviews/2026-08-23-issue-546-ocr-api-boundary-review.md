@@ -52,3 +52,26 @@
 이번 검토는 계획 문서가 후속 구현을 시작할 수 있는 경계·증거 요구사항을 충분히
 명시했는지를 판단한다. 실제 provider 품질 우위, service 운영 readiness, 또는 #547
 채택 결정을 대신하지 않는다.
+
+## 2026-08-23 누적 head 보강 검토
+
+대상은 PR #553의 누적 head `13ddbb6b7e8a71f3b10f692634fcd48ea4cc29d6`이다. 이 head는
+#554와 #558 산출물을 포함한 4개 문서 파일을 누적하며, 다음 보강을 반영한다.
+
+| 우선순위 | 관찰 | 보강 내용 | 상태 |
+|---|---|---|---|
+| P1 | 기존 계획 예시는 `data class OcrImage(ByteArray)`였지만 생성된 `copy()`와 getter가 배열 alias를 허용할 수 있음 | `OcrImage`를 non-data/private backing value object로 바꾸고 `of`·`bytes()` 방어 복사, content equality/hash, `ocr-image-aliasing-v1` 회귀 fixture를 명시 | 해결 |
+| P2 | WebFlux 검색 주장이 계획·review 문서까지 포함한 repository-wide 결과와 충돌함 | production source/config 경로만 검색하는 명령으로 ledger 범위를 명확히 하고 docs/review artifact 언급을 제외 | 해결 |
+| P1 | live PR body가 #544 단일 파일만 설명하고 누적 #554/#558 topology와 DoD를 반영하지 못함 | PR body를 4개 누적 문서, exact head, 후속 gate, 독립 재검토 결과 기준으로 갱신 | 진행 |
+
+보강 후에도 이 문서는 production Kotlin source, dependency, model, container를 변경하지
+않는다. 따라서 `#544` 실제 benchmark, `#545` service/model receipt, `#547` adoption
+decision은 여전히 후속 gate이며, 현재 PR의 hosted CI가 없다는 사실도 성공으로 해석하지
+않는다.
+
+## 누적 보강 후 판정
+
+`PASS — 설계 문서 보강 완료 / PR body 누적 범위와 exact head 재검토 대기`
+
+계획 문서의 aliasing·source ledger P1/P2는 해결되었다. PR #553 본문은 누적 4개 문서와
+새 exact head를 반영한 뒤 독립 reviewer가 다시 확인해야 하며, 그 전에는 merge하지 않는다.
