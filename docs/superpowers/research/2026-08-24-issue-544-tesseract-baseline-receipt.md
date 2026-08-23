@@ -109,8 +109,8 @@ scenario validator가 8개 row를 확인했다.
 
 | artifact | SHA-256 |
 |---|---|
-| [`ocr-latency.json`](../../../benchmark/images-benchmark/docs/raw/issue-544-20260824-macos-arm64-java25-baseline/ocr-latency.json) | `603f8fa2134b812185ed622d56620f843cc45e41d8a85e547064dfc0b1504580` |
-| [`ocr-throughput.json`](../../../benchmark/images-benchmark/docs/raw/issue-544-20260824-macos-arm64-java25-baseline/ocr-throughput.json) | `a750ef4030810b2411af4367985eacb594d4c5f41dfc54dccbeda28eceba2a66` |
+| [`ocr-latency.json`](../../../benchmark/images-benchmark/docs/raw/issue-544-20260824-macos-arm64-java25-baseline/ocr-latency.json) | `cf183ce38f7426e45e1af189217680d63a745a933ac9d8400648e30b4c303cbf` |
+| [`ocr-throughput.json`](../../../benchmark/images-benchmark/docs/raw/issue-544-20260824-macos-arm64-java25-baseline/ocr-throughput.json) | `9561a94ed163f37b36ff492dce852384d4155e9127ab24e24e9158bbd8310e64` |
 | [`run-manifest.json`](../../../benchmark/images-benchmark/docs/raw/issue-544-20260824-macos-arm64-java25-baseline/run-manifest.json) | see file content and report hashes |
 
 이 receipt은 synthetic fixture와 host-installed Tesseract만 사용하며, 개인정보·외부
