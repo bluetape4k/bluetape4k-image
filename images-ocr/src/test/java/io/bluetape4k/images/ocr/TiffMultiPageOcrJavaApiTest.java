@@ -1,6 +1,6 @@
 package io.bluetape4k.images.ocr;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.List;
 import java.util.Map;
@@ -24,12 +24,9 @@ class TiffMultiPageOcrJavaApiTest {
             List.of()
         );
         TiffMultiPageOcr ocr = new TiffMultiPageOcr();
-        assertNotNull(ocr);
-        assertNotNull(limits);
-        try {
-            ocr.recognize(new byte[0], options, limits);
-        } catch (TiffMultiPageOcrValidationException expected) {
-            // The call is intentionally invalid; compiling this invocation is the ABI smoke.
-        }
+        assertThrows(
+            TiffMultiPageOcrValidationException.class,
+            () -> ocr.recognize(new byte[0], options, limits)
+        );
     }
 }
