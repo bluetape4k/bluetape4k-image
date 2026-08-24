@@ -40,6 +40,21 @@
 검증은 안정적인 공통 토큰을 요구하지만, 한국어/일본어 글리프 전체 인식은 여전히
 엔진과 모델에 따른 관찰값으로 남긴다.
 
+## CER/WER metric receipt
+
+OCR 결과 비교는 `OcrBenchmarkTextNormalizer`의 고정 정책을 사용한다.
+Unicode는 NFC로 조합하고 line ending은 LF로 바꾸며, 줄바꿈을 포함한 연속
+whitespace를 하나의 공백으로 접고 대소문자는 보존한다. CER는 Unicode
+code point 편집 거리, WER는 정규화한 공백 기준 token 편집 거리다. summary는
+fixture별 edit 합계와 reference 분모로 가중 집계하며, 빈 문서(`EMPTY`)는
+`VALID_BLANK`로 raw row에 남기되 CER/WER 분모에서 제외한다. malformed
+negative receipt는 positive metric row와 섞지 않고 별도 제외 목록으로 기록한다.
+
+Train-2의 `OcrBenchmarkMetricReceiptValidator`는 manifest fixture 순서·scenario·
+ground-truth hash, raw row의 CER/WER 산식, `EMPTY` 제외, malformed 목록,
+weighted summary를 동시에 검증한다. 따라서 정규화된 summary만 수동으로 편집해
+raw fixture 결과를 대체할 수 없다.
+
 ## 결과
 
 `AverageTime`은 낮을수록 좋다. 처리량은 별도의 JMH 관찰값이며 높을수록 좋고,
