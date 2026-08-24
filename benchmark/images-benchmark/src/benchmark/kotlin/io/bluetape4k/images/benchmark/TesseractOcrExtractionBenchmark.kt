@@ -15,9 +15,10 @@ import org.openjdk.jmh.annotations.Threads
 import java.awt.image.BufferedImage
 
 /**
- * hash-pinned document fixture로 public Tess4J-backed text extraction path를 측정합니다.
+ * hash-pinned OCR corpus v2 fixture로 public Tess4J-backed text extraction path를 측정합니다.
  *
- * fixture resource loading, PNG decoding, traineddata check, one-time recognition check는 trial setup 중 실행합니다.
+ * fixtureId에 해당하는 v2 manifest의 resource·ground truth·geometry·license receipt 검증,
+ * PNG decoding, traineddata check, one-time recognition check는 trial setup 중 실행합니다.
  * `extractText`는 per-call Tesseract engine setup을 포함한 기본 public API를 측정합니다. `preprocessAndExtract`는
  * rotated input에 대한 grayscale preprocessing과 type-normalizing right rotation까지 추가로 측정합니다.
  */
@@ -25,22 +26,24 @@ import java.awt.image.BufferedImage
 @Threads(1)
 class TesseractOcrExtractionBenchmark {
 
-    @Param("clean-text", "noisy-scan", "rotated-document", "multilingual-text")
-    lateinit var scenario: String
+    @Param("clean-text-v2-001")
+    lateinit var fixtureId: String
 
-    private lateinit var fixture: OcrBenchmarkFixture
+    private lateinit var fixture: OcrBenchmarkCorpusFixture
     private lateinit var options: OcrOptions
 
     @Setup(Level.Trial)
     fun setup() {
-        val benchmarkScenario = OcrBenchmarkScenario.entries.single { it.value == scenario }
-        fixture = OcrBenchmarkFixtures.load(benchmarkScenario)
+        fixture = OcrBenchmarkCorpusV2.loadFixture(fixtureId)
+        require(fixture.entry.expectedOutcome != OcrBenchmarkExpectedOutcome.ERROR) {
+            "ERROR OCR fixtures must not be benchmark inputs: $fixtureId"
+        }
         OcrBenchmarkEnvironment.requireLanguages(fixture.entry.languages)
         options = OcrOptions(
             languages = fixture.entry.languages,
             tessdataPath = OcrBenchmarkEnvironment.requireTessdataPath(),
         )
-        fixture.verify(fixture.image.extractText(options))
+        fixture.verifyOutput(fixture.image.extractText(options))
     }
 
     @Benchmark
@@ -53,10 +56,10 @@ class TesseractOcrExtractionBenchmark {
         blackhole.consume(preprocess(fixture).extractText(options))
     }
 
-    private fun preprocess(source: OcrBenchmarkFixture) =
+    private fun preprocess(source: OcrBenchmarkCorpusFixture) =
         source.image
             .let { image ->
-                if (source.entry.scenario == OcrBenchmarkScenario.ROTATED_DOCUMENT) normalizeRightRotation(image) else image
+                if (source.entry.scenario == OcrBenchmarkCorpusScenario.ROTATED) normalizeRightRotation(image) else image
             }
             .filter(GrayscaleFilter())
 

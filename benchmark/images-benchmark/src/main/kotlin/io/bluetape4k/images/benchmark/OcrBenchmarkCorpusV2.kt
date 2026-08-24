@@ -377,7 +377,26 @@ internal class OcrBenchmarkCorpusFixture(
     val image: ImmutableImage,
     val normalizedText: String,
     val boxes: List<OcrBenchmarkCorpusBox>,
-)
+) {
+    /** OCR 실행 결과가 매니페스트의 분류 계약과 일치하는지 검증합니다. */
+    fun verifyOutput(text: String) {
+        when (entry.expectedOutcome) {
+            OcrBenchmarkExpectedOutcome.TEXT -> {
+                require(text.isNotBlank()) {
+                    "TEXT OCR fixture produced blank output: ${entry.fixtureId}"
+                }
+            }
+            OcrBenchmarkExpectedOutcome.EMPTY -> {
+                require(text.isBlank()) {
+                    "EMPTY OCR fixture produced non-blank output: ${entry.fixtureId}"
+                }
+            }
+            OcrBenchmarkExpectedOutcome.ERROR -> {
+                error("ERROR OCR fixtures must not be loaded as benchmark inputs: ${entry.fixtureId}")
+            }
+        }
+    }
+}
 
 @KotlinxSerializable
 internal enum class OcrBenchmarkCorpusScenario(
