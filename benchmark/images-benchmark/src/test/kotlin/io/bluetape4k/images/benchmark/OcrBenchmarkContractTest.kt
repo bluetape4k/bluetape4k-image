@@ -102,4 +102,25 @@ class OcrBenchmarkContractTest {
         build.shouldContain("validateOcrBenchmarkReport")
         build.shouldContain("benchmarkOcrThroughputBenchmark")
     }
+
+    @Test
+    fun `OCR corpus protocol task and committed receipt stay hash validated`() {
+        val build = Files.readString(buildScriptPath)
+        val receiptDirectory = repositoryRoot().resolve(
+            "benchmark/images-benchmark/docs/raw/issue-565-20260824-macos-arm64-java25-v2-protocol",
+        )
+
+        build.shouldContain("runOcrCorpusProtocol")
+        build.shouldContain("validateOcrProtocolReceipt")
+        build.shouldContain("ocr.protocol.runId")
+        build.shouldContain("ocr.protocol.output")
+        build.shouldContain("ocrProtocolReceiptFile")
+        build.shouldContain("ocrProtocolRunManifestFile")
+        Files.readString(receiptDirectory.resolve("run-manifest.json")).also { manifest ->
+            manifest.shouldContain("\"coverage\": \"full-corpus\"")
+            manifest.shouldContain("\"protocolReceipt\"")
+        }
+        Files.isRegularFile(receiptDirectory.resolve("ocr-v2-protocol.json")).shouldBeEqualTo(true)
+        Files.isRegularFile(receiptDirectory.resolve("model-provenance.json")).shouldBeEqualTo(true)
+    }
 }

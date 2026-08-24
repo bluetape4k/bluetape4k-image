@@ -133,6 +133,25 @@ receipt이며, host 간 순위나 도입 결정을 의미하지 않습니다. v2
 에 있습니다. corpus는 후속 metric 및 run-receipt train을 위한 규모로 확장되었고,
 CER/WER와 cold/warm/RSS 근거는 별도 benchmark output으로 관리합니다.
 
+Train-3 host-native 실행은 다음 명령으로 재현합니다. 각 fixture의 cold/warm
+latency, 관측 throughput, process RSS, 출력 hash와 host/JVM/Tesseract envelope를
+기록하며 throughput을 latency 역수로 계산하지 않습니다. warm은 engine wrapper
+재사용이며 public `TesseractOcrEngine`의 fresh Tess4J client 계약을 바꾸지 않습니다.
+
+```bash
+./gradlew :bluetape4k-images-benchmark:runOcrCorpusProtocol \
+  -Pocr.protocol.runId=issue-565-protocol-20260824 \
+  -Pocr.protocol.output=/absolute/path/issue565-protocol.json \
+  --console=plain
+./gradlew :bluetape4k-images-benchmark:validateOcrProtocolReceipt --console=plain
+```
+
+커밋한 full-corpus receipt는 24개 row(`TEXT` 21개, `EMPTY` 3개)와 embedded
+CER/WER summary를 포함합니다. macOS arm64 Java 25 host 한 대의 관찰값이므로
+host 간 순위나 production SLO로 해석하지 않습니다. 상세 파일은
+[`v2 protocol receipt`](docs/raw/issue-565-20260824-macos-arm64-java25-v2-protocol/)에
+있습니다.
+
 synthetic 추가 fixture는 고정한 ImageMagick/font receipt를 사용해
 `ruby benchmark/images-benchmark/tools/generate_ocr_v2_fixtures.rb`로 재생성할 수
 있습니다. 기존 `clean-text-v2-001` baseline은 byte 단위로 보존하므로 legacy

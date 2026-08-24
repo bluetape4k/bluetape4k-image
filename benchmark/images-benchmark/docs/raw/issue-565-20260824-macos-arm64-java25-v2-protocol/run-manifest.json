@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "issue": 565,
+  "runId": "issue-565-protocol-20260824",
+  "status": "MEASURED",
+  "coverage": "full-corpus",
+  "sourceCommit": "89d75e876359917f0a9bae7a83735e9310c75b31",
+  "fixtureManifest": {
+    "path": "benchmark/images-benchmark/src/main/resources/bench/ocr-v2/manifest.json",
+    "sha256": "99502a59751f68aff19634c33239d0f0e50931a17746621e7384ef169faaebb6",
+    "fixtureCount": 24,
+    "negativeCount": 3
+  },
+  "protocolReceipt": {
+    "path": "ocr-v2-protocol.json",
+    "sha256": "592806fcf4488dfd54683980c0a7959440dac37a672392de8116393a93b7043b",
+    "schemaVersion": 1,
+    "rowCount": 24,
+    "scoredFixtureCount": 21,
+    "excludedValidBlankCount": 3,
+    "excludedMalformedCount": 3
+  },
+  "modelProvenance": {
+    "path": "model-provenance.json",
+    "sha256": "53c4afb40b8d47c61b136e33eedfa78b44e3a9b224722610c13e5d8b33f9158f"
+  },
+  "host": {
+    "os": "Mac OS X 26.6.2",
+    "arch": "aarch64",
+    "jvm": "25.0.4 (Oracle Corporation)",
+    "tesseract": "tesseract 5.5.3",
+    "tessdata": "/opt/homebrew/share/tessdata",
+    "languages": ["eng", "jpn", "kor"]
+  },
+  "protocol": {
+    "coldRuns": 1,
+    "warmupRuns": 2,
+    "warmRuns": 3,
+    "throughputWindowMillis": 250,
+    "rssUnit": "bytes"
+  }
+}

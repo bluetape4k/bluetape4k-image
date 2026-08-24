@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "tessdata": "/opt/homebrew/share/tessdata",
+  "models": [
+    {
+      "language": "eng",
+      "modelId": "eng.traineddata",
+      "path": "/opt/homebrew/share/tessdata/eng.traineddata",
+      "resolvedPath": "/opt/homebrew/Cellar/tesseract/5.5.3/share/tessdata/eng.traineddata",
+      "bytes": 4113088,
+      "sha256": "7d4322bd2a7749724879683fc3912cb542f19906c83bcc1a52132556427170b2"
+    },
+    {
+      "language": "kor",
+      "modelId": "kor.traineddata",
+      "path": "/opt/homebrew/share/tessdata/kor.traineddata",
+      "resolvedPath": "/opt/homebrew/Cellar/tesseract-lang/4.1.0/share/tessdata/kor.traineddata",
+      "bytes": 1677415,
+      "sha256": "6b85e11d9bbf07863b97b3523b1b112844c43e713df8b66418a081fd1060b3b2"
+    },
+    {
+      "language": "jpn",
+      "modelId": "jpn.traineddata",
+      "path": "/opt/homebrew/share/tessdata/jpn.traineddata",
+      "resolvedPath": "/opt/homebrew/Cellar/tesseract-lang/4.1.0/share/tessdata/jpn.traineddata",
+      "bytes": 2471260,
+      "sha256": "1f5de9236d2e85f5fdf4b3c500f2d4926f8d9449f28f5394472d9e8d83b91b4d"
+    }
+  ]
+}
