@@ -538,6 +538,32 @@ fun vips_encodeJpeg(state: VipsBenchmarkState, bh: Blackhole) {
 | `scrimage_photoPreviewJpeg` | 4K photo resize -> grayscale -> JPEG encode |
 | `scrimage_documentPreviewPng` | document resize -> blur -> sepia -> PNG encode |
 
+### `VipsTransformBenchmark` (Issue #582)
+
+scrimage, Java 21 JVips backend, Java 25 FFM backend에서 파생 이미지의
+ownership 비용을 chain/fan-out 변환으로 측정합니다. 모든 `VipsImage` 파생
+결과는 같은 scope에서 소비하고 즉시 닫으며, operation 사이에 native handle을
+보존하거나 ownership 계약을 바꾸지 않습니다.
+
+이미지 크기(`1280x720`, `640x480`), chain 길이(`3`), fan-out(`4`)와 JMH
+cold/warm protocol을 고정합니다. backend별 실행 명령은 다음과 같습니다.
+
+```bash
+./gradlew :bluetape4k-images-benchmark:benchmarkVipsTransformBenchmark -Pvips.impl=java25
+./gradlew :bluetape4k-images-benchmark:benchmarkVipsTransformBenchmark -Pvips.impl=java21
+```
+
+커밋된 receipt는 host-native RSS/allocation을 측정하기 전까지 `N/A` 행을
+포함하는 계약 receipt입니다. 모듈 check 전에 다음 validator를 실행해야 합니다.
+
+```bash
+./gradlew :bluetape4k-images-benchmark:validateVipsTransformReceipt
+```
+
+`N/A`는 성능 결과가 아닙니다. backend 비교 전 후속 macOS/Linux native run에서
+native resource, output hash, latency/throughput 근거를 기록해야 합니다. 원본
+receipt는 [`transform-receipt.json`](docs/raw/issue-582-20260825-macos-arm64-java25-transform/transform-receipt.json)입니다.
+
 ### `ImageIoBoundaryBenchmark`
 
 기본 로드/쓰기 진입점과 Okio, `bluetape4k-okio` suspended file-channel 경계를

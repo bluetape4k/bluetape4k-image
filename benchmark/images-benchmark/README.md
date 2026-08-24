@@ -536,6 +536,34 @@ the `kotlinx-benchmark` Gradle DSL does not expose profiler arguments.
 | `scrimage_photoPreviewJpeg` | 4K photo resize -> grayscale -> JPEG encode |
 | `scrimage_documentPreviewPng` | document resize -> blur -> sepia -> PNG encode |
 
+### `VipsTransformBenchmark` (Issue #582)
+
+Measures derived-image ownership for a chained transform and a fan-out transform
+using scrimage, the Java 21 JVips backend, and the Java 25 FFM backend. Every
+derived `VipsImage` is consumed and closed in the same scope; the benchmark does
+not change the ownership contract or retain native handles across operations.
+
+The benchmark pins the image sizes (`1280x720`, `640x480`), chain length (`3`),
+fan-out (`4`), and JMH cold/warm protocol. Run one backend lane with:
+
+```bash
+./gradlew :bluetape4k-images-benchmark:benchmarkVipsTransformBenchmark -Pvips.impl=java25
+./gradlew :bluetape4k-images-benchmark:benchmarkVipsTransformBenchmark -Pvips.impl=java21
+```
+
+The committed receipt is a contract receipt with `N/A` native RSS/allocation
+rows until a host-native run records those metrics. It must be validated before
+the module check completes:
+
+```bash
+./gradlew :bluetape4k-images-benchmark:validateVipsTransformReceipt
+```
+
+`N/A` is not a performance result: native-resource measurements, output hashes,
+and latency/throughput must be recorded by a follow-up macOS/Linux native run
+before comparing backends. The raw receipt is
+[`transform-receipt.json`](docs/raw/issue-582-20260825-macos-arm64-java25-transform/transform-receipt.json).
+
 ### `ImageIoBoundaryBenchmark`
 
 Compares baseline load/write entry points with Okio and
