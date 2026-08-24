@@ -50,6 +50,10 @@
       "sha256": "c649233ce8dac09243e573ffc5b99a28e8b5dbe320740d090a3cd7b54b153b99"
     }
   ],
+  "modelProvenance": {
+    "path": "model-provenance.json",
+    "sha256": "054cba2d2c47ec19d1bb0a8f63127c1571b56ab03404d521871a739ca97253ae"
+  },
   "status": "BASELINE_ONLY",
   "paddleComparison": "PENDING",
   "adoptionDecision": "DEFER"

@@ -44,6 +44,7 @@ class TesseractOcrExtractionBenchmark {
             tessdataPath = OcrBenchmarkEnvironment.requireTessdataPath(),
         )
         fixture.verifyOutput(fixture.image.extractText(options))
+        fixture.verifyOutput(preprocess(fixture).extractText(options))
     }
 
     @Benchmark

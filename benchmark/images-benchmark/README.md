@@ -131,6 +131,15 @@ cross-host ranking or an adoption decision. The immutable v2 reports and run
 manifest are in [`issue-563 raw evidence`](docs/raw/issue-563-20260824-macos-arm64-java25-v2-baseline/).
 The remaining 9-scenario/27-fixture corpus and Paddle comparison are still pending.
 
+Trial setup performs one recognition through both `extractText` and
+`preprocessAndExtract` and rejects a result that violates the fixture's declared
+`TEXT`/`EMPTY` outcome. The receipt also pins the `eng.traineddata` model path,
+resolved path, byte count, and SHA-256 in
+[`model-provenance.json`](docs/raw/issue-563-20260824-macos-arm64-java25-v2-baseline/model-provenance.json).
+Run `./gradlew :bluetape4k-images-benchmark:validateOcrBenchmarkReceipt` to
+verify the manifest, raw report EOF normalization, report hashes, and model
+provenance hash before using the snapshot.
+
 The GC profiler reports `1,417,421 B/op` managed allocation for direct clean
 text extraction; it excludes Tesseract native/model memory. Host prerequisites
 are explicit (`tesseract`, tessdata, and fixture languages), so the OCR tasks
