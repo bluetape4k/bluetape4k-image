@@ -3,7 +3,9 @@ package io.bluetape4k.images.ocr
 import com.sksamuel.scrimage.ImmutableImage
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeInstanceOf
 import io.bluetape4k.assertions.shouldBeNull
+import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.images.IIORegistryUtils
 import io.bluetape4k.images.coroutines.SuspendTiffMultiPageWriter
 import java.io.ByteArrayOutputStream
@@ -70,6 +72,7 @@ class TiffMultiPageOcrTest {
         }
         textError.reason shouldBeEqualTo TiffMultiPageOcrFailureReason.RESULT_LIMIT_EXCEEDED
         textError.pageIndex shouldBeEqualTo 2
+        textError.message.orEmpty() shouldContain "phase=result"
 
         val entryEngine = RecordingStructuredEngine(textAt = { "x" })
         val entryError = assertFailsWith<TiffMultiPageOcrValidationException> {
@@ -140,11 +143,108 @@ class TiffMultiPageOcrTest {
         unknownPages.reason shouldBeEqualTo TiffMultiPageOcrFailureReason.PAGE_COUNT_UNKNOWN
         unknownPages.pageIndex shouldBeEqualTo null
 
+        val unknownPageCountCause = IllegalStateException("/secret/metadata")
+        val unknownPageCount = assertFailsWith<TiffMultiPageOcrValidationException> {
+            stubOcr(
+                StubImageReader(
+                    pageCount = 1,
+                    pageCountFailure = unknownPageCountCause,
+                ),
+            ).recognize(byteArrayOf(1))
+        }
+        unknownPageCount.reason shouldBeEqualTo TiffMultiPageOcrFailureReason.PAGE_COUNT_UNKNOWN
+        unknownPageCount.pageIndex shouldBeEqualTo null
+        unknownPageCount.cause shouldBeEqualTo unknownPageCountCause
+        unknownPageCount.message.orEmpty() shouldContain "phase=metadata"
+        unknownPageCount.message.orEmpty().contains("/secret") shouldBeEqualTo false
+
+        val metadataCancellation = CancellationException("metadata cancelled")
+        assertFailsWith<CancellationException> {
+            stubOcr(
+                StubImageReader(
+                    pageCount = 1,
+                    pageCountFailure = metadataCancellation,
+                ),
+            ).recognize(byteArrayOf(1))
+        }
+
+        val unknownReaderCause = IllegalStateException("/secret/reader")
+        val unknownReader = assertFailsWith<TiffMultiPageOcrValidationException> {
+            TiffMultiPageOcr.withFactories(
+                engine,
+                fixedInputFactory(),
+                object : TiffImageReaderFactory {
+                    override fun open(stream: ImageInputStream): ImageReader = throw unknownReaderCause
+                },
+            ).recognize(byteArrayOf(1))
+        }
+        unknownReader.reason shouldBeEqualTo TiffMultiPageOcrFailureReason.READER_UNAVAILABLE
+        unknownReader.pageIndex shouldBeEqualTo null
+        unknownReader.cause shouldBeEqualTo unknownReaderCause
+        unknownReader.message.orEmpty() shouldContain "phase=reader"
+        unknownReader.message.orEmpty().contains("/secret") shouldBeEqualTo false
+
+        val readerCancellation = CancellationException("reader cancelled")
+        assertFailsWith<CancellationException> {
+            TiffMultiPageOcr.withFactories(
+                engine,
+                fixedInputFactory(),
+                object : TiffImageReaderFactory {
+                    override fun open(stream: ImageInputStream): ImageReader = throw readerCancellation
+                },
+            ).recognize(byteArrayOf(1))
+        }
+
+        val setInputCause = IllegalStateException("/secret/set-input")
+        val setInputReader = StubImageReader(pageCount = 1, setInputFailure = setInputCause)
+        val setInputError = assertFailsWith<TiffMultiPageOcrValidationException> {
+            TiffMultiPageOcr.withFactories(
+                engine,
+                fixedInputFactory(),
+                object : TiffImageReaderFactory {
+                    override fun open(stream: ImageInputStream): ImageReader = setInputReader
+                },
+            ).recognize(byteArrayOf(1))
+        }
+        setInputError.reason shouldBeEqualTo TiffMultiPageOcrFailureReason.READER_UNAVAILABLE
+        setInputError.cause shouldBeEqualTo setInputCause
+        setInputReader.disposed shouldBeEqualTo true
+
         val invalidDimensions = assertFailsWith<TiffMultiPageOcrValidationException> {
             stubOcr(StubImageReader(pageCount = 1, width = 0)).recognize(byteArrayOf(1))
         }
         invalidDimensions.reason shouldBeEqualTo TiffMultiPageOcrFailureReason.DIMENSIONS_UNAVAILABLE
         invalidDimensions.pageIndex shouldBeEqualTo 0
+
+        val decodeCause = IllegalStateException("/secret/decode")
+        val decodeError = assertFailsWith<TiffMultiPageOcrException> {
+            stubOcr(StubImageReader(pageCount = 1, readFailure = decodeCause)).recognize(byteArrayOf(1))
+        }
+        decodeError.reason shouldBeEqualTo TiffMultiPageOcrFailureReason.DECODE_FAILED
+        decodeError.pageIndex shouldBeEqualTo 0
+        decodeError.cause shouldBeEqualTo decodeCause
+        decodeError.message.orEmpty() shouldContain "phase=decode"
+        decodeError.message.orEmpty().contains("/secret") shouldBeEqualTo false
+    }
+
+    @Test
+    fun `unexpected setup failure uses unknown operational reason`() {
+        val cause = IllegalStateException("/secret/unexpected")
+        val error = assertFailsWith<TiffMultiPageOcrException> {
+            TiffMultiPageOcr.withFactories(
+                RecordingStructuredEngine(),
+                fixedInputFactory(allowPayloadFailure = cause),
+                object : TiffImageReaderFactory {
+                    override fun open(stream: ImageInputStream): ImageReader = StubImageReader(pageCount = 1)
+                },
+            ).recognize(byteArrayOf(1))
+        }
+
+        error.reason shouldBeEqualTo TiffMultiPageOcrFailureReason.UNKNOWN
+        error.pageIndex shouldBeEqualTo null
+        error.cause shouldBeEqualTo cause
+        error.message.orEmpty() shouldContain "phase=unknown"
+        error.message.orEmpty().contains("/secret") shouldBeEqualTo false
     }
 
     @Test
@@ -199,8 +299,8 @@ class TiffMultiPageOcrTest {
         error.reason shouldBeEqualTo TiffMultiPageOcrFailureReason.ENGINE_FAILED
         error.pageIndex shouldBeEqualTo 1
         engine.calls.size shouldBeEqualTo 2
-        error.message shouldBeEqualTo "TIFF OCR engine failed."
-        error.cause.shouldBeNull()
+        error.message shouldBeEqualTo "TIFF OCR engine failed (phase=engine, pageIndex=1)."
+        error.cause shouldBeInstanceOf OcrException::class
     }
 
     @Test
@@ -242,8 +342,8 @@ class TiffMultiPageOcrTest {
         }
 
         error.reason shouldBeEqualTo TiffMultiPageOcrFailureReason.ENGINE_FAILED
-        error.message shouldBeEqualTo "TIFF OCR engine failed."
-        error.cause.shouldBeNull()
+        error.message shouldBeEqualTo "TIFF OCR engine failed (phase=engine, pageIndex=0)."
+        error.cause shouldBeInstanceOf OcrException::class
         error.suppressed.size shouldBeEqualTo 1
         error.suppressed.single().message shouldBeEqualTo "TIFF OCR resource cleanup failed"
     }
@@ -280,14 +380,16 @@ class TiffMultiPageOcrTest {
             },
         )
 
-    private fun fixedInputFactory(): TiffImageInputFactory = object : TiffImageInputFactory {
+    private fun fixedInputFactory(allowPayloadFailure: RuntimeException? = null): TiffImageInputFactory = object : TiffImageInputFactory {
         override fun open(bytes: ByteArray, maxMetadataBytes: Long): TiffImageInput {
             val source = ByteArrayInputStream(byteArrayOf(0))
             val imageInput = requireNotNull(ImageIO.createImageInputStream(source))
             return object : TiffImageInput {
                 override val stream: ImageInputStream = imageInput
 
-                override fun allowPayloadReads() = Unit
+                override fun allowPayloadReads() {
+                    allowPayloadFailure?.let { throw it }
+                }
 
                 override fun close() = imageInput.close()
             }
@@ -298,8 +400,23 @@ class TiffMultiPageOcrTest {
         private val pageCount: Int,
         private val width: Int = 1,
         private val height: Int = 1,
+        private val pageCountFailure: RuntimeException? = null,
+        private val readFailure: RuntimeException? = null,
+        private val setInputFailure: RuntimeException? = null,
     ) : ImageReader(null) {
-        override fun getNumImages(allowSearch: Boolean): Int = pageCount
+        var disposed: Boolean = false
+
+        override fun getNumImages(allowSearch: Boolean): Int = pageCountFailure?.let { throw it } ?: pageCount
+
+        override fun setInput(input: Any?, seekForwardOnly: Boolean, ignoreMetadata: Boolean) {
+            setInputFailure?.let { throw it }
+            super.setInput(input, seekForwardOnly, ignoreMetadata)
+        }
+
+        override fun dispose() {
+            disposed = true
+            super.dispose()
+        }
 
         override fun getWidth(imageIndex: Int): Int = width
 
@@ -312,8 +429,10 @@ class TiffMultiPageOcrTest {
 
         override fun getImageMetadata(imageIndex: Int): IIOMetadata? = null
 
-        override fun read(imageIndex: Int, param: ImageReadParam?): BufferedImage =
-            BufferedImage(width.coerceAtLeast(1), height.coerceAtLeast(1), BufferedImage.TYPE_INT_RGB)
+        override fun read(imageIndex: Int, param: ImageReadParam?): BufferedImage {
+            readFailure?.let { throw it }
+            return BufferedImage(width.coerceAtLeast(1), height.coerceAtLeast(1), BufferedImage.TYPE_INT_RGB)
+        }
     }
 
     private class RecordingStructuredEngine(

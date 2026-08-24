@@ -162,9 +162,12 @@ page, block, line, word entry의 `pageIndex`는 TIFF index로 다시 매핑되�
 확인합니다.
 
 입력과 metadata 거부는 `TiffMultiPageOcrValidationException`, decode·provider·
-engine 실패는 `TiffMultiPageOcrException`으로 전달됩니다. 예외 문장을 비교하지
-말고 안정적인 `TiffMultiPageOcrFailureReason` 값을 처리하세요. 외부 예외에는
-payload, 파일 경로, tessdata 경로, native cause가 포함되지 않습니다.
+engine·예상하지 못한 실행 실패는 `TiffMultiPageOcrException`으로 전달됩니다. 예외
+문장을 비교하지 말고 안정적인 `TiffMultiPageOcrFailureReason` 값을 처리하세요.
+매핑된 message에는 `input`, `reader`, `metadata`, `decode`, `engine`, `result`,
+`unknown` 단계와 가능한 경우 page index가 포함됩니다. 매핑된 message는 payload,
+파일 경로, tessdata 경로를 노출하지 않지만 원본 failure는 신뢰된 진단을 위해
+`Throwable.cause`에 보존됩니다. cause를 외부 응답에 그대로 전달하지 마세요.
 `suspendRecognize`는 전달한 dispatcher에서 blocking 작업을 수행하고
 `CancellationException`을 그대로 재전파합니다. native 취소는 best-effort이므로
 신뢰하지 않는 입력에는 caller가 timeout을 함께 설정해야 합니다.

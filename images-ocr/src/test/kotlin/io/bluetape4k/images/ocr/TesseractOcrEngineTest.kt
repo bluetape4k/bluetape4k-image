@@ -6,6 +6,7 @@ import io.bluetape4k.assertions.shouldBeNull
 import io.bluetape4k.assertions.shouldContain
 import java.awt.Rectangle
 import java.awt.image.BufferedImage
+import kotlinx.coroutines.CancellationException
 import net.sourceforge.tess4j.ITessAPI
 import net.sourceforge.tess4j.TesseractException
 import org.junit.jupiter.api.Test
@@ -55,6 +56,46 @@ class TesseractOcrEngineTest {
 
         error.message.orEmpty() shouldContain "Tesseract OCR failed for languages=eng"
         error.message.orEmpty().contains("/secret") shouldBeEqualTo false
+    }
+
+    @Test
+    fun `factory failure is normalized as configuration error with cause`() {
+        val cause = UnsatisfiedLinkError("/secret/libtesseract.so")
+        val error = assertFailsWith<OcrConfigurationException> {
+            TesseractOcrEngine.withClientFactory { throw cause }
+                .recognize(textImage(), OcrOptions(languages = listOf("eng")))
+        }
+
+        error.cause shouldBeEqualTo cause
+        error.message.orEmpty().contains("/secret") shouldBeEqualTo false
+    }
+
+    @Test
+    fun `configuration failure is normalized without swallowing cancellation`() {
+        val cause = IllegalStateException("/secret/tessdata is missing")
+        val configurationError = assertFailsWith<OcrConfigurationException> {
+            TesseractOcrEngine.withClientFactory {
+                RecordingTesseractClient(configurationError = cause)
+            }.recognize(
+                textImage(),
+                OcrOptions(languages = listOf("eng"), tessdataPath = "/secret/tessdata"),
+            )
+        }
+        configurationError.cause shouldBeEqualTo cause
+        configurationError.message.orEmpty().contains("/secret") shouldBeEqualTo false
+
+        val cancellation = CancellationException("caller cancelled")
+        assertFailsWith<CancellationException> {
+            TesseractOcrEngine.withClientFactory { throw cancellation }
+                .recognize(textImage(), OcrOptions(languages = listOf("eng")))
+        }
+
+        val ocrCancellation = CancellationException("OCR call cancelled")
+        assertFailsWith<CancellationException> {
+            TesseractOcrEngine.withClientFactory {
+                RecordingTesseractClient(ocrFailure = ocrCancellation)
+            }.recognize(textImage(), OcrOptions(languages = listOf("eng")))
+        }
     }
 
     @Test
@@ -146,6 +187,8 @@ class TesseractOcrEngineTest {
     private class RecordingTesseractClient(
         private val text: String = "",
         private val error: TesseractException? = null,
+        private val configurationError: RuntimeException? = null,
+        private val ocrFailure: RuntimeException? = null,
         private val wordsByLevel: Map<Int, List<TesseractWord>> = emptyMap(),
     ): TesseractClient {
 
@@ -163,6 +206,7 @@ class TesseractOcrEngineTest {
         }
 
         override fun setLanguage(language: String) {
+            configurationError?.let { throw it }
             this.recordedLanguage = language
         }
 
@@ -184,17 +228,20 @@ class TesseractOcrEngineTest {
 
         override fun doOCR(image: BufferedImage): String {
             error?.let { throw it }
+            ocrFailure?.let { throw it }
             return text
         }
 
         override fun doOCR(image: BufferedImage, regions: List<Rectangle>): String {
             error?.let { throw it }
+            ocrFailure?.let { throw it }
             requestedRegions = regions
             return text
         }
 
         override fun getWords(image: BufferedImage, level: Int): List<TesseractWord> {
             error?.let { throw it }
+            ocrFailure?.let { throw it }
             requestedLevels += level
             return wordsByLevel[level].orEmpty()
         }

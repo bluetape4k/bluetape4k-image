@@ -74,26 +74,41 @@ enum class TiffMultiPageOcrFailureReason {
     DECODE_FAILED,
     ENGINE_FAILED,
     RESULT_LIMIT_EXCEEDED,
+    UNKNOWN,
 }
 
-/** TIFF OCR metadata 또는 resource budget validation 실패입니다. */
+/** TIFF OCR 입력·metadata·resource budget 또는 예상하지 못한 validation 단계의 실패입니다. */
 class TiffMultiPageOcrValidationException(
     val reason: TiffMultiPageOcrFailureReason,
     val pageIndex: Int?,
     message: String,
-) : IllegalArgumentException(message), Serializable {
+    cause: Throwable? = null,
+) : IllegalArgumentException(message, cause), Serializable {
+
+    constructor(
+        reason: TiffMultiPageOcrFailureReason,
+        pageIndex: Int?,
+        message: String,
+    ) : this(reason, pageIndex, message, null)
 
     companion object {
         private const val serialVersionUID: Long = 1L
     }
 }
 
-/** TIFF OCR decode 또는 provider 실행 실패입니다. */
+/** TIFF OCR decode 또는 provider 실행 실패입니다. [cause]와 page index를 보존합니다. */
 class TiffMultiPageOcrException(
     val reason: TiffMultiPageOcrFailureReason,
     val pageIndex: Int?,
     message: String,
-) : OcrException(message), Serializable {
+    cause: Throwable? = null,
+) : OcrException(message, cause), Serializable {
+
+    constructor(
+        reason: TiffMultiPageOcrFailureReason,
+        pageIndex: Int?,
+        message: String,
+    ) : this(reason, pageIndex, message, null)
 
     companion object {
         private const val serialVersionUID: Long = 1L
@@ -122,7 +137,9 @@ class TiffMultiPageOcr private constructor(
      * TIFF 전체를 preflight한 뒤 page 순서대로 OCR합니다.
      *
      * 실패 시 partial result를 반환하지 않으며, public exception에는 원본 payload·경로·native
-     * provider cause를 포함하지 않습니다.
+     * provider cause를 message에 포함하지 않습니다. 단계별 reason과 page index를 사용하고,
+     * 진단이 필요하면 [Throwable.cause]를 확인하십시오. [CancellationException]은 그대로
+     * 전파됩니다.
      */
     fun recognize(
         bytes: ByteArray,
@@ -148,10 +165,11 @@ class TiffMultiPageOcr private constructor(
             primary = e
             throw e
         } catch (e: Exception) {
-            val mapped = TiffMultiPageOcrValidationException(
-                TiffMultiPageOcrFailureReason.PAGE_COUNT_UNKNOWN,
+            val mapped = TiffMultiPageOcrException(
+                TiffMultiPageOcrFailureReason.UNKNOWN,
                 null,
-                "TIFF OCR metadata could not be read.",
+                "TIFF OCR failed unexpectedly (phase=unknown).",
+                e,
             )
             primary = mapped
             throw mapped
@@ -204,10 +222,11 @@ class TiffMultiPageOcr private constructor(
             primary = e
             throw e
         } catch (e: Exception) {
-            val mapped = TiffMultiPageOcrValidationException(
-                TiffMultiPageOcrFailureReason.PAGE_COUNT_UNKNOWN,
+            val mapped = TiffMultiPageOcrException(
+                TiffMultiPageOcrFailureReason.UNKNOWN,
                 null,
-                "TIFF OCR metadata could not be read.",
+                "TIFF OCR failed unexpectedly (phase=unknown).",
+                e,
             )
             primary = mapped
             throw mapped
@@ -226,46 +245,61 @@ class TiffMultiPageOcr private constructor(
             inputFactory.open(bytes, limits.maxMetadataBytes)
         } catch (e: TiffMultiPageOcrValidationException) {
             throw e
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             if (findCause<MetadataLimitExceededException>(e) != null) {
-                throw validation(TiffMultiPageOcrFailureReason.METADATA_LIMIT_EXCEEDED, null)
+                throw validation(TiffMultiPageOcrFailureReason.METADATA_LIMIT_EXCEEDED, null, e)
             }
             throw TiffMultiPageOcrValidationException(
                 TiffMultiPageOcrFailureReason.READER_UNAVAILABLE,
                 null,
-                "TIFF OCR reader is unavailable.",
+                "TIFF OCR reader is unavailable (phase=reader).",
+                e,
             )
         }
 
+        var reader: ImageReader? = null
         return try {
-            val reader = readerFactory.open(input.stream)
+            val openedReader = readerFactory.open(input.stream)
+            reader = openedReader
             input.stream.seek(0)
-            reader.setInput(input.stream, false, false)
-            TiffImageSession(input, reader)
+            openedReader.setInput(input.stream, false, false)
+            TiffImageSession(input, openedReader)
         } catch (e: TiffMultiPageOcrValidationException) {
             val mapped = if (input.metadataLimitExceeded) {
-                validation(TiffMultiPageOcrFailureReason.METADATA_LIMIT_EXCEEDED, null)
+                validation(TiffMultiPageOcrFailureReason.METADATA_LIMIT_EXCEEDED, null, e)
             } else {
                 e
             }
-            closeInputAfterOpenFailure(input, mapped)
+            closeInputAfterOpenFailure(input, reader, mapped)
             throw mapped
+        } catch (e: CancellationException) {
+            closeInputAfterOpenFailure(input, reader, e)
+            throw e
         } catch (e: Exception) {
             val mapped = if (input.metadataLimitExceeded || findCause<MetadataLimitExceededException>(e) != null) {
-                validation(TiffMultiPageOcrFailureReason.METADATA_LIMIT_EXCEEDED, null)
+                validation(TiffMultiPageOcrFailureReason.METADATA_LIMIT_EXCEEDED, null, e)
             } else {
                 TiffMultiPageOcrValidationException(
                     TiffMultiPageOcrFailureReason.READER_UNAVAILABLE,
                     null,
-                    "TIFF OCR reader is unavailable.",
+                    "TIFF OCR reader is unavailable (phase=reader).",
+                    e,
                 )
             }
-            closeInputAfterOpenFailure(input, mapped)
+            closeInputAfterOpenFailure(input, reader, mapped)
             throw mapped
         }
     }
 
-    private fun closeInputAfterOpenFailure(input: TiffImageInput, primary: Throwable) {
+    private fun closeInputAfterOpenFailure(input: TiffImageInput, reader: ImageReader?, primary: Throwable) {
+        try {
+            reader?.dispose()
+        } catch (cleanup: Throwable) {
+            logCleanup(cleanup)
+            primary.addSuppressed(SanitizedCleanupMarker())
+        }
         try {
             input.close()
         } catch (cleanup: Throwable) {
@@ -277,14 +311,17 @@ class TiffMultiPageOcr private constructor(
     private fun preflight(session: TiffImageSession, limits: TiffMultiPageOcrLimits): List<PageMetadata> {
         val pageCount = try {
             session.reader.getNumImages(false)
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             if (findCause<MetadataLimitExceededException>(e) != null) {
-                throw validation(TiffMultiPageOcrFailureReason.METADATA_LIMIT_EXCEEDED, null)
+                throw validation(TiffMultiPageOcrFailureReason.METADATA_LIMIT_EXCEEDED, null, e)
             }
             throw TiffMultiPageOcrValidationException(
                 TiffMultiPageOcrFailureReason.PAGE_COUNT_UNKNOWN,
                 null,
-                "TIFF OCR metadata could not be read.",
+                "TIFF OCR metadata page count could not be read (phase=metadata).",
+                e,
             )
         }
         if (pageCount <= 0) {
@@ -302,11 +339,13 @@ class TiffMultiPageOcr private constructor(
             try {
                 width = session.reader.getWidth(index)
                 height = session.reader.getHeight(index)
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 if (findCause<MetadataLimitExceededException>(e) != null) {
-                    throw validation(TiffMultiPageOcrFailureReason.METADATA_LIMIT_EXCEEDED, index)
+                    throw validation(TiffMultiPageOcrFailureReason.METADATA_LIMIT_EXCEEDED, index, e)
                 }
-                throw validation(TiffMultiPageOcrFailureReason.DIMENSIONS_UNAVAILABLE, index)
+                throw validation(TiffMultiPageOcrFailureReason.DIMENSIONS_UNAVAILABLE, index, e)
             }
             if (width <= 0 || height <= 0) {
                 throw validation(TiffMultiPageOcrFailureReason.DIMENSIONS_UNAVAILABLE, index)
@@ -356,16 +395,12 @@ class TiffMultiPageOcr private constructor(
                 ?: throw IOException("decoded page was null")
         } catch (e: CancellationException) {
             throw e
-        } catch (_: EOFException) {
-            throw validation(TiffMultiPageOcrFailureReason.DECODE_FAILED, null)
+        } catch (e: EOFException) {
+            throw decodeFailure(page.index, e)
         } catch (e: IOException) {
-            throw validation(TiffMultiPageOcrFailureReason.DECODE_FAILED, page.index)
+            throw decodeFailure(page.index, e)
         } catch (e: Exception) {
-            throw TiffMultiPageOcrException(
-                TiffMultiPageOcrFailureReason.DECODE_FAILED,
-                page.index,
-                "TIFF OCR page decode failed.",
-            )
+            throw decodeFailure(page.index, e)
         }
 
         val image = try {
@@ -375,11 +410,12 @@ class TiffMultiPageOcr private constructor(
             throw e
         } catch (e: CancellationException) {
             throw e
-        } catch (_: Exception) {
+        } catch (e: Exception) {
             throw TiffMultiPageOcrException(
                 TiffMultiPageOcrFailureReason.DECODE_FAILED,
                 page.index,
-                "TIFF OCR page decode failed.",
+                "TIFF OCR page decode failed (phase=decode, pageIndex=${page.index}).",
+                e,
             )
         }
 
@@ -387,21 +423,30 @@ class TiffMultiPageOcr private constructor(
             engine.recognizeStructured(image, options)
         } catch (e: CancellationException) {
             throw e
-        } catch (_: Exception) {
+        } catch (e: Exception) {
             throw TiffMultiPageOcrException(
                 TiffMultiPageOcrFailureReason.ENGINE_FAILED,
                 page.index,
-                "TIFF OCR engine failed.",
+                "TIFF OCR engine failed (phase=engine, pageIndex=${page.index}).",
+                e,
             )
         }
     }
+
+    private fun decodeFailure(pageIndex: Int, cause: Throwable): TiffMultiPageOcrException =
+        TiffMultiPageOcrException(
+            TiffMultiPageOcrFailureReason.DECODE_FAILED,
+            pageIndex,
+            "TIFF OCR page decode failed (phase=decode, pageIndex=$pageIndex).",
+            cause,
+        )
 
     private fun validateDecodedImage(image: BufferedImage, page: PageMetadata, limits: TiffMultiPageOcrLimits) {
         if (image.width != page.width || image.height != page.height) {
             throw TiffMultiPageOcrException(
                 TiffMultiPageOcrFailureReason.DECODE_FAILED,
                 page.index,
-                "TIFF OCR page decode failed.",
+                "TIFF OCR page decode failed (phase=decode, pageIndex=${page.index}).",
             )
         }
         if (image.width > limits.maxDecodedSide || image.height > limits.maxDecodedSide) {
@@ -438,8 +483,34 @@ class TiffMultiPageOcr private constructor(
         }
     }
 
-    private fun validation(reason: TiffMultiPageOcrFailureReason, pageIndex: Int?): TiffMultiPageOcrValidationException =
-        TiffMultiPageOcrValidationException(reason, pageIndex, "TIFF OCR input was rejected ($reason).")
+    private fun validation(
+        reason: TiffMultiPageOcrFailureReason,
+        pageIndex: Int?,
+        cause: Throwable? = null,
+    ): TiffMultiPageOcrValidationException =
+        TiffMultiPageOcrValidationException(
+            reason,
+            pageIndex,
+            "TIFF OCR input was rejected (reason=$reason, phase=${reason.phase()}, pageIndex=${pageIndex ?: "none"}).",
+            cause,
+        )
+
+    private fun TiffMultiPageOcrFailureReason.phase(): String = when (this) {
+        TiffMultiPageOcrFailureReason.INPUT_TOO_LARGE -> "input"
+        TiffMultiPageOcrFailureReason.READER_UNAVAILABLE -> "reader"
+        TiffMultiPageOcrFailureReason.UNSUPPORTED_FORMAT,
+        TiffMultiPageOcrFailureReason.PAGE_COUNT_UNKNOWN,
+        TiffMultiPageOcrFailureReason.PAGE_LIMIT_EXCEEDED,
+        TiffMultiPageOcrFailureReason.DIMENSIONS_UNAVAILABLE,
+        TiffMultiPageOcrFailureReason.SIDE_LIMIT_EXCEEDED,
+        TiffMultiPageOcrFailureReason.PIXELS_PER_PAGE_LIMIT_EXCEEDED,
+        TiffMultiPageOcrFailureReason.TOTAL_PIXELS_LIMIT_EXCEEDED,
+        TiffMultiPageOcrFailureReason.METADATA_LIMIT_EXCEEDED -> "metadata"
+        TiffMultiPageOcrFailureReason.DECODE_FAILED -> "decode"
+        TiffMultiPageOcrFailureReason.ENGINE_FAILED -> "engine"
+        TiffMultiPageOcrFailureReason.RESULT_LIMIT_EXCEEDED -> "result"
+        TiffMultiPageOcrFailureReason.UNKNOWN -> "unknown"
+    }
 
     private inline fun <reified T : Throwable> findCause(error: Throwable): T? {
         var current: Throwable? = error
@@ -489,7 +560,7 @@ private class AggregateResult(
             throw TiffMultiPageOcrValidationException(
                 TiffMultiPageOcrFailureReason.RESULT_LIMIT_EXCEEDED,
                 pageIndex,
-                "TIFF OCR result exceeded its configured limit.",
+                "TIFF OCR result limit exceeded (phase=result, pageIndex=$pageIndex).",
             )
         }
         val accumulatedEntries = pages.size.toLong() + blocks.size.toLong() +
@@ -500,7 +571,7 @@ private class AggregateResult(
             throw TiffMultiPageOcrValidationException(
                 TiffMultiPageOcrFailureReason.RESULT_LIMIT_EXCEEDED,
                 pageIndex,
-                "TIFF OCR result exceeded its configured limit.",
+                "TIFF OCR result limit exceeded (phase=result, pageIndex=$pageIndex).",
             )
         }
 
@@ -651,7 +722,7 @@ private object DefaultTiffImageReaderFactory : TiffImageReaderFactory {
             throw TiffMultiPageOcrValidationException(
                 TiffMultiPageOcrFailureReason.READER_UNAVAILABLE,
                 null,
-                "TIFF OCR reader is unavailable.",
+                "TIFF OCR reader is unavailable (phase=reader).",
             )
         }
 
@@ -667,7 +738,7 @@ private object DefaultTiffImageReaderFactory : TiffImageReaderFactory {
         return selected ?: throw TiffMultiPageOcrValidationException(
             TiffMultiPageOcrFailureReason.UNSUPPORTED_FORMAT,
             null,
-            "TIFF OCR input format is unsupported.",
+            "TIFF OCR input format is unsupported (phase=metadata).",
         )
     }
 }
