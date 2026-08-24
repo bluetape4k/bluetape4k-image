@@ -98,14 +98,17 @@ permission, missing parent, cancellation 결과를 기록하며, provider나 pro
 #### S3
 
 `bluetape4k-aws-spring-boot` 의존성과 해당 모듈이 제공하는 `S3Operations`
-빈이 필요합니다. `backend=s3`로 설정했는데 `S3Operations` 빈이 없으면 로컬
-파일시스템으로 조용히 대체하지 않고 시작 단계에서 실패합니다. 애플리케이션이
-S3 저장소 구현을 의도적으로 대체하려면 별도의 `ImageStorage` 빈을 제공하세요.
+빈이 필요합니다. byte/object CRUD에는 이 `S3Operations` capability만 필요합니다.
+`backend=s3`로 설정했는데 `S3Operations` 빈이 없으면 로컬 파일시스템으로 조용히
+대체하지 않고 시작 단계에서 실패합니다. 애플리케이션이 S3 저장소 구현을
+의도적으로 대체하려면 별도의 `ImageStorage` 빈을 제공하세요.
 
 `Path` 업로드는 먼저 bounded streaming snapshot을 만든 뒤 선택적인
-`S3TransferOperations` 파일 전송 capability가 있을 때 이를 사용합니다. capability가
-없으면 source 전체를 `ByteArray`로 적재하지 않고 fail closed합니다. `Path` 다운로드는
-S3 resource를 통해 스트리밍한 뒤 destination 파일을 atomic replace합니다.
+`S3TransferOperations` 파일 전송 capability가 있을 때 이를 사용합니다. 이 capability는
+모듈의 transfer-neutral `S3PathTransferOperations` adapter로 연결되므로 transfer class나
+bean이 없어도 byte/object CRUD는 계속 사용할 수 있습니다. capability가 없으면 source
+전체를 `ByteArray`로 적재하지 않고 fail closed합니다. `Path` 다운로드는 S3 resource를
+통해 스트리밍한 뒤 destination 파일을 atomic replace합니다.
 
 #### 공통 저장소 계약 matrix
 
@@ -168,6 +171,11 @@ bluetape4k.images.cdn:
   enabled: true
   provider: s3_presign
 ```
+
+signer는 `bluetape4k.images.storage.bucket`과 `key-prefix`를 읽습니다.
+`bluetape4k.images.storage.enabled=false`로 `ImageStorage` 자동 구성을 끈 상태에서도
+CDN 서명만 사용할 수 있습니다. 이 경우 signer에 필요한 storage properties는 계속 bind되며
+storage bean은 등록되지 않습니다.
 
 #### CloudFront 서명 URL
 

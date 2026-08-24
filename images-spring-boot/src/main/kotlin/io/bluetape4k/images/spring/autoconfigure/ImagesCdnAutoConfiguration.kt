@@ -84,6 +84,20 @@ class ImagesCdnAutoConfiguration {
     }
 
     /**
+     * storage phase가 `storage.enabled=false`로 꺼져도 S3 CDN signer가 bucket/keyPrefix를 읽을 수 있도록
+     * 같은 storage properties를 별도로 bind합니다. storage가 켜진 경우에는 storage phase의 등록을
+     * 그대로 사용해 중복 bean을 만들지 않습니다.
+     */
+    @Configuration(proxyBeanMethods = false)
+    @ConditionalOnProperty(
+        prefix = "bluetape4k.images.storage",
+        name = ["enabled"],
+        havingValue = "false",
+    )
+    @EnableConfigurationProperties(ImageStorageProperties::class)
+    class CdnStoragePropertiesConfiguration
+
+    /**
      * CloudFront signed-URL signer입니다. [software.amazon.awssdk.services.cloudfront.CloudFrontUtilities]가
      * classpath에 있고 provider가 `cloudfront`일 때 활성화됩니다.
      */

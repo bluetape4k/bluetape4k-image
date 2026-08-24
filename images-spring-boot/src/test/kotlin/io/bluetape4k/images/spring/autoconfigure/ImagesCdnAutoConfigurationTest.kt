@@ -1,6 +1,7 @@
 package io.bluetape4k.images.spring.autoconfigure
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeNull
 import io.bluetape4k.assertions.shouldBeSameInstanceAs
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.aws.spring.s3.S3Operations
@@ -58,6 +59,31 @@ class ImagesCdnAutoConfigurationTest {
                 ctx.getBeanNamesForType(CdnReadSigner::class.java).isEmpty().shouldBeTrue()
                 ctx.getBeanNamesForType(CdnWriteSigner::class.java).isEmpty().shouldBeTrue()
                 ctx.getBeanNamesForType(CdnProperties::class.java).size shouldBeEqualTo 1
+            }
+    }
+
+    @Test
+    fun `s3 presign signer remains available when storage is disabled`() {
+        val operations = mockk<S3Operations>(relaxed = true)
+
+        contextRunner
+            .withBean(S3Operations::class.java, { operations })
+            .withPropertyValues(
+                "bluetape4k.images.cdn.enabled=true",
+                "bluetape4k.images.cdn.provider=s3_presign",
+                "bluetape4k.images.storage.enabled=false",
+                "bluetape4k.images.storage.bucket=images",
+                "bluetape4k.images.storage.key-prefix=cdn",
+            )
+            .run { ctx ->
+                ctx.startupFailure.shouldBeNull()
+                ctx.getBeanNamesForType(CdnReadSigner::class.java).size shouldBeEqualTo 1
+                ctx.getBeanNamesForType(CdnWriteSigner::class.java).size shouldBeEqualTo 1
+                ctx.getBean(ImageStorageProperties::class.java).bucket shouldBeEqualTo "images"
+                ctx.getBean(ImageStorageProperties::class.java).keyPrefix shouldBeEqualTo "cdn"
+                ctx.getBeanNamesForType(io.bluetape4k.images.spring.storage.ImageStorage::class.java)
+                    .isEmpty()
+                    .shouldBeTrue()
             }
     }
 

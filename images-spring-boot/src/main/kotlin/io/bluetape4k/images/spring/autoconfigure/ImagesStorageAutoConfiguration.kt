@@ -1,10 +1,11 @@
 package io.bluetape4k.images.spring.autoconfigure
 
 import io.bluetape4k.aws.spring.s3.S3Operations
-import io.bluetape4k.aws.spring.s3.S3TransferOperations
 import io.bluetape4k.images.spring.storage.ImageStorage
 import io.bluetape4k.images.spring.storage.LocalImageStorage
 import io.bluetape4k.images.spring.storage.s3.S3ImageStorage
+import io.bluetape4k.images.spring.storage.s3.S3PathTransferOperations
+import io.bluetape4k.images.spring.storage.s3.S3TransferOperationsAdapter
 import io.bluetape4k.support.requireNotBlank
 import org.springframework.boot.autoconfigure.AutoConfiguration
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
@@ -28,6 +29,8 @@ import java.nio.file.Path
  * - `bluetape4k.images.storage.enabled`로 toggle됩니다(default `true`).
  * - nested [S3StorageConfiguration]은 [S3Operations]가 classpath에 있고 `backend=s3`일 때만 활성화됩니다.
  *   S3 storage bean은 [S3Operations] bean이 있을 때만 생성됩니다.
+ * - nested [S3TransferCapabilityConfiguration]은 `S3TransferOperations` class와 bean이 있을 때만
+ *   path-upload adapter를 등록합니다. transfer capability는 byte/object CRUD의 필수 조건이 아닙니다.
  * - nested [LocalStorageConfiguration]은 default/local backend를 처리합니다.
  * - nested [S3MissingOperationsConfiguration]은 `backend=s3`인데 [S3Operations] bean이 없을 때 startup을 실패시킵니다.
  *
@@ -52,20 +55,15 @@ import java.nio.file.Path
 class ImagesStorageAutoConfiguration {
 
     /**
-     * S3-backed storage입니다. [S3Operations]와 [S3TransferOperations]가 classpath에 있고
-     * `bluetape4k.images.storage.backend=s3`일 때만 활성화됩니다. transfer bean은 선택 사항이며,
+     * S3-backed storage입니다. [S3Operations]가 classpath에 있고 `bluetape4k.images.storage.backend=s3`일
+     * 때만 활성화됩니다. transfer bean은 선택 사항이며,
      * 없을 때 [S3ImageStorage]의 [java.nio.file.Path] upload는 fail closed합니다.
      *
      * [S3Operations] 참조는 이 nested class 안에만 둡니다. 외부 `@AutoConfiguration` class가 class-load 시점에
      * `compileOnly` SDK type을 직접 참조하지 않게 하기 위해서입니다.
      */
     @Configuration(proxyBeanMethods = false)
-    @ConditionalOnClass(
-        name = [
-            "io.bluetape4k.aws.spring.s3.S3Operations",
-            "io.bluetape4k.aws.spring.s3.S3TransferOperations",
-        ],
-    )
+    @ConditionalOnClass(name = ["io.bluetape4k.aws.spring.s3.S3Operations"])
     @ConditionalOnProperty(
         prefix = "bluetape4k.images.storage",
         name = ["backend"],
@@ -79,7 +77,7 @@ class ImagesStorageAutoConfiguration {
         fun s3ImageStorage(
             operations: S3Operations,
             properties: ImageStorageProperties,
-            transferOperations: ObjectProvider<S3TransferOperations>,
+            transferOperations: ObjectProvider<S3PathTransferOperations>,
         ): ImageStorage {
             properties.bucket.requireNotBlank("bluetape4k.images.storage.bucket")
             requireHeadObjectSupport(operations)
@@ -104,6 +102,37 @@ class ImagesStorageAutoConfiguration {
                     "with headObject support. Upgrade bluetape4k-aws-spring-boot before creating S3ImageStorage."
             }
         }
+    }
+
+    /**
+     * AWS Transfer Manager가 제공하는 선택적 path-upload capability를 adapter로 연결합니다.
+     *
+     * `S3TransferOperations`를 method signature에 직접 노출하는 이 configuration은 classpath 조건을
+     * 통과한 경우에만 평가됩니다. storage phase와 같은 property 조건을 적용해 storage가 비활성화된
+     * consumer에는 불필요한 capability bean을 만들지 않습니다.
+     */
+    @Configuration(proxyBeanMethods = false)
+    @ConditionalOnClass(
+        name = [
+            "io.bluetape4k.aws.spring.s3.S3TransferOperations",
+            "software.amazon.awssdk.transfer.s3.model.CompletedFileUpload",
+        ],
+    )
+    @ConditionalOnProperty(
+        prefix = "bluetape4k.images.storage",
+        name = ["enabled"],
+        havingValue = "true",
+        matchIfMissing = true,
+    )
+    class S3TransferCapabilityConfiguration {
+
+        @Bean
+        @ConditionalOnBean(type = ["io.bluetape4k.aws.spring.s3.S3TransferOperations"])
+        @ConditionalOnMissingBean(S3PathTransferOperations::class)
+        fun s3PathTransfer(
+            transferOperations: io.bluetape4k.aws.spring.s3.S3TransferOperations,
+        ): S3PathTransferOperations =
+            S3TransferOperationsAdapter(transferOperations)
     }
 
     /**
