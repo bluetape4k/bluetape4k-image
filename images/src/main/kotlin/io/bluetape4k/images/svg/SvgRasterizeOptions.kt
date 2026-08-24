@@ -25,7 +25,8 @@ import java.io.Serializable
  * @property dpi 래스터화 DPI입니다. 기본값은 96입니다.
  * @property backgroundColor 배경색입니다. `null`이면 투명 배경을 유지합니다.
  * @property allowExternalResources Batik이 외부 리소스를 읽을 수 있는지 여부입니다.
- * @property allowedSchemes 향후 외부 리소스 필터링에 사용할 허용 URL scheme 목록입니다.
+ * @property allowedSchemes 외부 리소스에 허용할 URL scheme 목록입니다. scheme은 URI
+ *   규칙을 따라야 하며 비교 시 대소문자를 구분하지 않습니다.
  * @property timeoutMillis 래스터화 timeout입니다. 단위는 millisecond입니다.
  * @property maxWidthPx 허용되는 최대 출력 너비(px)입니다.
  * @property maxHeightPx 허용되는 최대 출력 높이(px)입니다.
@@ -49,10 +50,14 @@ data class SvgRasterizeOptions(
         timeoutMillis.requirePositiveNumber("timeoutMillis")
         maxWidthPx.requirePositiveNumber("maxWidthPx")
         maxHeightPx.requirePositiveNumber("maxHeightPx")
+        require(allowedSchemes.all { URI_SCHEME_PATTERN.matches(it) }) {
+            "allowedSchemes에는 유효한 URI scheme만 지정해야 합니다: $allowedSchemes"
+        }
     }
 
     companion object {
         private const val serialVersionUID: Long = -3374466010677860426L
+        private val URI_SCHEME_PATTERN = Regex("[A-Za-z][A-Za-z0-9+.-]*")
 
         @JvmStatic
         val Default = SvgRasterizeOptions()

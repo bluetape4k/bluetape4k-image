@@ -6,13 +6,19 @@ import io.bluetape4k.logging.debug
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runInterruptible
 import kotlinx.coroutines.withTimeout
+import org.apache.batik.bridge.ExternalResourceSecurity
+import org.apache.batik.bridge.NoLoadExternalResourceSecurity
+import org.apache.batik.bridge.RelaxedExternalResourceSecurity
+import org.apache.batik.bridge.UserAgent
 import org.apache.batik.transcoder.SVGAbstractTranscoder
 import org.apache.batik.transcoder.TranscoderInput
 import org.apache.batik.transcoder.TranscoderOutput
 import org.apache.batik.transcoder.image.PNGTranscoder
+import org.apache.batik.util.ParsedURL
 import org.xml.sax.XMLReader
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
+import java.util.Locale
 import javax.xml.parsers.SAXParserFactory
 
 /**
@@ -69,7 +75,7 @@ class BatikSvgRasterizer : SuspendSvgRasterizer {
     }
 
     private fun buildTranscoder(options: SvgRasterizeOptions): PNGTranscoder {
-        val transcoder = PNGTranscoder()
+        val transcoder = SchemeAwarePngTranscoder(options)
 
         // 항상 최대 치수 적용 (width/height 미지정 시 SVG 자체 선언 치수도 제한)
         transcoder.addTranscodingHint(SVGAbstractTranscoder.KEY_MAX_WIDTH, options.maxWidthPx.toFloat())
@@ -107,6 +113,39 @@ class BatikSvgRasterizer : SuspendSvgRasterizer {
         }
 
         return transcoder
+    }
+
+    /**
+     * Batik의 기본 boolean 외부 리소스 정책에 URI scheme allowlist를 추가합니다.
+     * `allowExternalResources=true`여도 목록에 없는 scheme은 항상 차단합니다.
+     */
+    private class SchemeAwarePngTranscoder(
+        private val options: SvgRasterizeOptions,
+    ) : PNGTranscoder() {
+
+        private val allowedSchemes = options.allowedSchemes
+            .asSequence()
+            .map { it.lowercase(Locale.ROOT) }
+            .toSet()
+
+        override fun createUserAgent(): UserAgent =
+            object : SVGAbstractTranscoderUserAgent() {
+                override fun getExternalResourceSecurity(
+                    resourceURL: ParsedURL?,
+                    docURL: ParsedURL?,
+                ): ExternalResourceSecurity {
+                    if (!options.allowExternalResources) {
+                        return NoLoadExternalResourceSecurity()
+                    }
+
+                    val scheme = resourceURL?.protocol?.lowercase(Locale.ROOT)
+                    return if (resourceURL != null && scheme in allowedSchemes) {
+                        RelaxedExternalResourceSecurity(resourceURL, docURL)
+                    } else {
+                        NoLoadExternalResourceSecurity()
+                    }
+                }
+            }
     }
 
     private fun buildSecureXmlReader(): XMLReader {
