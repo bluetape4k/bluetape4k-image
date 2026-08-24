@@ -31,6 +31,11 @@ class OcrBenchmarkContractTest {
         source.shouldContain("GrayscaleFilter()")
         source.contains("OcrBenchmarkFixtures.load").shouldBeEqualTo(false)
         source.shouldContain("OcrBenchmarkCorpusScenario.ROTATED")
+        OcrBenchmarkCorpusV2
+            .loadManifest()
+            .fixtures
+            .filter { it.expectedOutcome != OcrBenchmarkExpectedOutcome.ERROR }
+            .forEach { fixture -> source.shouldContain(fixture.fixtureId) }
     }
 
     @Test

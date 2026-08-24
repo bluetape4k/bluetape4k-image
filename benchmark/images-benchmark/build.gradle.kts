@@ -176,15 +176,25 @@ fun expectedOcrBenchmarkFixtureIds(): Set<String> {
         ?: throw IllegalArgumentException("OCR corpus v2 manifest must be an object")
     val fixtures = manifest["fixtures"] as? List<*>
         ?: throw IllegalArgumentException("OCR corpus v2 fixtures are missing")
-    val fixtureIds = fixtures.map { value ->
+    val allFixtureIds = fixtures.map { value ->
         val fixture = value as? Map<*, *>
             ?: throw IllegalArgumentException("OCR corpus v2 fixture must be an object")
         val fixtureId = fixture["fixtureId"] as? String
             ?: throw IllegalArgumentException("OCR corpus v2 fixtureId is missing")
         val expectedOutcome = fixture["expectedOutcome"] as? String
             ?: throw IllegalArgumentException("OCR corpus v2 expectedOutcome is missing: $fixtureId")
-        if (expectedOutcome == "TEXT" || expectedOutcome == "EMPTY") fixtureId else null
-    }.filterNotNull().toSet()
+        require(expectedOutcome in setOf("TEXT", "EMPTY", "ERROR")) {
+            "OCR corpus v2 expectedOutcome is invalid: $fixtureId"
+        }
+        fixtureId to expectedOutcome
+    }
+    require(allFixtureIds.map { (fixtureId, _) -> fixtureId }.distinct().size == allFixtureIds.size) {
+        "OCR corpus v2 fixtureId values must be unique"
+    }
+    val fixtureIds = allFixtureIds
+        .filter { (_, expectedOutcome) -> expectedOutcome == "TEXT" || expectedOutcome == "EMPTY" }
+        .map { (fixtureId, _) -> fixtureId }
+        .toSet()
     require(fixtureIds.isNotEmpty()) { "OCR corpus v2 has no benchmarkable fixtures" }
     return fixtureIds
 }
