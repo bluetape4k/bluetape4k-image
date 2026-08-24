@@ -16,6 +16,7 @@ import kotlinx.coroutines.test.runTest
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeGreaterThan
+import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldNotBeEqualTo
 import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.assertions.shouldBeTrue
@@ -28,6 +29,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.awt.Color
 import java.io.ByteArrayInputStream
+import java.io.InputStream
 import java.nio.channels.AsynchronousFileChannel
 import java.nio.file.Files
 import java.nio.file.Path
@@ -187,6 +189,55 @@ class ImmutableImageSupportTest: AbstractImageTest() {
     }
 
     @Test
+    fun `strict external path loader rejects payload before decode`(tempFolder: TempFolder) {
+        val bytes = whiteTestImage(16, 16)
+        val path = tempFolder.createFile("strict-path.png").toPath()
+        Files.write(path, bytes)
+
+        assertFailsWith<IllegalArgumentException> {
+            immutableExternalImageOf(
+                path,
+                ImageDecodeLimits(maxEncodedBytes = bytes.size - 1L),
+            )
+        }.message shouldBeEqualTo "Image input encodedBytes=${bytes.size} exceeds maxEncodedBytes=${bytes.size - 1}."
+    }
+
+    @Test
+    fun `strict external input stream loader preserves caller ownership`() {
+        val stream = TrackingInputStream(whiteTestImage(16, 16))
+
+        val image = immutableExternalImageOf(stream)
+
+        image.width shouldBeEqualTo 16
+        image.height shouldBeEqualTo 16
+        stream.closed.shouldBeFalse()
+    }
+
+    @Test
+    fun `strict external buffered source loader preserves caller ownership`() {
+        val source = TrackingSource(whiteTestImage(16, 16))
+        val bufferedSource = source.buffered()
+
+        val image = immutableExternalImageOf(bufferedSource)
+
+        image.width shouldBeEqualTo 16
+        image.height shouldBeEqualTo 16
+        source.closed.shouldBeFalse()
+        bufferedSource.close()
+    }
+
+    @Test
+    fun `strict external source loader closes owned source`() {
+        val source = TrackingSource(whiteTestImage(16, 16))
+
+        val image = immutableExternalImageOf(source)
+
+        image.width shouldBeEqualTo 16
+        image.height shouldBeEqualTo 16
+        source.closed.shouldBeTrue()
+    }
+
+    @Test
     fun `strict external loader accepts WebP when metadata supplies dimensions`() {
         val bytes = immutableImageOf(whiteTestImage(24, 16))
             .forWriter(WebpWriter.DEFAULT)
@@ -312,6 +363,21 @@ class ImmutableImageSupportTest: AbstractImageTest() {
 
         override fun close() {
             closed = true
+        }
+    }
+
+    private class TrackingInputStream(bytes: ByteArray): InputStream() {
+        private val delegate = ByteArrayInputStream(bytes)
+        var closed: Boolean = false
+
+        override fun read(): Int = delegate.read()
+
+        override fun read(bytes: ByteArray, offset: Int, length: Int): Int =
+            delegate.read(bytes, offset, length)
+
+        override fun close() {
+            closed = true
+            delegate.close()
         }
     }
 

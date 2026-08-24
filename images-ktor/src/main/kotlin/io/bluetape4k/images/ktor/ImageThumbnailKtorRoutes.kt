@@ -3,8 +3,7 @@ package io.bluetape4k.images.ktor
 import com.sksamuel.scrimage.nio.ImageWriter
 import com.sksamuel.scrimage.nio.PngWriter
 import io.bluetape4k.images.ImageDecodeLimits
-import io.bluetape4k.images.immutableImageOf
-import io.bluetape4k.images.probeImageDimensions
+import io.bluetape4k.images.immutableExternalImageOf
 import io.bluetape4k.images.toByteArray
 import io.bluetape4k.ktor.core.ApiErrorResponse
 import io.bluetape4k.ktor.core.intQueryParameter
@@ -38,6 +37,7 @@ private const val DEFAULT_MAX_INPUT_SIDE = 8_192
 private const val DEFAULT_THUMBNAIL_SIDE = 320
 private const val DEFAULT_MAX_THUMBNAIL_SIDE = 2_048
 private const val INVALID_IMAGE_PAYLOAD_MESSAGE = "Invalid image payload."
+private const val UNKNOWN_IMAGE_DIMENSIONS_MESSAGE = "Image input dimensions could not be determined."
 
 private val log = KotlinLogging.logger {}
 
@@ -92,13 +92,16 @@ fun Route.bluetape4kImageThumbnailRoutes(
                 val uploadBytes = call.receiveImageUpload(config)
                 val thumbnailBytes = withContext(Dispatchers.IO) {
                     try {
-                        immutableImageOf(uploadBytes, config.toDecodeLimits())
+                        immutableExternalImageOf(uploadBytes, config.toDecodeLimits())
                             .max(maxSide, maxSide)
                             .forWriter(config.writer)
                             .toByteArray()
                     } catch (e: CancellationException) {
                         throw e
                     } catch (e: IllegalArgumentException) {
+                        if (e.message == UNKNOWN_IMAGE_DIMENSIONS_MESSAGE) {
+                            throw IllegalArgumentException(INVALID_IMAGE_PAYLOAD_MESSAGE, e)
+                        }
                         throw e
                     } catch (e: IOException) {
                         throw e
@@ -146,9 +149,6 @@ private suspend fun ApplicationCall.receiveImageUpload(config: ImageThumbnailKto
                 require(bytes.isNotEmpty()) {
                     "Image upload must not be empty."
                 }
-                probeImageDimensions(bytes)
-                    ?.requireMaxPixels(config.maxInputPixels, "Image upload")
-                    ?.requireMaxSide(config.maxInputSide, "Image upload")
                 return bytes
             }
             if (part is PartData.FileItem || part is PartData.BinaryItem || part is PartData.BinaryChannelItem) {

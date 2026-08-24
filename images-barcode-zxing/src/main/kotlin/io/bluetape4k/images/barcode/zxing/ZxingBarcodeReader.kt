@@ -23,7 +23,8 @@ import io.bluetape4k.images.barcode.BarcodeProviderIdentity
 import io.bluetape4k.images.barcode.BarcodeReader
 import io.bluetape4k.images.barcode.BarcodeRegion
 import io.bluetape4k.images.barcode.BarcodeResult
-import io.bluetape4k.images.immutableImageOf
+import io.bluetape4k.images.immutableExternalImageOf
+import kotlinx.coroutines.CancellationException
 
 /**
  * ZXing 기반 barcode reader입니다.
@@ -73,7 +74,9 @@ class ZxingBarcodeReader(
         options: BarcodeOptions = BarcodeOptions(),
     ): List<BarcodeResult> =
         try {
-            readBarcodes(immutableImageOf(bytes), options)
+            readBarcodes(immutableExternalImageOf(bytes), options)
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: BarcodeException) {
             throw e
         } catch (e: Exception) {

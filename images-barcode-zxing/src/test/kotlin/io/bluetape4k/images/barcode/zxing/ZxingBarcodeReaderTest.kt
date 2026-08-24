@@ -1,6 +1,7 @@
 package io.bluetape4k.images.barcode.zxing
 
 import com.google.zxing.BarcodeFormat as ZxingFormat
+import com.sksamuel.scrimage.nio.PngWriter
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeTrue
@@ -13,6 +14,7 @@ import io.bluetape4k.images.barcode.BarcodeOptions
 import io.bluetape4k.images.barcode.extractBarcodes
 import io.bluetape4k.images.barcode.testfixtures.BarcodeTestFixtures
 import io.bluetape4k.images.barcode.zxing.ZxingBarcodeImageFixtures.barcodeImage
+import io.bluetape4k.images.ImageDimensions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
@@ -86,6 +88,18 @@ class ZxingBarcodeReaderTest {
     fun `malformed encoded bytes map to barcode exception`() {
         val error = assertFailsWith<BarcodeException> {
             reader.readBarcodes(BarcodeTestFixtures.malformedImageBytes)
+        }
+
+        error.reason shouldBeEqualTo BarcodeFailureReason.MALFORMED_INPUT
+    }
+
+    @Test
+    fun `external encoded bytes enforce image side limits before ZXing`() {
+        val bytes = BarcodeTestFixtures.blankImage(ImageDimensions(width = 8_193, height = 1))
+            .bytes(PngWriter.NoCompression)
+
+        val error = assertFailsWith<BarcodeException> {
+            reader.readBarcodes(bytes)
         }
 
         error.reason shouldBeEqualTo BarcodeFailureReason.MALFORMED_INPUT
