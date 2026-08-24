@@ -2,46 +2,49 @@ package io.bluetape4k.images.benchmark
 
 import com.sksamuel.scrimage.ImmutableImage
 import io.bluetape4k.images.immutableImageOf
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import java.io.Serializable
 import java.nio.ByteBuffer
 import java.nio.charset.CodingErrorAction
 import java.security.MessageDigest
 import java.text.Normalizer
-import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable as KotlinxSerializable
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.jsonArray
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
 
-private fun requireCorpusRelativePath(path: String, field: String) {
+private fun requireCorpusRelativePath(
+    path: String,
+    field: String,
+) {
     val segments = path.split('/')
     require(
         path.isNotBlank() && !path.startsWith('/') && '\\' !in path &&
             segments.firstOrNull()?.contains(':') != true &&
-            segments.all { segment -> segment.isNotEmpty() && segment != "." && segment != ".." },
+            segments.all { segment -> segment.isNotEmpty() && segment != "." && segment != ".." }
     ) { "$field must be normalized and relative: $path" }
 }
 
 private fun isCorpusSha256(value: String): Boolean = value.matches(Regex("[0-9a-f]{64}"))
 
 /**
- * Manifest v2 loader for the OCR corpus contract.
+ * OCR corpus v2 매니페스트 계약을 검증하는 내부 loader입니다.
  *
- * Image, text, geometry, generator, and negative input receipts are verified
- * before a fixture is handed to a benchmark. The loader is intentionally
- * internal: it prepares a provider-neutral benchmark boundary without
- * changing the production OCR API or adding a provider dependency.
+ * image·text·geometry·generator·negative input receipt를 benchmark에 전달하기
+ * 전에 검증합니다. production OCR API나 provider dependency를 변경하지 않는
+ * provider-neutral benchmark 경계를 유지합니다.
  */
 internal object OcrBenchmarkCorpusV2 {
     private const val MANIFEST_RESOURCE = "bench/ocr-v2/manifest.json"
     private const val MAX_MANIFEST_BYTES = 256_000
     private const val MAX_RESOURCE_BYTES = 5 * 1024 * 1024
-    private val json = Json {
-        ignoreUnknownKeys = false
-        isLenient = false
-        explicitNulls = false
-    }
+    private val json =
+        Json {
+            ignoreUnknownKeys = false
+            isLenient = false
+            explicitNulls = false
+        }
 
     fun loadManifest(): OcrBenchmarkCorpusManifest =
         decodeManifest(requireResource(MANIFEST_RESOURCE, MAX_MANIFEST_BYTES))
@@ -52,7 +55,8 @@ internal object OcrBenchmarkCorpusV2 {
     fun loadNegative(fixtureId: String): OcrBenchmarkNegativeFixtureReceipt {
         val manifest = loadManifest()
         val entry = manifest.negatives.single { it.fixtureId == fixtureId }
-        verifyBytes(entry.path, entry.bytes, entry.sha256, ::classpathResource)
+        val bytes = verifyBytes(entry.path, entry.bytes, entry.sha256, ::classpathResource)
+        validateNegative(entry, bytes)
         return entry
     }
 
@@ -67,8 +71,7 @@ internal object OcrBenchmarkCorpusV2 {
         manifestBytes: ByteArray,
         fixtureId: String,
         resources: Map<String, ByteArray>,
-    ): OcrBenchmarkCorpusFixture =
-        loadFixture(decodeManifest(manifestBytes), fixtureId, resources::get)
+    ): OcrBenchmarkCorpusFixture = loadFixture(decodeManifest(manifestBytes), fixtureId, resources::get)
 
     internal fun loadNegativeForTest(
         manifestBytes: ByteArray,
@@ -77,7 +80,8 @@ internal object OcrBenchmarkCorpusV2 {
     ): OcrBenchmarkNegativeFixtureReceipt {
         val manifest = decodeManifest(manifestBytes)
         val entry = manifest.negatives.single { it.fixtureId == fixtureId }
-        verifyBytes(entry.path, entry.bytes, entry.sha256, resources::get)
+        val bytes = verifyBytes(entry.path, entry.bytes, entry.sha256, resources::get)
+        validateNegative(entry, bytes)
         return entry
     }
 
@@ -91,44 +95,48 @@ internal object OcrBenchmarkCorpusV2 {
             manifest.generator.config.path,
             manifest.generator.config.bytes,
             manifest.generator.config.sha256,
-            resourceReader,
+            resourceReader
         )
         validateLicenses(entry.licenses)
         validateFontReceipt(entry.provenance.font)
 
-        val imageBytes = verifyBytes(
-            entry.resource.path,
-            entry.resource.bytes,
-            entry.resource.sha256,
-            resourceReader,
-        )
+        val imageBytes =
+            verifyBytes(
+                entry.resource.path,
+                entry.resource.bytes,
+                entry.resource.sha256,
+                resourceReader
+            )
         val image = immutableImageOf(imageBytes)
         require(image.width == entry.resource.width && image.height == entry.resource.height) {
             "OCR corpus v2 image dimensions differ: ${entry.fixtureId}"
         }
 
-        val textBytes = verifyBytes(
-            entry.groundTruth.text.path,
-            entry.groundTruth.text.bytes,
-            entry.groundTruth.text.sha256,
-            resourceReader,
-        )
+        val textBytes =
+            verifyBytes(
+                entry.groundTruth.text.path,
+                entry.groundTruth.text.bytes,
+                entry.groundTruth.text.sha256,
+                resourceReader
+            )
         val normalizedText = decodeGroundTruthText(textBytes, entry.groundTruth.text)
 
-        val schemaBytes = verifyBytes(
-            entry.groundTruth.boxes.schemaResource.path,
-            entry.groundTruth.boxes.schemaResource.bytes,
-            entry.groundTruth.boxes.schemaResource.sha256,
-            resourceReader,
-        )
+        val schemaBytes =
+            verifyBytes(
+                entry.groundTruth.boxes.schemaResource.path,
+                entry.groundTruth.boxes.schemaResource.bytes,
+                entry.groundTruth.boxes.schemaResource.sha256,
+                resourceReader
+            )
         validateBoxSchema(schemaBytes)
 
-        val boxesBytes = verifyBytes(
-            entry.groundTruth.boxes.path,
-            entry.groundTruth.boxes.bytes,
-            entry.groundTruth.boxes.sha256,
-            resourceReader,
-        )
+        val boxesBytes =
+            verifyBytes(
+                entry.groundTruth.boxes.path,
+                entry.groundTruth.boxes.bytes,
+                entry.groundTruth.boxes.sha256,
+                resourceReader
+            )
         val boxes = decodeBoxes(boxesBytes)
         validateBoxes(boxes, entry.resource.width, entry.resource.height)
         validateExpectedOutcome(entry.expectedOutcome, normalizedText, boxes)
@@ -150,15 +158,18 @@ internal object OcrBenchmarkCorpusV2 {
         require('\r' !in decoded) { "OCR ground truth must use LF line endings" }
         val normalized = Normalizer.normalize(decoded, Normalizer.Form.NFC)
         return when (receipt.whitespacePolicy) {
-            OcrBenchmarkWhitespacePolicy.PRESERVE -> normalized
-            OcrBenchmarkWhitespacePolicy.COLLAPSE -> normalized.lines().joinToString("\n") { line ->
-                line.trim().replace(Regex("[ \\t]+"), " ")
+            OcrBenchmarkWhitespacePolicy.PRESERVE -> {
+                normalized
+            }
+            OcrBenchmarkWhitespacePolicy.COLLAPSE -> {
+                normalized.lines().joinToString("\n") { line ->
+                    line.trim().replace(Regex("[ \\t]+"), " ")
+                }
             }
         }
     }
 
-    private fun decodeBoxes(bytes: ByteArray): OcrBenchmarkBoxesDocument =
-        json.decodeFromString(bytes.decodeUtf8())
+    private fun decodeBoxes(bytes: ByteArray): OcrBenchmarkBoxesDocument = json.decodeFromString(bytes.decodeUtf8())
 
     private fun validateBoxSchema(bytes: ByteArray) {
         val root = json.parseToJsonElement(bytes.decodeUtf8()).jsonObject
@@ -173,10 +184,22 @@ internal object OcrBenchmarkCorpusV2 {
             "OCR geometry schema required fields differ"
         }
         val properties = root["properties"]?.jsonObject ?: error("OCR geometry schema properties are missing")
-        require(properties["schema"]?.jsonObject?.get("const")?.jsonPrimitive?.content == "ocr-boxes-v1") {
+        require(
+            properties["schema"]
+                ?.jsonObject
+                ?.get("const")
+                ?.jsonPrimitive
+                ?.content == "ocr-boxes-v1"
+        ) {
             "OCR geometry schema name differs"
         }
-        require(properties["coordinateSpace"]?.jsonObject?.get("const")?.jsonPrimitive?.content == "pixel") {
+        require(
+            properties["coordinateSpace"]
+                ?.jsonObject
+                ?.get("const")
+                ?.jsonPrimitive
+                ?.content == "pixel"
+        ) {
             "OCR geometry coordinate space differs"
         }
     }
@@ -188,11 +211,24 @@ internal object OcrBenchmarkCorpusV2 {
     ) {
         require(boxes.schema == "ocr-boxes-v1") { "OCR geometry schema name differs" }
         require(boxes.coordinateSpace == "pixel") { "OCR geometry coordinate space must be pixel" }
-        require(boxes.entries.map(OcrBenchmarkCorpusBox::boxId).distinct().size == boxes.entries.size) {
+        require(
+            boxes.entries
+                .map(OcrBenchmarkCorpusBox::boxId)
+                .distinct()
+                .size == boxes.entries.size
+        ) {
             "OCR geometry boxId values must be unique"
         }
-        require(boxes.entries.map(OcrBenchmarkCorpusBox::order).distinct().size == boxes.entries.size) {
+        require(
+            boxes.entries
+                .map(OcrBenchmarkCorpusBox::order)
+                .distinct()
+                .size == boxes.entries.size
+        ) {
             "OCR geometry order values must be unique"
+        }
+        require(boxes.entries.map(OcrBenchmarkCorpusBox::order) == boxes.entries.indices.toList()) {
+            "OCR geometry order must be contiguous and match array reading order"
         }
         boxes.entries.forEach { box ->
             require(box.boxId.isNotBlank() && box.text.isNotBlank()) {
@@ -217,17 +253,47 @@ internal object OcrBenchmarkCorpusV2 {
         boxes: OcrBenchmarkBoxesDocument,
     ) {
         when (outcome) {
-            OcrBenchmarkExpectedOutcome.TEXT -> require(normalizedText.isNotBlank()) {
-                "TEXT OCR fixture must have non-blank ground truth"
+            OcrBenchmarkExpectedOutcome.TEXT -> {
+                require(normalizedText.isNotBlank()) {
+                    "TEXT OCR fixture must have non-blank ground truth"
+                }
+                require(boxes.entries.isNotEmpty()) {
+                    "TEXT OCR fixture must have geometry entries"
+                }
+                require(
+                    boxes.entries.joinToString("\n", transform = OcrBenchmarkCorpusBox::text) ==
+                        normalizedText.trimEnd('\n')
+                ) {
+                    "OCR geometry text must match normalized ground truth in reading order"
+                }
             }
-
             OcrBenchmarkExpectedOutcome.EMPTY -> {
                 require(normalizedText.isBlank() && boxes.entries.isEmpty()) {
                     "EMPTY OCR fixture must have blank text and no geometry"
                 }
             }
+            OcrBenchmarkExpectedOutcome.ERROR -> {
+                Unit
+            }
+        }
+    }
 
-            OcrBenchmarkExpectedOutcome.ERROR -> Unit
+    private fun validateNegative(
+        entry: OcrBenchmarkNegativeFixtureReceipt,
+        bytes: ByteArray,
+    ) {
+        when (entry.expectedReason) {
+            OcrBenchmarkNegativeReason.DECODE_FAILED -> {
+                try {
+                    immutableImageOf(bytes)
+                } catch (_: Exception) {
+                    return
+                }
+                error("OCR negative fixture must fail image decoding: ${entry.path}")
+            }
+            else -> {
+                Unit
+            }
         }
     }
 
@@ -271,28 +337,36 @@ internal object OcrBenchmarkCorpusV2 {
         return bytes
     }
 
-    private fun requireResource(resource: String, maxBytes: Int): ByteArray =
+    private fun requireResource(
+        resource: String,
+        maxBytes: Int,
+    ): ByteArray =
         requireNotNull(classpathResource(resource, maxBytes)) {
             "OCR corpus resource is missing: $resource"
         }
 
-    private fun classpathResource(resource: String): ByteArray? =
-        classpathResource(resource, MAX_RESOURCE_BYTES)
+    private fun classpathResource(resource: String): ByteArray? = classpathResource(resource, MAX_RESOURCE_BYTES)
 
-    private fun classpathResource(resource: String, maxBytes: Int): ByteArray? =
+    private fun classpathResource(
+        resource: String,
+        maxBytes: Int,
+    ): ByteArray? =
         OcrBenchmarkCorpusV2::class.java.classLoader.getResourceAsStream(resource)?.use { input ->
             input.readNBytes(maxBytes + 1)
         }
 
     private fun sha256(bytes: ByteArray): String =
-        MessageDigest.getInstance("SHA-256")
+        MessageDigest
+            .getInstance("SHA-256")
             .digest(bytes)
             .joinToString("") { byte -> "%02x".format(byte) }
 
     private fun ByteArray.decodeUtf8(): String {
-        val decoder = Charsets.UTF_8.newDecoder()
-            .onMalformedInput(CodingErrorAction.REPORT)
-            .onUnmappableCharacter(CodingErrorAction.REPORT)
+        val decoder =
+            Charsets.UTF_8
+                .newDecoder()
+                .onMalformedInput(CodingErrorAction.REPORT)
+                .onUnmappableCharacter(CodingErrorAction.REPORT)
         return decoder.decode(ByteBuffer.wrap(this)).toString()
     }
 }
@@ -306,22 +380,46 @@ internal class OcrBenchmarkCorpusFixture(
 )
 
 @KotlinxSerializable
-internal enum class OcrBenchmarkCorpusScenario(val value: String) {
-    @SerialName("clean") CLEAN("clean"),
-    @SerialName("low-resolution") LOW_RESOLUTION("low-resolution"),
-    @SerialName("noisy") NOISY("noisy"),
-    @SerialName("rotated") ROTATED("rotated"),
-    @SerialName("table") TABLE("table"),
-    @SerialName("multi-column") MULTI_COLUMN("multi-column"),
-    @SerialName("multilingual") MULTILINGUAL("multilingual"),
-    @SerialName("valid-blank") VALID_BLANK("valid-blank"),
-    @SerialName("malformed") MALFORMED("malformed"),
+internal enum class OcrBenchmarkCorpusScenario(
+    val value: String,
+) {
+    @SerialName("clean")
+    CLEAN("clean"),
+
+    @SerialName("low-resolution")
+    LOW_RESOLUTION("low-resolution"),
+
+    @SerialName("noisy")
+    NOISY("noisy"),
+
+    @SerialName("rotated")
+    ROTATED("rotated"),
+
+    @SerialName("table")
+    TABLE("table"),
+
+    @SerialName("multi-column")
+    MULTI_COLUMN("multi-column"),
+
+    @SerialName("multilingual")
+    MULTILINGUAL("multilingual"),
+
+    @SerialName("valid-blank")
+    VALID_BLANK("valid-blank"),
+
+    @SerialName("malformed")
+    MALFORMED("malformed"),
 }
 
 @KotlinxSerializable
-internal enum class OcrBenchmarkCorpusSourceType(val value: String) {
-    @SerialName("synthetic") SYNTHETIC("synthetic"),
-    @SerialName("public") PUBLIC("public"),
+internal enum class OcrBenchmarkCorpusSourceType(
+    val value: String,
+) {
+    @SerialName("synthetic")
+    SYNTHETIC("synthetic"),
+
+    @SerialName("public")
+    PUBLIC("public"),
 }
 
 @KotlinxSerializable
@@ -329,6 +427,12 @@ internal enum class OcrBenchmarkExpectedOutcome {
     TEXT,
     EMPTY,
     ERROR,
+}
+
+@KotlinxSerializable
+internal enum class OcrBenchmarkGeneratorReplayStatus {
+    PENDING,
+    VERIFIED,
 }
 
 @KotlinxSerializable
@@ -343,12 +447,14 @@ internal enum class OcrBenchmarkNegativeReason {
 
 @KotlinxSerializable
 internal enum class OcrBenchmarkTextEncoding {
-    @SerialName("UTF-8") UTF_8,
+    @SerialName("UTF-8")
+    UTF_8,
 }
 
 @KotlinxSerializable
 internal enum class OcrBenchmarkTextNormalization {
-    @SerialName("NFC+LF") NFC_LF,
+    @SerialName("NFC+LF")
+    NFC_LF,
 }
 
 @KotlinxSerializable
@@ -390,14 +496,15 @@ internal data class OcrBenchmarkGeneratorReceipt(
     val name: String,
     val version: String,
     val command: String,
-    val seed: Long,
+    val replayStatus: OcrBenchmarkGeneratorReplayStatus,
+    val seed: Long? = null,
     val config: OcrBenchmarkResourceReceipt,
 ) : Serializable {
     init {
         require(name.isNotBlank() && version.isNotBlank() && command.isNotBlank()) {
             "OCR corpus generator receipt is incomplete"
         }
-        require(seed >= 0) { "OCR corpus generator seed must be non-negative" }
+        require(seed == null || seed >= 0) { "OCR corpus generator seed must be non-negative" }
     }
 
     companion object {

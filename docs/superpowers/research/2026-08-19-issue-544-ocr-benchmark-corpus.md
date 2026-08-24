@@ -649,16 +649,19 @@ checksum, offline cache, native runtime CI tier뿐이다.
 구현했다. `OcrBenchmarkCorpusV2`는 기존 `immutableImageOf`와 benchmark fixture
 경계를 재사용하면서 다음 입력을 하나의 receipt로 검증한다.
 
-- generator config의 bytes·SHA-256·encoding·정규화·license receipt
+- generator config의 bytes·SHA-256·encoding·정규화·license receipt와 historical
+  ImageMagick provenance; replay가 검증되지 않은 경우 `replayStatus=PENDING`
 - image의 bytes·dimensions·SHA-256과 단일 read 결과의 decoder 전달
 - NFC+LF ground-truth text와 `TEXT`/`EMPTY`/`ERROR` outcome
 - `ocr-boxes-v1` schema·boxId/order uniqueness·single-page pixel bounds
 - malformed input의 별도 `DECODE_FAILED` negative manifest
 
 대표 fixture는 기존 `clean-text.png`를 재사용하고, v2 전용 text·boxes·schema·
-generator receipt를 `bench/ocr-v2/`에 고정한다. `OcrBenchmarkCorpusV2Test`는
-정상 receipt, malformed negative, path traversal, wrong hash, unknown outcome,
-duplicate geometry order를 검증한다. 이 slice는 Tesseract/PaddleOCR 실행, 9개
+generator receipt를 `bench/ocr-v2/`에 고정한다. 기존 v1 manifest의
+`ImageMagick 7.1.2-27` historical provenance를 receipt로 정정하며, 저장소에
+재현 generator가 없으므로 replay 상태는 `PENDING`이다. `OcrBenchmarkCorpusV2Test`는
+정상 receipt, malformed negative와 실제 decode 실패, path traversal, wrong hash,
+unknown outcome, contiguous geometry order와 ground-truth text 일치를 검증한다. 이 slice는 Tesseract/PaddleOCR 실행, 9개
 시나리오의 27개 corpus 확장, CER/WER·latency·RSS 결과를 완료했다고 주장하지
 않는다. 그 항목은 별도 scheduled/nightly benchmark train의 PENDING gate다.
 

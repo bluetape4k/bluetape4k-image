@@ -1,4 +1,5 @@
-name = "repo-owned-ocr-fixtures"
-version = "1.0.0"
-seed = 17
-normalization = "NFC+LF"
+tool = "ImageMagick"
+version = "7.1.2-27"
+font = "/Library/Fonts/Arial Unicode.ttf"
+fixture = "clean synthetic document"
+replay = "PENDING"
