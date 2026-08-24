@@ -1,13 +1,14 @@
 package io.bluetape4k.images.examples.spring.barcode
 
 import io.bluetape4k.images.ImageDimensions
+import io.bluetape4k.images.ImageDecodeLimits
 import io.bluetape4k.images.analysis.ImageMetadataReadOptions
 import io.bluetape4k.images.analysis.readImageMetadataReport
 import io.bluetape4k.images.barcode.BarcodeException
 import io.bluetape4k.images.barcode.BarcodeFailureReason
 import io.bluetape4k.images.barcode.BarcodeReader
 import io.bluetape4k.images.barcode.extractBarcodes
-import io.bluetape4k.images.immutableImageOf
+import io.bluetape4k.images.immutableExternalImageOf
 import io.bluetape4k.images.probeImageDimensions
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
@@ -88,7 +89,7 @@ internal class BarcodeExtractionService(
                     )
                 requireDecodedSize(dimensions)
 
-                val results = immutableImageOf(bytes).extractBarcodes(reader)
+                val results = immutableExternalImageOf(bytes, properties.toDecodeLimits()).extractBarcodes(reader)
                     .map { result ->
                         BarcodeResultResponse(
                             text = result.text,
@@ -142,6 +143,13 @@ internal class BarcodeExtractionService(
             )
         }
     }
+
+    private fun BarcodeExampleProperties.toDecodeLimits(): ImageDecodeLimits =
+        ImageDecodeLimits(
+            maxEncodedBytes = maxInputBytes,
+            maxDecodedPixels = maxInputPixels,
+            maxDecodedSide = maxInputSide,
+        )
 
     private fun requestError(
         status: HttpStatus,

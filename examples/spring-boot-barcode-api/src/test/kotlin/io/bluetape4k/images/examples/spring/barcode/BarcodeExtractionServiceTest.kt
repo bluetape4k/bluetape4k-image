@@ -158,6 +158,30 @@ class BarcodeExtractionServiceTest {
     }
 
     @Test
+    fun `strict loader rechecks dimensions after injected probes`() = runTest {
+        val readerCalls = AtomicInteger()
+        val reader = BarcodeReader { _, _ ->
+            readerCalls.incrementAndGet()
+            emptyList()
+        }
+        val webp = immutableImageOf(fixtures.bytes(BarcodeExampleFixture.SAMPLE))
+            .forWriter(WebpWriter.DEFAULT)
+            .bytes()
+
+        val error = assertFailsWith<BarcodeException> {
+            service(
+                reader = reader,
+                properties = BarcodeExampleProperties(maxInputSide = 100),
+                dimensionProbe = { ImageDimensions(1, 1) },
+                metadataDimensionProbe = { _, _ -> ImageDimensions(1, 1) },
+            ).extract(webp)
+        }
+
+        error.reason shouldBeEqualTo BarcodeFailureReason.MALFORMED_INPUT
+        readerCalls.get() shouldBeEqualTo 0
+    }
+
+    @Test
     fun `normalizes malformed bytes and missing dimensions`() = runTest {
         val malformed = assertFailsWith<BarcodeException> {
             service().extract(fixtures.bytes(BarcodeExampleFixture.MALFORMED))
