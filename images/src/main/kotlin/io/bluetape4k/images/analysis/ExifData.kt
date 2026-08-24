@@ -1,6 +1,5 @@
 package io.bluetape4k.images.analysis
 
-import com.drew.imaging.ImageMetadataReader
 import com.drew.metadata.Metadata
 import com.drew.metadata.exif.ExifIFD0Directory
 import com.drew.metadata.exif.ExifSubIFDDirectory
@@ -11,7 +10,6 @@ import io.bluetape4k.logging.debug
 import io.bluetape4k.logging.warn
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import java.io.ByteArrayInputStream
 import java.io.File
 import java.io.IOException
 import java.io.InputStream
@@ -92,19 +90,25 @@ data class ExifData(
 private val log = KotlinLogging.logger(ExifData::class)
 
 private val EXIF_DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy:MM:dd HH:mm:ss")
+private const val DEFAULT_EXIF_MAX_BYTES: Int = ImageMetadataReadOptions.DEFAULT_MAX_BYTES
 
 /**
  * ByteArray에서 EXIF 메타데이터를 읽는다.
  *
- * @param bytes 이미지 바이트 배열. 50MB 초과 시 [IllegalArgumentException].
+ * @param bytes 이미지 바이트 배열.
+ * @param maxBytes 허용할 최대 입력 크기(바이트). 초과 시 [IllegalArgumentException].
  * @return EXIF 데이터. EXIF 없거나 파싱 실패 시 [ExifData.EMPTY].
  */
-fun readExif(bytes: ByteArray): ExifData {
-    require(bytes.size <= 50 * 1024 * 1024) {
-        "이미지 바이트 배열이 50MB를 초과합니다: ${bytes.size} bytes"
+fun readExif(
+    bytes: ByteArray,
+    maxBytes: Int = DEFAULT_EXIF_MAX_BYTES,
+): ExifData {
+    val options = exifReadOptions(maxBytes)
+    require(bytes.size <= maxBytes) {
+        "이미지 바이트 배열이 ${maxBytes} bytes를 초과합니다: ${bytes.size} bytes"
     }
     return try {
-        ImageMetadataReader.readMetadata(ByteArrayInputStream(bytes)).toExifData()
+        readImageMetadataReport(bytes, options).exif
     } catch (e: IOException) {
         log.warn(e) { "EXIF 읽기 I/O 오류 (ByteArray ${bytes.size} bytes)" }
         ExifData.EMPTY
@@ -119,11 +123,18 @@ fun readExif(bytes: ByteArray): ExifData {
  *
  * **주의**: 신뢰할 수 없는 경로를 직접 전달하지 말 것. 사용자 입력 경로는 정규화 필요.
  *
+ * @param maxBytes 허용할 최대 입력 크기(바이트). 초과 시 [IllegalArgumentException].
  * @return EXIF 데이터. EXIF 없거나 파싱 실패 시 [ExifData.EMPTY].
  */
-fun File.readExif(): ExifData =
-    try {
-        ImageMetadataReader.readMetadata(this).toExifData()
+fun File.readExif(maxBytes: Int = DEFAULT_EXIF_MAX_BYTES): ExifData {
+    val options = exifReadOptions(maxBytes)
+    if (exists()) {
+        require(length() <= maxBytes) {
+            "이미지 파일이 ${maxBytes} bytes를 초과합니다: ${length()} bytes"
+        }
+    }
+    return try {
+        readImageMetadataReport(options).exif
     } catch (e: IOException) {
         log.warn(e) { "EXIF 읽기 I/O 오류: $absolutePath" }
         ExifData.EMPTY
@@ -131,39 +142,60 @@ fun File.readExif(): ExifData =
         log.debug(e) { "EXIF 파싱 실패: $absolutePath" }
         ExifData.EMPTY
     }
+}
 
 /**
  * [Path]에서 EXIF 메타데이터를 읽는다.
  *
  * jar/zip 내부 경로도 지원하기 위해 [Files.newInputStream]을 사용한다.
  *
+ * @param maxBytes 허용할 최대 입력 크기(바이트). 초과 시 [IllegalArgumentException].
  * @return EXIF 데이터. EXIF 없거나 파싱 실패 시 [ExifData.EMPTY].
  */
-fun Path.readExif(): ExifData =
-    try {
-        Files.newInputStream(this).use { it.readExif() }
+fun Path.readExif(maxBytes: Int = DEFAULT_EXIF_MAX_BYTES): ExifData {
+    val options = exifReadOptions(maxBytes)
+    return try {
+        val size = Files.size(this)
+        require(size <= maxBytes) {
+            "이미지 경로가 ${maxBytes} bytes를 초과합니다: $size bytes"
+        }
+        readImageMetadataReport(options).exif
+    } catch (e: IllegalArgumentException) {
+        throw e
     } catch (e: IOException) {
         log.warn(e) { "EXIF 파일 열기 실패: $this" }
         ExifData.EMPTY
     }
+}
 
 /**
  * [InputStream]에서 EXIF 메타데이터를 읽는다.
  *
  * 스트림 close는 호출자가 관리한다.
  *
+ * @param maxBytes 허용할 최대 입력 크기(바이트). 초과 시 [IllegalArgumentException].
  * @return EXIF 데이터. EXIF 없거나 파싱 실패 시 [ExifData.EMPTY].
  */
-fun InputStream.readExif(): ExifData =
-    try {
-        ImageMetadataReader.readMetadata(this).toExifData()
-    } catch (e: IOException) {
-        log.warn(e) { "EXIF 읽기 I/O 오류 (InputStream)" }
-        ExifData.EMPTY
-    } catch (e: Exception) {
-        log.debug(e) { "EXIF 파싱 실패 (InputStream)" }
-        ExifData.EMPTY
+fun InputStream.readExif(maxBytes: Int = DEFAULT_EXIF_MAX_BYTES): ExifData {
+    val options = exifReadOptions(maxBytes)
+    return when (val result = readImageMetadataReportStrict(options)) {
+        is ImageMetadataReadResult.Success -> result.report.exif
+        is ImageMetadataReadResult.Failure -> when (result.kind) {
+            ImageMetadataReadFailureKind.SIZE_LIMIT ->
+                throw IllegalArgumentException("이미지 스트림이 ${maxBytes} bytes를 초과합니다")
+
+            ImageMetadataReadFailureKind.IO,
+            ImageMetadataReadFailureKind.PARSE,
+            -> ExifData.EMPTY
+        }
     }
+}
+
+private fun exifReadOptions(maxBytes: Int): ImageMetadataReadOptions =
+    ImageMetadataReadOptions(
+        maxBytes = maxBytes,
+        stripSensitiveMetadata = false,
+    )
 
 /**
  * [File]에서 EXIF 메타데이터를 비동기로 읽는다.
