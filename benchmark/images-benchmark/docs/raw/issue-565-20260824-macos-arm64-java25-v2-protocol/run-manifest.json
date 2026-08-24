@@ -4,7 +4,7 @@
   "runId": "issue-565-protocol-20260824",
   "status": "MEASURED",
   "coverage": "full-corpus",
-  "sourceCommit": "fc0eb1b39e105cadda7150e9233578654d34df7f",
+  "sourceCommit": "89d75e876359917f0a9bae7a83735e9310c75b31",
   "fixtureManifest": {
     "path": "benchmark/images-benchmark/src/main/resources/bench/ocr-v2/manifest.json",
     "sha256": "99502a59751f68aff19634c33239d0f0e50931a17746621e7384ef169faaebb6",

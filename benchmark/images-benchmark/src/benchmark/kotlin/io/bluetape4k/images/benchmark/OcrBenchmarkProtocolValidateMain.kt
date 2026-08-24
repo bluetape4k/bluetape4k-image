@@ -54,6 +54,9 @@ object OcrBenchmarkProtocolValidateMain {
         require(runManifest["coverage"]?.jsonPrimitive?.content == "full-corpus") {
             "OCR protocol run manifest coverage must be full-corpus"
         }
+        require(runManifest["sourceCommit"]?.jsonPrimitive?.content?.matches(Regex("[0-9a-f]{40}")) == true) {
+            "OCR protocol run manifest source commit must be a Git SHA-1"
+        }
         require(runManifest["fixtureManifest"]?.jsonObject?.get("sha256")?.jsonPrimitive?.content == manifestSha256) {
             "OCR protocol run manifest fixture SHA-256 differs"
         }

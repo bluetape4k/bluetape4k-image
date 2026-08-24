@@ -1383,8 +1383,9 @@ tasks.register<JavaExec>("runOcrCorpusProtocol") {
         }
         val output = ocrProtocolOutput.orNull
             ?: error("ocr.protocol.output is required and must be an absolute JSON path")
-        val outputFile = file(output).absoluteFile.normalize()
-        require(outputFile.isAbsolute) { "ocr.protocol.output must be absolute" }
+        val requestedOutput = file(output)
+        require(requestedOutput.isAbsolute) { "ocr.protocol.output must be absolute" }
+        val outputFile = requestedOutput.absoluteFile.normalize()
         setArgs(listOf("--output", outputFile.absolutePath, "--run-id", runId))
     }
 }

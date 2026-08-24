@@ -117,6 +117,8 @@ internal object OcrBenchmarkProtocolReceiptValidator {
         require(receipt.host.languages.toSet() == expectedLanguages) {
             "OCR protocol host languages differ"
         }
+        OcrBenchmarkMetricReceiptValidator.validate(receipt.metrics, manifest, receipt.manifestSha256)
+        val metricRows = receipt.metrics.rows.associateBy(OcrBenchmarkMetricRow::fixtureId)
         val expectedIds = manifest.fixtures.map(OcrBenchmarkCorpusFixtureEntry::fixtureId)
         require(receipt.rows.map(OcrBenchmarkProtocolRow::fixtureId).toSet().size == receipt.rows.size) {
             "OCR protocol fixture IDs must be unique"
@@ -128,8 +130,22 @@ internal object OcrBenchmarkProtocolReceiptValidator {
             require(row.scenario == fixture.scenario && row.expectedOutcome == fixture.expectedOutcome) {
                 "OCR protocol fixture classification differs: ${fixture.fixtureId}"
             }
+            require(row.warmIterations == receipt.protocol.warmRuns) {
+                "OCR protocol warm iteration count differs: ${fixture.fixtureId}"
+            }
+            val metricRow = requireNotNull(metricRows[fixture.fixtureId]) {
+                "OCR protocol metric row is missing: ${fixture.fixtureId}"
+            }
+            when (fixture.expectedOutcome) {
+                OcrBenchmarkExpectedOutcome.TEXT -> require(row.outputSha256 == metricRow.predictionSha256) {
+                    "OCR protocol output SHA-256 differs from metric prediction: ${fixture.fixtureId}"
+                }
+                OcrBenchmarkExpectedOutcome.EMPTY -> require(row.outputSha256 == sha256Hex(ByteArray(0))) {
+                    "OCR protocol EMPTY output SHA-256 differs: ${fixture.fixtureId}"
+                }
+                OcrBenchmarkExpectedOutcome.ERROR -> error("ERROR fixture must not be a protocol row")
+            }
         }
-        OcrBenchmarkMetricReceiptValidator.validate(receipt.metrics, manifest, receipt.manifestSha256)
     }
 
     fun validateJson(bytes: ByteArray, manifest: OcrBenchmarkCorpusManifest) {

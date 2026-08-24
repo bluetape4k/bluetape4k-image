@@ -18,6 +18,7 @@ class OcrBenchmarkProtocolTest {
                 }
         val manifestSha256 = "d".repeat(64)
         val metricReceipt = OcrBenchmarkMetricReceipt.create(manifest, predictions, manifestSha256)
+        val metricRows = metricReceipt.rows.associateBy(OcrBenchmarkMetricRow::fixtureId)
         val receipt = OcrBenchmarkProtocolReceipt(
             schemaVersion = 1,
             issue = 565,
@@ -49,7 +50,8 @@ class OcrBenchmarkProtocolTest {
                     warmIterations = 3,
                     rssBeforeBytes = 10_000,
                     rssPeakBytes = 12_000,
-                    outputSha256 = "e".repeat(64),
+                    outputSha256 = metricRows.getValue(fixture.fixtureId).predictionSha256
+                        ?: sha256Hex(ByteArray(0)),
                 )
             },
             metrics = metricReceipt,
@@ -71,6 +73,7 @@ class OcrBenchmarkProtocolTest {
                 }
         val manifestSha256 = "f".repeat(64)
         val metricReceipt = OcrBenchmarkMetricReceipt.create(manifest, predictions, manifestSha256)
+        val metricRows = metricReceipt.rows.associateBy(OcrBenchmarkMetricRow::fixtureId)
         val valid = OcrBenchmarkProtocolReceipt(
             schemaVersion = 1,
             issue = 565,
@@ -89,7 +92,8 @@ class OcrBenchmarkProtocolTest {
                     3,
                     10_000,
                     12_000,
-                    "e".repeat(64),
+                    metricRows.getValue(fixture.fixtureId).predictionSha256
+                        ?: sha256Hex(ByteArray(0)),
                 )
             },
             metrics = metricReceipt,
@@ -102,6 +106,22 @@ class OcrBenchmarkProtocolTest {
             )
         }
         rssError.message.orEmpty().shouldContain("RSS")
+
+        val outputHashError = assertFailsWith<IllegalArgumentException> {
+            OcrBenchmarkProtocolReceiptValidator.validate(
+                valid.copy(rows = valid.rows.dropLast(1) + valid.rows.last().copy(outputSha256 = "e".repeat(64))),
+                manifest,
+            )
+        }
+        outputHashError.message.orEmpty().shouldContain("output SHA-256")
+
+        val warmIterationError = assertFailsWith<IllegalArgumentException> {
+            OcrBenchmarkProtocolReceiptValidator.validate(
+                valid.copy(rows = valid.rows.dropLast(1) + valid.rows.last().copy(warmIterations = 1)),
+                manifest,
+            )
+        }
+        warmIterationError.message.orEmpty().shouldContain("warm iteration")
 
         val driftError = assertFailsWith<IllegalArgumentException> {
             OcrBenchmarkProtocolReceiptValidator.validate(
