@@ -43,11 +43,11 @@
   "reports": [
     {
       "path": "ocr-latency.json",
-      "sha256": "7ff512f0e7a33c15faca9439cb3d28d07ca1b04f0e854e4cb1eacbcc126406b4"
+      "sha256": "c2074880b48c0e23702dc816067b1bc34a1b927a2f846c17c04741f12b4be8c0"
     },
     {
       "path": "ocr-throughput.json",
-      "sha256": "559705e885831e901b17c3cbcc1006c3e2164b0aa46687661b009923534e4049"
+      "sha256": "c649233ce8dac09243e573ffc5b99a28e8b5dbe320740d090a3cd7b54b153b99"
     }
   ],
   "status": "BASELINE_ONLY",

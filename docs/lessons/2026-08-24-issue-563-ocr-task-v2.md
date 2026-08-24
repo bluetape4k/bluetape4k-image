@@ -39,3 +39,21 @@ macOS arm64 Java 25 한 호스트의 baseline-only receipt다.
 validator와 raw receipt를 함께 갱신한다. malformed/limit 입력은 negative manifest에
 두고 benchmark 입력으로 섞지 않는다. 현재 9개 시나리오·최소 27개 fixture 확장과
 Paddle 비교는 별도 이슈에서 수행하며, 이 baseline만으로 provider 도입 결정을 내리지 않는다.
+
+## 독립 reviewer 결과와 후속 범위
+
+독립 reviewer lane은 P0=0, P1=1, P2=4, P3=1을 보고했다. P1은 현재 변경이
+Issue #563의 전체 완료가 아니라 v2 manifest와 현재 검증된 fixture를 연결한
+partial baseline이라는 점이다. 따라서 이 PR에서는 #563을 닫지 않고 `Refs #563`로
+연결한다.
+
+- 현재 PR 범위: v2 `fixtureId` 연결, v1 fallback 제거, manifest/resource/hash/
+  `expectedOutcome` fail-fast 검증, 단일 positive fixture의 Tesseract baseline.
+- 후속 범위: 9개 시나리오·최소 27개 fixture, CER/WER, cold/warm, RSS, 동일
+  corpus/host/resource envelope receipt, `preprocessAndExtract` 결과 검증,
+  언어별 `traineddata` byte·SHA-256 model provenance, manifest와 JMH `@Param`의
+  정확한 집합 일치 검증.
+- P3 raw JSON EOF 공백은 trailing newline 하나로 정규화하고, 변경된 report
+  SHA-256을 `run-manifest.json`에 갱신했다.
+- Paddle/provider 도입과 비교는 별도 범위로 유지하며, 현재 baseline으로 adoption
+  결정을 내리지 않는다.
