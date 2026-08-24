@@ -78,7 +78,9 @@ interface CaptchaChallengeStore {
  *
  * 이 구현체는 test, demo, single-node application 용도입니다. [save]는 새 challenge를
  * 삽입하기 전에 stale entry를 제거한 뒤, 가장 이른 expiration을 가진 entry부터 evict해
- * [maxEntries]를 강제합니다.
+ * [maxEntries]를 강제합니다. 저장·만료 정리·eviction은 하나의 critical section에서
+ * 수행되므로 [save]가 반환될 때 저장소 크기는 항상 [maxEntries] 이하입니다. expiration이
+ * 같으면 challenge id가 사전순으로 앞선 항목을 먼저 제거합니다.
  *
  * application instance들이 발급 challenge를 공유해야 하거나 cleanup이 challenge issue
  * traffic과 독립적으로 실행되어야 한다면 distributed store 구현체를 사용합니다.
@@ -93,27 +95,32 @@ class InMemoryCaptchaChallengeStore @JvmOverloads constructor(
     }
 
     private val challenges = ConcurrentHashMap<CaptchaChallengeId, IssuedCaptchaChallenge>()
+    private val lock = Any()
 
-    override fun save(challenge: IssuedCaptchaChallenge): IssuedCaptchaChallenge {
-        removeExpired(clock.instant())
-        challenges[challenge.id] = challenge
-        trimToMaxEntries()
-        return challenge
-    }
+    override fun save(challenge: IssuedCaptchaChallenge): IssuedCaptchaChallenge =
+        synchronized(lock) {
+            removeExpiredLocked(clock.instant())
+            challenges[challenge.id] = challenge
+            trimToMaxEntriesLocked()
+            challenge
+        }
 
     override fun consume(id: CaptchaChallengeId): IssuedCaptchaChallenge? =
-        challenges.remove(id)
+        synchronized(lock) { challenges.remove(id) }
 
     /**
      * 현재 저장된 challenge 수입니다. test와 diagnostic을 위해 노출합니다.
      */
     val size: Int
-        get() = challenges.size
+        get() = synchronized(lock) { challenges.size }
 
     /**
      * 만료된 challenge를 제거하고 제거된 entry 수를 반환합니다.
      */
-    fun removeExpired(now: Instant = clock.instant()): Int {
+    fun removeExpired(now: Instant = clock.instant()): Int =
+        synchronized(lock) { removeExpiredLocked(now) }
+
+    private fun removeExpiredLocked(now: Instant): Int {
         var removed = 0
         challenges.forEach { (id, challenge) ->
             if (!challenge.expiresAt.isAfter(now) && challenges.remove(id, challenge)) {
@@ -123,12 +130,13 @@ class InMemoryCaptchaChallengeStore @JvmOverloads constructor(
         return removed
     }
 
-    private fun trimToMaxEntries() {
+    private fun trimToMaxEntriesLocked() {
         val overflow = challenges.size - maxEntries
         if (overflow <= 0) return
 
         challenges.entries
-            .sortedBy { it.value.expiresAt }
+            .sortedWith(compareBy<Map.Entry<CaptchaChallengeId, IssuedCaptchaChallenge>> { it.value.expiresAt }
+                .thenBy { it.key.value })
             .take(overflow)
             .forEach { (id, challenge) ->
                 challenges.remove(id, challenge)

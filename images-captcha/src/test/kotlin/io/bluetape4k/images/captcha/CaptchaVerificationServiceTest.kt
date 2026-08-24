@@ -2,10 +2,12 @@ package io.bluetape4k.images.captcha
 
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeInstanceOf
+import io.bluetape4k.junit5.concurrency.MultithreadingTester
 import java.time.Clock
 import java.time.Instant
 import java.time.ZoneId
 import java.time.ZoneOffset
+import java.util.concurrent.atomic.AtomicInteger
 import org.junit.jupiter.api.Test
 import kotlin.time.Duration.Companion.minutes
 
@@ -108,6 +110,28 @@ class CaptchaVerificationServiceTest {
         store.consume(first.id) shouldBeEqualTo null
         store.consume(second.id) shouldBeEqualTo second
         store.consume(third.id) shouldBeEqualTo third
+    }
+
+    @Test
+    fun `in-memory store keeps hard max under concurrent saves`() {
+        val clock = MutableClock(Instant.parse("2026-05-24T00:00:00Z"))
+        val store = InMemoryCaptchaChallengeStore(clock = clock, maxEntries = 3)
+        val sequence = AtomicInteger()
+        val maximumObserved = AtomicInteger()
+
+        MultithreadingTester()
+            .workers(8)
+            .rounds(20)
+            .add {
+                val number = sequence.incrementAndGet()
+                store.save(issued("concurrent-$number", "ANSWER", clock.instant().plusSeconds(60)))
+                val currentSize = store.size
+                maximumObserved.updateAndGet { previous -> maxOf(previous, currentSize) }
+            }
+            .run()
+
+        maximumObserved.get() shouldBeEqualTo 3
+        store.size shouldBeEqualTo 3
     }
 
     private fun newChallenge(clock: Clock): CaptchaChallenge {
