@@ -39,6 +39,54 @@ class OcrBenchmarkContractTest {
     }
 
     @Test
+    fun `OCR benchmark validates both paths and keeps manifest parameters exact`() {
+        val source = Files.readString(sourcePath)
+        val build = Files.readString(buildScriptPath)
+
+        source.shouldContain("fixture.verifyOutput(preprocess(fixture).extractText(options))")
+        build.shouldContain("expectedOcrBenchmarkParamFixtureIds")
+        build.shouldContain("OCR benchmark fixture IDs and JMH parameters must match exactly")
+        build.shouldContain("normalizeOcrRawReport")
+
+        val declaredFixtureIds =
+            Regex("""@Param\(([^)]*)\)\s*lateinit var fixtureId""")
+                .find(source)
+                ?.groupValues
+                ?.get(1)
+                ?.let { values ->
+                    Regex("""\"([^\"]+)\"""")
+                        .findAll(values)
+                        .map { match -> match.groupValues[1] }
+                        .toSet()
+                }
+                ?: error("JMH fixtureId @Param declaration is missing")
+        val manifestFixtureIds =
+            OcrBenchmarkCorpusV2
+                .loadManifest()
+                .fixtures
+                .filter { it.expectedOutcome != OcrBenchmarkExpectedOutcome.ERROR }
+                .map { it.fixtureId }
+                .toSet()
+
+        declaredFixtureIds.shouldBeEqualTo(manifestFixtureIds)
+    }
+
+    @Test
+    fun `OCR receipt validator requires model provenance and report hash automation`() {
+        val build = Files.readString(buildScriptPath)
+        val runManifestPath = repositoryRoot().resolve(
+            "benchmark/images-benchmark/docs/raw/issue-563-20260824-macos-arm64-java25-v2-baseline/run-manifest.json",
+        )
+        val modelReceiptPath = runManifestPath.parent.resolve("model-provenance.json")
+
+        build.shouldContain("validateOcrBenchmarkReceipt")
+        build.shouldContain("validateOcrRawReport")
+        build.shouldContain("modelProvenance")
+        Files.readString(runManifestPath).shouldContain("modelProvenance")
+        Files.isRegularFile(modelReceiptPath).shouldBeEqualTo(true)
+    }
+
+    @Test
     fun `OCR latency and throughput tasks use one isolated host-native class`() {
         val build = Files.readString(buildScriptPath)
 

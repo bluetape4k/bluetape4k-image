@@ -51,6 +51,13 @@ val repositoryDirectory = rootProject.layout.projectDirectory
 val ocrBenchmarkManifestFile = repositoryDirectory.file(
     "benchmark/images-benchmark/src/main/resources/bench/ocr-v2/manifest.json",
 ).asFile
+val ocrBenchmarkSourceFile = repositoryDirectory.file(
+    "benchmark/images-benchmark/src/benchmark/kotlin/io/bluetape4k/images/benchmark/" +
+        "TesseractOcrExtractionBenchmark.kt",
+).asFile
+val ocrBenchmarkReceiptDirectory = repositoryDirectory.file(
+    "benchmark/images-benchmark/docs/raw/issue-563-20260824-macos-arm64-java25-v2-baseline",
+).asFile
 val codecMatrixSourceDirectory = layout.buildDirectory.dir("generated/codec-matrix-source-fixtures")
 val codecMatrixRunDirectoryProvider = codecMatrixRunId.flatMap { runId ->
     require(codecMatrixRunIdPattern.matches(runId)) {
@@ -196,11 +203,187 @@ fun expectedOcrBenchmarkFixtureIds(): Set<String> {
         .map { (fixtureId, _) -> fixtureId }
         .toSet()
     require(fixtureIds.isNotEmpty()) { "OCR corpus v2 has no benchmarkable fixtures" }
+    val parameterIds = expectedOcrBenchmarkParamFixtureIds()
+    require(parameterIds == fixtureIds) {
+        "OCR benchmark fixture IDs and JMH parameters must match exactly: " +
+            "manifest=$fixtureIds parameters=$parameterIds"
+    }
     return fixtureIds
+}
+
+fun expectedOcrBenchmarkParamFixtureIds(): Set<String> {
+    require(ocrBenchmarkSourceFile.isFile) {
+        "OCR benchmark source is missing: $ocrBenchmarkSourceFile"
+    }
+    val declaration = Regex("""@Param\(([^)]*)\)\s*lateinit var fixtureId""")
+        .find(ocrBenchmarkSourceFile.readText())
+        ?.groupValues
+        ?.get(1)
+        ?: throw IllegalArgumentException("OCR benchmark fixtureId @Param declaration is missing")
+    val parameterIds = Regex("\"([^\"]+)\"")
+        .findAll(declaration)
+        .map { match -> match.groupValues[1] }
+        .toList()
+    require(parameterIds.isNotEmpty()) { "OCR benchmark fixtureId @Param values are missing" }
+    require(parameterIds.size == parameterIds.toSet().size) {
+        "OCR benchmark fixtureId @Param values must be unique"
+    }
+    return parameterIds.toSet()
+}
+
+fun ocrBenchmarkSha256(file: File): String {
+    require(file.isFile) { "OCR benchmark receipt file is missing: $file" }
+    val digest = MessageDigest.getInstance("SHA-256")
+    file.inputStream().buffered().use { input ->
+        val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
+        while (true) {
+            val read = input.read(buffer)
+            if (read < 0) break
+            digest.update(buffer, 0, read)
+        }
+    }
+    return digest.digest().joinToString("") { byte -> "%02x".format(byte) }
+}
+
+fun validateOcrRawReport(report: File, expectedSha256: String? = null) {
+    require(report.isFile) { "OCR raw report is missing: $report" }
+    val bytes = report.readBytes()
+    require(bytes.isNotEmpty() && bytes.last() == '\n'.code.toByte()) {
+        "OCR raw report must end with exactly one LF: $report"
+    }
+    require(bytes.size == 1 || bytes[bytes.lastIndex - 1] !in setOf(
+        '\n'.code.toByte(),
+        '\r'.code.toByte(),
+        ' '.code.toByte(),
+        '\t'.code.toByte(),
+    )) {
+        "OCR raw report has trailing whitespace before EOF: $report"
+    }
+    expectedSha256?.let { expected ->
+        require(ocrBenchmarkSha256(report) == expected) {
+            "OCR raw report SHA-256 differs: $report"
+        }
+    }
+}
+
+fun normalizeOcrRawReport(report: File) {
+    require(report.isFile) { "OCR raw report is missing: $report" }
+    val original = report.readText()
+    val normalized = original.trimEnd() + "\n"
+    if (original != normalized) {
+        report.writeText(normalized)
+    }
+}
+
+fun resolveOcrReceiptFile(receiptDirectory: File, relativePath: String): File {
+    require(relativePath.isNotBlank() && !relativePath.contains('\\') && !File(relativePath).isAbsolute) {
+        "OCR receipt path must be relative: $relativePath"
+    }
+    require(relativePath.split('/').none { it.isEmpty() || it == "." || it == ".." }) {
+        "OCR receipt path must be normalized: $relativePath"
+    }
+    return receiptDirectory.resolve(relativePath)
+}
+
+fun validateOcrBenchmarkReceipt(receiptDirectory: File = ocrBenchmarkReceiptDirectory) {
+    val runManifestFile = receiptDirectory.resolve("run-manifest.json")
+    require(runManifestFile.isFile) { "OCR run manifest is missing: $runManifestFile" }
+    validateOcrRawReport(runManifestFile)
+    val runManifest = JsonSlurper().parse(runManifestFile) as? Map<*, *>
+        ?: throw IllegalArgumentException("OCR run manifest must be an object")
+
+    val fixtureManifest = runManifest["fixtureManifest"] as? Map<*, *>
+        ?: throw IllegalArgumentException("OCR run manifest fixture manifest is missing")
+    require(fixtureManifest["path"] == "benchmark/images-benchmark/src/main/resources/bench/ocr-v2/manifest.json") {
+        "OCR run manifest fixture manifest path differs"
+    }
+    require(fixtureManifest["sha256"] == ocrBenchmarkSha256(ocrBenchmarkManifestFile)) {
+        "OCR run manifest fixture manifest SHA-256 differs"
+    }
+
+    val reports = runManifest["reports"] as? List<*>
+        ?: throw IllegalArgumentException("OCR run manifest reports are missing")
+    require(reports.isNotEmpty()) { "OCR run manifest reports must not be empty" }
+    reports.forEach { value ->
+        val report = value as? Map<*, *>
+            ?: throw IllegalArgumentException("OCR run manifest report must be an object")
+        val path = report["path"] as? String
+            ?: throw IllegalArgumentException("OCR run manifest report path is missing")
+        val expectedSha256 = report["sha256"] as? String
+            ?: throw IllegalArgumentException("OCR run manifest report SHA-256 is missing: $path")
+        val reportFile = resolveOcrReceiptFile(receiptDirectory, path)
+        validateOcrRawReport(reportFile, expectedSha256)
+        require(JsonSlurper().parse(reportFile) is List<*>) {
+            "OCR raw report must be a JSON array: $path"
+        }
+    }
+
+    val modelProvenance = runManifest["modelProvenance"] as? Map<*, *>
+        ?: throw IllegalArgumentException("OCR run manifest model provenance is missing")
+    val modelPath = modelProvenance["path"] as? String
+        ?: throw IllegalArgumentException("OCR model provenance path is missing")
+    val modelSha256 = modelProvenance["sha256"] as? String
+        ?: throw IllegalArgumentException("OCR model provenance SHA-256 is missing")
+    val modelReceipt = resolveOcrReceiptFile(receiptDirectory, modelPath)
+    validateOcrRawReport(modelReceipt, modelSha256)
+    val modelRoot = JsonSlurper().parse(modelReceipt) as? Map<*, *>
+        ?: throw IllegalArgumentException("OCR model provenance must be an object")
+    require((modelRoot["schemaVersion"] as? Number)?.toInt() == 1) {
+        "OCR model provenance schema version differs"
+    }
+    val models = modelRoot["models"] as? List<*>
+        ?: throw IllegalArgumentException("OCR model provenance models are missing")
+    val fixtureRoot = JsonSlurper().parse(ocrBenchmarkManifestFile) as? Map<*, *>
+        ?: throw IllegalArgumentException("OCR fixture manifest must be an object")
+    val requiredLanguages = (fixtureRoot["fixtures"] as? List<*>)
+        ?.flatMap { value ->
+            val fixture = value as? Map<*, *> ?: error("OCR fixture must be an object")
+            if (fixture["expectedOutcome"] == "ERROR") {
+                emptyList()
+            } else {
+                (fixture["languages"] as? List<*>)
+                ?.map { language -> language as? String ?: error("OCR language must be a string") }
+                ?: emptyList()
+            }
+        }
+        ?.toSet()
+        ?: throw IllegalArgumentException("OCR fixture languages are missing")
+    require(requiredLanguages.isNotEmpty()) { "OCR fixture languages must not be empty" }
+    val modelLanguages = models.map { value ->
+        val model = value as? Map<*, *>
+            ?: throw IllegalArgumentException("OCR model provenance entry must be an object")
+        val language = model["language"] as? String
+            ?: throw IllegalArgumentException("OCR model provenance language is missing")
+        val modelId = model["modelId"] as? String
+            ?: throw IllegalArgumentException("OCR model provenance modelId is missing: $language")
+        val path = model["path"] as? String
+            ?: throw IllegalArgumentException("OCR model provenance path is missing: $language")
+        require(File(path).isAbsolute) { "OCR model provenance path must be absolute: $language" }
+        require(modelId == "$language.traineddata") {
+            "OCR model provenance modelId differs: $language"
+        }
+        require((model["bytes"] as? Number)?.toLong()?.let { it > 0 } == true) {
+            "OCR model provenance byte count is invalid: $language"
+        }
+        val sha256 = model["sha256"] as? String
+            ?: throw IllegalArgumentException("OCR model provenance SHA-256 is missing: $language")
+        require(sha256.matches(Regex("[0-9a-f]{64}"))) {
+            "OCR model provenance SHA-256 is invalid: $language"
+        }
+        language
+    }.toSet()
+    require(modelLanguages.size == models.size) {
+        "OCR model provenance languages must be unique"
+    }
+    require(modelLanguages == requiredLanguages) {
+        "OCR model provenance languages differ: required=$requiredLanguages actual=$modelLanguages"
+    }
 }
 
 fun validateOcrBenchmarkReport(report: File, expectedMode: String, expectedUnit: String) {
     require(report.isFile) { "OCR benchmark report is missing: $report" }
+    normalizeOcrRawReport(report)
+    validateOcrRawReport(report)
     val rows = JsonSlurper().parse(report) as? List<*>
         ?: throw IllegalArgumentException("OCR benchmark report must be a JSON array")
     val expectedRows = expectedOcrBenchmarkFixtureIds().flatMap { fixtureId ->
@@ -1174,6 +1357,23 @@ tasks.register("finalizeBarcodeBenchmarkEvidence") {
             }
         }
     }
+}
+
+tasks.register("validateOcrBenchmarkReceipt") {
+    description = "Validate the committed OCR raw reports and traineddata provenance receipt"
+    group = "verification"
+    inputs.files(
+        ocrBenchmarkManifestFile,
+        fileTree(ocrBenchmarkReceiptDirectory) { include("**/*.json") },
+    )
+    doLast {
+        validateOcrBenchmarkReceipt()
+        println("Validated OCR benchmark receipt: $ocrBenchmarkReceiptDirectory")
+    }
+}
+
+tasks.named("check") {
+    dependsOn("validateOcrBenchmarkReceipt")
 }
 
 val vipsJava21BenchmarkReportRoot = layout.buildDirectory.dir("reports/benchmarks/vipsJava21Smoke")

@@ -131,6 +131,15 @@ receipt이며, host 간 순위나 도입 결정을 의미하지 않습니다. v2
 실행 manifest는 [`Issue #563 raw evidence`](docs/raw/issue-563-20260824-macos-arm64-java25-v2-baseline/)
 에 있습니다. 9개 시나리오·27개 fixture 전체와 Paddle 비교는 아직 후속 범위입니다.
 
+trial setup은 `extractText`와 `preprocessAndExtract`를 각각 한 번 실행해
+fixture가 선언한 `TEXT`/`EMPTY` 결과를 모두 검증합니다. 선언과 다른 결과가 나오면
+즉시 실패합니다. 실행에 사용한 `eng.traineddata`의 경로, 실제 해석 경로, byte 수,
+SHA-256은 [`model-provenance.json`](docs/raw/issue-563-20260824-macos-arm64-java25-v2-baseline/model-provenance.json)에
+기록합니다. 기준 데이터를 사용하기 전에
+`./gradlew :bluetape4k-images-benchmark:validateOcrBenchmarkReceipt`를 실행해
+manifest, raw report EOF 정규화, report hash, model provenance hash를 함께
+검증합니다.
+
 GC profiler는 direct clean text 추출에서 managed allocation `1,417,421 B/op`을
 기록했으며 Tesseract native/model memory는 포함하지 않습니다. `tesseract`, tessdata,
 fixture language prerequisite을 명시적으로 확인하므로 OCR task는 기본 CI lane에서
