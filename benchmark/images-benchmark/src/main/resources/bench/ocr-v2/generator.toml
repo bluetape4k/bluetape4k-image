@@ -1,0 +1,4 @@
+name = "repo-owned-ocr-fixtures"
+version = "1.0.0"
+seed = 17
+normalization = "NFC+LF"
