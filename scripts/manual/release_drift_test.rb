@@ -29,6 +29,15 @@ class ReleaseDriftTest < Minitest::Test
     end
   end
 
+  def test_accepts_publishing_inventory_moved_to_build_src
+    with_fixture do |root, paths|
+      result = contract(root, paths, runner: git_runner(COMMIT, policy_source: :build_src)).validate
+
+      assert_empty result.errors
+      assert_equal 1, result.expected.fetch(:published_library_count)
+    end
+  end
+
   def test_rejects_full_sha_and_short_sha_drift
     with_fixture do |root, paths|
       manifest = YAML.safe_load(File.read(paths.fetch(:manifest)))
@@ -280,7 +289,7 @@ class ReleaseDriftTest < Minitest::Test
     )
   end
 
-  def git_runner(commit)
+  def git_runner(commit, policy_source: :root)
     settings = <<~KOTLIN
       project(":bluetape4k-images").projectDir = file("images")
       project(":bluetape4k-image-bom").projectDir = file("bom")
@@ -303,12 +312,24 @@ class ReleaseDriftTest < Minitest::Test
       }
       subprojects.filterNot { it.isNonPublishedModule() }.forEach { add("nmcpAggregation", project(it.path)) }
     KOTLIN
+    inventory_policy = <<~KOTLIN
+      fun Project.isNonPublishedModule(): Boolean {
+          val relativePath = repositoryRelativePath()
+          return relativePath == "examples" || relativePath.startsWith("examples/") ||
+              relativePath == "benchmark" || relativePath.startsWith("benchmark/") ||
+              name.contains("-demo") || name.endsWith("-benchmark")
+      }
+      fun Project.isPublishedJvmModule(): Boolean = name != "bluetape4k-image-bom" && !isNonPublishedModule()
+    KOTLIN
     lambda do |arguments|
       case arguments
       when ["rev-parse", "--verify", "refs/tags/#{TAG}^{commit}"] then ["#{commit}\n", true]
       when ["ls-tree", "-r", "--name-only", commit] then [tree, true]
       when ["show", "#{commit}:settings.gradle.kts"] then [settings, true]
-      when ["show", "#{commit}:build.gradle.kts"] then [publishing_policy, true]
+      when ["show", "#{commit}:build.gradle.kts"]
+        policy_source == :root ? [publishing_policy, true] : ["", false]
+      when ["show", "#{commit}:buildSrc/src/main/kotlin/PublicationInventory.kt"]
+        policy_source == :build_src ? [inventory_policy, true] : ["", false]
       else ["", false]
       end
     end
