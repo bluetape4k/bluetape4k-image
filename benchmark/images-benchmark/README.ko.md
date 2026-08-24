@@ -124,7 +124,7 @@ native engine 설정을 포함하며 fixture 로드, 디코드, 예상 token 검
 
 | Fixture | 직접 추출 latency | 전처리 + 추출 | 직접 추출 throughput | 전처리 + 추출 |
 |---------|-------------------|---------------|----------------------|---------------|
-| `clean-text-v2-001` | 225.860 ± 55.267 ms/op | 199.305 ± 3.082 ms/op | 4.521 ± 0.149 ops/s | 4.889 ± 0.474 ops/s |
+| `clean-text-v2-001` | 223.134 ± 6.445 ms/op | 207.461 ± 28.548 ms/op | 4.512 ± 0.272 ops/s | 4.985 ± 0.572 ops/s |
 
 이 결과는 macOS arm64 Java 25 host 한 대에서 얻은 Tesseract baseline-only
 receipt이며, host 간 순위나 도입 결정을 의미하지 않습니다. v2 immutable report와

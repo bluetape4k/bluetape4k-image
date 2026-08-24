@@ -19,8 +19,8 @@ v1 scenario 목록을 복제하지 않고 v2 manifest의 benchmarkable fixture I
 
 현재 manifest의 유일한 positive fixture `clean-text-v2-001`에 대해 latency와
 throughput task를 각각 실행하고 immutable JSON과 run manifest를 남겼다. latency는
-직접 추출 `225.860 ± 55.267 ms/op`, 전처리 후 추출 `199.305 ± 3.082 ms/op`이며,
-throughput은 각각 `4.521 ± 0.149 ops/s`, `4.889 ± 0.474 ops/s`였다. 이 수치는
+직접 추출 `223.134 ± 6.445 ms/op`, 전처리 후 추출 `207.461 ± 28.548 ms/op`이며,
+throughput은 각각 `4.512 ± 0.272 ops/s`, `4.985 ± 0.572 ops/s`였다. 이 수치는
 macOS arm64 Java 25 한 호스트의 baseline-only receipt다.
 
 ## 검증

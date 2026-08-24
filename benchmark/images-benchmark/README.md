@@ -124,7 +124,7 @@ remain the historical v1 snapshot.
 
 | Fixture | Direct latency | Preprocess + extract | Direct throughput | Preprocess + extract |
 |---------|----------------|----------------------|-------------------|----------------------|
-| `clean-text-v2-001` | 225.860 ± 55.267 ms/op | 199.305 ± 3.082 ms/op | 4.521 ± 0.149 ops/s | 4.889 ± 0.474 ops/s |
+| `clean-text-v2-001` | 223.134 ± 6.445 ms/op | 207.461 ± 28.548 ms/op | 4.512 ± 0.272 ops/s | 4.985 ± 0.572 ops/s |
 
 This is a Tesseract baseline-only receipt on one macOS arm64 Java 25 host, not a
 cross-host ranking or an adoption decision. The immutable v2 reports and run
