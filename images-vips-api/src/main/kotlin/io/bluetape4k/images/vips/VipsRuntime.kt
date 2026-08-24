@@ -20,13 +20,19 @@ interface VipsRuntime {
     /**
      * libvips 런타임을 초기화합니다.
      *
-     * 이미 초기화된 경우 즉시 반환합니다.
-     * 다른 스레드가 초기화 중인 경우 완료될 때까지 스핀 대기합니다.
+     * 첫 번째 성공한 호출의 요청 `concurrency`와 `maxPixels`가 프로세스 전역 effective configuration이 됩니다.
+     * 단, backend가 concurrency 조정을 지원하지 않으면 실제 native concurrency는 unknown으로 보고될 수 있습니다.
+     * 이미 초기화된 경우 두 값이 모두 같은 요청만 idempotent하게 즉시 반환합니다.
+     * 다른 값을 요청하면 requested/effective configuration을 포함한
+     * [VipsInitializationException]이 발생합니다.
+     * 다른 스레드가 초기화 중인 경우 완료될 때까지 스핀 대기한 뒤 같은 비교를 수행합니다.
+     * 초기화가 끝난 뒤에도 잘못된 인자(`concurrency <= 0` 또는 `maxPixels <= 0`)는 검증됩니다.
      *
      * @param concurrency libvips 내부 스레드 수 (기본값: [VipsLimits.DEFAULT_CONCURRENCY]).
      * backend가 스레드 수 조정을 지원하지 않으면 지원되지 않는 값은 명시적으로 거부합니다.
      * @param maxPixels 허용할 최대 픽셀 수 `width × height × bands` (기본값: 1억 5천만)
-     * @throws VipsInitializationException 초기화 실패 또는 [shutdown] 이후 재호출 시
+     * @throws VipsInitializationException 초기화 실패, effective configuration 충돌,
+     * 지원되지 않는 concurrency 또는 [shutdown] 이후 재호출 시
      */
     fun init(
         concurrency: Int = VipsLimits.DEFAULT_CONCURRENCY,
