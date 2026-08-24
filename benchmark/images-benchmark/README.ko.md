@@ -32,7 +32,7 @@
 | PNG | `cafe` | 884.105 ± 156.993 | 585.288 ± 186.247 | **1.5배** |
 | PNG | `landscape` | 989.370 ± 346.605 | 546.388 ± 25.444 | **1.8배** |
 
-> 이 값은 한 macOS Java 25 FFM host에서 측정한 자연사진 snapshot입니다. host 간 또는 Java 21 JNI 순위 비교가 아닙니다.
+> 이 값은 한 macOS Java 25 FFM host에서 측정한 자연사진 실행 결과입니다. host 간 또는 Java 21 JNI 순위 비교가 아닙니다.
 
 ### Vips 백엔드 비교
 
@@ -94,13 +94,13 @@ throughput은 별도로 관측한 `ops/s` 값이라 높을수록 좋습니다. �
 | 결과 없음 | 0.271397 ± 0.009099 | 3690.012 ± 32.832 | 빈 목록 |
 
 이 값은 Apple M5 호스트 한 대에서 고정 PNG fixture 3개와 단일 provider를 측정한
-로컬 snapshot입니다. provider 간 또는 host 간 순위로 해석할 수 없습니다.
+로컬 실행 결과입니다. provider 간 또는 host 간 순위로 해석할 수 없습니다.
 자세한 조건은 [`상세 리포트`](docs/barcode-extraction-2026-07-14.md), 원본 근거는
 [`불변 raw evidence`](docs/raw/issue-272-20260714-macos-arm64-01/)를 참고하세요.
 
 ### Tesseract OCR 추출
 
-이 Java 25/macOS snapshot은 clean, noisy, rotated, multilingual hash-pinned PNG
+이 Java 25/macOS 측정 기준 데이터는 clean, noisy, rotated, multilingual hash-pinned PNG
 문서에서 Tess4J 기반 공개 API `ImmutableImage.extractText`를 측정합니다. 매 호출의
 native engine 설정을 포함하며 fixture 로드, 디코드, 예상 token 검증은 trial setup에서
 수행합니다. latency는 `AverageTime ms/op`으로 낮을수록 좋고 throughput은 별도로
@@ -114,6 +114,22 @@ native engine 설정을 포함하며 fixture 로드, 디코드, 예상 token 검
 | multilingual | 370.003 ms/op | 394.922 ms/op | 2.704 ops/s | 2.518 ops/s |
 
 ![Tesseract OCR extraction benchmark chart](../../docs/images/readme-charts/images-benchmark-ocr-extraction-chart-01.png)
+
+#### 현재 OCR corpus v2 벤치마크
+
+벤치마크 task는 이제 검증된 `bench/ocr-v2/manifest.json`을 `fixtureId`로
+읽으며 v1 fixture fallback을 사용하지 않습니다. 현재 매니페스트에는 벤치마크에
+사용할 수 있는 positive fixture `clean-text-v2-001` 하나가 있습니다. 위 표와
+차트는 과거 v1 기준 데이터로 유지합니다.
+
+| Fixture | 직접 추출 latency | 전처리 + 추출 | 직접 추출 throughput | 전처리 + 추출 |
+|---------|-------------------|---------------|----------------------|---------------|
+| `clean-text-v2-001` | 225.860 ± 55.267 ms/op | 199.305 ± 3.082 ms/op | 4.521 ± 0.149 ops/s | 4.889 ± 0.474 ops/s |
+
+이 결과는 macOS arm64 Java 25 host 한 대에서 얻은 Tesseract baseline-only
+receipt이며, host 간 순위나 도입 결정을 의미하지 않습니다. v2 immutable report와
+실행 manifest는 [`Issue #563 raw evidence`](docs/raw/issue-563-20260824-macos-arm64-java25-v2-baseline/)
+에 있습니다. 9개 시나리오·27개 fixture 전체와 Paddle 비교는 아직 후속 범위입니다.
 
 GC profiler는 direct clean text 추출에서 managed allocation `1,417,421 B/op`을
 기록했으며 Tesseract native/model memory는 포함하지 않습니다. `tesseract`, tessdata,
@@ -277,7 +293,7 @@ raw `kotlinx-benchmark` JSON은
 `ImageLargeStreamingBenchmark`는 큰 binary fixture를 commit하지 않도록 JMH setup
 단계에서 deterministic large fixture를 생성합니다. 이번 로컬 Java 25 결과는
 Okio/suspended API를 Scrimage latency나 throughput 최적화가 아니라 memory/lifecycle
-경계로 설명하는 쪽을 지지합니다. vips 입력 경계는 이 짧은 snapshot을 보편적 순위로
+경계로 설명하는 쪽을 지지합니다. vips 입력 경계는 이 짧은 실행 결과를 보편적 순위로
 해석하지 말고 caller가 이미 소유한 resource와 lifecycle에 맞춰 선택하세요. 현재 모든
 vips 입력 overload는 `Path`를 포함해 50 MiB guard 안에서 compressed input을 검증하고
 버퍼링하므로, 어느 경계도 streaming-memory 또는 guard 우회 선택지가 아닙니다.

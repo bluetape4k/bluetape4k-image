@@ -1,0 +1,130 @@
+[
+    {
+        "jmhVersion" : "1.37",
+        "benchmark" : "io.bluetape4k.images.benchmark.TesseractOcrExtractionBenchmark.extractText",
+        "mode" : "avgt",
+        "threads" : 1,
+        "forks" : 1,
+        "jvm" : "/Library/Java/JavaVirtualMachines/graalvm-jdk-25/Contents/Home/bin/java",
+        "jvmArgs" : [
+            "-XX:ThreadPriorityPolicy=1",
+            "-XX:+UnlockExperimentalVMOptions",
+            "-XX:+EnableJVMCIProduct",
+            "-XX:+EnableJVMCI",
+            "-XX:-UnlockExperimentalVMOptions",
+            "-Dfile.encoding=UTF-8",
+            "-Duser.country=KR",
+            "-Duser.language=ko",
+            "-Duser.variant"
+        ],
+        "jdkVersion" : "25.0.4",
+        "vmName" : "Java HotSpot(TM) 64-Bit Server VM",
+        "vmVersion" : "25.0.4+7-LTS-jvmci-25.2-b20",
+        "warmupIterations" : 3,
+        "warmupTime" : "1 s",
+        "warmupBatchSize" : 1,
+        "measurementIterations" : 5,
+        "measurementTime" : "1 s",
+        "measurementBatchSize" : 1,
+        "params" : {
+            "fixtureId" : "clean-text-v2-001"
+        },
+        "primaryMetric" : {
+            "score" : 225.86002620999997,
+            "scoreError" : 55.26659084060405,
+            "scoreConfidence" : [
+                170.59343536939593,
+                281.126617050604
+            ],
+            "scorePercentiles" : {
+                "0.0" : 218.669225,
+                "50.0" : 219.7842,
+                "90.0" : 251.51803125,
+                "95.0" : 251.51803125,
+                "99.0" : 251.51803125,
+                "99.9" : 251.51803125,
+                "99.99" : 251.51803125,
+                "99.999" : 251.51803125,
+                "99.9999" : 251.51803125,
+                "100.0" : 251.51803125
+            },
+            "scoreUnit" : "ms/op",
+            "rawData" : [
+                [
+                    218.669225,
+                    219.3079166,
+                    219.7842,
+                    220.0207582,
+                    251.51803125
+                ]
+            ]
+        },
+        "secondaryMetrics" : {
+        }
+    },
+    {
+        "jmhVersion" : "1.37",
+        "benchmark" : "io.bluetape4k.images.benchmark.TesseractOcrExtractionBenchmark.preprocessAndExtract",
+        "mode" : "avgt",
+        "threads" : 1,
+        "forks" : 1,
+        "jvm" : "/Library/Java/JavaVirtualMachines/graalvm-jdk-25/Contents/Home/bin/java",
+        "jvmArgs" : [
+            "-XX:ThreadPriorityPolicy=1",
+            "-XX:+UnlockExperimentalVMOptions",
+            "-XX:+EnableJVMCIProduct",
+            "-XX:+EnableJVMCI",
+            "-XX:-UnlockExperimentalVMOptions",
+            "-Dfile.encoding=UTF-8",
+            "-Duser.country=KR",
+            "-Duser.language=ko",
+            "-Duser.variant"
+        ],
+        "jdkVersion" : "25.0.4",
+        "vmName" : "Java HotSpot(TM) 64-Bit Server VM",
+        "vmVersion" : "25.0.4+7-LTS-jvmci-25.2-b20",
+        "warmupIterations" : 3,
+        "warmupTime" : "1 s",
+        "warmupBatchSize" : 1,
+        "measurementIterations" : 5,
+        "measurementTime" : "1 s",
+        "measurementBatchSize" : 1,
+        "params" : {
+            "fixtureId" : "clean-text-v2-001"
+        },
+        "primaryMetric" : {
+            "score" : 199.3048889,
+            "scoreError" : 3.081809310746262,
+            "scoreConfidence" : [
+                196.22307958925376,
+                202.38669821074626
+            ],
+            "scorePercentiles" : {
+                "0.0" : 198.27395133333334,
+                "50.0" : 199.14572216666667,
+                "90.0" : 200.22065983333334,
+                "95.0" : 200.22065983333334,
+                "99.0" : 200.22065983333334,
+                "99.9" : 200.22065983333334,
+                "99.99" : 200.22065983333334,
+                "99.999" : 200.22065983333334,
+                "99.9999" : 200.22065983333334,
+                "100.0" : 200.22065983333334
+            },
+            "scoreUnit" : "ms/op",
+            "rawData" : [
+                [
+                    199.14572216666667,
+                    199.98873616666665,
+                    200.22065983333334,
+                    198.27395133333334,
+                    198.895375
+                ]
+            ]
+        },
+        "secondaryMetrics" : {
+        }
+    }
+]
+
+

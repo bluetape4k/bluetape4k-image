@@ -115,6 +115,22 @@ separate observed `ops/s` run (higher is better).
 
 ![Tesseract OCR extraction benchmark chart](../../docs/images/readme-charts/images-benchmark-ocr-extraction-chart-01.png)
 
+#### Current OCR corpus v2 task
+
+The benchmark task now consumes the verified `bench/ocr-v2/manifest.json` through
+`fixtureId` and has no v1 fixture fallback. The current manifest contains one
+benchmarkable positive fixture, `clean-text-v2-001`; the table and chart above
+remain the historical v1 snapshot.
+
+| Fixture | Direct latency | Preprocess + extract | Direct throughput | Preprocess + extract |
+|---------|----------------|----------------------|-------------------|----------------------|
+| `clean-text-v2-001` | 225.860 ± 55.267 ms/op | 199.305 ± 3.082 ms/op | 4.521 ± 0.149 ops/s | 4.889 ± 0.474 ops/s |
+
+This is a Tesseract baseline-only receipt on one macOS arm64 Java 25 host, not a
+cross-host ranking or an adoption decision. The immutable v2 reports and run
+manifest are in [`issue-563 raw evidence`](docs/raw/issue-563-20260824-macos-arm64-java25-v2-baseline/).
+The remaining 9-scenario/27-fixture corpus and Paddle comparison are still pending.
+
 The GC profiler reports `1,417,421 B/op` managed allocation for direct clean
 text extraction; it excludes Tesseract native/model memory. Host prerequisites
 are explicit (`tesseract`, tessdata, and fixture languages), so the OCR tasks

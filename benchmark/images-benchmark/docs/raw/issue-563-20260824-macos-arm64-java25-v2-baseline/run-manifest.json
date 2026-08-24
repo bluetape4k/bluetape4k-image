@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "issue": 563,
+  "runId": "issue-563-20260824-macos-arm64-java25-v2-baseline",
+  "commit": "ff66f83803dc1b5d1cd4d78d56d0687adcecda6a",
+  "host": {
+    "os": "macOS 26.6.2",
+    "arch": "aarch64",
+    "model": "Mac16,11",
+    "logicalCpu": 12
+  },
+  "jvm": {
+    "version": "25.0.4",
+    "distribution": "Oracle GraalVM 25.2.4+7.1"
+  },
+  "gradle": "9.7.0",
+  "tesseract": "5.5.3",
+  "leptonica": "1.87.0",
+  "tessdata": "/opt/homebrew/share/tessdata",
+  "tessdataAvailableLanguages": 163,
+  "fixtureManifest": {
+    "path": "benchmark/images-benchmark/src/main/resources/bench/ocr-v2/manifest.json",
+    "sha256": "ac9919021199e35815f624cf1e34e6cb012b8e924757aedd9a8123ba8ebe80fa",
+    "schemaVersion": 2,
+    "fixtureCount": 1,
+    "fixtureIds": ["clean-text-v2-001"],
+    "benchmarkableOutcomes": ["TEXT"],
+    "fullCorpus": "PENDING"
+  },
+  "protocol": {
+    "threads": 1,
+    "forks": 1,
+    "warmupIterations": 3,
+    "measurementIterations": 5,
+    "iterationTime": "1 s",
+    "latencyMode": "avgt/ms",
+    "throughputMode": "thrpt/ops"
+  },
+  "commands": [
+    "./gradlew :bluetape4k-images-benchmark:benchmarkOcrLatencyBenchmark --console=plain",
+    "./gradlew :bluetape4k-images-benchmark:benchmarkOcrThroughputBenchmark --console=plain"
+  ],
+  "reports": [
+    {
+      "path": "ocr-latency.json",
+      "sha256": "b867aa2d9bfd7f6f12b7528318a5266cc85c03a3aa5c8b60f45ec97109db5caa"
+    },
+    {
+      "path": "ocr-throughput.json",
+      "sha256": "902c89b2f2018f774353ae5fe4918b866438ac6ec37b7858a055f837ee134007"
+    }
+  ],
+  "status": "BASELINE_ONLY",
+  "paddleComparison": "PENDING",
+  "adoptionDecision": "DEFER"
+}
