@@ -29,6 +29,18 @@ class OcrBenchmarkCorpusV2Test {
     }
 
     @Test
+    fun `verified fixture enforces the declared OCR output outcome`() {
+        val fixture = OcrBenchmarkCorpusV2.loadFixture("clean-text-v2-001")
+
+        fixture.verifyOutput("recognized text")
+
+        val error = assertFailsWith<IllegalArgumentException> {
+            fixture.verifyOutput("  \n")
+        }
+        error.message.orEmpty().shouldContain("TEXT")
+    }
+
+    @Test
     fun `negative manifest verifies malformed input receipt without treating it as a text fixture`() {
         val negative = OcrBenchmarkCorpusV2.loadNegative("malformed-v2-001")
 

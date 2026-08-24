@@ -48,6 +48,9 @@ val barcodeBenchmarkCpu = providers.gradleProperty("barcode.benchmark.cpu")
 val codecMatrixRunIdPattern = Regex("[a-z0-9][a-z0-9._-]{7,79}")
 val barcodeBenchmarkRunIdPattern = Regex("issue-272-[0-9]{8}-[a-z0-9-]{3,40}")
 val repositoryDirectory = rootProject.layout.projectDirectory
+val ocrBenchmarkManifestFile = repositoryDirectory.file(
+    "benchmark/images-benchmark/src/main/resources/bench/ocr-v2/manifest.json",
+).asFile
 val codecMatrixSourceDirectory = layout.buildDirectory.dir("generated/codec-matrix-source-fixtures")
 val codecMatrixRunDirectoryProvider = codecMatrixRunId.flatMap { runId ->
     require(codecMatrixRunIdPattern.matches(runId)) {
@@ -165,17 +168,33 @@ fun validateBarcodeBenchmarkReport(report: File, expectedMode: String, expectedU
     }
 }
 
+fun expectedOcrBenchmarkFixtureIds(): Set<String> {
+    require(ocrBenchmarkManifestFile.isFile) {
+        "OCR corpus v2 manifest is missing: $ocrBenchmarkManifestFile"
+    }
+    val manifest = JsonSlurper().parse(ocrBenchmarkManifestFile) as? Map<*, *>
+        ?: throw IllegalArgumentException("OCR corpus v2 manifest must be an object")
+    val fixtures = manifest["fixtures"] as? List<*>
+        ?: throw IllegalArgumentException("OCR corpus v2 fixtures are missing")
+    val fixtureIds = fixtures.map { value ->
+        val fixture = value as? Map<*, *>
+            ?: throw IllegalArgumentException("OCR corpus v2 fixture must be an object")
+        val fixtureId = fixture["fixtureId"] as? String
+            ?: throw IllegalArgumentException("OCR corpus v2 fixtureId is missing")
+        val expectedOutcome = fixture["expectedOutcome"] as? String
+            ?: throw IllegalArgumentException("OCR corpus v2 expectedOutcome is missing: $fixtureId")
+        if (expectedOutcome == "TEXT" || expectedOutcome == "EMPTY") fixtureId else null
+    }.filterNotNull().toSet()
+    require(fixtureIds.isNotEmpty()) { "OCR corpus v2 has no benchmarkable fixtures" }
+    return fixtureIds
+}
+
 fun validateOcrBenchmarkReport(report: File, expectedMode: String, expectedUnit: String) {
     require(report.isFile) { "OCR benchmark report is missing: $report" }
     val rows = JsonSlurper().parse(report) as? List<*>
         ?: throw IllegalArgumentException("OCR benchmark report must be a JSON array")
-    val expectedRows = setOf(
-        "clean-text",
-        "noisy-scan",
-        "rotated-document",
-        "multilingual-text",
-    ).flatMap { scenario ->
-        listOf("extractText", "preprocessAndExtract").map { method -> "$method|$scenario" }
+    val expectedRows = expectedOcrBenchmarkFixtureIds().flatMap { fixtureId ->
+        listOf("extractText", "preprocessAndExtract").map { method -> "$method|$fixtureId" }
     }.toSet()
     val actualRows = rows.map { value ->
         val row = value as? Map<*, *>
@@ -208,9 +227,9 @@ fun validateOcrBenchmarkReport(report: File, expectedMode: String, expectedUnit:
         }
         val params = row["params"] as? Map<*, *>
             ?: throw IllegalArgumentException("OCR benchmark parameters are missing")
-        val scenario = params["scenario"] as? String
-            ?: throw IllegalArgumentException("OCR benchmark scenario is missing")
-        "$method|$scenario"
+        val fixtureId = params["fixtureId"] as? String
+            ?: throw IllegalArgumentException("OCR benchmark fixtureId is missing")
+        "$method|$fixtureId"
     }.toSet()
     require(rows.size == expectedRows.size && actualRows == expectedRows) {
         "OCR benchmark row coverage differs"

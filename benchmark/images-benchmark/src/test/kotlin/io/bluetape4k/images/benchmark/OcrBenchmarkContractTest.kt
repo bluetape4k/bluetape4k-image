@@ -17,18 +17,20 @@ class OcrBenchmarkContractTest {
     fun `OCR benchmark isolates fixture setup and has explicit preprocessing`() {
         val source = Files.readString(sourcePath)
 
-        source.shouldContain("@Param(\"clean-text\", \"noisy-scan\", \"rotated-document\", \"multilingual-text\")")
+        source.shouldContain("@Param(\"clean-text-v2-001\")")
+        source.shouldContain("lateinit var fixtureId: String")
         source.shouldContain("@Setup(Level.Trial)")
         source.shouldContain("OcrBenchmarkEnvironment.requireLanguages")
+        source.shouldContain("OcrBenchmarkCorpusV2.loadFixture(fixtureId)")
+        source.shouldContain("fixture.verifyOutput")
         source.shouldContain("fun extractText(blackhole: Blackhole)")
         source.shouldContain("fun preprocessAndExtract(blackhole: Blackhole)")
         source.shouldContain("normalizeRightRotation(image)")
         source.shouldContain("private fun normalizeRightRotation")
         source.shouldContain("BufferedImage.TYPE_INT_RGB")
         source.shouldContain("GrayscaleFilter()")
-        source.substringAfter("fun extractText").substringBefore("fun preprocessAndExtract")
-            .contains("OcrBenchmarkFixtures.load")
-            .shouldBeEqualTo(false)
+        source.contains("OcrBenchmarkFixtures.load").shouldBeEqualTo(false)
+        source.shouldContain("OcrBenchmarkCorpusScenario.ROTATED")
     }
 
     @Test
@@ -40,6 +42,9 @@ class OcrBenchmarkContractTest {
         }
         build.shouldContain("include(\".*TesseractOcrExtractionBenchmark.*\")")
         build.shouldContain("add(\"benchmarkImplementation\", project(\":bluetape4k-images-ocr\"))")
+        build.shouldContain("bench/ocr-v2/manifest.json")
+        build.shouldContain("expectedOcrBenchmarkFixtureIds")
+        build.shouldContain("params[\"fixtureId\"]")
         build.shouldContain("validateOcrBenchmarkReport")
         build.shouldContain("benchmarkOcrThroughputBenchmark")
     }
