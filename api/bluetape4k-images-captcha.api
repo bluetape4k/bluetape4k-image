@@ -1,0 +1,356 @@
+public abstract interface class io/bluetape4k/images/captcha/CaptchaAnswerMatcher {
+	public static final field Companion Lio/bluetape4k/images/captcha/CaptchaAnswerMatcher$Companion;
+	public abstract fun matches (Ljava/lang/String;Ljava/lang/String;)Z
+}
+
+public final class io/bluetape4k/images/captcha/CaptchaAnswerMatcher$Companion {
+	public final fun caseInsensitive ()Lio/bluetape4k/images/captcha/CaptchaAnswerMatcher;
+	public final fun exact ()Lio/bluetape4k/images/captcha/CaptchaAnswerMatcher;
+}
+
+public final class io/bluetape4k/images/captcha/CaptchaChallenge {
+	public fun <init> (Ljava/lang/String;Lcom/sksamuel/scrimage/ImmutableImage;Ljava/time/Instant;)V
+	public final fun getExpiresAt ()Ljava/time/Instant;
+	public final fun getImage ()Lcom/sksamuel/scrimage/ImmutableImage;
+	public final fun getText ()Ljava/lang/String;
+}
+
+public final class io/bluetape4k/images/captcha/CaptchaChallengeId : java/io/Serializable {
+	public static final synthetic fun box-impl (Ljava/lang/String;)Lio/bluetape4k/images/captcha/CaptchaChallengeId;
+	public static fun constructor-impl (Ljava/lang/String;)Ljava/lang/String;
+	public fun equals (Ljava/lang/Object;)Z
+	public static fun equals-impl (Ljava/lang/String;Ljava/lang/Object;)Z
+	public static final fun equals-impl0 (Ljava/lang/String;Ljava/lang/String;)Z
+	public final fun getValue ()Ljava/lang/String;
+	public fun hashCode ()I
+	public static fun hashCode-impl (Ljava/lang/String;)I
+	public fun toString ()Ljava/lang/String;
+	public static fun toString-impl (Ljava/lang/String;)Ljava/lang/String;
+	public final synthetic fun unbox-impl ()Ljava/lang/String;
+}
+
+public abstract interface class io/bluetape4k/images/captcha/CaptchaChallengeStore {
+	public abstract fun consume-yex2Sxk (Ljava/lang/String;)Lio/bluetape4k/images/captcha/IssuedCaptchaChallenge;
+	public abstract fun save (Lio/bluetape4k/images/captcha/IssuedCaptchaChallenge;)Lio/bluetape4k/images/captcha/IssuedCaptchaChallenge;
+}
+
+public abstract interface class io/bluetape4k/images/captcha/CaptchaDistortion : java/io/Serializable {
+}
+
+public final class io/bluetape4k/images/captcha/CaptchaDistortion$None : io/bluetape4k/images/captcha/CaptchaDistortion {
+	public static final field INSTANCE Lio/bluetape4k/images/captcha/CaptchaDistortion$None;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/bluetape4k/images/captcha/CaptchaDistortion$Wave : io/bluetape4k/images/captcha/CaptchaDistortion {
+	public static final field Companion Lio/bluetape4k/images/captcha/CaptchaDistortion$Wave$Companion;
+	public fun <init> (F)V
+	public final fun component1 ()F
+	public final fun copy (F)Lio/bluetape4k/images/captcha/CaptchaDistortion$Wave;
+	public static synthetic fun copy$default (Lio/bluetape4k/images/captcha/CaptchaDistortion$Wave;FILjava/lang/Object;)Lio/bluetape4k/images/captcha/CaptchaDistortion$Wave;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getStrength ()F
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/bluetape4k/images/captcha/CaptchaDistortion$Wave$Companion {
+}
+
+public final class io/bluetape4k/images/captcha/CaptchaFont : java/io/Serializable {
+	public static final field Companion Lio/bluetape4k/images/captcha/CaptchaFont$Companion;
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Lio/bluetape4k/images/captcha/CaptchaFontStyle;)V
+	public synthetic fun <init> (Ljava/lang/String;Lio/bluetape4k/images/captcha/CaptchaFontStyle;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lio/bluetape4k/images/captcha/CaptchaFontStyle;
+	public final fun copy (Ljava/lang/String;Lio/bluetape4k/images/captcha/CaptchaFontStyle;)Lio/bluetape4k/images/captcha/CaptchaFont;
+	public static synthetic fun copy$default (Lio/bluetape4k/images/captcha/CaptchaFont;Ljava/lang/String;Lio/bluetape4k/images/captcha/CaptchaFontStyle;ILjava/lang/Object;)Lio/bluetape4k/images/captcha/CaptchaFont;
+	public static final fun defaults ()Ljava/util/List;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getFamily ()Ljava/lang/String;
+	public final fun getStyle ()Lio/bluetape4k/images/captcha/CaptchaFontStyle;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/bluetape4k/images/captcha/CaptchaFont$Companion {
+	public final fun defaults ()Ljava/util/List;
+}
+
+public final class io/bluetape4k/images/captcha/CaptchaFontStyle : java/lang/Enum {
+	public static final field BOLD Lio/bluetape4k/images/captcha/CaptchaFontStyle;
+	public static final field BOLD_ITALIC Lio/bluetape4k/images/captcha/CaptchaFontStyle;
+	public static final field ITALIC Lio/bluetape4k/images/captcha/CaptchaFontStyle;
+	public static final field PLAIN Lio/bluetape4k/images/captcha/CaptchaFontStyle;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lio/bluetape4k/images/captcha/CaptchaFontStyle;
+	public static fun values ()[Lio/bluetape4k/images/captcha/CaptchaFontStyle;
+}
+
+public abstract interface class io/bluetape4k/images/captcha/CaptchaGenerator {
+	public abstract fun generate (I)Lio/bluetape4k/images/captcha/CaptchaChallenge;
+	public static synthetic fun generate$default (Lio/bluetape4k/images/captcha/CaptchaGenerator;IILjava/lang/Object;)Lio/bluetape4k/images/captcha/CaptchaChallenge;
+	public abstract fun generateSuspend (ILkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun generateSuspend$default (Lio/bluetape4k/images/captcha/CaptchaGenerator;ILkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public abstract fun getOptions ()Lio/bluetape4k/images/captcha/CaptchaOptions;
+}
+
+public final class io/bluetape4k/images/captcha/CaptchaGenerator$DefaultImpls {
+	public static synthetic fun generate$default (Lio/bluetape4k/images/captcha/CaptchaGenerator;IILjava/lang/Object;)Lio/bluetape4k/images/captcha/CaptchaChallenge;
+	public static synthetic fun generateSuspend$default (Lio/bluetape4k/images/captcha/CaptchaGenerator;ILkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+}
+
+public final class io/bluetape4k/images/captcha/CaptchaGeneratorFactoryKt {
+	public static final fun captchaGenerator (Ljava/time/Clock;Lkotlin/jvm/functions/Function1;)Lio/bluetape4k/images/captcha/CaptchaGenerator;
+	public static synthetic fun captchaGenerator$default (Ljava/time/Clock;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lio/bluetape4k/images/captcha/CaptchaGenerator;
+}
+
+public final class io/bluetape4k/images/captcha/CaptchaImageSize : java/io/Serializable {
+	public static final field Companion Lio/bluetape4k/images/captcha/CaptchaImageSize$Companion;
+	public static final field DEFAULT_HEIGHT I
+	public static final field DEFAULT_WIDTH I
+	public static final field MAX_SIZE I
+	public static final field MIN_SIZE I
+	public fun <init> ()V
+	public fun <init> (II)V
+	public synthetic fun <init> (IIILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()I
+	public final fun component2 ()I
+	public final fun copy (II)Lio/bluetape4k/images/captcha/CaptchaImageSize;
+	public static synthetic fun copy$default (Lio/bluetape4k/images/captcha/CaptchaImageSize;IIILjava/lang/Object;)Lio/bluetape4k/images/captcha/CaptchaImageSize;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getHeight ()I
+	public final fun getWidth ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/bluetape4k/images/captcha/CaptchaImageSize$Companion {
+}
+
+public abstract interface class io/bluetape4k/images/captcha/CaptchaNoise : java/io/Serializable {
+	public static final field Companion Lio/bluetape4k/images/captcha/CaptchaNoise$Companion;
+	public static final field MAX_NOISE_COUNT I
+	public abstract fun getDots ()I
+	public abstract fun getLines ()I
+}
+
+public final class io/bluetape4k/images/captcha/CaptchaNoise$Companion {
+	public static final field MAX_NOISE_COUNT I
+}
+
+public final class io/bluetape4k/images/captcha/CaptchaNoise$Custom : io/bluetape4k/images/captcha/CaptchaNoise {
+	public static final field Companion Lio/bluetape4k/images/captcha/CaptchaNoise$Custom$Companion;
+	public fun <init> (II)V
+	public final fun component1 ()I
+	public final fun component2 ()I
+	public final fun copy (II)Lio/bluetape4k/images/captcha/CaptchaNoise$Custom;
+	public static synthetic fun copy$default (Lio/bluetape4k/images/captcha/CaptchaNoise$Custom;IIILjava/lang/Object;)Lio/bluetape4k/images/captcha/CaptchaNoise$Custom;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getDots ()I
+	public fun getLines ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/bluetape4k/images/captcha/CaptchaNoise$Custom$Companion {
+}
+
+public final class io/bluetape4k/images/captcha/CaptchaNoise$High : io/bluetape4k/images/captcha/CaptchaNoise {
+	public static final field INSTANCE Lio/bluetape4k/images/captcha/CaptchaNoise$High;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getDots ()I
+	public fun getLines ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/bluetape4k/images/captcha/CaptchaNoise$Low : io/bluetape4k/images/captcha/CaptchaNoise {
+	public static final field INSTANCE Lio/bluetape4k/images/captcha/CaptchaNoise$Low;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getDots ()I
+	public fun getLines ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/bluetape4k/images/captcha/CaptchaNoise$Medium : io/bluetape4k/images/captcha/CaptchaNoise {
+	public static final field INSTANCE Lio/bluetape4k/images/captcha/CaptchaNoise$Medium;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getDots ()I
+	public fun getLines ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/bluetape4k/images/captcha/CaptchaNoise$None : io/bluetape4k/images/captcha/CaptchaNoise {
+	public static final field INSTANCE Lio/bluetape4k/images/captcha/CaptchaNoise$None;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getDots ()I
+	public fun getLines ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/bluetape4k/images/captcha/CaptchaOptions : java/io/Serializable {
+	public static final field Companion Lio/bluetape4k/images/captcha/CaptchaOptions$Companion;
+	public static final field DEFAULT_CHAR_SET Ljava/lang/String;
+	public static final field DEFAULT_FONT_SIZE I
+	public static final field DEFAULT_LENGTH I
+	public static final field MAX_FONT_SIZE I
+	public static final field MAX_LENGTH I
+	public static final field MIN_FONT_SIZE I
+	public static final field MIN_LENGTH I
+	public synthetic fun <init> (ILjava/lang/String;Lio/bluetape4k/images/captcha/CaptchaImageSize;ILio/bluetape4k/images/captcha/CaptchaNoise;Lio/bluetape4k/images/captcha/CaptchaDistortion;Ljava/awt/Color;Ljava/util/List;JLjava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (ILjava/lang/String;Lio/bluetape4k/images/captcha/CaptchaImageSize;ILio/bluetape4k/images/captcha/CaptchaNoise;Lio/bluetape4k/images/captcha/CaptchaDistortion;Ljava/awt/Color;Ljava/util/List;JLjava/util/List;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()I
+	public final fun component10 ()Ljava/util/List;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Lio/bluetape4k/images/captcha/CaptchaImageSize;
+	public final fun component4 ()I
+	public final fun component5 ()Lio/bluetape4k/images/captcha/CaptchaNoise;
+	public final fun component6 ()Lio/bluetape4k/images/captcha/CaptchaDistortion;
+	public final fun component7 ()Ljava/awt/Color;
+	public final fun component8 ()Ljava/util/List;
+	public final fun component9-UwyO8pc ()J
+	public final fun copy-HOM7YUo (ILjava/lang/String;Lio/bluetape4k/images/captcha/CaptchaImageSize;ILio/bluetape4k/images/captcha/CaptchaNoise;Lio/bluetape4k/images/captcha/CaptchaDistortion;Ljava/awt/Color;Ljava/util/List;JLjava/util/List;)Lio/bluetape4k/images/captcha/CaptchaOptions;
+	public static synthetic fun copy-HOM7YUo$default (Lio/bluetape4k/images/captcha/CaptchaOptions;ILjava/lang/String;Lio/bluetape4k/images/captcha/CaptchaImageSize;ILio/bluetape4k/images/captcha/CaptchaNoise;Lio/bluetape4k/images/captcha/CaptchaDistortion;Ljava/awt/Color;Ljava/util/List;JLjava/util/List;ILjava/lang/Object;)Lio/bluetape4k/images/captcha/CaptchaOptions;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBackgroundColor ()Ljava/awt/Color;
+	public final fun getCharSet ()Ljava/lang/String;
+	public final fun getDistortion ()Lio/bluetape4k/images/captcha/CaptchaDistortion;
+	public final fun getExpiresAfter-UwyO8pc ()J
+	public final fun getFontSize ()I
+	public final fun getFonts ()Ljava/util/List;
+	public final fun getImageSize ()Lio/bluetape4k/images/captcha/CaptchaImageSize;
+	public final fun getLength ()I
+	public final fun getNoise ()Lio/bluetape4k/images/captcha/CaptchaNoise;
+	public final fun getTextColors ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/bluetape4k/images/captcha/CaptchaOptions$Companion {
+	public final fun getDEFAULT_EXPIRES_AFTER-UwyO8pc ()J
+}
+
+public final class io/bluetape4k/images/captcha/CaptchaOptionsBuilder {
+	public fun <init> ()V
+	public final fun backgroundColor (Ljava/awt/Color;)Lio/bluetape4k/images/captcha/CaptchaOptionsBuilder;
+	public final fun build ()Lio/bluetape4k/images/captcha/CaptchaOptions;
+	public final fun charSet (Ljava/lang/String;)Lio/bluetape4k/images/captcha/CaptchaOptionsBuilder;
+	public final fun distortion (Lio/bluetape4k/images/captcha/CaptchaDistortion;)Lio/bluetape4k/images/captcha/CaptchaOptionsBuilder;
+	public final fun expiresAfter-LRDsOJo (J)Lio/bluetape4k/images/captcha/CaptchaOptionsBuilder;
+	public final fun fontSize (I)Lio/bluetape4k/images/captcha/CaptchaOptionsBuilder;
+	public final fun fonts (Ljava/lang/Iterable;)Lio/bluetape4k/images/captcha/CaptchaOptionsBuilder;
+	public final fun fonts ([Lio/bluetape4k/images/captcha/CaptchaFont;)Lio/bluetape4k/images/captcha/CaptchaOptionsBuilder;
+	public final fun imageSize (II)Lio/bluetape4k/images/captcha/CaptchaOptionsBuilder;
+	public final fun length (I)Lio/bluetape4k/images/captcha/CaptchaOptionsBuilder;
+	public final fun noise (Lio/bluetape4k/images/captcha/CaptchaNoise;)Lio/bluetape4k/images/captcha/CaptchaOptionsBuilder;
+	public final fun textColors (Ljava/lang/Iterable;)Lio/bluetape4k/images/captcha/CaptchaOptionsBuilder;
+	public final fun textColors ([Ljava/awt/Color;)Lio/bluetape4k/images/captcha/CaptchaOptionsBuilder;
+}
+
+public abstract interface class io/bluetape4k/images/captcha/CaptchaVerificationResult : java/io/Serializable {
+	public abstract fun getId-IzMJ1ao ()Ljava/lang/String;
+	public fun getVerified ()Z
+}
+
+public final class io/bluetape4k/images/captcha/CaptchaVerificationResult$DefaultImpls {
+	public static fun getVerified (Lio/bluetape4k/images/captcha/CaptchaVerificationResult;)Z
+}
+
+public final class io/bluetape4k/images/captcha/CaptchaVerificationResult$Expired : io/bluetape4k/images/captcha/CaptchaVerificationResult {
+	public synthetic fun <init> (Ljava/lang/String;Ljava/time/Instant;Ljava/time/Instant;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1-IzMJ1ao ()Ljava/lang/String;
+	public final fun component2 ()Ljava/time/Instant;
+	public final fun component3 ()Ljava/time/Instant;
+	public final fun copy-s6e7ZSI (Ljava/lang/String;Ljava/time/Instant;Ljava/time/Instant;)Lio/bluetape4k/images/captcha/CaptchaVerificationResult$Expired;
+	public static synthetic fun copy-s6e7ZSI$default (Lio/bluetape4k/images/captcha/CaptchaVerificationResult$Expired;Ljava/lang/String;Ljava/time/Instant;Ljava/time/Instant;ILjava/lang/Object;)Lio/bluetape4k/images/captcha/CaptchaVerificationResult$Expired;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCheckedAt ()Ljava/time/Instant;
+	public final fun getExpiredAt ()Ljava/time/Instant;
+	public fun getId-IzMJ1ao ()Ljava/lang/String;
+	public fun getVerified ()Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/bluetape4k/images/captcha/CaptchaVerificationResult$NotFound : io/bluetape4k/images/captcha/CaptchaVerificationResult {
+	public synthetic fun <init> (Ljava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1-IzMJ1ao ()Ljava/lang/String;
+	public final fun copy-yex2Sxk (Ljava/lang/String;)Lio/bluetape4k/images/captcha/CaptchaVerificationResult$NotFound;
+	public static synthetic fun copy-yex2Sxk$default (Lio/bluetape4k/images/captcha/CaptchaVerificationResult$NotFound;Ljava/lang/String;ILjava/lang/Object;)Lio/bluetape4k/images/captcha/CaptchaVerificationResult$NotFound;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getId-IzMJ1ao ()Ljava/lang/String;
+	public fun getVerified ()Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/bluetape4k/images/captcha/CaptchaVerificationResult$Success : io/bluetape4k/images/captcha/CaptchaVerificationResult {
+	public synthetic fun <init> (Ljava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1-IzMJ1ao ()Ljava/lang/String;
+	public final fun copy-yex2Sxk (Ljava/lang/String;)Lio/bluetape4k/images/captcha/CaptchaVerificationResult$Success;
+	public static synthetic fun copy-yex2Sxk$default (Lio/bluetape4k/images/captcha/CaptchaVerificationResult$Success;Ljava/lang/String;ILjava/lang/Object;)Lio/bluetape4k/images/captcha/CaptchaVerificationResult$Success;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getId-IzMJ1ao ()Ljava/lang/String;
+	public fun getVerified ()Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/bluetape4k/images/captcha/CaptchaVerificationResult$WrongAnswer : io/bluetape4k/images/captcha/CaptchaVerificationResult {
+	public synthetic fun <init> (Ljava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1-IzMJ1ao ()Ljava/lang/String;
+	public final fun copy-yex2Sxk (Ljava/lang/String;)Lio/bluetape4k/images/captcha/CaptchaVerificationResult$WrongAnswer;
+	public static synthetic fun copy-yex2Sxk$default (Lio/bluetape4k/images/captcha/CaptchaVerificationResult$WrongAnswer;Ljava/lang/String;ILjava/lang/Object;)Lio/bluetape4k/images/captcha/CaptchaVerificationResult$WrongAnswer;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getId-IzMJ1ao ()Ljava/lang/String;
+	public fun getVerified ()Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/bluetape4k/images/captcha/CaptchaVerificationService {
+	public fun <init> ()V
+	public fun <init> (Lio/bluetape4k/images/captcha/CaptchaChallengeStore;Ljava/time/Clock;Lio/bluetape4k/images/captcha/CaptchaAnswerMatcher;)V
+	public synthetic fun <init> (Lio/bluetape4k/images/captcha/CaptchaChallengeStore;Ljava/time/Clock;Lio/bluetape4k/images/captcha/CaptchaAnswerMatcher;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun issue-8-mO9LI (Ljava/lang/String;Lio/bluetape4k/images/captcha/CaptchaChallenge;)Lio/bluetape4k/images/captcha/IssuedCaptchaChallenge;
+	public final fun verify-8-mO9LI (Ljava/lang/String;Ljava/lang/String;)Lio/bluetape4k/images/captcha/CaptchaVerificationResult;
+}
+
+public final class io/bluetape4k/images/captcha/InMemoryCaptchaChallengeStore : io/bluetape4k/images/captcha/CaptchaChallengeStore {
+	public fun <init> ()V
+	public fun <init> (Ljava/time/Clock;)V
+	public fun <init> (Ljava/time/Clock;I)V
+	public synthetic fun <init> (Ljava/time/Clock;IILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun consume-yex2Sxk (Ljava/lang/String;)Lio/bluetape4k/images/captcha/IssuedCaptchaChallenge;
+	public final fun getSize ()I
+	public final fun removeExpired (Ljava/time/Instant;)I
+	public static synthetic fun removeExpired$default (Lio/bluetape4k/images/captcha/InMemoryCaptchaChallengeStore;Ljava/time/Instant;ILjava/lang/Object;)I
+	public fun save (Lio/bluetape4k/images/captcha/IssuedCaptchaChallenge;)Lio/bluetape4k/images/captcha/IssuedCaptchaChallenge;
+}
+
+public final class io/bluetape4k/images/captcha/IssuedCaptchaChallenge : java/io/Serializable {
+	public static final field Companion Lio/bluetape4k/images/captcha/IssuedCaptchaChallenge$Companion;
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/time/Instant;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1-IzMJ1ao ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/time/Instant;
+	public final fun copy-s6e7ZSI (Ljava/lang/String;Ljava/lang/String;Ljava/time/Instant;)Lio/bluetape4k/images/captcha/IssuedCaptchaChallenge;
+	public static synthetic fun copy-s6e7ZSI$default (Lio/bluetape4k/images/captcha/IssuedCaptchaChallenge;Ljava/lang/String;Ljava/lang/String;Ljava/time/Instant;ILjava/lang/Object;)Lio/bluetape4k/images/captcha/IssuedCaptchaChallenge;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAnswer ()Ljava/lang/String;
+	public final fun getExpiresAt ()Ljava/time/Instant;
+	public final fun getId-IzMJ1ao ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/bluetape4k/images/captcha/IssuedCaptchaChallenge$Companion {
+	public final fun from-8-mO9LI (Ljava/lang/String;Lio/bluetape4k/images/captcha/CaptchaChallenge;)Lio/bluetape4k/images/captcha/IssuedCaptchaChallenge;
+}

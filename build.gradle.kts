@@ -6,8 +6,11 @@ import org.gradle.api.artifacts.repositories.MavenArtifactRepository
 import org.gradle.api.artifacts.repositories.PasswordCredentials
 import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.authentication.http.BasicAuthentication
+import org.jetbrains.kotlin.gradle.dsl.KotlinProjectExtension
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
+import org.jetbrains.kotlin.gradle.dsl.abi.BinariesSource
+import org.jetbrains.kotlin.gradle.dsl.abi.ExperimentalAbiValidation
 import java.util.concurrent.TimeUnit
 
 plugins {
@@ -46,19 +49,36 @@ fun bt4kVersion(alias: String): String {
         .ifBlank { version.strictVersion }
 }
 
+@OptIn(ExperimentalAbiValidation::class)
+fun Project.configureProductionAbiValidation() {
+    if (!isPublishedJvmModule()) return
 
-fun Project.isNonPublishedModule(): Boolean {
-    val relativePath = rootProject.rootDir.toPath()
-        .relativize(projectDir.toPath())
-        .toString()
-        .replace(File.separatorChar, '/')
+    fun File.normalizeAbiDump() {
+        if (!isFile) return
+        writeText(readText().trimEnd('\r', '\n') + "\n")
+    }
 
-    return relativePath == "examples" ||
-            relativePath.startsWith("examples/") ||
-            relativePath == "benchmark" ||
-            relativePath.startsWith("benchmark/") ||
-            name.contains("-demo") ||
-            name.endsWith("-benchmark")
+    extensions.configure<KotlinProjectExtension> {
+        abiValidation {
+            referenceDumpDir.set(rootProject.layout.projectDirectory.dir("api"))
+            binariesSource.set(BinariesSource.MAVEN_PUBLICATIONS)
+            filters {
+                exclude {
+                    byNames.add("io.bluetape4k.images.IncubatingImageApi")
+                    byNames.add("io.bluetape4k.images.vips.VipsIncubatingApi")
+                    annotatedWith.add("io.bluetape4k.images.IncubatingImageApi")
+                    annotatedWith.add("io.bluetape4k.images.vips.VipsIncubatingApi")
+                }
+            }
+        }
+    }
+
+    val abiDumpFile = layout.buildDirectory.file("kotlin/abi/${name}.api")
+    tasks.named("internalDumpKotlinAbi") {
+        doLast {
+            abiDumpFile.get().asFile.normalizeAbiDump()
+        }
+    }
 }
 
 val centralPublishing = resolveCentralPublishingConfig()
@@ -153,6 +173,7 @@ subprojects {
     }
 
     pluginManager.withPlugin("org.jetbrains.kotlin.jvm") {
+        configureProductionAbiValidation()
         kotlin {
             jvmToolchain(25)
             compilerOptions {
@@ -443,4 +464,102 @@ dependencies {
 // atomicfu transforms output before kover collects coverage — make ordering explicit
 tasks.matching { it.name == "koverGenerateArtifactJvm" }.configureEach {
     mustRunAfter(tasks.matching { it.name == "transformMainAtomicfu" })
+}
+
+/**
+ * Published JVM modules are the single ABI inventory used by the release gate.
+ * Examples, benchmarks, and the platform BOM remain intentionally outside this
+ * Kotlin binary baseline; the shared buildSrc classifier is also used by BOM
+ * constraints so the two sets cannot drift silently.
+ */
+val productionAbiProjects = subprojects
+    .filter { it.isPublishedJvmModule() }
+    .sortedBy(Project::getPath)
+
+check(productionAbiProjects.isNotEmpty()) {
+    "Production ABI publication inventory must not be empty"
+}
+
+val productionAbiCheckTasks = productionAbiProjects.map { project ->
+    project.tasks.named("checkKotlinAbi")
+}
+val productionAbiUpdateTasks = productionAbiProjects.map { project ->
+    project.tasks.named("updateKotlinAbi")
+}
+val productionAbiReport = layout.buildDirectory.file("abi/reports/production-abi.txt")
+
+tasks.register("checkProductionAbi") {
+    group = "verification"
+    description = "Checks the fail-closed ABI baseline for every published JVM module."
+    dependsOn(productionAbiCheckTasks)
+    doLast {
+        val expectedProjects = productionAbiProjects.map(Project::getName).toSet()
+        val baselineFiles = rootProject.layout.projectDirectory.dir("api").asFile
+            .listFiles()
+            .orEmpty()
+            .filter { it.isFile && it.extension == "api" }
+        val baselineProjects = baselineFiles
+            .map { it.name.removeSuffix(".api") }
+            .toSet()
+        val emptyBaselineProjects = baselineFiles
+            .filter { it.length() == 0L }
+            .map { it.name.removeSuffix(".api") }
+            .toSet()
+        val actualProjects = productionAbiProjects
+            .map { project ->
+                project.layout.buildDirectory.file("kotlin/abi/${project.name}.api").get().asFile
+            }
+            .filter { it.isFile && it.length() > 0L }
+            .map { it.name.removeSuffix(".api") }
+            .toSet()
+
+        validateProductionAbiInventory(
+            expectedProjects = expectedProjects,
+            baselineProjects = baselineProjects,
+            actualProjects = actualProjects,
+            emptyBaselineProjects = emptyBaselineProjects,
+        ).requireValid()
+
+        productionAbiReport.get().asFile.apply {
+            parentFile.mkdirs()
+            writeText(
+                buildString {
+                    appendLine("modules=${expectedProjects.size}/${expectedProjects.size}")
+                    appendLine("baselines=${baselineProjects.size}/${expectedProjects.size}")
+                    appendLine("actualDumps=${actualProjects.size}/${expectedProjects.size}")
+                    appendLine("orphanBaselines=${baselineProjects - expectedProjects}")
+                    appendLine("orphanActuals=${actualProjects - expectedProjects}")
+                    appendLine("emptyBaselines=$emptyBaselineProjects")
+                    expectedProjects.sorted().forEach { appendLine(it) }
+                },
+            )
+        }
+        logger.lifecycle("Production ABI validated: ${expectedProjects.size} published JVM modules")
+    }
+}
+
+tasks.register("updateProductionAbiBaseline") {
+    group = "verification"
+    description = "Manually updates the committed production ABI baseline after review."
+    dependsOn(productionAbiUpdateTasks)
+    doLast {
+        val baselineFiles = rootProject.layout.projectDirectory.dir("api").asFile
+            .listFiles()
+            .orEmpty()
+            .filter { it.isFile && it.extension == "api" && it.length() > 0L }
+        check(baselineFiles.size == productionAbiProjects.size) {
+            "Production ABI baseline must contain ${productionAbiProjects.size} non-empty files, " +
+                "found ${baselineFiles.size}"
+        }
+    }
+}
+
+tasks.named("check") {
+    dependsOn("checkProductionAbi")
+}
+
+tasks.matching {
+    it.name == "publishAggregationToCentralPortal" || it.name == "publishAggregationToCentralSnapshots"
+}.configureEach {
+    dependsOn("checkProductionAbi")
 }

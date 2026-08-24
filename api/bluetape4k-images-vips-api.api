@@ -1,0 +1,291 @@
+public final class io/bluetape4k/images/vips/VipsCodecCapability : java/io/Serializable {
+	public static final field Companion Lio/bluetape4k/images/vips/VipsCodecCapability$Companion;
+	public fun <init> (Lio/bluetape4k/images/vips/VipsImageFormat;Lio/bluetape4k/images/vips/VipsCodecOperationCapability;Lio/bluetape4k/images/vips/VipsCodecOperationCapability;Ljava/util/List;)V
+	public synthetic fun <init> (Lio/bluetape4k/images/vips/VipsImageFormat;Lio/bluetape4k/images/vips/VipsCodecOperationCapability;Lio/bluetape4k/images/vips/VipsCodecOperationCapability;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lio/bluetape4k/images/vips/VipsImageFormat;
+	public final fun component2 ()Lio/bluetape4k/images/vips/VipsCodecOperationCapability;
+	public final fun component3 ()Lio/bluetape4k/images/vips/VipsCodecOperationCapability;
+	public final fun component4 ()Ljava/util/List;
+	public final fun copy (Lio/bluetape4k/images/vips/VipsImageFormat;Lio/bluetape4k/images/vips/VipsCodecOperationCapability;Lio/bluetape4k/images/vips/VipsCodecOperationCapability;Ljava/util/List;)Lio/bluetape4k/images/vips/VipsCodecCapability;
+	public static synthetic fun copy$default (Lio/bluetape4k/images/vips/VipsCodecCapability;Lio/bluetape4k/images/vips/VipsImageFormat;Lio/bluetape4k/images/vips/VipsCodecOperationCapability;Lio/bluetape4k/images/vips/VipsCodecOperationCapability;Ljava/util/List;ILjava/lang/Object;)Lio/bluetape4k/images/vips/VipsCodecCapability;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDecode ()Lio/bluetape4k/images/vips/VipsCodecOperationCapability;
+	public final fun getEncode ()Lio/bluetape4k/images/vips/VipsCodecOperationCapability;
+	public final fun getFormat ()Lio/bluetape4k/images/vips/VipsImageFormat;
+	public final fun getNativeDependencies ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/bluetape4k/images/vips/VipsCodecCapability$Companion {
+	public final fun heifFamily (Lio/bluetape4k/images/vips/VipsImageFormat;Lio/bluetape4k/images/vips/VipsCodecOperationCapability;Lio/bluetape4k/images/vips/VipsCodecOperationCapability;Ljava/util/List;)Lio/bluetape4k/images/vips/VipsCodecCapability;
+}
+
+public final class io/bluetape4k/images/vips/VipsCodecCapabilityReport : java/io/Serializable {
+	public static final field Companion Lio/bluetape4k/images/vips/VipsCodecCapabilityReport$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/Set;Ljava/util/List;Ljava/util/Set;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/Set;Ljava/util/List;Ljava/util/Set;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun codec (Lio/bluetape4k/images/vips/VipsImageFormat;)Lio/bluetape4k/images/vips/VipsCodecCapability;
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/util/Set;
+	public final fun component4 ()Ljava/util/List;
+	public final fun component5 ()Ljava/util/Set;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/util/Set;Ljava/util/List;Ljava/util/Set;)Lio/bluetape4k/images/vips/VipsCodecCapabilityReport;
+	public static synthetic fun copy$default (Lio/bluetape4k/images/vips/VipsCodecCapabilityReport;Ljava/lang/String;Ljava/lang/String;Ljava/util/Set;Ljava/util/List;Ljava/util/Set;ILjava/lang/Object;)Lio/bluetape4k/images/vips/VipsCodecCapabilityReport;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBackendName ()Ljava/lang/String;
+	public final fun getCodecs ()Ljava/util/List;
+	public final fun getInspectedOperations ()Ljava/util/Set;
+	public final fun getLibvipsVersion ()Ljava/lang/String;
+	public final fun getStableFormats ()Ljava/util/Set;
+	public fun hashCode ()I
+	public final fun isStableFormat (Lio/bluetape4k/images/vips/VipsImageFormat;)Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/bluetape4k/images/vips/VipsCodecCapabilityReport$Companion {
+	public final fun getDEFAULT_STABLE_FORMATS ()Ljava/util/Set;
+}
+
+public final class io/bluetape4k/images/vips/VipsCodecDirection : java/lang/Enum {
+	public static final field DECODE Lio/bluetape4k/images/vips/VipsCodecDirection;
+	public static final field ENCODE Lio/bluetape4k/images/vips/VipsCodecDirection;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lio/bluetape4k/images/vips/VipsCodecDirection;
+	public static fun values ()[Lio/bluetape4k/images/vips/VipsCodecDirection;
+}
+
+public final class io/bluetape4k/images/vips/VipsCodecOperationCapability : java/io/Serializable {
+	public static final field Companion Lio/bluetape4k/images/vips/VipsCodecOperationCapability$Companion;
+	public fun <init> (Lio/bluetape4k/images/vips/VipsCodecDirection;Lio/bluetape4k/images/vips/VipsCodecSupport;Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Lio/bluetape4k/images/vips/VipsCodecDirection;Lio/bluetape4k/images/vips/VipsCodecSupport;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lio/bluetape4k/images/vips/VipsCodecDirection;
+	public final fun component2 ()Lio/bluetape4k/images/vips/VipsCodecSupport;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun copy (Lio/bluetape4k/images/vips/VipsCodecDirection;Lio/bluetape4k/images/vips/VipsCodecSupport;Ljava/lang/String;Ljava/lang/String;)Lio/bluetape4k/images/vips/VipsCodecOperationCapability;
+	public static synthetic fun copy$default (Lio/bluetape4k/images/vips/VipsCodecOperationCapability;Lio/bluetape4k/images/vips/VipsCodecDirection;Lio/bluetape4k/images/vips/VipsCodecSupport;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lio/bluetape4k/images/vips/VipsCodecOperationCapability;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDirection ()Lio/bluetape4k/images/vips/VipsCodecDirection;
+	public final fun getOperationName ()Ljava/lang/String;
+	public final fun getReason ()Ljava/lang/String;
+	public final fun getSupport ()Lio/bluetape4k/images/vips/VipsCodecSupport;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/bluetape4k/images/vips/VipsCodecOperationCapability$Companion {
+	public final fun available (Lio/bluetape4k/images/vips/VipsCodecDirection;Ljava/lang/String;Ljava/lang/String;)Lio/bluetape4k/images/vips/VipsCodecOperationCapability;
+	public static synthetic fun available$default (Lio/bluetape4k/images/vips/VipsCodecOperationCapability$Companion;Lio/bluetape4k/images/vips/VipsCodecDirection;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lio/bluetape4k/images/vips/VipsCodecOperationCapability;
+	public final fun unavailable (Lio/bluetape4k/images/vips/VipsCodecDirection;Ljava/lang/String;Ljava/lang/String;)Lio/bluetape4k/images/vips/VipsCodecOperationCapability;
+	public static synthetic fun unavailable$default (Lio/bluetape4k/images/vips/VipsCodecOperationCapability$Companion;Lio/bluetape4k/images/vips/VipsCodecDirection;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lio/bluetape4k/images/vips/VipsCodecOperationCapability;
+	public final fun unknown (Lio/bluetape4k/images/vips/VipsCodecDirection;Ljava/lang/String;Ljava/lang/String;)Lio/bluetape4k/images/vips/VipsCodecOperationCapability;
+	public static synthetic fun unknown$default (Lio/bluetape4k/images/vips/VipsCodecOperationCapability$Companion;Lio/bluetape4k/images/vips/VipsCodecDirection;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lio/bluetape4k/images/vips/VipsCodecOperationCapability;
+}
+
+public final class io/bluetape4k/images/vips/VipsCodecSmokeResult : java/io/Serializable {
+	public static final field Companion Lio/bluetape4k/images/vips/VipsCodecSmokeResult$Companion;
+	public fun <init> (Ljava/lang/String;Lio/bluetape4k/images/vips/VipsImageFormat;ZZLio/bluetape4k/images/vips/VipsCodecDirection;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Lio/bluetape4k/images/vips/VipsImageFormat;ZZLio/bluetape4k/images/vips/VipsCodecDirection;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lio/bluetape4k/images/vips/VipsImageFormat;
+	public final fun component3 ()Z
+	public final fun component4 ()Z
+	public final fun component5 ()Lio/bluetape4k/images/vips/VipsCodecDirection;
+	public final fun component6 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Lio/bluetape4k/images/vips/VipsImageFormat;ZZLio/bluetape4k/images/vips/VipsCodecDirection;Ljava/lang/String;)Lio/bluetape4k/images/vips/VipsCodecSmokeResult;
+	public static synthetic fun copy$default (Lio/bluetape4k/images/vips/VipsCodecSmokeResult;Ljava/lang/String;Lio/bluetape4k/images/vips/VipsImageFormat;ZZLio/bluetape4k/images/vips/VipsCodecDirection;Ljava/lang/String;ILjava/lang/Object;)Lio/bluetape4k/images/vips/VipsCodecSmokeResult;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBackendName ()Ljava/lang/String;
+	public final fun getDecoded ()Z
+	public final fun getEncoded ()Z
+	public final fun getFailureReason ()Ljava/lang/String;
+	public final fun getFailureStage ()Lio/bluetape4k/images/vips/VipsCodecDirection;
+	public final fun getFormat ()Lio/bluetape4k/images/vips/VipsImageFormat;
+	public final fun getSucceeded ()Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/bluetape4k/images/vips/VipsCodecSmokeResult$Companion {
+	public final fun failure (Ljava/lang/String;Lio/bluetape4k/images/vips/VipsImageFormat;Lio/bluetape4k/images/vips/VipsCodecDirection;Ljava/lang/String;)Lio/bluetape4k/images/vips/VipsCodecSmokeResult;
+	public final fun success (Ljava/lang/String;Lio/bluetape4k/images/vips/VipsImageFormat;)Lio/bluetape4k/images/vips/VipsCodecSmokeResult;
+}
+
+public final class io/bluetape4k/images/vips/VipsCodecSupport : java/lang/Enum {
+	public static final field AVAILABLE Lio/bluetape4k/images/vips/VipsCodecSupport;
+	public static final field UNAVAILABLE Lio/bluetape4k/images/vips/VipsCodecSupport;
+	public static final field UNKNOWN Lio/bluetape4k/images/vips/VipsCodecSupport;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lio/bluetape4k/images/vips/VipsCodecSupport;
+	public static fun values ()[Lio/bluetape4k/images/vips/VipsCodecSupport;
+}
+
+public final class io/bluetape4k/images/vips/VipsConcurrencyCapability : java/io/Serializable {
+	public static final field Companion Lio/bluetape4k/images/vips/VipsConcurrencyCapability$Companion;
+	public fun <init> (Lio/bluetape4k/images/vips/VipsConcurrencySupport;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/String;)V
+	public synthetic fun <init> (Lio/bluetape4k/images/vips/VipsConcurrencySupport;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lio/bluetape4k/images/vips/VipsConcurrencySupport;
+	public final fun component2 ()Ljava/lang/Integer;
+	public final fun component3 ()Ljava/lang/Integer;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun copy (Lio/bluetape4k/images/vips/VipsConcurrencySupport;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/String;)Lio/bluetape4k/images/vips/VipsConcurrencyCapability;
+	public static synthetic fun copy$default (Lio/bluetape4k/images/vips/VipsConcurrencyCapability;Lio/bluetape4k/images/vips/VipsConcurrencySupport;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/String;ILjava/lang/Object;)Lio/bluetape4k/images/vips/VipsConcurrencyCapability;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getEffective ()Ljava/lang/Integer;
+	public final fun getReason ()Ljava/lang/String;
+	public final fun getRequested ()Ljava/lang/Integer;
+	public final fun getSupport ()Lio/bluetape4k/images/vips/VipsConcurrencySupport;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/bluetape4k/images/vips/VipsConcurrencyCapability$Companion {
+	public final fun configurable (II)Lio/bluetape4k/images/vips/VipsConcurrencyCapability;
+	public static synthetic fun configurable$default (Lio/bluetape4k/images/vips/VipsConcurrencyCapability$Companion;IIILjava/lang/Object;)Lio/bluetape4k/images/vips/VipsConcurrencyCapability;
+	public final fun unknown (Ljava/lang/String;)Lio/bluetape4k/images/vips/VipsConcurrencyCapability;
+	public final fun unsupported (Ljava/lang/Integer;Ljava/lang/String;)Lio/bluetape4k/images/vips/VipsConcurrencyCapability;
+}
+
+public final class io/bluetape4k/images/vips/VipsConcurrencySupport : java/lang/Enum {
+	public static final field CONFIGURABLE Lio/bluetape4k/images/vips/VipsConcurrencySupport;
+	public static final field UNKNOWN Lio/bluetape4k/images/vips/VipsConcurrencySupport;
+	public static final field UNSUPPORTED Lio/bluetape4k/images/vips/VipsConcurrencySupport;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lio/bluetape4k/images/vips/VipsConcurrencySupport;
+	public static fun values ()[Lio/bluetape4k/images/vips/VipsConcurrencySupport;
+}
+
+public final class io/bluetape4k/images/vips/VipsDecodeException : io/bluetape4k/images/vips/VipsException {
+	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public final class io/bluetape4k/images/vips/VipsEncodeException : io/bluetape4k/images/vips/VipsException {
+	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public final class io/bluetape4k/images/vips/VipsEncodeOptions : java/io/Serializable {
+	public static final field Companion Lio/bluetape4k/images/vips/VipsEncodeOptions$Companion;
+	public fun <init> ()V
+	public fun <init> (IIZZ)V
+	public synthetic fun <init> (IIZZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()I
+	public final fun component2 ()I
+	public final fun component3 ()Z
+	public final fun component4 ()Z
+	public final fun copy (IIZZ)Lio/bluetape4k/images/vips/VipsEncodeOptions;
+	public static synthetic fun copy$default (Lio/bluetape4k/images/vips/VipsEncodeOptions;IIZZILjava/lang/Object;)Lio/bluetape4k/images/vips/VipsEncodeOptions;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getEffort ()I
+	public final fun getLossless ()Z
+	public final fun getQuality ()I
+	public final fun getStripMetadata ()Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/bluetape4k/images/vips/VipsEncodeOptions$Companion : io/bluetape4k/logging/KLogging {
+	public final fun getDefault ()Lio/bluetape4k/images/vips/VipsEncodeOptions;
+	public final fun getHighQuality ()Lio/bluetape4k/images/vips/VipsEncodeOptions;
+	public final fun getLowBandwidth ()Lio/bluetape4k/images/vips/VipsEncodeOptions;
+}
+
+public class io/bluetape4k/images/vips/VipsException : java/lang/RuntimeException {
+	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public abstract interface class io/bluetape4k/images/vips/VipsImage : java/lang/AutoCloseable {
+	public abstract fun crop (IIII)Lio/bluetape4k/images/vips/VipsImage;
+	public abstract fun getBands ()I
+	public abstract fun getHeight ()I
+	public abstract fun getWidth ()I
+	public abstract fun resize (II)Lio/bluetape4k/images/vips/VipsImage;
+	public abstract fun thumbnail (I)Lio/bluetape4k/images/vips/VipsImage;
+	public abstract fun toBytes (Lio/bluetape4k/images/vips/VipsImageFormat;Lio/bluetape4k/images/vips/VipsEncodeOptions;)[B
+	public static synthetic fun toBytes$default (Lio/bluetape4k/images/vips/VipsImage;Lio/bluetape4k/images/vips/VipsImageFormat;Lio/bluetape4k/images/vips/VipsEncodeOptions;ILjava/lang/Object;)[B
+	public abstract fun writeTo (Ljava/io/OutputStream;Lio/bluetape4k/images/vips/VipsImageFormat;Lio/bluetape4k/images/vips/VipsEncodeOptions;)V
+	public abstract fun writeTo (Ljava/nio/file/Path;Lio/bluetape4k/images/vips/VipsImageFormat;Lio/bluetape4k/images/vips/VipsEncodeOptions;)V
+	public static synthetic fun writeTo$default (Lio/bluetape4k/images/vips/VipsImage;Ljava/io/OutputStream;Lio/bluetape4k/images/vips/VipsImageFormat;Lio/bluetape4k/images/vips/VipsEncodeOptions;ILjava/lang/Object;)V
+	public static synthetic fun writeTo$default (Lio/bluetape4k/images/vips/VipsImage;Ljava/nio/file/Path;Lio/bluetape4k/images/vips/VipsImageFormat;Lio/bluetape4k/images/vips/VipsEncodeOptions;ILjava/lang/Object;)V
+}
+
+public final class io/bluetape4k/images/vips/VipsImage$DefaultImpls {
+	public static synthetic fun toBytes$default (Lio/bluetape4k/images/vips/VipsImage;Lio/bluetape4k/images/vips/VipsImageFormat;Lio/bluetape4k/images/vips/VipsEncodeOptions;ILjava/lang/Object;)[B
+	public static synthetic fun writeTo$default (Lio/bluetape4k/images/vips/VipsImage;Ljava/io/OutputStream;Lio/bluetape4k/images/vips/VipsImageFormat;Lio/bluetape4k/images/vips/VipsEncodeOptions;ILjava/lang/Object;)V
+	public static synthetic fun writeTo$default (Lio/bluetape4k/images/vips/VipsImage;Ljava/nio/file/Path;Lio/bluetape4k/images/vips/VipsImageFormat;Lio/bluetape4k/images/vips/VipsEncodeOptions;ILjava/lang/Object;)V
+}
+
+public final class io/bluetape4k/images/vips/VipsImageFormat : java/lang/Enum {
+	public static final field JPEG Lio/bluetape4k/images/vips/VipsImageFormat;
+	public static final field PNG Lio/bluetape4k/images/vips/VipsImageFormat;
+	public static final field WEBP Lio/bluetape4k/images/vips/VipsImageFormat;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lio/bluetape4k/images/vips/VipsImageFormat;
+	public static fun values ()[Lio/bluetape4k/images/vips/VipsImageFormat;
+}
+
+public final class io/bluetape4k/images/vips/VipsImageOkioSupportKt {
+	public static final fun writeTo (Lio/bluetape4k/images/vips/VipsImage;Lokio/BufferedSink;Lio/bluetape4k/images/vips/VipsImageFormat;Lio/bluetape4k/images/vips/VipsEncodeOptions;)V
+	public static final fun writeTo (Lio/bluetape4k/images/vips/VipsImage;Lokio/Sink;Lio/bluetape4k/images/vips/VipsImageFormat;Lio/bluetape4k/images/vips/VipsEncodeOptions;)V
+	public static synthetic fun writeTo$default (Lio/bluetape4k/images/vips/VipsImage;Lokio/BufferedSink;Lio/bluetape4k/images/vips/VipsImageFormat;Lio/bluetape4k/images/vips/VipsEncodeOptions;ILjava/lang/Object;)V
+	public static synthetic fun writeTo$default (Lio/bluetape4k/images/vips/VipsImage;Lokio/Sink;Lio/bluetape4k/images/vips/VipsImageFormat;Lio/bluetape4k/images/vips/VipsEncodeOptions;ILjava/lang/Object;)V
+}
+
+public final class io/bluetape4k/images/vips/VipsInitializationException : io/bluetape4k/images/vips/VipsException {
+	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public final class io/bluetape4k/images/vips/VipsLimits {
+	public static final field DEFAULT_CONCURRENCY I
+	public static final field DEFAULT_MAX_PIXELS J
+	public static final field INSTANCE Lio/bluetape4k/images/vips/VipsLimits;
+	public static final field MAX_INPUT_BYTES J
+}
+
+public final class io/bluetape4k/images/vips/VipsOperationException : io/bluetape4k/images/vips/VipsException {
+	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public abstract interface class io/bluetape4k/images/vips/VipsRuntime {
+	public abstract fun codecCapabilityReport ()Lio/bluetape4k/images/vips/VipsCodecCapabilityReport;
+	public fun getConcurrencyCapability ()Lio/bluetape4k/images/vips/VipsConcurrencyCapability;
+	public abstract fun init (IJ)V
+	public static synthetic fun init$default (Lio/bluetape4k/images/vips/VipsRuntime;IJILjava/lang/Object;)V
+	public abstract fun isInitialized ()Z
+	public abstract fun isShutdown ()Z
+	public abstract fun shutdown ()V
+	public abstract fun smokeTestCodec ([BLio/bluetape4k/images/vips/VipsImageFormat;Lio/bluetape4k/images/vips/VipsEncodeOptions;)Lio/bluetape4k/images/vips/VipsCodecSmokeResult;
+	public static synthetic fun smokeTestCodec$default (Lio/bluetape4k/images/vips/VipsRuntime;[BLio/bluetape4k/images/vips/VipsImageFormat;Lio/bluetape4k/images/vips/VipsEncodeOptions;ILjava/lang/Object;)Lio/bluetape4k/images/vips/VipsCodecSmokeResult;
+}
+
+public final class io/bluetape4k/images/vips/VipsRuntime$DefaultImpls {
+	public static fun getConcurrencyCapability (Lio/bluetape4k/images/vips/VipsRuntime;)Lio/bluetape4k/images/vips/VipsConcurrencyCapability;
+	public static synthetic fun init$default (Lio/bluetape4k/images/vips/VipsRuntime;IJILjava/lang/Object;)V
+	public static synthetic fun smokeTestCodec$default (Lio/bluetape4k/images/vips/VipsRuntime;[BLio/bluetape4k/images/vips/VipsImageFormat;Lio/bluetape4k/images/vips/VipsEncodeOptions;ILjava/lang/Object;)Lio/bluetape4k/images/vips/VipsCodecSmokeResult;
+}
+
+public final class io/bluetape4k/images/vips/coroutines/SuspendVipsOkioOpsKt {
+	public static final fun suspendWriteTo (Lio/bluetape4k/images/vips/VipsImage;Lio/bluetape4k/okio/coroutines/BufferedSuspendedSink;Lio/bluetape4k/images/vips/VipsImageFormat;Lio/bluetape4k/images/vips/VipsEncodeOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun suspendWriteTo (Lio/bluetape4k/images/vips/VipsImage;Lio/bluetape4k/okio/coroutines/SuspendedSink;Lio/bluetape4k/images/vips/VipsImageFormat;Lio/bluetape4k/images/vips/VipsEncodeOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun suspendWriteTo (Lio/bluetape4k/images/vips/VipsImage;Lokio/BufferedSink;Lio/bluetape4k/images/vips/VipsImageFormat;Lio/bluetape4k/images/vips/VipsEncodeOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun suspendWriteTo (Lio/bluetape4k/images/vips/VipsImage;Lokio/Sink;Lio/bluetape4k/images/vips/VipsImageFormat;Lio/bluetape4k/images/vips/VipsEncodeOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun suspendWriteTo$default (Lio/bluetape4k/images/vips/VipsImage;Lio/bluetape4k/okio/coroutines/BufferedSuspendedSink;Lio/bluetape4k/images/vips/VipsImageFormat;Lio/bluetape4k/images/vips/VipsEncodeOptions;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static synthetic fun suspendWriteTo$default (Lio/bluetape4k/images/vips/VipsImage;Lio/bluetape4k/okio/coroutines/SuspendedSink;Lio/bluetape4k/images/vips/VipsImageFormat;Lio/bluetape4k/images/vips/VipsEncodeOptions;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static synthetic fun suspendWriteTo$default (Lio/bluetape4k/images/vips/VipsImage;Lokio/BufferedSink;Lio/bluetape4k/images/vips/VipsImageFormat;Lio/bluetape4k/images/vips/VipsEncodeOptions;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static synthetic fun suspendWriteTo$default (Lio/bluetape4k/images/vips/VipsImage;Lokio/Sink;Lio/bluetape4k/images/vips/VipsImageFormat;Lio/bluetape4k/images/vips/VipsEncodeOptions;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+}
+
+public final class io/bluetape4k/images/vips/coroutines/SuspendVipsOpsKt {
+	public static final fun suspendToBytes (Lio/bluetape4k/images/vips/VipsImage;Lio/bluetape4k/images/vips/VipsImageFormat;Lio/bluetape4k/images/vips/VipsEncodeOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun suspendToBytes$default (Lio/bluetape4k/images/vips/VipsImage;Lio/bluetape4k/images/vips/VipsImageFormat;Lio/bluetape4k/images/vips/VipsEncodeOptions;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static final fun suspendWriteTo (Lio/bluetape4k/images/vips/VipsImage;Ljava/io/OutputStream;Lio/bluetape4k/images/vips/VipsImageFormat;Lio/bluetape4k/images/vips/VipsEncodeOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun suspendWriteTo (Lio/bluetape4k/images/vips/VipsImage;Ljava/nio/file/Path;Lio/bluetape4k/images/vips/VipsImageFormat;Lio/bluetape4k/images/vips/VipsEncodeOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun suspendWriteTo$default (Lio/bluetape4k/images/vips/VipsImage;Ljava/io/OutputStream;Lio/bluetape4k/images/vips/VipsImageFormat;Lio/bluetape4k/images/vips/VipsEncodeOptions;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static synthetic fun suspendWriteTo$default (Lio/bluetape4k/images/vips/VipsImage;Ljava/nio/file/Path;Lio/bluetape4k/images/vips/VipsImageFormat;Lio/bluetape4k/images/vips/VipsEncodeOptions;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+}

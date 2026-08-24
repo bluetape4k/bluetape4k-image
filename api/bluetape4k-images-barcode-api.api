@@ -1,0 +1,204 @@
+public final class io/bluetape4k/images/barcode/BarcodeBoundingBox : java/io/Serializable {
+	public static final field Companion Lio/bluetape4k/images/barcode/BarcodeBoundingBox$Companion;
+	public final fun component1 ()D
+	public final fun component2 ()D
+	public final fun component3 ()D
+	public final fun component4 ()D
+	public final fun component5 ()Lio/bluetape4k/images/barcode/BarcodeCoordinateSpace;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCoordinateSpace ()Lio/bluetape4k/images/barcode/BarcodeCoordinateSpace;
+	public final fun getHeight ()D
+	public final fun getWidth ()D
+	public final fun getX ()D
+	public final fun getY ()D
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/bluetape4k/images/barcode/BarcodeBoundingBox$Companion {
+	public final fun invoke (DDDDLio/bluetape4k/images/barcode/BarcodeCoordinateSpace;)Lio/bluetape4k/images/barcode/BarcodeBoundingBox;
+	public static synthetic fun invoke$default (Lio/bluetape4k/images/barcode/BarcodeBoundingBox$Companion;DDDDLio/bluetape4k/images/barcode/BarcodeCoordinateSpace;ILjava/lang/Object;)Lio/bluetape4k/images/barcode/BarcodeBoundingBox;
+}
+
+public final class io/bluetape4k/images/barcode/BarcodeCoordinateSpace : java/lang/Enum {
+	public static final field NORMALIZED Lio/bluetape4k/images/barcode/BarcodeCoordinateSpace;
+	public static final field PIXEL Lio/bluetape4k/images/barcode/BarcodeCoordinateSpace;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lio/bluetape4k/images/barcode/BarcodeCoordinateSpace;
+	public static fun values ()[Lio/bluetape4k/images/barcode/BarcodeCoordinateSpace;
+}
+
+public class io/bluetape4k/images/barcode/BarcodeException : java/lang/RuntimeException, java/io/Serializable {
+	public static final field Companion Lio/bluetape4k/images/barcode/BarcodeException$Companion;
+	public fun <init> (Lio/bluetape4k/images/barcode/BarcodeFailureReason;Ljava/lang/String;Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Lio/bluetape4k/images/barcode/BarcodeFailureReason;Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getReason ()Lio/bluetape4k/images/barcode/BarcodeFailureReason;
+}
+
+public final class io/bluetape4k/images/barcode/BarcodeException$Companion {
+}
+
+public final class io/bluetape4k/images/barcode/BarcodeFailureReason : java/lang/Enum {
+	public static final field CANCELLED Lio/bluetape4k/images/barcode/BarcodeFailureReason;
+	public static final field DECODE_FAILED Lio/bluetape4k/images/barcode/BarcodeFailureReason;
+	public static final field MALFORMED_INPUT Lio/bluetape4k/images/barcode/BarcodeFailureReason;
+	public static final field NO_BARCODE Lio/bluetape4k/images/barcode/BarcodeFailureReason;
+	public static final field PROVIDER_UNAVAILABLE Lio/bluetape4k/images/barcode/BarcodeFailureReason;
+	public static final field UNKNOWN Lio/bluetape4k/images/barcode/BarcodeFailureReason;
+	public static final field UNSUPPORTED_FORMAT Lio/bluetape4k/images/barcode/BarcodeFailureReason;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lio/bluetape4k/images/barcode/BarcodeFailureReason;
+	public static fun values ()[Lio/bluetape4k/images/barcode/BarcodeFailureReason;
+}
+
+public final class io/bluetape4k/images/barcode/BarcodeFormat : java/lang/Enum {
+	public static final field AZTEC Lio/bluetape4k/images/barcode/BarcodeFormat;
+	public static final field CODABAR Lio/bluetape4k/images/barcode/BarcodeFormat;
+	public static final field CODE_128 Lio/bluetape4k/images/barcode/BarcodeFormat;
+	public static final field CODE_39 Lio/bluetape4k/images/barcode/BarcodeFormat;
+	public static final field DATA_MATRIX Lio/bluetape4k/images/barcode/BarcodeFormat;
+	public static final field EAN_13 Lio/bluetape4k/images/barcode/BarcodeFormat;
+	public static final field EAN_8 Lio/bluetape4k/images/barcode/BarcodeFormat;
+	public static final field ITF Lio/bluetape4k/images/barcode/BarcodeFormat;
+	public static final field PDF_417 Lio/bluetape4k/images/barcode/BarcodeFormat;
+	public static final field QR_CODE Lio/bluetape4k/images/barcode/BarcodeFormat;
+	public static final field UNKNOWN Lio/bluetape4k/images/barcode/BarcodeFormat;
+	public static final field UPC_A Lio/bluetape4k/images/barcode/BarcodeFormat;
+	public static final field UPC_E Lio/bluetape4k/images/barcode/BarcodeFormat;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lio/bluetape4k/images/barcode/BarcodeFormat;
+	public static fun values ()[Lio/bluetape4k/images/barcode/BarcodeFormat;
+}
+
+public final class io/bluetape4k/images/barcode/BarcodeInputExtensionsKt {
+	public static final fun readBarcodes (Lio/bluetape4k/images/barcode/BarcodeReader;Ljava/io/InputStream;Lio/bluetape4k/images/barcode/BarcodeOptions;)Ljava/util/List;
+	public static final fun readBarcodes (Lio/bluetape4k/images/barcode/BarcodeReader;Ljava/nio/file/Path;Lio/bluetape4k/images/barcode/BarcodeOptions;)Ljava/util/List;
+	public static final fun readBarcodes (Lio/bluetape4k/images/barcode/BarcodeReader;Lokio/Source;Lio/bluetape4k/images/barcode/BarcodeOptions;)Ljava/util/List;
+	public static final fun readBarcodes (Lio/bluetape4k/images/barcode/BarcodeReader;[BLio/bluetape4k/images/barcode/BarcodeOptions;)Ljava/util/List;
+	public static synthetic fun readBarcodes$default (Lio/bluetape4k/images/barcode/BarcodeReader;Ljava/io/InputStream;Lio/bluetape4k/images/barcode/BarcodeOptions;ILjava/lang/Object;)Ljava/util/List;
+	public static synthetic fun readBarcodes$default (Lio/bluetape4k/images/barcode/BarcodeReader;Ljava/nio/file/Path;Lio/bluetape4k/images/barcode/BarcodeOptions;ILjava/lang/Object;)Ljava/util/List;
+	public static synthetic fun readBarcodes$default (Lio/bluetape4k/images/barcode/BarcodeReader;Lokio/Source;Lio/bluetape4k/images/barcode/BarcodeOptions;ILjava/lang/Object;)Ljava/util/List;
+	public static synthetic fun readBarcodes$default (Lio/bluetape4k/images/barcode/BarcodeReader;[BLio/bluetape4k/images/barcode/BarcodeOptions;ILjava/lang/Object;)Ljava/util/List;
+}
+
+public final class io/bluetape4k/images/barcode/BarcodeOptions : java/io/Serializable {
+	public static final field Companion Lio/bluetape4k/images/barcode/BarcodeOptions$Companion;
+	public final fun accepts (Lio/bluetape4k/images/barcode/BarcodeResult;)Z
+	public final fun component1 ()Ljava/util/Set;
+	public final fun component2 ()Z
+	public final fun component3 ()Z
+	public final fun component4 ()Ljava/lang/Double;
+	public final fun component5 ()Ljava/util/Map;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun filter (Ljava/util/List;)Ljava/util/List;
+	public final fun getFormats ()Ljava/util/Set;
+	public final fun getIncludeRawBytes ()Z
+	public final fun getMetadata ()Ljava/util/Map;
+	public final fun getMinimumConfidence ()Ljava/lang/Double;
+	public final fun getTryHarder ()Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/bluetape4k/images/barcode/BarcodeOptions$Companion {
+	public final fun invoke (Ljava/util/Set;ZZLjava/lang/Double;Ljava/util/Map;)Lio/bluetape4k/images/barcode/BarcodeOptions;
+	public static synthetic fun invoke$default (Lio/bluetape4k/images/barcode/BarcodeOptions$Companion;Ljava/util/Set;ZZLjava/lang/Double;Ljava/util/Map;ILjava/lang/Object;)Lio/bluetape4k/images/barcode/BarcodeOptions;
+}
+
+public final class io/bluetape4k/images/barcode/BarcodePoint : java/io/Serializable {
+	public static final field Companion Lio/bluetape4k/images/barcode/BarcodePoint$Companion;
+	public final fun component1 ()D
+	public final fun component2 ()D
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getX ()D
+	public final fun getY ()D
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/bluetape4k/images/barcode/BarcodePoint$Companion {
+	public final fun invoke (DD)Lio/bluetape4k/images/barcode/BarcodePoint;
+}
+
+public final class io/bluetape4k/images/barcode/BarcodeProviderIdentity : java/io/Serializable {
+	public static final field Companion Lio/bluetape4k/images/barcode/BarcodeProviderIdentity$Companion;
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/util/Map;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBackend ()Ljava/lang/String;
+	public final fun getMetadata ()Ljava/util/Map;
+	public final fun getName ()Ljava/lang/String;
+	public final fun getVersion ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/bluetape4k/images/barcode/BarcodeProviderIdentity$Companion {
+	public final fun invoke (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;)Lio/bluetape4k/images/barcode/BarcodeProviderIdentity;
+	public static synthetic fun invoke$default (Lio/bluetape4k/images/barcode/BarcodeProviderIdentity$Companion;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;ILjava/lang/Object;)Lio/bluetape4k/images/barcode/BarcodeProviderIdentity;
+}
+
+public abstract interface class io/bluetape4k/images/barcode/BarcodeReader {
+	public abstract fun readBarcodes (Lcom/sksamuel/scrimage/ImmutableImage;Lio/bluetape4k/images/barcode/BarcodeOptions;)Ljava/util/List;
+}
+
+public final class io/bluetape4k/images/barcode/BarcodeReaderKt {
+	public static final fun readBarcodes (Lio/bluetape4k/images/barcode/BarcodeReader;Lcom/sksamuel/scrimage/ImmutableImage;)Ljava/util/List;
+}
+
+public final class io/bluetape4k/images/barcode/BarcodeRegion : java/io/Serializable {
+	public static final field Companion Lio/bluetape4k/images/barcode/BarcodeRegion$Companion;
+	public final fun component1 ()Ljava/util/List;
+	public final fun component2 ()Lio/bluetape4k/images/barcode/BarcodeCoordinateSpace;
+	public final fun component3 ()Lio/bluetape4k/images/barcode/BarcodeBoundingBox;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBoundingBox ()Lio/bluetape4k/images/barcode/BarcodeBoundingBox;
+	public final fun getCoordinateSpace ()Lio/bluetape4k/images/barcode/BarcodeCoordinateSpace;
+	public final fun getPoints ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/bluetape4k/images/barcode/BarcodeRegion$Companion {
+	public final fun invoke (Ljava/util/List;Lio/bluetape4k/images/barcode/BarcodeCoordinateSpace;Lio/bluetape4k/images/barcode/BarcodeBoundingBox;)Lio/bluetape4k/images/barcode/BarcodeRegion;
+	public static synthetic fun invoke$default (Lio/bluetape4k/images/barcode/BarcodeRegion$Companion;Ljava/util/List;Lio/bluetape4k/images/barcode/BarcodeCoordinateSpace;Lio/bluetape4k/images/barcode/BarcodeBoundingBox;ILjava/lang/Object;)Lio/bluetape4k/images/barcode/BarcodeRegion;
+}
+
+public final class io/bluetape4k/images/barcode/BarcodeResult : java/io/Serializable {
+	public static final field Companion Lio/bluetape4k/images/barcode/BarcodeResult$Companion;
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lio/bluetape4k/images/barcode/BarcodeFormat;
+	public final fun component3 ()Lio/bluetape4k/images/barcode/BarcodeProviderIdentity;
+	public final fun component4 ()Lio/bluetape4k/images/barcode/BarcodeRegion;
+	public final fun component5 ()Ljava/lang/Double;
+	public final fun component6 ()Ljava/lang/Double;
+	public final fun component7 ()[B
+	public final fun component8 ()Ljava/lang/String;
+	public final fun component9 ()Ljava/util/Map;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getConfidence ()Ljava/lang/Double;
+	public final fun getFormat ()Lio/bluetape4k/images/barcode/BarcodeFormat;
+	public final fun getMetadata ()Ljava/util/Map;
+	public final fun getProvider ()Lio/bluetape4k/images/barcode/BarcodeProviderIdentity;
+	public final fun getQuality ()Ljava/lang/Double;
+	public final fun getRawBackendFormat ()Ljava/lang/String;
+	public final fun getRawBytes ()[B
+	public final fun getRegion ()Lio/bluetape4k/images/barcode/BarcodeRegion;
+	public final fun getText ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/bluetape4k/images/barcode/BarcodeResult$Companion {
+	public final fun invoke (Ljava/lang/String;Lio/bluetape4k/images/barcode/BarcodeFormat;Lio/bluetape4k/images/barcode/BarcodeProviderIdentity;Lio/bluetape4k/images/barcode/BarcodeRegion;Ljava/lang/Double;Ljava/lang/Double;[BLjava/lang/String;Ljava/util/Map;)Lio/bluetape4k/images/barcode/BarcodeResult;
+	public static synthetic fun invoke$default (Lio/bluetape4k/images/barcode/BarcodeResult$Companion;Ljava/lang/String;Lio/bluetape4k/images/barcode/BarcodeFormat;Lio/bluetape4k/images/barcode/BarcodeProviderIdentity;Lio/bluetape4k/images/barcode/BarcodeRegion;Ljava/lang/Double;Ljava/lang/Double;[BLjava/lang/String;Ljava/util/Map;ILjava/lang/Object;)Lio/bluetape4k/images/barcode/BarcodeResult;
+}
+
+public final class io/bluetape4k/images/barcode/ImmutableImageBarcodeExtensionsKt {
+	public static final fun extractBarcodes (Lcom/sksamuel/scrimage/ImmutableImage;Lio/bluetape4k/images/barcode/BarcodeReader;Lio/bluetape4k/images/barcode/BarcodeOptions;)Ljava/util/List;
+	public static synthetic fun extractBarcodes$default (Lcom/sksamuel/scrimage/ImmutableImage;Lio/bluetape4k/images/barcode/BarcodeReader;Lio/bluetape4k/images/barcode/BarcodeOptions;ILjava/lang/Object;)Ljava/util/List;
+	public static final fun suspendExtractBarcodes (Lcom/sksamuel/scrimage/ImmutableImage;Lio/bluetape4k/images/barcode/BarcodeReader;Lio/bluetape4k/images/barcode/BarcodeOptions;Lkotlinx/coroutines/CoroutineDispatcher;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun suspendExtractBarcodes$default (Lcom/sksamuel/scrimage/ImmutableImage;Lio/bluetape4k/images/barcode/BarcodeReader;Lio/bluetape4k/images/barcode/BarcodeOptions;Lkotlinx/coroutines/CoroutineDispatcher;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+}

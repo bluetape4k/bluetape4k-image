@@ -1,0 +1,494 @@
+public final class io/bluetape4k/images/spring/ImageObjectKey : java/io/Serializable {
+	public static final field Companion Lio/bluetape4k/images/spring/ImageObjectKey$Companion;
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getFullKey ()Ljava/lang/String;
+	public final fun getName ()Ljava/lang/String;
+	public final fun getPrefix ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/bluetape4k/images/spring/ImageObjectKey$Companion {
+	public final fun invoke (Ljava/lang/String;Ljava/lang/String;)Lio/bluetape4k/images/spring/ImageObjectKey;
+	public final fun of (Ljava/lang/String;Ljava/lang/String;)Lio/bluetape4k/images/spring/ImageObjectKey;
+}
+
+public final class io/bluetape4k/images/spring/ImageObjectMetadata : java/io/Serializable {
+	public static final field Companion Lio/bluetape4k/images/spring/ImageObjectMetadata$Companion;
+	public fun <init> (Lio/bluetape4k/images/spring/ImageObjectKey;JLjava/lang/String;Ljava/lang/String;Ljava/time/Instant;)V
+	public synthetic fun <init> (Lio/bluetape4k/images/spring/ImageObjectKey;JLjava/lang/String;Ljava/lang/String;Ljava/time/Instant;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lio/bluetape4k/images/spring/ImageObjectKey;
+	public final fun component2 ()J
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun component5 ()Ljava/time/Instant;
+	public final fun copy (Lio/bluetape4k/images/spring/ImageObjectKey;JLjava/lang/String;Ljava/lang/String;Ljava/time/Instant;)Lio/bluetape4k/images/spring/ImageObjectMetadata;
+	public static synthetic fun copy$default (Lio/bluetape4k/images/spring/ImageObjectMetadata;Lio/bluetape4k/images/spring/ImageObjectKey;JLjava/lang/String;Ljava/lang/String;Ljava/time/Instant;ILjava/lang/Object;)Lio/bluetape4k/images/spring/ImageObjectMetadata;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getContentType ()Ljava/lang/String;
+	public final fun getEtag ()Ljava/lang/String;
+	public final fun getKey ()Lio/bluetape4k/images/spring/ImageObjectKey;
+	public final fun getLastModified ()Ljava/time/Instant;
+	public final fun getSizeBytes ()J
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/bluetape4k/images/spring/ImageObjectMetadata$Companion {
+}
+
+public abstract class io/bluetape4k/images/spring/ImageStorageException : java/lang/RuntimeException, java/io/Serializable {
+	public static final field Companion Lio/bluetape4k/images/spring/ImageStorageException$Companion;
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Throwable;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public abstract fun getKey ()Lio/bluetape4k/images/spring/ImageObjectKey;
+}
+
+public final class io/bluetape4k/images/spring/ImageStorageException$AccessDeniedException : io/bluetape4k/images/spring/ImageStorageException {
+	public static final field Companion Lio/bluetape4k/images/spring/ImageStorageException$AccessDeniedException$Companion;
+	public fun <init> (Lio/bluetape4k/images/spring/ImageObjectKey;Ljava/lang/String;Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Lio/bluetape4k/images/spring/ImageObjectKey;Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getKey ()Lio/bluetape4k/images/spring/ImageObjectKey;
+}
+
+public final class io/bluetape4k/images/spring/ImageStorageException$AccessDeniedException$Companion {
+}
+
+public final class io/bluetape4k/images/spring/ImageStorageException$Companion {
+}
+
+public final class io/bluetape4k/images/spring/ImageStorageException$ConflictException : io/bluetape4k/images/spring/ImageStorageException {
+	public static final field Companion Lio/bluetape4k/images/spring/ImageStorageException$ConflictException$Companion;
+	public fun <init> (Lio/bluetape4k/images/spring/ImageObjectKey;Ljava/lang/String;Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Lio/bluetape4k/images/spring/ImageObjectKey;Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getKey ()Lio/bluetape4k/images/spring/ImageObjectKey;
+}
+
+public final class io/bluetape4k/images/spring/ImageStorageException$ConflictException$Companion {
+}
+
+public final class io/bluetape4k/images/spring/ImageStorageException$NotFoundException : io/bluetape4k/images/spring/ImageStorageException {
+	public static final field Companion Lio/bluetape4k/images/spring/ImageStorageException$NotFoundException$Companion;
+	public fun <init> (Lio/bluetape4k/images/spring/ImageObjectKey;Ljava/lang/String;Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Lio/bluetape4k/images/spring/ImageObjectKey;Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getKey ()Lio/bluetape4k/images/spring/ImageObjectKey;
+}
+
+public final class io/bluetape4k/images/spring/ImageStorageException$NotFoundException$Companion {
+}
+
+public final class io/bluetape4k/images/spring/ImageStorageException$TransientException : io/bluetape4k/images/spring/ImageStorageException {
+	public static final field Companion Lio/bluetape4k/images/spring/ImageStorageException$TransientException$Companion;
+	public fun <init> ()V
+	public fun <init> (Lio/bluetape4k/images/spring/ImageObjectKey;Ljava/lang/String;Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Lio/bluetape4k/images/spring/ImageObjectKey;Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getKey ()Lio/bluetape4k/images/spring/ImageObjectKey;
+}
+
+public final class io/bluetape4k/images/spring/ImageStorageException$TransientException$Companion {
+}
+
+public final class io/bluetape4k/images/spring/ImageStorageException$ValidationException : io/bluetape4k/images/spring/ImageStorageException {
+	public static final field Companion Lio/bluetape4k/images/spring/ImageStorageException$ValidationException$Companion;
+	public fun <init> (Lio/bluetape4k/images/spring/ImageObjectKey;Ljava/lang/String;Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Lio/bluetape4k/images/spring/ImageObjectKey;Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getKey ()Lio/bluetape4k/images/spring/ImageObjectKey;
+}
+
+public final class io/bluetape4k/images/spring/ImageStorageException$ValidationException$Companion {
+}
+
+public final class io/bluetape4k/images/spring/ImageUploadResult : java/io/Serializable {
+	public static final field Companion Lio/bluetape4k/images/spring/ImageUploadResult$Companion;
+	public fun <init> (Lio/bluetape4k/images/spring/ImageObjectKey;Ljava/lang/String;JLjava/lang/String;Ljava/time/Instant;)V
+	public synthetic fun <init> (Lio/bluetape4k/images/spring/ImageObjectKey;Ljava/lang/String;JLjava/lang/String;Ljava/time/Instant;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lio/bluetape4k/images/spring/ImageObjectKey;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()J
+	public final fun component4 ()Ljava/lang/String;
+	public final fun component5 ()Ljava/time/Instant;
+	public final fun copy (Lio/bluetape4k/images/spring/ImageObjectKey;Ljava/lang/String;JLjava/lang/String;Ljava/time/Instant;)Lio/bluetape4k/images/spring/ImageUploadResult;
+	public static synthetic fun copy$default (Lio/bluetape4k/images/spring/ImageUploadResult;Lio/bluetape4k/images/spring/ImageObjectKey;Ljava/lang/String;JLjava/lang/String;Ljava/time/Instant;ILjava/lang/Object;)Lio/bluetape4k/images/spring/ImageUploadResult;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getContentType ()Ljava/lang/String;
+	public final fun getEtag ()Ljava/lang/String;
+	public final fun getKey ()Lio/bluetape4k/images/spring/ImageObjectKey;
+	public final fun getSizeBytes ()J
+	public final fun getUploadedAt ()Ljava/time/Instant;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/bluetape4k/images/spring/ImageUploadResult$Companion {
+}
+
+public final class io/bluetape4k/images/spring/UploadOptions : java/io/Serializable {
+	public static final field Companion Lio/bluetape4k/images/spring/UploadOptions$Companion;
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/util/Map;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;)Lio/bluetape4k/images/spring/UploadOptions;
+	public static synthetic fun copy$default (Lio/bluetape4k/images/spring/UploadOptions;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;ILjava/lang/Object;)Lio/bluetape4k/images/spring/UploadOptions;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCacheControl ()Ljava/lang/String;
+	public final fun getContentType ()Ljava/lang/String;
+	public final fun getMetadata ()Ljava/util/Map;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/bluetape4k/images/spring/UploadOptions$Companion {
+	public final fun getALLOWED_CONTENT_TYPES ()Ljava/util/Set;
+}
+
+public final class io/bluetape4k/images/spring/autoconfigure/CdnProperties {
+	public fun <init> ()V
+	public fun <init> (ZLjava/lang/String;Lio/bluetape4k/images/spring/autoconfigure/CdnProperties$CloudFront;)V
+	public synthetic fun <init> (ZLjava/lang/String;Lio/bluetape4k/images/spring/autoconfigure/CdnProperties$CloudFront;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Z
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Lio/bluetape4k/images/spring/autoconfigure/CdnProperties$CloudFront;
+	public final fun copy (ZLjava/lang/String;Lio/bluetape4k/images/spring/autoconfigure/CdnProperties$CloudFront;)Lio/bluetape4k/images/spring/autoconfigure/CdnProperties;
+	public static synthetic fun copy$default (Lio/bluetape4k/images/spring/autoconfigure/CdnProperties;ZLjava/lang/String;Lio/bluetape4k/images/spring/autoconfigure/CdnProperties$CloudFront;ILjava/lang/Object;)Lio/bluetape4k/images/spring/autoconfigure/CdnProperties;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCloudfront ()Lio/bluetape4k/images/spring/autoconfigure/CdnProperties$CloudFront;
+	public final fun getEnabled ()Z
+	public final fun getProvider ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/bluetape4k/images/spring/autoconfigure/CdnProperties$CloudFront {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/time/Duration;Ljava/time/Duration;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/time/Duration;Ljava/time/Duration;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun component5 ()Ljava/time/Duration;
+	public final fun component6 ()Ljava/time/Duration;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/time/Duration;Ljava/time/Duration;)Lio/bluetape4k/images/spring/autoconfigure/CdnProperties$CloudFront;
+	public static synthetic fun copy$default (Lio/bluetape4k/images/spring/autoconfigure/CdnProperties$CloudFront;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/time/Duration;Ljava/time/Duration;ILjava/lang/Object;)Lio/bluetape4k/images/spring/autoconfigure/CdnProperties$CloudFront;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDefaultExpiry ()Ljava/time/Duration;
+	public final fun getDistributionDomain ()Ljava/lang/String;
+	public final fun getKeyPairId ()Ljava/lang/String;
+	public final fun getMaxExpiry ()Ljava/time/Duration;
+	public final fun getPrivateKeyPath ()Ljava/lang/String;
+	public final fun getPrivateKeyPem ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/bluetape4k/images/spring/autoconfigure/CdnPropertySanitizingFunction : java/io/Serializable, org/springframework/boot/actuate/endpoint/SanitizingFunction {
+	public static final field Companion Lio/bluetape4k/images/spring/autoconfigure/CdnPropertySanitizingFunction$Companion;
+	public fun <init> ()V
+	public fun apply (Lorg/springframework/boot/actuate/endpoint/SanitizableData;)Lorg/springframework/boot/actuate/endpoint/SanitizableData;
+}
+
+public final class io/bluetape4k/images/spring/autoconfigure/CdnPropertySanitizingFunction$Companion {
+}
+
+public final class io/bluetape4k/images/spring/autoconfigure/ImageProcessingProperties : java/io/Serializable {
+	public static final field Companion Lio/bluetape4k/images/spring/autoconfigure/ImageProcessingProperties$Companion;
+	public fun <init> ()V
+	public fun <init> (ZLjava/lang/String;I)V
+	public synthetic fun <init> (ZLjava/lang/String;IILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Z
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()I
+	public final fun copy (ZLjava/lang/String;I)Lio/bluetape4k/images/spring/autoconfigure/ImageProcessingProperties;
+	public static synthetic fun copy$default (Lio/bluetape4k/images/spring/autoconfigure/ImageProcessingProperties;ZLjava/lang/String;IILjava/lang/Object;)Lio/bluetape4k/images/spring/autoconfigure/ImageProcessingProperties;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDefaultFormat ()Ljava/lang/String;
+	public final fun getDefaultQuality ()I
+	public final fun getEnabled ()Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/bluetape4k/images/spring/autoconfigure/ImageProcessingProperties$Companion {
+}
+
+public final class io/bluetape4k/images/spring/autoconfigure/ImageStorageProperties : java/io/Serializable {
+	public static final field Companion Lio/bluetape4k/images/spring/autoconfigure/ImageStorageProperties$Companion;
+	public fun <init> ()V
+	public fun <init> (ZLio/bluetape4k/images/spring/autoconfigure/ImageStorageProperties$Backend;Ljava/lang/String;Ljava/lang/String;JLjava/lang/String;Lio/bluetape4k/images/spring/autoconfigure/ImageStorageProperties$Local;Lio/bluetape4k/images/spring/autoconfigure/ImageStorageProperties$S3;)V
+	public synthetic fun <init> (ZLio/bluetape4k/images/spring/autoconfigure/ImageStorageProperties$Backend;Ljava/lang/String;Ljava/lang/String;JLjava/lang/String;Lio/bluetape4k/images/spring/autoconfigure/ImageStorageProperties$Local;Lio/bluetape4k/images/spring/autoconfigure/ImageStorageProperties$S3;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Z
+	public final fun component2 ()Lio/bluetape4k/images/spring/autoconfigure/ImageStorageProperties$Backend;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun component5 ()J
+	public final fun component6 ()Ljava/lang/String;
+	public final fun component7 ()Lio/bluetape4k/images/spring/autoconfigure/ImageStorageProperties$Local;
+	public final fun component8 ()Lio/bluetape4k/images/spring/autoconfigure/ImageStorageProperties$S3;
+	public final fun copy (ZLio/bluetape4k/images/spring/autoconfigure/ImageStorageProperties$Backend;Ljava/lang/String;Ljava/lang/String;JLjava/lang/String;Lio/bluetape4k/images/spring/autoconfigure/ImageStorageProperties$Local;Lio/bluetape4k/images/spring/autoconfigure/ImageStorageProperties$S3;)Lio/bluetape4k/images/spring/autoconfigure/ImageStorageProperties;
+	public static synthetic fun copy$default (Lio/bluetape4k/images/spring/autoconfigure/ImageStorageProperties;ZLio/bluetape4k/images/spring/autoconfigure/ImageStorageProperties$Backend;Ljava/lang/String;Ljava/lang/String;JLjava/lang/String;Lio/bluetape4k/images/spring/autoconfigure/ImageStorageProperties$Local;Lio/bluetape4k/images/spring/autoconfigure/ImageStorageProperties$S3;ILjava/lang/Object;)Lio/bluetape4k/images/spring/autoconfigure/ImageStorageProperties;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBackend ()Lio/bluetape4k/images/spring/autoconfigure/ImageStorageProperties$Backend;
+	public final fun getBucket ()Ljava/lang/String;
+	public final fun getEnabled ()Z
+	public final fun getHealthProbeKey ()Ljava/lang/String;
+	public final fun getKeyPrefix ()Ljava/lang/String;
+	public final fun getLocal ()Lio/bluetape4k/images/spring/autoconfigure/ImageStorageProperties$Local;
+	public final fun getMaxSizeBytes ()J
+	public final fun getS3 ()Lio/bluetape4k/images/spring/autoconfigure/ImageStorageProperties$S3;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/bluetape4k/images/spring/autoconfigure/ImageStorageProperties$Backend : java/lang/Enum {
+	public static final field LOCAL Lio/bluetape4k/images/spring/autoconfigure/ImageStorageProperties$Backend;
+	public static final field S3 Lio/bluetape4k/images/spring/autoconfigure/ImageStorageProperties$Backend;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lio/bluetape4k/images/spring/autoconfigure/ImageStorageProperties$Backend;
+	public static fun values ()[Lio/bluetape4k/images/spring/autoconfigure/ImageStorageProperties$Backend;
+}
+
+public final class io/bluetape4k/images/spring/autoconfigure/ImageStorageProperties$Companion {
+}
+
+public final class io/bluetape4k/images/spring/autoconfigure/ImageStorageProperties$Local : java/io/Serializable {
+	public static final field Companion Lio/bluetape4k/images/spring/autoconfigure/ImageStorageProperties$Local$Companion;
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Ljava/util/Set;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/util/Set;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/util/Set;
+	public final fun copy (Ljava/lang/String;Ljava/util/Set;)Lio/bluetape4k/images/spring/autoconfigure/ImageStorageProperties$Local;
+	public static synthetic fun copy$default (Lio/bluetape4k/images/spring/autoconfigure/ImageStorageProperties$Local;Ljava/lang/String;Ljava/util/Set;ILjava/lang/Object;)Lio/bluetape4k/images/spring/autoconfigure/ImageStorageProperties$Local;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBootstrapPrefixes ()Ljava/util/Set;
+	public final fun getRootDir ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/bluetape4k/images/spring/autoconfigure/ImageStorageProperties$Local$Companion {
+}
+
+public final class io/bluetape4k/images/spring/autoconfigure/ImageStorageProperties$S3 : java/io/Serializable {
+	public static final field Companion Lio/bluetape4k/images/spring/autoconfigure/ImageStorageProperties$S3$Companion;
+	public fun <init> ()V
+	public fun <init> (Ljava/time/Duration;Ljava/time/Duration;II)V
+	public synthetic fun <init> (Ljava/time/Duration;Ljava/time/Duration;IIILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/time/Duration;
+	public final fun component2 ()Ljava/time/Duration;
+	public final fun component3 ()I
+	public final fun component4 ()I
+	public final fun copy (Ljava/time/Duration;Ljava/time/Duration;II)Lio/bluetape4k/images/spring/autoconfigure/ImageStorageProperties$S3;
+	public static synthetic fun copy$default (Lio/bluetape4k/images/spring/autoconfigure/ImageStorageProperties$S3;Ljava/time/Duration;Ljava/time/Duration;IIILjava/lang/Object;)Lio/bluetape4k/images/spring/autoconfigure/ImageStorageProperties$S3;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAttemptTimeout ()Ljava/time/Duration;
+	public final fun getCallTimeout ()Ljava/time/Duration;
+	public final fun getMaxInFlight ()I
+	public final fun getMaxRetries ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/bluetape4k/images/spring/autoconfigure/ImageStorageProperties$S3$Companion {
+}
+
+public class io/bluetape4k/images/spring/autoconfigure/ImagesCdnAutoConfiguration {
+	public fun <init> ()V
+}
+
+public class io/bluetape4k/images/spring/autoconfigure/ImagesCdnAutoConfiguration$CdnSanitizingConfiguration {
+	public fun <init> ()V
+	public fun cdnPropertySanitizingFunction ()Lio/bluetape4k/images/spring/autoconfigure/CdnPropertySanitizingFunction;
+}
+
+public class io/bluetape4k/images/spring/autoconfigure/ImagesCdnAutoConfiguration$CdnStoragePropertiesConfiguration {
+	public fun <init> ()V
+}
+
+public class io/bluetape4k/images/spring/autoconfigure/ImagesCdnAutoConfiguration$CloudFrontCdnConfiguration {
+	public fun <init> ()V
+	public fun cloudFrontUrlSigner (Lio/bluetape4k/images/spring/autoconfigure/CdnProperties;)Lio/bluetape4k/images/spring/cdn/CloudFrontUrlSigner;
+}
+
+public class io/bluetape4k/images/spring/autoconfigure/ImagesCdnAutoConfiguration$S3PresignCdnConfiguration {
+	public fun <init> ()V
+	public fun s3PreSignedUrlSigner (Lio/bluetape4k/aws/spring/s3/S3Operations;Lio/bluetape4k/images/spring/autoconfigure/ImageStorageProperties;)Lio/bluetape4k/images/spring/cdn/S3PreSignedUrlSigner;
+}
+
+public class io/bluetape4k/images/spring/autoconfigure/ImagesHealthAutoConfiguration {
+	public fun <init> ()V
+}
+
+public class io/bluetape4k/images/spring/autoconfigure/ImagesHealthAutoConfiguration$ReactiveHealthConfiguration {
+	public fun <init> ()V
+	public fun imageStorageHealthIndicator (Lio/bluetape4k/images/spring/storage/ImageStorage;Lio/bluetape4k/images/spring/autoconfigure/ImageStorageProperties;)Lio/bluetape4k/images/spring/health/ImageStorageHealthIndicator;
+}
+
+public class io/bluetape4k/images/spring/autoconfigure/ImagesMetricsAutoConfiguration {
+	public fun <init> ()V
+}
+
+public class io/bluetape4k/images/spring/autoconfigure/ImagesMetricsAutoConfiguration$MetricsDecorationConfiguration {
+	public fun <init> ()V
+	public fun imageStorageMetricsBeanPostProcessor (Lio/micrometer/core/instrument/MeterRegistry;)Lorg/springframework/beans/factory/config/BeanPostProcessor;
+}
+
+public class io/bluetape4k/images/spring/autoconfigure/ImagesProcessingAutoConfiguration {
+	public fun <init> ()V
+}
+
+public class io/bluetape4k/images/spring/autoconfigure/ImagesStorageAutoConfiguration {
+	public static final field Companion Lio/bluetape4k/images/spring/autoconfigure/ImagesStorageAutoConfiguration$Companion;
+	public fun <init> ()V
+}
+
+public final class io/bluetape4k/images/spring/autoconfigure/ImagesStorageAutoConfiguration$Companion {
+}
+
+public class io/bluetape4k/images/spring/autoconfigure/ImagesStorageAutoConfiguration$LocalStorageConfiguration {
+	public fun <init> ()V
+	public fun localImageStorage (Lio/bluetape4k/images/spring/autoconfigure/ImageStorageProperties;)Lio/bluetape4k/images/spring/storage/ImageStorage;
+}
+
+public class io/bluetape4k/images/spring/autoconfigure/ImagesStorageAutoConfiguration$S3MissingOperationsConfiguration {
+	public fun <init> ()V
+	public fun missingS3OperationsImageStorage ()Lio/bluetape4k/images/spring/storage/ImageStorage;
+}
+
+public class io/bluetape4k/images/spring/autoconfigure/ImagesStorageAutoConfiguration$S3StorageConfiguration {
+	public fun <init> ()V
+	public fun s3ImageStorage (Lio/bluetape4k/aws/spring/s3/S3Operations;Lio/bluetape4k/images/spring/autoconfigure/ImageStorageProperties;Lorg/springframework/beans/factory/ObjectProvider;)Lio/bluetape4k/images/spring/storage/ImageStorage;
+}
+
+public class io/bluetape4k/images/spring/autoconfigure/ImagesStorageAutoConfiguration$S3TransferCapabilityConfiguration {
+	public fun <init> ()V
+	public fun s3PathTransfer (Lio/bluetape4k/aws/spring/s3/S3TransferOperations;)Lio/bluetape4k/images/spring/storage/s3/S3PathTransferOperations;
+}
+
+public abstract interface class io/bluetape4k/images/spring/cdn/CdnReadSigner {
+	public abstract fun signGet (Lio/bluetape4k/images/spring/ImageObjectKey;Ljava/time/Duration;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public abstract interface class io/bluetape4k/images/spring/cdn/CdnWriteSigner {
+	public abstract fun signPut (Lio/bluetape4k/images/spring/ImageObjectKey;Ljava/time/Duration;Lio/bluetape4k/images/spring/UploadOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class io/bluetape4k/images/spring/cdn/CloudFrontUrlSigner : io/bluetape4k/images/spring/cdn/CdnReadSigner {
+	public static final field Companion Lio/bluetape4k/images/spring/cdn/CloudFrontUrlSigner$Companion;
+	public fun <init> (Lio/bluetape4k/images/spring/autoconfigure/CdnProperties$CloudFront;)V
+	public fun signGet (Lio/bluetape4k/images/spring/ImageObjectKey;Ljava/time/Duration;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class io/bluetape4k/images/spring/cdn/CloudFrontUrlSigner$Companion : io/bluetape4k/logging/KLogging {
+}
+
+public final class io/bluetape4k/images/spring/cdn/S3PreSignedUrlSigner : io/bluetape4k/images/spring/cdn/CdnReadSigner, io/bluetape4k/images/spring/cdn/CdnWriteSigner {
+	public static final field Companion Lio/bluetape4k/images/spring/cdn/S3PreSignedUrlSigner$Companion;
+	public fun <init> (Lio/bluetape4k/aws/spring/s3/S3Operations;Ljava/lang/String;Ljava/lang/String;)V
+	public fun signGet (Lio/bluetape4k/images/spring/ImageObjectKey;Ljava/time/Duration;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun signPut (Lio/bluetape4k/images/spring/ImageObjectKey;Ljava/time/Duration;Lio/bluetape4k/images/spring/UploadOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class io/bluetape4k/images/spring/cdn/S3PreSignedUrlSigner$Companion : io/bluetape4k/logging/KLogging {
+}
+
+public final class io/bluetape4k/images/spring/health/ImageStorageHealthIndicator : org/springframework/boot/health/contributor/ReactiveHealthIndicator {
+	public static final field Companion Lio/bluetape4k/images/spring/health/ImageStorageHealthIndicator$Companion;
+	public fun <init> (Lio/bluetape4k/images/spring/storage/ImageStorage;Ljava/lang/String;)V
+	public fun health ()Lreactor/core/publisher/Mono;
+}
+
+public final class io/bluetape4k/images/spring/health/ImageStorageHealthIndicator$Companion : io/bluetape4k/logging/KLogging {
+}
+
+public final class io/bluetape4k/images/spring/metrics/ImageStorageMetricsBeanPostProcessor : org/springframework/beans/factory/config/BeanPostProcessor {
+	public static final field Companion Lio/bluetape4k/images/spring/metrics/ImageStorageMetricsBeanPostProcessor$Companion;
+	public fun <init> (Lio/micrometer/core/instrument/MeterRegistry;)V
+	public fun postProcessAfterInitialization (Ljava/lang/Object;Ljava/lang/String;)Ljava/lang/Object;
+}
+
+public final class io/bluetape4k/images/spring/metrics/ImageStorageMetricsBeanPostProcessor$Companion : io/bluetape4k/logging/KLogging {
+}
+
+public class io/bluetape4k/images/spring/metrics/MetricImageStorage : io/bluetape4k/images/spring/storage/ImageStorage {
+	public static final field Companion Lio/bluetape4k/images/spring/metrics/MetricImageStorage$Companion;
+	public fun <init> (Lio/bluetape4k/images/spring/storage/ImageStorage;Lio/micrometer/core/instrument/MeterRegistry;)V
+	public fun delete (Lio/bluetape4k/images/spring/ImageObjectKey;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun download (Lio/bluetape4k/images/spring/ImageObjectKey;Ljava/nio/file/Path;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun download (Lio/bluetape4k/images/spring/ImageObjectKey;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun exists (Lio/bluetape4k/images/spring/ImageObjectKey;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun list (Lio/bluetape4k/images/spring/ImageObjectKey;)Lkotlinx/coroutines/flow/Flow;
+	public fun upload (Lio/bluetape4k/images/spring/ImageObjectKey;Ljava/nio/file/Path;Lio/bluetape4k/images/spring/UploadOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun upload (Lio/bluetape4k/images/spring/ImageObjectKey;[BLio/bluetape4k/images/spring/UploadOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class io/bluetape4k/images/spring/metrics/MetricImageStorage$Companion : io/bluetape4k/logging/KLogging {
+}
+
+public final class io/bluetape4k/images/spring/metrics/MetricImageStorageWithMetadata : io/bluetape4k/images/spring/metrics/MetricImageStorage, io/bluetape4k/images/spring/storage/ImageObjectMetadataReader {
+	public fun <init> (Lio/bluetape4k/images/spring/storage/ImageStorage;Lio/micrometer/core/instrument/MeterRegistry;Lio/bluetape4k/images/spring/storage/ImageObjectMetadataReader;)V
+	public fun readMetadata (Lio/bluetape4k/images/spring/ImageObjectKey;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public abstract interface class io/bluetape4k/images/spring/storage/ImageObjectMetadataReader {
+	public abstract fun readMetadata (Lio/bluetape4k/images/spring/ImageObjectKey;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public abstract interface class io/bluetape4k/images/spring/storage/ImageStorage {
+	public abstract fun delete (Lio/bluetape4k/images/spring/ImageObjectKey;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun download (Lio/bluetape4k/images/spring/ImageObjectKey;Ljava/nio/file/Path;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun download (Lio/bluetape4k/images/spring/ImageObjectKey;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun exists (Lio/bluetape4k/images/spring/ImageObjectKey;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun list (Lio/bluetape4k/images/spring/ImageObjectKey;)Lkotlinx/coroutines/flow/Flow;
+	public abstract fun upload (Lio/bluetape4k/images/spring/ImageObjectKey;Ljava/nio/file/Path;Lio/bluetape4k/images/spring/UploadOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun upload (Lio/bluetape4k/images/spring/ImageObjectKey;[BLio/bluetape4k/images/spring/UploadOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class io/bluetape4k/images/spring/storage/LocalImageStorage : io/bluetape4k/images/spring/storage/ImageObjectMetadataReader, io/bluetape4k/images/spring/storage/ImageStorage, java/lang/AutoCloseable {
+	public static final field Companion Lio/bluetape4k/images/spring/storage/LocalImageStorage$Companion;
+	public fun <init> (Ljava/nio/file/Path;J)V
+	public fun close ()V
+	public fun delete (Lio/bluetape4k/images/spring/ImageObjectKey;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun download (Lio/bluetape4k/images/spring/ImageObjectKey;Ljava/nio/file/Path;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun download (Lio/bluetape4k/images/spring/ImageObjectKey;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun exists (Lio/bluetape4k/images/spring/ImageObjectKey;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun list (Lio/bluetape4k/images/spring/ImageObjectKey;)Lkotlinx/coroutines/flow/Flow;
+	public fun readMetadata (Lio/bluetape4k/images/spring/ImageObjectKey;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun upload (Lio/bluetape4k/images/spring/ImageObjectKey;Ljava/nio/file/Path;Lio/bluetape4k/images/spring/UploadOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun upload (Lio/bluetape4k/images/spring/ImageObjectKey;[BLio/bluetape4k/images/spring/UploadOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class io/bluetape4k/images/spring/storage/LocalImageStorage$Companion : io/bluetape4k/logging/KLogging {
+	public final fun provisionRoot (Ljava/nio/file/Path;Ljava/util/Set;)Ljava/nio/file/Path;
+}
+
+public final class io/bluetape4k/images/spring/storage/s3/S3ImageStorage : io/bluetape4k/images/spring/storage/ImageObjectMetadataReader, io/bluetape4k/images/spring/storage/ImageStorage {
+	public static final field Companion Lio/bluetape4k/images/spring/storage/s3/S3ImageStorage$Companion;
+	public fun <init> (Lio/bluetape4k/aws/spring/s3/S3Operations;Lio/bluetape4k/images/spring/autoconfigure/ImageStorageProperties;)V
+	public fun <init> (Lio/bluetape4k/aws/spring/s3/S3Operations;Lio/bluetape4k/images/spring/autoconfigure/ImageStorageProperties;Lio/bluetape4k/images/spring/storage/s3/S3PathTransferOperations;)V
+	public synthetic fun <init> (Lio/bluetape4k/aws/spring/s3/S3Operations;Lio/bluetape4k/images/spring/autoconfigure/ImageStorageProperties;Lio/bluetape4k/images/spring/storage/s3/S3PathTransferOperations;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun delete (Lio/bluetape4k/images/spring/ImageObjectKey;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun download (Lio/bluetape4k/images/spring/ImageObjectKey;Ljava/nio/file/Path;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun download (Lio/bluetape4k/images/spring/ImageObjectKey;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun exists (Lio/bluetape4k/images/spring/ImageObjectKey;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun list (Lio/bluetape4k/images/spring/ImageObjectKey;)Lkotlinx/coroutines/flow/Flow;
+	public fun readMetadata (Lio/bluetape4k/images/spring/ImageObjectKey;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun upload (Lio/bluetape4k/images/spring/ImageObjectKey;Ljava/nio/file/Path;Lio/bluetape4k/images/spring/UploadOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun upload (Lio/bluetape4k/images/spring/ImageObjectKey;[BLio/bluetape4k/images/spring/UploadOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class io/bluetape4k/images/spring/storage/s3/S3ImageStorage$Companion : io/bluetape4k/logging/KLogging {
+}
+
+public abstract interface class io/bluetape4k/images/spring/storage/s3/S3PathTransferOperations {
+	public abstract fun uploadFile (Ljava/lang/String;Ljava/lang/String;Ljava/nio/file/Path;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class io/bluetape4k/images/spring/storage/s3/S3TransferOperationsAdapter : io/bluetape4k/images/spring/storage/s3/S3PathTransferOperations {
+	public fun <init> (Lio/bluetape4k/aws/spring/s3/S3TransferOperations;)V
+	public fun uploadFile (Ljava/lang/String;Ljava/lang/String;Ljava/nio/file/Path;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}

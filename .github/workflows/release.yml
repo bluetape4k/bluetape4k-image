@@ -260,6 +260,9 @@ jobs:
           gradle-version: wrapper
           cache-read-only: true
 
+      - name: Verify published JVM ABI baseline
+        run: ./gradlew checkProductionAbi --no-daemon --no-configuration-cache --no-build-cache
+
       - name: Diagnose signing inputs
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.diagnoseSigning }}
         shell: bash

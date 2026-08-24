@@ -1,0 +1,12 @@
+public final class io/bluetape4k/images/barcode/zxing/ZxingBarcodeReader : io/bluetape4k/images/barcode/BarcodeReader {
+	public fun <init> ()V
+	public fun <init> (Lio/bluetape4k/images/barcode/BarcodeProviderIdentity;)V
+	public synthetic fun <init> (Lio/bluetape4k/images/barcode/BarcodeProviderIdentity;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun readBarcodes (Lcom/sksamuel/scrimage/ImmutableImage;Lio/bluetape4k/images/barcode/BarcodeOptions;)Ljava/util/List;
+	public final fun readBarcodes ([BLio/bluetape4k/images/barcode/BarcodeOptions;)Ljava/util/List;
+	public static synthetic fun readBarcodes$default (Lio/bluetape4k/images/barcode/zxing/ZxingBarcodeReader;[BLio/bluetape4k/images/barcode/BarcodeOptions;ILjava/lang/Object;)Ljava/util/List;
+}
+
+public final class io/bluetape4k/images/barcode/zxing/ZxingBarcodeReaderKt {
+	public static final fun zxingProviderIdentity ()Lio/bluetape4k/images/barcode/BarcodeProviderIdentity;
+}

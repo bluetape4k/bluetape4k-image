@@ -1,0 +1,27 @@
+public final class io/bluetape4k/images/vips/java25/FfmVipsImageSupportKt {
+	public static final fun ffmVipsImageOf (Ljava/io/File;)Lio/bluetape4k/images/vips/VipsImage;
+	public static final fun ffmVipsImageOf (Ljava/io/InputStream;)Lio/bluetape4k/images/vips/VipsImage;
+	public static final fun ffmVipsImageOf (Ljava/nio/file/Path;)Lio/bluetape4k/images/vips/VipsImage;
+	public static final fun ffmVipsImageOf (Lokio/BufferedSource;)Lio/bluetape4k/images/vips/VipsImage;
+	public static final fun ffmVipsImageOf (Lokio/Source;)Lio/bluetape4k/images/vips/VipsImage;
+	public static final fun ffmVipsImageOf ([B)Lio/bluetape4k/images/vips/VipsImage;
+	public static final fun suspendFfmVipsImageOf (Lio/bluetape4k/okio/coroutines/BufferedSuspendedSource;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun suspendFfmVipsImageOf (Lio/bluetape4k/okio/coroutines/SuspendedSource;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun suspendFfmVipsImageOf (Ljava/io/File;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun suspendFfmVipsImageOf (Ljava/nio/file/Path;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun suspendFfmVipsImageOf (Lokio/BufferedSource;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun suspendFfmVipsImageOf (Lokio/Source;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun suspendFfmVipsImageOf ([BLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class io/bluetape4k/images/vips/java25/FfmVipsRuntime : io/bluetape4k/logging/KLogging, io/bluetape4k/images/vips/VipsRuntime {
+	public static final field INSTANCE Lio/bluetape4k/images/vips/java25/FfmVipsRuntime;
+	public fun codecCapabilityReport ()Lio/bluetape4k/images/vips/VipsCodecCapabilityReport;
+	public fun getConcurrencyCapability ()Lio/bluetape4k/images/vips/VipsConcurrencyCapability;
+	public final fun getMaxPixels ()J
+	public fun init (IJ)V
+	public fun isInitialized ()Z
+	public fun isShutdown ()Z
+	public fun shutdown ()V
+	public fun smokeTestCodec ([BLio/bluetape4k/images/vips/VipsImageFormat;Lio/bluetape4k/images/vips/VipsEncodeOptions;)Lio/bluetape4k/images/vips/VipsCodecSmokeResult;
+}
