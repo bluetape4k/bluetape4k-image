@@ -55,6 +55,36 @@ ground-truth hash, raw row의 CER/WER 산식, `EMPTY` 제외, malformed 목록,
 weighted summary를 동시에 검증한다. 따라서 정규화된 summary만 수동으로 편집해
 raw fixture 결과를 대체할 수 없다.
 
+## Cold/warm/RSS protocol receipt
+
+Train-3은 동일한 host envelope에서 각 24개 positive fixture를 실행한다.
+fixture별로 새 engine wrapper를 만드는 cold 1회, 같은 wrapper를 재사용하는
+warmup 2회와 warm 3회, 250 ms 관측 창의 실제 throughput loop를 수행하고, 각
+단계의 latency·RSS·마지막 출력 SHA-256을 기록한다. public
+`TesseractOcrEngine`은 매 recognition call마다 fresh Tess4J client를 만드는
+계약이므로 이 warm 수치는 native client cache를 의미하지 않는다. RSS는 `ps`가
+보고한 process 값을 bytes로 보존하며, latency의 역수로 throughput을 만들지
+않는다. `TEXT`/`EMPTY` 선언과 다른 출력은 실행 자체를 실패시킨다.
+
+```bash
+./gradlew :bluetape4k-images-benchmark:runOcrCorpusProtocol \
+  -Pocr.protocol.runId=issue-565-protocol-20260824 \
+  -Pocr.protocol.output=/absolute/path/issue565-protocol.json \
+  --console=plain
+```
+
+호스트 실행은 macOS arm64, Oracle Java 25.0.4, Tesseract 5.5.3에서 완료되었고
+24개 row(텍스트 21개, 유효한 빈 문서 3개)를 생성했다. CER는 `0.0460405157`,
+WER는 `0.0989761092`였으며, 이 값은 단일 host receipt이지 host 간 순위나
+production SLO가 아니다. 커밋된 protocol JSON·run manifest·model provenance와
+해시는 [`v2 protocol receipt`](raw/issue-565-20260824-macos-arm64-java25-v2-protocol/)
+에서 확인할 수 있다. 다음 명령은 manifest hash, row 순서와 분류, embedded
+CER/WER, run manifest 상태·경로·SHA-256을 함께 검증한다.
+
+```bash
+./gradlew :bluetape4k-images-benchmark:validateOcrProtocolReceipt --console=plain
+```
+
 ## 결과
 
 `AverageTime`은 낮을수록 좋다. 처리량은 별도의 JMH 관찰값이며 높을수록 좋고,

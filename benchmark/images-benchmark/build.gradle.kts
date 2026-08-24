@@ -47,6 +47,7 @@ val barcodeBenchmarkRunId = providers.gradleProperty("barcode.benchmark.runId")
 val barcodeBenchmarkCpu = providers.gradleProperty("barcode.benchmark.cpu")
 val codecMatrixRunIdPattern = Regex("[a-z0-9][a-z0-9._-]{7,79}")
 val barcodeBenchmarkRunIdPattern = Regex("issue-272-[0-9]{8}-[a-z0-9-]{3,40}")
+val ocrProtocolRunIdPattern = Regex("issue-565-[a-z0-9-]{8,60}")
 val repositoryDirectory = rootProject.layout.projectDirectory
 val ocrBenchmarkManifestFile = repositoryDirectory.file(
     "benchmark/images-benchmark/src/main/resources/bench/ocr-v2/manifest.json",
@@ -58,6 +59,13 @@ val ocrBenchmarkSourceFile = repositoryDirectory.file(
 val ocrBenchmarkReceiptDirectory = repositoryDirectory.file(
     "benchmark/images-benchmark/docs/raw/issue-565-20260824-macos-arm64-java25-v2-corpus",
 ).asFile
+val ocrProtocolReceiptDirectory = repositoryDirectory.file(
+    "benchmark/images-benchmark/docs/raw/issue-565-20260824-macos-arm64-java25-v2-protocol",
+).asFile
+val ocrProtocolReceiptFile = ocrProtocolReceiptDirectory.resolve("ocr-v2-protocol.json")
+val ocrProtocolRunManifestFile = ocrProtocolReceiptDirectory.resolve("run-manifest.json")
+val ocrProtocolRunId = providers.gradleProperty("ocr.protocol.runId")
+val ocrProtocolOutput = providers.gradleProperty("ocr.protocol.output")
 val codecMatrixSourceDirectory = layout.buildDirectory.dir("generated/codec-matrix-source-fixtures")
 val codecMatrixRunDirectoryProvider = codecMatrixRunId.flatMap { runId ->
     require(codecMatrixRunIdPattern.matches(runId)) {
@@ -1359,6 +1367,53 @@ tasks.register("finalizeBarcodeBenchmarkEvidence") {
     }
 }
 
+tasks.register<JavaExec>("runOcrCorpusProtocol") {
+    description = "Run the host-native OCR corpus v2 cold/warm/throughput/RSS protocol"
+    group = "verification"
+    dependsOn(tasks.named("benchmarkClasses"))
+    classpath = sourceSets.named("benchmark").get().runtimeClasspath
+    mainClass.set("io.bluetape4k.images.benchmark.OcrBenchmarkProtocolMain")
+    javaLauncher.set(selectedJavaLauncher)
+    workingDir(repositoryDirectory)
+    outputs.upToDateWhen { false }
+    doFirst {
+        val runId = ocrProtocolRunId.orNull
+        require(runId != null && ocrProtocolRunIdPattern.matches(runId)) {
+            "ocr.protocol.runId must match ${ocrProtocolRunIdPattern.pattern}"
+        }
+        val output = ocrProtocolOutput.orNull
+            ?: error("ocr.protocol.output is required and must be an absolute JSON path")
+        val outputFile = file(output).absoluteFile.normalize()
+        require(outputFile.isAbsolute) { "ocr.protocol.output must be absolute" }
+        setArgs(listOf("--output", outputFile.absolutePath, "--run-id", runId))
+    }
+}
+
+tasks.register<JavaExec>("validateOcrProtocolReceipt") {
+    description = "Validate the committed OCR corpus v2 cold/warm/throughput/RSS receipt"
+    group = "verification"
+    dependsOn(tasks.named("benchmarkClasses"))
+    classpath = sourceSets.named("benchmark").get().runtimeClasspath
+    mainClass.set("io.bluetape4k.images.benchmark.OcrBenchmarkProtocolValidateMain")
+    javaLauncher.set(selectedJavaLauncher)
+    workingDir(repositoryDirectory)
+    inputs.files(ocrBenchmarkManifestFile, ocrProtocolReceiptFile, ocrProtocolRunManifestFile)
+    doFirst {
+        require(ocrProtocolReceiptFile.isFile) { "OCR protocol receipt is missing: $ocrProtocolReceiptFile" }
+        require(ocrProtocolRunManifestFile.isFile) {
+            "OCR protocol run manifest is missing: $ocrProtocolRunManifestFile"
+        }
+        setArgs(
+            listOf(
+                "--input",
+                ocrProtocolReceiptFile.absolutePath,
+                "--run-manifest",
+                ocrProtocolRunManifestFile.absolutePath,
+            ),
+        )
+    }
+}
+
 tasks.register("validateOcrBenchmarkReceipt") {
     description = "Validate the committed OCR raw reports and traineddata provenance receipt"
     group = "verification"
@@ -1373,7 +1428,7 @@ tasks.register("validateOcrBenchmarkReceipt") {
 }
 
 tasks.named("check") {
-    dependsOn("validateOcrBenchmarkReceipt")
+    dependsOn("validateOcrBenchmarkReceipt", "validateOcrProtocolReceipt")
 }
 
 val vipsJava21BenchmarkReportRoot = layout.buildDirectory.dir("reports/benchmarks/vipsJava21Smoke")

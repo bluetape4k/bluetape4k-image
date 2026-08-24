@@ -133,6 +133,24 @@ manifest are in [`issue-565 corpus receipt`](docs/raw/issue-565-20260824-macos-a
 The corpus is now expanded for the follow-up metric and run-receipt trains;
 CER/WER scoring and cold/warm/RSS evidence remain separate benchmark outputs.
 
+Train-3의 host-native 실행은 다음 명령으로 재현한다. 이 task는 각 fixture의
+cold/warm latency, 관측 throughput, process RSS, 출력 hash와 host/JVM/Tesseract
+envelope를 기록하며, throughput을 latency 역수로 계산하지 않는다. warm은
+engine wrapper 재사용이며 public `TesseractOcrEngine`의 fresh Tess4J client
+계약을 바꾸지 않는다.
+
+```bash
+./gradlew :bluetape4k-images-benchmark:runOcrCorpusProtocol \
+  -Pocr.protocol.runId=issue-565-protocol-20260824 \
+  -Pocr.protocol.output=/absolute/path/issue565-protocol.json \
+  --console=plain
+./gradlew :bluetape4k-images-benchmark:validateOcrProtocolReceipt --console=plain
+```
+
+The committed full-corpus receipt contains 24 rows (21 `TEXT`, 3 `EMPTY`) and its
+embedded CER/WER summary. It is one macOS arm64 Java 25 observation, not a
+cross-host ranking or production SLO; see the [`v2 protocol receipt`](docs/raw/issue-565-20260824-macos-arm64-java25-v2-protocol/).
+
 The synthetic additions are reproducible with
 `ruby benchmark/images-benchmark/tools/generate_ocr_v2_fixtures.rb` using the
 pinned ImageMagick/font receipt. The historical `clean-text-v2-001` baseline is
