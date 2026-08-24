@@ -26,7 +26,32 @@ import java.awt.image.BufferedImage
 @Threads(1)
 class TesseractOcrExtractionBenchmark {
 
-    @Param("clean-text-v2-001")
+    @Param(
+        "clean-text-v2-001",
+        "clean-v2-002",
+        "clean-v2-003",
+        "low-resolution-v2-001",
+        "low-resolution-v2-002",
+        "low-resolution-v2-003",
+        "noisy-v2-001",
+        "noisy-v2-002",
+        "noisy-v2-003",
+        "rotated-v2-001",
+        "rotated-v2-002",
+        "rotated-v2-003",
+        "table-v2-001",
+        "table-v2-002",
+        "table-v2-003",
+        "multi-column-v2-001",
+        "multi-column-v2-002",
+        "multi-column-v2-003",
+        "multilingual-v2-001",
+        "multilingual-v2-002",
+        "multilingual-v2-003",
+        "valid-blank-v2-001",
+        "valid-blank-v2-002",
+        "valid-blank-v2-003",
+    )
     lateinit var fixtureId: String
 
     private lateinit var fixture: OcrBenchmarkCorpusFixture

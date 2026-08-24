@@ -1,0 +1,36 @@
+{
+  "schema": "ocr-boxes-v1",
+  "coordinateSpace": "pixel",
+  "entries": [
+    {
+      "boxId": "multilingual-v2-003-box-00",
+      "pageIndex": 0,
+      "text": "MULTILINGUAL OCR 3",
+      "x": 100,
+      "y": 110,
+      "width": 1400,
+      "height": 60,
+      "order": 0
+    },
+    {
+      "boxId": "multilingual-v2-003-box-01",
+      "pageIndex": 0,
+      "text": "한국어 OCR 문서 3",
+      "x": 100,
+      "y": 202,
+      "width": 1400,
+      "height": 60,
+      "order": 1
+    },
+    {
+      "boxId": "multilingual-v2-003-box-02",
+      "pageIndex": 0,
+      "text": "日本語 OCR 文書 3",
+      "x": 100,
+      "y": 294,
+      "width": 1400,
+      "height": 60,
+      "order": 2
+    }
+  ]
+}

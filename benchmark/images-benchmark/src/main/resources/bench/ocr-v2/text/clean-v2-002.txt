@@ -1,0 +1,3 @@
+BLUETAPE OCR CLEAN 2
+Deterministic English document 2
+Tesseract corpus v2

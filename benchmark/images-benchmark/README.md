@@ -118,9 +118,10 @@ separate observed `ops/s` run (higher is better).
 #### Current OCR corpus v2 task
 
 The benchmark task now consumes the verified `bench/ocr-v2/manifest.json` through
-`fixtureId` and has no v1 fixture fallback. The current manifest contains one
-benchmarkable positive fixture, `clean-text-v2-001`; the table and chart above
-remain the historical v1 snapshot.
+`fixtureId` and has no v1 fixture fallback. The manifest contains 24
+benchmarkable positive fixtures across eight positive scenario classes (three
+fixtures each) and three separate malformed-input negative receipts; the table
+and chart above remain the historical v1 snapshot.
 
 | Fixture | Direct latency | Preprocess + extract | Direct throughput | Preprocess + extract |
 |---------|----------------|----------------------|-------------------|----------------------|
@@ -128,8 +129,15 @@ remain the historical v1 snapshot.
 
 This is a Tesseract baseline-only receipt on one macOS arm64 Java 25 host, not a
 cross-host ranking or an adoption decision. The immutable v2 reports and run
-manifest are in [`issue-563 raw evidence`](docs/raw/issue-563-20260824-macos-arm64-java25-v2-baseline/).
-The remaining 9-scenario/27-fixture corpus and Paddle comparison are still pending.
+manifest are in [`issue-565 corpus receipt`](docs/raw/issue-565-20260824-macos-arm64-java25-v2-corpus/).
+The corpus is now expanded for the follow-up metric and run-receipt trains;
+CER/WER scoring and cold/warm/RSS evidence remain separate benchmark outputs.
+
+The synthetic additions are reproducible with
+`ruby benchmark/images-benchmark/tools/generate_ocr_v2_fixtures.rb` using the
+pinned ImageMagick/font receipt. The historical `clean-text-v2-001` baseline is
+retained verbatim, so the generator receipt remains `PENDING` until that legacy
+fixture is replayable byte-for-byte.
 
 Trial setup performs one recognition through both `extractText` and
 `preprocessAndExtract` and rejects a result that violates the fixture's declared

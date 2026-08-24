@@ -17,7 +17,8 @@ class OcrBenchmarkContractTest {
     fun `OCR benchmark isolates fixture setup and has explicit preprocessing`() {
         val source = Files.readString(sourcePath)
 
-        source.shouldContain("@Param(\"clean-text-v2-001\")")
+        source.shouldContain("@Param(")
+        source.shouldContain("\"clean-text-v2-001\"")
         source.shouldContain("lateinit var fixtureId: String")
         source.shouldContain("@Setup(Level.Trial)")
         source.shouldContain("OcrBenchmarkEnvironment.requireLanguages")
@@ -75,7 +76,7 @@ class OcrBenchmarkContractTest {
     fun `OCR receipt validator requires model provenance and report hash automation`() {
         val build = Files.readString(buildScriptPath)
         val runManifestPath = repositoryRoot().resolve(
-            "benchmark/images-benchmark/docs/raw/issue-563-20260824-macos-arm64-java25-v2-baseline/run-manifest.json",
+            "benchmark/images-benchmark/docs/raw/issue-565-20260824-macos-arm64-java25-v2-corpus/run-manifest.json",
         )
         val modelReceiptPath = runManifestPath.parent.resolve("model-provenance.json")
 

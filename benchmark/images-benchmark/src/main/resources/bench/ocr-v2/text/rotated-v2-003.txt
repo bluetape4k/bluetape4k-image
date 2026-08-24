@@ -1,0 +1,3 @@
+ROTATED DOCUMENT OCR 3
+Right rotation is a preprocessing case
+Corpus v2

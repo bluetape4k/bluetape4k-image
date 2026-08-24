@@ -1,0 +1,36 @@
+{
+  "schema": "ocr-boxes-v1",
+  "coordinateSpace": "pixel",
+  "entries": [
+    {
+      "boxId": "low-resolution-v2-002-box-00",
+      "pageIndex": 0,
+      "text": "LOW RESOLUTION OCR 2",
+      "x": 100,
+      "y": 110,
+      "width": 600,
+      "height": 60,
+      "order": 0
+    },
+    {
+      "boxId": "low-resolution-v2-002-box-01",
+      "pageIndex": 0,
+      "text": "Small text remains measurable",
+      "x": 100,
+      "y": 202,
+      "width": 600,
+      "height": 60,
+      "order": 1
+    },
+    {
+      "boxId": "low-resolution-v2-002-box-02",
+      "pageIndex": 0,
+      "text": "Corpus v2",
+      "x": 100,
+      "y": 294,
+      "width": 600,
+      "height": 60,
+      "order": 2
+    }
+  ]
+}
