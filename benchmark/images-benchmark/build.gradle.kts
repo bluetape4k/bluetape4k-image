@@ -56,7 +56,7 @@ val ocrBenchmarkSourceFile = repositoryDirectory.file(
         "TesseractOcrExtractionBenchmark.kt",
 ).asFile
 val ocrBenchmarkReceiptDirectory = repositoryDirectory.file(
-    "benchmark/images-benchmark/docs/raw/issue-563-20260824-macos-arm64-java25-v2-baseline",
+    "benchmark/images-benchmark/docs/raw/issue-565-20260824-macos-arm64-java25-v2-corpus",
 ).asFile
 val codecMatrixSourceDirectory = layout.buildDirectory.dir("generated/codec-matrix-source-fixtures")
 val codecMatrixRunDirectoryProvider = codecMatrixRunId.flatMap { runId ->

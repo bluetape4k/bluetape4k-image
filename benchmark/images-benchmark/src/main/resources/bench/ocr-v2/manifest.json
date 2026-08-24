@@ -2,15 +2,15 @@
   "schemaVersion": 2,
   "hashAlgorithm": "SHA-256",
   "generator": {
-    "name": "historical-imagemagick-receipt",
-    "version": "7.1.2-27",
-    "command": "ImageMagick 7.1.2-27 with /Library/Fonts/Arial Unicode.ttf; clean synthetic document",
+    "name": "issue-565-imagemagick-synthetic",
+    "version": "7.1.2-29",
+    "command": "ruby benchmark/images-benchmark/tools/generate_ocr_v2_fixtures.rb",
     "replayStatus": "PENDING",
-    "seed": null,
+    "seed": 565,
     "config": {
       "path": "bench/ocr-v2/generator.toml",
-      "bytes": 140,
-      "sha256": "4077b6e6be2c61aa7c924e2b6b591dfac9511d66fd068619f48834b6da11e058",
+      "bytes": 365,
+      "sha256": "792502e77072639a603d94e65f28150e8d07cd5b6c398cd728356bca76291a17",
       "encoding": "UTF-8",
       "normalization": "NFC+LF",
       "spdx": "Apache-2.0",
@@ -29,8 +29,12 @@
         "height": 1000,
         "sha256": "f036a0ec994554fa6c214fe883603bea79c399c934b4674d84f77737ea0322b8"
       },
-      "languages": ["eng"],
-      "transformations": ["none"],
+      "languages": [
+        "eng"
+      ],
+      "transformations": [
+        "none"
+      ],
       "groundTruth": {
         "text": {
           "path": "bench/ocr-v2/clean-text-001.txt",
@@ -73,6 +77,1426 @@
         }
       },
       "expectedOutcome": "TEXT"
+    },
+    {
+      "fixtureId": "clean-v2-002",
+      "scenario": "clean",
+      "sourceType": "synthetic",
+      "resource": {
+        "path": "bench/ocr-v2/images/clean-v2-002.png",
+        "bytes": 13468,
+        "width": 1600,
+        "height": 1000,
+        "sha256": "1f0bc4d69698644473aab3f88e853165ef2b72b29461451d49b67b2c10cf2405"
+      },
+      "languages": [
+        "eng",
+        "kor",
+        "jpn"
+      ],
+      "transformations": [
+        "none"
+      ],
+      "groundTruth": {
+        "text": {
+          "path": "bench/ocr-v2/text/clean-v2-002.txt",
+          "bytes": 74,
+          "sha256": "3b15e112db05dda9c73a9a8c3ba612b26239f1e59d00feb1c940b5eb00bc6a0f",
+          "encoding": "UTF-8",
+          "normalization": "NFC+LF",
+          "whitespacePolicy": "PRESERVE"
+        },
+        "boxes": {
+          "path": "bench/ocr-v2/boxes/clean-v2-002.boxes.json",
+          "bytes": 694,
+          "sha256": "185bde3ee998674421b85e902320ed77503490f5975246852772d788ca496710",
+          "schema": "ocr-boxes-v1",
+          "schemaResource": {
+            "path": "bench/ocr-v2/ocr-boxes-v1.schema.json",
+            "bytes": 908,
+            "sha256": "e8a00d61ef83255fa94c390f4109f470a0ac2b889c3248a54a135d816d80e13b"
+          },
+          "coordinateSpace": "pixel",
+          "order": "reading-order"
+        }
+      },
+      "licenses": [
+        {
+          "component": "generator",
+          "spdx": "Apache-2.0",
+          "sourceUrl": "https://imagemagick.org/script/license.php",
+          "noticePath": "docs/licenses/ocr-fixtures.txt"
+        }
+      ],
+      "provenance": {
+        "font": {
+          "name": "Arial Unicode MS",
+          "sourceUrl": "https://learn.microsoft.com/en-us/typography/font-list/arial-unicode-ms",
+          "bytes": 23278008,
+          "sha256": "876af2cd4854644e7f3e7feb2f688997fdb3343c6df6693611209c9dfb47ccec",
+          "spdx": "LicenseRef-Arial-Unicode-MS",
+          "noticePath": "docs/licenses/ocr-fixtures.txt"
+        }
+      },
+      "expectedOutcome": "TEXT"
+    },
+    {
+      "fixtureId": "clean-v2-003",
+      "scenario": "clean",
+      "sourceType": "synthetic",
+      "resource": {
+        "path": "bench/ocr-v2/images/clean-v2-003.png",
+        "bytes": 13599,
+        "width": 1600,
+        "height": 1000,
+        "sha256": "85eb019c321cc4fb40ba42bba44a8a5028cb1445725dabd9e8e9cab0c2f3b62c"
+      },
+      "languages": [
+        "eng",
+        "kor",
+        "jpn"
+      ],
+      "transformations": [
+        "none"
+      ],
+      "groundTruth": {
+        "text": {
+          "path": "bench/ocr-v2/text/clean-v2-003.txt",
+          "bytes": 74,
+          "sha256": "6f005f1145d05141ec6738a1180448f37e67c1058886c47940a199430c9fcd0e",
+          "encoding": "UTF-8",
+          "normalization": "NFC+LF",
+          "whitespacePolicy": "PRESERVE"
+        },
+        "boxes": {
+          "path": "bench/ocr-v2/boxes/clean-v2-003.boxes.json",
+          "bytes": 694,
+          "sha256": "32706720358a310d2e2212686d3df841f3c69fb08cf8145c61cc9da6f5fdd1a5",
+          "schema": "ocr-boxes-v1",
+          "schemaResource": {
+            "path": "bench/ocr-v2/ocr-boxes-v1.schema.json",
+            "bytes": 908,
+            "sha256": "e8a00d61ef83255fa94c390f4109f470a0ac2b889c3248a54a135d816d80e13b"
+          },
+          "coordinateSpace": "pixel",
+          "order": "reading-order"
+        }
+      },
+      "licenses": [
+        {
+          "component": "generator",
+          "spdx": "Apache-2.0",
+          "sourceUrl": "https://imagemagick.org/script/license.php",
+          "noticePath": "docs/licenses/ocr-fixtures.txt"
+        }
+      ],
+      "provenance": {
+        "font": {
+          "name": "Arial Unicode MS",
+          "sourceUrl": "https://learn.microsoft.com/en-us/typography/font-list/arial-unicode-ms",
+          "bytes": 23278008,
+          "sha256": "876af2cd4854644e7f3e7feb2f688997fdb3343c6df6693611209c9dfb47ccec",
+          "spdx": "LicenseRef-Arial-Unicode-MS",
+          "noticePath": "docs/licenses/ocr-fixtures.txt"
+        }
+      },
+      "expectedOutcome": "TEXT"
+    },
+    {
+      "fixtureId": "low-resolution-v2-001",
+      "scenario": "low-resolution",
+      "sourceType": "synthetic",
+      "resource": {
+        "path": "bench/ocr-v2/images/low-resolution-v2-001.png",
+        "bytes": 4158,
+        "width": 800,
+        "height": 500,
+        "sha256": "2808493b0cf2ea5dce8941f539c65bca9b48e809c607512b64284bbe66745de2"
+      },
+      "languages": [
+        "eng",
+        "kor",
+        "jpn"
+      ],
+      "transformations": [
+        "resize:50%"
+      ],
+      "groundTruth": {
+        "text": {
+          "path": "bench/ocr-v2/text/low-resolution-v2-001.txt",
+          "bytes": 61,
+          "sha256": "3ab679d2843fd5400106a16cf299361052dbdaa11f64587b2eceed113e88789c",
+          "encoding": "UTF-8",
+          "normalization": "NFC+LF",
+          "whitespacePolicy": "PRESERVE"
+        },
+        "boxes": {
+          "path": "bench/ocr-v2/boxes/low-resolution-v2-001.boxes.json",
+          "bytes": 705,
+          "sha256": "3c2fb75ef35791049a268b3c5e01b7147c5e0857e4c1cc2872a03c1e3c15443f",
+          "schema": "ocr-boxes-v1",
+          "schemaResource": {
+            "path": "bench/ocr-v2/ocr-boxes-v1.schema.json",
+            "bytes": 908,
+            "sha256": "e8a00d61ef83255fa94c390f4109f470a0ac2b889c3248a54a135d816d80e13b"
+          },
+          "coordinateSpace": "pixel",
+          "order": "reading-order"
+        }
+      },
+      "licenses": [
+        {
+          "component": "generator",
+          "spdx": "Apache-2.0",
+          "sourceUrl": "https://imagemagick.org/script/license.php",
+          "noticePath": "docs/licenses/ocr-fixtures.txt"
+        }
+      ],
+      "provenance": {
+        "font": {
+          "name": "Arial Unicode MS",
+          "sourceUrl": "https://learn.microsoft.com/en-us/typography/font-list/arial-unicode-ms",
+          "bytes": 23278008,
+          "sha256": "876af2cd4854644e7f3e7feb2f688997fdb3343c6df6693611209c9dfb47ccec",
+          "spdx": "LicenseRef-Arial-Unicode-MS",
+          "noticePath": "docs/licenses/ocr-fixtures.txt"
+        }
+      },
+      "expectedOutcome": "TEXT"
+    },
+    {
+      "fixtureId": "low-resolution-v2-002",
+      "scenario": "low-resolution",
+      "sourceType": "synthetic",
+      "resource": {
+        "path": "bench/ocr-v2/images/low-resolution-v2-002.png",
+        "bytes": 4181,
+        "width": 800,
+        "height": 500,
+        "sha256": "d453488dcc3a5aeeb4b5aa37fb2da45c24bbd08cb3e1dc16ecdabe23203a0db0"
+      },
+      "languages": [
+        "eng",
+        "kor",
+        "jpn"
+      ],
+      "transformations": [
+        "resize:50%"
+      ],
+      "groundTruth": {
+        "text": {
+          "path": "bench/ocr-v2/text/low-resolution-v2-002.txt",
+          "bytes": 61,
+          "sha256": "6119337ada658e66d5ad91ce40cf937fc18fa12f300d6c12497c347c15a9f5fa",
+          "encoding": "UTF-8",
+          "normalization": "NFC+LF",
+          "whitespacePolicy": "PRESERVE"
+        },
+        "boxes": {
+          "path": "bench/ocr-v2/boxes/low-resolution-v2-002.boxes.json",
+          "bytes": 705,
+          "sha256": "bdfc7f19fa43203c596e1e8f7f1110966b4ac6f5bb1c9c2492add6f0e7d57589",
+          "schema": "ocr-boxes-v1",
+          "schemaResource": {
+            "path": "bench/ocr-v2/ocr-boxes-v1.schema.json",
+            "bytes": 908,
+            "sha256": "e8a00d61ef83255fa94c390f4109f470a0ac2b889c3248a54a135d816d80e13b"
+          },
+          "coordinateSpace": "pixel",
+          "order": "reading-order"
+        }
+      },
+      "licenses": [
+        {
+          "component": "generator",
+          "spdx": "Apache-2.0",
+          "sourceUrl": "https://imagemagick.org/script/license.php",
+          "noticePath": "docs/licenses/ocr-fixtures.txt"
+        }
+      ],
+      "provenance": {
+        "font": {
+          "name": "Arial Unicode MS",
+          "sourceUrl": "https://learn.microsoft.com/en-us/typography/font-list/arial-unicode-ms",
+          "bytes": 23278008,
+          "sha256": "876af2cd4854644e7f3e7feb2f688997fdb3343c6df6693611209c9dfb47ccec",
+          "spdx": "LicenseRef-Arial-Unicode-MS",
+          "noticePath": "docs/licenses/ocr-fixtures.txt"
+        }
+      },
+      "expectedOutcome": "TEXT"
+    },
+    {
+      "fixtureId": "low-resolution-v2-003",
+      "scenario": "low-resolution",
+      "sourceType": "synthetic",
+      "resource": {
+        "path": "bench/ocr-v2/images/low-resolution-v2-003.png",
+        "bytes": 4184,
+        "width": 800,
+        "height": 500,
+        "sha256": "439054f1af57cbfffd9f1d973b14b2b525bfbbf4cb8cc52ac52dc9fff4170f61"
+      },
+      "languages": [
+        "eng",
+        "kor",
+        "jpn"
+      ],
+      "transformations": [
+        "resize:50%"
+      ],
+      "groundTruth": {
+        "text": {
+          "path": "bench/ocr-v2/text/low-resolution-v2-003.txt",
+          "bytes": 61,
+          "sha256": "b8c0b47332be2a04ae4012812fd2e7d098f55c601f24b503f0b34dfbe0625dcd",
+          "encoding": "UTF-8",
+          "normalization": "NFC+LF",
+          "whitespacePolicy": "PRESERVE"
+        },
+        "boxes": {
+          "path": "bench/ocr-v2/boxes/low-resolution-v2-003.boxes.json",
+          "bytes": 705,
+          "sha256": "af16ca1ce660af6dfa29f7c4532e6adafda51fd4976f27c3f32230162f7030fb",
+          "schema": "ocr-boxes-v1",
+          "schemaResource": {
+            "path": "bench/ocr-v2/ocr-boxes-v1.schema.json",
+            "bytes": 908,
+            "sha256": "e8a00d61ef83255fa94c390f4109f470a0ac2b889c3248a54a135d816d80e13b"
+          },
+          "coordinateSpace": "pixel",
+          "order": "reading-order"
+        }
+      },
+      "licenses": [
+        {
+          "component": "generator",
+          "spdx": "Apache-2.0",
+          "sourceUrl": "https://imagemagick.org/script/license.php",
+          "noticePath": "docs/licenses/ocr-fixtures.txt"
+        }
+      ],
+      "provenance": {
+        "font": {
+          "name": "Arial Unicode MS",
+          "sourceUrl": "https://learn.microsoft.com/en-us/typography/font-list/arial-unicode-ms",
+          "bytes": 23278008,
+          "sha256": "876af2cd4854644e7f3e7feb2f688997fdb3343c6df6693611209c9dfb47ccec",
+          "spdx": "LicenseRef-Arial-Unicode-MS",
+          "noticePath": "docs/licenses/ocr-fixtures.txt"
+        }
+      },
+      "expectedOutcome": "TEXT"
+    },
+    {
+      "fixtureId": "noisy-v2-001",
+      "scenario": "noisy",
+      "sourceType": "synthetic",
+      "resource": {
+        "path": "bench/ocr-v2/images/noisy-v2-001.png",
+        "bytes": 618395,
+        "width": 1600,
+        "height": 1000,
+        "sha256": "9302065d967a68c990154f5d5e9c3b216e2f0079e1f24b063872f664b7a9780d"
+      },
+      "languages": [
+        "eng",
+        "kor",
+        "jpn"
+      ],
+      "transformations": [
+        "gaussian-noise:0.12"
+      ],
+      "groundTruth": {
+        "text": {
+          "path": "bench/ocr-v2/text/noisy-v2-001.txt",
+          "bytes": 60,
+          "sha256": "f88adcacc05e8f0b492ed3f8f87d8dc1b8864ac18091a5599260f06d63050474",
+          "encoding": "UTF-8",
+          "normalization": "NFC+LF",
+          "whitespacePolicy": "PRESERVE"
+        },
+        "boxes": {
+          "path": "bench/ocr-v2/boxes/noisy-v2-001.boxes.json",
+          "bytes": 680,
+          "sha256": "e910ec20fcc57b4105dd0d3946569ad4f3e292207f8b6836c95e3ee07f9818c6",
+          "schema": "ocr-boxes-v1",
+          "schemaResource": {
+            "path": "bench/ocr-v2/ocr-boxes-v1.schema.json",
+            "bytes": 908,
+            "sha256": "e8a00d61ef83255fa94c390f4109f470a0ac2b889c3248a54a135d816d80e13b"
+          },
+          "coordinateSpace": "pixel",
+          "order": "reading-order"
+        }
+      },
+      "licenses": [
+        {
+          "component": "generator",
+          "spdx": "Apache-2.0",
+          "sourceUrl": "https://imagemagick.org/script/license.php",
+          "noticePath": "docs/licenses/ocr-fixtures.txt"
+        }
+      ],
+      "provenance": {
+        "font": {
+          "name": "Arial Unicode MS",
+          "sourceUrl": "https://learn.microsoft.com/en-us/typography/font-list/arial-unicode-ms",
+          "bytes": 23278008,
+          "sha256": "876af2cd4854644e7f3e7feb2f688997fdb3343c6df6693611209c9dfb47ccec",
+          "spdx": "LicenseRef-Arial-Unicode-MS",
+          "noticePath": "docs/licenses/ocr-fixtures.txt"
+        }
+      },
+      "expectedOutcome": "TEXT"
+    },
+    {
+      "fixtureId": "noisy-v2-002",
+      "scenario": "noisy",
+      "sourceType": "synthetic",
+      "resource": {
+        "path": "bench/ocr-v2/images/noisy-v2-002.png",
+        "bytes": 621148,
+        "width": 1600,
+        "height": 1000,
+        "sha256": "2b3211f25a6bf45accf8f7834bef7355acde8cdb27b714a09865ed39c9f44b13"
+      },
+      "languages": [
+        "eng",
+        "kor",
+        "jpn"
+      ],
+      "transformations": [
+        "gaussian-noise:0.12"
+      ],
+      "groundTruth": {
+        "text": {
+          "path": "bench/ocr-v2/text/noisy-v2-002.txt",
+          "bytes": 60,
+          "sha256": "3235c943e92cd8177b7f3c27c449b352c69526e033d20d16b0439a446c536780",
+          "encoding": "UTF-8",
+          "normalization": "NFC+LF",
+          "whitespacePolicy": "PRESERVE"
+        },
+        "boxes": {
+          "path": "bench/ocr-v2/boxes/noisy-v2-002.boxes.json",
+          "bytes": 680,
+          "sha256": "ae5a9acd5fa88af3d8bfc30c397120c6308d9eeaf5140b1729c3522107762a60",
+          "schema": "ocr-boxes-v1",
+          "schemaResource": {
+            "path": "bench/ocr-v2/ocr-boxes-v1.schema.json",
+            "bytes": 908,
+            "sha256": "e8a00d61ef83255fa94c390f4109f470a0ac2b889c3248a54a135d816d80e13b"
+          },
+          "coordinateSpace": "pixel",
+          "order": "reading-order"
+        }
+      },
+      "licenses": [
+        {
+          "component": "generator",
+          "spdx": "Apache-2.0",
+          "sourceUrl": "https://imagemagick.org/script/license.php",
+          "noticePath": "docs/licenses/ocr-fixtures.txt"
+        }
+      ],
+      "provenance": {
+        "font": {
+          "name": "Arial Unicode MS",
+          "sourceUrl": "https://learn.microsoft.com/en-us/typography/font-list/arial-unicode-ms",
+          "bytes": 23278008,
+          "sha256": "876af2cd4854644e7f3e7feb2f688997fdb3343c6df6693611209c9dfb47ccec",
+          "spdx": "LicenseRef-Arial-Unicode-MS",
+          "noticePath": "docs/licenses/ocr-fixtures.txt"
+        }
+      },
+      "expectedOutcome": "TEXT"
+    },
+    {
+      "fixtureId": "noisy-v2-003",
+      "scenario": "noisy",
+      "sourceType": "synthetic",
+      "resource": {
+        "path": "bench/ocr-v2/images/noisy-v2-003.png",
+        "bytes": 618085,
+        "width": 1600,
+        "height": 1000,
+        "sha256": "2801f06bef4136423ceb79a383df1088b930d30210dc2cf78a0cbc2b4ec9720d"
+      },
+      "languages": [
+        "eng",
+        "kor",
+        "jpn"
+      ],
+      "transformations": [
+        "gaussian-noise:0.12"
+      ],
+      "groundTruth": {
+        "text": {
+          "path": "bench/ocr-v2/text/noisy-v2-003.txt",
+          "bytes": 60,
+          "sha256": "ef0caf26bf4578773eadc6ca0efd5b8b389c33aa268e04d1d36d821622363e2b",
+          "encoding": "UTF-8",
+          "normalization": "NFC+LF",
+          "whitespacePolicy": "PRESERVE"
+        },
+        "boxes": {
+          "path": "bench/ocr-v2/boxes/noisy-v2-003.boxes.json",
+          "bytes": 680,
+          "sha256": "79dfb70bec2e8f31b4aa75ea6f97e29df7b7e9fac4e046496d5920be6e0d13d4",
+          "schema": "ocr-boxes-v1",
+          "schemaResource": {
+            "path": "bench/ocr-v2/ocr-boxes-v1.schema.json",
+            "bytes": 908,
+            "sha256": "e8a00d61ef83255fa94c390f4109f470a0ac2b889c3248a54a135d816d80e13b"
+          },
+          "coordinateSpace": "pixel",
+          "order": "reading-order"
+        }
+      },
+      "licenses": [
+        {
+          "component": "generator",
+          "spdx": "Apache-2.0",
+          "sourceUrl": "https://imagemagick.org/script/license.php",
+          "noticePath": "docs/licenses/ocr-fixtures.txt"
+        }
+      ],
+      "provenance": {
+        "font": {
+          "name": "Arial Unicode MS",
+          "sourceUrl": "https://learn.microsoft.com/en-us/typography/font-list/arial-unicode-ms",
+          "bytes": 23278008,
+          "sha256": "876af2cd4854644e7f3e7feb2f688997fdb3343c6df6693611209c9dfb47ccec",
+          "spdx": "LicenseRef-Arial-Unicode-MS",
+          "noticePath": "docs/licenses/ocr-fixtures.txt"
+        }
+      },
+      "expectedOutcome": "TEXT"
+    },
+    {
+      "fixtureId": "rotated-v2-001",
+      "scenario": "rotated",
+      "sourceType": "synthetic",
+      "resource": {
+        "path": "bench/ocr-v2/images/rotated-v2-001.png",
+        "bytes": 19301,
+        "width": 1000,
+        "height": 1600,
+        "sha256": "ccebb35cc95645f1c0eeac672371d3937e071676124e687fcb2fc6ada2226671"
+      },
+      "languages": [
+        "eng",
+        "kor",
+        "jpn"
+      ],
+      "transformations": [
+        "rotate:90deg"
+      ],
+      "groundTruth": {
+        "text": {
+          "path": "bench/ocr-v2/text/rotated-v2-001.txt",
+          "bytes": 72,
+          "sha256": "792c052c813873372ace2f458d8728898104b29af4155fcc0faebe4d209a29ec",
+          "encoding": "UTF-8",
+          "normalization": "NFC+LF",
+          "whitespacePolicy": "PRESERVE"
+        },
+        "boxes": {
+          "path": "bench/ocr-v2/boxes/rotated-v2-001.boxes.json",
+          "bytes": 695,
+          "sha256": "f25a488c807a018c39d1c55738596150975d8992ad0109cb1a91fdc0df201c71",
+          "schema": "ocr-boxes-v1",
+          "schemaResource": {
+            "path": "bench/ocr-v2/ocr-boxes-v1.schema.json",
+            "bytes": 908,
+            "sha256": "e8a00d61ef83255fa94c390f4109f470a0ac2b889c3248a54a135d816d80e13b"
+          },
+          "coordinateSpace": "pixel",
+          "order": "reading-order"
+        }
+      },
+      "licenses": [
+        {
+          "component": "generator",
+          "spdx": "Apache-2.0",
+          "sourceUrl": "https://imagemagick.org/script/license.php",
+          "noticePath": "docs/licenses/ocr-fixtures.txt"
+        }
+      ],
+      "provenance": {
+        "font": {
+          "name": "Arial Unicode MS",
+          "sourceUrl": "https://learn.microsoft.com/en-us/typography/font-list/arial-unicode-ms",
+          "bytes": 23278008,
+          "sha256": "876af2cd4854644e7f3e7feb2f688997fdb3343c6df6693611209c9dfb47ccec",
+          "spdx": "LicenseRef-Arial-Unicode-MS",
+          "noticePath": "docs/licenses/ocr-fixtures.txt"
+        }
+      },
+      "expectedOutcome": "TEXT"
+    },
+    {
+      "fixtureId": "rotated-v2-002",
+      "scenario": "rotated",
+      "sourceType": "synthetic",
+      "resource": {
+        "path": "bench/ocr-v2/images/rotated-v2-002.png",
+        "bytes": 19523,
+        "width": 1000,
+        "height": 1600,
+        "sha256": "70edf12a58ec195272ae10f8d0bead27e5fbe7eae5d90692bf512c6ee274ed90"
+      },
+      "languages": [
+        "eng",
+        "kor",
+        "jpn"
+      ],
+      "transformations": [
+        "rotate:90deg"
+      ],
+      "groundTruth": {
+        "text": {
+          "path": "bench/ocr-v2/text/rotated-v2-002.txt",
+          "bytes": 72,
+          "sha256": "a3edf04431911780b18a81d76b25cf2a243a871d4a301682d90ac833f2424154",
+          "encoding": "UTF-8",
+          "normalization": "NFC+LF",
+          "whitespacePolicy": "PRESERVE"
+        },
+        "boxes": {
+          "path": "bench/ocr-v2/boxes/rotated-v2-002.boxes.json",
+          "bytes": 695,
+          "sha256": "5fa502ab47bb3a73db876a3f7e14db712d0b787c0c1f0823b589eb9d3072c49a",
+          "schema": "ocr-boxes-v1",
+          "schemaResource": {
+            "path": "bench/ocr-v2/ocr-boxes-v1.schema.json",
+            "bytes": 908,
+            "sha256": "e8a00d61ef83255fa94c390f4109f470a0ac2b889c3248a54a135d816d80e13b"
+          },
+          "coordinateSpace": "pixel",
+          "order": "reading-order"
+        }
+      },
+      "licenses": [
+        {
+          "component": "generator",
+          "spdx": "Apache-2.0",
+          "sourceUrl": "https://imagemagick.org/script/license.php",
+          "noticePath": "docs/licenses/ocr-fixtures.txt"
+        }
+      ],
+      "provenance": {
+        "font": {
+          "name": "Arial Unicode MS",
+          "sourceUrl": "https://learn.microsoft.com/en-us/typography/font-list/arial-unicode-ms",
+          "bytes": 23278008,
+          "sha256": "876af2cd4854644e7f3e7feb2f688997fdb3343c6df6693611209c9dfb47ccec",
+          "spdx": "LicenseRef-Arial-Unicode-MS",
+          "noticePath": "docs/licenses/ocr-fixtures.txt"
+        }
+      },
+      "expectedOutcome": "TEXT"
+    },
+    {
+      "fixtureId": "rotated-v2-003",
+      "scenario": "rotated",
+      "sourceType": "synthetic",
+      "resource": {
+        "path": "bench/ocr-v2/images/rotated-v2-003.png",
+        "bytes": 19574,
+        "width": 1000,
+        "height": 1600,
+        "sha256": "db1b8a891d608ad770dfc102f037e80378bb407b10b98091a6c178e4b80dbcc5"
+      },
+      "languages": [
+        "eng",
+        "kor",
+        "jpn"
+      ],
+      "transformations": [
+        "rotate:90deg"
+      ],
+      "groundTruth": {
+        "text": {
+          "path": "bench/ocr-v2/text/rotated-v2-003.txt",
+          "bytes": 72,
+          "sha256": "2950298e464b2ee6d88531fffef0d80a45c1476548529465e6ce03db6114689c",
+          "encoding": "UTF-8",
+          "normalization": "NFC+LF",
+          "whitespacePolicy": "PRESERVE"
+        },
+        "boxes": {
+          "path": "bench/ocr-v2/boxes/rotated-v2-003.boxes.json",
+          "bytes": 695,
+          "sha256": "00916e6469a1154f2497b63fd207f9162d870420562bb984295fb51a74866cc2",
+          "schema": "ocr-boxes-v1",
+          "schemaResource": {
+            "path": "bench/ocr-v2/ocr-boxes-v1.schema.json",
+            "bytes": 908,
+            "sha256": "e8a00d61ef83255fa94c390f4109f470a0ac2b889c3248a54a135d816d80e13b"
+          },
+          "coordinateSpace": "pixel",
+          "order": "reading-order"
+        }
+      },
+      "licenses": [
+        {
+          "component": "generator",
+          "spdx": "Apache-2.0",
+          "sourceUrl": "https://imagemagick.org/script/license.php",
+          "noticePath": "docs/licenses/ocr-fixtures.txt"
+        }
+      ],
+      "provenance": {
+        "font": {
+          "name": "Arial Unicode MS",
+          "sourceUrl": "https://learn.microsoft.com/en-us/typography/font-list/arial-unicode-ms",
+          "bytes": 23278008,
+          "sha256": "876af2cd4854644e7f3e7feb2f688997fdb3343c6df6693611209c9dfb47ccec",
+          "spdx": "LicenseRef-Arial-Unicode-MS",
+          "noticePath": "docs/licenses/ocr-fixtures.txt"
+        }
+      },
+      "expectedOutcome": "TEXT"
+    },
+    {
+      "fixtureId": "table-v2-001",
+      "scenario": "table",
+      "sourceType": "synthetic",
+      "resource": {
+        "path": "bench/ocr-v2/images/table-v2-001.png",
+        "bytes": 13491,
+        "width": 1600,
+        "height": 1000,
+        "sha256": "40a814b8e4ffe9ca9d2e64e1a5d9df32b7e6c3c099f6a2c724d3f3891b9ad48e"
+      },
+      "languages": [
+        "eng",
+        "kor",
+        "jpn"
+      ],
+      "transformations": [
+        "table-grid"
+      ],
+      "groundTruth": {
+        "text": {
+          "path": "bench/ocr-v2/text/table-v2-001.txt",
+          "bytes": 69,
+          "sha256": "b2cfe6e325312c57e2805a75a6003c06e26ec1a904322414716639ea9b148ef9",
+          "encoding": "UTF-8",
+          "normalization": "NFC+LF",
+          "whitespacePolicy": "PRESERVE"
+        },
+        "boxes": {
+          "path": "bench/ocr-v2/boxes/table-v2-001.boxes.json",
+          "bytes": 869,
+          "sha256": "af87a7ace08c275815e7f9473163c5469fa04ddc4319708c108cf3fcf2172609",
+          "schema": "ocr-boxes-v1",
+          "schemaResource": {
+            "path": "bench/ocr-v2/ocr-boxes-v1.schema.json",
+            "bytes": 908,
+            "sha256": "e8a00d61ef83255fa94c390f4109f470a0ac2b889c3248a54a135d816d80e13b"
+          },
+          "coordinateSpace": "pixel",
+          "order": "reading-order"
+        }
+      },
+      "licenses": [
+        {
+          "component": "generator",
+          "spdx": "Apache-2.0",
+          "sourceUrl": "https://imagemagick.org/script/license.php",
+          "noticePath": "docs/licenses/ocr-fixtures.txt"
+        }
+      ],
+      "provenance": {
+        "font": {
+          "name": "Arial Unicode MS",
+          "sourceUrl": "https://learn.microsoft.com/en-us/typography/font-list/arial-unicode-ms",
+          "bytes": 23278008,
+          "sha256": "876af2cd4854644e7f3e7feb2f688997fdb3343c6df6693611209c9dfb47ccec",
+          "spdx": "LicenseRef-Arial-Unicode-MS",
+          "noticePath": "docs/licenses/ocr-fixtures.txt"
+        }
+      },
+      "expectedOutcome": "TEXT"
+    },
+    {
+      "fixtureId": "table-v2-002",
+      "scenario": "table",
+      "sourceType": "synthetic",
+      "resource": {
+        "path": "bench/ocr-v2/images/table-v2-002.png",
+        "bytes": 13677,
+        "width": 1600,
+        "height": 1000,
+        "sha256": "dadb8062cd93351dd05d462c5efc4f26cd707ac51ef0b736039d9b6430c25928"
+      },
+      "languages": [
+        "eng",
+        "kor",
+        "jpn"
+      ],
+      "transformations": [
+        "table-grid"
+      ],
+      "groundTruth": {
+        "text": {
+          "path": "bench/ocr-v2/text/table-v2-002.txt",
+          "bytes": 69,
+          "sha256": "f24755bf7d03e587c5b8173ba1bfbd271c754537a9bcf4f1a5c8641d0cf439a8",
+          "encoding": "UTF-8",
+          "normalization": "NFC+LF",
+          "whitespacePolicy": "PRESERVE"
+        },
+        "boxes": {
+          "path": "bench/ocr-v2/boxes/table-v2-002.boxes.json",
+          "bytes": 869,
+          "sha256": "5286cd110dbece17e72328928c56acd87cde2c2f4ba8dcc65af15c36399ad911",
+          "schema": "ocr-boxes-v1",
+          "schemaResource": {
+            "path": "bench/ocr-v2/ocr-boxes-v1.schema.json",
+            "bytes": 908,
+            "sha256": "e8a00d61ef83255fa94c390f4109f470a0ac2b889c3248a54a135d816d80e13b"
+          },
+          "coordinateSpace": "pixel",
+          "order": "reading-order"
+        }
+      },
+      "licenses": [
+        {
+          "component": "generator",
+          "spdx": "Apache-2.0",
+          "sourceUrl": "https://imagemagick.org/script/license.php",
+          "noticePath": "docs/licenses/ocr-fixtures.txt"
+        }
+      ],
+      "provenance": {
+        "font": {
+          "name": "Arial Unicode MS",
+          "sourceUrl": "https://learn.microsoft.com/en-us/typography/font-list/arial-unicode-ms",
+          "bytes": 23278008,
+          "sha256": "876af2cd4854644e7f3e7feb2f688997fdb3343c6df6693611209c9dfb47ccec",
+          "spdx": "LicenseRef-Arial-Unicode-MS",
+          "noticePath": "docs/licenses/ocr-fixtures.txt"
+        }
+      },
+      "expectedOutcome": "TEXT"
+    },
+    {
+      "fixtureId": "table-v2-003",
+      "scenario": "table",
+      "sourceType": "synthetic",
+      "resource": {
+        "path": "bench/ocr-v2/images/table-v2-003.png",
+        "bytes": 13747,
+        "width": 1600,
+        "height": 1000,
+        "sha256": "c2df8babdaa5dfe6a4003b3b294b8378563028e38ff6e1009b58551a2ab6f6bb"
+      },
+      "languages": [
+        "eng",
+        "kor",
+        "jpn"
+      ],
+      "transformations": [
+        "table-grid"
+      ],
+      "groundTruth": {
+        "text": {
+          "path": "bench/ocr-v2/text/table-v2-003.txt",
+          "bytes": 69,
+          "sha256": "2f0968b1be012b432e3841cc423729c80f0fbed1ec0badea2928ab17e9df7b2a",
+          "encoding": "UTF-8",
+          "normalization": "NFC+LF",
+          "whitespacePolicy": "PRESERVE"
+        },
+        "boxes": {
+          "path": "bench/ocr-v2/boxes/table-v2-003.boxes.json",
+          "bytes": 869,
+          "sha256": "06228a0da6de7fd8fbd7e9a5fa3ee5fb9870600c40baf9c76deb098146f4a5d1",
+          "schema": "ocr-boxes-v1",
+          "schemaResource": {
+            "path": "bench/ocr-v2/ocr-boxes-v1.schema.json",
+            "bytes": 908,
+            "sha256": "e8a00d61ef83255fa94c390f4109f470a0ac2b889c3248a54a135d816d80e13b"
+          },
+          "coordinateSpace": "pixel",
+          "order": "reading-order"
+        }
+      },
+      "licenses": [
+        {
+          "component": "generator",
+          "spdx": "Apache-2.0",
+          "sourceUrl": "https://imagemagick.org/script/license.php",
+          "noticePath": "docs/licenses/ocr-fixtures.txt"
+        }
+      ],
+      "provenance": {
+        "font": {
+          "name": "Arial Unicode MS",
+          "sourceUrl": "https://learn.microsoft.com/en-us/typography/font-list/arial-unicode-ms",
+          "bytes": 23278008,
+          "sha256": "876af2cd4854644e7f3e7feb2f688997fdb3343c6df6693611209c9dfb47ccec",
+          "spdx": "LicenseRef-Arial-Unicode-MS",
+          "noticePath": "docs/licenses/ocr-fixtures.txt"
+        }
+      },
+      "expectedOutcome": "TEXT"
+    },
+    {
+      "fixtureId": "multi-column-v2-001",
+      "scenario": "multi-column",
+      "sourceType": "synthetic",
+      "resource": {
+        "path": "bench/ocr-v2/images/multi-column-v2-001.png",
+        "bytes": 15485,
+        "width": 1600,
+        "height": 1000,
+        "sha256": "33800dd8b865716b6ebfec2afb8a40955254238e24941583317ab3f8fb049125"
+      },
+      "languages": [
+        "eng",
+        "kor",
+        "jpn"
+      ],
+      "transformations": [
+        "two-column"
+      ],
+      "groundTruth": {
+        "text": {
+          "path": "bench/ocr-v2/text/multi-column-v2-001.txt",
+          "bytes": 98,
+          "sha256": "8a31e23cee1b7a8223c43a853129865463961aee7e0b0f8eb119309b338fe0d8",
+          "encoding": "UTF-8",
+          "normalization": "NFC+LF",
+          "whitespacePolicy": "PRESERVE"
+        },
+        "boxes": {
+          "path": "bench/ocr-v2/boxes/multi-column-v2-001.boxes.json",
+          "bytes": 926,
+          "sha256": "9ea001342e6a6dd65db12fbff6f94054403f484fe4baac17db3b94cc52b4c853",
+          "schema": "ocr-boxes-v1",
+          "schemaResource": {
+            "path": "bench/ocr-v2/ocr-boxes-v1.schema.json",
+            "bytes": 908,
+            "sha256": "e8a00d61ef83255fa94c390f4109f470a0ac2b889c3248a54a135d816d80e13b"
+          },
+          "coordinateSpace": "pixel",
+          "order": "reading-order"
+        }
+      },
+      "licenses": [
+        {
+          "component": "generator",
+          "spdx": "Apache-2.0",
+          "sourceUrl": "https://imagemagick.org/script/license.php",
+          "noticePath": "docs/licenses/ocr-fixtures.txt"
+        }
+      ],
+      "provenance": {
+        "font": {
+          "name": "Arial Unicode MS",
+          "sourceUrl": "https://learn.microsoft.com/en-us/typography/font-list/arial-unicode-ms",
+          "bytes": 23278008,
+          "sha256": "876af2cd4854644e7f3e7feb2f688997fdb3343c6df6693611209c9dfb47ccec",
+          "spdx": "LicenseRef-Arial-Unicode-MS",
+          "noticePath": "docs/licenses/ocr-fixtures.txt"
+        }
+      },
+      "expectedOutcome": "TEXT"
+    },
+    {
+      "fixtureId": "multi-column-v2-002",
+      "scenario": "multi-column",
+      "sourceType": "synthetic",
+      "resource": {
+        "path": "bench/ocr-v2/images/multi-column-v2-002.png",
+        "bytes": 16089,
+        "width": 1600,
+        "height": 1000,
+        "sha256": "040ec50914dbb0c6a721fec6125fe2f88463eef4f0d536ead7e628317a3c33d8"
+      },
+      "languages": [
+        "eng",
+        "kor",
+        "jpn"
+      ],
+      "transformations": [
+        "two-column"
+      ],
+      "groundTruth": {
+        "text": {
+          "path": "bench/ocr-v2/text/multi-column-v2-002.txt",
+          "bytes": 98,
+          "sha256": "cca538b0fea4148c9945c1d648e1bfb2204bb5e80015bc74e4b82b77323edbbb",
+          "encoding": "UTF-8",
+          "normalization": "NFC+LF",
+          "whitespacePolicy": "PRESERVE"
+        },
+        "boxes": {
+          "path": "bench/ocr-v2/boxes/multi-column-v2-002.boxes.json",
+          "bytes": 926,
+          "sha256": "4de257ee7137401577aa79cab7775a8209da4c30813da65fbd6c83aad6292295",
+          "schema": "ocr-boxes-v1",
+          "schemaResource": {
+            "path": "bench/ocr-v2/ocr-boxes-v1.schema.json",
+            "bytes": 908,
+            "sha256": "e8a00d61ef83255fa94c390f4109f470a0ac2b889c3248a54a135d816d80e13b"
+          },
+          "coordinateSpace": "pixel",
+          "order": "reading-order"
+        }
+      },
+      "licenses": [
+        {
+          "component": "generator",
+          "spdx": "Apache-2.0",
+          "sourceUrl": "https://imagemagick.org/script/license.php",
+          "noticePath": "docs/licenses/ocr-fixtures.txt"
+        }
+      ],
+      "provenance": {
+        "font": {
+          "name": "Arial Unicode MS",
+          "sourceUrl": "https://learn.microsoft.com/en-us/typography/font-list/arial-unicode-ms",
+          "bytes": 23278008,
+          "sha256": "876af2cd4854644e7f3e7feb2f688997fdb3343c6df6693611209c9dfb47ccec",
+          "spdx": "LicenseRef-Arial-Unicode-MS",
+          "noticePath": "docs/licenses/ocr-fixtures.txt"
+        }
+      },
+      "expectedOutcome": "TEXT"
+    },
+    {
+      "fixtureId": "multi-column-v2-003",
+      "scenario": "multi-column",
+      "sourceType": "synthetic",
+      "resource": {
+        "path": "bench/ocr-v2/images/multi-column-v2-003.png",
+        "bytes": 16251,
+        "width": 1600,
+        "height": 1000,
+        "sha256": "398523244c5377afa050a8d0e5058ac8c458cd4081baa694ec7eae6e829a7582"
+      },
+      "languages": [
+        "eng",
+        "kor",
+        "jpn"
+      ],
+      "transformations": [
+        "two-column"
+      ],
+      "groundTruth": {
+        "text": {
+          "path": "bench/ocr-v2/text/multi-column-v2-003.txt",
+          "bytes": 98,
+          "sha256": "80473581c7cb65562c8935f9275d5e25788359c3d3331f741057bc2864874782",
+          "encoding": "UTF-8",
+          "normalization": "NFC+LF",
+          "whitespacePolicy": "PRESERVE"
+        },
+        "boxes": {
+          "path": "bench/ocr-v2/boxes/multi-column-v2-003.boxes.json",
+          "bytes": 926,
+          "sha256": "7c0692dbf49a63576d08cab040ce5cb77b23649c4679fc71b6bc4095cf78fde5",
+          "schema": "ocr-boxes-v1",
+          "schemaResource": {
+            "path": "bench/ocr-v2/ocr-boxes-v1.schema.json",
+            "bytes": 908,
+            "sha256": "e8a00d61ef83255fa94c390f4109f470a0ac2b889c3248a54a135d816d80e13b"
+          },
+          "coordinateSpace": "pixel",
+          "order": "reading-order"
+        }
+      },
+      "licenses": [
+        {
+          "component": "generator",
+          "spdx": "Apache-2.0",
+          "sourceUrl": "https://imagemagick.org/script/license.php",
+          "noticePath": "docs/licenses/ocr-fixtures.txt"
+        }
+      ],
+      "provenance": {
+        "font": {
+          "name": "Arial Unicode MS",
+          "sourceUrl": "https://learn.microsoft.com/en-us/typography/font-list/arial-unicode-ms",
+          "bytes": 23278008,
+          "sha256": "876af2cd4854644e7f3e7feb2f688997fdb3343c6df6693611209c9dfb47ccec",
+          "spdx": "LicenseRef-Arial-Unicode-MS",
+          "noticePath": "docs/licenses/ocr-fixtures.txt"
+        }
+      },
+      "expectedOutcome": "TEXT"
+    },
+    {
+      "fixtureId": "multilingual-v2-001",
+      "scenario": "multilingual",
+      "sourceType": "synthetic",
+      "resource": {
+        "path": "bench/ocr-v2/images/multilingual-v2-001.png",
+        "bytes": 12852,
+        "width": 1600,
+        "height": 1000,
+        "sha256": "a7a98e5831496c7da56434a5df9518778d405856473bb432a1ca0ad5c61831cc"
+      },
+      "languages": [
+        "eng",
+        "kor",
+        "jpn"
+      ],
+      "transformations": [
+        "unicode-script-mix"
+      ],
+      "groundTruth": {
+        "text": {
+          "path": "bench/ocr-v2/text/multilingual-v2-001.txt",
+          "bytes": 65,
+          "sha256": "30b6afeca472d2029bc5b69807071ac111dc8b64290eaafd92b717b9d1a1537c",
+          "encoding": "UTF-8",
+          "normalization": "NFC+LF",
+          "whitespacePolicy": "PRESERVE"
+        },
+        "boxes": {
+          "path": "bench/ocr-v2/boxes/multilingual-v2-001.boxes.json",
+          "bytes": 706,
+          "sha256": "f810f8ceb9e647e16bfe4a53400851b8a25035cc3dd603e0bfe5a75a12f72575",
+          "schema": "ocr-boxes-v1",
+          "schemaResource": {
+            "path": "bench/ocr-v2/ocr-boxes-v1.schema.json",
+            "bytes": 908,
+            "sha256": "e8a00d61ef83255fa94c390f4109f470a0ac2b889c3248a54a135d816d80e13b"
+          },
+          "coordinateSpace": "pixel",
+          "order": "reading-order"
+        }
+      },
+      "licenses": [
+        {
+          "component": "generator",
+          "spdx": "Apache-2.0",
+          "sourceUrl": "https://imagemagick.org/script/license.php",
+          "noticePath": "docs/licenses/ocr-fixtures.txt"
+        }
+      ],
+      "provenance": {
+        "font": {
+          "name": "Arial Unicode MS",
+          "sourceUrl": "https://learn.microsoft.com/en-us/typography/font-list/arial-unicode-ms",
+          "bytes": 23278008,
+          "sha256": "876af2cd4854644e7f3e7feb2f688997fdb3343c6df6693611209c9dfb47ccec",
+          "spdx": "LicenseRef-Arial-Unicode-MS",
+          "noticePath": "docs/licenses/ocr-fixtures.txt"
+        }
+      },
+      "expectedOutcome": "TEXT"
+    },
+    {
+      "fixtureId": "multilingual-v2-002",
+      "scenario": "multilingual",
+      "sourceType": "synthetic",
+      "resource": {
+        "path": "bench/ocr-v2/images/multilingual-v2-002.png",
+        "bytes": 13500,
+        "width": 1600,
+        "height": 1000,
+        "sha256": "d57438818efcadb68595d357bd7c5464f3ab2991cee69155d3ace2d592ea5ce5"
+      },
+      "languages": [
+        "eng",
+        "kor",
+        "jpn"
+      ],
+      "transformations": [
+        "unicode-script-mix"
+      ],
+      "groundTruth": {
+        "text": {
+          "path": "bench/ocr-v2/text/multilingual-v2-002.txt",
+          "bytes": 65,
+          "sha256": "c5d200f79abed6fe1a5a8f90f3cb428a50f7485236cb6e7b68af3715e0a810e2",
+          "encoding": "UTF-8",
+          "normalization": "NFC+LF",
+          "whitespacePolicy": "PRESERVE"
+        },
+        "boxes": {
+          "path": "bench/ocr-v2/boxes/multilingual-v2-002.boxes.json",
+          "bytes": 706,
+          "sha256": "9540a2b69a2ba3d88c86c8fbab943b8fb7eb67f4d0caa94cea578a79cb7e62f7",
+          "schema": "ocr-boxes-v1",
+          "schemaResource": {
+            "path": "bench/ocr-v2/ocr-boxes-v1.schema.json",
+            "bytes": 908,
+            "sha256": "e8a00d61ef83255fa94c390f4109f470a0ac2b889c3248a54a135d816d80e13b"
+          },
+          "coordinateSpace": "pixel",
+          "order": "reading-order"
+        }
+      },
+      "licenses": [
+        {
+          "component": "generator",
+          "spdx": "Apache-2.0",
+          "sourceUrl": "https://imagemagick.org/script/license.php",
+          "noticePath": "docs/licenses/ocr-fixtures.txt"
+        }
+      ],
+      "provenance": {
+        "font": {
+          "name": "Arial Unicode MS",
+          "sourceUrl": "https://learn.microsoft.com/en-us/typography/font-list/arial-unicode-ms",
+          "bytes": 23278008,
+          "sha256": "876af2cd4854644e7f3e7feb2f688997fdb3343c6df6693611209c9dfb47ccec",
+          "spdx": "LicenseRef-Arial-Unicode-MS",
+          "noticePath": "docs/licenses/ocr-fixtures.txt"
+        }
+      },
+      "expectedOutcome": "TEXT"
+    },
+    {
+      "fixtureId": "multilingual-v2-003",
+      "scenario": "multilingual",
+      "sourceType": "synthetic",
+      "resource": {
+        "path": "bench/ocr-v2/images/multilingual-v2-003.png",
+        "bytes": 13672,
+        "width": 1600,
+        "height": 1000,
+        "sha256": "07ce84b36c26b2bf0e161ef7b30cbd7faf4cef6c0e9862d4368a0f6eacdfd89a"
+      },
+      "languages": [
+        "eng",
+        "kor",
+        "jpn"
+      ],
+      "transformations": [
+        "unicode-script-mix"
+      ],
+      "groundTruth": {
+        "text": {
+          "path": "bench/ocr-v2/text/multilingual-v2-003.txt",
+          "bytes": 65,
+          "sha256": "41aa94231f55d82aa468c9e99dc3106800f11763f400910123e4ed0e223731e1",
+          "encoding": "UTF-8",
+          "normalization": "NFC+LF",
+          "whitespacePolicy": "PRESERVE"
+        },
+        "boxes": {
+          "path": "bench/ocr-v2/boxes/multilingual-v2-003.boxes.json",
+          "bytes": 706,
+          "sha256": "bc8c6418b6c138af9d517f8b7e6c940dd593d04feeb61ed279f2bfa6d7a39e8c",
+          "schema": "ocr-boxes-v1",
+          "schemaResource": {
+            "path": "bench/ocr-v2/ocr-boxes-v1.schema.json",
+            "bytes": 908,
+            "sha256": "e8a00d61ef83255fa94c390f4109f470a0ac2b889c3248a54a135d816d80e13b"
+          },
+          "coordinateSpace": "pixel",
+          "order": "reading-order"
+        }
+      },
+      "licenses": [
+        {
+          "component": "generator",
+          "spdx": "Apache-2.0",
+          "sourceUrl": "https://imagemagick.org/script/license.php",
+          "noticePath": "docs/licenses/ocr-fixtures.txt"
+        }
+      ],
+      "provenance": {
+        "font": {
+          "name": "Arial Unicode MS",
+          "sourceUrl": "https://learn.microsoft.com/en-us/typography/font-list/arial-unicode-ms",
+          "bytes": 23278008,
+          "sha256": "876af2cd4854644e7f3e7feb2f688997fdb3343c6df6693611209c9dfb47ccec",
+          "spdx": "LicenseRef-Arial-Unicode-MS",
+          "noticePath": "docs/licenses/ocr-fixtures.txt"
+        }
+      },
+      "expectedOutcome": "TEXT"
+    },
+    {
+      "fixtureId": "valid-blank-v2-001",
+      "scenario": "valid-blank",
+      "sourceType": "synthetic",
+      "resource": {
+        "path": "bench/ocr-v2/images/valid-blank-v2-001.png",
+        "bytes": 1206,
+        "width": 1600,
+        "height": 1000,
+        "sha256": "c6e3f76280d774c9fb2082ddc4b586beaa287fbff728cc825b00c8da74ab281b"
+      },
+      "languages": [
+        "eng"
+      ],
+      "transformations": [
+        "blank-canvas"
+      ],
+      "groundTruth": {
+        "text": {
+          "path": "bench/ocr-v2/text/valid-blank-v2-001.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "encoding": "UTF-8",
+          "normalization": "NFC+LF",
+          "whitespacePolicy": "PRESERVE"
+        },
+        "boxes": {
+          "path": "bench/ocr-v2/boxes/valid-blank-v2-001.boxes.json",
+          "bytes": 82,
+          "sha256": "aa50fb53adc4f3009a91c278ca8691dc79ef7c808abd187f14cdaf72851d414e",
+          "schema": "ocr-boxes-v1",
+          "schemaResource": {
+            "path": "bench/ocr-v2/ocr-boxes-v1.schema.json",
+            "bytes": 908,
+            "sha256": "e8a00d61ef83255fa94c390f4109f470a0ac2b889c3248a54a135d816d80e13b"
+          },
+          "coordinateSpace": "pixel",
+          "order": "reading-order"
+        }
+      },
+      "licenses": [
+        {
+          "component": "generator",
+          "spdx": "Apache-2.0",
+          "sourceUrl": "https://imagemagick.org/script/license.php",
+          "noticePath": "docs/licenses/ocr-fixtures.txt"
+        }
+      ],
+      "provenance": {
+        "font": {
+          "name": "Arial Unicode MS",
+          "sourceUrl": "https://learn.microsoft.com/en-us/typography/font-list/arial-unicode-ms",
+          "bytes": 23278008,
+          "sha256": "876af2cd4854644e7f3e7feb2f688997fdb3343c6df6693611209c9dfb47ccec",
+          "spdx": "LicenseRef-Arial-Unicode-MS",
+          "noticePath": "docs/licenses/ocr-fixtures.txt"
+        }
+      },
+      "expectedOutcome": "EMPTY"
+    },
+    {
+      "fixtureId": "valid-blank-v2-002",
+      "scenario": "valid-blank",
+      "sourceType": "synthetic",
+      "resource": {
+        "path": "bench/ocr-v2/images/valid-blank-v2-002.png",
+        "bytes": 1206,
+        "width": 1600,
+        "height": 1000,
+        "sha256": "c6e3f76280d774c9fb2082ddc4b586beaa287fbff728cc825b00c8da74ab281b"
+      },
+      "languages": [
+        "eng"
+      ],
+      "transformations": [
+        "blank-canvas"
+      ],
+      "groundTruth": {
+        "text": {
+          "path": "bench/ocr-v2/text/valid-blank-v2-002.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "encoding": "UTF-8",
+          "normalization": "NFC+LF",
+          "whitespacePolicy": "PRESERVE"
+        },
+        "boxes": {
+          "path": "bench/ocr-v2/boxes/valid-blank-v2-002.boxes.json",
+          "bytes": 82,
+          "sha256": "aa50fb53adc4f3009a91c278ca8691dc79ef7c808abd187f14cdaf72851d414e",
+          "schema": "ocr-boxes-v1",
+          "schemaResource": {
+            "path": "bench/ocr-v2/ocr-boxes-v1.schema.json",
+            "bytes": 908,
+            "sha256": "e8a00d61ef83255fa94c390f4109f470a0ac2b889c3248a54a135d816d80e13b"
+          },
+          "coordinateSpace": "pixel",
+          "order": "reading-order"
+        }
+      },
+      "licenses": [
+        {
+          "component": "generator",
+          "spdx": "Apache-2.0",
+          "sourceUrl": "https://imagemagick.org/script/license.php",
+          "noticePath": "docs/licenses/ocr-fixtures.txt"
+        }
+      ],
+      "provenance": {
+        "font": {
+          "name": "Arial Unicode MS",
+          "sourceUrl": "https://learn.microsoft.com/en-us/typography/font-list/arial-unicode-ms",
+          "bytes": 23278008,
+          "sha256": "876af2cd4854644e7f3e7feb2f688997fdb3343c6df6693611209c9dfb47ccec",
+          "spdx": "LicenseRef-Arial-Unicode-MS",
+          "noticePath": "docs/licenses/ocr-fixtures.txt"
+        }
+      },
+      "expectedOutcome": "EMPTY"
+    },
+    {
+      "fixtureId": "valid-blank-v2-003",
+      "scenario": "valid-blank",
+      "sourceType": "synthetic",
+      "resource": {
+        "path": "bench/ocr-v2/images/valid-blank-v2-003.png",
+        "bytes": 1206,
+        "width": 1600,
+        "height": 1000,
+        "sha256": "c6e3f76280d774c9fb2082ddc4b586beaa287fbff728cc825b00c8da74ab281b"
+      },
+      "languages": [
+        "eng"
+      ],
+      "transformations": [
+        "blank-canvas"
+      ],
+      "groundTruth": {
+        "text": {
+          "path": "bench/ocr-v2/text/valid-blank-v2-003.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "encoding": "UTF-8",
+          "normalization": "NFC+LF",
+          "whitespacePolicy": "PRESERVE"
+        },
+        "boxes": {
+          "path": "bench/ocr-v2/boxes/valid-blank-v2-003.boxes.json",
+          "bytes": 82,
+          "sha256": "aa50fb53adc4f3009a91c278ca8691dc79ef7c808abd187f14cdaf72851d414e",
+          "schema": "ocr-boxes-v1",
+          "schemaResource": {
+            "path": "bench/ocr-v2/ocr-boxes-v1.schema.json",
+            "bytes": 908,
+            "sha256": "e8a00d61ef83255fa94c390f4109f470a0ac2b889c3248a54a135d816d80e13b"
+          },
+          "coordinateSpace": "pixel",
+          "order": "reading-order"
+        }
+      },
+      "licenses": [
+        {
+          "component": "generator",
+          "spdx": "Apache-2.0",
+          "sourceUrl": "https://imagemagick.org/script/license.php",
+          "noticePath": "docs/licenses/ocr-fixtures.txt"
+        }
+      ],
+      "provenance": {
+        "font": {
+          "name": "Arial Unicode MS",
+          "sourceUrl": "https://learn.microsoft.com/en-us/typography/font-list/arial-unicode-ms",
+          "bytes": 23278008,
+          "sha256": "876af2cd4854644e7f3e7feb2f688997fdb3343c6df6693611209c9dfb47ccec",
+          "spdx": "LicenseRef-Arial-Unicode-MS",
+          "noticePath": "docs/licenses/ocr-fixtures.txt"
+        }
+      },
+      "expectedOutcome": "EMPTY"
     }
   ],
   "negatives": [
@@ -83,6 +1507,26 @@
       "sha256": "89333cb8edf527776b033f457dcb8f66bfc49047803334364bfb1ab9acb284ab",
       "expectedReason": "DECODE_FAILED",
       "sourceType": "synthetic"
+    },
+    {
+      "fixtureId": "malformed-v2-002",
+      "scenario": "malformed",
+      "path": "bench/ocr-v2/malformed-002.bin",
+      "bytes": 18,
+      "sha256": "7adbda99d2418e633c6fa9a778344718525082e253918b7f30ed9f4f906da0a1",
+      "expectedReason": "DECODE_FAILED",
+      "sourceType": "synthetic",
+      "expectedOutcome": "ERROR"
+    },
+    {
+      "fixtureId": "malformed-v2-003",
+      "scenario": "malformed",
+      "path": "bench/ocr-v2/malformed-003.bin",
+      "bytes": 18,
+      "sha256": "ef14b2651df7551fc17463e0a276a73a788fa331f8e9b53101e888376fb41f26",
+      "expectedReason": "DECODE_FAILED",
+      "sourceType": "synthetic",
+      "expectedOutcome": "ERROR"
     }
   ]
 }

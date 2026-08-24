@@ -1,0 +1,3 @@
+NOISY SCAN OCR 1
+Synthetic noise is deterministic
+Corpus v2

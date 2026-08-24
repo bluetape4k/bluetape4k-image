@@ -1,0 +1,46 @@
+{
+  "schema": "ocr-boxes-v1",
+  "coordinateSpace": "pixel",
+  "entries": [
+    {
+      "boxId": "multi-column-v2-003-box-00",
+      "pageIndex": 0,
+      "text": "MULTI COLUMN OCR 3",
+      "x": 100,
+      "y": 110,
+      "width": 1400,
+      "height": 60,
+      "order": 0
+    },
+    {
+      "boxId": "multi-column-v2-003-box-01",
+      "pageIndex": 0,
+      "text": "Left column: invoice number 3",
+      "x": 100,
+      "y": 202,
+      "width": 1400,
+      "height": 60,
+      "order": 1
+    },
+    {
+      "boxId": "multi-column-v2-003-box-02",
+      "pageIndex": 0,
+      "text": "Right column: total 30",
+      "x": 100,
+      "y": 294,
+      "width": 1400,
+      "height": 60,
+      "order": 2
+    },
+    {
+      "boxId": "multi-column-v2-003-box-03",
+      "pageIndex": 0,
+      "text": "Reading order is explicit",
+      "x": 100,
+      "y": 386,
+      "width": 1400,
+      "height": 60,
+      "order": 3
+    }
+  ]
+}

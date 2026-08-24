@@ -1,0 +1,46 @@
+{
+  "schema": "ocr-boxes-v1",
+  "coordinateSpace": "pixel",
+  "entries": [
+    {
+      "boxId": "table-v2-001-box-00",
+      "pageIndex": 0,
+      "text": "TABLE OCR 1",
+      "x": 100,
+      "y": 110,
+      "width": 1400,
+      "height": 60,
+      "order": 0
+    },
+    {
+      "boxId": "table-v2-001-box-01",
+      "pageIndex": 0,
+      "text": "Name | Count | Status",
+      "x": 100,
+      "y": 202,
+      "width": 1400,
+      "height": 60,
+      "order": 1
+    },
+    {
+      "boxId": "table-v2-001-box-02",
+      "pageIndex": 0,
+      "text": "alpha | 3 | ready",
+      "x": 100,
+      "y": 294,
+      "width": 1400,
+      "height": 60,
+      "order": 2
+    },
+    {
+      "boxId": "table-v2-001-box-03",
+      "pageIndex": 0,
+      "text": "beta | 5 | ready",
+      "x": 100,
+      "y": 386,
+      "width": 1400,
+      "height": 60,
+      "order": 3
+    }
+  ]
+}

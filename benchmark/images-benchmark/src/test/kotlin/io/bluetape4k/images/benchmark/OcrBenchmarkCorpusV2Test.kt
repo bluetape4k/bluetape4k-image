@@ -8,6 +8,30 @@ import java.security.MessageDigest
 
 class OcrBenchmarkCorpusV2Test {
     @Test
+    fun `v2 manifest covers the full scenario and language floors`() {
+        val manifest = OcrBenchmarkCorpusV2.loadManifest()
+
+        manifest.fixtures.size.shouldBeEqualTo(24)
+        manifest.negatives.size.shouldBeEqualTo(3)
+
+        OcrBenchmarkCorpusScenario.entries
+            .filterNot { scenario -> scenario == OcrBenchmarkCorpusScenario.MALFORMED }
+            .forEach { scenario ->
+                manifest.fixtures.count { fixture -> fixture.scenario == scenario }
+                    .shouldBeEqualTo(3)
+            }
+
+        val languageCounts =
+            manifest.fixtures
+                .flatMap(OcrBenchmarkCorpusFixtureEntry::languages)
+                .groupingBy { it }
+                .eachCount()
+        languageCounts["eng"].shouldBeEqualTo(24)
+        languageCounts["kor"].shouldBeEqualTo(20)
+        languageCounts["jpn"].shouldBeEqualTo(20)
+    }
+
+    @Test
     fun `v2 manifest verifies image ground truth geometry and receipts`() {
         val manifest = OcrBenchmarkCorpusV2.loadManifest()
         val fixture = OcrBenchmarkCorpusV2.loadFixture("clean-text-v2-001")

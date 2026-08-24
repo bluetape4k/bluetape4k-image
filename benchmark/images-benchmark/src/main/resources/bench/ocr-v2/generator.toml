@@ -1,5 +1,9 @@
-tool = "ImageMagick"
-version = "7.1.2-27"
-font = "/Library/Fonts/Arial Unicode.ttf"
-fixture = "clean synthetic document"
-replay = "PENDING"
+tool=ImageMagick
+version=7.1.2-29
+font=/System/Library/Fonts/Supplemental/Arial Unicode.ttf
+fixture=issue-565 synthetic OCR corpus v2
+scenarios=clean,low-resolution,noisy,rotated,table,multi-column,multilingual,valid-blank,malformed
+positive-fixtures=24
+negative-fixtures=3
+seed=565
+replay=PENDING (historical clean-text-v2-001 is retained from issue-563 baseline)

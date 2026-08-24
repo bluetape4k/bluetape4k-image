@@ -118,9 +118,10 @@ native engine 설정을 포함하며 fixture 로드, 디코드, 예상 token 검
 #### 현재 OCR corpus v2 벤치마크
 
 벤치마크 task는 이제 검증된 `bench/ocr-v2/manifest.json`을 `fixtureId`로
-읽으며 v1 fixture fallback을 사용하지 않습니다. 현재 매니페스트에는 벤치마크에
-사용할 수 있는 positive fixture `clean-text-v2-001` 하나가 있습니다. 위 표와
-차트는 과거 v1 기준 데이터로 유지합니다.
+읽으며 v1 fixture fallback을 사용하지 않습니다. 매니페스트에는 8개 양성
+시나리오 클래스별 3개씩 총 24개의 benchmarkable positive fixture와, 별도로
+분리한 malformed-input negative receipt 3개가 있습니다. 위 표와 차트는 과거
+v1 기준 데이터로 유지합니다.
 
 | Fixture | 직접 추출 latency | 전처리 + 추출 | 직접 추출 throughput | 전처리 + 추출 |
 |---------|-------------------|---------------|----------------------|---------------|
@@ -128,8 +129,14 @@ native engine 설정을 포함하며 fixture 로드, 디코드, 예상 token 검
 
 이 결과는 macOS arm64 Java 25 host 한 대에서 얻은 Tesseract baseline-only
 receipt이며, host 간 순위나 도입 결정을 의미하지 않습니다. v2 immutable report와
-실행 manifest는 [`Issue #563 raw evidence`](docs/raw/issue-563-20260824-macos-arm64-java25-v2-baseline/)
-에 있습니다. 9개 시나리오·27개 fixture 전체와 Paddle 비교는 아직 후속 범위입니다.
+실행 manifest는 [`Issue #565 corpus receipt`](docs/raw/issue-565-20260824-macos-arm64-java25-v2-corpus/)
+에 있습니다. corpus는 후속 metric 및 run-receipt train을 위한 규모로 확장되었고,
+CER/WER와 cold/warm/RSS 근거는 별도 benchmark output으로 관리합니다.
+
+synthetic 추가 fixture는 고정한 ImageMagick/font receipt를 사용해
+`ruby benchmark/images-benchmark/tools/generate_ocr_v2_fixtures.rb`로 재생성할 수
+있습니다. 기존 `clean-text-v2-001` baseline은 byte 단위로 보존하므로 legacy
+fixture를 동일하게 재생할 수 있을 때까지 generator receipt는 `PENDING`입니다.
 
 trial setup은 `extractText`와 `preprocessAndExtract`를 각각 한 번 실행해
 fixture가 선언한 `TEXT`/`EMPTY` 결과를 모두 검증합니다. 선언과 다른 결과가 나오면

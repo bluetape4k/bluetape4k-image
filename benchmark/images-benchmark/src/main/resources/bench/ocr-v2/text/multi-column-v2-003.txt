@@ -1,0 +1,4 @@
+MULTI COLUMN OCR 3
+Left column: invoice number 3
+Right column: total 30
+Reading order is explicit

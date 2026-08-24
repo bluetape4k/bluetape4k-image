@@ -272,9 +272,7 @@ internal object OcrBenchmarkCorpusV2 {
                     "EMPTY OCR fixture must have blank text and no geometry"
                 }
             }
-            OcrBenchmarkExpectedOutcome.ERROR -> {
-                Unit
-            }
+            OcrBenchmarkExpectedOutcome.ERROR -> {}
         }
     }
 
@@ -291,9 +289,7 @@ internal object OcrBenchmarkCorpusV2 {
                 }
                 error("OCR negative fixture must fail image decoding: ${entry.path}")
             }
-            else -> {
-                Unit
-            }
+            else -> {}
         }
     }
 
@@ -502,6 +498,29 @@ internal data class OcrBenchmarkCorpusManifest(
         }
         require(fixtureIds.intersect(negativeIds.toSet()).isEmpty()) {
             "OCR corpus fixture and negative fixtureId values must not overlap"
+        }
+        val positiveScenarioCounts =
+            fixtures
+                .groupingBy(OcrBenchmarkCorpusFixtureEntry::scenario)
+                .eachCount()
+        OcrBenchmarkCorpusScenario.entries
+            .filterNot { scenario -> scenario == OcrBenchmarkCorpusScenario.MALFORMED }
+            .forEach { scenario ->
+                require((positiveScenarioCounts[scenario] ?: 0) >= 3) {
+                    "OCR corpus scenario must have at least 3 fixtures: ${scenario.value}"
+                }
+            }
+        require(negatives.count { it.scenario == OcrBenchmarkCorpusScenario.MALFORMED } >= 3) {
+            "OCR corpus malformed scenario must have at least 3 negative fixtures"
+        }
+        require(negatives.all { it.expectedOutcome == OcrBenchmarkExpectedOutcome.ERROR }) {
+            "OCR corpus negative fixtures must have ERROR outcome"
+        }
+        val languageCounts = fixtures.flatMap(OcrBenchmarkCorpusFixtureEntry::languages).groupingBy { it }.eachCount()
+        listOf("eng", "kor", "jpn").forEach { language ->
+            require((languageCounts[language] ?: 0) >= 3) {
+                "OCR corpus must cover language floor: $language"
+            }
         }
     }
 
@@ -740,6 +759,8 @@ internal data class OcrBenchmarkNegativeFixtureReceipt(
     val sha256: String,
     val expectedReason: OcrBenchmarkNegativeReason,
     val sourceType: OcrBenchmarkCorpusSourceType,
+    val scenario: OcrBenchmarkCorpusScenario = OcrBenchmarkCorpusScenario.MALFORMED,
+    val expectedOutcome: OcrBenchmarkExpectedOutcome = OcrBenchmarkExpectedOutcome.ERROR,
 ) : Serializable {
     init {
         require(fixtureId.matches(Regex("[a-z0-9][a-z0-9-]{2,80}"))) {
@@ -748,6 +769,12 @@ internal data class OcrBenchmarkNegativeFixtureReceipt(
         requireCorpusRelativePath(path, "negative fixture path")
         require(bytes >= 0 && isCorpusSha256(sha256)) {
             "OCR corpus negative fixture receipt is incomplete"
+        }
+        require(scenario == OcrBenchmarkCorpusScenario.MALFORMED) {
+            "OCR negative fixtures must use the malformed scenario"
+        }
+        require(expectedOutcome == OcrBenchmarkExpectedOutcome.ERROR) {
+            "OCR negative fixtures must have ERROR outcome"
         }
     }
 
