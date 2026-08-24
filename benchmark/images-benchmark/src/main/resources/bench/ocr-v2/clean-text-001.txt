@@ -1,0 +1,6 @@
+BLUETAPE OCR BENCHMARK
+Document ID: OCR-203-2026
+Deterministic clean-text fixture for Tesseract extraction.
+Lower latency is better. Allocation is reported separately.
+This document contains English text and numeric tokens 203 2026.
+bluetape4k-image / benchmark fixture / clean document

@@ -1,0 +1,5 @@
+OCR benchmark fixture notice
+
+The v2 manifest stores provenance and license receipts for generated inputs.
+The font named by the receipt is not redistributed in this repository; only
+its source URL, byte count, and SHA-256 are recorded for reproducibility.

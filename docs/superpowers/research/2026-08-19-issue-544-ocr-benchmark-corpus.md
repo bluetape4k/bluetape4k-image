@@ -597,7 +597,8 @@ checksum, offline cache, native runtime CI tier뿐이다.
 ## 재평가 전 필수 조건
 
 - [ ] repo-local corpus 생성기, font, config, text, boxes의 version/hash 고정
-- [ ] manifest v2와 negative fixture의 schema/loader contract 구현
+- [x] manifest v2와 representative negative fixture의 schema/loader contract 구현
+      (9개 시나리오·최소 27개 fixture 확장은 아직 PENDING)
 - [ ] historical #203 report의 publication receipt mismatch를 정정하거나
       quarantine한 새 baseline report 생성
 - [ ] Tesseract binary/traineddata와 Paddle service/model/container digest 고정
@@ -642,11 +643,30 @@ checksum, offline cache, native runtime CI tier뿐이다.
 | Tesseract benchmark 측정 주의사항 | [benchmark guidance](https://tesseract-ocr.github.io/tessdoc/Benchmarks.html) | host, preprocessing, model 차이를 숨기지 않는 benchmark 경계 |
 | JMH benchmark mode semantics | [OpenJDK `JMHSample_02_BenchmarkModes`](https://github.com/openjdk/jmh/blob/master/jmh-samples/src/main/java/org/openjdk/jmh/samples/JMHSample_02_BenchmarkModes.java) | `SampleTime` percentile과 `SingleShotTime` cold protocol을 고정하는 근거 |
 
+## 2026-08-24 구현 slice
+
+이번 slice는 비교 실행의 선행 조건인 manifest v2 계약을 benchmark 모듈에
+구현했다. `OcrBenchmarkCorpusV2`는 기존 `immutableImageOf`와 benchmark fixture
+경계를 재사용하면서 다음 입력을 하나의 receipt로 검증한다.
+
+- generator config의 bytes·SHA-256·encoding·정규화·license receipt
+- image의 bytes·dimensions·SHA-256과 단일 read 결과의 decoder 전달
+- NFC+LF ground-truth text와 `TEXT`/`EMPTY`/`ERROR` outcome
+- `ocr-boxes-v1` schema·boxId/order uniqueness·single-page pixel bounds
+- malformed input의 별도 `DECODE_FAILED` negative manifest
+
+대표 fixture는 기존 `clean-text.png`를 재사용하고, v2 전용 text·boxes·schema·
+generator receipt를 `bench/ocr-v2/`에 고정한다. `OcrBenchmarkCorpusV2Test`는
+정상 receipt, malformed negative, path traversal, wrong hash, unknown outcome,
+duplicate geometry order를 검증한다. 이 slice는 Tesseract/PaddleOCR 실행, 9개
+시나리오의 27개 corpus 확장, CER/WER·latency·RSS 결과를 완료했다고 주장하지
+않는다. 그 항목은 별도 scheduled/nightly benchmark train의 PENDING gate다.
+
 ## Issue #544 완료조건 매핑
 
 | 완료조건 | 상태 | 근거 |
 | --- | --- | --- |
-| corpus provenance·license·hash와 정답 라벨 고정 | **SPEC COMPLETE** | 기본 synthetic corpus, public supplemental 조건, manifest v2, ground-truth 계약 |
+| corpus provenance·license·hash와 정답 라벨 고정 | **HARNESS PARTIAL** | manifest v2 loader와 대표 synthetic fixture의 receipt·ground truth; 9개 시나리오 전체 확장은 PENDING |
 | 최소 3회 반복·warm-up·허용 오차·artifact 형식 문서화 | **SPEC COMPLETE** | 실행 protocol과 warm/cold relative MAD 허용 오차 |
 | Tesseract 대비 품질·지연·RSS 개선과 실패 사례 기록 | **PENDING** | 실제 PaddleOCR model/service 실행과 raw result가 아직 없음 |
 | 수용 가능한 결과가 없으면 DEFER 유지 | **DECIDED** | quality/performance/reproducibility gate 중 하나라도 미충족하면 DEFER |
@@ -665,8 +685,10 @@ checksum, offline cache, native runtime CI tier뿐이다.
 - [x] corpus 대표성, CER 집계·산식, 반복 metric 허용 오차, DEFER 조건을 명시
 - [x] 공식 URL과 저장소 source-to-claim ledger를 제공
 - [x] dependency/model/production code mutation 없음
+- [x] manifest v2 loader와 대표 `DECODE_FAILED` negative fixture의 계약 테스트
+- [ ] 9개 시나리오·최소 27개 fixture와 세 언어별 floor 확장
 - [ ] 실제 Tesseract/Paddle 동일 corpus benchmark 실행
 - [ ] 선택 model/container digest와 SBOM/NOTICE receipt 생성
 - [ ] #545 service/security와 #546 provider-neutral API 설계 승인
 
-**최종 상태: RESEARCH-1 CONTRACT SPECIFICATION / benchmark 설계 ADOPT / 비교 실행 PENDING / PaddleOCR provider DEFER**
+**최종 상태: RESEARCH-1 CONTRACT SPECIFICATION / v2 harness PARTIAL / 전체 corpus·비교 실행 PENDING / PaddleOCR provider DEFER**

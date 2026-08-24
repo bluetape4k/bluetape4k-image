@@ -1,0 +1,12 @@
+{
+  "schema": "ocr-boxes-v1",
+  "coordinateSpace": "pixel",
+  "entries": [
+    {"boxId":"title","pageIndex":0,"text":"BLUETAPE OCR BENCHMARK","x":110,"y":110,"width":950,"height":65,"order":0},
+    {"boxId":"document-id","pageIndex":0,"text":"Document ID: OCR-203-2026","x":110,"y":230,"width":520,"height":55,"order":1},
+    {"boxId":"description","pageIndex":0,"text":"Deterministic clean-text fixture for Tesseract extraction.","x":110,"y":340,"width":730,"height":45,"order":2},
+    {"boxId":"latency","pageIndex":0,"text":"Lower latency is better. Allocation is reported separately.","x":110,"y":420,"width":850,"height":45,"order":3},
+    {"boxId":"contents","pageIndex":0,"text":"This document contains English text and numeric tokens 203 2026.","x":110,"y":500,"width":900,"height":45,"order":4},
+    {"boxId":"footer","pageIndex":0,"text":"bluetape4k-image / benchmark fixture / clean document","x":110,"y":790,"width":760,"height":45,"order":5}
+  ]
+}

@@ -1,0 +1,87 @@
+{
+  "schemaVersion": 2,
+  "hashAlgorithm": "SHA-256",
+  "generator": {
+    "name": "repo-owned-ocr-fixtures",
+    "version": "1.0.0",
+    "command": "generator/ocr-fixtures --config bench/ocr-v2/generator.toml --seed 17",
+    "seed": 17,
+    "config": {
+      "path": "bench/ocr-v2/generator.toml",
+      "bytes": 86,
+      "sha256": "ddc05e964368379750e480be842f6933366fc05a860fa2c7e4b02ac49986c68e",
+      "encoding": "UTF-8",
+      "normalization": "NFC+LF",
+      "spdx": "Apache-2.0",
+      "noticePath": "docs/licenses/ocr-fixtures.txt"
+    }
+  },
+  "fixtures": [
+    {
+      "fixtureId": "clean-text-v2-001",
+      "scenario": "clean",
+      "sourceType": "synthetic",
+      "resource": {
+        "path": "bench/ocr/clean-text.png",
+        "bytes": 155280,
+        "width": 1600,
+        "height": 1000,
+        "sha256": "f036a0ec994554fa6c214fe883603bea79c399c934b4674d84f77737ea0322b8"
+      },
+      "languages": ["eng"],
+      "transformations": ["none"],
+      "groundTruth": {
+        "text": {
+          "path": "bench/ocr-v2/clean-text-001.txt",
+          "bytes": 287,
+          "sha256": "d1bf91aefb964ca7cf3941a6653cdc1d7275fdc5c2aaed71ad82bd7bbebfe416",
+          "encoding": "UTF-8",
+          "normalization": "NFC+LF",
+          "whitespacePolicy": "PRESERVE"
+        },
+        "boxes": {
+          "path": "bench/ocr-v2/clean-text-001.boxes.json",
+          "bytes": 961,
+          "sha256": "4faafcbbfc2ada2dfe73c7957dbbcec165d53a307fb64c8757ed4b112f827931",
+          "schema": "ocr-boxes-v1",
+          "schemaResource": {
+            "path": "bench/ocr-v2/ocr-boxes-v1.schema.json",
+            "bytes": 908,
+            "sha256": "e8a00d61ef83255fa94c390f4109f470a0ac2b889c3248a54a135d816d80e13b"
+          },
+          "coordinateSpace": "pixel",
+          "order": "reading-order"
+        }
+      },
+      "licenses": [
+        {
+          "component": "generator",
+          "spdx": "Apache-2.0",
+          "sourceUrl": "https://imagemagick.org/script/license.php",
+          "noticePath": "docs/licenses/ocr-fixtures.txt"
+        }
+      ],
+      "provenance": {
+        "font": {
+          "name": "Arial Unicode MS",
+          "sourceUrl": "https://learn.microsoft.com/en-us/typography/font-list/arial-unicode-ms",
+          "bytes": 23278008,
+          "sha256": "876af2cd4854644e7f3e7feb2f688997fdb3343c6df6693611209c9dfb47ccec",
+          "spdx": "LicenseRef-Arial-Unicode-MS",
+          "noticePath": "docs/licenses/ocr-fixtures.txt"
+        }
+      },
+      "expectedOutcome": "TEXT"
+    }
+  ],
+  "negatives": [
+    {
+      "fixtureId": "malformed-v2-001",
+      "path": "bench/ocr-v2/malformed-001.bin",
+      "bytes": 13,
+      "sha256": "89333cb8edf527776b033f457dcb8f66bfc49047803334364bfb1ab9acb284ab",
+      "expectedReason": "DECODE_FAILED",
+      "sourceType": "synthetic"
+    }
+  ]
+}
