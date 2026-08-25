@@ -13,6 +13,7 @@ import java.awt.image.BufferedImage
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.File
+import java.nio.file.Files
 import java.nio.file.Path
 import javax.imageio.ImageIO
 
@@ -84,6 +85,34 @@ class ExifDataTest {
     }
 
     @Test
+    fun `File readExif enforces the same byte limit`() {
+        val path = Files.createTempFile("exif-limit-", ".jpg")
+        try {
+            Files.write(path, ByteArray(1_025))
+
+            assertFailsWith<IllegalArgumentException> {
+                path.toFile().readExif(maxBytes = 1_024)
+            }
+        } finally {
+            Files.deleteIfExists(path)
+        }
+    }
+
+    @Test
+    fun `Path readExif enforces the same byte limit`() {
+        val path = Files.createTempFile("exif-limit-", ".jpg")
+        try {
+            Files.write(path, ByteArray(1_025))
+
+            assertFailsWith<IllegalArgumentException> {
+                path.readExif(maxBytes = 1_024)
+            }
+        } finally {
+            Files.deleteIfExists(path)
+        }
+    }
+
+    @Test
     fun `readExif on real photo bytes succeeds`() {
         val bytes = Resourcex.getInputStream(HOMER_JPG)!!.use { it.readBytes() }
         val result = readExif(bytes)
@@ -127,6 +156,16 @@ class ExifDataTest {
         result.hasGps.shouldBeFalse()
     }
 
+    @Test
+    fun `Path readExif on nonexistent path returns EMPTY`() {
+        val directory = Files.createTempDirectory("exif-missing-")
+        try {
+            directory.resolve("missing.jpg").readExif() shouldBeEqualTo ExifData.EMPTY
+        } finally {
+            Files.deleteIfExists(directory)
+        }
+    }
+
     // ─── InputStream.readExif() 검증 ────────────────────────────────────────
 
     @Test
@@ -135,6 +174,13 @@ class ExifDataTest {
         val result = ByteArrayInputStream(bytes).readExif()
         log.debug { "no-exif InputStream.readExif: $result" }
         result.hasGps.shouldBeFalse()
+    }
+
+    @Test
+    fun `InputStream readExif enforces the same byte limit`() {
+        assertFailsWith<IllegalArgumentException> {
+            ByteArray(1_025).inputStream().readExif(maxBytes = 1_024)
+        }
     }
 
     @Test
