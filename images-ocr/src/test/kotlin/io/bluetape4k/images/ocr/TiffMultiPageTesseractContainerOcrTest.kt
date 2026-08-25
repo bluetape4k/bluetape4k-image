@@ -3,6 +3,7 @@ package io.bluetape4k.images.ocr
 import com.sksamuel.scrimage.ImmutableImage
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldNotBeEmpty
+import io.bluetape4k.assertions.should
 import io.bluetape4k.images.coroutines.SuspendTiffMultiPageWriter
 import java.io.ByteArrayOutputStream
 import java.nio.file.Files
@@ -59,7 +60,7 @@ class TiffMultiPageTesseractContainerOcrTest {
                     "--psm",
                     "7",
                 )
-                check(output.exitCode == 0) { "container Tesseract failed for page $index" }
+                output.exitCode.should("container Tesseract failed for page $index") { it == 0 }
                 val text = output.stdout.trim()
                 return OcrStructuredResult(
                     text = text,

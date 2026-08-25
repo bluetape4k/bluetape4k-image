@@ -228,6 +228,7 @@ class ImagePropertyTest {
             totalDiff > 0.0,
             "이 이미지에서 sepia와 grayscale 결과가 동일합니다 (단색 또는 무채색): $label"
         )
+        totalDiff shouldBeGreaterThan 0.0
     }
 
     /**

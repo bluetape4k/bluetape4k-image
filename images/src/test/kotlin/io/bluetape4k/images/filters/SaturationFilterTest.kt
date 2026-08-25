@@ -6,6 +6,7 @@ import io.bluetape4k.logging.coroutines.KLoggingChannel
 import java.awt.image.BufferedImage
 import kotlin.math.abs
 import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.should
 import org.junit.jupiter.api.Test
 
 class SaturationFilterTest : AbstractFilterTest() {
@@ -61,9 +62,9 @@ class SaturationFilterTest : AbstractFilterTest() {
             val r = pixel.red()
             val g = pixel.green()
             val b = pixel.blue()
-            require(abs(r - g) <= 2) { "픽셀 R=$r, G=$g 값이 tolerance=2를 초과: ${abs(r - g)}" }
-            require(abs(r - b) <= 2) { "픽셀 R=$r, B=$b 값이 tolerance=2를 초과: ${abs(r - b)}" }
-            require(abs(g - b) <= 2) { "픽셀 G=$g, B=$b 값이 tolerance=2를 초과: ${abs(g - b)}" }
+            abs(r - g).should("픽셀 R=$r, G=$g 값이 tolerance=2를 초과") { it <= 2 }
+            abs(r - b).should("픽셀 R=$r, B=$b 값이 tolerance=2를 초과") { it <= 2 }
+            abs(g - b).should("픽셀 G=$g, B=$b 값이 tolerance=2를 초과") { it <= 2 }
         }
     }
 
@@ -115,8 +116,8 @@ class SaturationFilterTest : AbstractFilterTest() {
         val sourceMean = sourceSatSum / sourcePixels.size
         val resultMean = resultSatSum / resultPixels.size
 
-        require(resultMean >= sourceMean) {
-            "결과 이미지의 평균 채도($resultMean)가 원본($sourceMean)보다 작습니다."
+        resultMean.should("결과 이미지의 평균 채도($resultMean)가 원본($sourceMean)보다 작습니다.") {
+            it >= sourceMean
         }
     }
 }

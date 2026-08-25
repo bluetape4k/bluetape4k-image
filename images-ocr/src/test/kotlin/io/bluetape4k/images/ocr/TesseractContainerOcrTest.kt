@@ -11,7 +11,10 @@ class TesseractContainerOcrTest {
 
     @Test
     fun `launcher keeps one Tesseract container for the module test JVM`() {
-        TesseractContainerLauncher.container shouldBeSameInstanceAs TesseractContainerLauncher.container
+        val first = TesseractContainerLauncher.container
+        val second = TesseractContainerLauncher.container
+
+        first shouldBeSameInstanceAs second
     }
 
     @Test

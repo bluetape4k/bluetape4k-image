@@ -3,6 +3,7 @@ package io.bluetape4k.images.vips.testfixtures
 import com.sksamuel.scrimage.ImmutableImage
 import com.sksamuel.scrimage.nio.ImmutableImageLoader
 import com.sksamuel.scrimage.nio.PngWriter
+import io.bluetape4k.assertions.fail
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.logging.warn
@@ -10,7 +11,6 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import kotlin.math.abs
-import org.junit.jupiter.api.Assertions
 import org.opentest4j.TestAbortedException
 
 /**
@@ -63,7 +63,7 @@ object VipsGoldenAssert : KLogging() {
      * 골든 이미지가 없으면 [AssertionError]를 throw하여 테스트를 실패 처리합니다.
      *
      * 픽셀 비교에서 어느 픽셀이든 R/G/B 채널 절대 차이가 [tolerance]를 초과하면 diff 이미지를 저장하고
-     * [Assertions.fail]을 호출합니다.
+     * [fail]을 호출합니다.
      *
      * @param actualBytes vips 연산 결과 ByteArray
      * @param key 골든 이미지 식별 키 (파일명 제외, 예: "resize-320x240")
@@ -83,7 +83,7 @@ object VipsGoldenAssert : KLogging() {
         }
 
         val golden = loadGolden(key)
-            ?: Assertions.fail(
+            ?: fail(
                 "골든 이미지 없음: $key (canonical resource: $GOLDEN_BASE/$key.png). " +
                     "갱신 모드(-Dbluetape4k.images.golden.update=true)로 실행하여 먼저 생성하세요."
             )
@@ -143,7 +143,7 @@ object VipsGoldenAssert : KLogging() {
      * 두 이미지를 픽셀 단위로 비교합니다.
      *
      * 크기가 다르거나 R/G/B 채널 절대 차이가 [tolerance]를 초과하는 픽셀이 있으면
-     * diff 이미지를 저장하고 [Assertions.fail]을 호출합니다.
+     * diff 이미지를 저장하고 [fail]을 호출합니다.
      *
      * @param actual 실제 이미지
      * @param expected 기대(골든) 이미지
@@ -158,7 +158,7 @@ object VipsGoldenAssert : KLogging() {
     ) {
         if (actual.width != expected.width || actual.height != expected.height) {
             saveDiff(key, actual, expected)
-            Assertions.fail<Unit>(
+            fail(
                 "골든 이미지와 크기 불일치: actual=(${actual.width}x${actual.height}) " +
                     "expected=(${expected.width}x${expected.height}) key=$key"
             )
@@ -177,7 +177,7 @@ object VipsGoldenAssert : KLogging() {
                 val x = i % actual.width
                 val y = i / actual.width
                 saveDiff(key, actual, expected)
-                Assertions.fail<Unit>(
+                fail(
                     "픽셀 ($x, $y) 에서 허용 오차($tolerance) 초과: " +
                         "actual=(${a.red()},${a.green()},${a.blue()}) " +
                         "expected=(${e.red()},${e.green()},${e.blue()}) " +
