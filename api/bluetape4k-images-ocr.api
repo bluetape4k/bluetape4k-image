@@ -1,0 +1,387 @@
+public final class io/bluetape4k/images/ocr/ImmutableImageOcrExtensionsKt {
+	public static final fun extractOcr (Lcom/sksamuel/scrimage/ImmutableImage;Lio/bluetape4k/images/ocr/OcrOptions;Lio/bluetape4k/images/ocr/StructuredOcrEngine;)Lio/bluetape4k/images/ocr/OcrStructuredResult;
+	public static synthetic fun extractOcr$default (Lcom/sksamuel/scrimage/ImmutableImage;Lio/bluetape4k/images/ocr/OcrOptions;Lio/bluetape4k/images/ocr/StructuredOcrEngine;ILjava/lang/Object;)Lio/bluetape4k/images/ocr/OcrStructuredResult;
+	public static final fun extractText (Lcom/sksamuel/scrimage/ImmutableImage;Lio/bluetape4k/images/ocr/OcrOptions;Lio/bluetape4k/images/ocr/OcrEngine;)Ljava/lang/String;
+	public static synthetic fun extractText$default (Lcom/sksamuel/scrimage/ImmutableImage;Lio/bluetape4k/images/ocr/OcrOptions;Lio/bluetape4k/images/ocr/OcrEngine;ILjava/lang/Object;)Ljava/lang/String;
+	public static final fun suspendExtractOcr (Lcom/sksamuel/scrimage/ImmutableImage;Lio/bluetape4k/images/ocr/OcrOptions;Lio/bluetape4k/images/ocr/StructuredOcrEngine;Lkotlinx/coroutines/CoroutineDispatcher;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun suspendExtractOcr$default (Lcom/sksamuel/scrimage/ImmutableImage;Lio/bluetape4k/images/ocr/OcrOptions;Lio/bluetape4k/images/ocr/StructuredOcrEngine;Lkotlinx/coroutines/CoroutineDispatcher;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static final fun suspendExtractText (Lcom/sksamuel/scrimage/ImmutableImage;Lio/bluetape4k/images/ocr/OcrOptions;Lio/bluetape4k/images/ocr/OcrEngine;Lkotlinx/coroutines/CoroutineDispatcher;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun suspendExtractText$default (Lcom/sksamuel/scrimage/ImmutableImage;Lio/bluetape4k/images/ocr/OcrOptions;Lio/bluetape4k/images/ocr/OcrEngine;Lkotlinx/coroutines/CoroutineDispatcher;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+}
+
+public final class io/bluetape4k/images/ocr/OcrBoundingBox : java/io/Serializable {
+	public static final field Companion Lio/bluetape4k/images/ocr/OcrBoundingBox$Companion;
+	public final fun component1 ()I
+	public final fun component2 ()I
+	public final fun component3 ()I
+	public final fun component4 ()I
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getHeight ()I
+	public final fun getWidth ()I
+	public final fun getX ()I
+	public final fun getY ()I
+	public fun hashCode ()I
+	public final fun intersects (Lio/bluetape4k/images/ocr/OcrRegion;)Z
+	public final fun toAwtRectangle ()Ljava/awt/Rectangle;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/bluetape4k/images/ocr/OcrBoundingBox$Companion {
+	public final fun from (Ljava/awt/Rectangle;)Lio/bluetape4k/images/ocr/OcrBoundingBox;
+	public final fun invoke (IIII)Lio/bluetape4k/images/ocr/OcrBoundingBox;
+}
+
+public final class io/bluetape4k/images/ocr/OcrConfigurationException : io/bluetape4k/images/ocr/OcrException {
+	public static final field Companion Lio/bluetape4k/images/ocr/OcrConfigurationException$Companion;
+	public fun <init> (Ljava/lang/String;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public final class io/bluetape4k/images/ocr/OcrConfigurationException$Companion {
+}
+
+public abstract interface class io/bluetape4k/images/ocr/OcrEngine {
+	public abstract fun recognize (Lcom/sksamuel/scrimage/ImmutableImage;Lio/bluetape4k/images/ocr/OcrOptions;)Lio/bluetape4k/images/ocr/OcrResult;
+}
+
+public class io/bluetape4k/images/ocr/OcrException : java/lang/RuntimeException, java/io/Serializable {
+	public static final field Companion Lio/bluetape4k/images/ocr/OcrException$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public final class io/bluetape4k/images/ocr/OcrException$Companion {
+}
+
+public final class io/bluetape4k/images/ocr/OcrOptions : java/io/Serializable {
+	public static final field Companion Lio/bluetape4k/images/ocr/OcrOptions$Companion;
+	public static final field DEFAULT_LANGUAGE Ljava/lang/String;
+	public fun <init> ()V
+	public fun <init> (Ljava/util/List;Ljava/lang/String;Lio/bluetape4k/images/ocr/TesseractEngineMode;Lio/bluetape4k/images/ocr/TesseractPageSegmentationMode;Ljava/util/Map;Ljava/util/List;ZLio/bluetape4k/images/ocr/OcrStructuredDetail;Ljava/util/List;)V
+	public synthetic fun <init> (Ljava/util/List;Ljava/lang/String;Lio/bluetape4k/images/ocr/TesseractEngineMode;Lio/bluetape4k/images/ocr/TesseractPageSegmentationMode;Ljava/util/Map;Ljava/util/List;ZLio/bluetape4k/images/ocr/OcrStructuredDetail;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/util/List;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Lio/bluetape4k/images/ocr/TesseractEngineMode;
+	public final fun component4 ()Lio/bluetape4k/images/ocr/TesseractPageSegmentationMode;
+	public final fun component5 ()Ljava/util/Map;
+	public final fun component6 ()Ljava/util/List;
+	public final fun component7 ()Z
+	public final fun component8 ()Lio/bluetape4k/images/ocr/OcrStructuredDetail;
+	public final fun component9 ()Ljava/util/List;
+	public final fun copy (Ljava/util/List;Ljava/lang/String;Lio/bluetape4k/images/ocr/TesseractEngineMode;Lio/bluetape4k/images/ocr/TesseractPageSegmentationMode;Ljava/util/Map;Ljava/util/List;ZLio/bluetape4k/images/ocr/OcrStructuredDetail;Ljava/util/List;)Lio/bluetape4k/images/ocr/OcrOptions;
+	public static synthetic fun copy$default (Lio/bluetape4k/images/ocr/OcrOptions;Ljava/util/List;Ljava/lang/String;Lio/bluetape4k/images/ocr/TesseractEngineMode;Lio/bluetape4k/images/ocr/TesseractPageSegmentationMode;Ljava/util/Map;Ljava/util/List;ZLio/bluetape4k/images/ocr/OcrStructuredDetail;Ljava/util/List;ILjava/lang/Object;)Lio/bluetape4k/images/ocr/OcrOptions;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getConfigs ()Ljava/util/List;
+	public final fun getEngineMode ()Lio/bluetape4k/images/ocr/TesseractEngineMode;
+	public final fun getLanguageExpression ()Ljava/lang/String;
+	public final fun getLanguages ()Ljava/util/List;
+	public final fun getPageSegmentationMode ()Lio/bluetape4k/images/ocr/TesseractPageSegmentationMode;
+	public final fun getRegions ()Ljava/util/List;
+	public final fun getStructuredDetail ()Lio/bluetape4k/images/ocr/OcrStructuredDetail;
+	public final fun getTessdataPath ()Ljava/lang/String;
+	public final fun getTrimText ()Z
+	public final fun getVariables ()Ljava/util/Map;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/bluetape4k/images/ocr/OcrOptions$Companion {
+}
+
+public final class io/bluetape4k/images/ocr/OcrPage : java/io/Serializable {
+	public static final field Companion Lio/bluetape4k/images/ocr/OcrPage$Companion;
+	public fun <init> (ILjava/lang/String;Lio/bluetape4k/images/ocr/OcrBoundingBox;Ljava/lang/Double;Lio/bluetape4k/images/ocr/OcrRegion;)V
+	public synthetic fun <init> (ILjava/lang/String;Lio/bluetape4k/images/ocr/OcrBoundingBox;Ljava/lang/Double;Lio/bluetape4k/images/ocr/OcrRegion;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()I
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Lio/bluetape4k/images/ocr/OcrBoundingBox;
+	public final fun component4 ()Ljava/lang/Double;
+	public final fun component5 ()Lio/bluetape4k/images/ocr/OcrRegion;
+	public final fun copy (ILjava/lang/String;Lio/bluetape4k/images/ocr/OcrBoundingBox;Ljava/lang/Double;Lio/bluetape4k/images/ocr/OcrRegion;)Lio/bluetape4k/images/ocr/OcrPage;
+	public static synthetic fun copy$default (Lio/bluetape4k/images/ocr/OcrPage;ILjava/lang/String;Lio/bluetape4k/images/ocr/OcrBoundingBox;Ljava/lang/Double;Lio/bluetape4k/images/ocr/OcrRegion;ILjava/lang/Object;)Lio/bluetape4k/images/ocr/OcrPage;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBoundingBox ()Lio/bluetape4k/images/ocr/OcrBoundingBox;
+	public final fun getConfidence ()Ljava/lang/Double;
+	public final fun getPageIndex ()I
+	public final fun getSourceRegion ()Lio/bluetape4k/images/ocr/OcrRegion;
+	public final fun getText ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/bluetape4k/images/ocr/OcrPage$Companion {
+}
+
+public final class io/bluetape4k/images/ocr/OcrRegion : java/io/Serializable {
+	public static final field Companion Lio/bluetape4k/images/ocr/OcrRegion$Companion;
+	public final fun component1 ()Lio/bluetape4k/images/ocr/OcrBoundingBox;
+	public final fun component2 ()Ljava/lang/String;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBoundingBox ()Lio/bluetape4k/images/ocr/OcrBoundingBox;
+	public final fun getId ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/bluetape4k/images/ocr/OcrRegion$Companion {
+	public final fun invoke (Lio/bluetape4k/images/ocr/OcrBoundingBox;Ljava/lang/String;)Lio/bluetape4k/images/ocr/OcrRegion;
+	public static synthetic fun invoke$default (Lio/bluetape4k/images/ocr/OcrRegion$Companion;Lio/bluetape4k/images/ocr/OcrBoundingBox;Ljava/lang/String;ILjava/lang/Object;)Lio/bluetape4k/images/ocr/OcrRegion;
+}
+
+public final class io/bluetape4k/images/ocr/OcrResult : java/io/Serializable {
+	public static final field Companion Lio/bluetape4k/images/ocr/OcrResult$Companion;
+	public fun <init> (Ljava/lang/String;Lio/bluetape4k/images/ocr/OcrOptions;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lio/bluetape4k/images/ocr/OcrOptions;
+	public final fun copy (Ljava/lang/String;Lio/bluetape4k/images/ocr/OcrOptions;)Lio/bluetape4k/images/ocr/OcrResult;
+	public static synthetic fun copy$default (Lio/bluetape4k/images/ocr/OcrResult;Ljava/lang/String;Lio/bluetape4k/images/ocr/OcrOptions;ILjava/lang/Object;)Lio/bluetape4k/images/ocr/OcrResult;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getOptions ()Lio/bluetape4k/images/ocr/OcrOptions;
+	public final fun getText ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/bluetape4k/images/ocr/OcrResult$Companion {
+}
+
+public final class io/bluetape4k/images/ocr/OcrStructuredDetail : java/lang/Enum {
+	public static final field LINE Lio/bluetape4k/images/ocr/OcrStructuredDetail;
+	public static final field PLAIN_TEXT Lio/bluetape4k/images/ocr/OcrStructuredDetail;
+	public static final field WORD Lio/bluetape4k/images/ocr/OcrStructuredDetail;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lio/bluetape4k/images/ocr/OcrStructuredDetail;
+	public static fun values ()[Lio/bluetape4k/images/ocr/OcrStructuredDetail;
+}
+
+public final class io/bluetape4k/images/ocr/OcrStructuredResult : java/io/Serializable {
+	public static final field Companion Lio/bluetape4k/images/ocr/OcrStructuredResult$Companion;
+	public fun <init> (Ljava/lang/String;Lio/bluetape4k/images/ocr/OcrOptions;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;)V
+	public synthetic fun <init> (Ljava/lang/String;Lio/bluetape4k/images/ocr/OcrOptions;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lio/bluetape4k/images/ocr/OcrOptions;
+	public final fun component3 ()Ljava/util/List;
+	public final fun component4 ()Ljava/util/List;
+	public final fun component5 ()Ljava/util/List;
+	public final fun component6 ()Ljava/util/List;
+	public final fun copy (Ljava/lang/String;Lio/bluetape4k/images/ocr/OcrOptions;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;)Lio/bluetape4k/images/ocr/OcrStructuredResult;
+	public static synthetic fun copy$default (Lio/bluetape4k/images/ocr/OcrStructuredResult;Ljava/lang/String;Lio/bluetape4k/images/ocr/OcrOptions;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;ILjava/lang/Object;)Lio/bluetape4k/images/ocr/OcrStructuredResult;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBlocks ()Ljava/util/List;
+	public final fun getLines ()Ljava/util/List;
+	public final fun getOptions ()Lio/bluetape4k/images/ocr/OcrOptions;
+	public final fun getPages ()Ljava/util/List;
+	public final fun getText ()Ljava/lang/String;
+	public final fun getWords ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/bluetape4k/images/ocr/OcrStructuredResult$Companion {
+}
+
+public final class io/bluetape4k/images/ocr/OcrTextBlock : java/io/Serializable {
+	public static final field Companion Lio/bluetape4k/images/ocr/OcrTextBlock$Companion;
+	public fun <init> (ILjava/lang/String;Lio/bluetape4k/images/ocr/OcrBoundingBox;Ljava/lang/Double;Lio/bluetape4k/images/ocr/OcrRegion;)V
+	public synthetic fun <init> (ILjava/lang/String;Lio/bluetape4k/images/ocr/OcrBoundingBox;Ljava/lang/Double;Lio/bluetape4k/images/ocr/OcrRegion;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()I
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Lio/bluetape4k/images/ocr/OcrBoundingBox;
+	public final fun component4 ()Ljava/lang/Double;
+	public final fun component5 ()Lio/bluetape4k/images/ocr/OcrRegion;
+	public final fun copy (ILjava/lang/String;Lio/bluetape4k/images/ocr/OcrBoundingBox;Ljava/lang/Double;Lio/bluetape4k/images/ocr/OcrRegion;)Lio/bluetape4k/images/ocr/OcrTextBlock;
+	public static synthetic fun copy$default (Lio/bluetape4k/images/ocr/OcrTextBlock;ILjava/lang/String;Lio/bluetape4k/images/ocr/OcrBoundingBox;Ljava/lang/Double;Lio/bluetape4k/images/ocr/OcrRegion;ILjava/lang/Object;)Lio/bluetape4k/images/ocr/OcrTextBlock;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBoundingBox ()Lio/bluetape4k/images/ocr/OcrBoundingBox;
+	public final fun getConfidence ()Ljava/lang/Double;
+	public final fun getPageIndex ()I
+	public final fun getSourceRegion ()Lio/bluetape4k/images/ocr/OcrRegion;
+	public final fun getText ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/bluetape4k/images/ocr/OcrTextBlock$Companion {
+}
+
+public final class io/bluetape4k/images/ocr/OcrTextLine : java/io/Serializable {
+	public static final field Companion Lio/bluetape4k/images/ocr/OcrTextLine$Companion;
+	public fun <init> (ILjava/lang/String;Lio/bluetape4k/images/ocr/OcrBoundingBox;Ljava/lang/Double;Lio/bluetape4k/images/ocr/OcrRegion;)V
+	public synthetic fun <init> (ILjava/lang/String;Lio/bluetape4k/images/ocr/OcrBoundingBox;Ljava/lang/Double;Lio/bluetape4k/images/ocr/OcrRegion;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()I
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Lio/bluetape4k/images/ocr/OcrBoundingBox;
+	public final fun component4 ()Ljava/lang/Double;
+	public final fun component5 ()Lio/bluetape4k/images/ocr/OcrRegion;
+	public final fun copy (ILjava/lang/String;Lio/bluetape4k/images/ocr/OcrBoundingBox;Ljava/lang/Double;Lio/bluetape4k/images/ocr/OcrRegion;)Lio/bluetape4k/images/ocr/OcrTextLine;
+	public static synthetic fun copy$default (Lio/bluetape4k/images/ocr/OcrTextLine;ILjava/lang/String;Lio/bluetape4k/images/ocr/OcrBoundingBox;Ljava/lang/Double;Lio/bluetape4k/images/ocr/OcrRegion;ILjava/lang/Object;)Lio/bluetape4k/images/ocr/OcrTextLine;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBoundingBox ()Lio/bluetape4k/images/ocr/OcrBoundingBox;
+	public final fun getConfidence ()Ljava/lang/Double;
+	public final fun getPageIndex ()I
+	public final fun getSourceRegion ()Lio/bluetape4k/images/ocr/OcrRegion;
+	public final fun getText ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/bluetape4k/images/ocr/OcrTextLine$Companion {
+}
+
+public final class io/bluetape4k/images/ocr/OcrWord : java/io/Serializable {
+	public static final field Companion Lio/bluetape4k/images/ocr/OcrWord$Companion;
+	public fun <init> (ILjava/lang/String;Lio/bluetape4k/images/ocr/OcrBoundingBox;Ljava/lang/Double;Lio/bluetape4k/images/ocr/OcrRegion;)V
+	public synthetic fun <init> (ILjava/lang/String;Lio/bluetape4k/images/ocr/OcrBoundingBox;Ljava/lang/Double;Lio/bluetape4k/images/ocr/OcrRegion;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()I
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Lio/bluetape4k/images/ocr/OcrBoundingBox;
+	public final fun component4 ()Ljava/lang/Double;
+	public final fun component5 ()Lio/bluetape4k/images/ocr/OcrRegion;
+	public final fun copy (ILjava/lang/String;Lio/bluetape4k/images/ocr/OcrBoundingBox;Ljava/lang/Double;Lio/bluetape4k/images/ocr/OcrRegion;)Lio/bluetape4k/images/ocr/OcrWord;
+	public static synthetic fun copy$default (Lio/bluetape4k/images/ocr/OcrWord;ILjava/lang/String;Lio/bluetape4k/images/ocr/OcrBoundingBox;Ljava/lang/Double;Lio/bluetape4k/images/ocr/OcrRegion;ILjava/lang/Object;)Lio/bluetape4k/images/ocr/OcrWord;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBoundingBox ()Lio/bluetape4k/images/ocr/OcrBoundingBox;
+	public final fun getConfidence ()Ljava/lang/Double;
+	public final fun getPageIndex ()I
+	public final fun getSourceRegion ()Lio/bluetape4k/images/ocr/OcrRegion;
+	public final fun getText ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/bluetape4k/images/ocr/OcrWord$Companion {
+}
+
+public abstract interface class io/bluetape4k/images/ocr/StructuredOcrEngine : io/bluetape4k/images/ocr/OcrEngine {
+	public abstract fun recognizeStructured (Lcom/sksamuel/scrimage/ImmutableImage;Lio/bluetape4k/images/ocr/OcrOptions;)Lio/bluetape4k/images/ocr/OcrStructuredResult;
+}
+
+public final class io/bluetape4k/images/ocr/TesseractEngineMode : java/lang/Enum {
+	public static final field DEFAULT Lio/bluetape4k/images/ocr/TesseractEngineMode;
+	public static final field LSTM_ONLY Lio/bluetape4k/images/ocr/TesseractEngineMode;
+	public static final field TESSERACT_LSTM_COMBINED Lio/bluetape4k/images/ocr/TesseractEngineMode;
+	public static final field TESSERACT_ONLY Lio/bluetape4k/images/ocr/TesseractEngineMode;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public final fun getValue ()I
+	public static fun valueOf (Ljava/lang/String;)Lio/bluetape4k/images/ocr/TesseractEngineMode;
+	public static fun values ()[Lio/bluetape4k/images/ocr/TesseractEngineMode;
+}
+
+public final class io/bluetape4k/images/ocr/TesseractOcrEngine : io/bluetape4k/images/ocr/StructuredOcrEngine {
+	public fun <init> ()V
+	public fun recognize (Lcom/sksamuel/scrimage/ImmutableImage;Lio/bluetape4k/images/ocr/OcrOptions;)Lio/bluetape4k/images/ocr/OcrResult;
+	public fun recognizeStructured (Lcom/sksamuel/scrimage/ImmutableImage;Lio/bluetape4k/images/ocr/OcrOptions;)Lio/bluetape4k/images/ocr/OcrStructuredResult;
+}
+
+public final class io/bluetape4k/images/ocr/TesseractPageSegmentationMode : java/lang/Enum {
+	public static final field AUTO Lio/bluetape4k/images/ocr/TesseractPageSegmentationMode;
+	public static final field AUTO_ONLY Lio/bluetape4k/images/ocr/TesseractPageSegmentationMode;
+	public static final field AUTO_OSD Lio/bluetape4k/images/ocr/TesseractPageSegmentationMode;
+	public static final field CIRCLE_WORD Lio/bluetape4k/images/ocr/TesseractPageSegmentationMode;
+	public static final field OSD_ONLY Lio/bluetape4k/images/ocr/TesseractPageSegmentationMode;
+	public static final field RAW_LINE Lio/bluetape4k/images/ocr/TesseractPageSegmentationMode;
+	public static final field SINGLE_BLOCK Lio/bluetape4k/images/ocr/TesseractPageSegmentationMode;
+	public static final field SINGLE_BLOCK_VERTICAL_TEXT Lio/bluetape4k/images/ocr/TesseractPageSegmentationMode;
+	public static final field SINGLE_CHAR Lio/bluetape4k/images/ocr/TesseractPageSegmentationMode;
+	public static final field SINGLE_COLUMN Lio/bluetape4k/images/ocr/TesseractPageSegmentationMode;
+	public static final field SINGLE_LINE Lio/bluetape4k/images/ocr/TesseractPageSegmentationMode;
+	public static final field SINGLE_WORD Lio/bluetape4k/images/ocr/TesseractPageSegmentationMode;
+	public static final field SPARSE_TEXT Lio/bluetape4k/images/ocr/TesseractPageSegmentationMode;
+	public static final field SPARSE_TEXT_OSD Lio/bluetape4k/images/ocr/TesseractPageSegmentationMode;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public final fun getValue ()I
+	public static fun valueOf (Ljava/lang/String;)Lio/bluetape4k/images/ocr/TesseractPageSegmentationMode;
+	public static fun values ()[Lio/bluetape4k/images/ocr/TesseractPageSegmentationMode;
+}
+
+public final class io/bluetape4k/images/ocr/TiffMultiPageOcr {
+	public fun <init> (Lio/bluetape4k/images/ocr/StructuredOcrEngine;)V
+	public synthetic fun <init> (Lio/bluetape4k/images/ocr/StructuredOcrEngine;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun recognize ([BLio/bluetape4k/images/ocr/OcrOptions;Lio/bluetape4k/images/ocr/TiffMultiPageOcrLimits;)Lio/bluetape4k/images/ocr/OcrStructuredResult;
+	public static synthetic fun recognize$default (Lio/bluetape4k/images/ocr/TiffMultiPageOcr;[BLio/bluetape4k/images/ocr/OcrOptions;Lio/bluetape4k/images/ocr/TiffMultiPageOcrLimits;ILjava/lang/Object;)Lio/bluetape4k/images/ocr/OcrStructuredResult;
+	public final fun suspendRecognize ([BLio/bluetape4k/images/ocr/OcrOptions;Lio/bluetape4k/images/ocr/TiffMultiPageOcrLimits;Lkotlinx/coroutines/CoroutineDispatcher;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun suspendRecognize$default (Lio/bluetape4k/images/ocr/TiffMultiPageOcr;[BLio/bluetape4k/images/ocr/OcrOptions;Lio/bluetape4k/images/ocr/TiffMultiPageOcrLimits;Lkotlinx/coroutines/CoroutineDispatcher;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+}
+
+public final class io/bluetape4k/images/ocr/TiffMultiPageOcrException : io/bluetape4k/images/ocr/OcrException, java/io/Serializable {
+	public static final field Companion Lio/bluetape4k/images/ocr/TiffMultiPageOcrException$Companion;
+	public fun <init> (Lio/bluetape4k/images/ocr/TiffMultiPageOcrFailureReason;Ljava/lang/Integer;Ljava/lang/String;)V
+	public fun <init> (Lio/bluetape4k/images/ocr/TiffMultiPageOcrFailureReason;Ljava/lang/Integer;Ljava/lang/String;Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Lio/bluetape4k/images/ocr/TiffMultiPageOcrFailureReason;Ljava/lang/Integer;Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getPageIndex ()Ljava/lang/Integer;
+	public final fun getReason ()Lio/bluetape4k/images/ocr/TiffMultiPageOcrFailureReason;
+}
+
+public final class io/bluetape4k/images/ocr/TiffMultiPageOcrException$Companion {
+}
+
+public final class io/bluetape4k/images/ocr/TiffMultiPageOcrFailureReason : java/lang/Enum {
+	public static final field DECODE_FAILED Lio/bluetape4k/images/ocr/TiffMultiPageOcrFailureReason;
+	public static final field DIMENSIONS_UNAVAILABLE Lio/bluetape4k/images/ocr/TiffMultiPageOcrFailureReason;
+	public static final field ENGINE_FAILED Lio/bluetape4k/images/ocr/TiffMultiPageOcrFailureReason;
+	public static final field INPUT_TOO_LARGE Lio/bluetape4k/images/ocr/TiffMultiPageOcrFailureReason;
+	public static final field METADATA_LIMIT_EXCEEDED Lio/bluetape4k/images/ocr/TiffMultiPageOcrFailureReason;
+	public static final field PAGE_COUNT_UNKNOWN Lio/bluetape4k/images/ocr/TiffMultiPageOcrFailureReason;
+	public static final field PAGE_LIMIT_EXCEEDED Lio/bluetape4k/images/ocr/TiffMultiPageOcrFailureReason;
+	public static final field PIXELS_PER_PAGE_LIMIT_EXCEEDED Lio/bluetape4k/images/ocr/TiffMultiPageOcrFailureReason;
+	public static final field READER_UNAVAILABLE Lio/bluetape4k/images/ocr/TiffMultiPageOcrFailureReason;
+	public static final field RESULT_LIMIT_EXCEEDED Lio/bluetape4k/images/ocr/TiffMultiPageOcrFailureReason;
+	public static final field SIDE_LIMIT_EXCEEDED Lio/bluetape4k/images/ocr/TiffMultiPageOcrFailureReason;
+	public static final field TOTAL_PIXELS_LIMIT_EXCEEDED Lio/bluetape4k/images/ocr/TiffMultiPageOcrFailureReason;
+	public static final field UNKNOWN Lio/bluetape4k/images/ocr/TiffMultiPageOcrFailureReason;
+	public static final field UNSUPPORTED_FORMAT Lio/bluetape4k/images/ocr/TiffMultiPageOcrFailureReason;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lio/bluetape4k/images/ocr/TiffMultiPageOcrFailureReason;
+	public static fun values ()[Lio/bluetape4k/images/ocr/TiffMultiPageOcrFailureReason;
+}
+
+public final class io/bluetape4k/images/ocr/TiffMultiPageOcrLimits : java/io/Serializable {
+	public static final field Companion Lio/bluetape4k/images/ocr/TiffMultiPageOcrLimits$Companion;
+	public fun <init> ()V
+	public fun <init> (J)V
+	public fun <init> (JI)V
+	public fun <init> (JIJ)V
+	public fun <init> (JIJJ)V
+	public fun <init> (JIJJI)V
+	public fun <init> (JIJJIJ)V
+	public fun <init> (JIJJIJI)V
+	public fun <init> (JIJJIJII)V
+	public synthetic fun <init> (JIJJIJIIILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()J
+	public final fun component2 ()I
+	public final fun component3 ()J
+	public final fun component4 ()J
+	public final fun component5 ()I
+	public final fun component6 ()J
+	public final fun component7 ()I
+	public final fun component8 ()I
+	public final fun copy (JIJJIJII)Lio/bluetape4k/images/ocr/TiffMultiPageOcrLimits;
+	public static synthetic fun copy$default (Lio/bluetape4k/images/ocr/TiffMultiPageOcrLimits;JIJJIJIIILjava/lang/Object;)Lio/bluetape4k/images/ocr/TiffMultiPageOcrLimits;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getMaxDecodedSide ()I
+	public final fun getMaxEncodedBytes ()J
+	public final fun getMaxMetadataBytes ()J
+	public final fun getMaxPages ()I
+	public final fun getMaxPixelsPerPage ()J
+	public final fun getMaxResultEntries ()I
+	public final fun getMaxResultTextChars ()I
+	public final fun getMaxTotalPixels ()J
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/bluetape4k/images/ocr/TiffMultiPageOcrLimits$Companion {
+}
+
+public final class io/bluetape4k/images/ocr/TiffMultiPageOcrValidationException : java/lang/IllegalArgumentException, java/io/Serializable {
+	public static final field Companion Lio/bluetape4k/images/ocr/TiffMultiPageOcrValidationException$Companion;
+	public fun <init> (Lio/bluetape4k/images/ocr/TiffMultiPageOcrFailureReason;Ljava/lang/Integer;Ljava/lang/String;)V
+	public fun <init> (Lio/bluetape4k/images/ocr/TiffMultiPageOcrFailureReason;Ljava/lang/Integer;Ljava/lang/String;Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Lio/bluetape4k/images/ocr/TiffMultiPageOcrFailureReason;Ljava/lang/Integer;Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getPageIndex ()Ljava/lang/Integer;
+	public final fun getReason ()Lio/bluetape4k/images/ocr/TiffMultiPageOcrFailureReason;
+}
+
+public final class io/bluetape4k/images/ocr/TiffMultiPageOcrValidationException$Companion {
+}

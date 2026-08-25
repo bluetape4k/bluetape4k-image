@@ -111,6 +111,9 @@ jobs:
           gradle-version: wrapper
           cache-read-only: true
 
+      - name: Verify published JVM ABI baseline
+        run: ./gradlew checkProductionAbi --no-daemon --no-configuration-cache --no-build-cache
+
       - name: Publish SNAPSHOT
         run: |
           ./gradlew publishAggregationToCentralSnapshots -PsnapshotVersion=-SNAPSHOT \

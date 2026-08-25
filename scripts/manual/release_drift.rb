@@ -19,6 +19,10 @@ module ManualDocs
     DISPLAY_SHA_LENGTH = 8
     INTELLIGENCE_ID = "spring-boot-image-intelligence-api"
     TOPOLOGY_KEYS = %w[id gradlePath sourceDir kind].freeze
+    PUBLISHING_POLICY_PATHS = %w[
+      build.gradle.kts
+      buildSrc/src/main/kotlin/PublicationInventory.kt
+    ].freeze
     PUBLISHING_POLICY_MARKERS = [
       'fun Project.isNonPublishedModule()',
       'relativePath == "examples"',
@@ -27,6 +31,9 @@ module ManualDocs
       'relativePath.startsWith("benchmark/")',
       'name.contains("-demo")',
       'name.endsWith("-benchmark")',
+    ].freeze
+    PUBLISHED_MODULE_MARKERS = [
+      'fun Project.isPublishedJvmModule()',
       'filterNot { it.isNonPublishedModule() }',
     ].freeze
 
@@ -73,10 +80,13 @@ module ManualDocs
       commit = resolve_tag
       tree = git_output(["ls-tree", "-r", "--name-only", commit], "release inventory could not be read: #{commit}")
       settings = git_output(["show", "#{commit}:settings.gradle.kts"], "release settings could not be read: #{@tag}")
-      publishing_policy = git_output(["show", "#{commit}:build.gradle.kts"], "release publishing policy could not be read: #{@tag}")
+      publishing_policy = read_publishing_policy(commit)
       missing_policy = PUBLISHING_POLICY_MARKERS.reject { |marker| publishing_policy.include?(marker) }
       unless missing_policy.empty?
         raise ReleaseDriftError, "release publishing policy markers missing: #{missing_policy.join(', ')}"
+      end
+      unless PUBLISHED_MODULE_MARKERS.any? { |marker| publishing_policy.include?(marker) }
+        raise ReleaseDriftError, "release published-module marker missing: #{PUBLISHED_MODULE_MARKERS.join(', ')}"
       end
 
       release_paths = tree.lines(chomp: true)
@@ -124,6 +134,16 @@ module ManualDocs
       raise ReleaseDriftError, error_message unless success
 
       output
+    end
+
+    def read_publishing_policy(commit)
+      sources = PUBLISHING_POLICY_PATHS.each_with_object([]) do |path, collected|
+        output, success = @git_runner.call(["show", "#{commit}:#{path}"])
+        collected << output if success
+      end
+      raise ReleaseDriftError, "release publishing policy could not be read: #{@tag}" if sources.empty?
+
+      sources.join("\n")
     end
 
     def validate_snapshot(snapshot, label, expected)

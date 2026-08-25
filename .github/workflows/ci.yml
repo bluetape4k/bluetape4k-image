@@ -217,6 +217,8 @@ jobs:
           done
         env:
           GRADLE_OPTS: "-Dorg.gradle.daemon=false"
+      - name: Verify published JVM ABI baseline
+        run: ./gradlew checkProductionAbi --max-workers=1 --no-daemon --no-configuration-cache --no-build-cache
 
   test-images:
     name: Test / images
