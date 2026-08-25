@@ -1,0 +1,57 @@
+{
+  "receiptVersion": 1,
+  "receiptId": "issue-548-resnet50-v1-12-fp32",
+  "checkedAt": "2026-08-25T03:25:58Z",
+  "documentation": {
+    "repository": "https://github.com/onnx/models",
+    "ref": "4f43949841cb55a0b98dc8fcd045431ccafd9f96",
+    "path": "validated/vision/classification/resnet/model/resnet50-v1-12.onnx"
+  },
+  "artifact": {
+    "repository": "https://huggingface.co/onnxmodelzoo/resnet50-v1-12",
+    "ref": "1f95315d8bd3b3ca2ceabe54d274e0cdf5a83bbe",
+    "url": "https://huggingface.co/onnxmodelzoo/resnet50-v1-12/resolve/1f95315d8bd3b3ca2ceabe54d274e0cdf5a83bbe/resnet50-v1-12.onnx?download=true",
+    "format": "onnx",
+    "bytes": 102576593,
+    "sha256": "3f03fdef724b22947eed826f1eef1dc5c34151bb4c37d634f1db89dfa2dd1526",
+    "downloadCommand": "curl -L --fail --retry 2 --silent --show-error -o <temporary-file> <pinned-url>",
+    "hashCommand": "shasum -a 256 <temporary-file>",
+    "repositoryPersistence": "not-copied-to-repository"
+  },
+  "lfsPointer": {
+    "sourceUrl": "https://raw.githubusercontent.com/onnx/models/4f43949841cb55a0b98dc8fcd045431ccafd9f96/validated/vision/classification/resnet/model/resnet50-v1-12.onnx",
+    "oidSha256": "3f03fdef724b22947eed826f1eef1dc5c34151bb4c37d634f1db89dfa2dd1526",
+    "bytes": 102576593
+  },
+  "byteEquality": {
+    "status": "PASS",
+    "sha256MatchesLfsOid": true,
+    "byteSizeMatchesLfsPointer": true
+  },
+  "labels": {
+    "repository": "https://github.com/microsoft/onnxruntime-inference-examples",
+    "ref": "978efc89bdfb43aec001677d9344355e896c9ca0",
+    "path": "c_sharp/image_classification/model/synset.txt",
+    "bytes": 31675,
+    "count": 1000,
+    "sha256": "acf75ef0abe89694b19056e0796401068b459c457baa30335f240c7692857355"
+  },
+  "manifestSchema": {
+    "ref": "docs/superpowers/research/2026-08-25-issue-548-model-manifest-schema.json",
+    "sha256": "5481f4d8a1238e58a3d07d55c0b88c06d171bc41ba71084b9a1a8ae86dae7889"
+  },
+  "license": {
+    "repositorySpdx": "Apache-2.0",
+    "modelWeights": "PENDING",
+    "dataset": "PENDING",
+    "notice": "PENDING",
+    "sbom": "PENDING",
+    "attestation": "PENDING"
+  },
+  "scope": {
+    "modelBytesCommitted": false,
+    "remoteAutoDownloadImplemented": false,
+    "runtimeInferenceExecuted": false,
+    "adoptionDecision": "PENDING"
+  }
+}
