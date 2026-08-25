@@ -2,7 +2,6 @@ package io.bluetape4k.images.spring.storage.s3
 
 import io.bluetape4k.aws.spring.s3.S3Operations
 import io.bluetape4k.aws.spring.s3.S3ObjectMetadata as AwsS3ObjectMetadata
-import io.bluetape4k.aws.spring.s3.S3TransferOperations
 import io.bluetape4k.images.spring.ImageObjectKey
 import io.bluetape4k.images.spring.ImageObjectMetadata
 import io.bluetape4k.images.spring.ImageStorageException
@@ -23,7 +22,6 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
 import software.amazon.awssdk.services.s3.model.NoSuchBucketException
 import software.amazon.awssdk.services.s3.model.NoSuchKeyException
-import software.amazon.awssdk.services.s3.model.PutObjectRequest
 import software.amazon.awssdk.services.s3.model.S3Exception
 import java.io.IOException
 import java.nio.ByteBuffer
@@ -43,7 +41,7 @@ import kotlin.jvm.JvmOverloads
  *
  * ## 동작 / 계약
  * - byte/object 작업은 `bluetape4k-aws-spring-boot`의 [S3Operations]에 위임하고,
- *   [Path] 작업은 [S3TransferOperations] 또는 S3 resource stream을 사용합니다.
+ *   [Path] upload는 선택적인 [S3PathTransferOperations] capability를 사용합니다.
  * - 모든 suspend method는 blocking SDK 경로를 격리하기 위해 [Dispatchers.IO]에서 실행합니다.
  * - 모든 catch block은 [CancellationException]을 먼저 다시 던집니다. SDK exception은 file-local
  *   `toImageStorageException` extension을 통해 [ImageStorageException] 하위 type으로 매핑합니다.
@@ -53,8 +51,9 @@ import kotlin.jvm.JvmOverloads
  *   [ImageStorageException.ValidationException]으로 거부됩니다. download는 단일 `headObject` snapshot으로
  *   시작 전에 object size를 확인하고, body를 반환하거나 destination file을 교체하기 전에 limit과 snapshot의
  *   실제 byte count를 다시 검사합니다. 두 값이 다르면 object 교체 경합으로 보고 fail closed합니다.
- * - [Path] upload는 source를 bounded streaming 임시 snapshot으로 고정한 뒤 [S3TransferOperations]의 file
- *   transfer를 사용합니다. transfer bean이 없으면 source를 `ByteArray`로 적재하지 않고
+ * - [Path] upload는 source를 bounded streaming 임시 snapshot으로 고정한 뒤
+ *   [S3PathTransferOperations]의 file transfer를 사용합니다. transfer capability가 없으면 source를
+ *   `ByteArray`로 적재하지 않고
  *   [ImageStorageException.TransientException]으로 fail closed합니다.
  * - [Path] download는 S3 resource input stream을 destination 임시 파일로 복사한 뒤 atomic replace합니다.
  *   resource property를 metadata source로 사용하거나 `listPage`로 fallback하지 않습니다.
@@ -68,7 +67,7 @@ import kotlin.jvm.JvmOverloads
 class S3ImageStorage @JvmOverloads constructor(
     private val operations: S3Operations,
     private val properties: ImageStorageProperties,
-    private val transferOperations: S3TransferOperations? = null,
+    private val transferOperations: S3PathTransferOperations? = null,
 ) : ImageStorage, ImageObjectMetadataReader {
 
     companion object : KLogging() {
@@ -166,22 +165,15 @@ class S3ImageStorage @JvmOverloads constructor(
                 }
             }
             forceFile(staged)
-            val response = transfer.uploadFile(
+            val etag = transfer.uploadFile(
                 bucket = bucket,
                 key = objectKey(key),
                 source = staged,
-            ) {
-                putObjectRequest(
-                    PutObjectRequest.builder()
-                        .bucket(bucket)
-                        .key(objectKey(key))
-                        .contentType(options.contentType)
-                        .build(),
-                )
-            }.response()
+                contentType = options.contentType,
+            )
             ImageUploadResult(
                 key = key,
-                etag = response.eTag().orEmpty(),
+                etag = etag.orEmpty(),
                 sizeBytes = stagedSize,
                 contentType = options.contentType,
                 uploadedAt = Instant.now(),

@@ -2,10 +2,10 @@ package io.bluetape4k.images.spring.storage.s3
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.aws.spring.s3.S3Operations
 import io.bluetape4k.aws.spring.s3.S3ObjectMetadata
 import io.bluetape4k.aws.spring.s3.S3Resource
-import io.bluetape4k.aws.spring.s3.S3TransferOperations
 import io.bluetape4k.images.spring.ImageObjectKey
 import io.bluetape4k.images.spring.ImageObjectMetadata
 import io.bluetape4k.images.spring.ImageStorageException
@@ -29,9 +29,7 @@ import org.junit.jupiter.api.io.TempDir
 import java.io.ByteArrayInputStream
 import java.nio.file.Files
 import java.nio.file.Path
-import software.amazon.awssdk.services.s3.model.PutObjectResponse
 import software.amazon.awssdk.services.s3.model.S3Exception
-import software.amazon.awssdk.transfer.s3.model.CompletedFileUpload
 
 class S3ImageStorageTest {
 
@@ -297,9 +295,11 @@ class S3ImageStorageTest {
             )
         } returns response
 
-        assertFailsWith<ImageStorageException.TransientException> {
+        val error = assertFailsWith<ImageStorageException.TransientException> {
             storage.upload(key, source, io.bluetape4k.images.spring.UploadOptions())
         }
+
+        error.message.orEmpty() shouldContain "S3TransferOperations"
 
         coVerify(exactly = 0) {
             operations.upload(bucket = bucket, key = objectKey, bytes = any(), contentType = any())
@@ -311,13 +311,9 @@ class S3ImageStorageTest {
     fun `path upload uses S3 transfer operations`() = runTest {
         val source = Files.createTempFile("s3-image-storage-source", ".jpg")
         Files.write(source, ByteArray(4) { it.toByte() })
-        val transfer = mockk<S3TransferOperations>()
+        val transfer = mockk<S3PathTransferOperations>()
         val stagedSource = slot<Path>()
-        val completedUpload = mockk<CompletedFileUpload>()
-        val response = mockk<PutObjectResponse>()
-        every { completedUpload.response() } returns response
-        every { response.eTag() } returns "etag"
-        coEvery { transfer.uploadFile(bucket, objectKey, capture(stagedSource), any()) } returns completedUpload
+        coEvery { transfer.uploadFile(bucket, objectKey, capture(stagedSource), any()) } returns "etag"
         val transferStorage = S3ImageStorage(
             operations = operations,
             properties = ImageStorageProperties(

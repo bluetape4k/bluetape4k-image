@@ -102,16 +102,19 @@ when the provider or process cannot enforce them.
 #### S3
 
 Requires `bluetape4k-aws-spring-boot` dependency and an `S3Operations` bean
-provided by that module. When `backend=s3` is configured and no `S3Operations`
-bean exists, startup fails instead of silently falling back to local filesystem
-storage. Provide a custom `ImageStorage` bean if an application intentionally
-replaces the S3 storage implementation.
+provided by that module. Byte/object CRUD only requires this `S3Operations`
+capability. When `backend=s3` is configured and no `S3Operations` bean exists,
+startup fails instead of silently falling back to local filesystem storage.
+Provide a custom `ImageStorage` bean if an application intentionally replaces
+the S3 storage implementation.
 
 `Path` uploads first create a bounded streaming snapshot and then use the
-optional `S3TransferOperations` file-transfer capability when it is available;
-without that capability they fail closed instead of loading the entire source
-into a `ByteArray`. `Path` downloads stream through an S3 resource and
-atomically replace the destination file.
+optional `S3TransferOperations` file-transfer capability when it is available.
+The capability is connected through the module's transfer-neutral
+`S3PathTransferOperations` adapter, so a missing transfer class or bean does not
+disable byte/object CRUD. Without that capability, `Path` uploads fail closed
+instead of loading the entire source into a `ByteArray`. `Path` downloads
+stream through an S3 resource and atomically replace the destination file.
 
 #### Shared storage contract matrix
 
@@ -175,6 +178,11 @@ bluetape4k.images.cdn:
   enabled: true
   provider: s3_presign
 ```
+
+The signer reads `bluetape4k.images.storage.bucket` and `key-prefix`. It can be
+enabled with `bluetape4k.images.storage.enabled=false` when the application
+needs CDN signing without an auto-configured `ImageStorage`; the storage
+properties are still bound for the signer, while storage beans remain disabled.
 
 #### CloudFront Signed URLs
 

@@ -5,17 +5,22 @@ import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeInstanceOf
 import io.bluetape4k.assertions.shouldBeSameInstanceAs
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldBeNull
 import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.aws.spring.s3.S3Operations
+import io.bluetape4k.aws.spring.s3.S3TransferOperations
 import io.bluetape4k.images.spring.storage.ImageStorage
 import io.bluetape4k.images.spring.storage.LocalImageStorage
 import io.bluetape4k.images.spring.storage.s3.S3ImageStorage
+import io.bluetape4k.images.spring.storage.s3.S3PathTransferOperations
+import io.bluetape4k.images.spring.storage.s3.S3TransferOperationsAdapter
 import io.mockk.clearMocks
 import io.mockk.mockk
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.boot.autoconfigure.AutoConfigurations
+import org.springframework.boot.test.context.FilteredClassLoader
 import org.springframework.boot.test.context.runner.ApplicationContextRunner
 import java.net.URLClassLoader
 import java.nio.file.Files
@@ -26,6 +31,7 @@ class ImagesStorageAutoConfigurationTest {
 
     private val customStorage = mockk<ImageStorage>(relaxed = true)
     private val operations = mockk<S3Operations>(relaxed = true)
+    private val transferOperations = mockk<S3TransferOperations>(relaxed = true)
 
     private val contextRunner = ApplicationContextRunner()
         .withConfiguration(
@@ -37,7 +43,7 @@ class ImagesStorageAutoConfigurationTest {
 
     @BeforeEach
     fun setUp() {
-        clearMocks(customStorage, operations)
+        clearMocks(customStorage, operations, transferOperations)
     }
 
     @Test
@@ -104,6 +110,69 @@ class ImagesStorageAutoConfigurationTest {
             .run { ctx ->
                 ctx.getBeanNamesForType(ImageStorage::class.java).size shouldBeEqualTo 1
                 ctx.getBean(ImageStorage::class.java) shouldBeInstanceOf S3ImageStorage::class
+            }
+    }
+
+    @Test
+    fun `s3 byte CRUD remains available when transfer class is absent`() {
+        contextRunner
+            .withClassLoader(FilteredClassLoader("io.bluetape4k.aws.spring.s3.S3TransferOperations"))
+            .withBean(S3Operations::class.java, { operations })
+            .withPropertyValues(
+                "bluetape4k.images.storage.backend=s3",
+                "bluetape4k.images.storage.bucket=images",
+            )
+            .run { ctx ->
+                ctx.startupFailure.shouldBeNull()
+                ctx.getBeanNamesForType(ImageStorage::class.java).size shouldBeEqualTo 1
+                ctx.getBean(ImageStorage::class.java) shouldBeInstanceOf S3ImageStorage::class
+                ctx.getBeanNamesForType(S3PathTransferOperations::class.java).isEmpty().shouldBeTrue()
+            }
+    }
+
+    @Test
+    fun `s3 storage remains available when transfer bean is absent`() {
+        contextRunner
+            .withBean(S3Operations::class.java, { operations })
+            .withPropertyValues(
+                "bluetape4k.images.storage.backend=s3",
+                "bluetape4k.images.storage.bucket=images",
+            )
+            .run { ctx ->
+                ctx.startupFailure.shouldBeNull()
+                ctx.getBean(ImageStorage::class.java) shouldBeInstanceOf S3ImageStorage::class
+                ctx.getBeanNamesForType(S3PathTransferOperations::class.java).isEmpty().shouldBeTrue()
+            }
+    }
+
+    @Test
+    fun `s3 transfer bean is adapted as an optional path capability`() {
+        contextRunner
+            .withBean(S3Operations::class.java, { operations })
+            .withBean(S3TransferOperations::class.java, { transferOperations })
+            .withPropertyValues(
+                "bluetape4k.images.storage.backend=s3",
+                "bluetape4k.images.storage.bucket=images",
+            )
+            .run { ctx ->
+                ctx.startupFailure.shouldBeNull()
+                ctx.getBean(S3PathTransferOperations::class.java) shouldBeInstanceOf S3TransferOperationsAdapter::class
+                ctx.getBean(ImageStorage::class.java) shouldBeInstanceOf S3ImageStorage::class
+            }
+    }
+
+    @Test
+    fun `s3 backend reports a clear diagnostic when operations class is absent`() {
+        contextRunner
+            .withClassLoader(FilteredClassLoader("io.bluetape4k.aws.spring.s3.S3Operations"))
+            .withPropertyValues(
+                "bluetape4k.images.storage.backend=s3",
+                "bluetape4k.images.storage.bucket=images",
+            )
+            .run { ctx ->
+                val failure = ctx.startupFailure.shouldNotBeNull()
+                rootCauseMessage(failure) shouldContain "S3Operations"
+                rootCauseMessage(failure) shouldContain "bluetape4k.images.storage.backend=s3"
             }
     }
 
