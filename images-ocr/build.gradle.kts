@@ -1,3 +1,5 @@
+import org.gradle.api.tasks.compile.JavaCompile
+
 configurations {
     testImplementation.get().extendsFrom(compileOnly.get(), runtimeOnly.get())
 }
@@ -7,6 +9,14 @@ tasks.withType<Test>().configureEach {
     systemProperty("ocr.enabled", System.getProperty("ocr.enabled", "false"))
     systemProperty("ocr.container.enabled", System.getProperty("ocr.container.enabled", "false"))
     systemProperty("ocr.container.reuse", System.getProperty("ocr.container.reuse", "false"))
+}
+
+// atomicfu rewrites Kotlin tests into a dedicated output directory. Keep the
+// regular Java test output visible so the Java ABI test remains discoverable.
+val javaTestClasses = tasks.named<JavaCompile>("compileTestJava").flatMap { it.destinationDirectory }
+tasks.named<Test>("test") {
+    testClassesDirs = project.files(testClassesDirs, javaTestClasses)
+    classpath = project.files(classpath, javaTestClasses)
 }
 
 dependencies {
