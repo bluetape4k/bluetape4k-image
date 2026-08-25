@@ -102,6 +102,57 @@ fun immutableExternalImageOf(
 }
 
 /**
+ * 파일 크기와 이미지 메타데이터를 확인한 뒤 [Path]에서 외부 이미지를 읽습니다.
+ *
+ * 파일은 이 함수가 소유하므로 읽기가 끝나면 stream을 닫습니다.
+ */
+fun immutableExternalImageOf(
+    path: Path,
+    limits: ImageDecodeLimits = ImageDecodeLimits.ExternalInput,
+): ImmutableImage {
+    val size = Files.size(path)
+    require(size <= limits.maxEncodedBytes) {
+        "Image input encodedBytes=$size exceeds maxEncodedBytes=${limits.maxEncodedBytes}."
+    }
+
+    return Files.newInputStream(path).use { inputStream ->
+        immutableExternalImageOf(inputStream, limits)
+    }
+}
+
+/**
+ * 호출자가 소유한 [InputStream]을 bounded buffer로 읽은 뒤 외부 이미지를 strict하게
+ * 디코딩합니다. stream은 닫지 않습니다.
+ */
+fun immutableExternalImageOf(
+    inputStream: InputStream,
+    limits: ImageDecodeLimits = ImageDecodeLimits.ExternalInput,
+): ImmutableImage =
+    immutableExternalImageOf(inputStream.readBoundedImageBytes(limits), limits)
+
+/**
+ * 호출자가 소유한 [BufferedSource]에서 외부 이미지를 strict하게 디코딩합니다.
+ * source는 닫지 않습니다.
+ */
+fun immutableExternalImageOf(
+    source: BufferedSource,
+    limits: ImageDecodeLimits = ImageDecodeLimits.ExternalInput,
+): ImmutableImage =
+    immutableExternalImageOf(source.inputStream().readBoundedImageBytes(limits), limits)
+
+/**
+ * Okio [Source]에서 외부 이미지를 strict하게 디코딩합니다. 이 overload는 source를
+ * buffer하고 닫습니다.
+ */
+fun immutableExternalImageOf(
+    source: Source,
+    limits: ImageDecodeLimits = ImageDecodeLimits.ExternalInput,
+): ImmutableImage =
+    source.buffered().use { bufferedSource ->
+        immutableExternalImageOf(bufferedSource, limits)
+    }
+
+/**
  * [InputStream]을 읽어 [ImmutableImage]로 변환합니다.
  *
  * ## 동작/계약

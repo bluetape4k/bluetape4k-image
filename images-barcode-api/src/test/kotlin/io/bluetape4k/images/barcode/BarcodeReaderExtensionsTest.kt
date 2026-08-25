@@ -108,6 +108,35 @@ class BarcodeReaderExtensionsTest {
         recordedSizes shouldBeEqualTo listOf(64 to 32, 64 to 32, 64 to 32, 64 to 32)
     }
 
+    @Test
+    fun `reader input helpers normalize malformed external inputs`() {
+        val bytes = "not an encoded image".toByteArray()
+        val reader = recordingReader("should not run")
+        val path = Files.createTempFile("barcode-api-malformed-", ".bin")
+        Files.write(path, bytes)
+
+        try {
+            val failures = listOf(
+                assertFailsWith<BarcodeException> { reader.readBarcodes(bytes) },
+                assertFailsWith<BarcodeException> { reader.readBarcodes(path) },
+                assertFailsWith<BarcodeException> {
+                    bytes.inputStream().use { reader.readBarcodes(it) }
+                },
+                assertFailsWith<BarcodeException> {
+                    bytes.inputStream().source().buffer().use { reader.readBarcodes(it) }
+                },
+            )
+
+            failures.forEach { failure ->
+                failure.reason shouldBeEqualTo BarcodeFailureReason.MALFORMED_INPUT
+            }
+        } finally {
+            Files.deleteIfExists(path)
+        }
+
+        calls.get() shouldBeEqualTo 0
+    }
+
     private fun recordingReader(text: String): BarcodeReader =
         BarcodeReader { image, options ->
             calls.incrementAndGet()
