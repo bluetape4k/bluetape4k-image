@@ -64,6 +64,9 @@ val ocrProtocolReceiptDirectory = repositoryDirectory.file(
 ).asFile
 val ocrProtocolReceiptFile = ocrProtocolReceiptDirectory.resolve("ocr-v2-protocol.json")
 val ocrProtocolRunManifestFile = ocrProtocolReceiptDirectory.resolve("run-manifest.json")
+val vipsTransformReceiptFile = repositoryDirectory.file(
+    "benchmark/images-benchmark/docs/raw/issue-582-20260825-macos-arm64-java25-transform/transform-receipt.json",
+).asFile
 val ocrProtocolRunId = providers.gradleProperty("ocr.protocol.runId")
 val ocrProtocolOutput = providers.gradleProperty("ocr.protocol.output")
 val codecMatrixSourceDirectory = layout.buildDirectory.dir("generated/codec-matrix-source-fixtures")
@@ -99,6 +102,7 @@ val codecMatrixNativeTaskNames = setOf(
     "benchmarkCodecMatrixHeicBenchmark",
     "benchmarkBatchPipelineBenchmark",
     "benchmarkVipsJava21SmokeBenchmark",
+    "benchmarkVipsTransformBenchmark",
 )
 
 tasks.withType<JavaExec>().matching { task -> task.name in codecMatrixNativeTaskNames }.configureEach {
@@ -802,6 +806,18 @@ benchmark {
             advanced("jvmForks", 1)
         }
 
+        register("vipsTransform") {
+            include(".*VipsTransformBenchmark.*")
+            warmups = 2
+            iterations = 3
+            iterationTime = 1
+            iterationTimeUnit = "s"
+            mode = "avgt"
+            outputTimeUnit = "ms"
+            reportFormat = "json"
+            advanced("jvmForks", 1)
+        }
+
         register("barcodeLatency") {
             include(".*ZxingBarcodeExtractionBenchmark.*")
             warmups = BARCODE_BENCHMARK_WARMUPS
@@ -1428,8 +1444,25 @@ tasks.register("validateOcrBenchmarkReceipt") {
     }
 }
 
+tasks.register<JavaExec>("validateVipsTransformReceipt") {
+    description = "Validate the committed Vips chain/fan-out lifecycle receipt"
+    group = "verification"
+    dependsOn(tasks.named("benchmarkClasses"))
+    classpath = sourceSets.named("benchmark").get().runtimeClasspath
+    mainClass.set("io.bluetape4k.images.benchmark.VipsTransformReceiptValidateMain")
+    javaLauncher.set(selectedJavaLauncher)
+    workingDir(repositoryDirectory)
+    inputs.file(vipsTransformReceiptFile)
+    doFirst {
+        require(vipsTransformReceiptFile.isFile) {
+            "Vips transform receipt is missing: $vipsTransformReceiptFile"
+        }
+        setArgs(listOf("--input", vipsTransformReceiptFile.absolutePath))
+    }
+}
+
 tasks.named("check") {
-    dependsOn("validateOcrBenchmarkReceipt", "validateOcrProtocolReceipt")
+    dependsOn("validateOcrBenchmarkReceipt", "validateOcrProtocolReceipt", "validateVipsTransformReceipt")
 }
 
 val vipsJava21BenchmarkReportRoot = layout.buildDirectory.dir("reports/benchmarks/vipsJava21Smoke")
