@@ -1,5 +1,12 @@
 # Issue #544 Tesseract baseline 실행 receipt
 
+> **Canonical evidence 안내:** 이 문서는 v1 `bench/ocr/manifest.json`을 사용한
+> 역사적 baseline receipt다. 현재 #544 비교 입력은 v2
+> [`bench/ocr-v2/manifest.json`](../../../benchmark/images-benchmark/src/main/resources/bench/ocr-v2/manifest.json)이며,
+> v1 수치를 v2 또는 PaddleOCR 비교 결과로 재사용하지 않는다. 현재 artifact
+> 관계와 정합화 결과는 [2026-08-25 corpus v2 baseline 정합화](2026-08-25-issue-544-corpus-v2-baseline-reconciliation.md)를
+> 기준으로 삼는다.
+
 ## 상태
 
 `BASELINE_ONLY` — #544의 동일 corpus 비교를 위한 Tesseract baseline은 재현 가능한 raw
