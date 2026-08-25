@@ -3,6 +3,7 @@ package io.bluetape4k.images.svg
 import com.sun.net.httpserver.HttpServer
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeGreaterThan
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.images.AbstractImageTest
 import io.bluetape4k.junit5.coroutines.runSuspendIO
@@ -99,6 +100,80 @@ class BatikSvgRasterizerSecurityTest : AbstractImageTest() {
         }
 
         requests.get() shouldBeEqualTo 0
+    }
+
+    @Test
+    fun `외부 HTTP 리소스 참조 SVG - allowlist에 없으면 allowExternalResources=true여도 차단`() = runSuspendIO {
+        val requests = AtomicInteger()
+        val server = HttpServer.create(InetSocketAddress(InetAddress.getByName("127.0.0.1"), 0), 0)
+        server.createContext("/remote.png") { exchange ->
+            requests.incrementAndGet()
+            exchange.sendResponseHeaders(200, 0)
+            exchange.responseBody.use { }
+        }
+        server.start()
+
+        val port = server.address.port
+        val svg = """
+            <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="32" height="32">
+              <image x="0" y="0" width="16" height="16" href="http://127.0.0.1:$port/remote.png" xlink:href="http://127.0.0.1:$port/remote.png"/>
+            </svg>
+        """.trimIndent()
+
+        try {
+            ByteArrayInputStream(svg.toByteArray()).use {
+                runCatching {
+                    rasterizer.rasterize(
+                        it,
+                        SvgRasterizeOptions(
+                            allowExternalResources = true,
+                            allowedSchemes = setOf("data"),
+                        ),
+                    )
+                }
+            }
+        } finally {
+            server.stop(0)
+        }
+
+        requests.get() shouldBeEqualTo 0
+    }
+
+    @Test
+    fun `외부 HTTP 리소스 참조 SVG - 허용된 scheme은 외부 리소스 정책을 통과`() = runSuspendIO {
+        val requests = AtomicInteger()
+        val server = HttpServer.create(InetSocketAddress(InetAddress.getByName("127.0.0.1"), 0), 0)
+        server.createContext("/remote.png") { exchange ->
+            requests.incrementAndGet()
+            exchange.sendResponseHeaders(200, 0)
+            exchange.responseBody.use { }
+        }
+        server.start()
+
+        val port = server.address.port
+        val svg = """
+            <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="32" height="32">
+              <image x="0" y="0" width="16" height="16" href="http://127.0.0.1:$port/remote.png" xlink:href="http://127.0.0.1:$port/remote.png"/>
+            </svg>
+        """.trimIndent()
+
+        try {
+            ByteArrayInputStream(svg.toByteArray()).use {
+                runCatching {
+                    rasterizer.rasterize(
+                        it,
+                        SvgRasterizeOptions(
+                            allowExternalResources = true,
+                            allowedSchemes = setOf("HTTP"),
+                        ),
+                    )
+                }
+            }
+        } finally {
+            server.stop(0)
+        }
+
+        requests.get() shouldBeGreaterThan 0
     }
 
     @Test

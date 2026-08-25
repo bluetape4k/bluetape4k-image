@@ -87,6 +87,7 @@ class BatikSvgRasterizerTest : AbstractImageTest() {
             "timeoutMillis" to { SvgRasterizeOptions(timeoutMillis = 0L) },
             "maxWidthPx" to { SvgRasterizeOptions(maxWidthPx = 0) },
             "maxHeightPx" to { SvgRasterizeOptions(maxHeightPx = 0) },
+            "allowedSchemes" to { SvgRasterizeOptions(allowedSchemes = setOf("not a scheme")) },
         ).forEach { (field, factory) ->
             val error = assertFailsWith<IllegalArgumentException> {
                 factory()
