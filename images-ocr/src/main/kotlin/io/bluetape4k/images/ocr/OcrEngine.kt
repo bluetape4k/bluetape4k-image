@@ -57,11 +57,15 @@ open class OcrException(
 
 /**
  * native library, tessdata, language-pack 설정 때문에 발생한 OCR failure입니다.
+ * public message는 환경 경로를 노출하지 않으며, 진단이 필요한 경우 원본 failure는 [cause]로
+ * 보존됩니다.
  */
 class OcrConfigurationException(
     message: String,
     cause: Throwable? = null,
 ): OcrException(message, cause) {
+    constructor(message: String) : this(message, null)
+
     companion object {
         private const val serialVersionUID: Long = 7589750812884482785L
     }

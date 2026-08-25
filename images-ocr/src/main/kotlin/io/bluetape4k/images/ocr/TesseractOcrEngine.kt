@@ -4,6 +4,7 @@ import com.sksamuel.scrimage.ImmutableImage
 import java.awt.Rectangle
 import java.awt.image.BufferedImage
 import java.io.Serializable
+import kotlinx.coroutines.CancellationException
 import net.sourceforge.tess4j.ITessAPI
 import net.sourceforge.tess4j.ITesseract
 import net.sourceforge.tess4j.Tesseract
@@ -16,6 +17,8 @@ import net.sourceforge.tess4j.Word
  * ## 동작/계약
  * - 각 recognition call마다 새 Tess4J [ITesseract] instance를 생성합니다.
  * - mutable native OCR state는 call 사이에 공유하지 않습니다.
+ * - factory/configuration 오류는 [OcrConfigurationException]으로 정규화하며,
+ *   [CancellationException]은 caller에게 그대로 전파합니다.
  * - Tesseract와 traineddata package는 runtime environment가 설치해야 하며, 이 module은
  *   language data를 bundle하지 않습니다.
  *
@@ -36,16 +39,14 @@ class TesseractOcrEngine private constructor(
     }
 
     override fun recognize(image: ImmutableImage, options: OcrOptions): OcrResult {
-        val tesseract = tesseractFactory()
-        configure(tesseract, options)
+        val tesseract = createConfiguredTesseract(options)
 
         val text = recognizeText(tesseract, image.awt(), options)
         return OcrResult(text = text, options = options)
     }
 
     override fun recognizeStructured(image: ImmutableImage, options: OcrOptions): OcrStructuredResult {
-        val tesseract = tesseractFactory()
-        configure(tesseract, options)
+        val tesseract = createConfiguredTesseract(options)
 
         val bufferedImage = image.awt()
         val text = recognizeText(tesseract, bufferedImage, options)
@@ -96,6 +97,33 @@ class TesseractOcrEngine private constructor(
         }
     }
 
+    private fun createConfiguredTesseract(options: OcrOptions): TesseractClient {
+        val tesseract = try {
+            tesseractFactory()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: LinkageError) {
+            throw configurationException(options, e)
+        } catch (e: TesseractException) {
+            throw configurationException(options, e)
+        } catch (e: RuntimeException) {
+            throw configurationException(options, e)
+        }
+
+        try {
+            configure(tesseract, options)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: LinkageError) {
+            throw configurationException(options, e)
+        } catch (e: TesseractException) {
+            throw configurationException(options, e)
+        } catch (e: RuntimeException) {
+            throw configurationException(options, e)
+        }
+        return tesseract
+    }
+
     private fun recognizeText(
         tesseract: TesseractClient,
         image: BufferedImage,
@@ -107,10 +135,10 @@ class TesseractOcrEngine private constructor(
             } else {
                 tesseract.doOCR(image, options.regions.map { it.boundingBox.toAwtRectangle() })
             }
-        } catch (e: UnsatisfiedLinkError) {
-            throw nativeConfigurationException(options, e)
-        } catch (e: NoClassDefFoundError) {
-            throw nativeConfigurationException(options, e)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: LinkageError) {
+            throw configurationException(options, e)
         } catch (e: TesseractException) {
             throw OcrException(failureMessage(options), e)
         } catch (e: RuntimeException) {
@@ -128,39 +156,31 @@ class TesseractOcrEngine private constructor(
         try {
             tesseract.getWords(image, level)
                 .filter { it.belongsToRequestedRegions(options) }
-        } catch (e: UnsatisfiedLinkError) {
-            throw nativeConfigurationException(options, e)
-        } catch (e: NoClassDefFoundError) {
-            throw nativeConfigurationException(options, e)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: LinkageError) {
+            throw configurationException(options, e)
         } catch (e: TesseractException) {
             throw OcrException(failureMessage(options), e)
         } catch (e: RuntimeException) {
             throw OcrException(failureMessage(options), e)
         }
 
-    private fun nativeConfigurationException(options: OcrOptions, cause: Throwable): OcrConfigurationException =
+    private fun configurationException(options: OcrOptions, cause: Throwable): OcrConfigurationException =
         OcrConfigurationException(configurationMessage(options), cause)
 
     private fun configurationMessage(options: OcrOptions): String =
         buildString {
             append("Tesseract OCR native runtime is not available for languages=")
             append(options.languageExpression)
-            append(". Install Tesseract and required traineddata packages")
-            options.tessdataPath?.let {
-                append(", or verify tessdataPath=")
-                append(it)
-            } ?: append(", or verify TESSDATA_PREFIX")
-            append(".")
+            append(". Install Tesseract and required traineddata packages, or verify")
+            append(" TESSDATA_PREFIX or the configured tessdata path.")
         }
 
     private fun failureMessage(options: OcrOptions): String =
         buildString {
             append("Tesseract OCR failed for languages=")
             append(options.languageExpression)
-            options.tessdataPath?.let {
-                append(" with tessdataPath=")
-                append(it)
-            }
             append(".")
         }
 }

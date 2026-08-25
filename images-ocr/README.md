@@ -163,13 +163,17 @@ decode; cumulative text/entry budgets are checked before each page is appended
 to the public aggregate.
 
 Input and metadata rejections are reported as
-`TiffMultiPageOcrValidationException`; decode, provider, and engine failures use
-`TiffMultiPageOcrException`. Handle the stable
-`TiffMultiPageOcrFailureReason` values rather than matching exception text.
-Public errors do not expose payload bytes, file paths, tessdata paths, or native
-causes. `suspendRecognize` runs blocking work on the supplied dispatcher and
-rethrows `CancellationException`; native cancellation is best-effort, so callers
-should apply a timeout for untrusted input.
+`TiffMultiPageOcrValidationException`; decode, provider, engine, and unexpected
+operational failures use `TiffMultiPageOcrException`. Handle the stable
+`TiffMultiPageOcrFailureReason` values rather than matching exception text. The
+mapped message includes the failure phase (`input`, `reader`, `metadata`,
+`decode`, `engine`, `result`, or `unknown`) and page index when available.
+Mapped messages do not expose payload bytes, file paths, or tessdata paths; the
+original failure remains available through `Throwable.cause` for trusted
+diagnostics and must not be sent directly to untrusted clients. Unexpected
+failures use `UNKNOWN`. `suspendRecognize` runs blocking work on the supplied
+dispatcher and rethrows `CancellationException`; native cancellation is
+best-effort, so callers should apply a timeout for untrusted input.
 
 This API intentionally covers multi-page TIFF only. GIF animation frames,
 parallel page OCR, and `Path`/`InputStream` overloads are not included. Existing
