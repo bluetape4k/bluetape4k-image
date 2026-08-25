@@ -3,6 +3,7 @@ package io.bluetape4k.images.barcode
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldContain
+import io.bluetape4k.assertions.shouldNotContain
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.ObjectInputStream
@@ -160,6 +161,34 @@ class BarcodeModelsTest {
         assertFailsWith<IllegalArgumentException> {
             BarcodeResult(text = "BT4K", format = BarcodeFormat.QR_CODE, provider = provider, rawBytes = byteArrayOf())
         }
+    }
+
+    @Test
+    fun `result toString redacts payload and metadata values`() {
+        val result = BarcodeResult(
+            text = "secret-token-123",
+            format = BarcodeFormat.QR_CODE,
+            provider = BarcodeProviderIdentity(
+                name = "fake",
+                version = "1.0",
+                backend = "test",
+                metadata = mapOf("credential" to "provider-secret"),
+            ),
+            rawBytes = byteArrayOf(0x01, 0x02, 0x03, 0x04),
+            rawBackendFormat = "QR_CODE",
+            metadata = mapOf("secret-header" to "header-secret"),
+        )
+
+        val rendered = result.toString()
+
+        rendered.shouldNotContain("secret-token-123")
+        rendered.shouldNotContain("provider-secret")
+        rendered.shouldNotContain("header-secret")
+        rendered.shouldNotContain("[1, 2, 3, 4]")
+        rendered.shouldContain("textLength=16")
+        rendered.shouldContain("rawBytes=length=4")
+        rendered.shouldContain("metadataEntries=1")
+        rendered.shouldContain("provider=fake")
     }
 
     @Test

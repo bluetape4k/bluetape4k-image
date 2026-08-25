@@ -298,7 +298,8 @@ data class BarcodeOptions private constructor(
  * [rawBackendFormat]은 provider-native format string을 담을 수 있습니다. [rawBytes]는
  * 선택값이며 요청되었고 사용 가능한 경우에만 제공해야 합니다. 입력 배열은 생성 시
  * snapshot하고 조회 시 새 배열을 반환하므로 결과의 equality/hash가 외부 mutation에
- * 영향을 받지 않습니다.
+ * 영향을 받지 않습니다. `toString()`은 payload와 metadata 값을 포함하지 않는
+ * diagnostic summary만 반환합니다.
  */
 class BarcodeResult private constructor(
     val text: String,
@@ -379,10 +380,17 @@ class BarcodeResult private constructor(
 
     operator fun component9(): Map<String, String> = metadata
 
+    /**
+     * 로그에 안전한 요약을 반환합니다. barcode text, raw bytes, provider/결과 metadata
+     * 값은 민감할 수 있으므로 길이 또는 entry 수만 표시합니다.
+     */
     override fun toString(): String =
-        "BarcodeResult(text=$text, format=$format, provider=$provider, region=$region, " +
-            "confidence=$confidence, quality=$quality, rawBytes=${rawBytes?.contentToString()}, " +
-            "rawBackendFormat=$rawBackendFormat, metadata=$metadata)"
+        "BarcodeResult(textLength=${text.length}, format=$format, " +
+            "provider=${provider.name}, providerVersion=${provider.version}, " +
+            "providerBackend=${provider.backend}, providerMetadataEntries=${provider.metadata.size}, " +
+            "region=$region, confidence=$confidence, quality=$quality, " +
+            "rawBytes=${rawBytes?.let { "length=${it.size}" } ?: "absent"}, " +
+            "rawBackendFormat=$rawBackendFormat, metadataEntries=${metadata.size})"
 
     companion object {
         private const val serialVersionUID: Long = 8448839205622304997L
