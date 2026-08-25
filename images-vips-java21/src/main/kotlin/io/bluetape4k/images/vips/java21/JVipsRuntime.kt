@@ -41,29 +41,30 @@ object JVipsRuntime : VipsRuntime, KLogging() {
 
     private enum class RuntimeState { UNINITIALIZED, INITIALIZING, INITIALIZED, SHUTDOWN }
 
+    private data class InitConfiguration(
+        val concurrency: Int,
+        val maxPixels: Long,
+    )
+
     private val state = AtomicReference(RuntimeState.UNINITIALIZED)
+    private val effectiveConfiguration = AtomicReference<InitConfiguration?>()
 
     @VisibleForTesting
     internal var nativeRuntime: JVipsNativeRuntime = DefaultJVipsNativeRuntime
-
-    /** maxPixels 설정값 (init 시 저장) */
-    @Volatile
-    private var _maxPixels: Long = VipsLimits.DEFAULT_MAX_PIXELS
 
     @Volatile
     private var _concurrencyCapability: VipsConcurrencyCapability =
         VipsConcurrencyCapability.unknown("JVips runtime has not been initialized")
 
     /** 허용할 최대 픽셀 수 `width × height × bands` */
-    val maxPixels: Long get() = _maxPixels
+    val maxPixels: Long
+        get() = effectiveConfiguration.get()?.maxPixels ?: VipsLimits.DEFAULT_MAX_PIXELS
 
     override val concurrencyCapability: VipsConcurrencyCapability
         get() = _concurrencyCapability
 
     override fun init(concurrency: Int, maxPixels: Long) {
-        // 빠른 경로
         when (state.get()) {
-            RuntimeState.INITIALIZED -> return
             RuntimeState.SHUTDOWN -> throw VipsInitializationException(
                 "libvips has been shut down — restart the process to re-initialize"
             )
@@ -72,6 +73,15 @@ object JVipsRuntime : VipsRuntime, KLogging() {
 
         require(concurrency > 0) { "concurrency must be positive: $concurrency" }
         require(maxPixels > 0) { "maxPixels must be positive: $maxPixels" }
+        val requestedConfiguration = InitConfiguration(concurrency, maxPixels)
+
+        when (state.get()) {
+            RuntimeState.INITIALIZED -> return verifyEffectiveConfiguration(requestedConfiguration)
+            RuntimeState.SHUTDOWN -> throw VipsInitializationException(
+                "libvips has been shut down — restart the process to re-initialize"
+            )
+            else -> {}
+        }
 
         if (!state.compareAndSet(RuntimeState.UNINITIALIZED, RuntimeState.INITIALIZING)) {
             // 다른 스레드가 CAS에서 이겼습니다. 초기화가 완료될 때까지 스핀 대기합니다.
@@ -86,7 +96,7 @@ object JVipsRuntime : VipsRuntime, KLogging() {
                 }
             }
             when (state.get()) {
-                RuntimeState.INITIALIZED -> return
+                RuntimeState.INITIALIZED -> verifyEffectiveConfiguration(requestedConfiguration)
                 RuntimeState.SHUTDOWN -> throw VipsInitializationException(
                     "libvips was shut down during concurrent initialization"
                 )
@@ -102,8 +112,8 @@ object JVipsRuntime : VipsRuntime, KLogging() {
         try {
             JVipsNativeLibrarySupport.loadBundledLibTiffIfNeeded()
             nativeRuntime.nativeInit(concurrency)
-            _maxPixels = maxPixels
             _concurrencyCapability = VipsConcurrencyCapability.configurable(concurrency)
+            effectiveConfiguration.set(requestedConfiguration)
             state.set(RuntimeState.INITIALIZED)
             log.debug("JVipsRuntime initialized: concurrency=$concurrency, maxPixels=$maxPixels")
         } catch (e: Error) {
@@ -234,8 +244,22 @@ object JVipsRuntime : VipsRuntime, KLogging() {
     internal fun resetForTest() {
         state.set(RuntimeState.UNINITIALIZED)
         nativeRuntime = DefaultJVipsNativeRuntime
-        _maxPixels = VipsLimits.DEFAULT_MAX_PIXELS
+        effectiveConfiguration.set(null)
         _concurrencyCapability = VipsConcurrencyCapability.unknown("JVips runtime has not been initialized")
+    }
+
+    private fun verifyEffectiveConfiguration(requested: InitConfiguration) {
+        val effective = effectiveConfiguration.get()
+            ?: throw VipsInitializationException(
+                "libvips is initialized without an effective configuration"
+            )
+        if (effective != requested) {
+            throw VipsInitializationException(
+                "libvips runtime configuration mismatch: " +
+                    "requested=(concurrency=${requested.concurrency}, maxPixels=${requested.maxPixels}), " +
+                    "effective=(concurrency=${effective.concurrency}, maxPixels=${effective.maxPixels})",
+            )
+        }
     }
 
     private const val BACKEND_NAME = "JVips/JNI"

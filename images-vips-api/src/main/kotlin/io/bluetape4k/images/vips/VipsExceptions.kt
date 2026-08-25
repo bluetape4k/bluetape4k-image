@@ -41,7 +41,8 @@ class VipsOperationException(message: String, cause: Throwable? = null) : VipsEx
 /**
  * libvips 런타임 초기화 실패 시 발생하는 예외.
  *
- * `VipsRuntime.init()` 호출 실패 또는 이미 종료된 런타임에 대해 `init()`을 재호출하는 경우에 발생합니다.
+ * `VipsRuntime.init()` 호출 실패, 이미 초기화된 런타임에 다른 effective configuration을 요청한 경우,
+ * 또는 이미 종료된 런타임에 대해 `init()`을 재호출하는 경우에 발생합니다.
  * libvips는 `vips_shutdown()` 이후 `VIPS_INIT()`을 재호출하는 것을 지원하지 않으므로,
  * 이 예외가 발생하면 프로세스를 재시작해야 합니다.
  */

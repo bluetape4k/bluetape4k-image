@@ -43,7 +43,13 @@ object FfmVipsRuntime : VipsRuntime, KLogging() {
 
     private enum class RuntimeState { UNINITIALIZED, INITIALIZING, INITIALIZED, SHUTDOWN }
 
+    private data class InitConfiguration(
+        val concurrency: Int,
+        val maxPixels: Long,
+    )
+
     private val state = AtomicReference(RuntimeState.UNINITIALIZED)
+    private val effectiveConfiguration = AtomicReference<InitConfiguration?>()
 
     @VisibleForTesting
     internal var nativeRuntime: FfmVipsNativeRuntime = DefaultFfmVipsNativeRuntime
@@ -52,20 +58,17 @@ object FfmVipsRuntime : VipsRuntime, KLogging() {
     internal var codecProbe: FfmVipsCodecProbe = DefaultFfmVipsCodecProbe
 
     @Volatile
-    private var _maxPixels: Long = VipsLimits.DEFAULT_MAX_PIXELS
-
-    @Volatile
     private var _concurrencyCapability: VipsConcurrencyCapability = unsupportedConcurrencyCapability()
 
     /** 허용할 최대 픽셀 수 `width × height × bands` */
-    val maxPixels: Long get() = _maxPixels
+    val maxPixels: Long
+        get() = effectiveConfiguration.get()?.maxPixels ?: VipsLimits.DEFAULT_MAX_PIXELS
 
     override val concurrencyCapability: VipsConcurrencyCapability
         get() = _concurrencyCapability
 
     override fun init(concurrency: Int, maxPixels: Long) {
         when (state.get()) {
-            RuntimeState.INITIALIZED -> return
             RuntimeState.SHUTDOWN -> throw VipsInitializationException(
                 "libvips has been shut down — restart the process to re-initialize"
             )
@@ -80,6 +83,15 @@ object FfmVipsRuntime : VipsRuntime, KLogging() {
                     "requested=$concurrency, effective=unknown, support=UNSUPPORTED",
             )
         }
+        val requestedConfiguration = InitConfiguration(concurrency, maxPixels)
+
+        when (state.get()) {
+            RuntimeState.INITIALIZED -> return verifyEffectiveConfiguration(requestedConfiguration)
+            RuntimeState.SHUTDOWN -> throw VipsInitializationException(
+                "libvips has been shut down — restart the process to re-initialize"
+            )
+            else -> {}
+        }
 
         if (!state.compareAndSet(RuntimeState.UNINITIALIZED, RuntimeState.INITIALIZING)) {
             var spinCount = 0
@@ -92,7 +104,7 @@ object FfmVipsRuntime : VipsRuntime, KLogging() {
                 }
             }
             when (state.get()) {
-                RuntimeState.INITIALIZED -> return
+                RuntimeState.INITIALIZED -> verifyEffectiveConfiguration(requestedConfiguration)
                 RuntimeState.SHUTDOWN -> throw VipsInitializationException(
                     "libvips was shut down during concurrent initialization"
                 )
@@ -107,8 +119,8 @@ object FfmVipsRuntime : VipsRuntime, KLogging() {
         try {
             checkNativeAccessEnabled()
             nativeRuntime.nativeInit(concurrency)
-            _maxPixels = maxPixels
             _concurrencyCapability = unsupportedConcurrencyCapability(concurrency)
+            effectiveConfiguration.set(requestedConfiguration)
             state.set(RuntimeState.INITIALIZED)
             log.debug("FfmVipsRuntime initialized: concurrency=$concurrency, maxPixels=$maxPixels")
         } catch (e: Error) {
@@ -224,8 +236,22 @@ object FfmVipsRuntime : VipsRuntime, KLogging() {
         state.set(RuntimeState.UNINITIALIZED)
         nativeRuntime = DefaultFfmVipsNativeRuntime
         codecProbe = DefaultFfmVipsCodecProbe
-        _maxPixels = VipsLimits.DEFAULT_MAX_PIXELS
+        effectiveConfiguration.set(null)
         _concurrencyCapability = unsupportedConcurrencyCapability()
+    }
+
+    private fun verifyEffectiveConfiguration(requested: InitConfiguration) {
+        val effective = effectiveConfiguration.get()
+            ?: throw VipsInitializationException(
+                "libvips is initialized without an effective configuration"
+            )
+        if (effective != requested) {
+            throw VipsInitializationException(
+                "libvips runtime configuration mismatch: " +
+                    "requested=(concurrency=${requested.concurrency}, maxPixels=${requested.maxPixels}), " +
+                    "effective=(concurrency=${effective.concurrency}, maxPixels=${effective.maxPixels})",
+            )
+        }
     }
 
     private fun unsupportedConcurrencyCapability(requested: Int? = null): VipsConcurrencyCapability =
