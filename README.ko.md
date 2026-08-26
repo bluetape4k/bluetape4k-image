@@ -41,6 +41,37 @@ native codec이 중요해질 때 libvips 백엔드로 확장할 수 있는 단�
 BOM은 artifact version을 정렬하고, runnable example은 local API 형태를 보여 주며,
 benchmark module은 scrimage/libvips trade-off를 추측이 아니라 측정 가능한 증거로 남깁니다.
 
+## AI/ML backend 연구 상태
+
+Production 이미지 API는 detector boundary에서 runtime-free 상태를 유지합니다.
+현재 OCR 기본 경로는 Tess4J/Tesseract이며, 저장소는 제3자 ML model weight를
+자동으로 다운로드하거나 번들하지 않습니다.
+
+- **OCR 기본 경로** — `images-ocr`에 host Tesseract와 명시적으로 선택한
+  traineddata를 설정합니다. 이 경로를 현재 지원하는 기본 OCR로 유지합니다.
+- **Detector contract** — `images`는 ONNX Runtime, TensorFlow Lite, MediaPipe,
+  OpenCV, 외부 서비스와 분리된 face/object/sensitive-region 결과 계약을
+  제공합니다.
+- **연구 상태** — [#513](https://github.com/bluetape4k/bluetape4k-image/issues/513)은
+  `OPEN / Backlog / BACKLOG / DEFERRED`이며, PaddleOCR child
+  [#169](https://github.com/bluetape4k/bluetape4k-image/issues/169)도
+  `Backlog / DEFERRED`입니다. 이미지 분류 ONNX 결정인
+  [#3](https://github.com/bluetape4k/bluetape4k-image/issues/3)과
+  [#551](https://github.com/bluetape4k/bluetape4k-image/issues/551)은
+  `DEFER`입니다.
+- **보류 범위** — PaddleOCR model download, ONNX production backend, ML
+  runtime dependency, benchmark adoption, model-serving train은 현재
+  활성화하지 않습니다.
+- **재개 gate** — 호환되는 license/`NOTICE`, immutable model digest,
+  SBOM/signature를 포함한 trusted producer provenance, offline smoke receipt,
+  승인된 CI·운영 비용 경로를 모두 확보한 뒤에만 재개합니다. 공통 정책은
+  [#543](https://github.com/bluetape4k/bluetape4k-image/issues/543), artifact와
+  producer gate는 [#544](https://github.com/bluetape4k/bluetape4k-image/issues/544),
+  [#545](https://github.com/bluetape4k/bluetape4k-image/issues/545),
+  [#609](https://github.com/bluetape4k/bluetape4k-image/issues/609),
+  [#611](https://github.com/bluetape4k/bluetape4k-image/issues/611)에서
+  추적합니다.
+
 ## 매뉴얼
 
 [Image 0.4 매뉴얼](./docs/manual/ko/index.md)은 학습 경로, 모듈별 계약, 백엔드 선택,

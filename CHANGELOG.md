@@ -14,6 +14,16 @@
   bounded stream decode, 방어적 byte/collection copy를 추가했다. 기존 runtime Java
   serialization 사용자는 `PrivacyDerivativePayload`/report/batch snapshot으로
   migration해야 한다 ([#481](https://github.com/bluetape4k/bluetape4k-image/issues/481)).
+- AI/ML backend 연구 umbrella [#513](https://github.com/bluetape4k/bluetape4k-image/issues/513)와
+  PaddleOCR child [#169](https://github.com/bluetape4k/bluetape4k-image/issues/169)를
+  각각 `OPEN / Backlog / BACKLOG / DEFERRED`와 `Backlog / DEFERRED`로 보존한다.
+  Tesseract/Tess4J baseline은 기본 OCR 경로로 유지하고, PaddleOCR model download, ONNX production backend,
+  benchmark adoption은 license·immutable artifact·producer provenance·offline
+  receipt가 확보될 때까지 활성화하지 않는다 ([#543](https://github.com/bluetape4k/bluetape4k-image/issues/543),
+  [#544](https://github.com/bluetape4k/bluetape4k-image/issues/544),
+  [#545](https://github.com/bluetape4k/bluetape4k-image/issues/545),
+  [#609](https://github.com/bluetape4k/bluetape4k-image/issues/609),
+  [#611](https://github.com/bluetape4k/bluetape4k-image/issues/611)).
 
 ## [0.4.0] - 2026-08-06
 
