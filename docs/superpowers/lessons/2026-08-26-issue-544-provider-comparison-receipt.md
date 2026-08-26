@@ -84,7 +84,7 @@ production OCR API·provider dependency·native lifecycle은 변경하지 않았
 - `SPW-02`: PASS — 결정·miss/surprise·방어선·후속 검증을 연결했다.
 - `SPW-03`: PASS — 자연스러운 한국어 technical register와 machine token을 보존했다.
 - `SPW-04`: PASS — #544/#545/#547, v2 manifest, PR #605와 correction commit `47659ba3`을 연결했다.
-- `SPW-05`: CONDITIONAL — 독립 reviewer는 timeout/NO RESULT이며 inline 대체 검토는 완료했고, hosted CI·최종 read-back이 남아 있다.
+- `SPW-05`: PASS — 독립 reviewer timeout/NO RESULT와 inline 대체 검토, hosted CI run `32940367380`, 최종 read-back을 모두 기록했다. merge approval은 별도 gate다.
 
 ## Final Status
 
