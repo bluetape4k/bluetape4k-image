@@ -18,7 +18,9 @@ benchmark 전용 Jackson3 계약을 고정한다.
 - TEXT/EMPTY/ERROR payload의 일관성을 강제한다. TEXT는 비어 있지 않은 text와 geometry,
   EMPTY는 빈 text와 geometry 없음, ERROR는 bounded error message를 요구한다.
 - 모든 fixture에 cold/warm latency, warm iterations, throughput, RSS와 output SHA-256을
-  남기고, CER/WER·throughput·RSS delta는 비교 summary에서만 기록한다.
+  남기며 최소 warm 3회를 요구한다. CER/WER·throughput·RSS delta는 비교 summary에서만 기록한다.
+- receipt의 `scenario`는 Kotlin enum 이름이 아니라 canonical manifest wire 값으로 기록하고,
+  manifest digest 계산도 bounded resource만 허용한다.
 - Jackson3 `JsonMapper`에 unknown-field 거부, trailing-data 거부, document/string/
   nesting/token/name limit을 적용한다. 기존 corpus/protocol의 `kotlinx.serialization`
   사용은 호환성 때문에 그대로 둔다.
@@ -38,6 +40,12 @@ benchmark 전용 Jackson3 계약을 고정한다.
    subtraction으로 검증해 overflow를 피한다.
 5. JSON unknown-field와 trailing-data를 mapper default에 맡기면 입력 policy가 버전에
    따라 흔들릴 수 있다. strict feature와 bounded parser를 receipt contract 안에 고정한다.
+6. Jackson3는 기존 `kotlinx.serialization @SerialName`을 자동으로 적용하지 않으므로
+   `LOW_RESOLUTION` 같은 enum 이름을 wire로 내보내면 canonical `low-resolution` manifest와
+   교차 provider receipt가 재생되지 않는다. receipt 모델을 manifest wire 문자열로 고정하고
+   실제 JSON 값을 회귀 테스트로 확인했다.
+7. `warmIterations > 0`만 검사하면 한 번의 warm 실행도 benchmark evidence로 통과한다. Issue
+   #544의 최소 3회 반복 조건에 맞춰 validator가 `warmIterations >= 3`을 fail-closed로 요구한다.
 
 ## 재사용할 방어선
 
@@ -45,6 +53,8 @@ benchmark 전용 Jackson3 계약을 고정한다.
 - baseline-only, comparable, pending, defer 상태를 서로 승격하지 않는다.
 - JSON contract는 unknown field·oversized document·oversized string·trailing data를
   테스트로 고정한다.
+- scenario wire 값·manifest resource bound·최소 warm 3회도 receipt validator와 regression
+  test로 고정한다.
 - fixture row는 품질 payload와 resource metric을 함께 보존하되, 실제 실행 수치가 없는
   synthetic test receipt를 production evidence로 사용하지 않는다.
 - #545 trusted artifact와 #547 DEFER gate를 통과하기 전에는 Paddle dependency,
@@ -73,8 +83,8 @@ production OCR API·provider dependency·native lifecycle은 변경하지 않았
 - `SPW-01`: PASS — issue·독자·결정·범위와 후속 gate를 고정했다.
 - `SPW-02`: PASS — 결정·miss/surprise·방어선·후속 검증을 연결했다.
 - `SPW-03`: PASS — 자연스러운 한국어 technical register와 machine token을 보존했다.
-- `SPW-04`: PASS — #544/#545/#547, v2 manifest, PR #605와 commit `8a92f23`을 연결했다.
-- `SPW-05`: CONDITIONAL — 독립 reviewer·hosted CI·최종 read-back이 남아 있다.
+- `SPW-04`: PASS — #544/#545/#547, v2 manifest, PR #605와 correction commit `47659ba3`을 연결했다.
+- `SPW-05`: CONDITIONAL — 독립 reviewer는 timeout/NO RESULT이며 inline 대체 검토는 완료했고, hosted CI·최종 read-back이 남아 있다.
 
 ## Final Status
 
