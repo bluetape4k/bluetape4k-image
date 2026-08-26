@@ -49,6 +49,9 @@ internal object OcrBenchmarkCorpusV2 {
     fun loadManifest(): OcrBenchmarkCorpusManifest =
         decodeManifest(requireResource(MANIFEST_RESOURCE, MAX_MANIFEST_BYTES))
 
+    /** receipt가 참조해야 하는 canonical corpus v2 manifest SHA-256입니다. */
+    fun manifestSha256(): String = sha256Hex(requireResource(MANIFEST_RESOURCE, MAX_MANIFEST_BYTES))
+
     fun loadFixture(fixtureId: String): OcrBenchmarkCorpusFixture =
         loadFixture(loadManifest(), fixtureId, ::classpathResource)
 

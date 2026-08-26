@@ -1030,6 +1030,10 @@ dependencies {
     implementation(bt4k.bluetape4k.core)
     implementation(bt4k.bluetape4k.logging)
     implementation(bt4k.kotlinx.serialization.json)
+    // Issue #544 provider comparison receipt는 Jackson 3을 사용하며 기존 중앙 BOM을 재사용한다.
+    implementation(platform("tools.jackson:jackson-bom:${bt4k.versions.jackson3.get()}"))
+    implementation("tools.jackson.core:jackson-databind")
+    implementation("tools.jackson.module:jackson-module-kotlin")
     testImplementation(bt4k.bluetape4k.junit5)
     testImplementation(gradleTestKit())
     testImplementation(project(":bluetape4k-images-barcode-zxing"))
