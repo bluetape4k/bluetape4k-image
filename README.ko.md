@@ -70,7 +70,10 @@ Production 이미지 API는 detector boundary에서 runtime-free 상태를 유�
   [#545](https://github.com/bluetape4k/bluetape4k-image/issues/545),
   [#609](https://github.com/bluetape4k/bluetape4k-image/issues/609),
   [#611](https://github.com/bluetape4k/bluetape4k-image/issues/611)에서
-  추적합니다.
+  추적합니다. 최종 PaddleOCR 채택 결정은
+  [#547](https://github.com/bluetape4k/bluetape4k-image/issues/547)에서
+  추적하며, 현재 결과는 `DEFER`입니다. 이는 채택 승인이 아니며, 재개
+  증거는 새로운 #547 결정의 입력으로만 사용합니다.
 
 ## 매뉴얼
 

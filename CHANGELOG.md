@@ -23,7 +23,9 @@
   [#544](https://github.com/bluetape4k/bluetape4k-image/issues/544),
   [#545](https://github.com/bluetape4k/bluetape4k-image/issues/545),
   [#609](https://github.com/bluetape4k/bluetape4k-image/issues/609),
-  [#611](https://github.com/bluetape4k/bluetape4k-image/issues/611)).
+  [#611](https://github.com/bluetape4k/bluetape4k-image/issues/611)). 최종
+  PaddleOCR adoption gate [#547](https://github.com/bluetape4k/bluetape4k-image/issues/547)의
+  현재 결정은 `DEFER`이며, 재개 증거는 새로운 결정의 입력으로만 사용한다.
 
 ## [0.4.0] - 2026-08-06
 

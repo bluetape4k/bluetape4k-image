@@ -55,6 +55,9 @@
   [#609](https://github.com/bluetape4k/bluetape4k-image/issues/609),
   [#611](https://github.com/bluetape4k/bluetape4k-image/issues/611) - PaddleOCR
   benchmark·공급망·trusted producer 재개 gate.
+- [#547](https://github.com/bluetape4k/bluetape4k-image/issues/547) - PaddleOCR
+  최종 adoption gate (`CLOSED / DEFER`); 재개 증거는 새로운 결정의 입력으로만
+  사용한다.
 - [#203](https://github.com/bluetape4k/bluetape4k-image/issues/203) - OCR 추출
   benchmark 추가.
 - [#204](https://github.com/bluetape4k/bluetape4k-image/issues/204) - storage

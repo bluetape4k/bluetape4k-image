@@ -73,7 +73,10 @@ or bundle third-party ML model weights.
   the artifact and producer gates are [#544](https://github.com/bluetape4k/bluetape4k-image/issues/544),
   [#545](https://github.com/bluetape4k/bluetape4k-image/issues/545),
   [#609](https://github.com/bluetape4k/bluetape4k-image/issues/609), and
-  [#611](https://github.com/bluetape4k/bluetape4k-image/issues/611).
+  [#611](https://github.com/bluetape4k/bluetape4k-image/issues/611). The final
+  PaddleOCR adoption decision is tracked by [#547](https://github.com/bluetape4k/bluetape4k-image/issues/547);
+  its current `DEFER` outcome is not an adoption grant, and any re-entry
+  evidence must be supplied to a new #547 decision.
 
 ## Manual
 
