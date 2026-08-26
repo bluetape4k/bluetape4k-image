@@ -13,7 +13,9 @@ class OcrProviderComparisonReceiptTest {
         val receipt = receipt(manifest, OcrProviderComparisonStatus.BASELINE_ONLY)
 
         OcrProviderComparisonReceiptValidator.validate(receipt, manifest)
-        val decoded = OcrProviderComparisonReceipt.decode(OcrProviderComparisonReceipt.encode(receipt))
+        val encoded = OcrProviderComparisonReceipt.encode(receipt).decodeToString()
+        encoded.shouldContain("\"scenario\":\"clean\"")
+        val decoded = OcrProviderComparisonReceipt.decode(encoded.encodeToByteArray())
 
         decoded.status.shouldBeEqualTo(OcrProviderComparisonStatus.BASELINE_ONLY)
         decoded.providers.single().fixtures.size.shouldBeEqualTo(manifest.fixtures.size + manifest.negatives.size)
@@ -159,7 +161,7 @@ class OcrProviderComparisonReceiptTest {
             val fixture = OcrBenchmarkCorpusV2.loadFixture(entry.fixtureId)
             OcrProviderFixtureResult(
                 fixtureId = entry.fixtureId,
-                scenario = entry.scenario,
+                scenario = entry.scenario.value,
                 expectedOutcome = entry.expectedOutcome,
                 actualOutcome = entry.expectedOutcome,
                 text = fixture.normalizedText,
@@ -188,7 +190,7 @@ class OcrProviderComparisonReceiptTest {
         } + manifest.negatives.map { entry ->
             OcrProviderFixtureResult(
                 fixtureId = entry.fixtureId,
-                scenario = entry.scenario,
+                scenario = entry.scenario.value,
                 expectedOutcome = entry.expectedOutcome,
                 actualOutcome = OcrBenchmarkExpectedOutcome.ERROR,
                 text = "",

@@ -48,7 +48,8 @@ internal data class OcrProviderGeometry(
 /** provider 하나의 fixture별 품질·성능·메모리 관측값입니다. */
 internal data class OcrProviderFixtureResult(
     val fixtureId: String,
-    val scenario: OcrBenchmarkCorpusScenario,
+    /** canonical manifest wire value (for example, `low-resolution`)입니다. */
+    val scenario: String,
     val expectedOutcome: OcrBenchmarkExpectedOutcome,
     val actualOutcome: OcrBenchmarkExpectedOutcome,
     val text: String,
@@ -281,7 +282,7 @@ internal object OcrProviderComparisonReceiptValidator {
         result: OcrProviderFixtureResult,
         expected: ExpectedFixture,
     ) {
-        require(result.scenario == expected.scenario && result.expectedOutcome == expected.outcome) {
+        require(result.scenario == expected.scenario.value && result.expectedOutcome == expected.outcome) {
             "OCR comparison fixture classification differs: ${result.fixtureId}"
         }
         require(result.text.length <= MAX_TEXT_CHARS) {
