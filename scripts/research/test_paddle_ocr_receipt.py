@@ -7,6 +7,7 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from paddle_ocr_receipt import (
     MAX_RECEIPT_BYTES,
@@ -332,6 +333,31 @@ class PaddleOcrReceiptTest(unittest.TestCase):
             target.symlink_to(root / "receipts/smoke-logs")
 
             with self.assertRaisesRegex(ReceiptValidationError, "contains a symlink"):
+                validate_receipt(receipt, artifact_root=root)
+
+    def test_artifact_validation_uses_descriptors_not_path_rechecks(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            receipt = valid_receipt()
+            add_artifacts(receipt, root)
+
+            with (
+                patch.object(
+                    Path,
+                    "resolve",
+                    side_effect=AssertionError("artifact validation resolved a path"),
+                ),
+                patch.object(
+                    Path,
+                    "stat",
+                    side_effect=AssertionError("artifact validation stat'ed a path"),
+                ),
+                patch.object(
+                    Path,
+                    "open",
+                    side_effect=AssertionError("artifact validation opened a path"),
+                ),
+            ):
                 validate_receipt(receipt, artifact_root=root)
 
 

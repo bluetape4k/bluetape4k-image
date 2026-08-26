@@ -6,7 +6,9 @@ import argparse
 import hashlib
 import json
 import math
+import os
 import re
+import stat
 import sys
 from pathlib import Path
 from typing import Any
@@ -247,6 +249,52 @@ def _validate_security(value: Any) -> None:
         )
 
 
+def _open_artifact_fd(root: Path, relative_path: str) -> tuple[int, os.stat_result]:
+    """Open one artifact relative to a no-follow directory descriptor."""
+
+    directory_flags = os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW
+    try:
+        current_fd = os.open(os.fspath(root), directory_flags)
+    except OSError as error:
+        raise ReceiptValidationError(
+            f"artifact root contains a symlink or cannot be opened: {root}"
+        ) from error
+
+    file_fd: int | None = None
+    try:
+        parts = relative_path.split("/")
+        for part in parts[:-1]:
+            next_fd = os.open(part, directory_flags, dir_fd=current_fd)
+            previous_fd = current_fd
+            try:
+                os.close(previous_fd)
+            except OSError:
+                os.close(next_fd)
+                raise
+            current_fd = next_fd
+        file_fd = os.open(
+            parts[-1], os.O_RDONLY | os.O_NOFOLLOW, dir_fd=current_fd
+        )
+        file_stat = os.fstat(file_fd)
+        if not stat.S_ISREG(file_stat.st_mode):
+            raise ReceiptValidationError(
+                f"artifact path is not a regular file: {relative_path}"
+            )
+        return file_fd, file_stat
+    except ReceiptValidationError:
+        if file_fd is not None:
+            os.close(file_fd)
+        raise
+    except OSError as error:
+        if file_fd is not None:
+            os.close(file_fd)
+        raise ReceiptValidationError(
+            f"artifact path contains a symlink or cannot be opened: {relative_path}"
+        ) from error
+    finally:
+        os.close(current_fd)
+
+
 def _validate_artifacts(value: Any, artifact_root: Path | None) -> None:
     if not isinstance(value, list) or not value:
         raise ReceiptValidationError("artifacts must be a non-empty array")
@@ -281,54 +329,47 @@ def _validate_artifacts(value: Any, artifact_root: Path | None) -> None:
         media_type = _string(artifact["mediaType"], f"artifacts[{index}].mediaType")
         if artifact_root is None:
             continue
-        root = artifact_root.resolve()
-        lexical_candidate = root / relative_path
-        if any(part.is_symlink() for part in _path_parts(root, relative_path)):
-            raise ReceiptValidationError(
-                f"artifact path contains a symlink: {relative_path}"
-            )
-        candidate = lexical_candidate.resolve()
-        if root not in candidate.parents:
-            raise ReceiptValidationError(
-                f"artifacts[{index}].path escapes artifact root"
-            )
-        if not candidate.is_file():
-            raise ReceiptValidationError(
-                f"artifact file is missing or symlinked: {relative_path}"
-            )
-        actual_size = candidate.stat().st_size
-        if actual_size > MAX_ARTIFACT_BYTES:
-            raise ReceiptValidationError(
-                f"artifact exceeds {MAX_ARTIFACT_BYTES} bytes: {relative_path}"
-            )
-        if name == "smoke-logs" and actual_size > MAX_SMOKE_LOG_BYTES:
-            raise ReceiptValidationError(
-                f"smoke log exceeds {MAX_SMOKE_LOG_BYTES} bytes"
-            )
-        if actual_size != bytes_count:
-            raise ReceiptValidationError(
-                f"artifact byte count differs: {relative_path}"
-            )
-        actual_hash, actual = _hash_artifact(
-            candidate,
-            bytes_count,
-            capture_content=name == "smoke-logs",
-        )
-        if actual_hash != expected_hash:
-            raise ReceiptValidationError(f"artifact SHA-256 differs: {relative_path}")
-        if name == "smoke-logs":
-            if not media_type.startswith("text/"):
-                raise ReceiptValidationError("smoke-logs must use a text media type")
-            try:
-                log_text = actual.decode("utf-8")
-            except UnicodeDecodeError as error:
+        file_fd, file_stat = _open_artifact_fd(artifact_root, relative_path)
+        try:
+            actual_size = file_stat.st_size
+            if actual_size > MAX_ARTIFACT_BYTES:
                 raise ReceiptValidationError(
-                    "smoke-logs must be valid UTF-8"
-                ) from error
-            if FORBIDDEN_TEXT_PATTERN.search(log_text):
-                raise ReceiptValidationError(
-                    "smoke-logs contains a forbidden payload or credential"
+                    f"artifact exceeds {MAX_ARTIFACT_BYTES} bytes: {relative_path}"
                 )
+            if name == "smoke-logs" and actual_size > MAX_SMOKE_LOG_BYTES:
+                raise ReceiptValidationError(
+                    f"smoke log exceeds {MAX_SMOKE_LOG_BYTES} bytes"
+                )
+            if actual_size != bytes_count:
+                raise ReceiptValidationError(
+                    f"artifact byte count differs: {relative_path}"
+                )
+            actual_hash, actual = _hash_artifact_fd(
+                file_fd,
+                bytes_count,
+                capture_content=name == "smoke-logs",
+            )
+            if actual_hash != expected_hash:
+                raise ReceiptValidationError(
+                    f"artifact SHA-256 differs: {relative_path}"
+                )
+            if name == "smoke-logs":
+                if not media_type.startswith("text/"):
+                    raise ReceiptValidationError(
+                        "smoke-logs must use a text media type"
+                    )
+                try:
+                    log_text = actual.decode("utf-8")
+                except UnicodeDecodeError as error:
+                    raise ReceiptValidationError(
+                        "smoke-logs must be valid UTF-8"
+                    ) from error
+                if FORBIDDEN_TEXT_PATTERN.search(log_text):
+                    raise ReceiptValidationError(
+                        "smoke-logs contains a forbidden payload or credential"
+                    )
+        finally:
+            os.close(file_fd)
     missing = sorted(REQUIRED_ARTIFACTS - names)
     if missing:
         raise ReceiptValidationError(
@@ -336,19 +377,8 @@ def _validate_artifacts(value: Any, artifact_root: Path | None) -> None:
         )
 
 
-def _path_parts(root: Path, relative_path: str) -> list[Path]:
-    """Return each lexical path component so symlinks cannot hide in a path."""
-
-    current = root
-    parts: list[Path] = []
-    for part in Path(relative_path).parts:
-        current /= part
-        parts.append(current)
-    return parts
-
-
-def _hash_artifact(
-    path: Path,
+def _hash_artifact_fd(
+    file_fd: int,
     expected_bytes: int,
     *,
     capture_content: bool,
@@ -356,16 +386,15 @@ def _hash_artifact(
     digest = hashlib.sha256()
     content = bytearray() if capture_content else None
     actual_bytes = 0
-    with path.open("rb") as stream:
-        while chunk := stream.read(ARTIFACT_READ_CHUNK_BYTES):
-            actual_bytes += len(chunk)
-            if actual_bytes > expected_bytes:
-                raise ReceiptValidationError(f"artifact byte count differs: {path}")
-            digest.update(chunk)
-            if content is not None:
-                content.extend(chunk)
+    while chunk := os.read(file_fd, ARTIFACT_READ_CHUNK_BYTES):
+        actual_bytes += len(chunk)
+        if actual_bytes > expected_bytes:
+            raise ReceiptValidationError("artifact byte count differs")
+        digest.update(chunk)
+        if content is not None:
+            content.extend(chunk)
     if actual_bytes != expected_bytes:
-        raise ReceiptValidationError(f"artifact byte count differs: {path}")
+        raise ReceiptValidationError("artifact byte count differs")
     return digest.hexdigest(), bytes(content or b"")
 
 
