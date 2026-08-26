@@ -47,6 +47,37 @@ The BOM keeps artifact versions aligned, runnable examples show local API
 shape, and the benchmark module keeps scrimage/libvips trade-offs measurable
 instead of implicit.
 
+## AI/ML Backend Research Status
+
+The production image API remains runtime-free at the detector boundary. The
+current OCR baseline is Tess4J/Tesseract, and the repository does not download
+or bundle third-party ML model weights.
+
+- **OCR baseline** — use `images-ocr` with host Tesseract and explicitly selected
+  traineddata; this remains the default supported OCR path.
+- **Detector contract** — `images` keeps face/object/sensitive-region result
+  contracts independent of ONNX Runtime, TensorFlow Lite, MediaPipe, OpenCV, or
+  an external service.
+- **Research state** — [#513](https://github.com/bluetape4k/bluetape4k-image/issues/513)
+  is `OPEN / Backlog / BACKLOG / DEFERRED`, and its PaddleOCR child
+  [#169](https://github.com/bluetape4k/bluetape4k-image/issues/169) is also
+  `Backlog / DEFERRED`. The image-classification ONNX decision in
+  [#3](https://github.com/bluetape4k/bluetape4k-image/issues/3) and
+  [#551](https://github.com/bluetape4k/bluetape4k-image/issues/551) is `DEFER`.
+- **Deferred scope** — no PaddleOCR model download, ONNX production backend, ML
+  runtime dependency, benchmark adoption, or model-serving train is active.
+- **Re-entry gate** — resume only after compatible license/`NOTICE`, immutable
+  model digests, trusted producer provenance with SBOM/signature, offline smoke
+  receipt, and an approved CI/operating-cost path are available. The shared
+  policy is tracked in [#543](https://github.com/bluetape4k/bluetape4k-image/issues/543);
+  the artifact and producer gates are [#544](https://github.com/bluetape4k/bluetape4k-image/issues/544),
+  [#545](https://github.com/bluetape4k/bluetape4k-image/issues/545),
+  [#609](https://github.com/bluetape4k/bluetape4k-image/issues/609), and
+  [#611](https://github.com/bluetape4k/bluetape4k-image/issues/611). The final
+  PaddleOCR adoption decision is tracked by [#547](https://github.com/bluetape4k/bluetape4k-image/issues/547);
+  its current `DEFER` outcome is not an adoption grant, and any re-entry
+  evidence must be supplied to a new #547 decision.
+
 ## Manual
 
 The [Image 0.4 manual](./docs/manual/en/index.md) is the source of truth for

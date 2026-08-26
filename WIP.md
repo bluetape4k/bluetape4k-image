@@ -1,46 +1,63 @@
 # WIP - bluetape4k-image
 
-스냅샷: 2026-08-01 KST
+스냅샷: 2026-08-26 KST
 
-이 로드맵은 `debop`에게 할당된 열린 GitHub issue를 추적한다. 현재 release
-line closeout과 Backlog milestone으로 미룬 작업을 분리해서 본다.
+이 로드맵은 `debop`에게 할당된 열린 GitHub issue와 deferred decision record를
+추적한다. 현재 release line closeout과 Backlog milestone으로 미룬 작업을
+분리해서 본다.
 
 ## 현재 개발 상태
 
-- [`0.3.0`](https://github.com/bluetape4k/bluetape4k-image/releases/tag/0.3.0)은
-  2026-06-27에 게시된 최신 stable release이다.
-- `develop`은 `baseVersion=0.4.0`을 사용한다. `0.4.0` milestone은 아직 개발
-  중이며 release되지 않았다.
-- 현재 `0.4.0` milestone에는 열린 issue가 없다. 문서 후속 작업인
+- [`0.4.0`](https://github.com/bluetape4k/bluetape4k-image/releases/tag/0.4.0)은
+  2026-08-06에 게시된 최신 stable release이다.
+- `develop`은 `baseVersion=1.0.0`을 사용한다. `0.4.0` release와 milestone
+  closeout은 완료되었고, 다음 개발선은 별도의 release gate를 따른다.
+- 문서 후속 작업인
   [#462](https://github.com/bluetape4k/bluetape4k-image/issues/462)은
   [PR #463](https://github.com/bluetape4k/bluetape4k-image/pull/463)으로
   merge되어 한국어 `Fixed` category를 `버그 수정`으로 통일했다. 이 작업은
   runtime behavior, public API, dependency, release를 변경하지 않는다.
+- [#513](https://github.com/bluetape4k/bluetape4k-image/issues/513)은
+  `OPEN / Backlog / BACKLOG / DEFERRED` 상태의 AI/ML 연구 umbrella epic이다.
+  현재 실행 가능한 AI/ML child train은 없다.
 - [#270](https://github.com/bluetape4k/bluetape4k-image/issues/270)의 changelog
   backfill과 [#271](https://github.com/bluetape4k/bluetape4k-image/issues/271)의
   roadmap refresh는 완료되었다.
 
-## 0.4.0 마감 작업
+## 0.4.0 마감과 다음 개발선
 
 - [#270](https://github.com/bluetape4k/bluetape4k-image/issues/270)은 완료되고
   추적 가능한 `0.4.0` 작업을 기준으로 `CHANGELOG.md`를 보강했다. release를
-  게시하거나 artifact version을 바꾸지 않았다.
+  게시한 뒤에도 artifact version을 임의로 바꾸지 않았다.
 - [#271](https://github.com/bluetape4k/bluetape4k-image/issues/271)의 roadmap
   refresh도 완료되어 현재 milestone 상태를 반영한다.
 - [#462](https://github.com/bluetape4k/bluetape4k-image/issues/462)은
   [PR #463](https://github.com/bluetape4k/bluetape4k-image/pull/463)으로
   merge되어 한국어 changelog의 `Fixed` heading을 `버그 수정`으로 표준화했다.
-  이 문서 작업은 release publication이나 version 변경을 수행하지 않았고,
-  milestone은 현재 열린 issue 없이 유지된다.
+  이 문서 작업은 추가 release publication이나 version 변경을 수행하지 않았다.
+- 다음 개발선에서 [#513](https://github.com/bluetape4k/bluetape4k-image/issues/513)은
+  model license, immutable artifact, producer provenance, SBOM/signature,
+  offline receipt, 운영 비용을 모두 확보할 때까지 Backlog에 보존한다.
 
 ## 연기된 Backlog
 
-다음 issue는 고정 release target이 없고 `0.4.0` closeout 범위에 포함되지 않는다.
+다음 issue는 고정 release target이 없고 현재 active train에 포함되지 않는다.
 
-- [#3](https://github.com/bluetape4k/bluetape4k-image/issues/3) - image
-  classification ML model 통합.
+- [#513](https://github.com/bluetape4k/bluetape4k-image/issues/513) - AI/ML
+  backend 연구 umbrella (`OPEN / Backlog / BACKLOG / DEFERRED`).
 - [#169](https://github.com/bluetape4k/bluetape4k-image/issues/169) - 고급 문서
-  OCR을 위한 PaddleOCR 평가.
+  OCR을 위한 PaddleOCR 평가 (`Backlog / DEFERRED`).
+- [#3](https://github.com/bluetape4k/bluetape4k-image/issues/3)와
+  [#551](https://github.com/bluetape4k/bluetape4k-image/issues/551) - image
+  classification ONNX backend 채택 검증 (`DEFER`).
+- [#544](https://github.com/bluetape4k/bluetape4k-image/issues/544),
+  [#545](https://github.com/bluetape4k/bluetape4k-image/issues/545),
+  [#609](https://github.com/bluetape4k/bluetape4k-image/issues/609),
+  [#611](https://github.com/bluetape4k/bluetape4k-image/issues/611) - PaddleOCR
+  benchmark·공급망·trusted producer 재개 gate.
+- [#547](https://github.com/bluetape4k/bluetape4k-image/issues/547) - PaddleOCR
+  최종 adoption gate (`CLOSED / DEFER`); 재개 증거는 새로운 결정의 입력으로만
+  사용한다.
 - [#203](https://github.com/bluetape4k/bluetape4k-image/issues/203) - OCR 추출
   benchmark 추가.
 - [#204](https://github.com/bluetape4k/bluetape4k-image/issues/204) - storage
@@ -54,9 +71,10 @@ line closeout과 Backlog milestone으로 미룬 작업을 분리해서 본다.
 
 ## Release 경계
 
-`0.4.0` release date는 아직 정해지지 않았다.
+`0.4.0` release는 2026-08-06에 게시되었고, `develop`은 `baseVersion=1.0.0`의
+다음 개발선이다.
 [#462](https://github.com/bluetape4k/bluetape4k-image/issues/462)와
 [PR #463](https://github.com/bluetape4k/bluetape4k-image/pull/463)의 문서 작업
-완료는 release publication, version 변경, milestone closure를 의미하지 않는다.
-이러한 작업은 changelog가 완료된 milestone 작업을 반영한 뒤 별도의 검증된
-release workflow로만 진행한다.
+완료와 #513의 backlog 전환은 추가 release publication이나 version 변경을
+의미하지 않는다. 다음 release는 changelog가 완료된 milestone 작업을 반영한
+뒤 별도의 검증된 release workflow로만 진행한다.
