@@ -50,7 +50,14 @@ internal object OcrBenchmarkCorpusV2 {
         decodeManifest(requireResource(MANIFEST_RESOURCE, MAX_MANIFEST_BYTES))
 
     /** receipt가 참조해야 하는 canonical corpus v2 manifest SHA-256입니다. */
-    fun manifestSha256(): String = sha256Hex(requireResource(MANIFEST_RESOURCE, MAX_MANIFEST_BYTES))
+    fun manifestSha256(): String =
+        requireResource(MANIFEST_RESOURCE, MAX_MANIFEST_BYTES)
+            .also { bytes ->
+                require(bytes.size in 1..MAX_MANIFEST_BYTES) {
+                    "OCR corpus v2 manifest byte size is out of bounds"
+                }
+            }
+            .let(::sha256Hex)
 
     fun loadFixture(fixtureId: String): OcrBenchmarkCorpusFixture =
         loadFixture(loadManifest(), fixtureId, ::classpathResource)

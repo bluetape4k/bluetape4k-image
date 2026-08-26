@@ -170,6 +170,7 @@ internal object OcrProviderComparisonReceiptValidator {
     private val providerPattern = Regex("[a-z0-9][a-z0-9._-]{1,63}")
     private const val MAX_TEXT_CHARS = 64_000
     private const val MAX_GEOMETRY_ENTRIES = 4_096
+    private const val MIN_WARM_ITERATIONS = 3
 
     fun validate(
         receipt: OcrProviderComparisonReceipt,
@@ -294,8 +295,8 @@ internal object OcrProviderComparisonReceiptValidator {
         require(result.throughputOpsPerSecond.isFinite() && result.throughputOpsPerSecond > 0.0) {
             "OCR comparison throughput must be positive: ${result.fixtureId}"
         }
-        require(result.warmIterations > 0) {
-            "OCR comparison warm iterations must be positive: ${result.fixtureId}"
+        require(result.warmIterations >= MIN_WARM_ITERATIONS) {
+            "OCR comparison warm iterations must be at least $MIN_WARM_ITERATIONS: ${result.fixtureId}"
         }
         require(result.rssBeforeBytes > 0 && result.rssPeakBytes >= result.rssBeforeBytes) {
             "OCR comparison RSS values are invalid: ${result.fixtureId}"

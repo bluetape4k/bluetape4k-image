@@ -104,6 +104,18 @@ class OcrProviderComparisonReceiptTest {
             )
         }
         inconsistentError.message.orEmpty().shouldContain("TEXT result")
+
+        val warmIterationsError = assertFailsWith<IllegalArgumentException> {
+            OcrProviderComparisonReceiptValidator.validate(
+                valid.copy(providers = valid.providers.map { provider ->
+                    provider.copy(fixtures = provider.fixtures.map { result ->
+                        result.copy(warmIterations = 2)
+                    })
+                }),
+                manifest,
+            )
+        }
+        warmIterationsError.message.orEmpty().shouldContain("at least 3")
     }
 
     private fun receipt(
