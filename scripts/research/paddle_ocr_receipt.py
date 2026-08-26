@@ -260,25 +260,34 @@ def _open_artifact_fd(root: Path, relative_path: str) -> tuple[int, os.stat_resu
             f"artifact root contains a symlink or cannot be opened: {root}"
         ) from error
 
+    file_fd: int | None = None
     try:
         parts = relative_path.split("/")
         for part in parts[:-1]:
             next_fd = os.open(part, directory_flags, dir_fd=current_fd)
-            os.close(current_fd)
+            previous_fd = current_fd
+            try:
+                os.close(previous_fd)
+            except OSError:
+                os.close(next_fd)
+                raise
             current_fd = next_fd
         file_fd = os.open(
             parts[-1], os.O_RDONLY | os.O_NOFOLLOW, dir_fd=current_fd
         )
         file_stat = os.fstat(file_fd)
         if not stat.S_ISREG(file_stat.st_mode):
-            os.close(file_fd)
             raise ReceiptValidationError(
                 f"artifact path is not a regular file: {relative_path}"
             )
         return file_fd, file_stat
     except ReceiptValidationError:
+        if file_fd is not None:
+            os.close(file_fd)
         raise
     except OSError as error:
+        if file_fd is not None:
+            os.close(file_fd)
         raise ReceiptValidationError(
             f"artifact path contains a symlink or cannot be opened: {relative_path}"
         ) from error
