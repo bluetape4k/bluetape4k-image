@@ -137,8 +137,15 @@ when present. Outside Gradle, set it manually if needed.
 
 ## Manual Ownership
 
-- `docs/manual/` is the source of truth for versioned, manual-grade documentation; README files remain concise repository overviews.
-- Author release manuals from the exact stable tag and keep `releaseRef`, `releaseCommit`, module inventory, source links, and examples pinned to that release.
+- The central site owns versioned, manual-grade documentation under
+  `bluetape4k.github.io/docs/manual/bluetape4k-image`; this repository must not
+  recreate a second `docs/manual/` tree. README files remain concise repository
+  overviews.
+- Author release manuals in the central site from the exact stable tag and keep
+  `releaseRef`, `releaseCommit`, module inventory, source links, and examples
+  pinned to that release.
 - Consumer setup must name only the `bluetape4k-dependencies` version. Do not ask users to coordinate individual Image artifact versions.
 - Keep English and Korean pages structurally equivalent, and edit Korean text into natural sentences rather than preserving translation-shaped phrasing.
-- Render technical diagrams with `scripts/manual/render_image_diagrams.rb`, validate them with `scripts/manual/validate_diagrams.rb`, and perform a full-size visual review before publishing.
+- Render and validate technical diagrams with the central tooling at
+  `bluetape4k.github.io/scripts/manual/repositories/bluetape4k-image/`, and
+  perform a full-size visual review before publishing.
