@@ -19,8 +19,6 @@ env:
   JAVA_VERSION: '25'
   JAVA_DISTRIBUTION: 'temurin'
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
-  CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
-  CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
 
 permissions:
   contents: read
@@ -39,6 +37,10 @@ jobs:
   build:
     name: Build & Detekt
     runs-on: ubuntu-latest
+    environment: maven-central-snapshots
+    env:
+      CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
+      CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
     timeout-minutes: 35
     needs: validate-wrapper
     steps:
@@ -83,6 +85,10 @@ jobs:
   test-images:
     name: Test / images
     runs-on: ubuntu-latest
+    environment: maven-central-snapshots
+    env:
+      CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
+      CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
     timeout-minutes: 35
     needs: build
     steps:
@@ -133,6 +139,10 @@ jobs:
   test-images-barcode-api:
     name: Test / images-barcode-api
     runs-on: ubuntu-latest
+    environment: maven-central-snapshots
+    env:
+      CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
+      CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
     timeout-minutes: 35
     needs: build
     steps:
@@ -183,6 +193,10 @@ jobs:
   test-images-barcode-zxing:
     name: Test / images-barcode-zxing
     runs-on: ubuntu-latest
+    environment: maven-central-snapshots
+    env:
+      CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
+      CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
     timeout-minutes: 35
     needs: build
     steps:
@@ -233,6 +247,10 @@ jobs:
   test-images-captcha:
     name: Test / images-captcha
     runs-on: ubuntu-latest
+    environment: maven-central-snapshots
+    env:
+      CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
+      CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
     timeout-minutes: 35
     needs: build
     steps:
@@ -285,6 +303,10 @@ jobs:
     if: ${{ (github.event_name == 'schedule' && github.event.schedule == '11 19 * * 0') || (github.event_name == 'workflow_dispatch' && inputs.scope == 'full') }}
 
     runs-on: ubuntu-latest
+    environment: maven-central-snapshots
+    env:
+      CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
+      CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
     timeout-minutes: 35
     needs: build
     steps:
@@ -338,6 +360,10 @@ jobs:
   test-images-ktor:
     name: Test / images-ktor
     runs-on: ubuntu-latest
+    environment: maven-central-snapshots
+    env:
+      CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
+      CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
     timeout-minutes: 35
     needs: build
     steps:
@@ -388,6 +414,10 @@ jobs:
   test-images-spring-boot:
     name: Test / images-spring-boot
     runs-on: ubuntu-latest
+    environment: maven-central-snapshots
+    env:
+      CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
+      CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
     timeout-minutes: 35
     needs: build
     steps:
@@ -440,6 +470,10 @@ jobs:
     if: ${{ (github.event_name == 'schedule' && github.event.schedule == '11 19 * * 0') || (github.event_name == 'workflow_dispatch' && inputs.scope == 'full') }}
 
     runs-on: ubuntu-latest
+    environment: maven-central-snapshots
+    env:
+      CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
+      CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
     timeout-minutes: 35
     needs: build
     steps:
@@ -495,6 +529,10 @@ jobs:
     if: ${{ (github.event_name == 'schedule' && github.event.schedule == '11 19 * * 0') || (github.event_name == 'workflow_dispatch' && inputs.scope == 'full') }}
 
     runs-on: ubuntu-latest
+    environment: maven-central-snapshots
+    env:
+      CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
+      CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
     timeout-minutes: 35
     needs: build
     steps:
@@ -551,6 +589,10 @@ jobs:
     if: ${{ (github.event_name == 'schedule' && github.event.schedule == '11 19 * * 0') || (github.event_name == 'workflow_dispatch' && inputs.scope == 'full') }}
 
     runs-on: ubuntu-latest
+    environment: maven-central-snapshots
+    env:
+      CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
+      CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
     timeout-minutes: 35
     needs: build
     steps:
@@ -605,6 +647,10 @@ jobs:
     name: Verify / VIPS consumer·benchmark·BOM
     if: ${{ (github.event_name == 'schedule' && github.event.schedule == '11 19 * * 0') || (github.event_name == 'workflow_dispatch' && inputs.scope == 'full') }}
     runs-on: ubuntu-latest
+    environment: maven-central-snapshots
+    env:
+      CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
+      CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
     timeout-minutes: 45
     needs:
       - build
