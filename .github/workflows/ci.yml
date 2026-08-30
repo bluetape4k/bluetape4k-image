@@ -37,8 +37,6 @@ env:
   JAVA_DISTRIBUTION: 'temurin'
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
   BLUETAPE4K_DEPENDENCIES_CATALOG_REF: '91f9ea9336b5ea991f5675323a1cf25ccfd6f5ed'
-  CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
-  CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
 
 jobs:
   gitleaks:
@@ -145,6 +143,10 @@ jobs:
   catalog-governance:
     name: Central Catalog Governance
     runs-on: ubuntu-latest
+    environment: maven-central-snapshots
+    env:
+      CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
+      CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
@@ -196,6 +198,10 @@ jobs:
   build:
     name: Build (compile only)
     runs-on: ubuntu-latest
+    environment: maven-central-snapshots
+    env:
+      CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
+      CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
     timeout-minutes: 10
     needs: [validate-wrapper, catalog-governance]
     steps:
@@ -223,6 +229,10 @@ jobs:
   test-images:
     name: Test / images
     runs-on: ubuntu-latest
+    environment: maven-central-snapshots
+    env:
+      CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
+      CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
     timeout-minutes: 10
     needs: [build, changes]
     if: ${{ needs.changes.outputs['images'] == 'true' || needs.changes.outputs['build-logic'] == 'true' || github.event_name == 'workflow_dispatch' }}
@@ -269,6 +279,10 @@ jobs:
   test-images-captcha:
     name: Test / images-captcha
     runs-on: ubuntu-latest
+    environment: maven-central-snapshots
+    env:
+      CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
+      CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
     timeout-minutes: 10
     needs: [build, changes]
     if: ${{ needs.changes.outputs['images-captcha'] == 'true' || needs.changes.outputs['build-logic'] == 'true' || github.event_name == 'workflow_dispatch' }}
@@ -315,6 +329,10 @@ jobs:
   test-images-spring-boot:
     name: Test / images-spring-boot
     runs-on: ubuntu-latest
+    environment: maven-central-snapshots
+    env:
+      CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
+      CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
     timeout-minutes: 10
     needs: [build, changes]
     if: ${{ needs.changes.outputs['images-spring-boot'] == 'true' || needs.changes.outputs['build-logic'] == 'true' || github.event_name == 'workflow_dispatch' }}
@@ -361,6 +379,10 @@ jobs:
   test-images-spring-boot-filesystem:
     name: Test / images-spring-boot filesystem (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
+    environment: maven-central-snapshots
+    env:
+      CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
+      CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
     timeout-minutes: 10
     strategy:
       fail-fast: false
@@ -392,6 +414,10 @@ jobs:
   test-images-barcode-api:
     name: Test / images-barcode-api
     runs-on: ubuntu-latest
+    environment: maven-central-snapshots
+    env:
+      CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
+      CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
     timeout-minutes: 10
     needs: [build, changes]
     if: ${{ needs.changes.outputs['images-barcode-api'] == 'true' || needs.changes.outputs['build-logic'] == 'true' || github.event_name == 'workflow_dispatch' }}
@@ -438,6 +464,10 @@ jobs:
   test-images-barcode-zxing:
     name: Test / images-barcode-zxing
     runs-on: ubuntu-latest
+    environment: maven-central-snapshots
+    env:
+      CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
+      CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
     timeout-minutes: 10
     needs: [build, changes]
     if: ${{ needs.changes.outputs['images-barcode-zxing'] == 'true' || needs.changes.outputs['build-logic'] == 'true' || github.event_name == 'workflow_dispatch' }}
@@ -484,6 +514,10 @@ jobs:
   test-images-ocr:
     name: Test / images-ocr
     runs-on: ubuntu-latest
+    environment: maven-central-snapshots
+    env:
+      CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
+      CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
     timeout-minutes: 20
     needs: [build, changes]
     if: ${{ needs.changes.outputs['images-ocr'] == 'true' || needs.changes.outputs['build-logic'] == 'true' || github.event_name == 'workflow_dispatch' }}
@@ -533,6 +567,10 @@ jobs:
   test-images-ktor:
     name: Test / images-ktor
     runs-on: ubuntu-latest
+    environment: maven-central-snapshots
+    env:
+      CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
+      CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
     timeout-minutes: 10
     needs: [build, changes]
     if: ${{ needs.changes.outputs['images-ktor'] == 'true' || needs.changes.outputs['build-logic'] == 'true' || github.event_name == 'workflow_dispatch' }}
@@ -579,6 +617,10 @@ jobs:
   test-images-vips-api:
     name: Test / images-vips-api
     runs-on: ubuntu-latest
+    environment: maven-central-snapshots
+    env:
+      CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
+      CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
     timeout-minutes: 10
     needs: [build, changes]
     if: ${{ needs.changes.outputs['images-vips-api'] == 'true' || needs.changes.outputs['build-logic'] == 'true' || github.event_name == 'workflow_dispatch' }}
@@ -657,6 +699,10 @@ jobs:
   test-images-vips-java21:
     name: Test / images-vips-java21
     runs-on: ubuntu-latest
+    environment: maven-central-snapshots
+    env:
+      CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
+      CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
     timeout-minutes: 10
     needs: [build, changes]
     if: ${{ needs.changes.outputs['images-vips-java21'] == 'true' || needs.changes.outputs['build-logic'] == 'true' || github.event_name == 'workflow_dispatch' }}
@@ -701,6 +747,10 @@ jobs:
   test-images-vips-java25:
     name: Test / images-vips-java25
     runs-on: ubuntu-latest
+    environment: maven-central-snapshots
+    env:
+      CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
+      CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
     timeout-minutes: 60
     needs: [build, changes]
     if: ${{ needs.changes.outputs['images-vips-java25'] == 'true' || needs.changes.outputs['build-logic'] == 'true' || github.event_name == 'workflow_dispatch' }}
@@ -744,6 +794,10 @@ jobs:
   vips-verification:
     name: Verify / VIPS consumer·benchmark·BOM
     runs-on: ubuntu-latest
+    environment: maven-central-snapshots
+    env:
+      CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
+      CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
     timeout-minutes: 45
     needs:
       - build
