@@ -160,7 +160,7 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: '3.12'
-      - uses: actions/setup-java@v5.7.0
+      - uses: actions/setup-java@v6.0.0
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.JAVA_DISTRIBUTION }}
@@ -206,7 +206,7 @@ jobs:
     needs: [validate-wrapper, catalog-governance]
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-java@v5.7.0
+      - uses: actions/setup-java@v6.0.0
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.JAVA_DISTRIBUTION }}
@@ -238,7 +238,7 @@ jobs:
     if: ${{ needs.changes.outputs['images'] == 'true' || needs.changes.outputs['build-logic'] == 'true' || github.event_name == 'workflow_dispatch' }}
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-java@v5.7.0
+      - uses: actions/setup-java@v6.0.0
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.JAVA_DISTRIBUTION }}
@@ -288,7 +288,7 @@ jobs:
     if: ${{ needs.changes.outputs['images-captcha'] == 'true' || needs.changes.outputs['build-logic'] == 'true' || github.event_name == 'workflow_dispatch' }}
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-java@v5.7.0
+      - uses: actions/setup-java@v6.0.0
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.JAVA_DISTRIBUTION }}
@@ -338,7 +338,7 @@ jobs:
     if: ${{ needs.changes.outputs['images-spring-boot'] == 'true' || needs.changes.outputs['build-logic'] == 'true' || github.event_name == 'workflow_dispatch' }}
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-java@v5.7.0
+      - uses: actions/setup-java@v6.0.0
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.JAVA_DISTRIBUTION }}
@@ -392,7 +392,7 @@ jobs:
     if: ${{ needs.changes.outputs['images-spring-boot'] == 'true' || needs.changes.outputs['build-logic'] == 'true' || github.event_name == 'workflow_dispatch' }}
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-java@v5.7.0
+      - uses: actions/setup-java@v6.0.0
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.JAVA_DISTRIBUTION }}
@@ -423,7 +423,7 @@ jobs:
     if: ${{ needs.changes.outputs['images-barcode-api'] == 'true' || needs.changes.outputs['build-logic'] == 'true' || github.event_name == 'workflow_dispatch' }}
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-java@v5.7.0
+      - uses: actions/setup-java@v6.0.0
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.JAVA_DISTRIBUTION }}
@@ -473,7 +473,7 @@ jobs:
     if: ${{ needs.changes.outputs['images-barcode-zxing'] == 'true' || needs.changes.outputs['build-logic'] == 'true' || github.event_name == 'workflow_dispatch' }}
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-java@v5.7.0
+      - uses: actions/setup-java@v6.0.0
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.JAVA_DISTRIBUTION }}
@@ -523,7 +523,7 @@ jobs:
     if: ${{ needs.changes.outputs['images-ocr'] == 'true' || needs.changes.outputs['build-logic'] == 'true' || github.event_name == 'workflow_dispatch' }}
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-java@v5.7.0
+      - uses: actions/setup-java@v6.0.0
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.JAVA_DISTRIBUTION }}
@@ -576,7 +576,7 @@ jobs:
     if: ${{ needs.changes.outputs['images-ktor'] == 'true' || needs.changes.outputs['build-logic'] == 'true' || github.event_name == 'workflow_dispatch' }}
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-java@v5.7.0
+      - uses: actions/setup-java@v6.0.0
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.JAVA_DISTRIBUTION }}
@@ -626,7 +626,7 @@ jobs:
     if: ${{ needs.changes.outputs['images-vips-api'] == 'true' || needs.changes.outputs['build-logic'] == 'true' || github.event_name == 'workflow_dispatch' }}
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-java@v5.7.0
+      - uses: actions/setup-java@v6.0.0
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.JAVA_DISTRIBUTION }}
@@ -708,7 +708,7 @@ jobs:
     if: ${{ needs.changes.outputs['images-vips-java21'] == 'true' || needs.changes.outputs['build-logic'] == 'true' || github.event_name == 'workflow_dispatch' }}
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-java@v5.7.0
+      - uses: actions/setup-java@v6.0.0
         with:
           # The module and Gradle/buildSrc use the repository baseline JDK 25.
           java-version: '25'
@@ -756,7 +756,7 @@ jobs:
     if: ${{ needs.changes.outputs['images-vips-java25'] == 'true' || needs.changes.outputs['build-logic'] == 'true' || github.event_name == 'workflow_dispatch' }}
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-java@v5.7.0
+      - uses: actions/setup-java@v6.0.0
         with:
           java-version: '25-ea'
           distribution: ${{ env.JAVA_DISTRIBUTION }}
@@ -808,7 +808,7 @@ jobs:
     if: ${{ always() && (needs.changes.outputs['vips-verification'] == 'true' || needs.changes.outputs['build-logic'] == 'true' || github.event_name == 'workflow_dispatch') }}
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-java@v5.7.0
+      - uses: actions/setup-java@v6.0.0
         with:
           java-version: '25'
           distribution: ${{ env.JAVA_DISTRIBUTION }}
