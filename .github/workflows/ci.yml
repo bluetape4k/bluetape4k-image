@@ -212,7 +212,7 @@ jobs:
           ruby "$TOOL_ROOT/export_manifest.rb" --check "$MANUAL_ROOT/manifest.yaml" "$MANUAL_ROOT/generated/manifest.json"
           ruby -I "$TOOL_ROOT" "$TOOL_ROOT/release_diagram_contract_test.rb"
           ruby "$TOOL_ROOT/verify_diagram_provenance.rb" \
-            --root "$GITHUB_WORKSPACE" \
+            --root "$SITE_ROOT" \
             --manual-root "$MANUAL_ROOT" \
             --manifest "$MANUAL_ROOT/diagram-provenance.yaml" \
             --no-render
