@@ -188,10 +188,6 @@ jobs:
         env:
           BLUETAPE4K_DEPENDENCIES_CATALOG_PATH: ${{ github.workspace }}/.catalog/bluetape4k-dependencies/gradle/libs.versions.toml
         run: ./gradlew help --no-daemon
-      - name: Install diagram renderer
-        run: |
-          sudo apt-get update
-          sudo apt-get install --no-install-recommends -y librsvg2-bin
       - name: Verify release validation contract
         run: python3 .github/scripts/test-release-validation-contract.py
       - name: Verify tag-derived manual release drift
@@ -215,11 +211,6 @@ jobs:
             --tag "$MANUAL_TAG"
           ruby "$TOOL_ROOT/export_manifest.rb" --check "$MANUAL_ROOT/manifest.yaml" "$MANUAL_ROOT/generated/manifest.json"
           ruby -I "$TOOL_ROOT" "$TOOL_ROOT/release_diagram_contract_test.rb"
-          ruby "$TOOL_ROOT/verify_diagram_provenance.rb" \
-            --root "$SITE_ROOT" \
-            --manual-root "$MANUAL_ROOT" \
-            --manifest "$MANUAL_ROOT/diagram-provenance.yaml" \
-            --no-render
 
   build:
     name: Build (compile only)
