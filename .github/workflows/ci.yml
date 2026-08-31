@@ -188,6 +188,10 @@ jobs:
         env:
           BLUETAPE4K_DEPENDENCIES_CATALOG_PATH: ${{ github.workspace }}/.catalog/bluetape4k-dependencies/gradle/libs.versions.toml
         run: ./gradlew help --no-daemon
+      - name: Install diagram renderer
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y librsvg2-bin
       - name: Verify release validation contract
         run: python3 .github/scripts/test-release-validation-contract.py
       - name: Verify tag-derived manual release drift
