@@ -6,16 +6,6 @@ on:
     types: [completed]
     branches: [develop]
   workflow_dispatch:
-    inputs:
-      validation_run_id:
-        description: 'Nightly run ID that already completed full OCR and VIPS validation'
-        required: false
-        type: string
-      override_full_validation:
-        description: 'Manual override when intentionally publishing without a full Nightly validation run'
-        required: true
-        type: boolean
-        default: false
 
 concurrency:
   group: publish-snapshot
@@ -44,8 +34,6 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           WORKFLOW_RUN_ID: ${{ github.event.workflow_run.id }}
           WORKFLOW_RUN_CONCLUSION: ${{ github.event.workflow_run.conclusion }}
-          MANUAL_VALIDATION_RUN_ID: ${{ inputs.validation_run_id }}
-          MANUAL_OVERRIDE: ${{ inputs.override_full_validation }}
         run: |
           set -euo pipefail
 
@@ -56,16 +44,10 @@ jobs:
               exit 0
             fi
             validation_run_id="$WORKFLOW_RUN_ID"
-          elif [ "$MANUAL_OVERRIDE" = "true" ]; then
-            echo "Manual override requested; bypassing full Nightly validation requirement."
+          else
+            echo "Manual workflow dispatch is publish-eligible without Full Nightly validation."
             echo "publish_eligible=true" >> "$GITHUB_OUTPUT"
             exit 0
-          else
-            validation_run_id="$MANUAL_VALIDATION_RUN_ID"
-            if [ -z "$validation_run_id" ]; then
-              echo "validation_run_id is required unless override_full_validation is true."
-              exit 1
-            fi
           fi
 
           required_jobs=(
@@ -101,6 +83,14 @@ jobs:
     if: ${{ needs.validate-full-nightly.outputs.publish_eligible == 'true' }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
+          fetch-depth: 0
+
+      - name: Verify exact checkout
+        env:
+          EXPECTED_HEAD_SHA: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
+        run: test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD_SHA"
 
       - uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # v6.0.0
         with:
