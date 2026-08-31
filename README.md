@@ -80,7 +80,7 @@ or bundle third-party ML model weights.
 
 ## Manual
 
-The [Image 0.4 manual](./docs/manual/en/index.md) is the source of truth for
+The [Image 0.4 manual](https://bluetape4k.github.io/manual/bluetape4k-image/0.4/) is the source of truth for
 learning paths, module contracts, backend selection, native-resource ownership,
 OCR and web integration, runnable workshops, and benchmark interpretation.
 Applications select only the `bluetape4k-dependencies` version; the central BOM

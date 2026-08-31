@@ -77,7 +77,7 @@ Production 이미지 API는 detector boundary에서 runtime-free 상태를 유�
 
 ## 매뉴얼
 
-[Image 0.4 매뉴얼](./docs/manual/ko/index.md)은 학습 경로, 모듈별 계약, 백엔드 선택,
+[Image 0.4 매뉴얼](https://bluetape4k.github.io/ko/manual/bluetape4k-image/0.4/)은 학습 경로, 모듈별 계약, 백엔드 선택,
 네이티브 자원 수명, OCR·웹 연동, 실행 가능한 예제, 벤치마크 해석을 자세히 설명하는
 기준 문서입니다. 애플리케이션에서는 `bluetape4k-dependencies` 버전 하나만 선택하면 되며,
 개별 Image 라이브러리 버전은 중앙 BOM이 맞춰 줍니다.

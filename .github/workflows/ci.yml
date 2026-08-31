@@ -152,6 +152,13 @@ jobs:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
+      - name: Checkout central manual site
+        uses: actions/checkout@v7
+        with:
+          repository: bluetape4k/bluetape4k.github.io
+          ref: develop
+          path: .manual-site
+          fetch-depth: 1
       - uses: actions/checkout@v7
         with:
           repository: bluetape4k/bluetape4k-dependencies
@@ -160,7 +167,7 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: '3.12'
-      - uses: actions/setup-java@v5.7.0
+      - uses: actions/setup-java@v6.0.0
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.JAVA_DISTRIBUTION }}
@@ -187,13 +194,23 @@ jobs:
         run: |
           MANUAL_TAG=0.4.0
           MANUAL_SHA="$(git rev-parse --verify "refs/tags/${MANUAL_TAG}^{commit}")"
-          ruby scripts/manual/export_settings_inventory.rb settings.gradle.kts build/manual/module-inventory.json
-          ruby scripts/manual/release_inventory.rb "$MANUAL_TAG" "$MANUAL_SHA" build/manual/module-inventory.json build/manual/release-module-inventory.json 19
-          ruby -I scripts/manual scripts/manual/release_inventory_test.rb
-          ruby -I scripts/manual scripts/manual/release_drift_test.rb
-          ruby scripts/manual/validate_release_drift.rb "$MANUAL_TAG"
-          ruby scripts/manual/export_manifest.rb --check
-          ruby -I scripts/manual scripts/manual/release_diagram_contract_test.rb
+          SITE_ROOT="$GITHUB_WORKSPACE/.manual-site"
+          TOOL_ROOT="$SITE_ROOT/scripts/manual/repositories/bluetape4k-image"
+          MANUAL_ROOT="$SITE_ROOT/docs/manual/bluetape4k-image"
+          ruby "$TOOL_ROOT/export_settings_inventory.rb" settings.gradle.kts build/manual/module-inventory.json
+          ruby "$TOOL_ROOT/release_inventory.rb" "$MANUAL_TAG" "$MANUAL_SHA" build/manual/module-inventory.json build/manual/release-module-inventory.json 19
+          ruby -I "$TOOL_ROOT" "$TOOL_ROOT/release_inventory_test.rb"
+          ruby -I "$TOOL_ROOT" "$TOOL_ROOT/release_drift_test.rb"
+          ruby "$TOOL_ROOT/validate_release_drift.rb" \
+            --root "$GITHUB_WORKSPACE" \
+            --site-root "$SITE_ROOT" \
+            --manual-root "$MANUAL_ROOT" \
+            --manifest "$MANUAL_ROOT/manifest.yaml" \
+            --generated-manifest "$MANUAL_ROOT/generated/manifest.json" \
+            --inventory "$GITHUB_WORKSPACE/build/manual/release-module-inventory.json" \
+            --tag "$MANUAL_TAG"
+          ruby "$TOOL_ROOT/export_manifest.rb" --check "$MANUAL_ROOT/manifest.yaml" "$MANUAL_ROOT/generated/manifest.json"
+          ruby -I "$TOOL_ROOT" "$TOOL_ROOT/release_diagram_contract_test.rb"
 
   build:
     name: Build (compile only)
@@ -206,7 +223,7 @@ jobs:
     needs: [validate-wrapper, catalog-governance]
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-java@v5.7.0
+      - uses: actions/setup-java@v6.0.0
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.JAVA_DISTRIBUTION }}
@@ -238,7 +255,7 @@ jobs:
     if: ${{ needs.changes.outputs['images'] == 'true' || needs.changes.outputs['build-logic'] == 'true' || github.event_name == 'workflow_dispatch' }}
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-java@v5.7.0
+      - uses: actions/setup-java@v6.0.0
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.JAVA_DISTRIBUTION }}
@@ -288,7 +305,7 @@ jobs:
     if: ${{ needs.changes.outputs['images-captcha'] == 'true' || needs.changes.outputs['build-logic'] == 'true' || github.event_name == 'workflow_dispatch' }}
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-java@v5.7.0
+      - uses: actions/setup-java@v6.0.0
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.JAVA_DISTRIBUTION }}
@@ -338,7 +355,7 @@ jobs:
     if: ${{ needs.changes.outputs['images-spring-boot'] == 'true' || needs.changes.outputs['build-logic'] == 'true' || github.event_name == 'workflow_dispatch' }}
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-java@v5.7.0
+      - uses: actions/setup-java@v6.0.0
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.JAVA_DISTRIBUTION }}
@@ -392,7 +409,7 @@ jobs:
     if: ${{ needs.changes.outputs['images-spring-boot'] == 'true' || needs.changes.outputs['build-logic'] == 'true' || github.event_name == 'workflow_dispatch' }}
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-java@v5.7.0
+      - uses: actions/setup-java@v6.0.0
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.JAVA_DISTRIBUTION }}
@@ -423,7 +440,7 @@ jobs:
     if: ${{ needs.changes.outputs['images-barcode-api'] == 'true' || needs.changes.outputs['build-logic'] == 'true' || github.event_name == 'workflow_dispatch' }}
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-java@v5.7.0
+      - uses: actions/setup-java@v6.0.0
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.JAVA_DISTRIBUTION }}
@@ -473,7 +490,7 @@ jobs:
     if: ${{ needs.changes.outputs['images-barcode-zxing'] == 'true' || needs.changes.outputs['build-logic'] == 'true' || github.event_name == 'workflow_dispatch' }}
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-java@v5.7.0
+      - uses: actions/setup-java@v6.0.0
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.JAVA_DISTRIBUTION }}
@@ -523,7 +540,7 @@ jobs:
     if: ${{ needs.changes.outputs['images-ocr'] == 'true' || needs.changes.outputs['build-logic'] == 'true' || github.event_name == 'workflow_dispatch' }}
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-java@v5.7.0
+      - uses: actions/setup-java@v6.0.0
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.JAVA_DISTRIBUTION }}
@@ -576,7 +593,7 @@ jobs:
     if: ${{ needs.changes.outputs['images-ktor'] == 'true' || needs.changes.outputs['build-logic'] == 'true' || github.event_name == 'workflow_dispatch' }}
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-java@v5.7.0
+      - uses: actions/setup-java@v6.0.0
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.JAVA_DISTRIBUTION }}
@@ -626,7 +643,7 @@ jobs:
     if: ${{ needs.changes.outputs['images-vips-api'] == 'true' || needs.changes.outputs['build-logic'] == 'true' || github.event_name == 'workflow_dispatch' }}
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-java@v5.7.0
+      - uses: actions/setup-java@v6.0.0
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.JAVA_DISTRIBUTION }}
@@ -708,7 +725,7 @@ jobs:
     if: ${{ needs.changes.outputs['images-vips-java21'] == 'true' || needs.changes.outputs['build-logic'] == 'true' || github.event_name == 'workflow_dispatch' }}
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-java@v5.7.0
+      - uses: actions/setup-java@v6.0.0
         with:
           # The module and Gradle/buildSrc use the repository baseline JDK 25.
           java-version: '25'
@@ -756,7 +773,7 @@ jobs:
     if: ${{ needs.changes.outputs['images-vips-java25'] == 'true' || needs.changes.outputs['build-logic'] == 'true' || github.event_name == 'workflow_dispatch' }}
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-java@v5.7.0
+      - uses: actions/setup-java@v6.0.0
         with:
           java-version: '25-ea'
           distribution: ${{ env.JAVA_DISTRIBUTION }}
@@ -808,7 +825,7 @@ jobs:
     if: ${{ always() && (needs.changes.outputs['vips-verification'] == 'true' || needs.changes.outputs['build-logic'] == 'true' || github.event_name == 'workflow_dispatch') }}
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-java@v5.7.0
+      - uses: actions/setup-java@v6.0.0
         with:
           java-version: '25'
           distribution: ${{ env.JAVA_DISTRIBUTION }}
