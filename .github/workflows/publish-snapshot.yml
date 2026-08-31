@@ -37,6 +37,7 @@ jobs:
     timeout-minutes: 10
     outputs:
       publish_eligible: ${{ steps.validate.outputs.publish_eligible }}
+      head_sha: ${{ steps.validate.outputs.head_sha }}
     steps:
       - name: Check full validation jobs
         id: validate
@@ -44,6 +45,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           WORKFLOW_RUN_ID: ${{ github.event.workflow_run.id }}
           WORKFLOW_RUN_CONCLUSION: ${{ github.event.workflow_run.conclusion }}
+          WORKFLOW_RUN_HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
           MANUAL_VALIDATION_RUN_ID: ${{ inputs.validation_run_id }}
           MANUAL_OVERRIDE: ${{ inputs.override_full_validation }}
         run: |
@@ -56,14 +58,24 @@ jobs:
               exit 0
             fi
             validation_run_id="$WORKFLOW_RUN_ID"
+            validation_head_sha="$WORKFLOW_RUN_HEAD_SHA"
           elif [ "$MANUAL_OVERRIDE" = "true" ]; then
             echo "Manual override requested; bypassing full Nightly validation requirement."
+            echo "head_sha=$GITHUB_SHA" >> "$GITHUB_OUTPUT"
             echo "publish_eligible=true" >> "$GITHUB_OUTPUT"
             exit 0
           else
             validation_run_id="$MANUAL_VALIDATION_RUN_ID"
             if [ -z "$validation_run_id" ]; then
               echo "validation_run_id is required unless override_full_validation is true."
+              exit 1
+            fi
+
+            validation_conclusion="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${validation_run_id}" --jq '.conclusion')"
+            validation_head_branch="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${validation_run_id}" --jq '.head_branch')"
+            validation_head_sha="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${validation_run_id}" --jq '.head_sha')"
+            if [ "$validation_conclusion" != "success" ] || [ "$validation_head_branch" != "develop" ]; then
+              echo "Nightly run $validation_run_id is not a successful develop run."
               exit 1
             fi
           fi
@@ -91,6 +103,7 @@ jobs:
           done
 
           echo "Full OCR and VIPS validation succeeded in Nightly run $validation_run_id."
+          echo "head_sha=$validation_head_sha" >> "$GITHUB_OUTPUT"
           echo "publish_eligible=true" >> "$GITHUB_OUTPUT"
 
   publish:
@@ -101,6 +114,13 @@ jobs:
     if: ${{ needs.validate-full-nightly.outputs.publish_eligible == 'true' }}
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.validate-full-nightly.outputs.head_sha }}
+
+      - name: Verify exact checkout
+        env:
+          EXPECTED_HEAD_SHA: ${{ needs.validate-full-nightly.outputs.head_sha }}
+        run: test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD_SHA"
 
       - uses: actions/setup-java@v5.7.0
         with:
