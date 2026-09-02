@@ -36,7 +36,7 @@ env:
   JAVA_VERSION: '25'
   JAVA_DISTRIBUTION: 'temurin'
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
-  BLUETAPE4K_DEPENDENCIES_CATALOG_REF: '3c203aa9f8ba80685aac766c5fb8f24e23d0058e'
+  BLUETAPE4K_DEPENDENCIES_CATALOG_REF: '850959d0ea5f76ac7e2c442400f47653d5f95eed'
 
 jobs:
   gitleaks:
@@ -192,7 +192,7 @@ jobs:
         run: python3 .github/scripts/test-release-validation-contract.py
       - name: Verify tag-derived manual release drift
         run: |
-          MANUAL_TAG=0.4.0
+          MANUAL_TAG=1.0.0
           MANUAL_SHA="$(git rev-parse --verify "refs/tags/${MANUAL_TAG}^{commit}")"
           SITE_ROOT="$GITHUB_WORKSPACE/.manual-site"
           TOOL_ROOT="$SITE_ROOT/scripts/manual/repositories/bluetape4k-image"
