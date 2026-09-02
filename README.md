@@ -7,6 +7,10 @@
 
 English | [한국어](./README.ko.md)
 
+Current stable version: `1.0.0`
+
+Current development line: `1.1.0-SNAPSHOT` on `develop`
+
 ![Bluetape4k image processing workbench](./docs/images/image-workbench.png)
 
 Kotlin/JVM image processing library — part of the [bluetape4k](https://github.com/bluetape4k) ecosystem.
@@ -80,14 +84,14 @@ or bundle third-party ML model weights.
 
 ## Manual
 
-The [Image 0.4 manual](https://bluetape4k.github.io/manual/bluetape4k-image/0.4/) is the source of truth for
+The [Image 1.0 manual](https://bluetape4k.github.io/manual/bluetape4k-image/1.0/) is the source of truth for
 learning paths, module contracts, backend selection, native-resource ownership,
 OCR and web integration, runnable workshops, and benchmark interpretation.
 Applications select only the `bluetape4k-dependencies` version; the central BOM
 keeps the individual Image artifacts aligned.
 
 The README summarizes the current repository. The versioned manual instead
-describes the exact `0.4.0` release and links every claim to that release source.
+describes the exact `1.0.0` release and links every claim to that release source.
 
 ## What It Provides
 

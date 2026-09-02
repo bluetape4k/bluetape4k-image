@@ -7,6 +7,10 @@
 
 [English](./README.md) | 한국어
 
+현재 안정 버전: `1.0.0`
+
+현재 개발선: `develop`의 `1.1.0-SNAPSHOT`
+
 ![bluetape4k 이미지 처리 작업대 일러스트](./docs/images/image-workbench.png)
 
 Kotlin/JVM 이미지 처리 라이브러리 — [bluetape4k](https://github.com/bluetape4k) 생태계의 일부입니다.
@@ -77,12 +81,12 @@ Production 이미지 API는 detector boundary에서 runtime-free 상태를 유�
 
 ## 매뉴얼
 
-[Image 0.4 매뉴얼](https://bluetape4k.github.io/ko/manual/bluetape4k-image/0.4/)은 학습 경로, 모듈별 계약, 백엔드 선택,
+[Image 1.0 매뉴얼](https://bluetape4k.github.io/ko/manual/bluetape4k-image/1.0/)은 학습 경로, 모듈별 계약, 백엔드 선택,
 네이티브 자원 수명, OCR·웹 연동, 실행 가능한 예제, 벤치마크 해석을 자세히 설명하는
 기준 문서입니다. 애플리케이션에서는 `bluetape4k-dependencies` 버전 하나만 선택하면 되며,
 개별 Image 라이브러리 버전은 중앙 BOM이 맞춰 줍니다.
 
-README는 현재 저장소의 모습을 요약합니다. 버전별 매뉴얼은 이와 달리 정확한 `0.4.0`
+README는 현재 저장소의 모습을 요약합니다. 버전별 매뉴얼은 이와 달리 정확한 `1.0.0`
 배포본을 다루며, 각 설명에서 해당 배포 소스로 이동할 수 있습니다.
 
 ## 제공 기능
