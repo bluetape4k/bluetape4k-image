@@ -1,6 +1,6 @@
 # WIP - bluetape4k-image
 
-스냅샷: 2026-08-26 KST
+기준 시점: 2026-09-02 KST
 
 이 로드맵은 `debop`에게 할당된 열린 GitHub issue와 deferred decision record를
 추적한다. 현재 release line closeout과 Backlog milestone으로 미룬 작업을
@@ -11,7 +11,9 @@
 - [`0.4.0`](https://github.com/bluetape4k/bluetape4k-image/releases/tag/0.4.0)은
   2026-08-06에 게시된 최신 stable release이다.
 - `develop`은 `baseVersion=1.0.0`을 사용한다. `0.4.0` release와 milestone
-  closeout은 완료되었고, 다음 개발선은 별도의 release gate를 따른다.
+  closeout은 완료되었고, 이슈
+  [#619](https://github.com/bluetape4k/bluetape4k-image/issues/619)에서
+  `1.0.0` 정식 배포 source를 stable Dependencies catalog에 고정한다.
 - 문서 후속 작업인
   [#462](https://github.com/bluetape4k/bluetape4k-image/issues/462)은
   [PR #463](https://github.com/bluetape4k/bluetape4k-image/pull/463)으로
@@ -72,7 +74,8 @@
 ## Release 경계
 
 `0.4.0` release는 2026-08-06에 게시되었고, `develop`은 `baseVersion=1.0.0`의
-다음 개발선이다.
+정식 배포 후보이다. #619의 release-prep와 exact-head CI/Nightly 검증이 끝난 뒤에만
+`1.0.0` tag를 생성한다.
 [#462](https://github.com/bluetape4k/bluetape4k-image/issues/462)와
 [PR #463](https://github.com/bluetape4k/bluetape4k-image/pull/463)의 문서 작업
 완료와 #513의 backlog 전환은 추가 release publication이나 version 변경을
