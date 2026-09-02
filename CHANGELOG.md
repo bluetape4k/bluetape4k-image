@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-09-02
+
 ### 변경
 
 - privacy pipeline의 runtime 객체와 Spring storage/CDN collaborator에서 허위
