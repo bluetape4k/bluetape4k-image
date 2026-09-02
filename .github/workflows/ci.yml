@@ -192,7 +192,7 @@ jobs:
         run: python3 .github/scripts/test-release-validation-contract.py
       - name: Verify tag-derived manual release drift
         run: |
-          MANUAL_TAG=0.4.0
+          MANUAL_TAG=1.0.0
           MANUAL_SHA="$(git rev-parse --verify "refs/tags/${MANUAL_TAG}^{commit}")"
           SITE_ROOT="$GITHUB_WORKSPACE/.manual-site"
           TOOL_ROOT="$SITE_ROOT/scripts/manual/repositories/bluetape4k-image"
