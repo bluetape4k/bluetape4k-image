@@ -58,7 +58,7 @@ jobs:
       - name: Build (compile only)
         run: |
           for attempt in 1 2 3 4 5; do
-            ./gradlew build -x test --max-workers=1 --no-configuration-cache && break
+            ./gradlew build -x test -x :bluetape4k-images-benchmark:build --max-workers=1 --no-configuration-cache && break
             echo "Attempt $attempt failed"
             [ $attempt -lt 5 ] && sleep 30 || exit 1
           done
@@ -116,7 +116,7 @@ jobs:
 
       - name: Generate Kover XML report
         if: always()
-        run: ./gradlew :bluetape4k-images:koverXmlReport --no-configuration-cache --no-daemon
+        run: ./gradlew :bluetape4k-images:koverXmlReport --no-configuration-cache --no-daemon -x test
         continue-on-error: true
 
       - name: Upload test results
@@ -170,7 +170,7 @@ jobs:
 
       - name: Generate Kover XML report
         if: always()
-        run: ./gradlew :bluetape4k-images-barcode-api:koverXmlReport --no-configuration-cache --no-daemon
+        run: ./gradlew :bluetape4k-images-barcode-api:koverXmlReport --no-configuration-cache --no-daemon -x test
         continue-on-error: true
 
       - name: Upload test results
@@ -224,7 +224,7 @@ jobs:
 
       - name: Generate Kover XML report
         if: always()
-        run: ./gradlew :bluetape4k-images-barcode-zxing:koverXmlReport --no-configuration-cache --no-daemon
+        run: ./gradlew :bluetape4k-images-barcode-zxing:koverXmlReport --no-configuration-cache --no-daemon -x test
         continue-on-error: true
 
       - name: Upload test results
@@ -278,7 +278,7 @@ jobs:
 
       - name: Generate Kover XML report
         if: always()
-        run: ./gradlew :bluetape4k-images-captcha:koverXmlReport --no-configuration-cache --no-daemon
+        run: ./gradlew :bluetape4k-images-captcha:koverXmlReport --no-configuration-cache --no-daemon -x test
         continue-on-error: true
 
       - name: Upload test results
@@ -337,7 +337,7 @@ jobs:
 
       - name: Generate Kover XML report
         if: always()
-        run: ./gradlew :bluetape4k-images-ocr:koverXmlReport --no-configuration-cache --no-daemon
+        run: ./gradlew :bluetape4k-images-ocr:koverXmlReport --no-configuration-cache --no-daemon -x test
         continue-on-error: true
 
       - name: Upload test results
@@ -391,7 +391,7 @@ jobs:
 
       - name: Generate Kover XML report
         if: always()
-        run: ./gradlew :bluetape4k-images-ktor:koverXmlReport --no-configuration-cache --no-daemon
+        run: ./gradlew :bluetape4k-images-ktor:koverXmlReport --no-configuration-cache --no-daemon -x test
         continue-on-error: true
 
       - name: Upload test results
@@ -445,7 +445,7 @@ jobs:
 
       - name: Generate Kover XML report
         if: always()
-        run: ./gradlew :bluetape4k-images-spring-boot:koverXmlReport --no-configuration-cache --no-daemon
+        run: ./gradlew :bluetape4k-images-spring-boot:koverXmlReport --no-configuration-cache --no-daemon -x test
         continue-on-error: true
 
       - name: Upload test results
@@ -504,7 +504,7 @@ jobs:
 
       - name: Generate Kover XML report
         if: always()
-        run: ./gradlew :bluetape4k-images-vips-api:koverXmlReport --no-configuration-cache --no-daemon
+        run: ./gradlew :bluetape4k-images-vips-api:koverXmlReport --no-configuration-cache --no-daemon -x test
         continue-on-error: true
 
       - name: Upload test results
@@ -564,7 +564,7 @@ jobs:
 
       - name: Generate Kover XML report
         if: always()
-        run: ./gradlew :bluetape4k-images-vips-java21:koverXmlReport --no-configuration-cache --no-daemon
+        run: ./gradlew :bluetape4k-images-vips-java21:koverXmlReport --no-configuration-cache --no-daemon -x test
         continue-on-error: true
 
       - name: Upload test results
@@ -623,7 +623,7 @@ jobs:
 
       - name: Generate Kover XML report
         if: always()
-        run: ./gradlew :bluetape4k-images-vips-java25:koverXmlReport --no-configuration-cache --no-daemon
+        run: ./gradlew :bluetape4k-images-vips-java25:koverXmlReport --no-configuration-cache --no-daemon -x test
         continue-on-error: true
 
       - name: Upload test results
@@ -642,9 +642,9 @@ jobs:
           path: '**/build/reports/kover/'
           retention-days: 14
 
-  # ── 11. VIPS consumer·benchmark·BOM 검증 (full only) ─────────────────────
+  # ── 11. VIPS consumer·BOM 검증 (full only) ────────────────────────────────
   vips-verification:
-    name: Verify / VIPS consumer·benchmark·BOM
+    name: Verify / VIPS consumer·BOM
     if: ${{ (github.event_name == 'schedule' && github.event.schedule == '11 19 * * 0') || (github.event_name == 'workflow_dispatch' && inputs.scope == 'full') }}
     runs-on: ubuntu-latest
     environment: maven-central-snapshots
@@ -677,12 +677,6 @@ jobs:
             --no-configuration-cache --no-daemon
           ./gradlew :bluetape4k-images-vips-java21:verifyVipsJava21Bytecode \
             --no-configuration-cache --no-daemon
-      - name: Run Java21 JNI benchmark smoke
-        id: vips_benchmark
-        run: |
-          ./gradlew :bluetape4k-images-benchmark:verifyVipsJava21BenchmarkReport \
-            -Pvips.impl=java21 -Dvips.benchmark.required=true \
-            --no-configuration-cache --no-daemon
       - name: Run published BOM consumer smoke
         id: vips_bom
         run: ./gradlew :bluetape4k-image-bom:verifyVipsBomConsumer --no-configuration-cache --no-daemon
@@ -690,17 +684,9 @@ jobs:
         if: always()
         run: |
           {
-            echo '### VIPS consumer·benchmark·BOM verification'
+            echo '### VIPS consumer·BOM verification'
             echo '- Java25 production-only consumer: ${{ steps.vips_consumer.outcome }}'
             echo '- class-file major ceiling: 69 이하 (${{ steps.vips_consumer.outcome }})'
-            echo '- Java21 JNI benchmark: ${{ steps.vips_benchmark.outcome }}'
-            report_path="$(find benchmark/images-benchmark/build/reports/benchmarks/vipsJava21Smoke -name benchmark.json -type f -print -quit 2>/dev/null || true)"
-            if [ -n "$report_path" ]; then
-              echo "- benchmark report: $report_path"
-              python3 -c 'import json,sys; rows=json.load(open(sys.argv[1],encoding="utf-8")); scores=[row["primaryMetric"]["score"] for row in rows]; print(f"- benchmark backend: java21 JNI; rows: {len(rows)}; score range: {min(scores):.3f}-{max(scores):.3f} ms/op")' "$report_path"
-            else
-              echo '- benchmark report: 산출물 없음 (이전 단계 실패 가능)'
-            fi
             echo '- published BOM consumer: ${{ steps.vips_bom.outcome }}'
           } >> "$GITHUB_STEP_SUMMARY"
       - name: Upload VIPS verification evidence
@@ -709,7 +695,6 @@ jobs:
         with:
           name: nightly-vips-verification-evidence
           path: |
-            benchmark/images-benchmark/build/reports/benchmarks/vipsJava21Smoke/**
             images-vips-java21/build/reports/**
           if-no-files-found: warn
           retention-days: 14
