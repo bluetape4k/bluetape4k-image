@@ -600,7 +600,7 @@ jobs:
 
       - uses: actions/setup-java@v6.0.0
         with:
-          java-version: '25-ea'
+          java-version: '25'
           distribution: ${{ env.JAVA_DISTRIBUTION }}
 
       - name: Install libvips
