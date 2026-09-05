@@ -20,6 +20,7 @@ import io.bluetape4k.images.immutableImageOf
 import io.bluetape4k.images.moderation.SensitiveCoordinateSpace
 import io.bluetape4k.images.moderation.SensitiveRegion
 import io.bluetape4k.images.moderation.SensitiveRegionGeometry
+import io.bluetape4k.images.thumbnail.ThumbnailCrop
 import io.bluetape4k.images.thumbnail.ThumbnailSize
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.toList
@@ -29,6 +30,7 @@ import org.junit.jupiter.api.TestInstance
 import java.awt.Color
 import java.awt.image.BufferedImage
 import java.io.OutputStream
+import java.io.Serializable
 import java.nio.file.Files
 import javax.imageio.ImageIO
 import kotlin.time.Duration.Companion.seconds
@@ -89,6 +91,104 @@ class PrivacyDerivativePipelineTest {
             result.report.sourceDimensions shouldBeEqualTo PrivacyImageDimensions(width = 120, height = 80)
             result.report.outputDimensions shouldBeEqualTo PrivacyImageDimensions(width = 80, height = 120)
             result.report.appliedActions shouldContain PrivacyDerivativeAction.ORIENTATION_NORMALIZED
+        }
+
+    @Test
+    fun `suspendPrivacyDerivative maps redactions through every exif orientation and resize`() =
+        runTest(timeout = 30.seconds) {
+            val sourceWidth = 10
+            val sourceHeight = 6
+            val redaction = pixelRedaction(
+                x = 1.0,
+                y = 1.0,
+                width = 3.0,
+                height = 2.0,
+                id = "orientation",
+                color = Color.RED,
+            )
+
+            for (orientation in 2..8) {
+                val result = testImage(
+                    width = sourceWidth,
+                    height = sourceHeight,
+                    color = Color.WHITE,
+                ).suspendPrivacyDerivative(
+                    options = PrivacyDerivativeOptions(
+                        thumbnailSize = ThumbnailSize(width = 30, height = 30, suffix = "orientation-$orientation"),
+                        outputFormat = PrivacyDerivativeFormat.Png,
+                        redactions = listOf(redaction),
+                    ),
+                    sourceExif = ExifData(orientation = orientation),
+                )
+
+                val expected = expectedOrientationRedaction(orientation)
+                result.report.redactions.single() shouldBeEqualTo expected
+                paintedBounds(result.image, Color.RED) shouldBeEqualTo PaintedBounds(
+                    x = expected.x,
+                    y = expected.y,
+                    width = expected.width,
+                    height = expected.height,
+                )
+            }
+        }
+
+    @Test
+    fun `suspendPrivacyDerivative clips and drops redactions around smart crop origin`() =
+        runTest(timeout = 30.seconds) {
+            val clipped = pixelRedaction(
+                x = 30.0,
+                y = 15.0,
+                width = 20.0,
+                height = 15.0,
+                id = "clipped",
+                color = Color.RED,
+            )
+            val inside = pixelRedaction(
+                x = 100.0,
+                y = 15.0,
+                width = 20.0,
+                height = 15.0,
+                id = "inside",
+                color = Color.BLUE,
+            )
+            val outside = pixelRedaction(
+                x = 0.0,
+                y = 15.0,
+                width = 20.0,
+                height = 15.0,
+                id = "outside",
+                color = Color.GREEN,
+            )
+
+            val result = smartCropSource().suspendPrivacyDerivative(
+                options = PrivacyDerivativeOptions(
+                    thumbnailSize = ThumbnailSize(width = 40, height = 30, suffix = "smart"),
+                    thumbnailCrop = ThumbnailCrop.Smart(),
+                    outputFormat = PrivacyDerivativeFormat.Png,
+                    redactions = listOf(clipped, inside, outside),
+                ),
+            )
+
+            result.report.redactions shouldHaveSize 2
+            result.report.redactions.single { it.regionId == "clipped" } shouldBeEqualTo AppliedPrivacyRedaction(
+                regionId = "clipped",
+                mode = PrivacyRedactionMode.SOLID_MASK,
+                x = 0,
+                y = 5,
+                width = 4,
+                height = 5,
+            )
+            result.report.redactions.single { it.regionId == "inside" } shouldBeEqualTo AppliedPrivacyRedaction(
+                regionId = "inside",
+                mode = PrivacyRedactionMode.SOLID_MASK,
+                x = 20,
+                y = 5,
+                width = 7,
+                height = 5,
+            )
+            paintedBounds(result.image, Color.RED) shouldBeEqualTo PaintedBounds(x = 0, y = 5, width = 4, height = 5)
+            paintedBounds(result.image, Color.BLUE) shouldBeEqualTo PaintedBounds(x = 20, y = 5, width = 7, height = 5)
+            countPixels(result.image, Color.GREEN) shouldBeEqualTo 0
         }
 
     @Test
@@ -336,6 +436,99 @@ class PrivacyDerivativePipelineTest {
             graphics.dispose()
         }
         return image
+    }
+
+    private fun pixelRedaction(
+        x: Double,
+        y: Double,
+        width: Double,
+        height: Double,
+        id: String,
+        color: Color,
+    ): PrivacyRedaction = PrivacyRedaction(
+        region = SensitiveRegion(
+            geometry = SensitiveRegionGeometry.Rectangle(
+                x = x,
+                y = y,
+                width = width,
+                height = height,
+                coordinateSpace = SensitiveCoordinateSpace.PIXEL,
+            ),
+            id = id,
+        ),
+        maskColorArgb = color.rgb,
+    )
+
+    private fun smartCropSource(): ImmutableImage {
+        val image = BufferedImage(160, 90, BufferedImage.TYPE_INT_RGB)
+        val graphics = image.createGraphics()
+        try {
+            graphics.color = Color.WHITE
+            graphics.fillRect(0, 0, image.width, image.height)
+            graphics.color = Color.BLACK
+            graphics.fillRect(157, 0, 1, image.height)
+        } finally {
+            graphics.dispose()
+        }
+        return ImmutableImage.fromAwt(image)
+    }
+
+    private fun expectedOrientationRedaction(orientation: Int): AppliedPrivacyRedaction {
+        val transformed = when (orientation) {
+            2 -> PaintedBounds(x = 6, y = 1, width = 3, height = 2)
+            3 -> PaintedBounds(x = 6, y = 3, width = 3, height = 2)
+            4 -> PaintedBounds(x = 1, y = 3, width = 3, height = 2)
+            5 -> PaintedBounds(x = 1, y = 1, width = 2, height = 3)
+            6 -> PaintedBounds(x = 3, y = 1, width = 2, height = 3)
+            7 -> PaintedBounds(x = 3, y = 6, width = 2, height = 3)
+            8 -> PaintedBounds(x = 1, y = 6, width = 2, height = 3)
+            else -> error("Unsupported test orientation: $orientation")
+        }
+        val orientedWidth = if (orientation >= 5) 6 else 10
+        val orientedHeight = if (orientation >= 5) 10 else 6
+        return AppliedPrivacyRedaction(
+            regionId = "orientation",
+            mode = PrivacyRedactionMode.SOLID_MASK,
+            x = transformed.x * 30 / orientedWidth,
+            y = transformed.y * 30 / orientedHeight,
+            width = transformed.width * 30 / orientedWidth,
+            height = transformed.height * 30 / orientedHeight,
+        )
+    }
+
+    private fun paintedBounds(image: ImmutableImage, color: Color): PaintedBounds {
+        val pixels = (0 until image.height).flatMap { y ->
+            (0 until image.width).mapNotNull { x ->
+                if (image.awt().getRGB(x, y) == color.rgb) x to y else null
+            }
+        }
+        require(pixels.isNotEmpty()) { "Expected ${color.rgb} pixels in ${image.width}x${image.height} image" }
+        val xs = pixels.map { it.first }
+        val ys = pixels.map { it.second }
+        val minX = xs.min()
+        val minY = ys.min()
+        return PaintedBounds(
+            x = minX,
+            y = minY,
+            width = xs.max() - minX + 1,
+            height = ys.max() - minY + 1,
+        )
+    }
+
+    private fun countPixels(image: ImmutableImage, color: Color): Int =
+        (0 until image.height).sumOf { y ->
+            (0 until image.width).count { x -> image.awt().getRGB(x, y) == color.rgb }
+        }
+
+    private data class PaintedBounds(
+        val x: Int,
+        val y: Int,
+        val width: Int,
+        val height: Int,
+    ) : Serializable {
+        companion object {
+            private const val serialVersionUID: Long = 1L
+        }
     }
 
     private object MalformedImageWriter : SuspendImageWriter {

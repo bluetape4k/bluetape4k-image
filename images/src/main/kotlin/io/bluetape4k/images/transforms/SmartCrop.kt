@@ -75,7 +75,28 @@ sealed interface SaliencyStrategy {
 }
 
 /**
- * 이미지에서 [aspectRatio] 비율을 유지하는 가장 "흥미로워 보이는" 영역을 잘라냅니다.
+ * smart crop이 원본 이미지에서 선택한 crop window입니다.
+ *
+ * privacy redaction처럼 crop 결과와 함께 원본 좌표를 변환해야 하는 호출자는 이
+ * window의 원점을 사용해 crop-local 좌표로 옮겨야 합니다.
+ */
+internal class SmartCropBounds(
+    val x: Int,
+    val y: Int,
+    val width: Int,
+    val height: Int,
+)
+
+/**
+ * smart crop 결과 이미지와 원본 좌표계의 crop window를 함께 보관합니다.
+ */
+internal class SmartCropResult(
+    val image: ImmutableImage,
+    val crop: SmartCropBounds,
+)
+
+/**
+ * 이미지에서 [aspectRatio] 비율을 유지하는 가장 "흥미로워 보이는" 영역과 crop window를 계산합니다.
  *
  * > **주의**: 이 함수는 **휴리스틱 saliency** 입니다 — 얼굴/객체 검출이 아닌
  * > **Sobel 엣지 에너지** 기준입니다. 인물 사진 등에서 얼굴이 항상 중앙에 오도록
@@ -94,12 +115,12 @@ sealed interface SaliencyStrategy {
  *
  * @param aspectRatio 결과 영역의 종횡비 (`width:height`).
  * @param strategy saliency 추정 전략. 기본은 [SaliencyStrategy.SobelEnergy].
- * @return saliency 가 가장 높은 영역을 [aspectRatio] 비율로 잘라낸 새 [ImmutableImage].
+ * @return saliency가 가장 높은 영역을 잘라낸 이미지와 receiver 좌표계의 crop window.
  */
-fun ImmutableImage.smartCrop(
+internal fun ImmutableImage.smartCropWithBounds(
     aspectRatio: AspectRatio,
     strategy: SaliencyStrategy = SaliencyStrategy.SobelEnergy,
-): ImmutableImage {
+): SmartCropResult {
     require(aspectRatio.width > 0 && aspectRatio.height > 0) {
         "aspectRatio dimensions must be positive: width=${aspectRatio.width}, height=${aspectRatio.height}"
     }
@@ -206,7 +227,34 @@ fun ImmutableImage.smartCrop(
             "win=${winW}x${winH} at ds($bestX,$bestY) -> orig(${restoredX},${restoredY}) ${restoredW}x${restoredH}"
     }
 
-    return subimage(restoredX, restoredY, restoredW, restoredH)
+    return SmartCropResult(
+        image = subimage(restoredX, restoredY, restoredW, restoredH),
+        crop = SmartCropBounds(restoredX, restoredY, restoredW, restoredH),
+    )
+}
+
+/**
+ * [aspectRatio] 비율로 saliency가 높은 영역을 잘라낸 새 이미지입니다.
+ *
+ * crop window가 필요한 내부 호출자는 [smartCropWithBounds]를 사용합니다.
+ */
+fun ImmutableImage.smartCrop(
+    aspectRatio: AspectRatio,
+    strategy: SaliencyStrategy = SaliencyStrategy.SobelEnergy,
+): ImmutableImage = smartCropWithBounds(aspectRatio, strategy).image
+
+/**
+ * smart crop 후 resize한 이미지와 resize 전 crop window를 함께 반환합니다.
+ * crop window는 receiver 이미지의 좌표계에 있으며, 반환 이미지의 좌표계가 아닙니다.
+ */
+internal fun ImmutableImage.smartCropToWithBounds(
+    width: Int,
+    height: Int,
+    strategy: SaliencyStrategy = SaliencyStrategy.SobelEnergy,
+): SmartCropResult {
+    require(width > 0 && height > 0) { "output dimensions must be positive: width=$width, height=$height" }
+    val cropped = smartCropWithBounds(AspectRatio(width, height), strategy)
+    return SmartCropResult(cropped.image.scaleTo(width, height), cropped.crop)
 }
 
 /**
@@ -232,10 +280,7 @@ fun ImmutableImage.smartCropTo(
     width: Int,
     height: Int,
     strategy: SaliencyStrategy = SaliencyStrategy.SobelEnergy,
-): ImmutableImage {
-    require(width > 0 && height > 0) { "output dimensions must be positive: width=$width, height=$height" }
-    return smartCrop(AspectRatio(width, height), strategy).scaleTo(width, height)
-}
+): ImmutableImage = smartCropToWithBounds(width, height, strategy).image
 
 /**
  * 코루틴 환경에서 [smartCrop] 을 실행합니다.

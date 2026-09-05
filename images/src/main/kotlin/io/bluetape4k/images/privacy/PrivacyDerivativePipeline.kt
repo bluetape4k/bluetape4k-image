@@ -25,7 +25,7 @@ import io.bluetape4k.images.thumbnail.ThumbnailSize
 import io.bluetape4k.images.transforms.flipHorizontal
 import io.bluetape4k.images.transforms.flipVertical
 import io.bluetape4k.images.transforms.rotateDegrees
-import io.bluetape4k.images.transforms.smartCropTo
+import io.bluetape4k.images.transforms.smartCropToWithBounds
 import io.bluetape4k.images.withGraphics
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.requirePositiveNumber
@@ -519,16 +519,40 @@ private fun ImmutableImage.applyDerivativeTransforms(
         this.copy()
     }
 
-    var current = when (val size = options.thumbnailSize) {
-        null -> oriented
+    val transformed = when (val size = options.thumbnailSize) {
+        null -> PrivacyDerivativeImageTransform(
+            image = oriented,
+            crop = CropWindow(x = 0.0, y = 0.0, width = oriented.width.toDouble(), height = oriented.height.toDouble()),
+        )
+
         else -> when (val crop = options.thumbnailCrop) {
-            ThumbnailCrop.Fit -> oriented.scaleTo(size.width, size.height)
-            is ThumbnailCrop.Smart -> oriented.smartCropTo(size.width, size.height, crop.strategy)
+            ThumbnailCrop.Fit -> PrivacyDerivativeImageTransform(
+                image = oriented.scaleTo(size.width, size.height),
+                crop = CropWindow(x = 0.0, y = 0.0, width = oriented.width.toDouble(), height = oriented.height.toDouble()),
+            )
+
+            is ThumbnailCrop.Smart -> oriented.smartCropToWithBounds(size.width, size.height, crop.strategy).let {
+                PrivacyDerivativeImageTransform(
+                    image = it.image,
+                    crop = CropWindow(
+                        x = it.crop.x.toDouble(),
+                        y = it.crop.y.toDouble(),
+                        width = it.crop.width.toDouble(),
+                        height = it.crop.height.toDouble(),
+                    ),
+                )
+            }
         }
     }
 
-    val outputDimensions = PrivacyImageDimensions(width = current.width, height = current.height)
-    val redactions = options.redactions.renderableRedactions(sourceDimensions, outputDimensions)
+    val outputDimensions = PrivacyImageDimensions(width = transformed.image.width, height = transformed.image.height)
+    val redactions = options.redactions.renderableRedactions(
+        sourceDimensions = sourceDimensions,
+        outputDimensions = outputDimensions,
+        orientation = if (options.normalizeOrientation) orientation else null,
+        crop = transformed.crop,
+    )
+    var current = transformed.image
     if (options.redactions.isNotEmpty()) {
         current = current.withGraphics { graphics ->
             redactions.forEach { redaction ->
@@ -561,14 +585,19 @@ private fun ImmutableImage.normalizeExifOrientation(orientation: Int?): Immutabl
 private fun List<PrivacyRedaction>.renderableRedactions(
     sourceDimensions: PrivacyImageDimensions,
     outputDimensions: PrivacyImageDimensions,
+    orientation: Int?,
+    crop: CropWindow,
 ): List<RenderablePrivacyRedaction> =
     mapNotNull { redaction ->
         when (val geometry = redaction.region.geometry) {
             is SensitiveRegionGeometry.Rectangle ->
-                RenderablePrivacyRedaction(
-                    redaction,
-                    geometry.toAppliedRedaction(sourceDimensions, outputDimensions, redaction),
-                )
+                geometry.toAppliedRedaction(
+                    sourceDimensions = sourceDimensions,
+                    outputDimensions = outputDimensions,
+                    orientation = orientation,
+                    crop = crop,
+                    redaction = redaction,
+                )?.let { RenderablePrivacyRedaction(redaction, it) }
 
             else -> null
         }
@@ -577,24 +606,29 @@ private fun List<PrivacyRedaction>.renderableRedactions(
 private fun SensitiveRegionGeometry.Rectangle.toAppliedRedaction(
     sourceDimensions: PrivacyImageDimensions,
     outputDimensions: PrivacyImageDimensions,
+    orientation: Int?,
+    crop: CropWindow,
     redaction: PrivacyRedaction,
-): AppliedPrivacyRedaction {
+): AppliedPrivacyRedaction? {
     requireWithin(sourceDimensions)
-    val bounds = when (coordinateSpace) {
-        SensitiveCoordinateSpace.PIXEL -> PixelBounds(
-            x = (x * outputDimensions.width / sourceDimensions.width).roundToInt(),
-            y = (y * outputDimensions.height / sourceDimensions.height).roundToInt(),
-            width = (width * outputDimensions.width / sourceDimensions.width).roundToInt(),
-            height = (height * outputDimensions.height / sourceDimensions.height).roundToInt(),
+    val sourceBounds = when (coordinateSpace) {
+        SensitiveCoordinateSpace.PIXEL -> RectangleBounds(
+            left = x,
+            top = y,
+            right = x + width,
+            bottom = y + height,
         )
 
-        SensitiveCoordinateSpace.NORMALIZED -> PixelBounds(
-            x = (x * outputDimensions.width).roundToInt(),
-            y = (y * outputDimensions.height).roundToInt(),
-            width = (width * outputDimensions.width).roundToInt(),
-            height = (height * outputDimensions.height).roundToInt(),
+        SensitiveCoordinateSpace.NORMALIZED -> RectangleBounds(
+            left = x * sourceDimensions.width,
+            top = y * sourceDimensions.height,
+            right = (x + width) * sourceDimensions.width,
+            bottom = (y + height) * sourceDimensions.height,
         )
-    }.coerceWithin(outputDimensions)
+    }
+    val orientedBounds = sourceBounds.transformOrientation(orientation, sourceDimensions)
+    val croppedBounds = orientedBounds.intersect(crop) ?: return null
+    val bounds = croppedBounds.toPixelBounds(crop, outputDimensions) ?: return null
 
     return AppliedPrivacyRedaction(
         regionId = redaction.region.id,
@@ -606,12 +640,117 @@ private fun SensitiveRegionGeometry.Rectangle.toAppliedRedaction(
     )
 }
 
-private data class PrivacyDerivativeTransformResult(
+private class PrivacyDerivativeTransformResult(
     val image: ImmutableImage,
     val redactions: List<AppliedPrivacyRedaction>,
 )
 
-private data class RenderablePrivacyRedaction(
+/** derivative image와 orientation 이후 crop window를 함께 보관합니다. */
+private class PrivacyDerivativeImageTransform(
+    val image: ImmutableImage,
+    val crop: CropWindow,
+)
+
+/** orientation이 적용된 이미지 좌표계의 crop window입니다. */
+private class CropWindow(
+    val x: Double,
+    val y: Double,
+    val width: Double,
+    val height: Double,
+)
+
+/** source rectangle을 변환하는 동안 유지하는 연속 좌표 bounds입니다. */
+private class RectangleBounds(
+    val left: Double,
+    val top: Double,
+    val right: Double,
+    val bottom: Double,
+) {
+    fun transformOrientation(
+        orientation: Int?,
+        sourceDimensions: PrivacyImageDimensions,
+    ): RectangleBounds = when (orientation) {
+        2 -> RectangleBounds(
+            left = sourceDimensions.width - right,
+            top = top,
+            right = sourceDimensions.width - left,
+            bottom = bottom,
+        )
+
+        3 -> RectangleBounds(
+            left = sourceDimensions.width - right,
+            top = sourceDimensions.height - bottom,
+            right = sourceDimensions.width - left,
+            bottom = sourceDimensions.height - top,
+        )
+
+        4 -> RectangleBounds(
+            left = left,
+            top = sourceDimensions.height - bottom,
+            right = right,
+            bottom = sourceDimensions.height - top,
+        )
+
+        5 -> RectangleBounds(
+            left = top,
+            top = left,
+            right = bottom,
+            bottom = right,
+        )
+
+        6 -> RectangleBounds(
+            left = sourceDimensions.height - bottom,
+            top = left,
+            right = sourceDimensions.height - top,
+            bottom = right,
+        )
+
+        7 -> RectangleBounds(
+            left = sourceDimensions.height - bottom,
+            top = sourceDimensions.width - right,
+            right = sourceDimensions.height - top,
+            bottom = sourceDimensions.width - left,
+        )
+
+        8 -> RectangleBounds(
+            left = top,
+            top = sourceDimensions.width - right,
+            right = bottom,
+            bottom = sourceDimensions.width - left,
+        )
+
+        else -> this
+    }
+
+    fun intersect(crop: CropWindow): RectangleBounds? {
+        val intersection = RectangleBounds(
+            left = maxOf(left, crop.x),
+            top = maxOf(top, crop.y),
+            right = minOf(right, crop.x + crop.width),
+            bottom = minOf(bottom, crop.y + crop.height),
+        )
+        return intersection.takeIf { it.right > it.left && it.bottom > it.top }
+    }
+
+    fun toPixelBounds(crop: CropWindow, outputDimensions: PrivacyImageDimensions): PixelBounds? {
+        val rawLeft = (left - crop.x) * outputDimensions.width / crop.width
+        val rawTop = (top - crop.y) * outputDimensions.height / crop.height
+        val rawRight = (right - crop.x) * outputDimensions.width / crop.width
+        val rawBottom = (bottom - crop.y) * outputDimensions.height / crop.height
+        val x = rawLeft.roundToInt().coerceIn(0, outputDimensions.width - 1)
+        val y = rawTop.roundToInt().coerceIn(0, outputDimensions.height - 1)
+        val right = rawRight.roundToInt().coerceIn(x + 1, outputDimensions.width)
+        val bottom = rawBottom.roundToInt().coerceIn(y + 1, outputDimensions.height)
+        return PixelBounds(
+            x = x,
+            y = y,
+            width = right - x,
+            height = bottom - y,
+        )
+    }
+}
+
+private class RenderablePrivacyRedaction(
     val request: PrivacyRedaction,
     val applied: AppliedPrivacyRedaction,
 )
@@ -621,15 +760,7 @@ private data class PixelBounds(
     val y: Int,
     val width: Int,
     val height: Int,
-) {
-    fun coerceWithin(dimensions: PrivacyImageDimensions): PixelBounds {
-        val safeX = x.coerceIn(0, dimensions.width - 1)
-        val safeY = y.coerceIn(0, dimensions.height - 1)
-        val safeWidth = width.coerceAtMost(dimensions.width - safeX).coerceAtLeast(1)
-        val safeHeight = height.coerceAtMost(dimensions.height - safeY).coerceAtLeast(1)
-        return PixelBounds(safeX, safeY, safeWidth, safeHeight)
-    }
-}
+)
 
 private fun PrivacyImageDimensions.requireWithin(
     options: PrivacyDerivativeOptions,
