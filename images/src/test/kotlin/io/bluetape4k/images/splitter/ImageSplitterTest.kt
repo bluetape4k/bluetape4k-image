@@ -61,11 +61,15 @@ class ImageSplitterTest: AbstractImageTest() {
     @ParameterizedTest(name = "invalid input {0}")
     @MethodSource("invalidImageInputs")
     fun `split rejects invalid truncated and unknown inputs`(description: String, input: ByteArray) = runTest {
-        val error = assertFailsWith<IllegalArgumentException> {
+        val splitError = assertFailsWith<IllegalArgumentException> {
             splitter.split(input.inputStream()).toList()
         }
+        splitError.message shouldContain "지원하지 않는 이미지 포맷이거나 손상된 스트림"
 
-        error.message shouldContain "지원하지 않는 이미지 포맷이거나 손상된 스트림"
+        val compressError = assertFailsWith<IllegalArgumentException> {
+            splitter.splitAndCompress(input.inputStream()).toList()
+        }
+        compressError.message shouldContain "지원하지 않는 이미지 포맷이거나 손상된 스트림"
     }
 
     @ParameterizedTest(name = "unsupported output {0}")
@@ -146,6 +150,10 @@ class ImageSplitterTest: AbstractImageTest() {
                 )
 
             items.buffer().collect { bytes ->
+                bytes.shouldNotBeEmpty()
+                val image = ImageIO.read(bytes.toInputStream())
+                (image.width > 0).shouldBeTrue()
+                (image.height > 0).shouldBeTrue()
                 tempFolder.createFile().writeSuspending(bytes)
             }
         }
