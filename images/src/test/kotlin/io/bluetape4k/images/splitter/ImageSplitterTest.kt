@@ -10,6 +10,7 @@ import io.bluetape4k.junit5.tempfolder.TempFolder
 import io.bluetape4k.junit5.tempfolder.TempFolderTest
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
+import java.util.stream.Stream
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.toList
@@ -18,9 +19,13 @@ import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeLessOrEqualTo
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldNotBeEmpty
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.Arguments
+import org.junit.jupiter.params.provider.EnumSource
+import org.junit.jupiter.params.provider.MethodSource
 import org.junit.jupiter.params.provider.ValueSource
 import javax.imageio.ImageIO
 
@@ -30,6 +35,16 @@ class ImageSplitterTest: AbstractImageTest() {
     companion object: KLoggingChannel() {
         private const val AQUA_JPG = "images/splitter/aqua.jpg"
         private const val EVERLAND_JPG = "images/splitter/everland.jpg"
+
+        @JvmStatic
+        fun invalidImageInputs(): Stream<Arguments> = Stream.of(
+            Arguments.of("empty", byteArrayOf()),
+            Arguments.of("unknown", "not an image".toByteArray()),
+            Arguments.of(
+                "truncated png",
+                byteArrayOf(0x89.toByte(), 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A),
+            ),
+        )
     }
 
     private val splitter = ImageSplitter(1024)
@@ -40,6 +55,34 @@ class ImageSplitterTest: AbstractImageTest() {
             assertFailsWith<IllegalArgumentException> {
                 splitter.split(input, ImageFormat.JPG, 0)
             }
+        }
+    }
+
+    @ParameterizedTest(name = "invalid input {0}")
+    @MethodSource("invalidImageInputs")
+    fun `split rejects invalid truncated and unknown inputs`(description: String, input: ByteArray) = runTest {
+        val error = assertFailsWith<IllegalArgumentException> {
+            splitter.split(input.inputStream()).toList()
+        }
+
+        error.message shouldContain "지원하지 않는 이미지 포맷이거나 손상된 스트림"
+    }
+
+    @ParameterizedTest(name = "unsupported output {0}")
+    @EnumSource(value = ImageFormat::class, names = ["AVIF", "HEIC", "SVG"])
+    fun `split and splitAndCompress reject formats without ImageIO writers`(format: ImageFormat) = runTest {
+        getImage(AQUA_JPG).use { input ->
+            val error = assertFailsWith<IllegalArgumentException> {
+                splitter.split(input, format).toList()
+            }
+            error.message shouldContain "전용 writer를 사용하세요"
+        }
+
+        getImage(AQUA_JPG).use { input ->
+            val error = assertFailsWith<IllegalArgumentException> {
+                splitter.splitAndCompress(input, format).toList()
+            }
+            error.message shouldContain "전용 writer를 사용하세요"
         }
     }
 
