@@ -133,6 +133,120 @@ class PrivacyDerivativePipelineTest {
         }
 
     @Test
+    fun `suspendPrivacyDerivative expands fractional normalized bounds during resize`() =
+        runTest(timeout = 30.seconds) {
+            val result = testImage(width = 100, height = 100, color = Color.WHITE).suspendPrivacyDerivative(
+                options = PrivacyDerivativeOptions(
+                    thumbnailSize = ThumbnailSize(width = 10, height = 10, suffix = "fractional"),
+                    outputFormat = PrivacyDerivativeFormat.Png,
+                    redactions = listOf(
+                        normalizedRedaction(
+                            x = 0.15,
+                            y = 0.15,
+                            width = 0.20,
+                            height = 0.20,
+                            id = "fractional",
+                            color = Color.RED,
+                        ),
+                    ),
+                ),
+            )
+
+            result.report.redactions.single() shouldBeEqualTo AppliedPrivacyRedaction(
+                regionId = "fractional",
+                mode = PrivacyRedactionMode.SOLID_MASK,
+                x = 1,
+                y = 1,
+                width = 3,
+                height = 3,
+            )
+            paintedBounds(result.image, Color.RED) shouldBeEqualTo PaintedBounds(x = 1, y = 1, width = 3, height = 3)
+        }
+
+    @Test
+    fun `suspendPrivacyDerivative maps normalized redaction through exif orientation`() =
+        runTest(timeout = 30.seconds) {
+            val result = markedImage(
+                width = 120,
+                height = 80,
+                markerX = 90,
+                markerY = 8,
+                markerWidth = 18,
+                markerHeight = 16,
+                markerColor = Color.GREEN,
+            ).suspendPrivacyDerivative(
+                options = PrivacyDerivativeOptions(
+                    outputFormat = PrivacyDerivativeFormat.Png,
+                    redactions = listOf(
+                        normalizedRedaction(
+                            x = 0.75,
+                            y = 0.10,
+                            width = 0.15,
+                            height = 0.20,
+                            id = "normalized-orientation",
+                            color = Color.RED,
+                        ),
+                    ),
+                ),
+                sourceExif = ExifData(orientation = 6),
+            )
+
+            result.report.redactions.single() shouldBeEqualTo AppliedPrivacyRedaction(
+                regionId = "normalized-orientation",
+                mode = PrivacyRedactionMode.SOLID_MASK,
+                x = 56,
+                y = 90,
+                width = 16,
+                height = 18,
+            )
+            paintedBounds(result.image, Color.RED) shouldBeEqualTo PaintedBounds(x = 56, y = 90, width = 16, height = 18)
+            countPixels(result.image, Color.GREEN) shouldBeEqualTo 0
+        }
+
+    @Test
+    fun `suspendPrivacyDerivative keeps redaction coordinates when orientation normalization is disabled`() =
+        runTest(timeout = 30.seconds) {
+            val result = markedImage(
+                width = 10,
+                height = 6,
+                markerX = 1,
+                markerY = 1,
+                markerWidth = 3,
+                markerHeight = 2,
+                markerColor = Color.GREEN,
+            ).suspendPrivacyDerivative(
+                options = PrivacyDerivativeOptions(
+                    normalizeOrientation = false,
+                    outputFormat = PrivacyDerivativeFormat.Png,
+                    redactions = listOf(
+                        pixelRedaction(
+                            x = 1.0,
+                            y = 1.0,
+                            width = 3.0,
+                            height = 2.0,
+                            id = "orientation-disabled",
+                            color = Color.RED,
+                        ),
+                    ),
+                ),
+                sourceExif = ExifData(orientation = 6),
+            )
+
+            result.image.width shouldBeEqualTo 10
+            result.image.height shouldBeEqualTo 6
+            result.report.redactions.single() shouldBeEqualTo AppliedPrivacyRedaction(
+                regionId = "orientation-disabled",
+                mode = PrivacyRedactionMode.SOLID_MASK,
+                x = 1,
+                y = 1,
+                width = 3,
+                height = 2,
+            )
+            paintedBounds(result.image, Color.RED) shouldBeEqualTo PaintedBounds(x = 1, y = 1, width = 3, height = 2)
+            countPixels(result.image, Color.GREEN) shouldBeEqualTo 0
+        }
+
+    @Test
     fun `suspendPrivacyDerivative clips and drops redactions around smart crop origin`() =
         runTest(timeout = 30.seconds) {
             val clipped = pixelRedaction(
@@ -458,6 +572,47 @@ class PrivacyDerivativePipelineTest {
         ),
         maskColorArgb = color.rgb,
     )
+
+    private fun normalizedRedaction(
+        x: Double,
+        y: Double,
+        width: Double,
+        height: Double,
+        id: String,
+        color: Color,
+    ): PrivacyRedaction = PrivacyRedaction(
+        region = SensitiveRegion(
+            geometry = SensitiveRegionGeometry.Rectangle(
+                x = x,
+                y = y,
+                width = width,
+                height = height,
+                coordinateSpace = SensitiveCoordinateSpace.NORMALIZED,
+            ),
+            id = id,
+        ),
+        maskColorArgb = color.rgb,
+    )
+
+    private fun markedImage(
+        width: Int,
+        height: Int,
+        markerX: Int,
+        markerY: Int,
+        markerWidth: Int,
+        markerHeight: Int,
+        markerColor: Color,
+    ): ImmutableImage {
+        val image = testBufferedImage(width, height, Color.WHITE)
+        val graphics = image.createGraphics()
+        try {
+            graphics.color = markerColor
+            graphics.fillRect(markerX, markerY, markerWidth, markerHeight)
+        } finally {
+            graphics.dispose()
+        }
+        return ImmutableImage.fromAwt(image)
+    }
 
     private fun smartCropSource(): ImmutableImage {
         val image = BufferedImage(160, 90, BufferedImage.TYPE_INT_RGB)

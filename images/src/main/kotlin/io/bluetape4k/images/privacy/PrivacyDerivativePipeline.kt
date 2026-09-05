@@ -35,7 +35,8 @@ import kotlinx.coroutines.withContext
 import java.awt.AlphaComposite
 import java.awt.Color
 import java.nio.file.Path
-import kotlin.math.roundToInt
+import kotlin.math.ceil
+import kotlin.math.floor
 import kotlin.time.TimeSource
 
 /**
@@ -737,10 +738,10 @@ private class RectangleBounds(
         val rawTop = (top - crop.y) * outputDimensions.height / crop.height
         val rawRight = (right - crop.x) * outputDimensions.width / crop.width
         val rawBottom = (bottom - crop.y) * outputDimensions.height / crop.height
-        val x = rawLeft.roundToInt().coerceIn(0, outputDimensions.width - 1)
-        val y = rawTop.roundToInt().coerceIn(0, outputDimensions.height - 1)
-        val right = rawRight.roundToInt().coerceIn(x + 1, outputDimensions.width)
-        val bottom = rawBottom.roundToInt().coerceIn(y + 1, outputDimensions.height)
+        val x = floor(rawLeft).toInt().coerceIn(0, outputDimensions.width - 1)
+        val y = floor(rawTop).toInt().coerceIn(0, outputDimensions.height - 1)
+        val right = ceil(rawRight).toInt().coerceIn(x + 1, outputDimensions.width)
+        val bottom = ceil(rawBottom).toInt().coerceIn(y + 1, outputDimensions.height)
         return PixelBounds(
             x = x,
             y = y,
