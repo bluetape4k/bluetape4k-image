@@ -108,11 +108,16 @@ class PrivacyDerivativePipelineTest {
             )
 
             for (orientation in 2..8) {
-                val result = testImage(
+                val source = markedImage(
                     width = sourceWidth,
                     height = sourceHeight,
-                    color = Color.WHITE,
-                ).suspendPrivacyDerivative(
+                    markerX = 1,
+                    markerY = 1,
+                    markerWidth = 3,
+                    markerHeight = 2,
+                    markerColor = Color.GREEN,
+                )
+                val result = source.suspendPrivacyDerivative(
                     options = PrivacyDerivativeOptions(
                         thumbnailSize = ThumbnailSize(width = 30, height = 30, suffix = "orientation-$orientation"),
                         outputFormat = PrivacyDerivativeFormat.Png,
@@ -129,6 +134,7 @@ class PrivacyDerivativePipelineTest {
                     width = expected.width,
                     height = expected.height,
                 )
+                countPixels(result.image, Color.GREEN) shouldBeEqualTo 0
             }
         }
 
