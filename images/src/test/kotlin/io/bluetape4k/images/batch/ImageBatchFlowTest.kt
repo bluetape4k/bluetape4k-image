@@ -153,23 +153,23 @@ class ImageBatchFlowTest: AbstractImageTest() {
     }
 
     @Test
-    fun `atomic output preserves cancellation when temporary cleanup fails`(
+    fun `atomic output preserves cancellation and removes staged file`(
         tempFolder: TempFolder,
     ) = runTest(timeout = 30.seconds) {
         val output = tempFolder.root.toPath().resolve(OUTPUT_IMAGE_NAME)
-        val cleanupFailure = IOException("fixture cleanup failure")
+        val cancellation = CancellationException("fixture cancellation")
 
         val error = assertFailsWith<CancellationException> {
             writeAtomically(
                 output = output,
                 ioDispatcher = ImageProcessingOptions().ioDispatcher,
-                writer = { throw CancellationException("fixture cancellation") },
-                deleteTemporary = { throw cleanupFailure },
+                writer = { throw cancellation },
             )
         }
 
-        error.suppressed.single().message shouldBeEqualTo cleanupFailure.message
+        error.message shouldBeEqualTo cancellation.message
         Files.exists(output).shouldBeFalse()
+        Files.list(tempFolder.root.toPath()).use { stream -> stream.count() shouldBeEqualTo 0L }
     }
 
     @Test

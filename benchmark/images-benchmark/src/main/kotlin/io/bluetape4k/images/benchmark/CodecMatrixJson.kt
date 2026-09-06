@@ -1,11 +1,10 @@
 package io.bluetape4k.images.benchmark
 
+import io.bluetape4k.io.writeAtomically
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Path
-import java.nio.file.StandardCopyOption
 import java.security.MessageDigest
-import java.util.UUID
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -209,20 +208,8 @@ internal object CodecMatrixJson {
     private fun writeBytes(target: Path, bytes: ByteArray): CodecMatrixSha256 {
         require(bytes.size <= MAX_JSON_BYTES) { "codec matrix JSON exceeds $MAX_JSON_BYTES bytes" }
         StrictJsonScanner(bytes.toString(StandardCharsets.UTF_8)).validate()
-        val parent = requireNotNull(target.parent) { "target must have a parent directory" }
-        Files.createDirectories(parent)
-        val temporary = parent.resolve(".${target.fileName}.tmp-${UUID.randomUUID()}")
-        try {
-            Files.write(temporary, bytes)
-            Files.move(
-                temporary,
-                target,
-                StandardCopyOption.ATOMIC_MOVE,
-                StandardCopyOption.REPLACE_EXISTING,
-            )
-        } finally {
-            Files.deleteIfExists(temporary)
-        }
+        requireNotNull(target.parent) { "target must have a parent directory" }
+        target.writeAtomically { output -> output.write(bytes) }
         return sha256(bytes)
     }
 
