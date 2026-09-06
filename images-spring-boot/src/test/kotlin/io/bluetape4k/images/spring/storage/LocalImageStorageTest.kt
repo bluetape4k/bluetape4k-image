@@ -74,6 +74,37 @@ class LocalImageStorageTest {
     }
 
     @Test
+    fun `same content has the same SHA-256 etag for byte and Path uploads`() = runTest {
+        val sourceFile = Files.createTempFile(tempDir, "equivalent-source-", ".jpg")
+        Files.write(sourceFile, sampleBytes)
+        val byteKey = ImageObjectKey.of("etag", "bytes.jpg")
+        val pathKey = ImageObjectKey.of("etag", "path.jpg")
+        provisionParent(byteKey)
+        provisionParent(pathKey)
+
+        val byteResult = storage.upload(byteKey, sampleBytes, options)
+        val pathResult = storage.upload(pathKey, sourceFile, options)
+
+        byteResult.etag shouldBeEqualTo pathResult.etag
+        byteResult.etag shouldBeEqualTo "43044b9f977ef333aa328b242d0e9ff0f9fed13e1c77abdd5ff12dd8edac5dd5"
+    }
+
+    @Test
+    fun `same size different content has different etags`() = runTest {
+        val firstKey = ImageObjectKey.of("etag", "first.jpg")
+        val secondKey = ImageObjectKey.of("etag", "second.jpg")
+        val firstBytes = byteArrayOf(0, 1, 2, 3)
+        val secondBytes = byteArrayOf(9, 8, 7, 6)
+        provisionParent(firstKey)
+        provisionParent(secondKey)
+
+        val firstResult = storage.upload(firstKey, firstBytes, options)
+        val secondResult = storage.upload(secondKey, secondBytes, options)
+
+        (firstResult.etag != secondResult.etag).shouldBeTrue()
+    }
+
+    @Test
     fun `upload path throws ValidationException when file exceeds maxSizeBytes`() = runTest {
         val smallStorage = LocalImageStorage(tempDir, maxSizeBytes = 4L)
         val sourceFile = Files.createTempFile(tempDir, "big-", ".jpg")

@@ -34,7 +34,9 @@ import java.nio.file.SecureDirectoryStream
 import java.nio.file.StandardOpenOption
 import java.nio.file.attribute.BasicFileAttributeView
 import java.nio.file.attribute.BasicFileAttributes
+import java.security.MessageDigest
 import java.time.Instant
+import java.util.HexFormat
 import java.util.UUID
 
 /**
@@ -51,6 +53,8 @@ import java.util.UUID
  *   JDK [SecureDirectoryStream]에 `mkdirat`가 없으므로 operation 중 missing parent를 생성하지
  *   않고 [ImageStorageException.ValidationException]으로 fail closed합니다.
  * - [maxSizeBytes]보다 큰 upload는 byte를 쓰기 전에 거부합니다.
+ * - upload 결과의 [ImageUploadResult.etag]는 업로드한 content의 SHA-256 digest를 lowercase hex로
+ *   표현한 opaque tag입니다. 동일한 content는 ByteArray/Path 입력과 무관하게 같은 tag를 반환합니다.
  * - [maxSizeBytes]보다 큰 object download는 byte를 읽기 전에 거부합니다.
  * - [ImageObjectMetadataReader.readMetadata]는 body를 열지 않고 regular-file attributes만 반환합니다.
  *   Local backend가 보장하지 않는 ETag과 content type은 null입니다.
@@ -68,6 +72,8 @@ class LocalImageStorage(
 ) : ImageStorage, ImageObjectMetadataReader, AutoCloseable {
 
     companion object : KLogging() {
+        private const val SHA_256_ALGORITHM = "SHA-256"
+
         /**
          * trusted startup 단계에서 local root와 고정된 bootstrap prefix를 준비합니다.
          *
@@ -213,6 +219,7 @@ class LocalImageStorage(
             )
         }
         val target = resolveKey(key)
+        val etag = sha256Hex(bytes)
         atomicWrite(key, target) { staged, _ ->
             val channel = staged
             val buffer = ByteBuffer.wrap(bytes)
@@ -223,7 +230,7 @@ class LocalImageStorage(
         }
         ImageUploadResult(
             key = key,
-            etag = bytes.size.toString(),
+            etag = etag,
             sizeBytes = bytes.size.toLong(),
             contentType = options.contentType,
             uploadedAt = Instant.now(),
@@ -253,15 +260,16 @@ class LocalImageStorage(
             )
         }
         val target = resolveKey(key)
+        val digest = MessageDigest.getInstance(SHA_256_ALGORITHM)
         var actualSize = 0L
         atomicWrite(key, target) { staged, _ ->
             Files.newInputStream(source, LinkOption.NOFOLLOW_LINKS).use { input ->
-                actualSize = copyToChannel(input, staged, key)
+                actualSize = copyToChannel(input, staged, key, digest)
             }
         }
         ImageUploadResult(
             key = key,
-            etag = actualSize.toString(),
+            etag = HexFormat.of().formatHex(digest.digest()),
             sizeBytes = actualSize,
             contentType = options.contentType,
             uploadedAt = Instant.now(),
@@ -514,7 +522,12 @@ class LocalImageStorage(
         }
     }
 
-    private fun copyToChannel(input: java.io.InputStream, output: SeekableByteChannel, key: ImageObjectKey): Long {
+    private fun copyToChannel(
+        input: java.io.InputStream,
+        output: SeekableByteChannel,
+        key: ImageObjectKey,
+        digest: MessageDigest? = null,
+    ): Long {
         val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
         var copied = 0L
         while (true) {
@@ -523,6 +536,7 @@ class LocalImageStorage(
             if (count == 0) continue
             copied += count
             validateStoredSize(key, copied)
+            digest?.update(buffer, 0, count)
             var pending = ByteBuffer.wrap(buffer, 0, count)
             while (pending.hasRemaining()) {
                 output.write(pending)
@@ -530,6 +544,10 @@ class LocalImageStorage(
         }
         return copied
     }
+
+    private fun sha256Hex(bytes: ByteArray): String = HexFormat.of().formatHex(
+        MessageDigest.getInstance(SHA_256_ALGORITHM).digest(bytes),
+    )
 
     private fun readBoundedBytes(input: java.io.InputStream, key: ImageObjectKey): ByteArray {
         val output = ByteArrayOutputStream()
