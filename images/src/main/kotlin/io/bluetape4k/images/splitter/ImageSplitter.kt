@@ -2,11 +2,14 @@ package io.bluetape4k.images.splitter
 
 import io.bluetape4k.coroutines.flow.async
 import io.bluetape4k.images.ImageFormat
+import io.bluetape4k.images.bufferedImageOf
 import io.bluetape4k.images.coroutines.SuspendImageWriter
 import io.bluetape4k.images.coroutines.SuspendJpegWriter
 import io.bluetape4k.images.immutableImageOf
+import io.bluetape4k.images.requireWritable
 import io.bluetape4k.images.splitter.ImageSplitter.Companion.DEFAULT_MAX_HEIGHT
 import io.bluetape4k.images.splitter.ImageSplitter.Companion.DEFAULT_MIN_HEIGHT
+import io.bluetape4k.images.toByteArray
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.support.requirePositiveNumber
@@ -15,9 +18,8 @@ import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
-import java.io.ByteArrayOutputStream
 import java.io.InputStream
-import javax.imageio.ImageIO
+import javax.imageio.IIOException
 
 /**
  * Height가 아주 큰 이미지 (예: 상품 이미지) 를 [defaultMaxHeight] 크기로 분할하는 ImageSplitter
@@ -70,6 +72,7 @@ class ImageSplitter private constructor(val defaultMaxHeight: Int) {
      * @param format        변환할 이미지 포맷 (JPG, PNG ...) (기본: [ImageFormat.JPG])
      * @param splitHeight   분할할 이미지의 Height (기본: [defaultMaxHeight])
      * @return 분할된 이미지 정보의 Flow
+     * @throws IllegalArgumentException 입력을 이미지로 decode할 수 없거나 [format]용 ImageIO writer가 없는 경우
      */
     fun split(
         input: InputStream,
@@ -77,27 +80,28 @@ class ImageSplitter private constructor(val defaultMaxHeight: Int) {
         splitHeight: Int = this.defaultMaxHeight,
     ): Flow<ByteArray> {
         splitHeight.requirePositiveNumber("splitHeight")
+        format.requireWritable()
         val height = splitHeight.coerceAtLeast(DEFAULT_MIN_HEIGHT)
         log.debug { "Split image. format=$format, split height=$height" }
 
-        val source = ImageIO.read(input)
+        val source = try {
+            bufferedImageOf(input)
+        } catch (e: IIOException) {
+            throw IllegalArgumentException("지원하지 않는 이미지 포맷이거나 손상된 스트림입니다.", e)
+        }
         val srcHeight = source.height
         val srcWidth = source.width
 
         if (srcHeight <= height) {
-            val bos = ByteArrayOutputStream()
-            ImageIO.write(source, format.name, bos)
-            return flowOf(bos.toByteArray())
+            return flowOf(source.toByteArray(format.ioName))
         }
 
         return channelFlow {
             getHeights(height, srcHeight)
                 .async { h ->
-                    ByteArrayOutputStream().use { bos ->
-                        val splitImage = source.getSubimage(0, h, srcWidth, height.coerceAtMost(srcHeight - h))
-                        ImageIO.write(splitImage, format.name, bos)
-                        bos.toByteArray()
-                    }
+                    source
+                        .getSubimage(0, h, srcWidth, height.coerceAtMost(srcHeight - h))
+                        .toByteArray(format.ioName)
                 }
                 .collect {
                     send(it)
@@ -127,6 +131,7 @@ class ImageSplitter private constructor(val defaultMaxHeight: Int) {
      * @param splitHeight   분할할 이미지의 Height (기본: [defaultMaxHeight])
      * @param writer        이미지를 변환할 Writer (기본: [SuspendJpegWriter.Default])
      * @return 분할된 이미지 정보의 Flow
+     * @throws IllegalArgumentException 입력을 이미지로 decode할 수 없거나 [format]용 ImageIO writer가 없는 경우
      */
     fun splitAndCompress(
         input: InputStream,
