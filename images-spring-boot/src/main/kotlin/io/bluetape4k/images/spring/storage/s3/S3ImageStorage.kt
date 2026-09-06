@@ -16,6 +16,8 @@ import io.bluetape4k.logging.debug
 import io.bluetape4k.support.requireNotBlank
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.flow
@@ -217,12 +219,14 @@ class S3ImageStorage @JvmOverloads constructor(
             } catch (e: Throwable) {
                 throw e.toImageStorageException(key)
             }
+            val coroutineContext = currentCoroutineContext()
             try {
                 destination.writeAtomically { output ->
                     val actualSize = resource.getInputStream().use { input ->
                         copyWithLimit(input, output, key)
                     }
                     validateSnapshotSize(key, metadata.sizeBytes, actualSize)
+                    coroutineContext.ensureActive()
                 }
             } catch (e: CancellationException) {
                 throw e
