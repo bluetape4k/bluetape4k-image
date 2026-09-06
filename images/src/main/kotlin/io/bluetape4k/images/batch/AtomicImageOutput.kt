@@ -1,14 +1,11 @@
 package io.bluetape4k.images.batch
 
+import io.bluetape4k.io.writeAtomically
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
 import java.io.OutputStream
-import java.nio.file.Files
 import java.nio.file.Path
-import java.nio.file.StandardCopyOption.ATOMIC_MOVE
-import java.nio.file.StandardCopyOption.REPLACE_EXISTING
-import java.util.concurrent.atomic.AtomicReference
 import kotlin.coroutines.CoroutineContext
 
 /**
@@ -22,35 +19,10 @@ internal suspend fun writeAtomically(
     output: Path,
     ioDispatcher: CoroutineContext,
     writer: (OutputStream) -> Unit,
-    deleteTemporary: (Path) -> Unit = { path -> Files.deleteIfExists(path) },
-): Long {
-    val cleanupFailure = AtomicReference<Throwable?>()
-    try {
-        val result = withContext(ioDispatcher) {
-            val parent = output.parent ?: Path.of(".").toAbsolutePath().normalize()
-            val fileName = output.fileName?.toString()?.takeIf(String::isNotBlank)
-                ?: throw IllegalArgumentException("출력 파일명을 확인할 수 없습니다: $output")
-            Files.createDirectories(parent)
-            val temporary = Files.createTempFile(parent, ".$fileName.", ".tmp")
-
-            try {
-                Files.newOutputStream(temporary).use(writer)
-                currentCoroutineContext().ensureActive()
-                Files.move(temporary, output, ATOMIC_MOVE, REPLACE_EXISTING)
-                Files.size(output)
-            } finally {
-                try {
-                    deleteTemporary(temporary)
-                } catch (error: Throwable) {
-                    cleanupFailure.set(error)
-                }
-            }
-        }
-
-        cleanupFailure.get()?.let { throw it }
-        return result
-    } catch (error: Throwable) {
-        cleanupFailure.get()?.takeUnless { it === error }?.let(error::addSuppressed)
-        throw error
+): Long = withContext(ioDispatcher) {
+    val coroutineContext = currentCoroutineContext()
+    output.writeAtomically { stream ->
+        writer(stream)
+        coroutineContext.ensureActive()
     }
 }

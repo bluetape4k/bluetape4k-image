@@ -40,8 +40,10 @@ class S3ImageStoragePathContractTest : AbstractImageStoragePathContractTest() {
     override fun stagedArtifacts(): List<Path> =
         Files.walk(contractDir).use { paths ->
             paths.filter { path ->
-                path.fileName.toString().contains(".s3-upload") ||
-                    path.fileName.toString().contains(".download")
+                val fileName = path.fileName.toString()
+                fileName.contains(".s3-upload") ||
+                    fileName.contains(".download") ||
+                    fileName.endsWith(".tmp")
             }.toList()
         }
 

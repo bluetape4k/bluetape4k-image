@@ -2,6 +2,7 @@ package io.bluetape4k.images.spring.storage.s3
 
 import io.bluetape4k.aws.spring.s3.S3Operations
 import io.bluetape4k.aws.spring.s3.S3ObjectMetadata as AwsS3ObjectMetadata
+import io.bluetape4k.io.writeAtomically
 import io.bluetape4k.images.spring.ImageObjectKey
 import io.bluetape4k.images.spring.ImageObjectMetadata
 import io.bluetape4k.images.spring.ImageStorageException
@@ -15,6 +16,8 @@ import io.bluetape4k.logging.debug
 import io.bluetape4k.support.requireNotBlank
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.flow
@@ -31,7 +34,6 @@ import java.nio.file.Files
 import java.nio.file.LinkOption
 import java.nio.file.NoSuchFileException
 import java.nio.file.Path
-import java.nio.file.StandardCopyOption
 import java.nio.file.StandardOpenOption
 import java.time.Instant
 import kotlin.jvm.JvmOverloads
@@ -217,28 +219,18 @@ class S3ImageStorage @JvmOverloads constructor(
             } catch (e: Throwable) {
                 throw e.toImageStorageException(key)
             }
-            val destinationParent = destination.toAbsolutePath().parent ?: Path.of(".").toAbsolutePath()
-            var staged: Path? = null
+            val coroutineContext = currentCoroutineContext()
             try {
-                Files.createDirectories(destinationParent)
-                staged = Files.createTempFile(destinationParent, ".${destination.fileName}.", ".download")
-                val actualSize = resource.getInputStream().use { input ->
-                    Files.newOutputStream(staged).use { output ->
+                destination.writeAtomically { output ->
+                    val actualSize = resource.getInputStream().use { input ->
                         copyWithLimit(input, output, key)
                     }
+                    validateSnapshotSize(key, metadata.sizeBytes, actualSize)
+                    coroutineContext.ensureActive()
                 }
-                validateSnapshotSize(key, metadata.sizeBytes, actualSize)
-                Files.move(
-                    staged,
-                    destination.toAbsolutePath(),
-                    StandardCopyOption.ATOMIC_MOVE,
-                    StandardCopyOption.REPLACE_EXISTING,
-                )
             } catch (e: CancellationException) {
-                staged?.let(::deletePartialQuietly)
                 throw e
             } catch (e: Throwable) {
-                staged?.let(::deletePartialQuietly)
                 throw e.toImageStorageException(key)
             }
         }

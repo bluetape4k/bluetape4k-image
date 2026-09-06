@@ -22,6 +22,9 @@ import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.async
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -255,9 +258,7 @@ class S3ImageStorageTest {
         }
 
         Files.readAllBytes(destination).contentEquals(original).shouldBeEqualTo(true)
-        Files.list(tempDir).use { paths ->
-            paths.noneMatch { it.fileName.toString().contains(".download") }.shouldBeEqualTo(true)
-        }
+        assertNoAtomicWriteStagedFiles(destination)
         coVerify(exactly = 1) { operations.headObject(bucket = bucket, key = objectKey) }
         verify(exactly = 1) { operations.resource(bucket, objectKey) }
         verify(exactly = 1) { resource.getInputStream() }
@@ -380,10 +381,61 @@ class S3ImageStorageTest {
         }
 
         Files.readAllBytes(destination).contentEquals(original).shouldBeEqualTo(true)
+        assertNoAtomicWriteStagedFiles(destination)
         coVerify(exactly = 1) { operations.headObject(bucket = bucket, key = objectKey) }
         verify(exactly = 1) { operations.resource(bucket, objectKey) }
         verify(exactly = 1) { resource.getInputStream() }
         confirmVerified(operations, resource)
+    }
+
+    @Test
+    fun `path download preserves destination when job is cancelled before commit`() = runTest {
+        val destination = Files.createTempFile("s3-image-storage-cancel-before-commit", ".jpg")
+        val original = "existing".toByteArray()
+        Files.write(destination, original)
+        val resource = mockk<S3Resource>()
+        lateinit var download: Deferred<Unit>
+        var cancelled = false
+        val cancellingInput = object : ByteArrayInputStream(ByteArray(4)) {
+            override fun read(buffer: ByteArray, offset: Int, length: Int): Int =
+                super.read(buffer, offset, length).also { count ->
+                    if (count < 0 && !cancelled) {
+                        cancelled = true
+                        download.cancel(CancellationException("cancelled before commit"))
+                    }
+                }
+        }
+        coEvery {
+            operations.headObject(bucket = bucket, key = objectKey)
+        } returns S3ObjectMetadata(sizeBytes = 4L)
+        every { operations.resource(bucket, objectKey) } returns resource
+        every { resource.getInputStream() } returns cancellingInput
+
+        download = async(start = CoroutineStart.LAZY) {
+            storage.download(key, destination)
+        }
+        download.start()
+
+        assertFailsWith<CancellationException> {
+            download.await()
+        }
+
+        Files.readAllBytes(destination).contentEquals(original).shouldBeEqualTo(true)
+        assertNoAtomicWriteStagedFiles(destination)
+        coVerify(exactly = 1) { operations.headObject(bucket = bucket, key = objectKey) }
+        verify(exactly = 1) { operations.resource(bucket, objectKey) }
+        verify(exactly = 1) { resource.getInputStream() }
+        confirmVerified(operations, resource)
+    }
+
+    private fun assertNoAtomicWriteStagedFiles(target: Path) {
+        val stagedPrefix = ".${target.fileName}."
+        Files.list(target.parent).use { paths ->
+            paths.noneMatch { path ->
+                val fileName = path.fileName.toString()
+                fileName.startsWith(stagedPrefix) && fileName.endsWith(".tmp")
+            }.shouldBeEqualTo(true)
+        }
     }
 
     private fun verifyHeadPrecheck() {
