@@ -11,6 +11,7 @@ from paddle_ocr_producer_lib.registry import (
     collect_package_pages,
     retry_delays,
     run_with_retry,
+    select_dispatched_run,
     select_exact_version,
     validate_anonymous_environment,
 )
@@ -25,6 +26,29 @@ def package_version(version_id: int, tag: str) -> dict[str, object]:
 
 
 class RegistryContractTest(unittest.TestCase):
+    def test_dispatched_run_selection_is_new_unique_and_exact(self) -> None:
+        before = {40, 41}
+        run = {
+            "databaseId": 42,
+            "runAttempt": 1,
+            "headSha": "a" * 40,
+            "workflowPath": ".github/workflows/paddleocr-producer.yml",
+            "event": "workflow_dispatch",
+        }
+        self.assertEqual(
+            select_dispatched_run(
+                before, [[run]], expected_head="a" * 40,
+                expected_workflow=".github/workflows/paddleocr-producer.yml",
+            ),
+            run,
+        )
+        for pages in ([], [[run, {**run, "databaseId": 43}]], [[{**run, "runAttempt": 2}]]):
+            with self.subTest(pages=pages), self.assertRaises(ProducerValidationError):
+                select_dispatched_run(
+                    before, pages, expected_head="a" * 40,
+                    expected_workflow=".github/workflows/paddleocr-producer.yml",
+                )
+
     def test_two_matching_versions_are_rejected_across_pages(self) -> None:
         pages = [[package_version(1, "image-44.2")], [package_version(2, "image-44.2")]]
         with self.assertRaisesRegex(ProducerValidationError, "ambiguous package state"):

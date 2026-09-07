@@ -227,6 +227,50 @@ def select_exact_version(
     return matches[0] if matches else None
 
 
+def select_dispatched_run(
+    before_ids: set[int],
+    pages: Sequence[Sequence[Mapping[str, Any]]],
+    *,
+    expected_head: str,
+    expected_workflow: str,
+) -> dict[str, Any]:
+    """Select exactly one new first-attempt workflow-dispatch run at the expected head."""
+
+    if any(type(run_id) is not int or run_id <= 0 for run_id in before_ids):
+        raise ProducerValidationError("before run IDs must be positive integers")
+    if re.fullmatch(r"[0-9a-f]{40}", expected_head) is None:
+        raise ProducerValidationError("expected head must be a full commit SHA")
+    if expected_workflow != ".github/workflows/paddleocr-producer.yml":
+        raise ProducerValidationError("expected workflow path is invalid")
+    matches: list[dict[str, Any]] = []
+    seen: set[int] = set()
+    required = {"databaseId", "runAttempt", "headSha", "workflowPath", "event"}
+    for page in pages:
+        if not isinstance(page, Sequence):
+            raise ProducerValidationError("workflow run page must be a sequence")
+        for raw in page:
+            run = exact_object(raw, required=required)
+            run_id = run["databaseId"]
+            if type(run_id) is not int or run_id <= 0 or run_id in seen:
+                raise ProducerValidationError("workflow run ID is invalid or duplicate")
+            seen.add(run_id)
+            if run_id in before_ids:
+                continue
+            if (
+                run["event"] == "workflow_dispatch"
+                and run["headSha"] == expected_head
+                and run["workflowPath"] == expected_workflow
+            ):
+                if run["runAttempt"] != 1:
+                    raise ProducerValidationError(
+                        "same-head manual rerun is not a new dispatch"
+                    )
+                matches.append(run)
+    if len(matches) != 1:
+        raise ProducerValidationError("new dispatched run is absent or ambiguous")
+    return matches[0]
+
+
 def validate_anonymous_environment(
     environment: Mapping[str, str],
     *,

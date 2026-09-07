@@ -36,7 +36,9 @@ EXPECTED_TIMEOUTS = {
     "consumer-verify-private": 15,
     "public-visibility-readback": 15,
     "consumer-verify-public": 15,
+    "reconcile-readback": 15,
     "emergency-deny-attest": 15,
+    "cleanup-aggregate": 15,
     "release-readback-finalize": 15,
 }
 
@@ -68,10 +70,14 @@ EXPECTED_PERMISSIONS = {
     "consumer-verify-private": {"contents": "read", "packages": "read"},
     "public-visibility-readback": {"contents": "read", "packages": "read"},
     "consumer-verify-public": READ,
+    "reconcile-readback": {
+        "contents": "read", "packages": "read", "attestations": "read",
+    },
     "emergency-deny-attest": {
         "contents": "read", "actions": "read",
         "attestations": "write", "id-token": "write",
     },
+    "cleanup-aggregate": {"contents": "read", "actions": "read"},
     "release-readback-finalize": {
         "contents": "read", "actions": "read", "packages": "read",
         "attestations": "read",
@@ -124,10 +130,14 @@ def expanded_steps(block: str, shared_steps: str) -> str:
         "- &cleanup-step\n        name: Merge cleanup aggregate": "- name: Merge cleanup aggregate",
         "- &summary-step\n        name: Write step summary": "- name: Write step summary",
         "- &terminal-step\n        name: Emit terminal result": "- name: Emit terminal result",
+        "- &cleanup-fragment-step\n        name: Write cleanup fragment": "- name: Write cleanup fragment",
+        "- &cleanup-upload-step\n        name: Upload cleanup fragment": "- name: Upload cleanup fragment",
         "- *trust-step": "- name: Validate trust context",
         "- *cleanup-step": "- name: Merge cleanup aggregate",
         "- *summary-step": "- name: Write step summary",
         "- *terminal-step": "- name: Emit terminal result",
+        "- *cleanup-fragment-step": "- name: Write cleanup fragment",
+        "- *cleanup-upload-step": "- name: Upload cleanup fragment\n          cleanup-fragment-${{ env.ATTEMPT_ID }}-${{ env.PRODUCER_JOB }}\n          retention-days: 90",
     }
     for alias, expanded in aliases.items():
         block = block.replace(alias, expanded)
@@ -187,6 +197,8 @@ class ProducerWorkflowContractTest(unittest.TestCase):
         shared_steps = self.blocks["validation"]
         for job, block in self.blocks.items():
             with self.subTest(job=job):
+                if job in {"cleanup-aggregate", "release-readback-finalize"}:
+                    continue
                 steps = expanded_steps(block, shared_steps)
                 self.assertIn("- name: Validate trust context", steps)
                 cleanup = steps.index("- name: Merge cleanup aggregate")
@@ -204,6 +216,48 @@ class ProducerWorkflowContractTest(unittest.TestCase):
             validation.index("- name: Execute producer stage"),
         )
         self.assertNotIn("secrets.", self.workflow)
+
+    def test_finalizer_reconcile_and_quarantine_order_is_fail_closed(self) -> None:
+        stages = set(EXPECTED_TIMEOUTS) - {"cleanup-aggregate", "release-readback-finalize"}
+        shared = self.blocks["validation"]
+        self.assertRegex(shared, r"(?s)name: Write cleanup fragment.*?if: \$\{\{ always\(\) \}\}")
+        self.assertRegex(shared, r"(?s)name: Upload cleanup fragment.*?if: \$\{\{ always\(\) \}\}")
+        for job in stages:
+            with self.subTest(job=job):
+                steps = expanded_steps(self.blocks[job], shared)
+                self.assertIn("cleanup-fragment-${{ env.ATTEMPT_ID }}-${{ env.PRODUCER_JOB }}", steps)
+                self.assertIn("retention-days: 90", steps)
+        cleanup = self.blocks["cleanup-aggregate"]
+        self.assertEqual(job_needs(cleanup), stages)
+        self.assertIn("if: ${{ always() }}", cleanup)
+        self.assertIn("merge-cleanup", cleanup)
+        self.assertIn("pattern: cleanup-fragment-${{ env.ATTEMPT_ID }}-*", cleanup)
+        finalizer = self.blocks["release-readback-finalize"]
+        self.assertEqual(job_needs(finalizer), {
+            "consumer-verify-public", "reconcile-readback",
+            "emergency-deny-attest", "cleanup-aggregate",
+        })
+        self.assertIn("if: ${{ always() }}", finalizer)
+        self.assertLess(finalizer.index("download-artifact@"), finalizer.index(" finalize-run "))
+        emergency = self.blocks["emergency-deny-attest"]
+        self.assertEqual(job_needs(emergency), {"consumer-verify-public"})
+        self.assertIn("QUARANTINE_PENDING", emergency)
+        self.assertIn("verify-emergency-receipt", emergency)
+        reconcile = self.blocks["reconcile-readback"]
+        self.assertEqual(job_needs(reconcile), {"validation"})
+        self.assertIn("inputs.mode == 'RECONCILE'", reconcile)
+        for field in (
+            "resumeAttemptId", "expectedPriorStatus", "expectedInputLockSha256",
+            "expectedStagingDigest", "expectedReleaseDigest", "expectedEvidenceDigest",
+        ):
+            self.assertIn(f"inputs.{field}", reconcile)
+        for forbidden in ("docker build", "oras push", "oras cp", "packages: write", "id-token: write"):
+            self.assertNotIn(forbidden, reconcile.lower())
+        for job in ("staging", "source-repro-check", "image-build", "staging-push", "staging-attest", "release-promotion", "release-attest", "release-evidence-push"):
+            self.assertIn("inputs.mode == 'PRODUCE'", self.blocks[job], job)
+        self.assertNotIn("issues: write", self.workflow)
+        for forbidden in ("visibility public", "visibility private", "delete-package-version", "execute-known-good-rollback"):
+            self.assertNotIn(forbidden, self.workflow)
 
     def test_unprivileged_build_and_private_push_use_same_run_artifacts(self) -> None:
         self.assertEqual(

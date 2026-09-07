@@ -63,7 +63,7 @@ jobs:
       PRODUCER_JOB: validation
     permissions:
       contents: read
-    steps: &producer-steps
+    steps:
       - &checkout-step
         name: Checkout exact dispatch head
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
@@ -113,11 +113,12 @@ jobs:
             --expected-release-digest "$EXPECTED_RELEASE_DIGEST" \
             --expected-evidence-digest "$EXPECTED_EVIDENCE_DIGEST"
       - name: Reject duplicate successful input lock
-        if: ${{ env.PRODUCER_JOB == 'validation' }}
+        if: ${{ env.PRODUCER_JOB == 'validation' && inputs.mode == 'PRODUCE' }}
         run: |
           echo "중복 PRODUCER_PASS 검사는 publish 구현 전까지 fail-closed 상태입니다."
           exit 10
       - name: Execute producer stage
+        if: ${{ env.PRODUCER_JOB != 'validation' || inputs.mode == 'PRODUCE' }}
         run: |
           echo "$PRODUCER_JOB stage는 후속 구현 task가 완료될 때까지 publish하지 않습니다."
           exit 10
@@ -138,7 +139,43 @@ jobs:
               shutil.rmtree(root)
           PY
           mkdir -p .producer-state
-          printf '{"job":"%s","status":"PENDING"}' "$PRODUCER_JOB" > ".producer-state/cleanup-$PRODUCER_JOB.json"
+          python3 - <<'PY'
+          import json
+          import os
+          from datetime import datetime, timezone
+          from pathlib import Path
+          now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+          fragment = {
+              "schemaVersion": 1,
+              "attemptId": os.environ["ATTEMPT_ID"],
+              "jobId": os.environ["PRODUCER_JOB"],
+              "originalProducerStatus": "FAILED",
+              "startedAt": now,
+              "finishedAt": now,
+              "targets": [],
+          }
+          Path(f".producer-state/cleanup-{os.environ['PRODUCER_JOB']}.json").write_text(
+              json.dumps(fragment, separators=(",", ":"), sort_keys=True),
+              encoding="utf-8",
+          )
+          PY
+      - &cleanup-fragment-step
+        name: Write cleanup fragment
+        if: ${{ always() }}
+        run: |
+          mkdir -p .producer-state/cleanup-fragments
+          cp ".producer-state/cleanup-$PRODUCER_JOB.json"             ".producer-state/cleanup-fragments/$PRODUCER_JOB.json"
+      - &cleanup-upload-step
+        name: Upload cleanup fragment
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: cleanup-fragment-${{ env.ATTEMPT_ID }}-${{ env.PRODUCER_JOB }}
+          path: .producer-state/cleanup-fragments/${{ env.PRODUCER_JOB }}.json
+          if-no-files-found: error
+          include-hidden-files: false
+          compression-level: 0
+          retention-days: 90
       - &summary-step
         name: Write step summary
         if: ${{ always() }}
@@ -225,6 +262,8 @@ jobs:
           compression-level: 0
           retention-days: 2
       - *cleanup-step
+      - *cleanup-fragment-step
+      - *cleanup-upload-step
       - *summary-step
       - *terminal-step
   source-repro-check:
@@ -284,6 +323,8 @@ jobs:
           compression-level: 0
           retention-days: 2
       - *cleanup-step
+      - *cleanup-fragment-step
+      - *cleanup-upload-step
       - *summary-step
       - *terminal-step
   image-build:
@@ -429,6 +470,8 @@ jobs:
           compression-level: 0
           retention-days: 2
       - *cleanup-step
+      - *cleanup-fragment-step
+      - *cleanup-upload-step
       - *summary-step
       - *terminal-step
   staging-push:
@@ -517,6 +560,8 @@ jobs:
             "private"
           printf 'staging-digest=%s\n' "$STAGING_DIGEST" >> "$GITHUB_OUTPUT"
       - *cleanup-step
+      - *cleanup-fragment-step
+      - *cleanup-upload-step
       - *summary-step
       - *terminal-step
   staging-attest:
@@ -607,6 +652,8 @@ jobs:
           compression-level: 0
           retention-days: 2
       - *cleanup-step
+      - *cleanup-fragment-step
+      - *cleanup-upload-step
       - *summary-step
       - *terminal-step
   staging-readback:
@@ -614,7 +661,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     needs: [staging-attest]
-    if: ${{ always() && !cancelled() }}
+    if: ${{ always() && inputs.mode == 'PRODUCE' }}
     env:
       PRODUCER_JOB: staging-readback
     outputs:
@@ -719,6 +766,8 @@ jobs:
           done
           printf 'subject-digest=%s\n' "$SUBJECT_DIGEST" >> "$GITHUB_OUTPUT"
       - *cleanup-step
+      - *cleanup-fragment-step
+      - *cleanup-upload-step
       - *summary-step
       - *terminal-step
   release-promotion:
@@ -801,6 +850,8 @@ jobs:
           test "$(gh api /orgs/bluetape4k/packages/container/paddleocr-service --jq .visibility)" = private
           printf 'release-digest=%s\n' "$RELEASE_DIGEST" >> "$GITHUB_OUTPUT"
       - *cleanup-step
+      - *cleanup-fragment-step
+      - *cleanup-upload-step
       - *summary-step
       - *terminal-step
   release-attest:
@@ -870,6 +921,8 @@ jobs:
           compression-level: 0
           retention-days: 3
       - *cleanup-step
+      - *cleanup-fragment-step
+      - *cleanup-upload-step
       - *summary-step
       - *terminal-step
   release-readback:
@@ -877,7 +930,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     needs: [release-attest]
-    if: ${{ always() && !cancelled() }}
+    if: ${{ always() && inputs.mode == 'PRODUCE' }}
     env:
       PRODUCER_JOB: release-readback
     outputs:
@@ -945,6 +998,8 @@ jobs:
           verify_release sbom.bundle.jsonl https://spdx.dev/Document/v2.3 \
             .producer-state/release-sbom-readback.json
       - *cleanup-step
+      - *cleanup-fragment-step
+      - *cleanup-upload-step
       - *summary-step
       - *terminal-step
   release-evidence-push:
@@ -1061,6 +1116,8 @@ jobs:
           test "$(gh api /orgs/bluetape4k/packages/container/paddleocr-service --jq .visibility)" = private
           printf 'evidence-digest=%s\n' "$EVIDENCE_DIGEST" >> "$GITHUB_OUTPUT"
       - *cleanup-step
+      - *cleanup-fragment-step
+      - *cleanup-upload-step
       - *summary-step
       - *terminal-step
   consumer-verify-private:
@@ -1110,6 +1167,8 @@ jobs:
           test "$(jq -er '.subject.digest' .producer-state/private-evidence-manifest.json)" = \
             "${{ needs.release-evidence-push.outputs.release-digest }}"
       - *cleanup-step
+      - *cleanup-fragment-step
+      - *cleanup-upload-step
       - *summary-step
       - *terminal-step
   public-visibility-readback:
@@ -1135,6 +1194,8 @@ jobs:
         run: |
           test "$(gh api /orgs/bluetape4k/packages/container/paddleocr-service --jq .visibility)" = public
       - *cleanup-step
+      - *cleanup-fragment-step
+      - *cleanup-upload-step
       - *summary-step
       - *terminal-step
   consumer-verify-public:
@@ -1176,14 +1237,68 @@ jobs:
               --operation-timeout-seconds 30 \
               --materialization-timeout-seconds 600
       - *cleanup-step
+      - *cleanup-fragment-step
+      - *cleanup-upload-step
+      - *summary-step
+      - *terminal-step
+  reconcile-readback:
+    name: PaddleOCR producer / reconcile-readback
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    needs: [validation]
+    if: ${{ inputs.mode == 'RECONCILE' }}
+    env:
+      PRODUCER_JOB: reconcile-readback
+      GH_TOKEN: ${{ github.token }}
+    permissions:
+      contents: read
+      packages: read
+      attestations: read
+    steps:
+      - *checkout-step
+      - *python-step
+      - *trust-step
+      - name: Execute producer stage - reconcile readback only
+        env:
+          RESUME_ATTEMPT_ID: ${{ inputs.resumeAttemptId }}
+          EXPECTED_PRIOR_STATUS: ${{ inputs.expectedPriorStatus }}
+          EXPECTED_INPUT_LOCK_SHA256: ${{ inputs.expectedInputLockSha256 }}
+          EXPECTED_STAGING_DIGEST: ${{ inputs.expectedStagingDigest }}
+          EXPECTED_RELEASE_DIGEST: ${{ inputs.expectedReleaseDigest }}
+          EXPECTED_EVIDENCE_DIGEST: ${{ inputs.expectedEvidenceDigest }}
+        run: |
+          set -euo pipefail
+          python3 scripts/research/paddle_ocr_producer.py validate-dispatch \
+            --mode RECONCILE \
+            --resume-attempt-id "$RESUME_ATTEMPT_ID" \
+            --expected-prior-status "$EXPECTED_PRIOR_STATUS" \
+            --expected-input-lock-sha256 "$EXPECTED_INPUT_LOCK_SHA256" \
+            --expected-staging-digest "$EXPECTED_STAGING_DIGEST" \
+            --expected-release-digest "$EXPECTED_RELEASE_DIGEST" \
+            --expected-evidence-digest "$EXPECTED_EVIDENCE_DIGEST"
+          RESUME_RUN_ID=${RESUME_ATTEMPT_ID%%.*}
+          RESUME_RUN_ATTEMPT=${RESUME_ATTEMPT_ID##*.}
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$RESUME_RUN_ID" \
+            > .producer-state/prior-run.json
+          test "$(jq -er '.run_attempt' .producer-state/prior-run.json)" = "$RESUME_RUN_ATTEMPT"
+          test "$(jq -er '.path' .producer-state/prior-run.json)" = ".github/workflows/paddleocr-producer.yml"
+          test "$(jq -er '.event' .producer-state/prior-run.json)" = workflow_dispatch
+          gh api /orgs/bluetape4k/packages/container/paddleocr-service-staging \
+            > .producer-state/staging-package.json
+          gh api /orgs/bluetape4k/packages/container/paddleocr-service \
+            > .producer-state/release-package.json
+          echo 'RECONCILE performs read-back and compensation planning only.'
+      - *cleanup-step
+      - *cleanup-fragment-step
+      - *cleanup-upload-step
       - *summary-step
       - *terminal-step
   emergency-deny-attest:
     name: PaddleOCR producer / emergency-deny-attest
     runs-on: ubuntu-24.04
     timeout-minutes: 15
-    needs: [staging-readback]
-    if: ${{ always() && !cancelled() }}
+    needs: [consumer-verify-public]
+    if: ${{ always() && !cancelled() && needs.consumer-verify-public.result == 'failure' }}
     environment: paddleocr-producer
     env:
       PRODUCER_JOB: emergency-deny-attest
@@ -1192,13 +1307,75 @@ jobs:
       actions: read
       attestations: write
       id-token: write
-    steps: *producer-steps
+    steps:
+      - *checkout-step
+      - *python-step
+      - *trust-step
+      - name: Execute producer stage - record QUARANTINE_PENDING and verify emergency receipt
+        run: |
+          set -euo pipefail
+          echo 'QUARANTINE_PENDING: protected develop revocation and signed receipt are required.'
+          test -s .producer-state/emergency-receipt.json
+          test -s .producer-state/current-revocations.json
+          python3 scripts/research/paddle_ocr_producer.py verify-emergency-receipt \
+            --receipt .producer-state/emergency-receipt.json \
+            --revocations .producer-state/current-revocations.json
+      - *cleanup-step
+      - *cleanup-fragment-step
+      - *cleanup-upload-step
+      - *summary-step
+      - *terminal-step
+  cleanup-aggregate:
+    name: PaddleOCR producer / cleanup-aggregate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    needs: [validation, staging, source-repro-check, image-build, staging-push, staging-attest, staging-readback, release-promotion, release-attest, release-readback, release-evidence-push, consumer-verify-private, public-visibility-readback, consumer-verify-public, reconcile-readback, emergency-deny-attest]
+    if: ${{ always() }}
+    env:
+      PRODUCER_JOB: cleanup-aggregate
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - *checkout-step
+      - *python-step
+      - name: Download cleanup fragments
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          pattern: cleanup-fragment-${{ env.ATTEMPT_ID }}-*
+          path: .producer-state/cleanup-fragments
+          merge-multiple: true
+      - name: Merge cleanup fragments
+        run: |
+          set -euo pipefail
+          mapfile -t FRAGMENTS < <(find .producer-state/cleanup-fragments -type f -name '*.json' -print | sort)
+          test "${#FRAGMENTS[@]}" -gt 0
+          ARGS=()
+          for fragment in "${FRAGMENTS[@]}"; do
+            job=$(basename "$fragment" .json)
+            ARGS+=(--started-job "$job" --fragment "$fragment")
+          done
+          python3 scripts/research/paddle_ocr_producer.py merge-cleanup \
+            --attempt-id "$ATTEMPT_ID" \
+            --original-status FAILED \
+            "${ARGS[@]}" \
+            --merged-at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            --output .producer-state/cleanup.json
+      - name: Upload cleanup aggregate
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: paddleocr-cleanup-${{ env.ATTEMPT_ID }}
+          path: .producer-state/cleanup.json
+          if-no-files-found: error
+          include-hidden-files: false
+          compression-level: 0
+          retention-days: 90
   release-readback-finalize:
     name: PaddleOCR producer / release-readback-finalize
     runs-on: ubuntu-24.04
     timeout-minutes: 15
-    needs: [consumer-verify-public, emergency-deny-attest]
-    if: ${{ always() && !cancelled() }}
+    needs: [consumer-verify-public, reconcile-readback, emergency-deny-attest, cleanup-aggregate]
+    if: ${{ always() }}
     env:
       PRODUCER_JOB: release-readback-finalize
     permissions:
@@ -1206,4 +1383,46 @@ jobs:
       actions: read
       packages: read
       attestations: read
-    steps: *producer-steps
+    steps:
+      - *checkout-step
+      - *python-step
+      - *trust-step
+      - name: Download cleanup aggregate
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          name: paddleocr-cleanup-${{ env.ATTEMPT_ID }}
+          path: .producer-state/finalizer
+      - name: Build immutable finalizer input
+        env:
+          PUBLIC_RESULT: ${{ needs.consumer-verify-public.result }}
+          CLEANUP_RESULT: ${{ needs.cleanup-aggregate.result }}
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+          passed = os.environ["PUBLIC_RESULT"] == "success" and os.environ["CLEANUP_RESULT"] == "success"
+          document = {
+              "producerStatus": "PRODUCER_PASS" if passed else "INTERRUPTED",
+              "lastCompletedStage": "PUBLIC_EVIDENCE" if os.environ["PUBLIC_RESULT"] != "skipped" else "NONE",
+              "runConclusion": "success" if passed else "timed_out",
+          }
+          Path(".producer-state/finalizer/input.json").write_text(
+              json.dumps(document, separators=(",", ":"), sort_keys=True), encoding="utf-8"
+          )
+          PY
+      - name: Finalize terminal result
+        run: |
+          python3 scripts/research/paddle_ocr_producer.py finalize-run \
+            --input .producer-state/finalizer/input.json \
+            --cleanup .producer-state/finalizer/cleanup.json \
+            --output .producer-state/finalizer/producer-result.json
+      - name: Upload terminal result
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: paddleocr-result-${{ env.ATTEMPT_ID }}
+          path: .producer-state/finalizer/producer-result.json
+          if-no-files-found: error
+          include-hidden-files: false
+          compression-level: 0
+          retention-days: 90

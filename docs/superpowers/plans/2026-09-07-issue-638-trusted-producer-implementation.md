@@ -1117,7 +1117,7 @@ git commit -m 'ci: 동일 digest의 attestation과 public evidence를 검증한�
 - Modify: `scripts/research/test_paddle_ocr_producer.py`
 - Modify: `scripts/research/test_paddle_ocr_producer_registry.py`
 
-- [ ] **Step 1: cancelled/interrupted/ambiguous/quarantine RED test를 추가한다.**
+- [x] **Step 1: cancelled/interrupted/ambiguous/quarantine RED test를 추가한다.**
 
 ```python
 def test_cancelled_attempt_cannot_become_pass(self) -> None:
@@ -1130,7 +1130,7 @@ def test_release_without_staging_is_rejected(self) -> None:
     self.assertEqual(reconcile_remote_state(remote)["producerStatus"], "REJECTED")
 ```
 
-- [ ] **Step 2: RED를 확인한다.**
+- [x] **Step 2: RED를 확인한다.**
 
 ```bash
 python3 scripts/research/test_paddle_ocr_producer.py -v
@@ -1140,7 +1140,7 @@ python3 .github/scripts/test-paddleocr-producer-workflow.py
 
 Expected: finalizer/reconcile/emergency assertions가 실패한다.
 
-- [ ] **Step 3: `always()` finalizer와 cleanup aggregation을 구현한다.**
+- [x] **Step 3: `always()` finalizer와 cleanup aggregation을 구현한다.**
 
 finalizer는 started job fragments, run conclusion, remote package/evidence, visibility,
 attestation과 revocation commit을 다시 읽는다. required hash는 모든 terminal path에서
@@ -1149,7 +1149,7 @@ runner loss의 missing fragment는 `INTERRUPTED`/32와 `cleanupVerified=false`, 
 duplicate fragment는 `REJECTED`/22다. workflow contract는 각 job의 cleanup
 `if: always()`와 fragment upload -> aggregate -> result ordering을 검사한다.
 
-- [ ] **Step 4: RECONCILE과 emergency deny path를 구현한다.**
+- [x] **Step 4: RECONCILE과 emergency deny path를 구현한다.**
 
 workflow/CLI는 `resumeAttemptId`, `expectedPriorStatus`, `expectedInputLockSha256`,
 `expectedStagingDigest`, `expectedReleaseDigest`, `expectedEvidenceDigest` 여섯 field를 모두
@@ -1188,7 +1188,7 @@ workflow 기본 경로에서는 호출하지 않는다. failure ordering fixture
 revocation merge, emergency receipt, known-good selection, downstream notification,
 owner acknowledgement와 closure 순서를 검증한다.
 
-- [ ] **Step 5: lifecycle/workflow를 GREEN으로 만들고 commit한다.**
+- [x] **Step 5: lifecycle/workflow를 GREEN으로 만들고 commit한다.**
 
 ```bash
 python3 scripts/research/test_paddle_ocr_producer.py -v

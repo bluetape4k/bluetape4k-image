@@ -60,9 +60,13 @@ from paddle_ocr_producer_lib.filesystem import (
 )
 from paddle_ocr_producer_lib.lifecycle import (
     STATUS_CONTRACT,
+    acknowledge_incident,
     append_revocations,
     build_producer_result,
+    close_incident,
+    finalize_attempt,
     merge_cleanup_fragments,
+    plan_known_good_rollback,
     validate_attempt,
     validate_cleanup_aggregate,
     validate_cleanup_fragment,
@@ -70,6 +74,7 @@ from paddle_ocr_producer_lib.lifecycle import (
     validate_reconciliation,
     validate_revocations,
 )
+from paddle_ocr_producer_lib.registry import select_dispatched_run
 
 MAX_DOCUMENT_BYTES = 1024 * 1024
 LOGGER = logging.getLogger("paddle_ocr_producer")
@@ -1993,6 +1998,116 @@ def _finalize(args: argparse.Namespace) -> dict[str, Any]:
     )
 
 
+def _finalize_run(args: argparse.Namespace) -> dict[str, Any]:
+    attempt, _ = _load_canonical_document(args.input, contract_error=True)
+    cleanup, cleanup_raw = _load_canonical_document(args.cleanup, contract_error=True)
+    validated_cleanup = validate_cleanup_aggregate(cleanup)
+    if set(attempt) != {"producerStatus", "lastCompletedStage", "runConclusion"}:
+        raise ProducerValidationError("finalizer input has an invalid shape")
+    result = {
+        "schemaVersion": 1,
+        "attemptId": validated_cleanup["attemptId"],
+        **finalize_attempt(
+            attempt,
+            {
+                "cleanupVerified": validated_cleanup["cleanupVerified"],
+                "fragmentsComplete": (
+                    len(validated_cleanup["fragments"])
+                    == len(validated_cleanup["startedJobIds"])
+                ),
+            },
+        ),
+    }
+    result_sha = _atomic_write_new(args.output, jcs_bytes(result))
+    return _success(
+        "finalize-run",
+        {
+            "attemptId": result["attemptId"],
+            "producerStatus": result["producerStatus"],
+            "cleanupSha256": sha256_hex(cleanup_raw),
+            "resultSha256": result_sha,
+        },
+    )
+
+
+def _select_dispatched_run(args: argparse.Namespace) -> dict[str, Any]:
+    before, _ = _load_canonical_document(args.before, contract_error=True)
+    candidates, _ = _load_canonical_document(args.candidates, contract_error=True)
+    if set(before) != {"runIds"} or not isinstance(before["runIds"], list):
+        raise ProducerValidationError("before snapshot has an invalid shape")
+    if set(candidates) != {"pages"} or not isinstance(candidates["pages"], list):
+        raise ProducerValidationError("candidate snapshot has an invalid shape")
+    selected = select_dispatched_run(
+        set(before["runIds"]),
+        candidates["pages"],
+        expected_head=args.expected_head,
+        expected_workflow=args.expected_workflow,
+    )
+    raw = jcs_bytes(selected)
+    digest = _atomic_write_new(args.output, raw)
+    return _success("select-dispatched-run", {**selected, "outputSha256": digest})
+
+
+def _acknowledge_incident(args: argparse.Namespace) -> dict[str, Any]:
+    reconciliation, raw = _load_canonical_document(
+        args.reconciliation, contract_error=True
+    )
+    if sha256_hex(raw) != require_sha256(args.expected_sha256, "expectedSha256"):
+        raise ProducerValidationError("reconciliation SHA-256 differs")
+    incident, _ = _load_canonical_document(args.incident, contract_error=True)
+    if set(incident) != {"incidentUrl", "ownerAcknowledgedAt"}:
+        raise ProducerValidationError("incident acknowledgement has an invalid shape")
+    result = acknowledge_incident(
+        reconciliation, incident["incidentUrl"], incident["ownerAcknowledgedAt"]
+    )
+    digest = _atomic_write_new(args.output, jcs_bytes(result))
+    return _success(
+        "acknowledge-incident",
+        {"incidentUrl": result["incidentUrl"], "reconciliationSha256": digest},
+    )
+
+
+def _close_incident(args: argparse.Namespace) -> dict[str, Any]:
+    reconciliation, raw = _load_canonical_document(
+        args.reconciliation, contract_error=True
+    )
+    if sha256_hex(raw) != require_sha256(args.expected_sha256, "expectedSha256"):
+        raise ProducerValidationError("reconciliation SHA-256 differs")
+    if not all(
+        (
+            args.require_denylist,
+            args.require_visibility,
+            args.require_cleanup,
+            args.require_downstream,
+        )
+    ):
+        raise ProducerValidationError("all incident closure read-backs are required")
+    result = close_incident(reconciliation, args.closed_at)
+    digest = _atomic_write_new(args.output, jcs_bytes(result))
+    return _success(
+        "close-incident",
+        {"incidentUrl": result["incidentUrl"], "reconciliationSha256": digest},
+    )
+
+
+def _plan_known_good_rollback(args: argparse.Namespace) -> dict[str, Any]:
+    candidates, _ = _load_canonical_document(args.candidates, contract_error=True)
+    revocations, _ = _load_canonical_document(args.revocations, contract_error=True)
+    validated = validate_revocations(revocations)
+    if set(candidates) != {"candidates"} or not isinstance(
+        candidates["candidates"], list
+    ):
+        raise ProducerValidationError("rollback candidates have an invalid shape")
+    plan = plan_known_good_rollback(
+        current_digest=args.current_digest,
+        candidates=candidates["candidates"],
+        revoked_digests={entry["digest"] for entry in validated["digests"]},
+        downstream_notified=args.require_downstream_notification,
+    )
+    digest = _atomic_write_new(args.output, jcs_bytes(plan))
+    return _success("plan-known-good-rollback", {**plan, "outputSha256": digest})
+
+
 def _verify_attempt(args: argparse.Namespace) -> dict[str, Any]:
     attempt, _ = _load_canonical_document(args.attempt, contract_error=True)
     evidence, evidence_raw = _load_canonical_document(args.evidence, contract_error=True)
@@ -2660,6 +2775,46 @@ def build_parser() -> StrictArgumentParser:
     finalize.add_argument("--attempt-sha256", required=True)
     finalize.add_argument("--output", type=Path, required=True)
     finalize.set_defaults(handler=_finalize)
+
+    finalize_run = subparsers.add_parser("finalize-run")
+    finalize_run.add_argument("--input", type=Path, required=True)
+    finalize_run.add_argument("--cleanup", type=Path, required=True)
+    finalize_run.add_argument("--output", type=Path, required=True)
+    finalize_run.set_defaults(handler=_finalize_run)
+
+    selected_run = subparsers.add_parser("select-dispatched-run")
+    selected_run.add_argument("--before", type=Path, required=True)
+    selected_run.add_argument("--candidates", type=Path, required=True)
+    selected_run.add_argument("--expected-head", required=True)
+    selected_run.add_argument("--expected-workflow", required=True)
+    selected_run.add_argument("--output", type=Path, required=True)
+    selected_run.set_defaults(handler=_select_dispatched_run)
+
+    acknowledge = subparsers.add_parser("acknowledge-incident")
+    acknowledge.add_argument("--reconciliation", type=Path, required=True)
+    acknowledge.add_argument("--expected-sha256", required=True)
+    acknowledge.add_argument("--incident", type=Path, required=True)
+    acknowledge.add_argument("--output", type=Path, required=True)
+    acknowledge.set_defaults(handler=_acknowledge_incident)
+
+    close = subparsers.add_parser("close-incident")
+    close.add_argument("--reconciliation", type=Path, required=True)
+    close.add_argument("--expected-sha256", required=True)
+    close.add_argument("--closed-at", required=True)
+    close.add_argument("--require-denylist", action="store_true")
+    close.add_argument("--require-visibility", action="store_true")
+    close.add_argument("--require-cleanup", action="store_true")
+    close.add_argument("--require-downstream", action="store_true")
+    close.add_argument("--output", type=Path, required=True)
+    close.set_defaults(handler=_close_incident)
+
+    rollback = subparsers.add_parser("plan-known-good-rollback")
+    rollback.add_argument("--current-digest", required=True)
+    rollback.add_argument("--candidates", type=Path, required=True)
+    rollback.add_argument("--revocations", type=Path, required=True)
+    rollback.add_argument("--require-downstream-notification", action="store_true")
+    rollback.add_argument("--output", type=Path, required=True)
+    rollback.set_defaults(handler=_plan_known_good_rollback)
 
     verify = subparsers.add_parser("verify-attempt")
     verify.add_argument("--attempt", type=Path, required=True)

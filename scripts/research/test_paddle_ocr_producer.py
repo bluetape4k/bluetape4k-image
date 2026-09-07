@@ -43,12 +43,20 @@ from paddle_ocr_producer_lib.filesystem import (
 )
 from paddle_ocr_producer_lib.lifecycle import (
     STATUS_CONTRACT,
+    acknowledge_incident,
     append_revocations,
     apply_cleanup_outcome,
+    close_incident,
+    finalize_attempt,
     initial_revocations,
     merge_cleanup_fragments,
+    plan_known_good_rollback,
+    reconcile_remote_state,
     validate_cleanup_fragment,
     validate_emergency_receipt,
+    validate_failure_order,
+    validate_quarantine_recovery,
+    validate_reconcile_expectations,
     validate_reconciliation,
     validate_revocation_successor,
 )
@@ -1141,6 +1149,20 @@ class ProducerCliTest(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr.decode())
         self.assertTrue(json.loads(cleanup.read_bytes())["cleanupVerified"])
 
+        finalizer_input = self.root / "finalizer-input.json"
+        finalizer_input.write_bytes(jcs_bytes({
+            "producerStatus": "PRODUCER_PASS",
+            "lastCompletedStage": "PUBLIC_EVIDENCE",
+            "runConclusion": "cancelled",
+        }))
+        terminal_result = self.root / "terminal-result.json"
+        result = self._run(
+            "finalize-run", "--input", str(finalizer_input),
+            "--cleanup", str(cleanup), "--output", str(terminal_result),
+        )
+        self.assertEqual(result.returncode, 0, result.stderr.decode())
+        self.assertEqual(json.loads(terminal_result.read_bytes())["producerStatus"], "CANCELLED")
+
         reconciliation = self.root / "reconciliation.json"
         reconciliation.write_bytes(jcs_bytes(valid_reconciliation("PRODUCER_PASS")))
         result = self._run("reconcile", "--reconciliation", str(reconciliation))
@@ -1410,6 +1432,11 @@ class ProducerArtifactCliContractTest(unittest.TestCase):
             "validate-build-artifacts",
             "create-oci-handoff",
             "validate-oci-artifact",
+            "finalize-run",
+            "select-dispatched-run",
+            "acknowledge-incident",
+            "close-incident",
+            "plan-known-good-rollback",
         }.issubset(subparsers.choices))
 
     def test_oci_layout_requires_exact_reachable_blob_closure(self) -> None:
@@ -1599,6 +1626,167 @@ class ProducerArtifactCliContractTest(unittest.TestCase):
 
 
 class LifecycleContractTest(unittest.TestCase):
+    def test_cancelled_attempt_cannot_become_pass(self) -> None:
+        result = finalize_attempt(
+            {
+                "producerStatus": "PRODUCER_PASS",
+                "lastCompletedStage": "PUBLIC_EVIDENCE",
+                "runConclusion": "cancelled",
+            },
+            {"cleanupVerified": True, "fragmentsComplete": True},
+        )
+        self.assertEqual(result["producerStatus"], "CANCELLED")
+        self.assertEqual(result["exitCode"], 31)
+
+    def test_release_without_staging_is_rejected(self) -> None:
+        remote = {
+            "staging": None,
+            "release": {"manifestDigest": "sha256:" + SHA_A},
+            "evidence": {"manifestDigest": "sha256:" + SHA_B},
+        }
+        result = reconcile_remote_state(remote)
+        self.assertEqual(result["producerStatus"], "REJECTED")
+        self.assertEqual(result["exitCode"], 22)
+
+    def test_runner_loss_and_malformed_fragments_fail_closed(self) -> None:
+        attempt = {
+            "producerStatus": "PRODUCER_PASS",
+            "lastCompletedStage": "PUBLIC_EVIDENCE",
+            "runConclusion": "timed_out",
+        }
+        interrupted = finalize_attempt(
+            attempt, {"cleanupVerified": False, "fragmentsComplete": False}
+        )
+        self.assertEqual(interrupted["producerStatus"], "INTERRUPTED")
+        self.assertEqual(interrupted["exitCode"], 32)
+        rejected = finalize_attempt(
+            {**attempt, "runConclusion": "failure"},
+            {
+                "cleanupVerified": False,
+                "fragmentsComplete": False,
+                "duplicateFragments": True,
+            },
+        )
+        self.assertEqual(rejected["producerStatus"], "REJECTED")
+        self.assertEqual(rejected["exitCode"], 22)
+
+    def test_reconcile_expectations_bind_all_prior_remote_values(self) -> None:
+        expected = {
+            "resumeAttemptId": "1234.2",
+            "expectedPriorStatus": "INTERRUPTED",
+            "expectedInputLockSha256": SHA_A,
+            "expectedStagingDigest": "sha256:" + SHA_B,
+            "expectedReleaseDigest": None,
+            "expectedEvidenceDigest": None,
+        }
+        prior = {
+            "attemptId": "1234.2",
+            "producerStatus": "INTERRUPTED",
+            "inputLockSha256": SHA_A,
+            "staging": {"manifestDigest": "sha256:" + SHA_B},
+            "release": None,
+            "evidence": None,
+        }
+        self.assertEqual(
+            validate_reconcile_expectations(expected, prior, dict(prior)), prior
+        )
+        with self.assertRaisesRegex(ProducerValidationError, "release digest"):
+            validate_reconcile_expectations(
+                {**expected, "expectedReleaseDigest": "sha256:" + SHA_C},
+                prior,
+                dict(prior),
+            )
+
+    def test_quarantine_requires_current_revocation_and_emergency_receipt(self) -> None:
+        pending = validate_quarantine_recovery(
+            {
+                "publicVerificationFailed": True,
+                "revocationMerged": False,
+                "emergencyReceiptVerified": False,
+                "revocationsCommitSha": "1" * 40,
+                "developHeadSha": "2" * 40,
+                "cleanupVerified": True,
+                "downstreamReadBack": True,
+                "visibilityReadBack": True,
+            }
+        )
+        self.assertEqual(pending["producerStatus"], "QUARANTINE_PENDING")
+        quarantined = validate_quarantine_recovery(
+            {
+                **pending["observed"],
+                "revocationMerged": True,
+                "emergencyReceiptVerified": True,
+                "revocationsCommitSha": "2" * 40,
+            }
+        )
+        self.assertEqual(quarantined["producerStatus"], "QUARANTINED")
+
+    def test_failure_order_and_incident_closure_are_strict(self) -> None:
+        ordered = [
+            "cleanup-aggregate",
+            "result",
+            "quarantine-pending",
+            "revocation-merge",
+            "emergency-attestation",
+            "quarantined",
+            "known-good-selection",
+            "downstream-notification",
+            "owner-acknowledgement",
+            "incident-closure",
+        ]
+        self.assertEqual(validate_failure_order(ordered), ordered)
+        with self.assertRaisesRegex(ProducerValidationError, "ordering"):
+            validate_failure_order(list(reversed(ordered)))
+        reconciliation = valid_reconciliation("FAILED")
+        reconciliation["ownerAcknowledgedAt"] = None
+        acknowledged = acknowledge_incident(
+            reconciliation,
+            "https://github.com/bluetape4k/bluetape4k-image/issues/638",
+            "2026-09-07T01:01:00Z",
+        )
+        acknowledged.update(
+            {
+                "cleanupVerified": True,
+                "denylistVerified": True,
+                "visibilityReadBack": True,
+            }
+        )
+        with self.assertRaisesRegex(ProducerValidationError, "downstreamReadBack"):
+            close_incident(acknowledged, "2026-09-07T01:02:00Z")
+        acknowledged["downstreamReadBack"] = True
+        self.assertEqual(
+            close_incident(acknowledged, "2026-09-07T01:02:00Z")["closedAt"],
+            "2026-09-07T01:02:00Z",
+        )
+
+    def test_known_good_rollback_plan_rejects_revoked_or_mutable_only_candidate(
+        self,
+    ) -> None:
+        plan = plan_known_good_rollback(
+            current_digest="sha256:" + SHA_A,
+            candidates=[
+                {"digest": "sha256:" + SHA_B, "stableTag": "stable", "accepted": True},
+            ],
+            revoked_digests={"sha256:" + SHA_C},
+            downstream_notified=True,
+        )
+        self.assertEqual(plan["knownGoodDigest"], "sha256:" + SHA_B)
+        self.assertTrue(plan["dryRun"])
+        for candidate in (
+            {"digest": "sha256:" + SHA_C, "stableTag": "stable", "accepted": True},
+            {"digest": None, "stableTag": "stable", "accepted": True},
+        ):
+            with (
+                self.subTest(candidate=candidate),
+                self.assertRaises(ProducerValidationError),
+            ):
+                plan_known_good_rollback(
+                    current_digest="sha256:" + SHA_A,
+                    candidates=[candidate],
+                    revoked_digests={"sha256:" + SHA_C},
+                    downstream_notified=True,
+                )
+
     def test_status_table_exhaustively_accepts_only_declared_stage_and_mapping(self) -> None:
         for status, contract in STATUS_CONTRACT.items():
             for stage in ("NONE", "STAGING", "EVIDENCE", "RELEASE", "PUBLIC_EVIDENCE"):

@@ -474,6 +474,362 @@ def apply_cleanup_outcome(original_status: str, cleanup: Mapping[str, Any]) -> s
     return "INTERRUPTED"
 
 
+def _terminal_summary(
+    status: str, stage: str, *, cleanup_verified: bool
+) -> dict[str, Any]:
+    contract = STATUS_CONTRACT[status]
+    if contract.exit_code is None:
+        raise ProducerValidationError("final producerStatus must be terminal")
+    if stage not in contract.allowed_stages:
+        raise ProducerValidationError(
+            "lastCompletedStage is invalid for producerStatus"
+        )
+    return {
+        "producerStatus": status,
+        "lastCompletedStage": stage,
+        "mapped609Status": contract.mapped_609_status,
+        "errorCode": contract.error_code,
+        "exitCode": contract.exit_code,
+        "cleanupVerified": cleanup_verified,
+    }
+
+
+def finalize_attempt(
+    attempt: Mapping[str, Any], readbacks: Mapping[str, Any]
+) -> dict[str, Any]:
+    """Resolve a terminal status without allowing cleanup or cancellation to become PASS."""
+
+    status = attempt.get("producerStatus")
+    stage = attempt.get("lastCompletedStage")
+    conclusion = attempt.get("runConclusion")
+    if status not in STATUS_CONTRACT:
+        raise ProducerValidationError("producerStatus is invalid")
+    if stage not in LAST_COMPLETED_STAGES:
+        raise ProducerValidationError("lastCompletedStage is invalid")
+    if conclusion not in {
+        "success",
+        "failure",
+        "cancelled",
+        "timed_out",
+        "stale",
+        "action_required",
+    }:
+        raise ProducerValidationError("runConclusion is invalid")
+    cleanup_verified = readbacks.get("cleanupVerified")
+    fragments_complete = readbacks.get("fragmentsComplete")
+    _boolean(cleanup_verified, "cleanupVerified")
+    _boolean(fragments_complete, "fragmentsComplete")
+    if readbacks.get("malformedFragments") or readbacks.get("duplicateFragments"):
+        return _terminal_summary("REJECTED", stage, cleanup_verified=False)
+    if conclusion == "cancelled":
+        return _terminal_summary("CANCELLED", stage, cleanup_verified=cleanup_verified)
+    if (
+        conclusion in {"timed_out", "stale", "action_required"}
+        or not fragments_complete
+    ):
+        return _terminal_summary("INTERRUPTED", stage, cleanup_verified=False)
+    if conclusion == "failure" and status not in {
+        "BLOCKED_INPUT",
+        "BLOCKED_LEGAL_INVENTORY",
+        "QUARANTINED",
+        "REJECTED",
+        "REVOKED",
+        "FAILED",
+        "CANCELLED",
+        "INTERRUPTED",
+    }:
+        status = "FAILED"
+    if not cleanup_verified:
+        status = apply_cleanup_outcome(status, {"cleanupVerified": False})
+    if STATUS_CONTRACT[status].exit_code is None:
+        raise ProducerValidationError(
+            "successful run did not reach a terminal producerStatus"
+        )
+    return _terminal_summary(status, stage, cleanup_verified=cleanup_verified)
+
+
+def reconcile_remote_state(remote: Mapping[str, Any]) -> dict[str, Any]:
+    """Classify an observed registry topology without creating or mutating artifacts."""
+
+    if set(remote) - {"staging", "release", "evidence", "ambiguous"}:
+        raise ProducerValidationError("remote state contains unknown fields")
+    staging = remote.get("staging")
+    release = remote.get("release")
+    evidence = remote.get("evidence")
+    if remote.get("ambiguous") is True or (
+        staging is None and (release is not None or evidence is not None)
+    ):
+        return _terminal_summary(
+            "REJECTED",
+            "PUBLIC_EVIDENCE" if evidence is not None else "RELEASE",
+            cleanup_verified=False,
+        )
+    if release is None and evidence is not None:
+        return _terminal_summary("REJECTED", "PUBLIC_EVIDENCE", cleanup_verified=False)
+    if staging is None:
+        return _terminal_summary("INTERRUPTED", "NONE", cleanup_verified=False)
+    if release is None:
+        status, stage = "PUBLISHED_UNVERIFIED", "STAGING"
+    elif evidence is None:
+        status, stage = "RELEASE_UNVERIFIED", "RELEASE"
+    else:
+        status, stage = "RELEASE_UNVERIFIED", "PUBLIC_EVIDENCE"
+    contract = STATUS_CONTRACT[status]
+    return {
+        "producerStatus": status,
+        "lastCompletedStage": stage,
+        "mapped609Status": contract.mapped_609_status,
+        "errorCode": contract.error_code,
+        "exitCode": contract.exit_code,
+        "cleanupVerified": False,
+    }
+
+
+def validate_reconcile_expectations(
+    expected: Mapping[str, Any],
+    prior: Mapping[str, Any],
+    remote: Mapping[str, Any],
+) -> dict[str, Any]:
+    """Bind a RECONCILE request to the exact prior attempt and current remote state."""
+
+    expected_keys = {
+        "resumeAttemptId",
+        "expectedPriorStatus",
+        "expectedInputLockSha256",
+        "expectedStagingDigest",
+        "expectedReleaseDigest",
+        "expectedEvidenceDigest",
+    }
+    if set(expected) != expected_keys:
+        raise ProducerValidationError(
+            "reconcile expectations must contain all six exact fields"
+        )
+    if set(prior) != {
+        "attemptId",
+        "producerStatus",
+        "inputLockSha256",
+        "staging",
+        "release",
+        "evidence",
+    }:
+        raise ProducerValidationError("prior reconcile state has an invalid shape")
+    if set(remote) != set(prior):
+        raise ProducerValidationError("remote reconcile state has an invalid shape")
+    _attempt_id(expected["resumeAttemptId"], "resumeAttemptId")
+    require_sha256(expected["expectedInputLockSha256"], "expectedInputLockSha256")
+    if (
+        prior["attemptId"] != expected["resumeAttemptId"]
+        or remote["attemptId"] != prior["attemptId"]
+    ):
+        raise ProducerValidationError(
+            "resumeAttemptId differs from prior or remote state"
+        )
+    if (
+        prior["producerStatus"] != expected["expectedPriorStatus"]
+        or remote["producerStatus"] != prior["producerStatus"]
+    ):
+        raise ProducerValidationError(
+            "expected prior status differs from prior or remote state"
+        )
+    if (
+        prior["inputLockSha256"] != expected["expectedInputLockSha256"]
+        or remote["inputLockSha256"] != prior["inputLockSha256"]
+    ):
+        raise ProducerValidationError(
+            "expected input lock differs from prior or remote state"
+        )
+
+    for artifact, field in (
+        ("staging", "expectedStagingDigest"),
+        ("release", "expectedReleaseDigest"),
+        ("evidence", "expectedEvidenceDigest"),
+    ):
+        expected_digest = expected[field]
+        prior_object = prior[artifact]
+        remote_object = remote[artifact]
+        prior_digest = (
+            None if prior_object is None else prior_object.get("manifestDigest")
+        )
+        remote_digest = (
+            None if remote_object is None else remote_object.get("manifestDigest")
+        )
+        if expected_digest is not None:
+            _oci_digest(expected_digest, field)
+        if expected_digest != prior_digest or remote_digest != prior_digest:
+            raise ProducerValidationError(
+                f"{artifact} digest differs from reconcile expectation"
+            )
+    return dict(prior)
+
+
+def validate_quarantine_recovery(observed: Mapping[str, Any]) -> dict[str, Any]:
+    """Allow QUARANTINED only after the protected revocation and denial receipt read back."""
+
+    keys = {
+        "publicVerificationFailed",
+        "revocationMerged",
+        "emergencyReceiptVerified",
+        "revocationsCommitSha",
+        "developHeadSha",
+        "cleanupVerified",
+        "downstreamReadBack",
+        "visibilityReadBack",
+    }
+    if set(observed) != keys:
+        raise ProducerValidationError("quarantine observation has an invalid shape")
+    for field in (
+        "publicVerificationFailed",
+        "revocationMerged",
+        "emergencyReceiptVerified",
+        "cleanupVerified",
+        "downstreamReadBack",
+        "visibilityReadBack",
+    ):
+        _boolean(observed[field], field)
+    for field in ("revocationsCommitSha", "developHeadSha"):
+        _commit(observed[field], field)
+    if observed["publicVerificationFailed"] is not True:
+        raise ProducerValidationError(
+            "quarantine requires a public verification failure"
+        )
+    complete = (
+        observed["revocationMerged"] is True
+        and observed["emergencyReceiptVerified"] is True
+        and observed["revocationsCommitSha"] == observed["developHeadSha"]
+        and observed["cleanupVerified"] is True
+        and observed["downstreamReadBack"] is True
+        and observed["visibilityReadBack"] is True
+    )
+    status = "QUARANTINED" if complete else "QUARANTINE_PENDING"
+    contract = STATUS_CONTRACT[status]
+    return {
+        "producerStatus": status,
+        "exitCode": contract.exit_code,
+        "mapped609Status": contract.mapped_609_status,
+        "observed": dict(observed),
+    }
+
+
+_FAILURE_ORDER = (
+    "cleanup-aggregate",
+    "result",
+    "quarantine-pending",
+    "revocation-merge",
+    "emergency-attestation",
+    "quarantined",
+    "known-good-selection",
+    "downstream-notification",
+    "owner-acknowledgement",
+    "incident-closure",
+)
+
+
+def validate_failure_order(events: Sequence[str]) -> list[str]:
+    """Validate the append-only failure recovery order and reject inline rollback."""
+
+    if not isinstance(events, Sequence) or isinstance(events, (str, bytes)):
+        raise ProducerValidationError("failure events must be a sequence")
+    if len(events) != len(set(events)) or any(
+        not isinstance(event, str) for event in events
+    ):
+        raise ProducerValidationError(
+            "failure ordering contains duplicate or invalid events"
+        )
+    if any(
+        event in {"visibility-rollback", "delete-package", "stable-tag-mutation"}
+        for event in events
+    ):
+        raise ProducerValidationError(
+            "destructive rollback is outside the producer workflow"
+        )
+    positions = {event: index for index, event in enumerate(_FAILURE_ORDER)}
+    selected = [event for event in events if event in positions]
+    if selected != sorted(selected, key=positions.__getitem__):
+        raise ProducerValidationError("failure ordering is invalid")
+    return list(events)
+
+
+def acknowledge_incident(
+    reconciliation: Mapping[str, Any], incident_url: str, acknowledged_at: str
+) -> dict[str, Any]:
+    document = dict(reconciliation)
+    _incident(incident_url, required=True)
+    acknowledged = _timestamp(acknowledged_at, "ownerAcknowledgedAt")
+    changed = _timestamp(document.get("statusChangedAt"), "statusChangedAt")
+    if acknowledged < changed:  # type: ignore[operator]
+        raise ProducerValidationError("incident timestamp order is invalid")
+    if document.get("incidentUrl") not in {None, incident_url}:
+        raise ProducerValidationError("incidentUrl differs from reconciliation")
+    if document.get("ownerAcknowledgedAt") is not None:
+        raise ProducerValidationError("incident is already acknowledged")
+    document["incidentUrl"] = incident_url
+    document["ownerAcknowledgedAt"] = acknowledged_at
+    validate_reconciliation(document)
+    return document
+
+
+def close_incident(reconciliation: Mapping[str, Any], closed_at: str) -> dict[str, Any]:
+    document = dict(reconciliation)
+    if document.get("ownerAcknowledgedAt") is None:
+        raise ProducerValidationError("ownerAcknowledgedAt is required before closure")
+    if document.get("closedAt") is not None:
+        raise ProducerValidationError("incident is already closed")
+    for field in (
+        "cleanupVerified",
+        "denylistVerified",
+        "visibilityReadBack",
+        "downstreamReadBack",
+    ):
+        if document.get(field) is not True:
+            raise ProducerValidationError(f"{field} must be true before closure")
+    _timestamp(closed_at, "closedAt")
+    document["closedAt"] = closed_at
+    validate_reconciliation(document)
+    return document
+
+
+def plan_known_good_rollback(
+    *,
+    current_digest: str,
+    candidates: Sequence[Mapping[str, Any]],
+    revoked_digests: set[str],
+    downstream_notified: bool,
+) -> dict[str, Any]:
+    """Select one immutable accepted non-revoked digest without mutating registry state."""
+
+    _oci_digest(current_digest, "currentDigest")
+    _boolean(downstream_notified, "downstreamNotified")
+    if not downstream_notified:
+        raise ProducerValidationError("downstream notification is required")
+    for digest in revoked_digests:
+        _oci_digest(digest, "revokedDigest")
+    eligible = []
+    for raw in candidates:
+        if set(raw) != {"digest", "stableTag", "accepted"}:
+            raise ProducerValidationError("rollback candidate has an invalid shape")
+        digest = raw["digest"]
+        if not isinstance(digest, str):
+            raise ProducerValidationError(
+                "rollback candidate requires an immutable digest"
+            )
+        _oci_digest(digest, "knownGoodDigest")
+        if raw["stableTag"] != "stable" or raw["accepted"] is not True:
+            continue
+        if digest not in revoked_digests and digest != current_digest:
+            eligible.append(digest)
+    if len(eligible) != 1:
+        raise ProducerValidationError(
+            "known-good rollback candidate is absent or ambiguous"
+        )
+    return {
+        "schemaVersion": 1,
+        "dryRun": True,
+        "currentDigest": current_digest,
+        "knownGoodDigest": eligible[0],
+        "mutationRequired": "visibility-and-stable-tag",
+    }
+
+
 _ATTEMPT_KEYS = {
     "schemaVersion", "attemptId", "producerStatus", "lastCompletedStage",
     "inputLockSha256", "policySha256", "repository", "workflowPath",
