@@ -1,0 +1,121 @@
+{
+  "$id": "https://bluetape4k.github.io/schema/paddleocr/producer-result.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "attemptId": {
+      "pattern": "^[1-9][0-9]*\\.[1-9][0-9]*$",
+      "type": "string"
+    },
+    "errorCode": {
+      "oneOf": [
+        {
+          "pattern": "^[A-Z][A-Z0-9_]*$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "errorMessage": {
+      "oneOf": [
+        {
+          "maxLength": 512,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "evidenceManifestDigest": {
+      "oneOf": [
+        {
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "imagePlatformDigest": {
+      "oneOf": [
+        {
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "lastCompletedStage": {
+      "enum": [
+        "NONE",
+        "STAGING",
+        "EVIDENCE",
+        "RELEASE",
+        "PUBLIC_EVIDENCE"
+      ]
+    },
+    "ledgerFragmentSha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "mapped609Status": {
+      "enum": [
+        "PENDING",
+        "BLOCKED",
+        "REJECTED"
+      ]
+    },
+    "producerStatus": {
+      "enum": [
+        "VALIDATING",
+        "BLOCKED_INPUT",
+        "BLOCKED_LEGAL_INVENTORY",
+        "BUILDING",
+        "PUBLISHED_UNVERIFIED",
+        "PROMOTING",
+        "RELEASE_UNVERIFIED",
+        "QUARANTINE_PENDING",
+        "QUARANTINED",
+        "PRODUCER_PASS",
+        "REJECTED",
+        "REVOKED",
+        "FAILED",
+        "CANCELLED",
+        "INTERRUPTED"
+      ]
+    },
+    "reconciliationSha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "revocationsSha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "schemaVersion": {
+      "const": 1
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "attemptId",
+    "producerStatus",
+    "lastCompletedStage",
+    "mapped609Status",
+    "imagePlatformDigest",
+    "evidenceManifestDigest",
+    "reconciliationSha256",
+    "ledgerFragmentSha256",
+    "revocationsSha256",
+    "errorCode",
+    "errorMessage"
+  ],
+  "title": "PaddleOCR producer terminal result",
+  "type": "object"
+}

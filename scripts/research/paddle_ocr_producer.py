@@ -35,6 +35,18 @@ from paddle_ocr_producer_lib.filesystem import (
     tree_sha256,
     verify_regular_file,
 )
+from paddle_ocr_producer_lib.lifecycle import (
+    STATUS_CONTRACT,
+    append_revocations,
+    build_producer_result,
+    merge_cleanup_fragments,
+    validate_attempt,
+    validate_cleanup_aggregate,
+    validate_cleanup_fragment,
+    validate_emergency_receipt,
+    validate_reconciliation,
+    validate_revocations,
+)
 
 MAX_DOCUMENT_BYTES = 1024 * 1024
 LOGGER = logging.getLogger("paddle_ocr_producer")
@@ -115,13 +127,19 @@ def _read_regular_bytes(path: Path, limit: int = MAX_DOCUMENT_BYTES) -> bytes:
         os.close(descriptor)
 
 
-def _load_canonical_document(path: Path) -> tuple[dict[str, Any], bytes]:
+def _load_canonical_document(
+    path: Path, *, contract_error: bool = False
+) -> tuple[dict[str, Any], bytes]:
     raw = _read_regular_bytes(path)
     try:
         document = load_json_bytes(raw, MAX_DOCUMENT_BYTES)
     except ProducerValidationError as exc:
+        if contract_error:
+            raise ProducerValidationError("input document violates the strict JSON contract") from exc
         raise ProducerBlockedError("input document violates the strict JSON contract") from exc
     if jcs_bytes(document) != raw:
+        if contract_error:
+            raise ProducerValidationError("input document must use canonical JSON without a trailing newline")
         raise ProducerBlockedError("input document must use canonical JSON without a trailing newline")
     return document, raw
 
@@ -858,6 +876,173 @@ def _resolve_inputs(args: argparse.Namespace) -> dict[str, Any]:
             ],
         },
     )
+
+
+def _merge_cleanup(args: argparse.Namespace) -> dict[str, Any]:
+    fragments = []
+    for path in args.fragment:
+        document, _ = _load_canonical_document(path, contract_error=True)
+        fragments.append(document)
+    aggregate = merge_cleanup_fragments(
+        args.attempt_id,
+        args.original_status,
+        args.started_job,
+        fragments,
+        merged_at=args.merged_at,
+    )
+    raw = jcs_bytes(aggregate)
+    digest = _atomic_write_new(args.output, raw)
+    return _success(
+        "merge-cleanup",
+        {"attemptId": args.attempt_id, "cleanupSha256": digest, "cleanupVerified": aggregate["cleanupVerified"]},
+    )
+
+
+def _reconcile(args: argparse.Namespace) -> dict[str, Any]:
+    document, raw = _load_canonical_document(args.reconciliation, contract_error=True)
+    validated = validate_reconciliation(document)
+    return _success(
+        "reconcile",
+        {
+            "attemptId": validated["attemptId"],
+            "producerStatus": validated["producerStatus"],
+            "reconciliationSha256": sha256_hex(raw),
+        },
+    )
+
+
+def _append_revocation(args: argparse.Namespace) -> dict[str, Any]:
+    previous, _ = _load_canonical_document(args.previous, contract_error=True)
+    entries = []
+    for path in args.entry:
+        entry, _ = _load_canonical_document(path, contract_error=True)
+        entries.append(entry)
+    candidate = append_revocations(previous, entries)
+    raw = jcs_bytes(candidate)
+    digest = _atomic_write_new(args.output, raw)
+    return _success(
+        "append-revocation",
+        {"revocationsSha256": digest, "entryCount": len(candidate["digests"])},
+    )
+
+
+def _verify_emergency_receipt(args: argparse.Namespace) -> dict[str, Any]:
+    receipt, receipt_raw = _load_canonical_document(args.receipt, contract_error=True)
+    revocations, revocations_raw = _load_canonical_document(args.revocations, contract_error=True)
+    validate_emergency_receipt(receipt, revocations)
+    return _success(
+        "verify-emergency-receipt",
+        {
+            "receiptSha256": sha256_hex(receipt_raw),
+            "revocationsSha256": sha256_hex(revocations_raw),
+            "commitSha": receipt["revocationsCommitSha"],
+        },
+    )
+
+
+def _verify_cleanup_fragments(cleanup_path: Path, cleanup: dict[str, Any]) -> None:
+    expected_paths = set()
+    for descriptor in cleanup["fragments"]:
+        relative = PurePosixPath(descriptor["path"])
+        if relative.is_absolute() or ".." in relative.parts:
+            raise ProducerValidationError("cleanup fragment path escapes its bundle")
+        path = cleanup_path.parent.joinpath(*relative.parts)
+        fragment, raw = _load_canonical_document(path, contract_error=True)
+        validate_cleanup_fragment(fragment)
+        if fragment["attemptId"] != cleanup["attemptId"]:
+            raise ProducerValidationError("cleanup fragment attemptId differs")
+        if fragment["jobId"] != descriptor["jobId"]:
+            raise ProducerValidationError("cleanup fragment jobId differs")
+        if len(raw) != descriptor["bytes"] or sha256_hex(raw) != descriptor["sha256"]:
+            raise ProducerValidationError("cleanup fragment descriptor differs from bytes")
+        expected_paths.add(path)
+    directory = cleanup_path.parent / "cleanup-fragments"
+    if directory.exists():
+        actual_paths = {path for path in directory.iterdir() if path.is_file() or path.is_symlink()}
+        if actual_paths != expected_paths:
+            raise ProducerValidationError("cleanup fragment directory contains missing or extra files")
+
+
+def _finalize(args: argparse.Namespace) -> dict[str, Any]:
+    reconciliation, reconciliation_raw = _load_canonical_document(args.reconciliation, contract_error=True)
+    cleanup, cleanup_raw = _load_canonical_document(args.cleanup, contract_error=True)
+    _, ledger_raw = _load_canonical_document(args.ledger_fragment, contract_error=True)
+    revocations, revocations_raw = _load_canonical_document(args.revocations, contract_error=True)
+    validated_reconciliation = validate_reconciliation(reconciliation)
+    validated_cleanup = validate_cleanup_aggregate(cleanup)
+    validate_revocations(revocations)
+    require_sha256(args.attempt_sha256, "attemptSha256")
+    _verify_cleanup_fragments(args.cleanup, validated_cleanup)
+    if validated_cleanup["attemptId"] != validated_reconciliation["attemptId"]:
+        raise ProducerValidationError("cleanup attemptId differs from reconciliation")
+    if validated_reconciliation["cleanupVerified"] != validated_cleanup["cleanupVerified"]:
+        raise ProducerValidationError("cleanupVerified differs between documents")
+    result = build_producer_result(
+        validated_reconciliation,
+        reconciliation_sha256=sha256_hex(reconciliation_raw),
+        ledger_fragment_sha256=sha256_hex(ledger_raw),
+        revocations_sha256=sha256_hex(revocations_raw),
+    )
+    result_sha = _atomic_write_new(args.output, jcs_bytes(result))
+    return _success(
+        "finalize",
+        {
+            "attemptId": result["attemptId"],
+            "attemptSha256": args.attempt_sha256,
+            "cleanupSha256": sha256_hex(cleanup_raw),
+            "reconciliationSha256": result["reconciliationSha256"],
+            "resultSha256": result_sha,
+        },
+    )
+
+
+def _verify_attempt(args: argparse.Namespace) -> dict[str, Any]:
+    attempt, _ = _load_canonical_document(args.attempt, contract_error=True)
+    evidence, evidence_raw = _load_canonical_document(args.evidence, contract_error=True)
+    reconciliation, reconciliation_raw = _load_canonical_document(args.reconciliation, contract_error=True)
+    cleanup, cleanup_raw = _load_canonical_document(args.cleanup, contract_error=True)
+    ledger, ledger_raw = _load_canonical_document(args.ledger_fragment, contract_error=True)
+    revocations, revocations_raw = _load_canonical_document(args.revocations, contract_error=True)
+    validated_attempt = validate_attempt(attempt)
+    validated_reconciliation = validate_reconciliation(reconciliation)
+    validated_cleanup = validate_cleanup_aggregate(cleanup)
+    validate_revocations(revocations)
+    _verify_cleanup_fragments(args.cleanup, validated_cleanup)
+    attempt_id = validated_attempt["attemptId"]
+    for field, document in (
+        ("evidence", evidence), ("reconciliation", validated_reconciliation),
+        ("cleanup", validated_cleanup), ("ledger fragment", ledger),
+    ):
+        if document.get("attemptId") != attempt_id:
+            raise ProducerValidationError(f"{field} attemptId differs")
+    hashes = {
+        "evidenceSha256": sha256_hex(evidence_raw),
+        "reconciliationSha256": sha256_hex(reconciliation_raw),
+        "cleanupSha256": sha256_hex(cleanup_raw),
+        "ledgerFragmentSha256": sha256_hex(ledger_raw),
+        "revocationsSha256": sha256_hex(revocations_raw),
+    }
+    for field, actual in hashes.items():
+        if validated_attempt[field] != actual:
+            raise ProducerValidationError(f"attempt {field} differs from companion bytes")
+    if validated_attempt["producerStatus"] != validated_reconciliation["producerStatus"]:
+        raise ProducerValidationError("producerStatus differs between attempt and reconciliation")
+    if validated_attempt["lastCompletedStage"] != validated_reconciliation["lastCompletedStage"]:
+        raise ProducerValidationError("lastCompletedStage differs between attempt and reconciliation")
+    if validated_attempt["inputLockSha256"] != validated_reconciliation["inputLockSha256"]:
+        raise ProducerValidationError("inputLockSha256 differs between attempt and reconciliation")
+    if validated_attempt["revocationsCommitSha"] != validated_reconciliation["revocationsCommitSha"]:
+        raise ProducerValidationError("revocationsCommitSha differs between attempt and reconciliation")
+    if validated_attempt["previousDocumentSha256"] != validated_reconciliation["previousDocumentSha256"]:
+        raise ProducerValidationError("previousDocumentSha256 differs between attempt and reconciliation")
+    return build_producer_result(
+        validated_reconciliation,
+        reconciliation_sha256=hashes["reconciliationSha256"],
+        ledger_fragment_sha256=hashes["ledgerFragmentSha256"],
+        revocations_sha256=hashes["revocationsSha256"],
+    )
+
+
 def build_parser() -> StrictArgumentParser:
     parser = StrictArgumentParser(description="PaddleOCR trusted producer verifier")
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -912,6 +1097,48 @@ def build_parser() -> StrictArgumentParser:
     resolve.add_argument("--accepted-root", type=Path, default=Path("docker/paddleocr"))
     resolve.add_argument("--output-root", type=Path, required=True)
     resolve.set_defaults(handler=_resolve_inputs)
+
+    cleanup = subparsers.add_parser("merge-cleanup")
+    cleanup.add_argument("--attempt-id", required=True)
+    cleanup.add_argument("--original-status", choices=tuple(STATUS_CONTRACT), required=True)
+    cleanup.add_argument("--started-job", action="append", default=[])
+    cleanup.add_argument("--fragment", type=Path, action="append", default=[])
+    cleanup.add_argument("--merged-at", required=True)
+    cleanup.add_argument("--output", type=Path, required=True)
+    cleanup.set_defaults(handler=_merge_cleanup)
+
+    reconcile = subparsers.add_parser("reconcile")
+    reconcile.add_argument("--reconciliation", type=Path, required=True)
+    reconcile.set_defaults(handler=_reconcile)
+
+    append = subparsers.add_parser("append-revocation")
+    append.add_argument("--previous", type=Path, required=True)
+    append.add_argument("--entry", type=Path, action="append", required=True)
+    append.add_argument("--output", type=Path, required=True)
+    append.set_defaults(handler=_append_revocation)
+
+    emergency = subparsers.add_parser("verify-emergency-receipt")
+    emergency.add_argument("--receipt", type=Path, required=True)
+    emergency.add_argument("--revocations", type=Path, required=True)
+    emergency.set_defaults(handler=_verify_emergency_receipt)
+
+    finalize = subparsers.add_parser("finalize")
+    finalize.add_argument("--reconciliation", type=Path, required=True)
+    finalize.add_argument("--cleanup", type=Path, required=True)
+    finalize.add_argument("--ledger-fragment", type=Path, required=True)
+    finalize.add_argument("--revocations", type=Path, required=True)
+    finalize.add_argument("--attempt-sha256", required=True)
+    finalize.add_argument("--output", type=Path, required=True)
+    finalize.set_defaults(handler=_finalize)
+
+    verify = subparsers.add_parser("verify-attempt")
+    verify.add_argument("--attempt", type=Path, required=True)
+    verify.add_argument("--evidence", type=Path, required=True)
+    verify.add_argument("--reconciliation", type=Path, required=True)
+    verify.add_argument("--cleanup", type=Path, required=True)
+    verify.add_argument("--ledger-fragment", type=Path, required=True)
+    verify.add_argument("--revocations", type=Path, required=True)
+    verify.set_defaults(handler=_verify_attempt)
     return parser
 
 
@@ -926,6 +1153,9 @@ def main(argv: Sequence[str] | None = None) -> int:
             args = build_parser().parse_args(arguments)
             document = args.handler(args)
         exit_code = 0
+        if command == "verify-attempt":
+            terminal_exit = STATUS_CONTRACT[document["producerStatus"]].exit_code
+            exit_code = terminal_exit if terminal_exit is not None else 40
     except ProducerUsageError:
         document = _failure(command, "SCHEMA_INVALID", "BLOCKED_INPUT", "invalid command arguments")
         exit_code = 40
@@ -947,6 +1177,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     except KeyboardInterrupt:
         document = _failure(command, "CANCELLED", "CANCELLED", "producer operation was cancelled")
         exit_code = 31
+    except ProducerValidationError:
+        document = _failure(command, "SCHEMA_INVALID", "BLOCKED_INPUT", "input document violates its schema")
+        exit_code = 40
     except OSError:
         LOGGER.error("producer command failed", extra={"command": command})
         document = _failure(command, "FAILED", "FAILED", "producer operation failed")

@@ -416,7 +416,7 @@ git commit -m 'feat: PaddleOCR producer 입력을 실제 bytes에 고정한다' 
 - Modify: `scripts/research/paddle_ocr_producer.py`
 - Modify: `scripts/research/test_paddle_ocr_producer.py`
 
-- [ ] **Step 1: exhaustive state/last-stage, cleanup merge와 hash-chain RED test를 작성한다.**
+- [x] **Step 1: exhaustive state/last-stage, cleanup merge와 hash-chain RED test를 작성한다.**
 
 ```python
 def test_producer_pass_requires_all_readbacks(self) -> None:
@@ -438,13 +438,13 @@ def test_incident_timestamps_follow_status_group_and_order(self) -> None:
             assert_incident_contract(case.document, case.expected_valid)
 ```
 
-- [ ] **Step 2: RED를 확인한다.**
+- [x] **Step 2: RED를 확인한다.**
 
 Run: `python3 scripts/research/test_paddle_ocr_producer.py -v`
 
 Expected: lifecycle API 미구현으로 실패한다.
 
-- [ ] **Step 3: transition table과 status별 invariant를 구현한다.**
+- [x] **Step 3: transition table과 status별 invariant를 구현한다.**
 
 ```python
 LAST_COMPLETED_STAGES = ("NONE", "STAGING", "EVIDENCE", "RELEASE", "PUBLIC_EVIDENCE")
@@ -503,7 +503,7 @@ partial publication, quarantine와 terminal failure 각각에 incident 생성·o
 가능 조건을 table-driven test로 고정하며 downstream/denylist/visibility/cleanup read-back이
 하나라도 false면 `closedAt`을 허용하지 않는다.
 
-- [ ] **Step 4: lifecycle test와 JSON parse를 GREEN으로 만든다.**
+- [x] **Step 4: lifecycle test와 JSON parse를 GREEN으로 만든다.**
 
 ```bash
 python3 scripts/research/test_paddle_ocr_producer.py -v
@@ -514,7 +514,7 @@ done
 
 Expected: lifecycle cases가 `OK`, 모든 JSON이 parse된다.
 
-- [ ] **Step 5: lifecycle commit을 만든다.**
+- [x] **Step 5: lifecycle commit을 만든다.**
 
 ```bash
 git add docker/paddleocr scripts/research

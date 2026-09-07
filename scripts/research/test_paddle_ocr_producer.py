@@ -34,10 +34,92 @@ from paddle_ocr_producer_lib.filesystem import (
     tree_sha256,
     verify_regular_file,
 )
+from paddle_ocr_producer_lib.lifecycle import (
+    STATUS_CONTRACT,
+    append_revocations,
+    apply_cleanup_outcome,
+    initial_revocations,
+    merge_cleanup_fragments,
+    validate_cleanup_fragment,
+    validate_emergency_receipt,
+    validate_reconciliation,
+    validate_revocation_successor,
+)
 
 SHA_A = "a" * 64
 SHA_B = "b" * 64
 SHA_C = "c" * 64
+
+
+def valid_reconciliation(status: str = "PRODUCER_PASS") -> dict[str, object]:
+    stage = STATUS_CONTRACT[status].allowed_stages[-1]
+    package = {
+        "package": "ghcr.io/bluetape4k/paddleocr-runtime",
+        "versionId": 123,
+        "attemptTag": "image-1234.2",
+        "visibility": "private",
+        "pullMode": "PACKAGES_READ",
+        "pullVerified": True,
+        "indexDigest": "sha256:" + SHA_A,
+        "manifestDigest": "sha256:" + SHA_B,
+        "configDigest": "sha256:" + SHA_C,
+        "baseDigest": "sha256:" + "d" * 64,
+    }
+    staging = package if stage != "NONE" else None
+    release = None
+    evidence = None
+    if stage in ("RELEASE", "PUBLIC_EVIDENCE"):
+        release = dict(package)
+        release.update({"visibility": "public", "pullMode": "ANONYMOUS"})
+    if stage == "PUBLIC_EVIDENCE":
+        evidence = {
+            "package": package["package"],
+            "versionId": 124,
+            "attemptTag": "evidence-1234.2",
+            "visibility": "public",
+            "pullMode": "ANONYMOUS",
+            "pullVerified": True,
+            "artifactType": "application/vnd.bluetape4k.paddleocr.evidence.v1",
+            "manifestDigest": "sha256:" + "e" * 64,
+            "subjectDigest": release["manifestDigest"],
+            "fileManifestSha256": "f" * 64,
+        }
+    terminal_incident = status in {
+        "QUARANTINE_PENDING", "QUARANTINED", "REJECTED", "REVOKED",
+        "FAILED", "CANCELLED", "INTERRUPTED",
+    }
+    return {
+        "schemaVersion": 1,
+        "attemptId": "1234.2",
+        "producerStatus": status,
+        "lastCompletedStage": stage,
+        "mapped609Status": STATUS_CONTRACT[status].mapped_609_status,
+        "inputLockSha256": SHA_A,
+        "staging": staging,
+        "release": release,
+        "evidence": evidence,
+        "replacesAttemptId": None,
+        "replacedReleaseDigest": None,
+        "replacedEvidenceDigest": None,
+        "replacedAttemptSha256": None,
+        "replacedEvidenceSha256": None,
+        "replacedReconciliationSha256": None,
+        "replacedCleanupSha256": None,
+        "workflowRetryOrdinal": 1,
+        "retryReceipts": [],
+        "secretScan": "PASS" if status == "PRODUCER_PASS" else "NOT_RUN",
+        "cleanupVerified": status == "PRODUCER_PASS",
+        "denylistVerified": status == "PRODUCER_PASS",
+        "visibilityReadBack": status == "PRODUCER_PASS",
+        "downstreamReadBack": status == "PRODUCER_PASS",
+        "revocationsSha256": SHA_B,
+        "revocationsCommitSha": "1" * 40,
+        "previousDocumentSha256": None,
+        "statusChangedAt": "2026-09-07T01:00:00Z",
+        "incidentUrl": "https://github.com/bluetape4k/bluetape4k-image/issues/638" if terminal_incident else None,
+        "ownerAcknowledgedAt": "2026-09-07T01:01:00Z" if terminal_incident else None,
+        "closedAt": None,
+    }
 
 
 def valid_input_lock() -> dict[str, object]:
@@ -608,7 +690,7 @@ class ProducerCliTest(unittest.TestCase):
             "--legal",
             str(legal),
         )
-        self.assertEqual(result.returncode, 0, result.stderr.decode())
+        self.assertEqual(result.returncode, 0, (result.stdout + result.stderr).decode())
         self.assertEqual(result.stdout.count(b"\n"), 1)
         document = json.loads(result.stdout)
         self.assertEqual(document["command"], "validate-inputs")
@@ -851,6 +933,159 @@ class ProducerCliTest(unittest.TestCase):
         self.assertEqual(result.returncode, 10)
         self.assertFalse(output.exists())
 
+    def test_lifecycle_cli_merges_cleanup_reconciles_and_appends_revocations(self) -> None:
+        fragment_paths = []
+        for job, digest in (("validation", SHA_A), ("staging", SHA_B)):
+            path = self.root / f"{job}.json"
+            path.write_bytes(jcs_bytes({
+                "schemaVersion": 1,
+                "attemptId": "1234.2",
+                "jobId": job,
+                "originalProducerStatus": "FAILED",
+                "startedAt": "2026-09-07T01:00:00Z",
+                "finishedAt": "2026-09-07T01:01:00Z",
+                "targets": [{"kind": "TEMP_DIRECTORY", "idSha256": digest, "result": "REMOVED"}],
+            }))
+            fragment_paths.append(path)
+        cleanup = self.root / "cleanup.json"
+        result = self._run(
+            "merge-cleanup", "--attempt-id", "1234.2", "--original-status", "FAILED",
+            "--started-job", "validation", "--started-job", "staging",
+            "--fragment", str(fragment_paths[0]), "--fragment", str(fragment_paths[1]),
+            "--merged-at", "2026-09-07T01:02:00Z", "--output", str(cleanup),
+        )
+        self.assertEqual(result.returncode, 0, result.stderr.decode())
+        self.assertTrue(json.loads(cleanup.read_bytes())["cleanupVerified"])
+
+        reconciliation = self.root / "reconciliation.json"
+        reconciliation.write_bytes(jcs_bytes(valid_reconciliation("PRODUCER_PASS")))
+        result = self._run("reconcile", "--reconciliation", str(reconciliation))
+        self.assertEqual(result.returncode, 0, result.stderr.decode())
+        self.assertEqual(json.loads(result.stdout)["data"]["producerStatus"], "PRODUCER_PASS")
+        malformed = self.root / "malformed-reconciliation.json"
+        malformed.write_bytes(reconciliation.read_bytes() + b"\n")
+        result = self._run("reconcile", "--reconciliation", str(malformed))
+        self.assertEqual(result.returncode, 40)
+        self.assertEqual(json.loads(result.stdout)["status"], "SCHEMA_INVALID")
+
+        previous = self.root / "previous.json"
+        previous.write_bytes(jcs_bytes(initial_revocations()))
+        entries = []
+        for kind, digest in (("IMAGE", SHA_A), ("EVIDENCE", SHA_B)):
+            path = self.root / f"{kind.lower()}.json"
+            path.write_bytes(jcs_bytes({
+                "incidentId": "638",
+                "artifactKind": kind,
+                "digest": "sha256:" + digest,
+                "reasonCode": "PUBLIC_VERIFICATION_FAILED",
+                "incidentUrl": "https://github.com/bluetape4k/bluetape4k-image/issues/638",
+                "issuedAt": "2026-09-07T01:00:00Z",
+                "acknowledgedAt": "2026-09-07T01:01:00Z",
+                "signer": "repo:bluetape4k/bluetape4k-image:ref:refs/heads/develop",
+            }))
+            entries.append(path)
+        candidate = self.root / "candidate.json"
+        result = self._run(
+            "append-revocation", "--previous", str(previous),
+            "--entry", str(entries[0]), "--entry", str(entries[1]), "--output", str(candidate),
+        )
+        self.assertEqual(result.returncode, 0, result.stderr.decode())
+        self.assertEqual(len(json.loads(candidate.read_bytes())["digests"]), 2)
+
+    def test_verify_attempt_emits_exact_result_and_rejects_cross_document_identity(self) -> None:
+        bundle = self.root / "bundle"
+        fragments_dir = bundle / "cleanup-fragments"
+        fragments_dir.mkdir(parents=True)
+        fragment = {
+            "schemaVersion": 1,
+            "attemptId": "1234.2",
+            "jobId": "validation",
+            "originalProducerStatus": "PRODUCER_PASS",
+            "startedAt": "2026-09-07T01:00:00Z",
+            "finishedAt": "2026-09-07T01:01:00Z",
+            "targets": [{"kind": "TEMP_DIRECTORY", "idSha256": SHA_A, "result": "REMOVED"}],
+        }
+        fragment_path = fragments_dir / "validation.json"
+        fragment_path.write_bytes(jcs_bytes(fragment))
+        cleanup_value = merge_cleanup_fragments(
+            "1234.2", "PRODUCER_PASS", ["validation"], [fragment],
+            merged_at="2026-09-07T01:02:00Z",
+        )
+        cleanup_path = bundle / "cleanup.json"
+        cleanup_path.write_bytes(jcs_bytes(cleanup_value))
+        evidence_path = bundle / "producer-evidence.json"
+        evidence_path.write_bytes(jcs_bytes({"attemptId": "1234.2"}))
+        ledger_path = bundle / "artifact-ledger.fragment.json"
+        ledger_path.write_bytes(jcs_bytes({"attemptId": "1234.2"}))
+        revocations_path = bundle / "revocations.json"
+        revocations_path.write_bytes(jcs_bytes(initial_revocations()))
+        reconciliation_value = valid_reconciliation("PRODUCER_PASS")
+        reconciliation_value["revocationsSha256"] = sha256_hex(revocations_path.read_bytes())
+        reconciliation_path = bundle / "reconciliation.json"
+        reconciliation_path.write_bytes(jcs_bytes(reconciliation_value))
+        attempt_value = {
+            "schemaVersion": 1,
+            "attemptId": "1234.2",
+            "producerStatus": "PRODUCER_PASS",
+            "lastCompletedStage": "PUBLIC_EVIDENCE",
+            "inputLockSha256": SHA_A,
+            "policySha256": SHA_B,
+            "repository": "bluetape4k/bluetape4k-image",
+            "workflowPath": ".github/workflows/paddleocr-producer.yml",
+            "workflowRef": "bluetape4k/bluetape4k-image/.github/workflows/paddleocr-producer.yml@refs/heads/develop",
+            "workflowSha": "1" * 40,
+            "ref": "refs/heads/develop",
+            "headSha": "2" * 40,
+            "runId": 1234,
+            "runAttempt": 2,
+            "actor": "debop",
+            "runner": "github-hosted-linux-amd64",
+            "environment": "github-hosted",
+            "replacesAttemptId": None,
+            "replacedReleaseDigest": None,
+            "replacedEvidenceDigest": None,
+            "replacedAttemptSha256": None,
+            "replacedEvidenceSha256": None,
+            "replacedReconciliationSha256": None,
+            "replacedCleanupSha256": None,
+            "timestamps": {
+                "VALIDATING": "2026-09-07T01:00:00Z",
+                "BUILDING": "2026-09-07T01:01:00Z",
+                "STAGING": "2026-09-07T01:02:00Z",
+                "EVIDENCE": "2026-09-07T01:03:00Z",
+                "RELEASE": "2026-09-07T01:04:00Z",
+                "PUBLIC_EVIDENCE": "2026-09-07T01:05:00Z",
+                "TERMINAL": "2026-09-07T01:06:00Z",
+            },
+            "evidenceSha256": sha256_hex(evidence_path.read_bytes()),
+            "reconciliationSha256": sha256_hex(reconciliation_path.read_bytes()),
+            "cleanupSha256": sha256_hex(cleanup_path.read_bytes()),
+            "ledgerFragmentSha256": sha256_hex(ledger_path.read_bytes()),
+            "revocationsSha256": sha256_hex(revocations_path.read_bytes()),
+            "revocationsCommitSha": "1" * 40,
+            "previousDocumentSha256": None,
+        }
+        attempt_path = bundle / "producer-attempt.json"
+        attempt_path.write_bytes(jcs_bytes(attempt_value))
+        command = (
+            "verify-attempt", "--attempt", str(attempt_path), "--evidence", str(evidence_path),
+            "--reconciliation", str(reconciliation_path), "--cleanup", str(cleanup_path),
+            "--ledger-fragment", str(ledger_path), "--revocations", str(revocations_path),
+        )
+        result = self._run(*command)
+        self.assertEqual(result.returncode, 0, (result.stdout + result.stderr).decode())
+        document = json.loads(result.stdout)
+        self.assertEqual(set(document), {
+            "schemaVersion", "attemptId", "producerStatus", "lastCompletedStage",
+            "mapped609Status", "imagePlatformDigest", "evidenceManifestDigest",
+            "reconciliationSha256", "ledgerFragmentSha256", "revocationsSha256",
+            "errorCode", "errorMessage",
+        })
+        evidence_path.write_bytes(jcs_bytes({"attemptId": "9999.1"}))
+        result = self._run(*command)
+        self.assertEqual(result.returncode, 40)
+        self.assertEqual(json.loads(result.stdout)["status"], "SCHEMA_INVALID")
+
     def test_usage_and_secret_payload_are_canonical_and_redacted(self) -> None:
         result = self._run("validate-inputs", "--token", "ghp_super_secret_token")
         self.assertEqual(result.returncode, 40)
@@ -858,6 +1093,192 @@ class ProducerCliTest(unittest.TestCase):
         self.assertNotIn(b"ghp_super_secret_token", result.stdout + result.stderr)
         document = json.loads(result.stdout)
         self.assertEqual((document["status"], document["errorCode"]), ("SCHEMA_INVALID", "BLOCKED_INPUT"))
+
+
+class LifecycleContractTest(unittest.TestCase):
+    def test_status_table_exhaustively_accepts_only_declared_stage_and_mapping(self) -> None:
+        for status, contract in STATUS_CONTRACT.items():
+            for stage in ("NONE", "STAGING", "EVIDENCE", "RELEASE", "PUBLIC_EVIDENCE"):
+                document = valid_reconciliation(status)
+                document["lastCompletedStage"] = stage
+                document["mapped609Status"] = contract.mapped_609_status
+                if stage in contract.allowed_stages:
+                    document["staging"] = None if stage == "NONE" else document["staging"]
+                    if stage not in ("RELEASE", "PUBLIC_EVIDENCE"):
+                        document["release"] = None
+                    if stage != "PUBLIC_EVIDENCE":
+                        document["evidence"] = None
+                    # Package-shape details are tested through the terminal success path.
+                    if status in {"REJECTED", "REVOKED", "FAILED", "CANCELLED", "INTERRUPTED"}:
+                        continue
+                else:
+                    with self.assertRaisesRegex(ProducerValidationError, "lastCompletedStage"):
+                        validate_reconciliation(document)
+
+    def test_producer_pass_requires_all_readbacks_and_digest_equality(self) -> None:
+        document = valid_reconciliation("PRODUCER_PASS")
+        self.assertEqual(validate_reconciliation(document)["producerStatus"], "PRODUCER_PASS")
+        for field in (
+            "visibilityReadBack", "downstreamReadBack", "cleanupVerified", "denylistVerified"
+        ):
+            invalid = dict(document)
+            invalid[field] = False
+            with self.subTest(field=field), self.assertRaisesRegex(
+                ProducerValidationError, field
+            ):
+                validate_reconciliation(invalid)
+        invalid = dict(document)
+        invalid["release"] = dict(document["release"])  # type: ignore[arg-type]
+        invalid["release"]["configDigest"] = "sha256:" + "9" * 64  # type: ignore[index]
+        with self.assertRaisesRegex(ProducerValidationError, "configDigest"):
+            validate_reconciliation(invalid)
+
+    def test_incident_timestamps_follow_status_group_and_order(self) -> None:
+        document = valid_reconciliation("FAILED")
+        document.update(
+            {
+                "cleanupVerified": True,
+                "denylistVerified": True,
+                "visibilityReadBack": True,
+                "downstreamReadBack": True,
+                "closedAt": "2026-09-07T01:02:00Z",
+            }
+        )
+        self.assertEqual(validate_reconciliation(document)["closedAt"], document["closedAt"])
+        document["ownerAcknowledgedAt"] = "2026-09-07T01:03:00Z"
+        with self.assertRaisesRegex(ProducerValidationError, "timestamp order"):
+            validate_reconciliation(document)
+
+    def test_cleanup_merge_is_attempt_scoped_complete_and_target_unique(self) -> None:
+        fragments = [
+            {
+                "schemaVersion": 1,
+                "attemptId": "1234.2",
+                "jobId": job,
+                "originalProducerStatus": "FAILED",
+                "startedAt": "2026-09-07T01:00:00Z",
+                "finishedAt": "2026-09-07T01:01:00Z",
+                "targets": [{"kind": "TEMP_DIRECTORY", "idSha256": digest, "result": "REMOVED"}],
+            }
+            for job, digest in (("validation", SHA_A), ("staging", SHA_B))
+        ]
+        aggregate = merge_cleanup_fragments(
+            "1234.2", "FAILED", ["validation", "staging"], fragments,
+            merged_at="2026-09-07T01:02:00Z",
+        )
+        self.assertTrue(aggregate["cleanupVerified"])
+        self.assertEqual(apply_cleanup_outcome("FAILED", aggregate), "FAILED")
+
+        pass_fragment = dict(fragments[0])
+        pass_fragment["originalProducerStatus"] = "PRODUCER_PASS"
+        missing = merge_cleanup_fragments(
+            "1234.2", "PRODUCER_PASS", ["validation", "staging"], [pass_fragment],
+            merged_at="2026-09-07T01:02:00Z",
+        )
+        self.assertFalse(missing["cleanupVerified"])
+        self.assertEqual(apply_cleanup_outcome("PRODUCER_PASS", missing), "INTERRUPTED")
+
+        fragments[1]["attemptId"] = "9999.1"
+        with self.assertRaisesRegex(ProducerValidationError, "attemptId"):
+            merge_cleanup_fragments(
+                "1234.2", "FAILED", ["validation", "staging"], fragments,
+                merged_at="2026-09-07T01:02:00Z",
+            )
+
+    def test_cleanup_fragment_rejects_duplicate_targets_and_paths(self) -> None:
+        document = {
+            "schemaVersion": 1,
+            "attemptId": "1234.2",
+            "jobId": "validation",
+            "originalProducerStatus": "FAILED",
+            "startedAt": "2026-09-07T01:00:00Z",
+            "finishedAt": "2026-09-07T01:01:00Z",
+            "targets": [
+                {"kind": "TEMP_DIRECTORY", "idSha256": SHA_A, "result": "REMOVED"},
+                {"kind": "TEMP_DIRECTORY", "idSha256": SHA_A, "result": "ABSENT"},
+            ],
+        }
+        with self.assertRaisesRegex(ProducerValidationError, "duplicate cleanup target"):
+            validate_cleanup_fragment(document)
+        document["targets"] = [
+            {"kind": "/tmp/secret", "idSha256": SHA_A, "result": "REMOVED"}
+        ]
+        with self.assertRaisesRegex(ProducerValidationError, "kind"):
+            validate_cleanup_fragment(document)
+
+    def test_revocation_chain_is_append_only_and_pairs_public_artifacts(self) -> None:
+        previous = initial_revocations()
+        entries = [
+            {
+                "incidentId": "638",
+                "artifactKind": kind,
+                "digest": "sha256:" + digest,
+                "reasonCode": "PUBLIC_VERIFICATION_FAILED",
+                "incidentUrl": "https://github.com/bluetape4k/bluetape4k-image/issues/638",
+                "issuedAt": "2026-09-07T01:00:00Z",
+                "acknowledgedAt": "2026-09-07T01:01:00Z",
+                "signer": "repo:bluetape4k/bluetape4k-image:ref:refs/heads/develop",
+            }
+            for kind, digest in (("IMAGE", SHA_A), ("EVIDENCE", SHA_B))
+        ]
+        candidate = append_revocations(previous, entries)
+        self.assertEqual(validate_revocation_successor(previous, candidate), candidate)
+        invalid = dict(candidate)
+        invalid["previousDocumentSha256"] = "f" * 64
+        with self.assertRaisesRegex(ProducerValidationError, "previousDocumentSha256"):
+            validate_revocation_successor(previous, invalid)
+        invalid = dict(candidate)
+        invalid["digests"] = list(reversed(candidate["digests"]))
+        with self.assertRaisesRegex(ProducerValidationError, "append-only|adjacent"):
+            validate_revocation_successor(previous, invalid)
+
+    def test_emergency_receipt_binds_both_current_revocation_entries(self) -> None:
+        previous = initial_revocations()
+        candidate = append_revocations(previous, [
+            {
+                "incidentId": "638",
+                "artifactKind": kind,
+                "digest": "sha256:" + digest,
+                "reasonCode": "PUBLIC_VERIFICATION_FAILED",
+                "incidentUrl": "https://github.com/bluetape4k/bluetape4k-image/issues/638",
+                "issuedAt": "2026-09-07T01:00:00Z",
+                "acknowledgedAt": "2026-09-07T01:01:00Z",
+                "signer": "repo:bluetape4k/bluetape4k-image:ref:refs/heads/develop",
+            }
+            for kind, digest in (("IMAGE", SHA_A), ("EVIDENCE", SHA_B))
+        ])
+        receipt = {
+            "schemaVersion": 1,
+            "imageDigest": "sha256:" + SHA_A,
+            "evidenceDigest": "sha256:" + SHA_B,
+            "incidentUrl": "https://github.com/bluetape4k/bluetape4k-image/issues/638",
+            "reasonCode": "PUBLIC_VERIFICATION_FAILED",
+            "repository": "bluetape4k/bluetape4k-image",
+            "workflowPath": ".github/workflows/paddleocr-producer.yml",
+            "workflowRef": "bluetape4k/bluetape4k-image/.github/workflows/paddleocr-producer.yml@refs/heads/develop",
+            "workflowSha": "2" * 40,
+            "runId": 1234,
+            "runAttempt": 2,
+            "signer": "repo:bluetape4k/bluetape4k-image:ref:refs/heads/develop",
+            "oidcIssuer": "https://token.actions.githubusercontent.com",
+            "oidcAudience": "sigstore",
+            "developHeadSha": "3" * 40,
+            "revocationsCommitSha": "3" * 40,
+            "revocationsSha256": sha256_hex(jcs_bytes(candidate)),
+            "issuedAt": "2026-09-07T01:02:00Z",
+            "revocationEntries": [
+                {
+                    "artifactKind": entry["artifactKind"],
+                    "digest": entry["digest"],
+                    "entrySha256": sha256_hex(jcs_bytes(entry)),
+                }
+                for entry in candidate["digests"]
+            ],
+        }
+        self.assertEqual(validate_emergency_receipt(receipt, candidate)["runId"], 1234)
+        receipt["revocationEntries"][0]["entrySha256"] = SHA_C  # type: ignore[index]
+        with self.assertRaisesRegex(ProducerValidationError, "entrySha256"):
+            validate_emergency_receipt(receipt, candidate)
 
 
 if __name__ == "__main__":

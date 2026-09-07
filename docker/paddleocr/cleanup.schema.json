@@ -1,0 +1,121 @@
+{
+  "$id": "https://bluetape4k.github.io/schema/paddleocr/cleanup.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "attemptId": {
+      "pattern": "^[1-9][0-9]*\\.[1-9][0-9]*$",
+      "type": "string"
+    },
+    "cleanupVerified": {
+      "type": "boolean"
+    },
+    "fragments": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "bytes": {
+            "minimum": 1,
+            "type": "integer"
+          },
+          "jobId": {
+            "enum": [
+              "validation",
+              "staging",
+              "source-repro-check",
+              "image-build",
+              "staging-push",
+              "staging-attest",
+              "staging-readback",
+              "release-promotion",
+              "release-attest",
+              "release-readback",
+              "release-evidence-push",
+              "consumer-verify-private",
+              "public-visibility-readback",
+              "consumer-verify-public",
+              "emergency-deny-attest"
+            ]
+          },
+          "path": {
+            "pattern": "^cleanup-fragments/[a-z][a-z0-9-]*\\.json$",
+            "type": "string"
+          },
+          "sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "jobId",
+          "path",
+          "bytes",
+          "sha256"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "mergedAt": {
+      "format": "date-time",
+      "pattern": "Z$",
+      "type": "string"
+    },
+    "originalProducerStatus": {
+      "enum": [
+        "VALIDATING",
+        "BLOCKED_INPUT",
+        "BLOCKED_LEGAL_INVENTORY",
+        "BUILDING",
+        "PUBLISHED_UNVERIFIED",
+        "PROMOTING",
+        "RELEASE_UNVERIFIED",
+        "QUARANTINE_PENDING",
+        "QUARANTINED",
+        "PRODUCER_PASS",
+        "REJECTED",
+        "REVOKED",
+        "FAILED",
+        "CANCELLED",
+        "INTERRUPTED"
+      ]
+    },
+    "schemaVersion": {
+      "const": 1
+    },
+    "startedJobIds": {
+      "items": {
+        "enum": [
+          "validation",
+          "staging",
+          "source-repro-check",
+          "image-build",
+          "staging-push",
+          "staging-attest",
+          "staging-readback",
+          "release-promotion",
+          "release-attest",
+          "release-readback",
+          "release-evidence-push",
+          "consumer-verify-private",
+          "public-visibility-readback",
+          "consumer-verify-public",
+          "emergency-deny-attest"
+        ]
+      },
+      "type": "array",
+      "uniqueItems": true
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "attemptId",
+    "originalProducerStatus",
+    "startedJobIds",
+    "fragments",
+    "cleanupVerified",
+    "mergedAt"
+  ],
+  "title": "PaddleOCR producer cleanup aggregate",
+  "type": "object"
+}
