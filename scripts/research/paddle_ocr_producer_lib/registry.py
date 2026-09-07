@@ -13,7 +13,9 @@ from typing import Any
 from .contracts import ProducerValidationError, exact_object, load_json_bytes
 
 _OCI_DIGEST_RE = re.compile(r"\Asha256:[0-9a-f]{64}\Z")
-_ATTEMPT_TAG_RE = re.compile(r"\A(?:image|evidence)-[1-9][0-9]*\.[1-9][0-9]*\Z")
+_ATTEMPT_TAG_RE = re.compile(
+    r"\A(?:(?:image|evidence)-[1-9][0-9]*\.[1-9][0-9]*|stable)\Z"
+)
 _CREDENTIAL_ENV_KEYS = (
     "GH_TOKEN",
     "GITHUB_TOKEN",
@@ -249,7 +251,9 @@ def select_dispatched_run(
         if not isinstance(page, Sequence):
             raise ProducerValidationError("workflow run page must be a sequence")
         for raw in page:
-            run = exact_object(raw, required=required)
+            run = exact_object(
+                raw, required=required, optional={"status", "conclusion"}
+            )
             run_id = run["databaseId"]
             if type(run_id) is not int or run_id <= 0 or run_id in seen:
                 raise ProducerValidationError("workflow run ID is invalid or duplicate")

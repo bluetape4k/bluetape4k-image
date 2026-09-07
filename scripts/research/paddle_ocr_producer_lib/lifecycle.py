@@ -88,6 +88,7 @@ CLEANUP_JOB_ORDER = (
     "consumer-verify-private",
     "public-visibility-readback",
     "consumer-verify-public",
+    "reconcile-readback",
     "emergency-deny-attest",
 )
 
@@ -310,11 +311,11 @@ def validate_reconciliation(value: Mapping[str, Any]) -> dict[str, Any]:
         "QUARANTINE_PENDING", "QUARANTINED", "REJECTED", "REVOKED",
         "FAILED", "CANCELLED", "INTERRUPTED",
     }
-    _incident(document["incidentUrl"], required=terminal_incident)
+    _incident(document["incidentUrl"], required=False)
     acknowledged = _timestamp(document["ownerAcknowledgedAt"], "ownerAcknowledgedAt", nullable=True)
     closed = _timestamp(document["closedAt"], "closedAt", nullable=True)
-    if terminal_incident and acknowledged is None:
-        raise ProducerValidationError("ownerAcknowledgedAt is required for terminal incident status")
+    if acknowledged is not None and document["incidentUrl"] is None:
+        raise ProducerValidationError("incidentUrl is required before owner acknowledgement")
     if (
         not terminal_incident
         and status not in {"PUBLISHED_UNVERIFIED", "PROMOTING", "RELEASE_UNVERIFIED"}
@@ -531,6 +532,9 @@ def finalize_attempt(
     if conclusion == "failure" and status not in {
         "BLOCKED_INPUT",
         "BLOCKED_LEGAL_INVENTORY",
+        "PUBLISHED_UNVERIFIED",
+        "RELEASE_UNVERIFIED",
+        "QUARANTINE_PENDING",
         "QUARANTINED",
         "REJECTED",
         "REVOKED",

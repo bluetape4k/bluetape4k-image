@@ -112,16 +112,17 @@ jobs:
             --expected-staging-digest "$EXPECTED_STAGING_DIGEST" \
             --expected-release-digest "$EXPECTED_RELEASE_DIGEST" \
             --expected-evidence-digest "$EXPECTED_EVIDENCE_DIGEST"
-      - name: Reject duplicate successful input lock
-        if: ${{ env.PRODUCER_JOB == 'validation' && inputs.mode == 'PRODUCE' }}
+      - name: Execute producer stage - validate immutable inputs
+        if: ${{ env.PRODUCER_JOB == 'validation' }}
         run: |
-          echo "중복 PRODUCER_PASS 검사는 publish 구현 전까지 fail-closed 상태입니다."
-          exit 10
-      - name: Execute producer stage
-        if: ${{ env.PRODUCER_JOB != 'validation' || inputs.mode == 'PRODUCE' }}
-        run: |
-          echo "$PRODUCER_JOB stage는 후속 구현 task가 완료될 때까지 publish하지 않습니다."
-          exit 10
+          set -euo pipefail
+          python3 scripts/research/paddle_ocr_producer.py validate-inputs \
+            --lock "$PRODUCER_INPUT_LOCK" \
+            --policy "$PRODUCER_TRUST_POLICY" \
+            --legal "$PRODUCER_LEGAL_INVENTORY"
+          python3 scripts/research/paddle_ocr_producer.py verify-dockerfile \
+            --input-lock "$PRODUCER_INPUT_LOCK" \
+            --dockerfile docker/paddleocr/Dockerfile
       - &cleanup-step
         name: Merge cleanup aggregate
         if: ${{ always() }}
@@ -1177,6 +1178,7 @@ jobs:
     timeout-minutes: 15
     needs: [consumer-verify-private]
     if: ${{ always() && !cancelled() }}
+    environment: paddleocr-producer
     env:
       PRODUCER_JOB: public-visibility-readback
     outputs:
@@ -1250,8 +1252,14 @@ jobs:
     env:
       PRODUCER_JOB: reconcile-readback
       GH_TOKEN: ${{ github.token }}
+    outputs:
+      producer-status: ${{ steps.validate-reconcile.outputs.producer-status }}
+      staging-digest: ${{ steps.validate-reconcile.outputs.staging-digest }}
+      release-digest: ${{ steps.validate-reconcile.outputs.release-digest }}
+      evidence-digest: ${{ steps.validate-reconcile.outputs.evidence-digest }}
     permissions:
       contents: read
+      actions: read
       packages: read
       attestations: read
     steps:
@@ -1259,6 +1267,7 @@ jobs:
       - *python-step
       - *trust-step
       - name: Execute producer stage - reconcile readback only
+        id: validate-reconcile
         env:
           RESUME_ATTEMPT_ID: ${{ inputs.resumeAttemptId }}
           EXPECTED_PRIOR_STATUS: ${{ inputs.expectedPriorStatus }}
@@ -1278,48 +1287,113 @@ jobs:
             --expected-evidence-digest "$EXPECTED_EVIDENCE_DIGEST"
           RESUME_RUN_ID=${RESUME_ATTEMPT_ID%%.*}
           RESUME_RUN_ATTEMPT=${RESUME_ATTEMPT_ID##*.}
-          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$RESUME_RUN_ID" \
-            > .producer-state/prior-run.json
-          test "$(jq -er '.run_attempt' .producer-state/prior-run.json)" = "$RESUME_RUN_ATTEMPT"
-          test "$(jq -er '.path' .producer-state/prior-run.json)" = ".github/workflows/paddleocr-producer.yml"
-          test "$(jq -er '.event' .producer-state/prior-run.json)" = workflow_dispatch
-          gh api /orgs/bluetape4k/packages/container/paddleocr-service-staging \
-            > .producer-state/staging-package.json
-          gh api /orgs/bluetape4k/packages/container/paddleocr-service \
-            > .producer-state/release-package.json
-          echo 'RECONCILE performs read-back and compensation planning only.'
+          python3 - "$RESUME_RUN_ID" "$RESUME_ATTEMPT_ID" <<'PY'
+          import os
+          import subprocess
+          import sys
+          subprocess.run(
+              [
+                  "gh", "run", "download", sys.argv[1],
+                  "--repo", os.environ["GITHUB_REPOSITORY"],
+                  "--name", "paddleocr-reconcile-state-" + sys.argv[2],
+                  "--dir", ".producer-state/prior-state",
+              ],
+              check=True,
+              stdin=subprocess.DEVNULL,
+              timeout=60,
+          )
+          PY
+          test "$(find .producer-state/prior-state -type l -print -quit)" = ""
+          test "$(find .producer-state/prior-state -type f | wc -l | tr -d ' ')" = 3
+          test "$(find .producer-state/prior-state -type f -exec wc -c {} + | awk 'END {print $1}')" -le 1048576
+          PRIOR_STATE=.producer-state/prior-state/reconcile-state.json
+          PRIOR_HEAD=$(jq -er '.workflowHeadSha' "$PRIOR_STATE")
+          python3 scripts/research/paddle_ocr_producer.py readback-workflow-run \
+            --repo "$GITHUB_REPOSITORY" \
+            --run-id "$RESUME_RUN_ID" \
+            --run-attempt "$RESUME_RUN_ATTEMPT" \
+            --expected-head "$PRIOR_HEAD" \
+            --operation-timeout-seconds 60 \
+            --output .producer-state/prior-run-readback.json
+          python3 scripts/research/paddle_ocr_producer.py readback-packages \
+            --owner bluetape4k \
+            --staging-package paddleocr-service-staging \
+            --release-package paddleocr-service \
+            --attempt-id "$RESUME_ATTEMPT_ID" \
+            --image-tag "image-$RESUME_ATTEMPT_ID" \
+            --evidence-tag "evidence-$RESUME_ATTEMPT_ID" \
+            --operation-timeout-seconds 60 \
+            > .producer-state/package-readback.json
+          python3 scripts/research/paddle_ocr_producer.py validate-reconcile-state \
+            --resume-attempt-id "$RESUME_ATTEMPT_ID" \
+            --expected-prior-status "$EXPECTED_PRIOR_STATUS" \
+            --expected-input-lock-sha256 "$EXPECTED_INPUT_LOCK_SHA256" \
+            --expected-staging-digest "$EXPECTED_STAGING_DIGEST" \
+            --expected-release-digest "$EXPECTED_RELEASE_DIGEST" \
+            --expected-evidence-digest "$EXPECTED_EVIDENCE_DIGEST" \
+            --prior-state "$PRIOR_STATE" \
+            --package-readback .producer-state/package-readback.json \
+            --input-lock "$PRODUCER_INPUT_LOCK" \
+            --output .producer-state/reconcile-observation.json
+          printf 'producer-status=%s\n' \
+            "$(jq -er '.producerStatus' .producer-state/reconcile-observation.json)" >> "$GITHUB_OUTPUT"
+          for artifact in staging release evidence; do
+            digest=$(jq -er --arg artifact "$artifact" \
+              '.[$artifact].manifestDigest // ""' .producer-state/reconcile-observation.json)
+            printf '%s-digest=%s\n' "$artifact" "$digest" >> "$GITHUB_OUTPUT"
+          done
       - *cleanup-step
       - *cleanup-fragment-step
       - *cleanup-upload-step
       - *summary-step
       - *terminal-step
   emergency-deny-attest:
-    name: PaddleOCR producer / emergency-deny-attest
+    name: PaddleOCR producer / quarantine-pending
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     needs: [consumer-verify-public]
     if: ${{ always() && !cancelled() && needs.consumer-verify-public.result == 'failure' }}
-    environment: paddleocr-producer
     env:
       PRODUCER_JOB: emergency-deny-attest
     permissions:
       contents: read
-      actions: read
-      attestations: write
-      id-token: write
     steps:
       - *checkout-step
       - *python-step
       - *trust-step
-      - name: Execute producer stage - record QUARANTINE_PENDING and verify emergency receipt
+      - name: Execute producer stage - record QUARANTINE_PENDING candidate
         run: |
           set -euo pipefail
-          echo 'QUARANTINE_PENDING: protected develop revocation and signed receipt are required.'
-          test -s .producer-state/emergency-receipt.json
-          test -s .producer-state/current-revocations.json
-          python3 scripts/research/paddle_ocr_producer.py verify-emergency-receipt \
-            --receipt .producer-state/emergency-receipt.json \
-            --revocations .producer-state/current-revocations.json
+          python3 - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+          document = {
+              "schemaVersion": 1,
+              "attemptId": os.environ["ATTEMPT_ID"],
+              "producerStatus": "QUARANTINE_PENDING",
+              "reasonCode": "PUBLIC_VERIFICATION_FAILED",
+              "requiredNextEvidence": [
+                  "protected-develop-revocation",
+                  "signed-emergency-receipt",
+                  "visibility-readback",
+                  "downstream-readback",
+              ],
+          }
+          Path(".producer-state/quarantine-pending.json").write_text(
+              json.dumps(document, separators=(",", ":"), sort_keys=True),
+              encoding="utf-8",
+          )
+          PY
+      - name: Upload quarantine candidate
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: paddleocr-quarantine-pending-${{ env.ATTEMPT_ID }}
+          path: .producer-state/quarantine-pending.json
+          if-no-files-found: error
+          include-hidden-files: false
+          compression-level: 0
+          retention-days: 90
       - *cleanup-step
       - *cleanup-fragment-step
       - *cleanup-upload-step
@@ -1333,6 +1407,7 @@ jobs:
     if: ${{ always() }}
     env:
       PRODUCER_JOB: cleanup-aggregate
+      NEEDS_JSON: ${{ toJSON(needs) }}
     permissions:
       contents: read
       actions: read
@@ -1349,11 +1424,22 @@ jobs:
         run: |
           set -euo pipefail
           mapfile -t FRAGMENTS < <(find .producer-state/cleanup-fragments -type f -name '*.json' -print | sort)
-          test "${#FRAGMENTS[@]}" -gt 0
           ARGS=()
+          python3 - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+          needs = json.loads(os.environ["NEEDS_JSON"])
+          started = sorted(job for job, state in needs.items() if state.get("result") != "skipped")
+          Path(".producer-state/started-jobs.txt").write_text(
+              "".join(job + "\n" for job in started), encoding="utf-8"
+          )
+          PY
+          while IFS= read -r job; do
+            test -n "$job" && ARGS+=(--started-job "$job")
+          done < .producer-state/started-jobs.txt
           for fragment in "${FRAGMENTS[@]}"; do
-            job=$(basename "$fragment" .json)
-            ARGS+=(--started-job "$job" --fragment "$fragment")
+            ARGS+=(--fragment "$fragment")
           done
           python3 scripts/research/paddle_ocr_producer.py merge-cleanup \
             --attempt-id "$ATTEMPT_ID" \
@@ -1374,7 +1460,7 @@ jobs:
     name: PaddleOCR producer / release-readback-finalize
     runs-on: ubuntu-24.04
     timeout-minutes: 15
-    needs: [consumer-verify-public, reconcile-readback, emergency-deny-attest, cleanup-aggregate]
+    needs: [staging-push, release-promotion, release-evidence-push, consumer-verify-public, reconcile-readback, emergency-deny-attest, cleanup-aggregate]
     if: ${{ always() }}
     env:
       PRODUCER_JOB: release-readback-finalize
@@ -1394,18 +1480,55 @@ jobs:
           path: .producer-state/finalizer
       - name: Build immutable finalizer input
         env:
+          DISPATCH_MODE: ${{ inputs.mode }}
           PUBLIC_RESULT: ${{ needs.consumer-verify-public.result }}
+          RECONCILE_RESULT: ${{ needs.reconcile-readback.result }}
+          RECONCILE_STATUS: ${{ needs.reconcile-readback.outputs.producer-status }}
+          QUARANTINE_RESULT: ${{ needs.emergency-deny-attest.result }}
           CLEANUP_RESULT: ${{ needs.cleanup-aggregate.result }}
+          STAGING_DIGEST: ${{ needs.staging-push.outputs.staging-digest }}
+          RELEASE_DIGEST: ${{ needs.release-promotion.outputs.release-digest }}
+          EVIDENCE_DIGEST: ${{ needs.release-evidence-push.outputs.evidence-digest }}
+          RECONCILE_STAGING_DIGEST: ${{ needs.reconcile-readback.outputs.staging-digest }}
+          RECONCILE_RELEASE_DIGEST: ${{ needs.reconcile-readback.outputs.release-digest }}
+          RECONCILE_EVIDENCE_DIGEST: ${{ needs.reconcile-readback.outputs.evidence-digest }}
         run: |
           python3 - <<'PY'
           import json
           import os
           from pathlib import Path
-          passed = os.environ["PUBLIC_RESULT"] == "success" and os.environ["CLEANUP_RESULT"] == "success"
+          reconcile = os.environ["DISPATCH_MODE"] == "RECONCILE"
+          if reconcile:
+              status = os.environ.get("RECONCILE_STATUS") or "INTERRUPTED"
+              conclusion = "success" if os.environ["RECONCILE_RESULT"] == "success" else "failure"
+          elif os.environ["PUBLIC_RESULT"] == "success":
+              status = "PRODUCER_PASS"
+              conclusion = "success"
+          elif os.environ["QUARANTINE_RESULT"] == "success" and os.environ.get("EVIDENCE_DIGEST"):
+              status = "QUARANTINE_PENDING"
+              conclusion = "failure"
+          elif os.environ.get("RELEASE_DIGEST"):
+              status = "RELEASE_UNVERIFIED"
+              conclusion = "failure"
+          elif os.environ.get("STAGING_DIGEST"):
+              status = "PUBLISHED_UNVERIFIED"
+              conclusion = "failure"
+          else:
+              status = "FAILED"
+              conclusion = "failure"
+          staging_digest = os.environ.get("RECONCILE_STAGING_DIGEST") if reconcile else os.environ.get("STAGING_DIGEST")
+          release_digest = os.environ.get("RECONCILE_RELEASE_DIGEST") if reconcile else os.environ.get("RELEASE_DIGEST")
+          evidence_digest = os.environ.get("RECONCILE_EVIDENCE_DIGEST") if reconcile else os.environ.get("EVIDENCE_DIGEST")
+          stage = (
+              "PUBLIC_EVIDENCE" if evidence_digest else
+              "RELEASE" if release_digest else
+              "STAGING" if staging_digest else
+              "NONE"
+          )
           document = {
-              "producerStatus": "PRODUCER_PASS" if passed else "INTERRUPTED",
-              "lastCompletedStage": "PUBLIC_EVIDENCE" if os.environ["PUBLIC_RESULT"] != "skipped" else "NONE",
-              "runConclusion": "success" if passed else "timed_out",
+              "producerStatus": status,
+              "lastCompletedStage": stage,
+              "runConclusion": conclusion,
           }
           Path(".producer-state/finalizer/input.json").write_text(
               json.dumps(document, separators=(",", ":"), sort_keys=True), encoding="utf-8"
@@ -1417,11 +1540,82 @@ jobs:
             --input .producer-state/finalizer/input.json \
             --cleanup .producer-state/finalizer/cleanup.json \
             --output .producer-state/finalizer/producer-result.json
+      - name: Build immutable reconciliation state
+        env:
+          STAGING_DIGEST: ${{ needs.staging-push.outputs.staging-digest }}
+          RELEASE_DIGEST: ${{ needs.release-promotion.outputs.release-digest }}
+          EVIDENCE_DIGEST: ${{ needs.release-evidence-push.outputs.evidence-digest }}
+          RECONCILE_STAGING_DIGEST: ${{ needs.reconcile-readback.outputs.staging-digest }}
+          RECONCILE_RELEASE_DIGEST: ${{ needs.reconcile-readback.outputs.release-digest }}
+          RECONCILE_EVIDENCE_DIGEST: ${{ needs.reconcile-readback.outputs.evidence-digest }}
+          DISPATCH_MODE: ${{ inputs.mode }}
+        run: |
+          python3 - <<'PY'
+          import hashlib
+          import json
+          import os
+          from pathlib import Path
+
+          root = Path(".producer-state/finalizer")
+          canonical = lambda value: json.dumps(value, separators=(",", ":"), sort_keys=True).encode()
+          artifact = lambda digest: None if not digest else {"manifestDigest": digest}
+          reconcile = os.environ["DISPATCH_MODE"] == "RECONCILE"
+          staging_digest = os.environ.get("RECONCILE_STAGING_DIGEST") if reconcile else os.environ.get("STAGING_DIGEST")
+          release_digest = os.environ.get("RECONCILE_RELEASE_DIGEST") if reconcile else os.environ.get("RELEASE_DIGEST")
+          evidence_digest = os.environ.get("RECONCILE_EVIDENCE_DIGEST") if reconcile else os.environ.get("EVIDENCE_DIGEST")
+          evidence_reference = {
+              "attemptId": os.environ["ATTEMPT_ID"],
+              "manifestDigest": evidence_digest or None,
+          }
+          reconciliation_readback = {
+              "attemptId": os.environ["ATTEMPT_ID"],
+              "staging": artifact(staging_digest),
+              "release": artifact(release_digest),
+              "evidence": artifact(evidence_digest),
+          }
+          evidence_raw = canonical(evidence_reference)
+          reconciliation_raw = canonical(reconciliation_readback)
+          (root / "evidence-reference.json").write_bytes(evidence_raw)
+          (root / "reconciliation-readback.json").write_bytes(reconciliation_raw)
+          result_raw = (root / "producer-result.json").read_bytes()
+          cleanup_raw = (root / "cleanup.json").read_bytes()
+          result = json.loads(result_raw)
+          input_lock_raw = Path(os.environ["PRODUCER_INPUT_LOCK"]).read_bytes()
+          state = {
+              "schemaVersion": 1,
+              "attemptId": os.environ["ATTEMPT_ID"],
+              "workflowHeadSha": os.environ["GITHUB_SHA"],
+              "producerStatus": result["producerStatus"],
+              "inputLockSha256": hashlib.sha256(input_lock_raw).hexdigest(),
+              "staging": reconciliation_readback["staging"],
+              "release": reconciliation_readback["release"],
+              "evidence": reconciliation_readback["evidence"],
+              "documentHashes": {
+                  "resultSha256": hashlib.sha256(result_raw).hexdigest(),
+                  "evidenceSha256": hashlib.sha256(evidence_raw).hexdigest(),
+                  "reconciliationSha256": hashlib.sha256(reconciliation_raw).hexdigest(),
+                  "cleanupSha256": hashlib.sha256(cleanup_raw).hexdigest(),
+              },
+          }
+          (root / "reconcile-state.json").write_bytes(canonical(state))
+          PY
       - name: Upload terminal result
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: paddleocr-result-${{ env.ATTEMPT_ID }}
           path: .producer-state/finalizer/producer-result.json
+          if-no-files-found: error
+          include-hidden-files: false
+          compression-level: 0
+          retention-days: 90
+      - name: Upload reconciliation state
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: paddleocr-reconcile-state-${{ env.ATTEMPT_ID }}
+          path: |
+            .producer-state/finalizer/reconcile-state.json
+            .producer-state/finalizer/evidence-reference.json
+            .producer-state/finalizer/reconciliation-readback.json
           if-no-files-found: error
           include-hidden-files: false
           compression-level: 0

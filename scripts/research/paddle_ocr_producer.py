@@ -21,7 +21,7 @@ from contextlib import contextmanager
 from pathlib import Path, PurePosixPath
 from types import FrameType
 from typing import Any
-from urllib.parse import urlsplit
+from urllib.parse import quote, urlsplit
 
 from paddle_ocr_producer_lib.contracts import (
     AttemptIdentity,
@@ -71,10 +71,15 @@ from paddle_ocr_producer_lib.lifecycle import (
     validate_cleanup_aggregate,
     validate_cleanup_fragment,
     validate_emergency_receipt,
+    validate_reconcile_expectations,
     validate_reconciliation,
     validate_revocations,
 )
-from paddle_ocr_producer_lib.registry import select_dispatched_run
+from paddle_ocr_producer_lib.registry import (
+    run_with_retry,
+    select_dispatched_run,
+    select_exact_version,
+)
 
 MAX_DOCUMENT_BYTES = 1024 * 1024
 LOGGER = logging.getLogger("paddle_ocr_producer")
@@ -568,7 +573,9 @@ def validate_dispatch_inputs(
         "resumeAttemptId": resume_attempt_id,
         "expectedPriorStatus": expected_prior_status,
         "expectedInputLockSha256": expected_input_lock_sha256,
-        "expectedStagingDigest": require_digest(expected_staging_digest, "staging digest"),
+        "expectedStagingDigest": require_digest(
+            expected_staging_digest, "staging digest", nullable=True
+        ),
         "expectedReleaseDigest": require_digest(
             expected_release_digest, "release digest", nullable=True
         ),
@@ -2032,20 +2039,192 @@ def _finalize_run(args: argparse.Namespace) -> dict[str, Any]:
 
 def _select_dispatched_run(args: argparse.Namespace) -> dict[str, Any]:
     before, _ = _load_canonical_document(args.before, contract_error=True)
-    candidates, _ = _load_canonical_document(args.candidates, contract_error=True)
     if set(before) != {"runIds"} or not isinstance(before["runIds"], list):
         raise ProducerValidationError("before snapshot has an invalid shape")
-    if set(candidates) != {"pages"} or not isinstance(candidates["pages"], list):
-        raise ProducerValidationError("candidate snapshot has an invalid shape")
+    if args.candidates is None:
+        if not all((args.repo, args.workflow, args.branch, args.event)):
+            raise ProducerValidationError("remote run selection arguments are incomplete")
+        pages = _workflow_runs(args)
+    else:
+        candidates, _ = _load_canonical_document(args.candidates, contract_error=True)
+        if set(candidates) != {"pages"} or not isinstance(candidates["pages"], list):
+            raise ProducerValidationError("candidate snapshot has an invalid shape")
+        pages = candidates["pages"]
     selected = select_dispatched_run(
         set(before["runIds"]),
-        candidates["pages"],
+        pages,
         expected_head=args.expected_head,
         expected_workflow=args.expected_workflow,
     )
-    raw = jcs_bytes(selected)
-    digest = _atomic_write_new(args.output, raw)
-    return _success("select-dispatched-run", {**selected, "outputSha256": digest})
+    data = dict(selected)
+    if args.output is not None:
+        data["outputSha256"] = _atomic_write_new(args.output, jcs_bytes(selected))
+    return _success("select-dispatched-run", data)
+
+
+def _prepare_reconcile_inputs(args: argparse.Namespace) -> dict[str, Any]:
+    result, result_raw = _load_canonical_document(
+        args.prior_result, contract_error=True
+    )
+    reconciliation, reconciliation_raw = _load_canonical_document(
+        args.prior_reconciliation, contract_error=True
+    )
+    evidence, evidence_raw = _load_canonical_document(
+        args.prior_evidence, contract_error=True
+    )
+    cleanup, cleanup_raw = _load_canonical_document(
+        args.prior_cleanup, contract_error=True
+    )
+    validated_reconciliation = validate_reconciliation(reconciliation)
+    validated_evidence = validate_producer_evidence(evidence)
+    validated_cleanup = validate_cleanup_aggregate(cleanup)
+    result_keys = {
+        "schemaVersion", "attemptId", "producerStatus", "lastCompletedStage",
+        "mapped609Status", "imagePlatformDigest", "evidenceManifestDigest",
+        "reconciliationSha256", "ledgerFragmentSha256", "revocationsSha256",
+        "errorCode", "errorMessage",
+    }
+    if set(result) != result_keys or result.get("schemaVersion") != 1:
+        raise ProducerValidationError("prior result has an invalid shape")
+    attempt_id = validated_reconciliation["attemptId"]
+    for field, document in (
+        ("result", result),
+        ("evidence", validated_evidence),
+        ("cleanup", validated_cleanup),
+    ):
+        if document.get("attemptId") != attempt_id:
+            raise ProducerValidationError(f"prior {field} attemptId differs")
+    for field in ("producerStatus", "lastCompletedStage"):
+        expected = validated_reconciliation[field]
+        if result[field] != expected or validated_evidence[field] != expected:
+            raise ProducerValidationError(f"prior {field} differs across documents")
+    if result["mapped609Status"] != validated_reconciliation["mapped609Status"]:
+        raise ProducerValidationError("prior mapped609Status differs across documents")
+    reconciliation_sha = sha256_hex(reconciliation_raw)
+    if result["reconciliationSha256"] != reconciliation_sha:
+        raise ProducerValidationError("prior result reconciliationSha256 differs")
+    if validated_cleanup["originalProducerStatus"] != result["producerStatus"]:
+        raise ProducerValidationError("prior cleanup producerStatus differs")
+
+    def prior_digest(field: str, digest_field: str = "manifestDigest") -> str:
+        artifact = validated_reconciliation[field]
+        return "NONE" if artifact is None else artifact[digest_field]
+
+    prepared = {
+        "resumeAttemptId": attempt_id,
+        "expectedPriorStatus": validated_reconciliation["producerStatus"],
+        "expectedInputLockSha256": validated_reconciliation["inputLockSha256"],
+        "expectedStagingDigest": prior_digest("staging"),
+        "expectedReleaseDigest": prior_digest("release"),
+        "expectedEvidenceDigest": prior_digest("evidence"),
+        "priorDocumentHashes": {
+            "resultSha256": sha256_hex(result_raw),
+            "reconciliationSha256": reconciliation_sha,
+            "evidenceSha256": sha256_hex(evidence_raw),
+            "cleanupSha256": sha256_hex(cleanup_raw),
+        },
+    }
+    output_document = _success("prepare-reconcile-inputs", prepared)
+    output_sha = _atomic_write_new(args.output, jcs_bytes(output_document))
+    return _success(
+        "prepare-reconcile-inputs", {**prepared, "outputSha256": output_sha}
+    )
+
+
+def _validate_reconcile_state(args: argparse.Namespace) -> dict[str, Any]:
+    expected = validate_dispatch_inputs(
+        "RECONCILE",
+        args.resume_attempt_id,
+        args.expected_prior_status,
+        args.expected_input_lock_sha256,
+        args.expected_staging_digest,
+        args.expected_release_digest,
+        args.expected_evidence_digest,
+    )
+    prior, prior_raw = _load_canonical_document(args.prior_state, contract_error=True)
+    required_prior = {
+        "schemaVersion",
+        "attemptId",
+        "workflowHeadSha",
+        "producerStatus",
+        "inputLockSha256",
+        "staging",
+        "release",
+        "evidence",
+        "documentHashes",
+    }
+    if set(prior) != required_prior or prior["schemaVersion"] != 1:
+        raise ProducerValidationError("prior reconcile state has an invalid shape")
+    if (
+        not isinstance(prior["workflowHeadSha"], str)
+        or re.fullmatch(r"[0-9a-f]{40}", prior["workflowHeadSha"]) is None
+    ):
+        raise ProducerValidationError("prior workflow head SHA is invalid")
+    hashes = exact_object(
+        prior["documentHashes"],
+        required={
+            "resultSha256",
+            "evidenceSha256",
+            "reconciliationSha256",
+            "cleanupSha256",
+        },
+    )
+    for field, value in hashes.items():
+        require_sha256(value, field)
+
+    readback, _ = _load_canonical_document(
+        args.package_readback, contract_error=True
+    )
+    if (
+        set(readback) != {"command", "data", "schemaVersion", "status"}
+        or readback["schemaVersion"] != 1
+        or readback["command"] != "readback-packages"
+        or readback["status"] != "PASS"
+        or not isinstance(readback["data"], dict)
+    ):
+        raise ProducerValidationError("package read-back envelope is invalid")
+    data = readback["data"]
+    if set(data) != {"staging", "release", "evidence", "retryReceipts"}:
+        raise ProducerValidationError("package read-back data has an invalid shape")
+
+    _, input_lock_raw = _validated_input_lock(args.input_lock)
+    current_input_lock_sha = sha256_hex(input_lock_raw)
+    if current_input_lock_sha != expected["expectedInputLockSha256"]:
+        raise ProducerValidationError("current input lock differs from reconcile expectation")
+    prior_core = {
+        "attemptId": prior["attemptId"],
+        "producerStatus": prior["producerStatus"],
+        "inputLockSha256": prior["inputLockSha256"],
+        "staging": prior["staging"],
+        "release": prior["release"],
+        "evidence": prior["evidence"],
+    }
+    remote_core = {
+        "attemptId": prior["attemptId"],
+        "producerStatus": prior["producerStatus"],
+        "inputLockSha256": current_input_lock_sha,
+        "staging": data["staging"],
+        "release": data["release"],
+        "evidence": data["evidence"],
+    }
+    validate_reconcile_expectations(expected, prior_core, remote_core)
+    result = {
+        "schemaVersion": 1,
+        "replacesAttemptId": prior["attemptId"],
+        "workflowHeadSha": prior["workflowHeadSha"],
+        "producerStatus": prior["producerStatus"],
+        "inputLockSha256": current_input_lock_sha,
+        "staging": data["staging"],
+        "release": data["release"],
+        "evidence": data["evidence"],
+        "priorDocumentHashes": hashes,
+        "priorStateSha256": sha256_hex(prior_raw),
+        "retryReceipts": data["retryReceipts"],
+    }
+    output_sha = _atomic_write_new(args.output, jcs_bytes(result))
+    return _success(
+        "validate-reconcile-state", {**result, "outputSha256": output_sha}
+    )
 
 
 def _acknowledge_incident(args: argparse.Namespace) -> dict[str, Any]:
@@ -2068,11 +2247,17 @@ def _acknowledge_incident(args: argparse.Namespace) -> dict[str, Any]:
 
 
 def _close_incident(args: argparse.Namespace) -> dict[str, Any]:
-    reconciliation, raw = _load_canonical_document(
+    original, raw = _load_canonical_document(
         args.reconciliation, contract_error=True
     )
     if sha256_hex(raw) != require_sha256(args.expected_sha256, "expectedSha256"):
         raise ProducerValidationError("reconciliation SHA-256 differs")
+    reconciliation = original
+    if args.incident is not None:
+        reconciliation, _ = _load_canonical_document(args.incident, contract_error=True)
+        for field, value in original.items():
+            if field not in {"incidentUrl", "ownerAcknowledgedAt"} and reconciliation.get(field) != value:
+                raise ProducerValidationError("incident acknowledgement differs from reconciliation")
     if not all(
         (
             args.require_denylist,
@@ -2082,7 +2267,8 @@ def _close_incident(args: argparse.Namespace) -> dict[str, Any]:
         )
     ):
         raise ProducerValidationError("all incident closure read-backs are required")
-    result = close_incident(reconciliation, args.closed_at)
+    closed_at = args.closed_at or datetime.datetime.now(datetime.timezone.utc).isoformat().replace("+00:00", "Z")
+    result = close_incident(reconciliation, closed_at)
     digest = _atomic_write_new(args.output, jcs_bytes(result))
     return _success(
         "close-incident",
@@ -2545,6 +2731,559 @@ def _run_bounded_command(
     return output
 
 
+def _validated_repository(value: str) -> str:
+    if value != "bluetape4k/bluetape4k-image":
+        raise ProducerValidationError("repository is outside the producer contract")
+    return value
+
+
+def _resolved_tool(value: str | Path | None, name: str) -> Path:
+    candidate = str(value) if value is not None else (shutil.which(name) or "")
+    path = Path(candidate)
+    if not path.is_absolute():
+        located = shutil.which(candidate)
+        path = Path(located) if located else path
+    try:
+        metadata = path.stat()
+    except OSError as exc:
+        raise ProducerBlockedError(f"{name} executable is unavailable") from exc
+    if not path.is_absolute() or not stat.S_ISREG(metadata.st_mode) or not os.access(path, os.X_OK):
+        raise ProducerBlockedError(f"{name} executable is unavailable")
+    return path.resolve()
+
+
+def _operation_timeout(args: argparse.Namespace) -> int:
+    timeout_seconds = getattr(args, "operation_timeout_seconds", 60)
+    if type(timeout_seconds) is not int or not 1 <= timeout_seconds <= 60:
+        raise ProducerValidationError("operation timeout must be between 1 and 60 seconds")
+    return timeout_seconds
+
+
+def _gh_json(
+    args: argparse.Namespace,
+    endpoint: str,
+    *,
+    jq: str | None = None,
+    max_bytes: int | None = None,
+    method: str = "GET",
+    fields: Sequence[str] = (),
+) -> dict[str, Any]:
+    gh_bin = _resolved_tool(getattr(args, "gh_bin", None), "gh")
+    operation_timeout = _operation_timeout(args)
+    connect_timeout = getattr(args, "connect_timeout_seconds", 10)
+    read_timeout = getattr(args, "read_timeout_seconds", 30)
+    if (
+        type(connect_timeout) is not int
+        or type(read_timeout) is not int
+        or not 1 <= connect_timeout <= 60
+        or not 1 <= read_timeout <= 60
+    ):
+        raise ProducerValidationError("GitHub API timeout limits are invalid")
+    command = [str(gh_bin), "api", "--method", method, endpoint]
+    for field in fields:
+        command.extend(("-f", field))
+    if jq is not None:
+        command.extend(("--jq", jq))
+    limit = max_bytes or getattr(args, "max_page_bytes", 2 * 1024 * 1024)
+
+    def invoke() -> bytes:
+        try:
+            return _run_bounded_command(
+                command,
+                limit,
+                min(read_timeout, max(1, (operation_timeout - 6) // 3)),
+            )
+        except ProducerInterrupted as exc:
+            raise TimeoutError("GitHub API operation timed out") from exc
+
+    try:
+        raw, receipt = run_with_retry(
+            f"github-api:{method}:{endpoint.split('?', 1)[0]}",
+            "GITHUB_API",
+            invoke,
+            deadline_seconds=operation_timeout,
+        )
+    except ProducerValidationError as exc:
+        if "transient" in str(exc) or "deadline" in str(exc):
+            raise ProducerInterrupted() from exc
+        raise
+    receipts = getattr(args, "_retry_receipts", None)
+    if receipts is None:
+        receipts = []
+        args._retry_receipts = receipts
+    receipts.append(
+        {
+            **receipt,
+            "connectTimeoutSeconds": connect_timeout,
+            "readTimeoutSeconds": read_timeout,
+            "operationTimeoutSeconds": operation_timeout,
+        }
+    )
+    try:
+        return load_json_bytes(raw, limit, max_depth=24, max_entries=20_000)
+    except ProducerValidationError as exc:
+        raise ProducerRejectedError("GitHub API returned malformed JSON") from exc
+
+
+def _retry_receipts(args: argparse.Namespace) -> list[dict[str, Any]]:
+    return list(getattr(args, "_retry_receipts", []))
+
+
+def _workflow_path(value: Any) -> str:
+    if not isinstance(value, str):
+        raise ProducerRejectedError("workflow path is invalid")
+    path = value.split("@", 1)[0]
+    if path != ".github/workflows/paddleocr-producer.yml":
+        raise ProducerRejectedError("workflow path differs")
+    return path
+
+
+def _normalized_run(value: Any) -> dict[str, Any]:
+    if not isinstance(value, dict):
+        raise ProducerRejectedError("workflow run is invalid")
+    required = ("id", "run_attempt", "head_sha", "path", "event", "status", "conclusion")
+    if any(field not in value for field in required):
+        raise ProducerRejectedError("workflow run is incomplete")
+    run_id = value["id"]
+    run_attempt = value["run_attempt"]
+    if type(run_id) is not int or run_id <= 0 or type(run_attempt) is not int or run_attempt <= 0:
+        raise ProducerRejectedError("workflow run identity is invalid")
+    head_sha = value["head_sha"]
+    if not isinstance(head_sha, str) or re.fullmatch(r"[0-9a-f]{40}", head_sha) is None:
+        raise ProducerRejectedError("workflow head SHA is invalid")
+    if value["event"] != "workflow_dispatch":
+        raise ProducerRejectedError("workflow event differs")
+    status = value["status"]
+    conclusion = value["conclusion"]
+    if not isinstance(status, str) or conclusion is not None and not isinstance(conclusion, str):
+        raise ProducerRejectedError("workflow state is invalid")
+    return {
+        "databaseId": run_id,
+        "runAttempt": run_attempt,
+        "headSha": head_sha,
+        "workflowPath": _workflow_path(value["path"]),
+        "event": value["event"],
+        "status": status,
+        "conclusion": conclusion,
+    }
+
+
+def _workflow_runs(args: argparse.Namespace) -> list[list[dict[str, Any]]]:
+    _validated_repository(args.repo)
+    max_pages = getattr(args, "max_pages", 20)
+    max_items = getattr(args, "max_page_items", 100)
+    max_total = getattr(args, "max_total_bytes", 40 * 1024 * 1024)
+    if not 1 <= max_pages <= 20 or not 1 <= max_items <= 100 or max_total > 40 * 1024 * 1024:
+        raise ProducerValidationError("workflow pagination limits exceed the contract")
+    pages: list[list[dict[str, Any]]] = []
+    observed_bytes = 0
+    for page in range(1, max_pages + 1):
+        endpoint = (
+            f"repos/{args.repo}/actions/workflows/{args.workflow}/runs"
+            f"?branch={quote(args.branch)}&event={quote(args.event)}&per_page={max_items}&page={page}"
+        )
+        document = _gh_json(args, endpoint, jq='{\"items\":.workflow_runs}')
+        items = document.get("items")
+        if not isinstance(items, list) or len(items) > max_items:
+            raise ProducerRejectedError("workflow run page violates item limits")
+        normalized = [_normalized_run(item) for item in items]
+        observed_bytes += len(jcs_bytes(document))
+        if observed_bytes > max_total:
+            raise ProducerRejectedError("workflow run pages exceed total byte limit")
+        pages.append(normalized)
+        if len(items) < max_items:
+            return pages
+    raise ProducerRejectedError("workflow run pagination exceeds page limit")
+
+
+def _snapshot_workflow_runs(args: argparse.Namespace) -> dict[str, Any]:
+    pages = _workflow_runs(args)
+    run_ids = [run["databaseId"] for page in pages for run in page]
+    if len(run_ids) != len(set(run_ids)):
+        raise ProducerRejectedError("workflow run snapshot contains duplicate IDs")
+    snapshot = {"runIds": run_ids}
+    output_sha = _atomic_write_new(args.output, jcs_bytes(snapshot))
+    return _success(
+        "snapshot-workflow-runs", {**snapshot, "outputSha256": output_sha}
+    )
+
+
+def _readback_workflow_run(args: argparse.Namespace) -> dict[str, Any]:
+    _validated_repository(args.repo)
+    document = _gh_json(
+        args,
+        f"repos/{args.repo}/actions/runs/{args.run_id}/attempts/{args.run_attempt}",
+    )
+    run = _normalized_run(document)
+    if run["databaseId"] != args.run_id or run["runAttempt"] != args.run_attempt:
+        raise ProducerRejectedError("workflow run identity differs")
+    if run["headSha"] != args.expected_head:
+        raise ProducerRejectedError("workflow run head differs")
+    receipt = {**run, "retryReceipts": _retry_receipts(args)}
+    output_sha = _atomic_write_new(args.output, jcs_bytes(receipt))
+    return _success(
+        "readback-workflow-run", {**receipt, "outputSha256": output_sha}
+    )
+
+
+def _workflow_jobs(args: argparse.Namespace) -> list[dict[str, Any]]:
+    _validated_repository(args.repo)
+    document = _gh_json(
+        args,
+        f"repos/{args.repo}/actions/runs/{args.run_id}/attempts/{args.run_attempt}/jobs?per_page=100",
+        jq='{\"items\":.jobs}',
+    )
+    jobs = document.get("items")
+    if not isinstance(jobs, list) or len(jobs) > 100:
+        raise ProducerRejectedError("workflow jobs violate item limits")
+    normalized = []
+    for job in jobs:
+        if not isinstance(job, dict) or any(field not in job for field in ("name", "status", "conclusion")):
+            raise ProducerRejectedError("workflow job is incomplete")
+        if not all(job[field] is None or isinstance(job[field], str) for field in ("name", "status", "conclusion")):
+            raise ProducerRejectedError("workflow job state is invalid")
+        normalized.append({field: job[field] for field in ("name", "status", "conclusion")})
+    return normalized
+
+
+def _wait_workflow(args: argparse.Namespace, *, job_name: str | None) -> dict[str, Any]:
+    if not 1 <= args.deadline_seconds <= 7200 or not 1 <= args.poll_seconds <= 60:
+        raise ProducerValidationError("workflow wait limits exceed the contract")
+    deadline = time.monotonic() + args.deadline_seconds
+    while True:
+        if job_name is None:
+            document = _gh_json(
+                args,
+                f"repos/{args.repo}/actions/runs/{args.run_id}/attempts/{args.run_attempt}",
+            )
+            state = _normalized_run(document)
+            if state["databaseId"] != args.run_id or state["runAttempt"] != args.run_attempt:
+                raise ProducerRejectedError("workflow run identity differs")
+            if state["headSha"] != args.expected_head:
+                raise ProducerRejectedError("workflow run head differs")
+        else:
+            matches = [job for job in _workflow_jobs(args) if job["name"] == job_name]
+            if len(matches) != 1:
+                raise ProducerRejectedError("workflow job is absent or ambiguous")
+            state = {
+                "runId": args.run_id,
+                "runAttempt": args.run_attempt,
+                "jobName": job_name,
+                **matches[0],
+            }
+        if state["status"] == "completed":
+            return state
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            raise ProducerInterrupted()
+        time.sleep(min(args.poll_seconds, remaining))
+
+
+def _wait_workflow_job(args: argparse.Namespace) -> dict[str, Any]:
+    state = _wait_workflow(args, job_name=args.job_name)
+    return _success(
+        "wait-workflow-job", {**state, "retryReceipts": _retry_receipts(args)}
+    )
+
+
+def _wait_workflow_run(args: argparse.Namespace) -> dict[str, Any]:
+    state = _wait_workflow(args, job_name=None)
+    receipt = {**state, "retryReceipts": _retry_receipts(args)}
+    output_sha = _atomic_write_new(args.output, jcs_bytes(receipt))
+    return _success("wait-workflow-run", {**receipt, "outputSha256": output_sha})
+
+
+def _package_metadata(args: argparse.Namespace, owner: str, package: str) -> dict[str, Any]:
+    document = _gh_json(
+        args, f"orgs/{owner}/packages/container/{quote(package, safe='')}"
+    )
+    if document.get("name") != package or document.get("package_type") != "container":
+        raise ProducerRejectedError("package identity differs")
+    visibility = document.get("visibility")
+    if visibility not in {"private", "public", "internal"}:
+        raise ProducerRejectedError("package visibility is invalid")
+    return {"package": package, "visibility": visibility, "packageId": document.get("id")}
+
+
+def _package_version(args: argparse.Namespace, owner: str, package: str, tag: str) -> dict[str, Any] | None:
+    if owner != "bluetape4k":
+        raise ProducerValidationError("package owner is outside the producer contract")
+    max_pages = min(getattr(args, "max_pages", 20), 20)
+    max_items = min(getattr(args, "max_page_items", 100), 100)
+    max_total = min(getattr(args, "max_total_bytes", 40 * 1024 * 1024), 40 * 1024 * 1024)
+    pages = []
+    observed_bytes = 0
+    for page in range(1, max_pages + 1):
+        document = _gh_json(
+            args,
+            f"orgs/{owner}/packages/container/{quote(package, safe='')}/versions"
+            f"?per_page={max_items}&page={page}",
+            jq='{\"items\":.}',
+        )
+        items = document.get("items")
+        if not isinstance(items, list) or len(items) > max_items:
+            raise ProducerRejectedError("package versions are invalid")
+        observed_bytes += len(jcs_bytes(document))
+        if observed_bytes > max_total:
+            raise ProducerRejectedError("package versions exceed total byte limit")
+        pages.append(items)
+        if len(items) < max_items:
+            break
+    else:
+        raise ProducerRejectedError("package version pagination exceeds page limit")
+    selected = select_exact_version(pages, tag)
+    if selected is None:
+        return None
+    return {
+        "package": package,
+        "versionId": selected["id"],
+        "attemptTag": tag,
+        "manifestDigest": selected["name"],
+    }
+
+
+def _readback_packages(args: argparse.Namespace) -> dict[str, Any]:
+    if args.image_tag != "image-" + args.attempt_id or args.evidence_tag != "evidence-" + args.attempt_id:
+        raise ProducerValidationError("package tags differ from attemptId")
+    staging_meta = _package_metadata(args, args.owner, args.staging_package)
+    release_meta = _package_metadata(args, args.owner, args.release_package)
+    staging = _package_version(args, args.owner, args.staging_package, args.image_tag)
+    release = _package_version(args, args.owner, args.release_package, args.image_tag)
+    evidence = _package_version(args, args.owner, args.release_package, args.evidence_tag)
+    for artifact, metadata in ((staging, staging_meta), (release, release_meta), (evidence, release_meta)):
+        if artifact is not None:
+            artifact["visibility"] = metadata["visibility"]
+    return _success(
+        "readback-packages",
+        {
+            "staging": staging,
+            "release": release,
+            "evidence": evidence,
+            "retryReceipts": _retry_receipts(args),
+        },
+    )
+
+
+def _readback_public_gate(args: argparse.Namespace) -> dict[str, Any]:
+    package = _package_metadata(args, args.repo.split("/", 1)[0], args.package)
+    if package["visibility"] != "public":
+        raise ProducerBlockedError("release package is not public")
+    jobs = _workflow_jobs(args)
+    required = {
+        "PaddleOCR producer / consumer-verify-public",
+        "PaddleOCR producer / cleanup-aggregate",
+        "PaddleOCR producer / release-readback-finalize",
+    }
+    selected = {job["name"]: job for job in jobs if job["name"] in required}
+    if set(selected) != required or any(job["conclusion"] != "success" for job in selected.values()):
+        raise ProducerBlockedError("public workflow gate is incomplete")
+    if re.fullmatch(r"[0-9a-f]{40}", args.expected_head) is None:
+        raise ProducerValidationError("expected head must be a full commit SHA")
+    result = {
+            "runId": args.run_id,
+            "runAttempt": args.run_attempt,
+            "expectedHead": args.expected_head,
+            "visibility": package["visibility"],
+            "jobs": selected,
+            "retryReceipts": _retry_receipts(args),
+    }
+    output_sha = _atomic_write_new(args.output, jcs_bytes(result))
+    return _success("readback-public-gate", {**result, "outputSha256": output_sha})
+
+
+def _open_or_link_incident(args: argparse.Namespace) -> dict[str, Any]:
+    _validated_repository(args.repo)
+    reconciliation, raw = _load_canonical_document(args.reconciliation, contract_error=True)
+    validated = validate_reconciliation(reconciliation)
+    expected_sha = require_sha256(args.expected_sha256, "expectedSha256")
+    if sha256_hex(raw) != expected_sha:
+        raise ProducerValidationError("reconciliation SHA-256 differs")
+    expected_marker = f"issue-638-incident:{expected_sha}"
+    if args.approval_marker != expected_marker:
+        raise ProducerValidationError("incident approval marker is absent or stale")
+    body = (
+        f"Issue #638 producer incident: attempt `{validated['attemptId']}`, "
+        f"status `{validated['producerStatus']}`, reconciliation `{expected_sha}`."
+    )
+    gh_bin = _resolved_tool(args.gh_bin, "gh")
+    raw_url = _run_bounded_command(
+        [str(gh_bin), "issue", "comment", "638", "--repo", args.repo, "--body", body],
+        8 * 1024,
+        _operation_timeout(args),
+    )
+    incident_url = raw_url.decode("utf-8", errors="strict").strip()
+    if re.fullmatch(
+        r"https://github\.com/bluetape4k/bluetape4k-image/issues/638#issuecomment-[1-9][0-9]*",
+        incident_url,
+    ) is None:
+        raise ProducerRejectedError("incident comment URL is invalid")
+    acknowledged_at = datetime.datetime.now(datetime.timezone.utc).isoformat().replace("+00:00", "Z")
+    incident = {"incidentUrl": incident_url, "ownerAcknowledgedAt": acknowledged_at}
+    output_sha = _atomic_write_new(args.output, jcs_bytes(incident))
+    return _success(
+        "open-or-link-incident",
+        {
+            "incidentUrl": incident_url,
+            "statusChangedAt": validated["statusChangedAt"],
+            "approvalMarkerSha256": sha256_hex(args.approval_marker.encode()),
+            "outputSha256": output_sha,
+        },
+    )
+
+
+def _readback_incident(args: argparse.Namespace) -> dict[str, Any]:
+    _validated_repository(args.repo)
+    reconciliation, raw = _load_canonical_document(args.reconciliation, contract_error=True)
+    validated = validate_reconciliation(reconciliation)
+    if validated["attemptId"] != f"{args.run_id}.{args.run_attempt}":
+        raise ProducerValidationError("incident run identity differs")
+    result = {
+            "incidentUrl": validated["incidentUrl"],
+            "ownerAcknowledgedAt": validated["ownerAcknowledgedAt"],
+            "closedAt": validated["closedAt"],
+            "cleanupVerified": validated["cleanupVerified"],
+            "denylistVerified": validated["denylistVerified"],
+            "visibilityReadBack": validated["visibilityReadBack"],
+            "downstreamReadBack": validated["downstreamReadBack"],
+            "reconciliationSha256": sha256_hex(raw),
+    }
+    output_sha = _atomic_write_new(args.output, jcs_bytes(result))
+    return _success("readback-incident", {**result, "outputSha256": output_sha})
+
+
+def _inspect_live_producer_settings(args: argparse.Namespace) -> dict[str, Any]:
+    _validated_repository(args.repo)
+    if re.fullmatch(r"[0-9a-f]{40}", args.expected_head) is None:
+        raise ProducerValidationError("expected head must be a full commit SHA")
+    commit = _gh_json(args, f"repos/{args.repo}/commits/{args.expected_head}")
+    workflow = _gh_json(args, f"repos/{args.repo}/contents/{args.workflow}?ref={args.expected_head}")
+    environment = _gh_json(args, f"repos/{args.repo}/environments/{args.environment}")
+    rulesets = _gh_json(args, f"repos/{args.repo}/rulesets", jq='{\"items\":.}')
+    packages = {}
+    for name in (args.staging_package, args.release_package):
+        packages[name] = _package_metadata(args, args.repo.split("/", 1)[0], name)
+    if commit.get("sha") != args.expected_head:
+        raise ProducerRejectedError("expected commit read-back differs")
+    if (
+        workflow.get("path") != args.workflow
+        or not isinstance(workflow.get("sha"), str)
+        or re.fullmatch(r"[0-9a-f]{40}", workflow["sha"]) is None
+    ):
+        raise ProducerRejectedError("workflow content read-back is incomplete")
+    if environment.get("name") != args.environment:
+        raise ProducerRejectedError("producer environment read-back differs")
+    if not isinstance(rulesets.get("items"), list):
+        raise ProducerRejectedError("repository ruleset read-back is incomplete")
+    result = {
+            "expectedHead": args.expected_head,
+            "commitSha": commit["sha"],
+            "workflowPath": args.workflow,
+            "workflowBlobSha": workflow.get("sha"),
+            "environment": environment.get("name"),
+            "rulesets": rulesets.get("items"),
+            "packages": packages,
+    }
+    output_sha = _atomic_write_new(args.output, jcs_bytes(result))
+    return _success("inspect-live-producer-settings", {**result, "outputSha256": output_sha})
+
+
+def _readback_retention(args: argparse.Namespace) -> dict[str, Any]:
+    _validated_repository(args.repo)
+    repository = _gh_json(args, f"repos/{args.repo}")
+    run_days = repository.get("actions_retention_days")
+    if type(run_days) is not int:
+        raise ProducerBlockedError("GitHub API does not expose repository run retention")
+    result = {
+        "runDays": run_days,
+        "artifactDays": run_days,
+        "acceptedDays": args.required_accepted_days,
+        "failedStagingDays": args.failed_staging_quarantine_days,
+    }
+    if run_days < args.required_run_days:
+        raise ProducerBlockedError("repository run retention is below the producer minimum")
+    output_sha = _atomic_write_new(args.output, jcs_bytes(result))
+    return _success("readback-retention", {**result, "outputSha256": output_sha})
+
+
+def _execute_known_good_rollback(args: argparse.Namespace) -> dict[str, Any]:
+    _validated_repository(args.repo)
+    if re.fullmatch(r"sha256:[0-9a-f]{64}", args.expected_current_digest) is None:
+        raise ProducerValidationError("expectedCurrentDigest must be a sha256 OCI digest")
+    if re.fullmatch(r"sha256:[0-9a-f]{64}", args.known_good_digest) is None:
+        raise ProducerValidationError("knownGoodDigest must be a sha256 OCI digest")
+    current = args.expected_current_digest
+    known_good = args.known_good_digest
+    plan, _ = _load_canonical_document(args.rollback_plan, contract_error=True)
+    if plan.get("currentDigest") != current or plan.get("knownGoodDigest") != known_good or plan.get("dryRun") is not True:
+        raise ProducerValidationError("rollback plan differs from requested mutation")
+    marker = f"issue-638-rollback:{args.release_package_id}:{current}:{known_good}"
+    if args.approval_marker != marker or args.mutation != "visibility-and-stable-tag":
+        raise ProducerValidationError("rollback approval marker is absent or stale")
+    gh_bin = _resolved_tool(args.gh_bin, "gh")
+    oras_bin = _resolved_tool(args.oras_bin, "oras")
+    owner = args.repo.split("/", 1)[0]
+    package = "paddleocr-service"
+    metadata = _package_metadata(args, owner, package)
+    if metadata["packageId"] != args.release_package_id:
+        raise ProducerRejectedError("release package ID differs")
+    registry_config = args.registry_config.resolve()
+    if (
+        args.registry_config.is_symlink()
+        or not args.registry_config.is_file()
+        or registry_config.stat().st_mode & 0o077
+    ):
+        raise ProducerBlockedError("registry config must be a private regular file")
+    _run_bounded_command(
+        [str(gh_bin), "api", "--method", "PATCH", f"orgs/{owner}/packages/container/{package}", "-f", "visibility=private"],
+        2 * 1024 * 1024,
+        _operation_timeout(args),
+    )
+    _run_bounded_command(
+        [
+            str(oras_bin),
+            "copy",
+            "--registry-config",
+            str(registry_config),
+            f"ghcr.io/{owner}/{package}@{known_good}",
+            f"ghcr.io/{owner}/{package}:stable",
+        ],
+        64 * 1024,
+        _operation_timeout(args),
+    )
+    result = {
+        "packageId": args.release_package_id,
+        "beforeDigest": current,
+        "afterDigest": known_good,
+        "visibility": "private",
+        "stableTag": "stable",
+        "approvalMarkerSha256": sha256_hex(args.approval_marker.encode()),
+    }
+    output_sha = _atomic_write_new(args.output, jcs_bytes(result))
+    return _success("execute-known-good-rollback", {**result, "outputSha256": output_sha})
+
+
+def _readback_known_good_rollback(args: argparse.Namespace) -> dict[str, Any]:
+    _validated_repository(args.repo)
+    if re.fullmatch(r"sha256:[0-9a-f]{64}", args.expected_digest) is None:
+        raise ProducerValidationError("expectedDigest must be a sha256 OCI digest")
+    expected = args.expected_digest
+    owner = args.repo.split("/", 1)[0]
+    metadata = _package_metadata(args, owner, "paddleocr-service")
+    if metadata["packageId"] != args.release_package_id or metadata["visibility"] != "private":
+        raise ProducerRejectedError("rollback package state differs")
+    version = _package_version(args, owner, "paddleocr-service", "stable")
+    if version is None or version["manifestDigest"] != expected:
+        raise ProducerRejectedError("rollback stable tag digest differs")
+    result = {
+        "packageId": args.release_package_id,
+        "digest": expected,
+        "visibility": "private",
+        "stableTag": "stable",
+    }
+    output_sha = _atomic_write_new(args.output, jcs_bytes(result))
+    return _success("readback-known-good-rollback", {**result, "outputSha256": output_sha})
+
+
 def _verify_public_evidence(args: argparse.Namespace) -> dict[str, Any]:
     if not 1 <= args.operation_timeout_seconds <= 60:
         raise ProducerValidationError("operation timeout exceeds the public verifier limit")
@@ -2784,11 +3523,159 @@ def build_parser() -> StrictArgumentParser:
 
     selected_run = subparsers.add_parser("select-dispatched-run")
     selected_run.add_argument("--before", type=Path, required=True)
-    selected_run.add_argument("--candidates", type=Path, required=True)
+    selected_run.add_argument("--candidates", type=Path)
+    selected_run.add_argument("--repo")
+    selected_run.add_argument("--workflow")
+    selected_run.add_argument("--branch")
+    selected_run.add_argument("--event", default="workflow_dispatch")
+    selected_run.add_argument("--gh-bin", type=Path)
+    selected_run.add_argument("--operation-timeout-seconds", type=int, default=60)
+    selected_run.add_argument("--connect-timeout-seconds", type=int, default=10)
+    selected_run.add_argument("--read-timeout-seconds", type=int, default=30)
+    selected_run.add_argument("--max-page-bytes", type=int, default=2 * 1024 * 1024)
+    selected_run.add_argument("--max-page-items", type=int, default=100)
+    selected_run.add_argument("--max-pages", type=int, default=20)
+    selected_run.add_argument("--max-total-bytes", type=int, default=40 * 1024 * 1024)
     selected_run.add_argument("--expected-head", required=True)
     selected_run.add_argument("--expected-workflow", required=True)
-    selected_run.add_argument("--output", type=Path, required=True)
+    selected_run.add_argument("--output", type=Path)
     selected_run.set_defaults(handler=_select_dispatched_run)
+
+    snapshot_runs = subparsers.add_parser("snapshot-workflow-runs")
+    snapshot_runs.add_argument("--repo", required=True)
+    snapshot_runs.add_argument("--workflow", required=True)
+    snapshot_runs.add_argument("--branch", required=True)
+    snapshot_runs.add_argument("--event", default="workflow_dispatch")
+    snapshot_runs.add_argument("--gh-bin", type=Path)
+    snapshot_runs.add_argument("--operation-timeout-seconds", type=int, default=60)
+    snapshot_runs.add_argument("--connect-timeout-seconds", type=int, default=10)
+    snapshot_runs.add_argument("--read-timeout-seconds", type=int, default=30)
+    snapshot_runs.add_argument("--max-page-bytes", type=int, default=2 * 1024 * 1024)
+    snapshot_runs.add_argument("--max-page-items", type=int, default=100)
+    snapshot_runs.add_argument("--max-pages", type=int, default=20)
+    snapshot_runs.add_argument("--max-total-bytes", type=int, default=40 * 1024 * 1024)
+    snapshot_runs.add_argument("--output", type=Path, required=True)
+    snapshot_runs.set_defaults(handler=_snapshot_workflow_runs)
+
+    readback_run = subparsers.add_parser("readback-workflow-run")
+    readback_run.add_argument("--repo", required=True)
+    readback_run.add_argument("--run-id", type=int, required=True)
+    readback_run.add_argument("--run-attempt", type=int, required=True)
+    readback_run.add_argument("--expected-head", required=True)
+    readback_run.add_argument("--gh-bin", type=Path)
+    readback_run.add_argument("--operation-timeout-seconds", type=int, default=60)
+    readback_run.add_argument("--connect-timeout-seconds", type=int, default=10)
+    readback_run.add_argument("--read-timeout-seconds", type=int, default=30)
+    readback_run.add_argument("--output", type=Path, required=True)
+    readback_run.set_defaults(handler=_readback_workflow_run)
+
+    wait_job = subparsers.add_parser("wait-workflow-job")
+    wait_job.add_argument("--repo", required=True)
+    wait_job.add_argument("--run-id", type=int, required=True)
+    wait_job.add_argument("--run-attempt", type=int, required=True)
+    wait_job.add_argument("--job-name", required=True)
+    wait_job.add_argument("--gh-bin", type=Path)
+    wait_job.add_argument("--operation-timeout-seconds", type=int, default=60)
+    wait_job.add_argument("--connect-timeout-seconds", type=int, default=10)
+    wait_job.add_argument("--read-timeout-seconds", type=int, default=30)
+    wait_job.add_argument("--max-page-bytes", type=int, default=2 * 1024 * 1024)
+    wait_job.add_argument("--max-page-items", type=int, default=100)
+    wait_job.add_argument("--max-pages", type=int, default=20)
+    wait_job.add_argument("--max-total-bytes", type=int, default=40 * 1024 * 1024)
+    wait_job.add_argument("--poll-seconds", type=int, default=15)
+    wait_job.add_argument("--deadline-seconds", type=int, default=7200)
+    wait_job.set_defaults(handler=_wait_workflow_job)
+
+    wait_run = subparsers.add_parser("wait-workflow-run")
+    wait_run.add_argument("--repo", required=True)
+    wait_run.add_argument("--run-id", type=int, required=True)
+    wait_run.add_argument("--run-attempt", type=int, required=True)
+    wait_run.add_argument("--expected-head", required=True)
+    wait_run.add_argument("--gh-bin", type=Path)
+    wait_run.add_argument("--operation-timeout-seconds", type=int, default=60)
+    wait_run.add_argument("--connect-timeout-seconds", type=int, default=10)
+    wait_run.add_argument("--read-timeout-seconds", type=int, default=30)
+    wait_run.add_argument("--max-page-bytes", type=int, default=2 * 1024 * 1024)
+    wait_run.add_argument("--max-page-items", type=int, default=100)
+    wait_run.add_argument("--max-pages", type=int, default=20)
+    wait_run.add_argument("--max-total-bytes", type=int, default=40 * 1024 * 1024)
+    wait_run.add_argument("--poll-seconds", type=int, default=15)
+    wait_run.add_argument("--deadline-seconds", type=int, default=7200)
+    wait_run.add_argument("--output", type=Path, required=True)
+    wait_run.set_defaults(handler=_wait_workflow_run)
+
+    readback_packages = subparsers.add_parser("readback-packages")
+    readback_packages.add_argument("--owner", required=True)
+    readback_packages.add_argument("--release-package", required=True)
+    readback_packages.add_argument("--staging-package", required=True)
+    readback_packages.add_argument("--attempt-id", required=True)
+    readback_packages.add_argument("--image-tag", required=True)
+    readback_packages.add_argument("--evidence-tag", required=True)
+    readback_packages.add_argument("--gh-bin", type=Path)
+    readback_packages.add_argument("--operation-timeout-seconds", type=int, default=60)
+    readback_packages.add_argument("--connect-timeout-seconds", type=int, default=10)
+    readback_packages.add_argument("--read-timeout-seconds", type=int, default=30)
+    readback_packages.add_argument("--max-page-bytes", type=int, default=2 * 1024 * 1024)
+    readback_packages.add_argument("--max-page-items", type=int, default=100)
+    readback_packages.add_argument("--max-pages", type=int, default=20)
+    readback_packages.add_argument("--max-total-bytes", type=int, default=40 * 1024 * 1024)
+    readback_packages.set_defaults(handler=_readback_packages)
+
+    public_gate = subparsers.add_parser("readback-public-gate")
+    public_gate.add_argument("--repo", required=True)
+    public_gate.add_argument("--package", required=True)
+    public_gate.add_argument("--run-id", type=int, required=True)
+    public_gate.add_argument("--run-attempt", type=int, required=True)
+    public_gate.add_argument("--expected-head", required=True)
+    public_gate.add_argument("--gh-bin", type=Path)
+    public_gate.add_argument("--operation-timeout-seconds", type=int, default=60)
+    public_gate.add_argument("--connect-timeout-seconds", type=int, default=10)
+    public_gate.add_argument("--read-timeout-seconds", type=int, default=30)
+    public_gate.add_argument("--max-page-bytes", type=int, default=2 * 1024 * 1024)
+    public_gate.add_argument("--max-page-items", type=int, default=100)
+    public_gate.add_argument("--max-pages", type=int, default=20)
+    public_gate.add_argument("--max-total-bytes", type=int, default=40 * 1024 * 1024)
+    public_gate.add_argument("--output", type=Path, required=True)
+    public_gate.set_defaults(handler=_readback_public_gate)
+
+    prepare_reconcile = subparsers.add_parser("prepare-reconcile-inputs")
+    prepare_reconcile.add_argument("--prior-result", type=Path, required=True)
+    prepare_reconcile.add_argument("--prior-reconciliation", type=Path, required=True)
+    prepare_reconcile.add_argument("--prior-evidence", type=Path, required=True)
+    prepare_reconcile.add_argument("--prior-cleanup", type=Path, required=True)
+    prepare_reconcile.add_argument("--output", type=Path, required=True)
+    prepare_reconcile.set_defaults(handler=_prepare_reconcile_inputs)
+
+    validate_reconcile = subparsers.add_parser("validate-reconcile-state")
+    validate_reconcile.add_argument("--resume-attempt-id", required=True)
+    validate_reconcile.add_argument("--expected-prior-status", required=True)
+    validate_reconcile.add_argument("--expected-input-lock-sha256", required=True)
+    validate_reconcile.add_argument("--expected-staging-digest", required=True)
+    validate_reconcile.add_argument("--expected-release-digest", required=True)
+    validate_reconcile.add_argument("--expected-evidence-digest", required=True)
+    validate_reconcile.add_argument("--prior-state", type=Path, required=True)
+    validate_reconcile.add_argument("--package-readback", type=Path, required=True)
+    validate_reconcile.add_argument("--input-lock", type=Path, required=True)
+    validate_reconcile.add_argument("--output", type=Path, required=True)
+    validate_reconcile.set_defaults(handler=_validate_reconcile_state)
+
+    open_incident = subparsers.add_parser("open-or-link-incident")
+    open_incident.add_argument("--repo", required=True)
+    open_incident.add_argument("--reconciliation", type=Path, required=True)
+    open_incident.add_argument("--expected-sha256", required=True)
+    open_incident.add_argument("--approval-marker", required=True)
+    open_incident.add_argument("--gh-bin", type=Path)
+    open_incident.add_argument("--operation-timeout-seconds", type=int, default=60)
+    open_incident.add_argument("--output", type=Path, required=True)
+    open_incident.set_defaults(handler=_open_or_link_incident)
+
+    readback_incident = subparsers.add_parser("readback-incident")
+    readback_incident.add_argument("--repo", required=True)
+    readback_incident.add_argument("--run-id", type=int, required=True)
+    readback_incident.add_argument("--run-attempt", type=int, required=True)
+    readback_incident.add_argument("--reconciliation", type=Path, required=True)
+    readback_incident.add_argument("--output", type=Path, required=True)
+    readback_incident.set_defaults(handler=_readback_incident)
 
     acknowledge = subparsers.add_parser("acknowledge-incident")
     acknowledge.add_argument("--reconciliation", type=Path, required=True)
@@ -2800,7 +3687,8 @@ def build_parser() -> StrictArgumentParser:
     close = subparsers.add_parser("close-incident")
     close.add_argument("--reconciliation", type=Path, required=True)
     close.add_argument("--expected-sha256", required=True)
-    close.add_argument("--closed-at", required=True)
+    close.add_argument("--incident", type=Path)
+    close.add_argument("--closed-at")
     close.add_argument("--require-denylist", action="store_true")
     close.add_argument("--require-visibility", action="store_true")
     close.add_argument("--require-cleanup", action="store_true")
@@ -2815,6 +3703,66 @@ def build_parser() -> StrictArgumentParser:
     rollback.add_argument("--require-downstream-notification", action="store_true")
     rollback.add_argument("--output", type=Path, required=True)
     rollback.set_defaults(handler=_plan_known_good_rollback)
+
+    execute_rollback = subparsers.add_parser("execute-known-good-rollback")
+    execute_rollback.add_argument("--repo", required=True)
+    execute_rollback.add_argument("--release-package-id", type=int, required=True)
+    execute_rollback.add_argument("--rollback-plan", type=Path, required=True)
+    execute_rollback.add_argument("--approval-marker", required=True)
+    execute_rollback.add_argument("--expected-current-digest", required=True)
+    execute_rollback.add_argument("--known-good-digest", required=True)
+    execute_rollback.add_argument("--mutation", required=True)
+    execute_rollback.add_argument("--gh-bin", type=Path)
+    execute_rollback.add_argument("--oras-bin", type=Path)
+    execute_rollback.add_argument("--registry-config", type=Path, required=True)
+    execute_rollback.add_argument("--operation-timeout-seconds", type=int, default=60)
+    execute_rollback.add_argument("--output", type=Path, required=True)
+    execute_rollback.set_defaults(handler=_execute_known_good_rollback)
+
+    readback_rollback = subparsers.add_parser("readback-known-good-rollback")
+    readback_rollback.add_argument("--repo", required=True)
+    readback_rollback.add_argument("--release-package-id", type=int, required=True)
+    readback_rollback.add_argument("--expected-digest", required=True)
+    readback_rollback.add_argument("--gh-bin", type=Path)
+    readback_rollback.add_argument("--operation-timeout-seconds", type=int, default=60)
+    readback_rollback.add_argument("--connect-timeout-seconds", type=int, default=10)
+    readback_rollback.add_argument("--read-timeout-seconds", type=int, default=30)
+    readback_rollback.add_argument("--max-page-bytes", type=int, default=2 * 1024 * 1024)
+    readback_rollback.add_argument("--max-page-items", type=int, default=100)
+    readback_rollback.add_argument("--max-pages", type=int, default=20)
+    readback_rollback.add_argument("--max-total-bytes", type=int, default=40 * 1024 * 1024)
+    readback_rollback.add_argument("--output", type=Path, required=True)
+    readback_rollback.set_defaults(handler=_readback_known_good_rollback)
+
+    inspect_settings = subparsers.add_parser("inspect-live-producer-settings")
+    inspect_settings.add_argument("--repo", required=True)
+    inspect_settings.add_argument("--expected-head", required=True)
+    inspect_settings.add_argument("--workflow", required=True)
+    inspect_settings.add_argument("--environment", required=True)
+    inspect_settings.add_argument("--staging-package", required=True)
+    inspect_settings.add_argument("--release-package", required=True)
+    inspect_settings.add_argument("--gh-bin", type=Path)
+    inspect_settings.add_argument("--operation-timeout-seconds", type=int, default=60)
+    inspect_settings.add_argument("--connect-timeout-seconds", type=int, default=10)
+    inspect_settings.add_argument("--read-timeout-seconds", type=int, default=30)
+    inspect_settings.add_argument("--max-page-bytes", type=int, default=2 * 1024 * 1024)
+    inspect_settings.add_argument("--max-page-items", type=int, default=100)
+    inspect_settings.add_argument("--max-pages", type=int, default=20)
+    inspect_settings.add_argument("--max-total-bytes", type=int, default=40 * 1024 * 1024)
+    inspect_settings.add_argument("--output", type=Path, required=True)
+    inspect_settings.set_defaults(handler=_inspect_live_producer_settings)
+
+    retention = subparsers.add_parser("readback-retention")
+    retention.add_argument("--repo", required=True)
+    retention.add_argument("--required-run-days", type=int, required=True)
+    retention.add_argument("--required-accepted-days", type=int, required=True)
+    retention.add_argument("--failed-staging-quarantine-days", type=int, required=True)
+    retention.add_argument("--gh-bin", type=Path)
+    retention.add_argument("--operation-timeout-seconds", type=int, default=60)
+    retention.add_argument("--connect-timeout-seconds", type=int, default=10)
+    retention.add_argument("--read-timeout-seconds", type=int, default=30)
+    retention.add_argument("--output", type=Path, required=True)
+    retention.set_defaults(handler=_readback_retention)
 
     verify = subparsers.add_parser("verify-attempt")
     verify.add_argument("--attempt", type=Path, required=True)

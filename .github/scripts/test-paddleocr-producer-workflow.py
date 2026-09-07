@@ -71,12 +71,10 @@ EXPECTED_PERMISSIONS = {
     "public-visibility-readback": {"contents": "read", "packages": "read"},
     "consumer-verify-public": READ,
     "reconcile-readback": {
-        "contents": "read", "packages": "read", "attestations": "read",
+        "contents": "read", "actions": "read", "packages": "read",
+        "attestations": "read",
     },
-    "emergency-deny-attest": {
-        "contents": "read", "actions": "read",
-        "attestations": "write", "id-token": "write",
-    },
+    "emergency-deny-attest": READ,
     "cleanup-aggregate": {"contents": "read", "actions": "read"},
     "release-readback-finalize": {
         "contents": "read", "actions": "read", "packages": "read",
@@ -211,10 +209,11 @@ class ProducerWorkflowContractTest(unittest.TestCase):
                     side_effect = steps.index("- name: Execute producer stage")
                     self.assertLess(trust, side_effect)
         validation = self.blocks["validation"]
-        self.assertLess(
-            validation.index("- name: Reject duplicate successful input lock"),
-            validation.index("- name: Execute producer stage"),
-        )
+        self.assertIn("Execute producer stage - validate immutable inputs", validation)
+        self.assertIn(" validate-inputs ", validation)
+        self.assertIn(" verify-dockerfile ", validation)
+        self.assertNotIn("exit 10", validation)
+        self.assertNotIn("후속 구현", validation)
         self.assertNotIn("secrets.", self.workflow)
 
     def test_finalizer_reconcile_and_quarantine_order_is_fail_closed(self) -> None:
@@ -234,6 +233,7 @@ class ProducerWorkflowContractTest(unittest.TestCase):
         self.assertIn("pattern: cleanup-fragment-${{ env.ATTEMPT_ID }}-*", cleanup)
         finalizer = self.blocks["release-readback-finalize"]
         self.assertEqual(job_needs(finalizer), {
+            "staging-push", "release-promotion", "release-evidence-push",
             "consumer-verify-public", "reconcile-readback",
             "emergency-deny-attest", "cleanup-aggregate",
         })
@@ -242,7 +242,9 @@ class ProducerWorkflowContractTest(unittest.TestCase):
         emergency = self.blocks["emergency-deny-attest"]
         self.assertEqual(job_needs(emergency), {"consumer-verify-public"})
         self.assertIn("QUARANTINE_PENDING", emergency)
-        self.assertIn("verify-emergency-receipt", emergency)
+        self.assertIn("paddleocr-quarantine-pending-${{ env.ATTEMPT_ID }}", emergency)
+        self.assertNotIn("verify-emergency-receipt", emergency)
+        self.assertNotIn("id-token: write", emergency)
         reconcile = self.blocks["reconcile-readback"]
         self.assertEqual(job_needs(reconcile), {"validation"})
         self.assertIn("inputs.mode == 'RECONCILE'", reconcile)
@@ -251,6 +253,14 @@ class ProducerWorkflowContractTest(unittest.TestCase):
             "expectedStagingDigest", "expectedReleaseDigest", "expectedEvidenceDigest",
         ):
             self.assertIn(f"inputs.{field}", reconcile)
+        for command in (
+            "readback-workflow-run",
+            "readback-packages",
+            "validate-reconcile-state",
+        ):
+            self.assertIn(command, reconcile)
+        self.assertIn("-type l -print -quit", reconcile)
+        self.assertIn("-le 1048576", reconcile)
         for forbidden in ("docker build", "oras push", "oras cp", "packages: write", "id-token: write"):
             self.assertNotIn(forbidden, reconcile.lower())
         for job in ("staging", "source-repro-check", "image-build", "staging-push", "staging-attest", "release-promotion", "release-attest", "release-evidence-push"):
@@ -258,6 +268,8 @@ class ProducerWorkflowContractTest(unittest.TestCase):
         self.assertNotIn("issues: write", self.workflow)
         for forbidden in ("visibility public", "visibility private", "delete-package-version", "execute-known-good-rollback"):
             self.assertNotIn(forbidden, self.workflow)
+        self.assertIn("paddleocr-reconcile-state-${{ env.ATTEMPT_ID }}", finalizer)
+        self.assertIn('NEEDS_JSON: ${{ toJSON(needs) }}', cleanup)
 
     def test_unprivileged_build_and_private_push_use_same_run_artifacts(self) -> None:
         self.assertEqual(
@@ -347,6 +359,10 @@ class ProducerWorkflowContractTest(unittest.TestCase):
 
         self.assertEqual(job_needs(self.blocks["consumer-verify-private"]), {"release-evidence-push"})
         self.assertEqual(job_needs(self.blocks["public-visibility-readback"]), {"consumer-verify-private"})
+        self.assertIn(
+            "environment: paddleocr-producer",
+            self.blocks["public-visibility-readback"],
+        )
         public = self.blocks["consumer-verify-public"]
         self.assertEqual(job_needs(public), {"public-visibility-readback"})
         self.assertIn("verify-public-evidence", public)

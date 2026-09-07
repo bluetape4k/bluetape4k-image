@@ -1198,6 +1198,237 @@ class ProducerCliTest(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr.decode())
         self.assertEqual(len(json.loads(candidate.read_bytes())["digests"]), 2)
 
+    def test_prepare_reconcile_inputs_emits_six_fields_in_file_envelope(self) -> None:
+        reconciliation = valid_reconciliation("INTERRUPTED")
+        reconciliation.update(
+            {
+                "lastCompletedStage": "NONE",
+                "staging": None,
+                "release": None,
+                "evidence": None,
+            }
+        )
+        reconciliation_raw = jcs_bytes(reconciliation)
+        result = {
+            "schemaVersion": 1,
+            "attemptId": "1234.2",
+            "producerStatus": "INTERRUPTED",
+            "lastCompletedStage": "NONE",
+            "mapped609Status": "BLOCKED",
+            "imagePlatformDigest": None,
+            "evidenceManifestDigest": None,
+            "reconciliationSha256": sha256_hex(reconciliation_raw),
+            "ledgerFragmentSha256": SHA_C,
+            "revocationsSha256": SHA_B,
+            "errorCode": "INTERRUPTED",
+            "errorMessage": "producer ended with INTERRUPTED",
+        }
+        evidence = {
+            "schemaVersion": 1,
+            "attemptId": "1234.2",
+            "producerStatus": "INTERRUPTED",
+            "lastCompletedStage": "NONE",
+            "inputLockSha256": SHA_A,
+            "staging": None,
+            "release": None,
+            "payload": None,
+            "evidenceSubjectDigest": None,
+        }
+        cleanup = {
+            "schemaVersion": 1,
+            "attemptId": "1234.2",
+            "originalProducerStatus": "INTERRUPTED",
+            "startedJobIds": [],
+            "fragments": [],
+            "cleanupVerified": True,
+            "mergedAt": "2026-09-07T01:02:00Z",
+        }
+        paths = {}
+        for name, document in (
+            ("result", result),
+            ("reconciliation", reconciliation),
+            ("evidence", evidence),
+            ("cleanup", cleanup),
+        ):
+            paths[name] = self.root / f"prior-{name}.json"
+            paths[name].write_bytes(jcs_bytes(document))
+        output = self.root / "reconcile-inputs.json"
+        completed = self._run(
+            "prepare-reconcile-inputs",
+            "--prior-result", str(paths["result"]),
+            "--prior-reconciliation", str(paths["reconciliation"]),
+            "--prior-evidence", str(paths["evidence"]),
+            "--prior-cleanup", str(paths["cleanup"]),
+            "--output", str(output),
+        )
+        self.assertEqual(completed.returncode, 0, completed.stdout.decode())
+        file_document = json.loads(output.read_bytes())
+        self.assertEqual(file_document["command"], "prepare-reconcile-inputs")
+        self.assertEqual(
+            {
+                key: file_document["data"][key]
+                for key in (
+                    "resumeAttemptId",
+                    "expectedPriorStatus",
+                    "expectedInputLockSha256",
+                    "expectedStagingDigest",
+                    "expectedReleaseDigest",
+                    "expectedEvidenceDigest",
+                )
+            },
+            {
+                "resumeAttemptId": "1234.2",
+                "expectedPriorStatus": "INTERRUPTED",
+                "expectedInputLockSha256": SHA_A,
+                "expectedStagingDigest": "NONE",
+                "expectedReleaseDigest": "NONE",
+                "expectedEvidenceDigest": "NONE",
+            },
+        )
+        tampered = dict(result)
+        tampered["reconciliationSha256"] = SHA_C
+        paths["result"].write_bytes(jcs_bytes(tampered))
+        rejected = self._run(
+            "prepare-reconcile-inputs",
+            "--prior-result", str(paths["result"]),
+            "--prior-reconciliation", str(paths["reconciliation"]),
+            "--prior-evidence", str(paths["evidence"]),
+            "--prior-cleanup", str(paths["cleanup"]),
+            "--output", str(self.root / "rejected.json"),
+        )
+        self.assertEqual(rejected.returncode, 40)
+
+    def test_validate_reconcile_state_binds_prior_hashes_and_remote_absence(self) -> None:
+        lock, _, _ = self._write_inputs()
+        input_lock_sha = sha256_hex(lock.read_bytes())
+        document_hashes = {
+            "resultSha256": SHA_A,
+            "evidenceSha256": SHA_B,
+            "reconciliationSha256": SHA_C,
+            "cleanupSha256": "d" * 64,
+        }
+        prior_state = self.root / "prior-state.json"
+        prior_state.write_bytes(jcs_bytes({
+            "schemaVersion": 1,
+            "attemptId": "1234.2",
+            "workflowHeadSha": "1" * 40,
+            "producerStatus": "INTERRUPTED",
+            "inputLockSha256": input_lock_sha,
+            "staging": None,
+            "release": None,
+            "evidence": None,
+            "documentHashes": document_hashes,
+        }))
+        package_readback = self.root / "package-readback.json"
+        package_readback.write_bytes(jcs_bytes({
+            "schemaVersion": 1,
+            "command": "readback-packages",
+            "status": "PASS",
+            "data": {
+                "staging": None,
+                "release": None,
+                "evidence": None,
+                "retryReceipts": [],
+            },
+        }))
+        output = self.root / "validated-reconcile.json"
+        command = (
+            "validate-reconcile-state",
+            "--resume-attempt-id", "1234.2",
+            "--expected-prior-status", "INTERRUPTED",
+            "--expected-input-lock-sha256", input_lock_sha,
+            "--expected-staging-digest", "NONE",
+            "--expected-release-digest", "NONE",
+            "--expected-evidence-digest", "NONE",
+            "--prior-state", str(prior_state),
+            "--package-readback", str(package_readback),
+            "--input-lock", str(lock),
+            "--output", str(output),
+        )
+        completed = self._run(*command)
+        self.assertEqual(completed.returncode, 0, completed.stdout.decode())
+        self.assertEqual(
+            json.loads(output.read_bytes())["priorDocumentHashes"], document_hashes
+        )
+        tampered = json.loads(package_readback.read_bytes())
+        tampered["data"]["release"] = {
+            "package": "paddleocr-service",
+            "versionId": 9,
+            "attemptTag": "image-1234.2",
+            "manifestDigest": "sha256:" + SHA_A,
+            "visibility": "private",
+        }
+        package_readback.write_bytes(jcs_bytes(tampered))
+        rejected = self._run(*command[:-2], "--output", str(self.root / "rejected-state.json"))
+        self.assertEqual(rejected.returncode, 40)
+
+    def test_remote_run_selection_keeps_selected_identity_under_data(self) -> None:
+        fake_gh = self.root / "fake-gh"
+        fake_gh.write_text(
+            f"#!{sys.executable}\n"
+            "import json\n"
+            "print(json.dumps({'items': [{'id': 991, 'run_attempt': 1, "
+            "'head_sha': '1' * 40, 'path': '.github/workflows/paddleocr-producer.yml@refs/heads/develop', "
+            "'event': 'workflow_dispatch', 'status': 'queued', 'conclusion': None}]}))\n",
+            encoding="utf-8",
+        )
+        fake_gh.chmod(0o700)
+        before = self.root / "before.json"
+        before.write_bytes(jcs_bytes({"runIds": []}))
+        completed = self._run(
+            "select-dispatched-run",
+            "--repo", "bluetape4k/bluetape4k-image",
+            "--workflow", "paddleocr-producer.yml",
+            "--branch", "develop",
+            "--event", "workflow_dispatch",
+            "--before", str(before),
+            "--expected-head", "1" * 40,
+            "--expected-workflow", ".github/workflows/paddleocr-producer.yml",
+            "--gh-bin", str(fake_gh),
+        )
+        self.assertEqual(completed.returncode, 0, completed.stdout.decode())
+        document = json.loads(completed.stdout)
+        self.assertEqual(document["data"]["databaseId"], 991)
+        self.assertEqual(document["data"]["runAttempt"], 1)
+        self.assertNotIn("databaseId", {key: value for key, value in document.items() if key != "data"})
+
+    def test_incident_approval_is_validated_before_gh_mutation(self) -> None:
+        reconciliation = self.root / "incident-reconciliation.json"
+        reconciliation.write_bytes(jcs_bytes(valid_reconciliation("FAILED")))
+        called = self.root / "gh-called"
+        fake_gh = self.root / "fake-gh"
+        fake_gh.write_text(
+            f"#!{sys.executable}\n"
+            "from pathlib import Path\n"
+            f"Path({str(called)!r}).write_text('called')\n"
+            "print('https://github.com/bluetape4k/bluetape4k-image/issues/638#issuecomment-1')\n",
+            encoding="utf-8",
+        )
+        fake_gh.chmod(0o700)
+        digest = sha256_hex(reconciliation.read_bytes())
+        rejected = self._run(
+            "open-or-link-incident",
+            "--repo", "bluetape4k/bluetape4k-image",
+            "--reconciliation", str(reconciliation),
+            "--expected-sha256", digest,
+            "--approval-marker", "stale",
+            "--gh-bin", str(fake_gh),
+            "--output", str(self.root / "incident.json"),
+        )
+        self.assertEqual(rejected.returncode, 40)
+        self.assertFalse(called.exists())
+        accepted = self._run(
+            "open-or-link-incident",
+            "--repo", "bluetape4k/bluetape4k-image",
+            "--reconciliation", str(reconciliation),
+            "--expected-sha256", digest,
+            "--approval-marker", f"issue-638-incident:{digest}",
+            "--gh-bin", str(fake_gh),
+            "--output", str(self.root / "incident.json"),
+        )
+        self.assertEqual(accepted.returncode, 0, accepted.stdout.decode())
+        self.assertTrue(called.exists())
+
     def test_verify_attempt_emits_exact_result_and_rejects_cross_document_identity(self) -> None:
         bundle = self.root / "bundle"
         fragments_dir = bundle / "cleanup-fragments"
@@ -1437,7 +1668,65 @@ class ProducerArtifactCliContractTest(unittest.TestCase):
             "acknowledge-incident",
             "close-incident",
             "plan-known-good-rollback",
+            "prepare-reconcile-inputs",
+            "validate-reconcile-state",
+            "readback-packages",
+            "snapshot-workflow-runs",
+            "readback-workflow-run",
+            "wait-workflow-job",
+            "wait-workflow-run",
+            "readback-public-gate",
+            "inspect-live-producer-settings",
+            "readback-retention",
+            "open-or-link-incident",
+            "readback-incident",
+            "execute-known-good-rollback",
+            "readback-known-good-rollback",
         }.issubset(subparsers.choices))
+
+    def test_remote_commands_accept_the_documented_transport_limits(self) -> None:
+        parser = producer_cli.build_parser()
+        common = [
+            "--connect-timeout-seconds", "10",
+            "--read-timeout-seconds", "30",
+            "--max-page-bytes", "2097152",
+            "--max-page-items", "100",
+            "--max-pages", "20",
+            "--max-total-bytes", "41943040",
+        ]
+        commands = (
+            [
+                "snapshot-workflow-runs", "--repo", "bluetape4k/bluetape4k-image",
+                "--workflow", "paddleocr-producer.yml", "--branch", "develop",
+                "--output", "snapshot.json",
+            ],
+            [
+                "select-dispatched-run", "--repo", "bluetape4k/bluetape4k-image",
+                "--workflow", "paddleocr-producer.yml", "--branch", "develop",
+                "--before", "snapshot.json", "--expected-head", "1" * 40,
+                "--expected-workflow", ".github/workflows/paddleocr-producer.yml",
+            ],
+            [
+                "wait-workflow-job", "--repo", "bluetape4k/bluetape4k-image",
+                "--run-id", "1", "--run-attempt", "1", "--job-name", "job",
+            ],
+            [
+                "wait-workflow-run", "--repo", "bluetape4k/bluetape4k-image",
+                "--run-id", "1", "--run-attempt", "1", "--expected-head", "1" * 40,
+                "--output", "run.json",
+            ],
+            [
+                "readback-public-gate", "--repo", "bluetape4k/bluetape4k-image",
+                "--package", "paddleocr-service", "--run-id", "1",
+                "--run-attempt", "1", "--expected-head", "1" * 40,
+                "--output", "public.json",
+            ],
+        )
+        for command in commands:
+            with self.subTest(command=command[0]):
+                parsed = parser.parse_args([*command, *common])
+                self.assertEqual(parsed.connect_timeout_seconds, 10)
+                self.assertEqual(parsed.max_pages, 20)
 
     def test_oci_layout_requires_exact_reachable_blob_closure(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -1638,6 +1927,18 @@ class LifecycleContractTest(unittest.TestCase):
         self.assertEqual(result["producerStatus"], "CANCELLED")
         self.assertEqual(result["exitCode"], 31)
 
+    def test_quarantine_pending_survives_failed_public_verification(self) -> None:
+        result = finalize_attempt(
+            {
+                "producerStatus": "QUARANTINE_PENDING",
+                "lastCompletedStage": "PUBLIC_EVIDENCE",
+                "runConclusion": "failure",
+            },
+            {"cleanupVerified": True, "fragmentsComplete": True},
+        )
+        self.assertEqual(result["producerStatus"], "QUARANTINE_PENDING")
+        self.assertEqual(result["exitCode"], 20)
+
     def test_release_without_staging_is_rejected(self) -> None:
         remote = {
             "staging": None,
@@ -1826,6 +2127,15 @@ class LifecycleContractTest(unittest.TestCase):
 
     def test_incident_timestamps_follow_status_group_and_order(self) -> None:
         document = valid_reconciliation("FAILED")
+        incident_candidate = dict(document)
+        incident_candidate["incidentUrl"] = None
+        incident_candidate["ownerAcknowledgedAt"] = None
+        self.assertIsNone(
+            validate_reconciliation(incident_candidate)["ownerAcknowledgedAt"]
+        )
+        incident_candidate["ownerAcknowledgedAt"] = "2026-09-07T01:01:00Z"
+        with self.assertRaisesRegex(ProducerValidationError, "incidentUrl"):
+            validate_reconciliation(incident_candidate)
         document.update(
             {
                 "cleanupVerified": True,

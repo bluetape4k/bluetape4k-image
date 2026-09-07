@@ -1574,7 +1574,7 @@ RUN_ATTEMPT=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["d
   build/selected-producer-run.json)
 python3 scripts/research/paddle_ocr_producer.py wait-workflow-job \
   --repo "$REPO" --run-id "$RUN_ID" --run-attempt "$RUN_ATTEMPT" \
-  --job-name 'Consumer verify private' --poll-seconds 15 \
+  --job-name 'PaddleOCR producer / consumer-verify-private' --poll-seconds 15 \
   --connect-timeout-seconds 10 --read-timeout-seconds 30 \
   --max-page-bytes 2097152 --max-page-items 100 --max-pages 20 \
   --max-total-bytes 41943040
