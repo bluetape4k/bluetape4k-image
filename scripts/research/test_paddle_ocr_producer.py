@@ -773,6 +773,7 @@ class ProducerCliTest(unittest.TestCase):
         document = {
             "schemaVersion": 1,
             "attemptId": "1234.2",
+            "jobStatus": "success",
             "producerStatus": "PRODUCER_PASS",
             "exitCode": 0,
             "lastCompletedStage": "PUBLIC_EVIDENCE",

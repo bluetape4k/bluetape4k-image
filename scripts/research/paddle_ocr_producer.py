@@ -111,7 +111,7 @@ RECONCILE_PRIOR_STATUSES = {
     "INTERRUPTED",
 }
 SUMMARY_KEYS = {
-    "schemaVersion", "attemptId", "producerStatus", "exitCode",
+    "schemaVersion", "attemptId", "jobStatus", "producerStatus", "exitCode",
     "lastCompletedStage", "documentDigests", "imageDigest", "evidenceDigest",
     "retryCount", "cleanupVerified", "incidentCandidate",
 }
@@ -596,6 +596,8 @@ def _validate_summary_document(value: Any) -> dict[str, Any]:
         raise ProducerValidationError("summary attemptId is invalid")
     if document["producerStatus"] not in STATUS_CONTRACT:
         raise ProducerValidationError("summary producerStatus is invalid")
+    if document["jobStatus"] not in {"success", "failure", "cancelled"}:
+        raise ProducerValidationError("summary jobStatus is invalid")
     if type(document["exitCode"]) is not int or not 0 <= document["exitCode"] <= 255:
         raise ProducerValidationError("summary exitCode is invalid")
     stages = {stage for contract in STATUS_CONTRACT.values() for stage in contract.allowed_stages}
@@ -635,6 +637,7 @@ def write_step_summary(path: Path, value: Any) -> dict[str, Any]:
     payload = (
         "## PaddleOCR producer\n\n"
         f"- Attempt: `{document['attemptId']}`\n"
+        f"- Job status: `{document['jobStatus']}`\n"
         f"- Status / exit: `{document['producerStatus']}` / `{document['exitCode']}`\n"
         f"- Last stage: `{document['lastCompletedStage']}`\n"
         f"- Image digest: `{document['imageDigest'] or 'NONE'}`\n"

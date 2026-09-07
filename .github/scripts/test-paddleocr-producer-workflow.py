@@ -209,6 +209,7 @@ class ProducerWorkflowContractTest(unittest.TestCase):
                     side_effect = steps.index("- name: Execute producer stage")
                     self.assertLess(trust, side_effect)
         validation = self.blocks["validation"]
+        self.assertIn("PRODUCER_JOB_STATUS: ${{ job.status }}", validation)
         self.assertIn("Execute producer stage - validate immutable inputs", validation)
         self.assertIn(" validate-inputs ", validation)
         self.assertIn(" verify-dockerfile ", validation)

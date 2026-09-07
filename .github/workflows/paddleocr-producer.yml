@@ -180,6 +180,8 @@ jobs:
       - &summary-step
         name: Write step summary
         if: ${{ always() }}
+        env:
+          PRODUCER_JOB_STATUS: ${{ job.status }}
         run: |
           python3 - <<'PY'
           import hashlib
@@ -187,18 +189,47 @@ jobs:
           import os
           from pathlib import Path
           lock = Path(os.environ["PRODUCER_INPUT_LOCK"]).read_bytes()
+          job_status = os.environ["PRODUCER_JOB_STATUS"]
+          if job_status not in {"success", "failure", "cancelled"}:
+              raise SystemExit(40)
+          successful_phase = {
+              "validation": ("VALIDATING", "NONE"),
+              "staging": ("BUILDING", "NONE"),
+              "source-repro-check": ("BUILDING", "NONE"),
+              "image-build": ("BUILDING", "NONE"),
+              "staging-push": ("PUBLISHED_UNVERIFIED", "STAGING"),
+              "staging-attest": ("PUBLISHED_UNVERIFIED", "STAGING"),
+              "staging-readback": ("PUBLISHED_UNVERIFIED", "STAGING"),
+              "release-promotion": ("PROMOTING", "EVIDENCE"),
+              "release-attest": ("RELEASE_UNVERIFIED", "RELEASE"),
+              "release-readback": ("RELEASE_UNVERIFIED", "RELEASE"),
+              "release-evidence-push": ("RELEASE_UNVERIFIED", "PUBLIC_EVIDENCE"),
+              "consumer-verify-private": ("RELEASE_UNVERIFIED", "PUBLIC_EVIDENCE"),
+              "public-visibility-readback": ("RELEASE_UNVERIFIED", "PUBLIC_EVIDENCE"),
+              "consumer-verify-public": ("PRODUCER_PASS", "PUBLIC_EVIDENCE"),
+              "reconcile-readback": ("VALIDATING", "NONE"),
+              "emergency-deny-attest": ("QUARANTINE_PENDING", "PUBLIC_EVIDENCE"),
+          }
+          if job_status == "success":
+              producer_status, last_stage = successful_phase[os.environ["PRODUCER_JOB"]]
+              exit_code = 0
+          elif job_status == "cancelled":
+              producer_status, last_stage, exit_code = "CANCELLED", "NONE", 31
+          else:
+              producer_status, last_stage, exit_code = "FAILED", "NONE", 30
           document = {
               "schemaVersion": 1,
               "attemptId": os.environ["GITHUB_RUN_ID"] + "." + os.environ["GITHUB_RUN_ATTEMPT"],
-              "producerStatus": "FAILED",
-              "exitCode": 30,
-              "lastCompletedStage": "NONE",
+              "jobStatus": job_status,
+              "producerStatus": producer_status,
+              "exitCode": exit_code,
+              "lastCompletedStage": last_stage,
               "documentDigests": {"input-lock": hashlib.sha256(lock).hexdigest()},
               "imageDigest": None,
               "evidenceDigest": None,
               "retryCount": 0,
               "cleanupVerified": False,
-              "incidentCandidate": "https://github.com/bluetape4k/bluetape4k-image/issues/638",
+              "incidentCandidate": None if job_status == "success" else "https://github.com/bluetape4k/bluetape4k-image/issues/638",
           }
           Path(".producer-state/summary-input.json").write_bytes(
               json.dumps(document, separators=(",", ":"), sort_keys=True).encode()
