@@ -6,11 +6,13 @@ import argparse
 import logging
 import os
 import re
+import select
 import shutil
 import signal
 import stat
 import subprocess
 import sys
+import time
 from collections.abc import Iterator, Sequence
 from contextlib import contextmanager
 from pathlib import Path, PurePosixPath
@@ -27,8 +29,20 @@ from paddle_ocr_producer_lib.contracts import (
     sha256_hex,
     validate_input_lock,
 )
+from paddle_ocr_producer_lib.evidence import (
+    MaterializationLimits,
+    validate_evidence_file_manifest,
+    validate_ledger_fragment,
+    validate_oci_handoff,
+    validate_producer_evidence,
+    verify_public_evidence,
+)
 from paddle_ocr_producer_lib.filesystem import (
     ARCHIVE_LIMITS,
+    ORAS_LINUX_AMD64_SHA256,
+    ORAS_LINUX_AMD64_URL,
+    ORAS_VERSION,
+    bootstrap_oras_archive,
     canonical_tree_manifest,
     extract_archive,
     fetch_to_regular_file,
@@ -1004,14 +1018,16 @@ def _verify_attempt(args: argparse.Namespace) -> dict[str, Any]:
     ledger, ledger_raw = _load_canonical_document(args.ledger_fragment, contract_error=True)
     revocations, revocations_raw = _load_canonical_document(args.revocations, contract_error=True)
     validated_attempt = validate_attempt(attempt)
+    validated_evidence = validate_producer_evidence(evidence)
+    validated_ledger = validate_ledger_fragment(ledger)
     validated_reconciliation = validate_reconciliation(reconciliation)
     validated_cleanup = validate_cleanup_aggregate(cleanup)
     validate_revocations(revocations)
     _verify_cleanup_fragments(args.cleanup, validated_cleanup)
     attempt_id = validated_attempt["attemptId"]
     for field, document in (
-        ("evidence", evidence), ("reconciliation", validated_reconciliation),
-        ("cleanup", validated_cleanup), ("ledger fragment", ledger),
+        ("evidence", validated_evidence), ("reconciliation", validated_reconciliation),
+        ("cleanup", validated_cleanup), ("ledger fragment", validated_ledger),
     ):
         if document.get("attemptId") != attempt_id:
             raise ProducerValidationError(f"{field} attemptId differs")
@@ -1025,12 +1041,30 @@ def _verify_attempt(args: argparse.Namespace) -> dict[str, Any]:
     for field, actual in hashes.items():
         if validated_attempt[field] != actual:
             raise ProducerValidationError(f"attempt {field} differs from companion bytes")
+    for field in ("evidenceSha256", "reconciliationSha256", "cleanupSha256", "revocationsSha256"):
+        if validated_ledger[field] != hashes[field]:
+            raise ProducerValidationError(f"ledger fragment {field} differs from companion bytes")
     if validated_attempt["producerStatus"] != validated_reconciliation["producerStatus"]:
         raise ProducerValidationError("producerStatus differs between attempt and reconciliation")
     if validated_attempt["lastCompletedStage"] != validated_reconciliation["lastCompletedStage"]:
         raise ProducerValidationError("lastCompletedStage differs between attempt and reconciliation")
     if validated_attempt["inputLockSha256"] != validated_reconciliation["inputLockSha256"]:
         raise ProducerValidationError("inputLockSha256 differs between attempt and reconciliation")
+    for field, document in (("evidence", validated_evidence), ("ledger fragment", validated_ledger)):
+        if document["producerStatus"] != validated_attempt["producerStatus"]:
+            raise ProducerValidationError(f"producerStatus differs in {field}")
+        if document["lastCompletedStage"] != validated_attempt["lastCompletedStage"]:
+            raise ProducerValidationError(f"lastCompletedStage differs in {field}")
+        if document["inputLockSha256"] != validated_attempt["inputLockSha256"]:
+            raise ProducerValidationError(f"inputLockSha256 differs in {field}")
+    if validated_ledger["mapped609Status"] != validated_reconciliation["mapped609Status"]:
+        raise ProducerValidationError("mapped609Status differs in ledger fragment")
+    expected_image = (
+        validated_reconciliation["release"]["manifestDigest"]
+        if validated_reconciliation["release"] is not None else None
+    )
+    if validated_ledger["imagePlatformDigest"] != expected_image:
+        raise ProducerValidationError("imagePlatformDigest differs in ledger fragment")
     if validated_attempt["revocationsCommitSha"] != validated_reconciliation["revocationsCommitSha"]:
         raise ProducerValidationError("revocationsCommitSha differs between attempt and reconciliation")
     if validated_attempt["previousDocumentSha256"] != validated_reconciliation["previousDocumentSha256"]:
@@ -1041,6 +1075,146 @@ def _verify_attempt(args: argparse.Namespace) -> dict[str, Any]:
         ledger_fragment_sha256=hashes["ledgerFragmentSha256"],
         revocations_sha256=hashes["revocationsSha256"],
     )
+
+
+def _validate_oci_handoff(args: argparse.Namespace) -> dict[str, Any]:
+    document, raw = _load_canonical_document(args.handoff, contract_error=True)
+    validated = validate_oci_handoff(document)
+    return _success(
+        "validate-oci-handoff",
+        {
+            "attemptId": validated["attemptId"],
+            "imagePlatformDigest": validated["imagePlatformDigest"],
+            "handoffSha256": sha256_hex(raw),
+        },
+    )
+
+
+def _validate_evidence_manifest(args: argparse.Namespace) -> dict[str, Any]:
+    document, raw = _load_canonical_document(args.manifest, contract_error=True)
+    validated = validate_evidence_file_manifest(document)
+    return _success(
+        "validate-evidence-manifest",
+        {
+            "attemptId": validated["attemptId"],
+            "subjectDigest": validated["subjectDigest"],
+            "fileManifestSha256": sha256_hex(raw),
+        },
+    )
+
+
+def _bootstrap_oras(args: argparse.Namespace) -> dict[str, Any]:
+    oras_bin = bootstrap_oras_archive(args.archive, args.tool_root)
+    return _success(
+        "bootstrap-oras",
+        {
+            "version": ORAS_VERSION,
+            "sourceUrl": ORAS_LINUX_AMD64_URL,
+            "archiveSha256": ORAS_LINUX_AMD64_SHA256,
+            "orasBin": str(oras_bin.resolve()),
+        },
+    )
+
+
+def _run_bounded_command(
+    command: Sequence[str], limit: int, timeout_seconds: int
+) -> bytes:
+    process: subprocess.Popen[bytes] | None = None
+    try:
+        process = subprocess.Popen(
+            list(command),
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+            env=dict(os.environ),
+        )
+        if process.stdout is None:
+            raise ProducerRejectedError("public evidence command stdout is unavailable")
+        deadline = time.monotonic() + timeout_seconds
+        chunks: list[bytes] = []
+        total = 0
+        while True:
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                raise ProducerInterrupted()
+            readable, _, _ = select.select([process.stdout.fileno()], [], [], remaining)
+            if not readable:
+                raise ProducerInterrupted()
+            chunk = os.read(process.stdout.fileno(), min(64 * 1024, limit + 1 - total))
+            if not chunk:
+                break
+            total += len(chunk)
+            if total > limit:
+                raise ProducerRejectedError("public evidence command output violates byte limit")
+            chunks.append(chunk)
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            raise ProducerInterrupted()
+        return_code = process.wait(timeout=remaining)
+    except subprocess.TimeoutExpired as exc:
+        raise ProducerInterrupted() from exc
+    except BaseException:
+        if process is not None and process.poll() is None:
+            process.kill()
+            process.wait()
+        raise
+    finally:
+        if process is not None and process.stdout is not None:
+            process.stdout.close()
+    if return_code != 0:
+        raise ProducerRejectedError("public evidence command failed")
+    output = b"".join(chunks)
+    if not output:
+        raise ProducerRejectedError("public evidence command output violates byte limit")
+    return output
+
+
+def _verify_public_evidence(args: argparse.Namespace) -> dict[str, Any]:
+    if not 1 <= args.operation_timeout_seconds <= 60:
+        raise ProducerValidationError("operation timeout exceeds the public verifier limit")
+    if not 1 <= args.materialization_timeout_seconds <= 600:
+        raise ProducerValidationError("materialization timeout exceeds the public verifier limit")
+    limits = MaterializationLimits(
+        manifest_timeout_seconds=args.operation_timeout_seconds,
+        blob_read_timeout_seconds=args.operation_timeout_seconds,
+        total_timeout_seconds=args.materialization_timeout_seconds,
+    )
+
+    def verify_attestation(artifact: Path, bundle: Path, predicate_type: str) -> None:
+        raw = _run_bounded_command(
+            [
+                str(args.gh_bin),
+                "attestation", "verify", str(artifact),
+                "--repo", "bluetape4k/bluetape4k-image",
+                "--bundle", str(bundle),
+                "--signer-workflow", "bluetape4k/bluetape4k-image/.github/workflows/paddleocr-producer.yml",
+                "--cert-oidc-issuer", "https://token.actions.githubusercontent.com",
+                "--source-ref", "refs/heads/develop",
+                "--predicate-type", predicate_type,
+                "--deny-self-hosted-runners",
+                "--format", "json",
+            ],
+            4 * 1024 * 1024,
+            args.operation_timeout_seconds,
+        )
+        try:
+            wrapped = load_json_bytes(b'{"results":' + raw + b"}", 4 * 1024 * 1024 + 12)
+        except ProducerValidationError as exc:
+            raise ProducerRejectedError("attestation verifier returned malformed JSON") from exc
+        if not isinstance(wrapped["results"], list) or not wrapped["results"]:
+            raise ProducerRejectedError("attestation verifier returned no verified result")
+
+    result = verify_public_evidence(
+        oras_bin=args.oras_bin,
+        gh_bin=args.gh_bin,
+        reference=args.ref,
+        root=args.root,
+        environment=dict(os.environ),
+        run_command=_run_bounded_command,
+        verify_attestation=verify_attestation,
+        limits=limits,
+    )
+    return _success("verify-public-evidence", result)
 
 
 def build_parser() -> StrictArgumentParser:
@@ -1139,6 +1313,28 @@ def build_parser() -> StrictArgumentParser:
     verify.add_argument("--ledger-fragment", type=Path, required=True)
     verify.add_argument("--revocations", type=Path, required=True)
     verify.set_defaults(handler=_verify_attempt)
+
+    handoff = subparsers.add_parser("validate-oci-handoff")
+    handoff.add_argument("--handoff", type=Path, required=True)
+    handoff.set_defaults(handler=_validate_oci_handoff)
+
+    evidence_manifest = subparsers.add_parser("validate-evidence-manifest")
+    evidence_manifest.add_argument("--manifest", type=Path, required=True)
+    evidence_manifest.set_defaults(handler=_validate_evidence_manifest)
+
+    oras = subparsers.add_parser("bootstrap-oras")
+    oras.add_argument("--archive", type=Path, required=True)
+    oras.add_argument("--tool-root", type=Path, required=True)
+    oras.set_defaults(handler=_bootstrap_oras)
+
+    public_evidence = subparsers.add_parser("verify-public-evidence")
+    public_evidence.add_argument("--oras-bin", type=Path, required=True)
+    public_evidence.add_argument("--gh-bin", type=Path, required=True)
+    public_evidence.add_argument("--ref", required=True)
+    public_evidence.add_argument("--root", type=Path, required=True)
+    public_evidence.add_argument("--operation-timeout-seconds", type=int, default=60)
+    public_evidence.add_argument("--materialization-timeout-seconds", type=int, default=600)
+    public_evidence.set_defaults(handler=_verify_public_evidence)
     return parser
 
 

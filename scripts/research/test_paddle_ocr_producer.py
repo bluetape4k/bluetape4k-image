@@ -4,6 +4,7 @@ import hashlib
 import io
 import json
 import os
+import stat
 import subprocess
 import sys
 import tarfile
@@ -12,6 +13,8 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
+import paddle_ocr_producer as producer_cli
+import paddle_ocr_producer_lib.filesystem as producer_filesystem
 from paddle_ocr_producer_lib.contracts import (
     AttemptIdentity,
     ProducerValidationError,
@@ -25,8 +28,12 @@ from paddle_ocr_producer_lib.contracts import (
 )
 from paddle_ocr_producer_lib.filesystem import (
     ARCHIVE_LIMITS,
+    ORAS_LINUX_AMD64_SHA256,
+    ORAS_LINUX_AMD64_URL,
+    ORAS_VERSION,
     ArchiveLimits,
     DownloadResponse,
+    bootstrap_oras_archive,
     canonical_tree_manifest,
     extract_archive,
     fetch_to_regular_file,
@@ -458,6 +465,46 @@ class FilesystemBoundaryTest(unittest.TestCase):
         entries = preflight_archive(archive, ARCHIVE_LIMITS)
         self.assertEqual([entry.path for entry in entries], ["model/inference.json"])
 
+    def test_oras_bootstrap_pins_distribution_allowlist_and_modes(self) -> None:
+        self.assertEqual(ORAS_VERSION, "1.3.4")
+        self.assertEqual(
+            ORAS_LINUX_AMD64_URL,
+            "https://github.com/oras-project/oras/releases/download/v1.3.4/"
+            "oras_1.3.4_linux_amd64.tar.gz",
+        )
+        self.assertEqual(
+            ORAS_LINUX_AMD64_SHA256,
+            "f27adb935022d94df8dc77719c322dda592c78a0d57a6f7dcdd8d900b248c454",
+        )
+        archive = self.root / "oras.tar.gz"
+        with tarfile.open(archive, "w:gz") as stream:
+            for name, payload in (("oras", b"binary"), ("LICENSE", b"license"), ("README.md", b"readme")):
+                info = tarfile.TarInfo(name)
+                info.size = len(payload)
+                stream.addfile(info, io.BytesIO(payload))
+        digest = hashlib.sha256(archive.read_bytes()).hexdigest()
+        tool_root = self.root / "oras-tool"
+        with patch.object(producer_filesystem, "ORAS_LINUX_AMD64_SHA256", digest):
+            oras_bin = bootstrap_oras_archive(archive, tool_root)
+        self.assertEqual(oras_bin, tool_root / "oras")
+        self.assertEqual(stat.S_IMODE(tool_root.stat().st_mode), 0o700)
+        self.assertEqual(stat.S_IMODE(oras_bin.stat().st_mode), 0o700)
+        self.assertEqual(oras_bin.read_bytes(), b"binary")
+
+        invalid = self.root / "oras-invalid.tar.gz"
+        with tarfile.open(invalid, "w:gz") as stream:
+            for name in ("oras", "unexpected.txt"):
+                info = tarfile.TarInfo(name)
+                info.size = 1
+                stream.addfile(info, io.BytesIO(b"x"))
+        invalid_digest = hashlib.sha256(invalid.read_bytes()).hexdigest()
+        with (
+            patch.object(producer_filesystem, "ORAS_LINUX_AMD64_SHA256", invalid_digest),
+            self.assertRaisesRegex(ProducerValidationError, "allowlist"),
+        ):
+            bootstrap_oras_archive(invalid, self.root / "invalid-tool")
+        self.assertFalse((self.root / "invalid-tool").exists())
+
     def test_allowlisted_fetcher_rejects_private_and_rebound_address(self) -> None:
         destination = self.root / "download.bin"
 
@@ -623,6 +670,29 @@ class ProducerCliTest(unittest.TestCase):
             capture_output=True,
             check=False,
         )
+
+    def test_public_command_runner_enforces_output_bound_and_has_no_credential_options(self) -> None:
+        output = producer_cli._run_bounded_command(
+            [sys.executable, "-c", "import sys; sys.stdout.buffer.write(b'abc')"],
+            3,
+            5,
+        )
+        self.assertEqual(output, b"abc")
+        with self.assertRaisesRegex(producer_cli.ProducerRejectedError, "byte limit"):
+            producer_cli._run_bounded_command(
+                [sys.executable, "-c", "import sys; sys.stdout.buffer.write(b'abcd')"],
+                3,
+                5,
+            )
+        parser = producer_cli.build_parser()
+        subparsers = next(
+            action for action in parser._actions
+            if isinstance(action, producer_cli.argparse._SubParsersAction)
+        )
+        public_parser = subparsers.choices["verify-public-evidence"]
+        options = {option for action in public_parser._actions for option in action.option_strings}
+        self.assertTrue({"--oras-bin", "--gh-bin", "--ref", "--root"}.issubset(options))
+        self.assertTrue({"--token", "--username", "--password", "--registry-config"}.isdisjoint(options))
 
     def _write_inputs(self) -> tuple[Path, Path, Path]:
         license_file = self.root / "LICENSE"
@@ -1014,15 +1084,64 @@ class ProducerCliTest(unittest.TestCase):
         cleanup_path = bundle / "cleanup.json"
         cleanup_path.write_bytes(jcs_bytes(cleanup_value))
         evidence_path = bundle / "producer-evidence.json"
-        evidence_path.write_bytes(jcs_bytes({"attemptId": "1234.2"}))
-        ledger_path = bundle / "artifact-ledger.fragment.json"
-        ledger_path.write_bytes(jcs_bytes({"attemptId": "1234.2"}))
         revocations_path = bundle / "revocations.json"
         revocations_path.write_bytes(jcs_bytes(initial_revocations()))
         reconciliation_value = valid_reconciliation("PRODUCER_PASS")
         reconciliation_value["revocationsSha256"] = sha256_hex(revocations_path.read_bytes())
         reconciliation_path = bundle / "reconciliation.json"
         reconciliation_path.write_bytes(jcs_bytes(reconciliation_value))
+        artifact = {"path": "artifact.json", "bytes": 1, "sha256": SHA_A}
+        attestation = {
+            "path": "attestations/provenance.bundle.jsonl",
+            "bytes": 1,
+            "sha256": SHA_B,
+            "predicateType": "https://slsa.dev/provenance/v1",
+            "subjectDigest": reconciliation_value["release"]["manifestDigest"],
+            "signer": "bluetape4k/bluetape4k-image/.github/workflows/paddleocr-producer.yml",
+            "issuer": "https://token.actions.githubusercontent.com",
+            "verified": True,
+        }
+        sbom_attestation = dict(attestation)
+        sbom_attestation.update({
+            "path": "attestations/sbom.bundle.jsonl",
+            "predicateType": "https://spdx.dev/Document/v2.3",
+        })
+        evidence_value = {
+            "schemaVersion": 1,
+            "attemptId": "1234.2",
+            "producerStatus": "PRODUCER_PASS",
+            "lastCompletedStage": "PUBLIC_EVIDENCE",
+            "inputLockSha256": SHA_A,
+            "staging": artifact,
+            "release": artifact,
+            "payload": {
+                "packageLock": artifact,
+                "detectorModel": artifact,
+                "recognizerModel": artifact,
+                "legalInventory": artifact,
+                "spdx": artifact,
+                "provenanceAttestation": attestation,
+                "sbomAttestation": sbom_attestation,
+            },
+            "evidenceSubjectDigest": reconciliation_value["release"]["manifestDigest"],
+        }
+        evidence_path.write_bytes(jcs_bytes(evidence_value))
+        ledger_value = {
+            "schemaVersion": 1,
+            "attemptId": "1234.2",
+            "producerStatus": "PRODUCER_PASS",
+            "lastCompletedStage": "PUBLIC_EVIDENCE",
+            "mapped609Status": "PENDING",
+            "inputLockSha256": SHA_A,
+            "imagePlatformDigest": reconciliation_value["release"]["manifestDigest"],
+            "evidenceSha256": sha256_hex(evidence_path.read_bytes()),
+            "reconciliationSha256": sha256_hex(reconciliation_path.read_bytes()),
+            "cleanupSha256": sha256_hex(cleanup_path.read_bytes()),
+            "revocationsSha256": sha256_hex(revocations_path.read_bytes()),
+            "revocationsCommitSha": "1" * 40,
+        }
+        ledger_path = bundle / "artifact-ledger.fragment.json"
+        ledger_path.write_bytes(jcs_bytes(ledger_value))
         attempt_value = {
             "schemaVersion": 1,
             "attemptId": "1234.2",

@@ -538,7 +538,7 @@ git commit -m 'feat: producer 상태 전이를 재시작 가능하게 고정한�
 - Modify: `scripts/research/paddle_ocr_producer.py`
 - Modify: `scripts/research/paddle_ocr_producer_lib/filesystem.py`
 
-- [ ] **Step 1: pagination, ambiguous tag, foreign layer와 traversal RED test를 작성한다.**
+- [x] **Step 1: pagination, ambiguous tag, foreign layer와 traversal RED test를 작성한다.**
 
 ```python
 def test_two_matching_versions_are_rejected(self) -> None:
@@ -560,7 +560,7 @@ def test_materializer_rejects_every_path_escape_before_commit(self) -> None:
             materialize_fixture(fixture)
 ```
 
-- [ ] **Step 2: RED를 확인한다.**
+- [x] **Step 2: RED를 확인한다.**
 
 ```bash
 python3 scripts/research/test_paddle_ocr_producer_registry.py -v
@@ -569,7 +569,7 @@ python3 scripts/research/test_paddle_ocr_producer_evidence.py -v
 
 Expected: registry/evidence API 미구현으로 실패한다.
 
-- [ ] **Step 3: bounded HTTP, retry/result 분류와 OCI preflight를 구현한다.**
+- [x] **Step 3: bounded HTTP, retry/result 분류와 OCI preflight를 구현한다.**
 
 ```python
 @dataclass(frozen=True)
@@ -599,7 +599,7 @@ match, malformed JSON/number, depth/entry 초과, BOM/trailing data를 거부한
 bytes를 보존하며 BOM, CR, trailing blank, line 재정렬/재직렬화와 malformed signed
 envelope를 거부한다. fake transport/clock/sleeper로 모든 boundary를 시험한다.
 
-- [ ] **Step 4: exact evidence allowlist와 root-pinned materializer를 구현한다.**
+- [x] **Step 4: exact evidence allowlist와 root-pinned materializer를 구현한다.**
 
 ```python
 EVIDENCE_FILES = (
@@ -633,7 +633,7 @@ Docker/ORAS auth config나 credential helper가 보이면 시작 전에 거부�
 empty Docker config와 token 없는 clean environment fixture는 digest-pinned public ref를
 검증하며 credential env/option/auth file 주입 fixture는 network call 전에 실패한다.
 
-- [ ] **Step 5: registry/evidence test를 GREEN으로 만들고 commit한다.**
+- [x] **Step 5: registry/evidence test를 GREEN으로 만들고 commit한다.**
 
 ```bash
 python3 scripts/research/test_paddle_ocr_producer_registry.py -v

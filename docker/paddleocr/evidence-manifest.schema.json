@@ -1,0 +1,116 @@
+{
+  "$id": "https://bluetape4k.github.io/schema/paddleocr/evidence-manifest.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "artifactType": {
+      "const": "application/vnd.bluetape4k.paddleocr.producer-evidence.v1"
+    },
+    "attemptId": {
+      "pattern": "^[1-9][0-9]*\\.[1-9][0-9]*$",
+      "type": "string"
+    },
+    "baseDigest": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "files": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "bytes": {
+            "maximum": 134217728,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "path": {
+            "enum": [
+              "producer-evidence.json",
+              "artifact-ledger.fragment.json",
+              "inputs/producer-input.lock.json",
+              "manifests/package-lock.json",
+              "manifests/model-detector.json",
+              "manifests/model-recognizer.json",
+              "platform-manifest.json",
+              "sbom.spdx.json",
+              "legal-inventory.json",
+              "attestations/provenance.bundle.jsonl",
+              "attestations/sbom.bundle.jsonl"
+            ],
+            "type": "string"
+          },
+          "sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "path",
+          "bytes",
+          "sha256"
+        ],
+        "type": "object"
+      },
+      "maxItems": 11,
+      "minItems": 11,
+      "type": "array"
+    },
+    "imageConfigDigest": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "imageIndexDigest": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "imagePlatformDigest": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "inputLockSha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "revocationsCommitSha": {
+      "pattern": "^[0-9a-f]{40}$",
+      "type": "string"
+    },
+    "revocationsSha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "runAttempt": {
+      "minimum": 1,
+      "type": "integer"
+    },
+    "runId": {
+      "minimum": 1,
+      "type": "integer"
+    },
+    "schemaVersion": {
+      "const": 1
+    },
+    "subjectDigest": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "artifactType",
+    "imageIndexDigest",
+    "imagePlatformDigest",
+    "imageConfigDigest",
+    "baseDigest",
+    "subjectDigest",
+    "runId",
+    "runAttempt",
+    "attemptId",
+    "inputLockSha256",
+    "revocationsSha256",
+    "revocationsCommitSha",
+    "files"
+  ],
+  "title": "PaddleOCR producer evidence file manifest",
+  "type": "object"
+}

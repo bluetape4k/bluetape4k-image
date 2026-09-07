@@ -1,0 +1,721 @@
+{
+  "$id": "https://bluetape4k.github.io/schema/paddleocr/producer-evidence.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "lastCompletedStage": {
+            "const": "NONE"
+          }
+        },
+        "required": [
+          "lastCompletedStage"
+        ]
+      },
+      "then": {
+        "properties": {
+          "evidenceSubjectDigest": {
+            "type": "null"
+          },
+          "lastCompletedStage": {
+            "const": "NONE"
+          },
+          "payload": {
+            "type": "null"
+          },
+          "release": {
+            "type": "null"
+          },
+          "staging": {
+            "type": "null"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "lastCompletedStage": {
+            "const": "STAGING"
+          }
+        },
+        "required": [
+          "lastCompletedStage"
+        ]
+      },
+      "then": {
+        "properties": {
+          "evidenceSubjectDigest": {
+            "type": "null"
+          },
+          "lastCompletedStage": {
+            "const": "STAGING"
+          },
+          "payload": {
+            "type": "null"
+          },
+          "release": {
+            "type": "null"
+          },
+          "staging": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "lastCompletedStage": {
+            "const": "EVIDENCE"
+          }
+        },
+        "required": [
+          "lastCompletedStage"
+        ]
+      },
+      "then": {
+        "properties": {
+          "evidenceSubjectDigest": {
+            "type": "null"
+          },
+          "lastCompletedStage": {
+            "const": "EVIDENCE"
+          },
+          "payload": {
+            "type": "object"
+          },
+          "release": {
+            "type": "null"
+          },
+          "staging": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "lastCompletedStage": {
+            "const": "RELEASE"
+          }
+        },
+        "required": [
+          "lastCompletedStage"
+        ]
+      },
+      "then": {
+        "properties": {
+          "evidenceSubjectDigest": {
+            "type": "string"
+          },
+          "lastCompletedStage": {
+            "const": "RELEASE"
+          },
+          "payload": {
+            "type": "object"
+          },
+          "release": {
+            "type": "object"
+          },
+          "staging": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "lastCompletedStage": {
+            "const": "PUBLIC_EVIDENCE"
+          }
+        },
+        "required": [
+          "lastCompletedStage"
+        ]
+      },
+      "then": {
+        "properties": {
+          "evidenceSubjectDigest": {
+            "type": "string"
+          },
+          "lastCompletedStage": {
+            "const": "PUBLIC_EVIDENCE"
+          },
+          "payload": {
+            "type": "object"
+          },
+          "release": {
+            "type": "object"
+          },
+          "staging": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "producerStatus": {
+            "const": "VALIDATING"
+          }
+        },
+        "required": [
+          "producerStatus"
+        ]
+      },
+      "then": {
+        "properties": {
+          "lastCompletedStage": {
+            "enum": [
+              "NONE"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "producerStatus": {
+            "const": "BUILDING"
+          }
+        },
+        "required": [
+          "producerStatus"
+        ]
+      },
+      "then": {
+        "properties": {
+          "lastCompletedStage": {
+            "enum": [
+              "NONE"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "producerStatus": {
+            "const": "BLOCKED_INPUT"
+          }
+        },
+        "required": [
+          "producerStatus"
+        ]
+      },
+      "then": {
+        "properties": {
+          "lastCompletedStage": {
+            "enum": [
+              "NONE"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "producerStatus": {
+            "const": "BLOCKED_LEGAL_INVENTORY"
+          }
+        },
+        "required": [
+          "producerStatus"
+        ]
+      },
+      "then": {
+        "properties": {
+          "lastCompletedStage": {
+            "enum": [
+              "NONE"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "producerStatus": {
+            "const": "PUBLISHED_UNVERIFIED"
+          }
+        },
+        "required": [
+          "producerStatus"
+        ]
+      },
+      "then": {
+        "properties": {
+          "lastCompletedStage": {
+            "enum": [
+              "STAGING"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "producerStatus": {
+            "const": "PROMOTING"
+          }
+        },
+        "required": [
+          "producerStatus"
+        ]
+      },
+      "then": {
+        "properties": {
+          "lastCompletedStage": {
+            "enum": [
+              "EVIDENCE"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "producerStatus": {
+            "const": "RELEASE_UNVERIFIED"
+          }
+        },
+        "required": [
+          "producerStatus"
+        ]
+      },
+      "then": {
+        "properties": {
+          "lastCompletedStage": {
+            "enum": [
+              "RELEASE",
+              "PUBLIC_EVIDENCE"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "producerStatus": {
+            "const": "PRODUCER_PASS"
+          }
+        },
+        "required": [
+          "producerStatus"
+        ]
+      },
+      "then": {
+        "properties": {
+          "lastCompletedStage": {
+            "enum": [
+              "PUBLIC_EVIDENCE"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "producerStatus": {
+            "const": "QUARANTINE_PENDING"
+          }
+        },
+        "required": [
+          "producerStatus"
+        ]
+      },
+      "then": {
+        "properties": {
+          "lastCompletedStage": {
+            "enum": [
+              "PUBLIC_EVIDENCE"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "producerStatus": {
+            "const": "QUARANTINED"
+          }
+        },
+        "required": [
+          "producerStatus"
+        ]
+      },
+      "then": {
+        "properties": {
+          "lastCompletedStage": {
+            "enum": [
+              "PUBLIC_EVIDENCE"
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "properties": {
+    "attemptId": {
+      "pattern": "^[1-9][0-9]*\\.[1-9][0-9]*$",
+      "type": "string"
+    },
+    "evidenceSubjectDigest": {
+      "oneOf": [
+        {
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "inputLockSha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "lastCompletedStage": {
+      "enum": [
+        "NONE",
+        "STAGING",
+        "EVIDENCE",
+        "RELEASE",
+        "PUBLIC_EVIDENCE"
+      ]
+    },
+    "payload": {
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "detectorModel": {
+              "additionalProperties": false,
+              "properties": {
+                "bytes": {
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                "path": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "sha256": {
+                  "pattern": "^[0-9a-f]{64}$",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "path",
+                "bytes",
+                "sha256"
+              ],
+              "type": "object"
+            },
+            "legalInventory": {
+              "additionalProperties": false,
+              "properties": {
+                "bytes": {
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                "path": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "sha256": {
+                  "pattern": "^[0-9a-f]{64}$",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "path",
+                "bytes",
+                "sha256"
+              ],
+              "type": "object"
+            },
+            "packageLock": {
+              "additionalProperties": false,
+              "properties": {
+                "bytes": {
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                "path": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "sha256": {
+                  "pattern": "^[0-9a-f]{64}$",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "path",
+                "bytes",
+                "sha256"
+              ],
+              "type": "object"
+            },
+            "provenanceAttestation": {
+              "additionalProperties": false,
+              "properties": {
+                "bytes": {
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                "issuer": {
+                  "const": "https://token.actions.githubusercontent.com"
+                },
+                "path": {
+                  "const": "attestations/provenance.bundle.jsonl"
+                },
+                "predicateType": {
+                  "const": "https://slsa.dev/provenance/v1"
+                },
+                "sha256": {
+                  "pattern": "^[0-9a-f]{64}$",
+                  "type": "string"
+                },
+                "signer": {
+                  "const": "bluetape4k/bluetape4k-image/.github/workflows/paddleocr-producer.yml"
+                },
+                "subjectDigest": {
+                  "pattern": "^sha256:[0-9a-f]{64}$",
+                  "type": "string"
+                },
+                "verified": {
+                  "const": true
+                }
+              },
+              "required": [
+                "path",
+                "bytes",
+                "sha256",
+                "predicateType",
+                "subjectDigest",
+                "signer",
+                "issuer",
+                "verified"
+              ],
+              "type": "object"
+            },
+            "recognizerModel": {
+              "additionalProperties": false,
+              "properties": {
+                "bytes": {
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                "path": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "sha256": {
+                  "pattern": "^[0-9a-f]{64}$",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "path",
+                "bytes",
+                "sha256"
+              ],
+              "type": "object"
+            },
+            "sbomAttestation": {
+              "additionalProperties": false,
+              "properties": {
+                "bytes": {
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                "issuer": {
+                  "const": "https://token.actions.githubusercontent.com"
+                },
+                "path": {
+                  "const": "attestations/sbom.bundle.jsonl"
+                },
+                "predicateType": {
+                  "const": "https://spdx.dev/Document/v2.3"
+                },
+                "sha256": {
+                  "pattern": "^[0-9a-f]{64}$",
+                  "type": "string"
+                },
+                "signer": {
+                  "const": "bluetape4k/bluetape4k-image/.github/workflows/paddleocr-producer.yml"
+                },
+                "subjectDigest": {
+                  "pattern": "^sha256:[0-9a-f]{64}$",
+                  "type": "string"
+                },
+                "verified": {
+                  "const": true
+                }
+              },
+              "required": [
+                "path",
+                "bytes",
+                "sha256",
+                "predicateType",
+                "subjectDigest",
+                "signer",
+                "issuer",
+                "verified"
+              ],
+              "type": "object"
+            },
+            "spdx": {
+              "additionalProperties": false,
+              "properties": {
+                "bytes": {
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                "path": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "sha256": {
+                  "pattern": "^[0-9a-f]{64}$",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "path",
+                "bytes",
+                "sha256"
+              ],
+              "type": "object"
+            }
+          },
+          "required": [
+            "packageLock",
+            "detectorModel",
+            "recognizerModel",
+            "legalInventory",
+            "spdx",
+            "provenanceAttestation",
+            "sbomAttestation"
+          ],
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "producerStatus": {
+      "enum": [
+        "VALIDATING",
+        "BLOCKED_INPUT",
+        "BLOCKED_LEGAL_INVENTORY",
+        "BUILDING",
+        "PUBLISHED_UNVERIFIED",
+        "PROMOTING",
+        "RELEASE_UNVERIFIED",
+        "QUARANTINE_PENDING",
+        "QUARANTINED",
+        "PRODUCER_PASS",
+        "REJECTED",
+        "REVOKED",
+        "FAILED",
+        "CANCELLED",
+        "INTERRUPTED"
+      ]
+    },
+    "release": {
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "bytes": {
+              "minimum": 1,
+              "type": "integer"
+            },
+            "path": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "sha256": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            }
+          },
+          "required": [
+            "path",
+            "bytes",
+            "sha256"
+          ],
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "schemaVersion": {
+      "const": 1
+    },
+    "staging": {
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "bytes": {
+              "minimum": 1,
+              "type": "integer"
+            },
+            "path": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "sha256": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            }
+          },
+          "required": [
+            "path",
+            "bytes",
+            "sha256"
+          ],
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "attemptId",
+    "producerStatus",
+    "lastCompletedStage",
+    "inputLockSha256",
+    "staging",
+    "release",
+    "payload",
+    "evidenceSubjectDigest"
+  ],
+  "title": "PaddleOCR producer evidence",
+  "type": "object"
+}

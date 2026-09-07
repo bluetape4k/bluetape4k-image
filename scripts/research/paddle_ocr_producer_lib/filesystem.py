@@ -42,6 +42,16 @@ ARCHIVE_LIMITS = ArchiveLimits(
     deadline_seconds=600,
 )
 
+ORAS_VERSION = "1.3.4"
+ORAS_LINUX_AMD64_URL = (
+    "https://github.com/oras-project/oras/releases/download/v1.3.4/"
+    "oras_1.3.4_linux_amd64.tar.gz"
+)
+ORAS_LINUX_AMD64_SHA256 = "f27adb935022d94df8dc77719c322dda592c78a0d57a6f7dcdd8d900b248c454"
+ORAS_ARCHIVE_MAX_BYTES = 8 * 1024 * 1024
+ORAS_EXPANDED_MAX_BYTES = 16 * 1024 * 1024
+_ORAS_ARCHIVE_FILES = frozenset({"oras", "LICENSE", "README.md"})
+
 
 @dataclass(frozen=True)
 class ArchiveEntry:
@@ -560,6 +570,61 @@ def extract_archive(
     except BaseException:
         shutil.rmtree(destination, ignore_errors=True)
         raise
+
+
+def bootstrap_oras_archive(archive_path: Path, tool_root: Path) -> Path:
+    """Verify and extract the single pinned ORAS linux/amd64 distribution."""
+
+    try:
+        archive_bytes = archive_path.lstat().st_size
+    except OSError as exc:
+        raise ProducerValidationError("ORAS archive is unavailable") from exc
+    if archive_bytes <= 0 or archive_bytes > ORAS_ARCHIVE_MAX_BYTES:
+        raise ProducerValidationError("ORAS archive bytes exceed limit")
+    verify_regular_file(
+        archive_path,
+        expected_bytes=archive_bytes,
+        expected_sha256=ORAS_LINUX_AMD64_SHA256,
+    )
+    limits = ArchiveLimits(
+        max_expanded_bytes=ORAS_EXPANDED_MAX_BYTES,
+        max_files=len(_ORAS_ARCHIVE_FILES),
+        max_depth=1,
+        max_path_bytes=64,
+        max_compression_ratio=100,
+        deadline_seconds=30,
+    )
+    entries = preflight_archive(archive_path, limits)
+    names = {entry.path for entry in entries}
+    if "oras" not in names or not names.issubset(_ORAS_ARCHIVE_FILES):
+        raise ProducerValidationError("ORAS archive file allowlist differs")
+    try:
+        with tarfile.open(archive_path, "r:gz") as archive:
+            if any(not member.isfile() for member in archive.getmembers()):
+                raise ProducerValidationError("ORAS archive contains a non-file entry")
+    except (tarfile.TarError, OSError) as exc:
+        if isinstance(exc, ProducerValidationError):
+            raise
+        raise ProducerValidationError("ORAS archive must be gzip-compressed tar") from exc
+    extracted = extract_archive(archive_path, tool_root, limits)
+    if {entry.path for entry in extracted} != names:
+        shutil.rmtree(tool_root, ignore_errors=True)
+        raise ProducerValidationError("ORAS extracted file set differs")
+    os.chmod(tool_root, 0o700)
+    oras_bin = tool_root / "oras"
+    try:
+        metadata = oras_bin.lstat()
+    except OSError as exc:
+        shutil.rmtree(tool_root, ignore_errors=True)
+        raise ProducerValidationError("ORAS binary is unavailable after extraction") from exc
+    if not stat.S_ISREG(metadata.st_mode) or oras_bin.is_symlink():
+        shutil.rmtree(tool_root, ignore_errors=True)
+        raise ProducerValidationError("ORAS binary must be a regular file")
+    os.chmod(oras_bin, 0o700)
+    if oras_bin.resolve() != tool_root.resolve() / "oras":
+        shutil.rmtree(tool_root, ignore_errors=True)
+        raise ProducerValidationError("ORAS binary escapes the tool root")
+    return oras_bin
 
 
 def canonical_tree_manifest(root: Path) -> bytes:
