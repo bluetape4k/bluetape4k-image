@@ -1409,7 +1409,7 @@ git commit -m 'docs: producer 운영과 adoption 경계를 분리한다' \
 - Create: `docs/review/2026-09-07-issue-638-trusted-producer-code-review.md`
 - Modify: finding이 있는 implementation file만 수정
 
-- [ ] **Step 1: Python/schema validation ladder를 실행한다.**
+- [x] **Step 1: Python/schema validation ladder를 실행한다.**
 
 ```bash
 PYTHON39="${PYTHON39:-/usr/bin/python3}"
@@ -1455,7 +1455,7 @@ evidence digest, retry, cleanup과 incident URL을 redacted canonical form으로
 summary write 또는 digest read-back 실패는 job을 fail closed하고 workflow contract test가
 모든 job의 summary step 순서와 required field를 검사한다.
 
-- [ ] **Step 2: workflow/security validation ladder를 실행한다.**
+- [x] **Step 2: workflow/security validation ladder를 실행한다.**
 
 ```bash
 python3 .github/scripts/test-paddleocr-producer-workflow.py
@@ -1466,7 +1466,7 @@ git diff --check
 
 Expected: graph, permissions, pins, syntax, secret scan과 diff가 PASS다.
 
-- [ ] **Step 3: local stop condition과 exact HEAD를 기록한다.**
+- [x] **Step 3: local stop condition과 exact HEAD를 기록한다.**
 
 ```bash
 python3 scripts/research/paddle_ocr_producer.py validate-inputs \
@@ -1480,14 +1480,14 @@ git rev-parse HEAD
 Expected: canonical `PASS` 한 줄과 clean worktree다. GitHub runner/environment/GHCR/
 attestation은 local evidence로 PASS 처리하지 않는다.
 
-- [ ] **Step 4: 여섯 관점 code review와 main integration을 수행한다.**
+- [x] **Step 4: 여섯 관점 code review와 main integration을 수행한다.**
 
 performance, stability, security, operator/Ops, developer/API, user/caller lane을 exact
 HEAD에서 독립 실행한다. P0/P1은 수정 후 affected lane을 다시 실행하고 P2/P3은 수정
 또는 근거를 기록한다. 최종 문서는 P0=0/P1=0, tests, action pins, 미실행 external
 evidence를 분리한다.
 
-- [ ] **Step 5: verification/review artifact를 commit하고 PR-ready 상태를 보고한다.**
+- [x] **Step 5: verification/review artifact를 commit하고 PR-ready 상태를 보고한다.**
 
 ```bash
 git add docs/review
