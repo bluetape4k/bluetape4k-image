@@ -983,7 +983,7 @@ git commit -m 'ci: producer의 validation 경계를 PR에서 검증한다' \
 - Modify: `scripts/research/paddle_ocr_producer.py`
 - Modify: `scripts/research/test_paddle_ocr_producer_evidence.py`
 
-- [ ] **Step 1: exact artifact binding과 private staging RED test를 추가한다.**
+- [x] **Step 1: exact artifact binding과 private staging RED test를 추가한다.**
 
 ```python
 assert_job_permissions(workflow, "image-build", {"contents": "read", "actions": "read"})
@@ -999,13 +999,13 @@ assert_same_run_artifact(workflow, "staging-push", "paddleocr-oci-${attemptId}")
 assert_no_registry_write_in_job(workflow, "image-build")
 ```
 
-- [ ] **Step 2: RED를 확인한다.**
+- [x] **Step 2: RED를 확인한다.**
 
 Run: `python3 .github/scripts/test-paddleocr-producer-workflow.py`
 
 Expected: staging job body/permission assertion이 실패한다.
 
-- [ ] **Step 3: source-repro-check와 unprivileged image-build를 구현한다.**
+- [x] **Step 3: source-repro-check와 unprivileged image-build를 구현한다.**
 
 `staging`은 exact `paddleocr-models-<attemptId>` artifact를 만든다. content는
 `models/{detector,recognizer}/**`, `model-manifest.json`, `ocr-pipeline.yaml`,
@@ -1030,7 +1030,7 @@ shared/remote cache와 cache import/export는 사용하지 않으며 workflow co
 거부한다. build start/end/duration, network-none와 cache-disabled receipt를 handoff에
 결합해 Task 11/12에서 exact run 기준으로 read-back한다.
 
-- [ ] **Step 4: privileged staging-push/readback을 구현한다.**
+- [x] **Step 4: privileged staging-push/readback을 구현한다.**
 
 staging-push는 OCI tar를 실행하거나 임의 extract하지 않는다. verified ORAS absolute
 path로 `ghcr.io/bluetape4k/paddleocr-service-staging:image-<attemptId>`에 copy한 뒤
@@ -1040,7 +1040,7 @@ fragment를 올리며 원래 실패를 보존한다. secret/query/header/model f
 stderr, uploaded artifacts, Docker context/args와 cache에 나타나지 않는지 capture test로
 검증하고 cleanup failure 경로도 같은 redaction assertion을 통과해야 한다.
 
-- [ ] **Step 5: contract/syntax를 GREEN으로 만들고 commit한다.**
+- [x] **Step 5: contract/syntax를 GREEN으로 만들고 commit한다.**
 
 ```bash
 python3 .github/scripts/test-paddleocr-producer-workflow.py

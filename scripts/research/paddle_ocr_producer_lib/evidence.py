@@ -2,6 +2,7 @@ from __future__ import annotations
 
 """OCI evidence descriptor validation and root-pinned materialization."""
 
+import datetime
 import hashlib
 import os
 import re
@@ -335,6 +336,63 @@ def _validate_artifact_file(value: Any, field: str) -> dict[str, Any]:
     return descriptor
 
 
+def validate_same_run_artifact(
+    value: Mapping[str, Any],
+    *,
+    expected_kind: str,
+    expected_artifact_name: str,
+    expected_artifact_id: int,
+    expected_artifact_digest: str,
+    expected_run_id: int,
+    expected_run_attempt: int,
+    expected_input_lock_sha256: str,
+    expected_content_sha256: str,
+) -> dict[str, Any]:
+    """Validate immutable GitHub artifact metadata before consuming its files."""
+    document = _exact(
+        value,
+        {
+            "schemaVersion", "kind", "artifactName", "artifactId", "artifactDigest",
+            "runId", "runAttempt", "attemptId", "inputLockSha256", "contentSha256",
+        },
+        "same-run artifact",
+    )
+    if document["schemaVersion"] != 1:
+        raise ProducerValidationError("same-run artifact schemaVersion must be 1")
+    if expected_kind not in {"MODELS", "WHEELHOUSE", "OCI"} or document["kind"] != expected_kind:
+        raise ProducerValidationError("same-run artifact kind differs")
+    if (
+        not isinstance(expected_artifact_name, str)
+        or re.fullmatch(r"paddleocr-(?:models|wheelhouse|oci)-[1-9][0-9]*\.[1-9][0-9]*", expected_artifact_name) is None
+        or document["artifactName"] != expected_artifact_name
+    ):
+        raise ProducerValidationError("same-run artifact name differs")
+    artifact_id = _positive(document["artifactId"], "artifactId")
+    if artifact_id != _positive(expected_artifact_id, "expected artifact id"):
+        raise ProducerValidationError("same-run artifact id differs")
+    _oci_digest(document["artifactDigest"], "artifactDigest")
+    _oci_digest(expected_artifact_digest, "expected artifact digest")
+    if document["artifactDigest"] != expected_artifact_digest:
+        raise ProducerValidationError("same-run artifact digest differs")
+    run_id = _positive(document["runId"], "runId")
+    run_attempt = _positive(document["runAttempt"], "runAttempt")
+    if run_id != _positive(expected_run_id, "expected run id"):
+        raise ProducerValidationError("same-run artifact run id differs")
+    if run_attempt != _positive(expected_run_attempt, "expected run attempt"):
+        raise ProducerValidationError("same-run artifact run attempt differs")
+    if document["attemptId"] != f"{run_id}.{run_attempt}":
+        raise ProducerValidationError("same-run artifact attemptId differs")
+    require_sha256(document["inputLockSha256"], "inputLockSha256")
+    require_sha256(expected_input_lock_sha256, "expected inputLockSha256")
+    if document["inputLockSha256"] != expected_input_lock_sha256:
+        raise ProducerValidationError("same-run artifact input lock differs")
+    require_sha256(document["contentSha256"], "contentSha256")
+    require_sha256(expected_content_sha256, "expected contentSha256")
+    if document["contentSha256"] != expected_content_sha256:
+        raise ProducerValidationError("same-run artifact content differs")
+    return document
+
+
 def validate_oci_handoff(value: Mapping[str, Any]) -> dict[str, Any]:
     document = _exact(
         value,
@@ -343,6 +401,7 @@ def validate_oci_handoff(value: Mapping[str, Any]) -> dict[str, Any]:
             "stagingArtifactSha256", "imageTarSha256", "imageIndexDigest",
             "imagePlatformDigest", "imageConfigDigest", "baseDigest", "targetPlatform",
             "sourceDateEpoch", "modelTreeDigests", "modelPairSha256", "createdAt",
+            "buildReceipt",
         },
         "OCI handoff",
     )
@@ -359,6 +418,34 @@ def validate_oci_handoff(value: Mapping[str, Any]) -> dict[str, Any]:
     if document["targetPlatform"] != "linux/amd64":
         raise ProducerValidationError("targetPlatform must be linux/amd64")
     _positive(document["sourceDateEpoch"], "sourceDateEpoch")
+    build = _exact(
+        document["buildReceipt"],
+        {
+            "schemaVersion", "startedAt", "finishedAt", "durationSeconds",
+            "networkMode", "cacheMode", "sourceDateEpoch",
+        },
+        "buildReceipt",
+    )
+    if build["schemaVersion"] != 1:
+        raise ProducerValidationError("buildReceipt.schemaVersion must be 1")
+    if build["networkMode"] != "NONE" or build["cacheMode"] != "DISABLED":
+        raise ProducerValidationError("buildReceipt isolation differs")
+    if build["sourceDateEpoch"] != document["sourceDateEpoch"]:
+        raise ProducerValidationError("buildReceipt sourceDateEpoch differs")
+    if type(build["durationSeconds"]) is not int or build["durationSeconds"] < 0:
+        raise ProducerValidationError("buildReceipt durationSeconds is invalid")
+    try:
+        started = datetime.datetime.fromisoformat(build["startedAt"].replace("Z", "+00:00"))
+        finished = datetime.datetime.fromisoformat(build["finishedAt"].replace("Z", "+00:00"))
+    except (AttributeError, TypeError, ValueError) as exc:
+        raise ProducerValidationError("buildReceipt timestamp is invalid") from exc
+    if (
+        not build["startedAt"].endswith("Z")
+        or not build["finishedAt"].endswith("Z")
+        or finished < started
+        or int((finished - started).total_seconds()) != build["durationSeconds"]
+    ):
+        raise ProducerValidationError("buildReceipt timestamp order is invalid")
     models = _exact(document["modelTreeDigests"], {"detector", "recognizer"}, "modelTreeDigests")
     require_sha256(models["detector"], "modelTreeDigests.detector")
     require_sha256(models["recognizer"], "modelTreeDigests.recognizer")

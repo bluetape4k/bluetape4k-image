@@ -111,6 +111,29 @@ def job_permissions(block: str) -> dict[str, str]:
     return dict(re.findall(r"(?m)^      ([a-z-]+): (read|write)$", match.group(1)))
 
 
+def job_needs(block: str) -> set[str]:
+    match = re.search(r"(?m)^    needs: \[([^]]+)]$", block)
+    return set() if match is None else {item.strip() for item in match.group(1).split(",")}
+
+
+def expanded_steps(block: str, shared_steps: str) -> str:
+    if "steps: *producer-steps" in block:
+        block = shared_steps
+    aliases = {
+        "- &trust-step\n        name: Validate trust context": "- name: Validate trust context",
+        "- &cleanup-step\n        name: Merge cleanup aggregate": "- name: Merge cleanup aggregate",
+        "- &summary-step\n        name: Write step summary": "- name: Write step summary",
+        "- &terminal-step\n        name: Emit terminal result": "- name: Emit terminal result",
+        "- *trust-step": "- name: Validate trust context",
+        "- *cleanup-step": "- name: Merge cleanup aggregate",
+        "- *summary-step": "- name: Write step summary",
+        "- *terminal-step": "- name: Emit terminal result",
+    }
+    for alias, expanded in aliases.items():
+        block = block.replace(alias, expanded)
+    return block
+
+
 class ProducerWorkflowContractTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
@@ -164,7 +187,7 @@ class ProducerWorkflowContractTest(unittest.TestCase):
         shared_steps = self.blocks["validation"]
         for job, block in self.blocks.items():
             with self.subTest(job=job):
-                steps = shared_steps if "steps: *producer-steps" in block else block
+                steps = expanded_steps(block, shared_steps)
                 self.assertIn("- name: Validate trust context", steps)
                 cleanup = steps.index("- name: Merge cleanup aggregate")
                 summary = steps.index("- name: Write step summary")
@@ -181,6 +204,38 @@ class ProducerWorkflowContractTest(unittest.TestCase):
             validation.index("- name: Execute producer stage"),
         )
         self.assertNotIn("secrets.", self.workflow)
+
+    def test_unprivileged_build_and_private_push_use_same_run_artifacts(self) -> None:
+        self.assertEqual(
+            job_needs(self.blocks["image-build"]),
+            {"validation", "staging", "source-repro-check"},
+        )
+        self.assertEqual(
+            job_needs(self.blocks["staging-push"]),
+            {"validation", "source-repro-check", "image-build"},
+        )
+        self.assertIn("environment: paddleocr-producer", self.blocks["staging-push"])
+        self.assertIn("paddleocr-models-${{ env.ATTEMPT_ID }}", self.workflow)
+        self.assertIn("paddleocr-wheelhouse-${{ env.ATTEMPT_ID }}", self.workflow)
+        self.assertIn("paddleocr-oci-${{ env.ATTEMPT_ID }}", self.workflow)
+        image_build = self.blocks["image-build"]
+        self.assertNotRegex(image_build, r"(?i)(docker\s+push|oras\s+(?:push|copy)|packages:\s+write)")
+        for forbidden in ("cache-from", "cache-to", "type=gha", "type=registry"):
+            self.assertNotIn(forbidden, self.workflow)
+        self.assertIn("--network=none", image_build)
+        self.assertIn("--no-cache", image_build)
+        self.assertIn('--build-arg "SOURCE_DATE_EPOCH=$SOURCE_DATE_EPOCH"', image_build)
+        self.assertIn("--build-receipt .producer-state/build-receipt.json", image_build)
+        push = self.blocks["staging-push"]
+        for output in ("artifact-id", "artifact-digest", "content-sha256"):
+            self.assertIn(f"needs.staging.outputs.{output}", image_build)
+            self.assertIn(f"needs.source-repro-check.outputs.{output}", image_build)
+            self.assertIn(f"needs.image-build.outputs.{output}", push)
+        self.assertLess(push.index("validate-oci-artifact"), push.index('"$ORAS_BIN" cp'))
+        self.assertLess(push.index('"$ORAS_BIN" manifest fetch'), push.index("staging-digest=%s"))
+        self.assertIn("packages/container/paddleocr-service-staging --jq .visibility", push)
+        self.assertIn('"private"', push)
+        self.assertIn('"registry-config.json"', self.blocks["validation"])
 
     def test_ci_routes_every_producer_surface_to_credential_free_matrix(self) -> None:
         self.assertIn("paddleocr-producer: ${{ steps.filter.outputs.paddleocr-producer }}", self.ci)

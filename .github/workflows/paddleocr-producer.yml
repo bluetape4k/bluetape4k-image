@@ -52,6 +52,7 @@ env:
   PRODUCER_INPUT_LOCK: docker/paddleocr/producer-input.lock.json
   PRODUCER_TRUST_POLICY: docker/paddleocr/trust-policy.json
   PRODUCER_LEGAL_INVENTORY: docker/paddleocr/legal-inventory.json
+  ATTEMPT_ID: ${{ github.run_id }}.${{ github.run_attempt }}
 
 jobs:
   validation:
@@ -63,15 +64,18 @@ jobs:
     permissions:
       contents: read
     steps: &producer-steps
-      - name: Checkout exact dispatch head
+      - &checkout-step
+        name: Checkout exact dispatch head
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
-      - name: Set up pinned Python
+      - &python-step
+        name: Set up pinned Python
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
         with:
           python-version: '3.13'
-      - name: Validate trust context
+      - &trust-step
+        name: Validate trust context
         env:
           DISPATCH_MODE: ${{ inputs.mode }}
           RESUME_ATTEMPT_ID: ${{ inputs.resumeAttemptId }}
@@ -117,12 +121,28 @@ jobs:
         run: |
           echo "$PRODUCER_JOB stage는 후속 구현 task가 완료될 때까지 publish하지 않습니다."
           exit 10
-      - name: Merge cleanup aggregate
+      - &cleanup-step
+        name: Merge cleanup aggregate
         if: ${{ always() }}
         run: |
+          python3 - <<'PY'
+          import shutil
+          from pathlib import Path
+          root = Path(".producer-state")
+          for name in (
+              "context", "model-archives", "oras.tar.gz", "registry-config.json",
+              "registry-wheelhouse", "source-repro", "tools",
+          ):
+              path = root / name
+              if path.is_symlink() or path.is_file():
+                  path.unlink(missing_ok=True)
+              elif path.is_dir():
+                  shutil.rmtree(path)
+          PY
           mkdir -p .producer-state
           printf '{"job":"%s","status":"PENDING"}' "$PRODUCER_JOB" > ".producer-state/cleanup-$PRODUCER_JOB.json"
-      - name: Write step summary
+      - &summary-step
+        name: Write step summary
         if: ${{ always() }}
         run: |
           python3 - <<'PY'
@@ -151,7 +171,8 @@ jobs:
           python3 scripts/research/paddle_ocr_producer.py write-step-summary \
             --input .producer-state/summary-input.json \
             --summary "$GITHUB_STEP_SUMMARY"
-      - name: Emit terminal result
+      - &terminal-step
+        name: Emit terminal result
         if: ${{ always() }}
         run: test -s "$GITHUB_STEP_SUMMARY"
   staging:
@@ -162,9 +183,52 @@ jobs:
     if: ${{ inputs.mode == 'PRODUCE' }}
     env:
       PRODUCER_JOB: staging
+    outputs:
+      artifact-id: ${{ steps.upload-models.outputs.artifact-id }}
+      artifact-digest: ${{ steps.upload-models.outputs.artifact-digest }}
+      content-sha256: ${{ steps.stage-models.outputs.content-sha256 }}
     permissions:
       contents: read
-    steps: *producer-steps
+    steps:
+      - *checkout-step
+      - *python-step
+      - *trust-step
+      - name: Fetch locked model archives
+        run: |
+          python3 scripts/research/paddle_ocr_producer.py fetch-locked-inputs \
+            --input-lock "$PRODUCER_INPUT_LOCK" \
+            --kind models \
+            --output-root .producer-state/model-archives
+      - name: Stage verified model artifact
+        id: stage-models
+        run: |
+          python3 scripts/research/paddle_ocr_producer.py stage-models \
+            --input-lock "$PRODUCER_INPUT_LOCK" \
+            --legal "$PRODUCER_LEGAL_INVENTORY" \
+            --pipeline docker/paddleocr/ocr-pipeline.yaml \
+            --model-archive detector=.producer-state/model-archives/detector.tar.gz \
+            --model-archive recognizer=.producer-state/model-archives/recognizer.tar.gz \
+            --run-id "$GITHUB_RUN_ID" \
+            --run-attempt "$GITHUB_RUN_ATTEMPT" \
+            --artifact-name "paddleocr-models-$ATTEMPT_ID" \
+            --output-root .producer-state/models \
+            > .producer-state/stage-models-receipt.json
+          printf 'content-sha256=%s\n' \
+            "$(jq -er '.data.contentSha256' .producer-state/stage-models-receipt.json)" \
+            >> "$GITHUB_OUTPUT"
+      - name: Upload exact model artifact
+        id: upload-models
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: paddleocr-models-${{ env.ATTEMPT_ID }}
+          path: .producer-state/models/
+          if-no-files-found: error
+          include-hidden-files: true
+          compression-level: 0
+          retention-days: 2
+      - *cleanup-step
+      - *summary-step
+      - *terminal-step
   source-repro-check:
     name: PaddleOCR producer / source-repro-check
     runs-on: ubuntu-24.04
@@ -173,9 +237,57 @@ jobs:
     if: ${{ inputs.mode == 'PRODUCE' }}
     env:
       PRODUCER_JOB: source-repro-check
+    outputs:
+      artifact-id: ${{ steps.upload-wheelhouse.outputs.artifact-id }}
+      artifact-digest: ${{ steps.upload-wheelhouse.outputs.artifact-digest }}
+      content-sha256: ${{ steps.seal-wheelhouse.outputs.content-sha256 }}
     permissions:
       contents: read
-    steps: *producer-steps
+    steps:
+      - *checkout-step
+      - *python-step
+      - *trust-step
+      - name: Fetch locked registry wheels
+        run: |
+          python3 scripts/research/paddle_ocr_producer.py fetch-locked-inputs \
+            --input-lock "$PRODUCER_INPUT_LOCK" \
+            --kind packages \
+            --output-root .producer-state/registry-wheelhouse
+      - name: Reproduce source wheel twice
+        run: |
+          python3 scripts/research/paddle_ocr_producer.py verify-source-reproducibility \
+            --input-lock "$PRODUCER_INPUT_LOCK" \
+            --work-root .producer-state/source-repro \
+            --registry-wheelhouse .producer-state/registry-wheelhouse \
+            --output-wheelhouse .producer-state/verified-wheelhouse
+      - name: Seal exact wheelhouse artifact
+        id: seal-wheelhouse
+        run: |
+          python3 scripts/research/paddle_ocr_producer.py seal-wheelhouse \
+            --input-lock "$PRODUCER_INPUT_LOCK" \
+            --requirements-lock docker/paddleocr/requirements.cpu.lock.txt \
+            --wheelhouse .producer-state/verified-wheelhouse \
+            --run-id "$GITHUB_RUN_ID" \
+            --run-attempt "$GITHUB_RUN_ATTEMPT" \
+            --artifact-name "paddleocr-wheelhouse-$ATTEMPT_ID" \
+            --output-root .producer-state/wheelhouse-artifact \
+            > .producer-state/seal-wheelhouse-receipt.json
+          printf 'content-sha256=%s\n' \
+            "$(jq -er '.data.contentSha256' .producer-state/seal-wheelhouse-receipt.json)" \
+            >> "$GITHUB_OUTPUT"
+      - name: Upload exact wheelhouse artifact
+        id: upload-wheelhouse
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: paddleocr-wheelhouse-${{ env.ATTEMPT_ID }}
+          path: .producer-state/wheelhouse-artifact/
+          if-no-files-found: error
+          include-hidden-files: true
+          compression-level: 0
+          retention-days: 2
+      - *cleanup-step
+      - *summary-step
+      - *terminal-step
   image-build:
     name: PaddleOCR producer / image-build
     runs-on: ubuntu-24.04
@@ -184,10 +296,134 @@ jobs:
     if: ${{ inputs.mode == 'PRODUCE' }}
     env:
       PRODUCER_JOB: image-build
+    outputs:
+      artifact-id: ${{ steps.upload-oci.outputs.artifact-id }}
+      artifact-digest: ${{ steps.upload-oci.outputs.artifact-digest }}
+      image-index-digest: ${{ steps.create-handoff.outputs.image-index-digest }}
+      content-sha256: ${{ steps.create-handoff.outputs.content-sha256 }}
     permissions:
       contents: read
       actions: read
-    steps: *producer-steps
+    steps:
+      - *checkout-step
+      - *python-step
+      - *trust-step
+      - name: Download same-run model artifact by ID
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          artifact-ids: ${{ needs.staging.outputs.artifact-id }}
+          path: .producer-state/models
+      - name: Download same-run wheelhouse artifact by ID
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          artifact-ids: ${{ needs.source-repro-check.outputs.artifact-id }}
+          path: .producer-state/wheelhouse
+      - name: Validate same-run build inputs
+        run: |
+          python3 scripts/research/paddle_ocr_producer.py validate-build-artifacts \
+            --input-lock "$PRODUCER_INPUT_LOCK" \
+            --models-root .producer-state/models \
+            --models-artifact-id "${{ needs.staging.outputs.artifact-id }}" \
+            --models-artifact-digest "${{ needs.staging.outputs.artifact-digest }}" \
+            --models-content-sha256 "${{ needs.staging.outputs.content-sha256 }}" \
+            --wheelhouse-root .producer-state/wheelhouse \
+            --wheelhouse-artifact-id "${{ needs.source-repro-check.outputs.artifact-id }}" \
+            --wheelhouse-artifact-digest "${{ needs.source-repro-check.outputs.artifact-digest }}" \
+            --wheelhouse-content-sha256 "${{ needs.source-repro-check.outputs.content-sha256 }}" \
+            --run-id "$GITHUB_RUN_ID" \
+            --run-attempt "$GITHUB_RUN_ATTEMPT"
+      - name: Materialize bounded Docker context
+        run: |
+          mkdir -p .producer-state/context/bin
+          cp docker/paddleocr/Dockerfile .producer-state/context/Dockerfile
+          cp docker/paddleocr/service.py .producer-state/context/service.py
+          cp docker/paddleocr/bin/bluetape4k-paddleocr-service .producer-state/context/bin/
+          cp -R .producer-state/models/models .producer-state/context/models
+          cp .producer-state/models/model-manifest.json .producer-state/context/model-manifest.json
+          cp .producer-state/models/ocr-pipeline.yaml .producer-state/context/ocr-pipeline.yaml
+          cp .producer-state/models/legal-inventory.json .producer-state/context/legal-inventory.json
+          cp -R .producer-state/wheelhouse/wheelhouse .producer-state/context/wheelhouse
+          cp .producer-state/wheelhouse/requirements.cpu.lock.txt .producer-state/context/requirements.cpu.lock.txt
+      - name: Build network-none OCI archive without remote cache
+        run: |
+          set -euo pipefail
+          python3 scripts/research/paddle_ocr_producer.py verify-dockerfile \
+            --dockerfile docker/paddleocr/Dockerfile \
+            --input-lock "$PRODUCER_INPUT_LOCK" > .producer-state/dockerfile-receipt.json
+          python3 scripts/research/paddle_ocr_producer.py input-value \
+            --lock "$PRODUCER_INPUT_LOCK" \
+            --field sourceDateEpoch \
+            --output .producer-state/source-date-epoch.json \
+            > /dev/null
+          BASE_IMAGE=$(jq -er '.data.baseReference' .producer-state/dockerfile-receipt.json)
+          SOURCE_DATE_EPOCH=$(jq -er '.data.sourceDateEpoch' .producer-state/source-date-epoch.json)
+          BUILD_STARTED_AT=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
+          BUILD_STARTED_EPOCH=$(date +%s)
+          mkdir -p .producer-state/oci
+          docker buildx build \
+            --network=none \
+            --no-cache \
+            --platform linux/amd64 \
+            --build-arg "BASE_IMAGE=$BASE_IMAGE" \
+            --build-arg "SOURCE_DATE_EPOCH=$SOURCE_DATE_EPOCH" \
+            --tag "paddleocr-service:$ATTEMPT_ID" \
+            --output type=oci,dest=.producer-state/oci/paddleocr-service.oci.tar \
+            .producer-state/context
+          BUILD_FINISHED_AT=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
+          BUILD_FINISHED_EPOCH=$(date +%s)
+          BUILD_STARTED_AT="$BUILD_STARTED_AT" \
+          BUILD_FINISHED_AT="$BUILD_FINISHED_AT" \
+          BUILD_DURATION_SECONDS="$((BUILD_FINISHED_EPOCH - BUILD_STARTED_EPOCH))" \
+          SOURCE_DATE_EPOCH="$SOURCE_DATE_EPOCH" \
+          python3 - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+          receipt = {
+              "schemaVersion": 1,
+              "startedAt": os.environ["BUILD_STARTED_AT"],
+              "finishedAt": os.environ["BUILD_FINISHED_AT"],
+              "durationSeconds": int(os.environ["BUILD_DURATION_SECONDS"]),
+              "networkMode": "NONE",
+              "cacheMode": "DISABLED",
+              "sourceDateEpoch": int(os.environ["SOURCE_DATE_EPOCH"]),
+          }
+          Path(".producer-state/build-receipt.json").write_bytes(
+              json.dumps(receipt, separators=(",", ":"), sort_keys=True).encode()
+          )
+          PY
+      - name: Create exact OCI handoff
+        id: create-handoff
+        run: |
+          python3 scripts/research/paddle_ocr_producer.py create-oci-handoff \
+            --input-lock "$PRODUCER_INPUT_LOCK" \
+            --models-manifest .producer-state/models/staging-manifest.json \
+            --oci-tar .producer-state/oci/paddleocr-service.oci.tar \
+            --run-id "$GITHUB_RUN_ID" \
+            --run-attempt "$GITHUB_RUN_ATTEMPT" \
+            --staging-artifact-sha256 "${{ needs.staging.outputs.content-sha256 }}" \
+            --build-receipt .producer-state/build-receipt.json \
+            --output .producer-state/oci/handoff.json \
+            > .producer-state/create-handoff-receipt.json
+          printf 'image-index-digest=%s\n' \
+            "$(jq -er '.data.imageIndexDigest' .producer-state/create-handoff-receipt.json)" \
+            >> "$GITHUB_OUTPUT"
+          printf 'content-sha256=%s\n' \
+            "$(jq -er '.data.contentSha256' .producer-state/create-handoff-receipt.json)" \
+            >> "$GITHUB_OUTPUT"
+      - name: Upload exact OCI handoff artifact
+        id: upload-oci
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: paddleocr-oci-${{ env.ATTEMPT_ID }}
+          path: .producer-state/oci/
+          if-no-files-found: error
+          include-hidden-files: false
+          compression-level: 0
+          retention-days: 2
+      - *cleanup-step
+      - *summary-step
+      - *terminal-step
   staging-push:
     name: PaddleOCR producer / staging-push
     runs-on: ubuntu-24.04
@@ -197,11 +433,78 @@ jobs:
     environment: paddleocr-producer
     env:
       PRODUCER_JOB: staging-push
+    outputs:
+      staging-digest: ${{ steps.push-staging.outputs.staging-digest }}
     permissions:
       contents: read
       actions: read
       packages: write
-    steps: *producer-steps
+    steps:
+      - *checkout-step
+      - *python-step
+      - *trust-step
+      - name: Download same-run OCI artifact by ID
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          artifact-ids: ${{ needs.image-build.outputs.artifact-id }}
+          path: .producer-state/oci
+      - name: Validate OCI handoff before registry access
+        run: |
+          python3 scripts/research/paddle_ocr_producer.py validate-oci-artifact \
+            --input-lock "$PRODUCER_INPUT_LOCK" \
+            --root .producer-state/oci \
+            --artifact-id "${{ needs.image-build.outputs.artifact-id }}" \
+            --artifact-digest "${{ needs.image-build.outputs.artifact-digest }}" \
+            --content-sha256 "${{ needs.image-build.outputs.content-sha256 }}" \
+            --run-id "$GITHUB_RUN_ID" \
+            --run-attempt "$GITHUB_RUN_ATTEMPT"
+      - name: Bootstrap verified ORAS
+        run: |
+          mkdir -p .producer-state/tools
+          curl --fail --location --silent --show-error \
+            https://github.com/oras-project/oras/releases/download/v1.3.4/oras_1.3.4_linux_amd64.tar.gz \
+            --output .producer-state/oras.tar.gz
+          python3 scripts/research/paddle_ocr_producer.py bootstrap-oras \
+            --archive .producer-state/oras.tar.gz \
+            --tool-root .producer-state/tools
+      - name: Execute producer stage
+        id: push-staging
+        env:
+          REGISTRY_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          ORAS_BIN="$PWD/.producer-state/tools/oras"
+          REGISTRY_CONFIG="$PWD/.producer-state/registry-config.json"
+          STAGING_REPOSITORY="ghcr.io/bluetape4k/paddleocr-service-staging"
+          STAGING_REF="$STAGING_REPOSITORY:image-$ATTEMPT_ID"
+          printf '%s' "$REGISTRY_TOKEN" | "$ORAS_BIN" login ghcr.io \
+            --username "$GITHUB_ACTOR" \
+            --password-stdin \
+            --registry-config "$REGISTRY_CONFIG"
+          "$ORAS_BIN" cp \
+            --from-oci-layout \
+            --to-registry-config "$REGISTRY_CONFIG" \
+            ".producer-state/oci/paddleocr-service.oci.tar:$ATTEMPT_ID" \
+            "$STAGING_REF"
+          STAGING_DIGEST=$("$ORAS_BIN" resolve \
+            --registry-config "$REGISTRY_CONFIG" \
+            "$STAGING_REF")
+          test "$STAGING_DIGEST" = "${{ needs.image-build.outputs.image-index-digest }}"
+          "$ORAS_BIN" manifest fetch \
+            --registry-config "$REGISTRY_CONFIG" \
+            "$STAGING_REPOSITORY@$STAGING_DIGEST" \
+            > .producer-state/staging-manifest-readback.json
+          test "sha256:$(shasum -a 256 .producer-state/staging-manifest-readback.json | awk '{print $1}')" = \
+            "$STAGING_DIGEST"
+          test "$(jq -er '.config.digest' .producer-state/staging-manifest-readback.json)" = \
+            "$(jq -er '.imageConfigDigest' .producer-state/oci/handoff.json)"
+          test "$(gh api /orgs/bluetape4k/packages/container/paddleocr-service-staging --jq .visibility)" = \
+            "private"
+          printf 'staging-digest=%s\n' "$STAGING_DIGEST" >> "$GITHUB_OUTPUT"
+      - *cleanup-step
+      - *summary-step
+      - *terminal-step
   staging-attest:
     name: PaddleOCR producer / staging-attest
     runs-on: ubuntu-24.04

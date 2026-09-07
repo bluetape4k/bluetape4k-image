@@ -1327,6 +1327,276 @@ class ProducerCliTest(unittest.TestCase):
         document = json.loads(result.stdout)
         self.assertEqual((document["status"], document["errorCode"]), ("SCHEMA_INVALID", "BLOCKED_INPUT"))
 
+    def test_model_and_wheelhouse_artifacts_bind_exact_run_and_content(self) -> None:
+        lock, _, legal = self._write_inputs()
+        value = json.loads(lock.read_bytes())
+        wheel_payload = b"locked-wheel"
+        package = value["packages"][0]
+        package["bytes"] = len(wheel_payload)
+        package["sha256"] = hashlib.sha256(wheel_payload).hexdigest()
+        wheelhouse = self.root / "verified-wheelhouse"
+        wheelhouse.mkdir()
+        (wheelhouse / package["filename"]).write_bytes(wheel_payload)
+        requirements = self.root / "requirements.cpu.lock.txt"
+        requirements.write_text(
+            f"paddleocr==3.2.0 --hash=sha256:{package['sha256']}\n", encoding="utf-8"
+        )
+        archives: dict[str, Path] = {}
+        for model in value["models"]:
+            role = model["role"]
+            payload = f"{role}-model".encode()
+            archive = self.root / f"{role}.tar.gz"
+            with tarfile.open(archive, "w:gz") as stream:
+                info = tarfile.TarInfo(f"upstream/{role}.bin")
+                info.size = len(payload)
+                stream.addfile(info, io.BytesIO(payload))
+            tree_manifest = (
+                f"{role}.bin\t{len(payload)}\t{hashlib.sha256(payload).hexdigest()}\n"
+            ).encode()
+            model["bytes"] = archive.stat().st_size
+            model["sha256"] = hashlib.sha256(archive.read_bytes()).hexdigest()
+            model["treeSha256"] = hashlib.sha256(tree_manifest).hexdigest()
+            archives[role] = archive
+        lock.write_bytes(jcs_bytes(value))
+        pipeline = self.root / "ocr-pipeline.yaml"
+        pipeline.write_text("schemaVersion: 1\n", encoding="utf-8")
+        models_root = self.root / "models-artifact"
+        staged = self._run(
+            "stage-models", "--input-lock", str(lock), "--legal", str(legal),
+            "--pipeline", str(pipeline), "--model-archive", f"detector={archives['detector']}",
+            "--model-archive", f"recognizer={archives['recognizer']}", "--run-id", "44",
+            "--run-attempt", "2", "--artifact-name", "paddleocr-models-44.2",
+            "--output-root", str(models_root),
+        )
+        self.assertEqual(staged.returncode, 0, (staged.stdout + staged.stderr).decode())
+        staged_data = json.loads(staged.stdout)["data"]
+        wheelhouse_root = self.root / "wheelhouse-artifact"
+        sealed = self._run(
+            "seal-wheelhouse", "--input-lock", str(lock), "--requirements-lock",
+            str(requirements), "--wheelhouse", str(wheelhouse), "--run-id", "44",
+            "--run-attempt", "2", "--artifact-name", "paddleocr-wheelhouse-44.2",
+            "--output-root", str(wheelhouse_root),
+        )
+        self.assertEqual(sealed.returncode, 0, (sealed.stdout + sealed.stderr).decode())
+        sealed_data = json.loads(sealed.stdout)["data"]
+        command = (
+            "validate-build-artifacts", "--input-lock", str(lock), "--models-root",
+            str(models_root), "--models-artifact-id", "101", "--models-artifact-digest",
+            "sha256:" + SHA_A, "--models-content-sha256", staged_data["contentSha256"],
+            "--wheelhouse-root", str(wheelhouse_root), "--wheelhouse-artifact-id", "102",
+            "--wheelhouse-artifact-digest", "sha256:" + SHA_B,
+            "--wheelhouse-content-sha256", sealed_data["contentSha256"], "--run-id", "44",
+            "--run-attempt", "2",
+        )
+        verified = self._run(*command)
+        self.assertEqual(verified.returncode, 0, (verified.stdout + verified.stderr).decode())
+        (models_root / "unexpected.txt").write_text("swap", encoding="utf-8")
+        rejected = self._run(*command)
+        self.assertEqual(rejected.returncode, 22)
+        self.assertNotIn(b"swap", rejected.stdout + rejected.stderr)
+
+
+class ProducerArtifactCliContractTest(unittest.TestCase):
+    def test_workflow_artifact_commands_are_registered(self) -> None:
+        parser = producer_cli.build_parser()
+        subparsers = next(
+            action for action in parser._actions
+            if isinstance(action, producer_cli.argparse._SubParsersAction)
+        )
+        self.assertTrue({
+            "fetch-locked-inputs",
+            "stage-models",
+            "seal-wheelhouse",
+            "validate-build-artifacts",
+            "create-oci-handoff",
+            "validate-oci-artifact",
+        }.issubset(subparsers.choices))
+
+    def test_oci_layout_requires_exact_reachable_blob_closure(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            config = jcs_bytes({"architecture": "amd64", "os": "linux"})
+            layer = b"offline-image-layer"
+            config_digest = hashlib.sha256(config).hexdigest()
+            layer_digest = hashlib.sha256(layer).hexdigest()
+            manifest = jcs_bytes({
+                "schemaVersion": 2,
+                "mediaType": "application/vnd.oci.image.manifest.v1+json",
+                "config": {
+                    "mediaType": "application/vnd.oci.image.config.v1+json",
+                    "digest": "sha256:" + config_digest,
+                    "size": len(config),
+                },
+                "layers": [{
+                    "mediaType": "application/vnd.oci.image.layer.v1.tar",
+                    "digest": "sha256:" + layer_digest,
+                    "size": len(layer),
+                }],
+            })
+            manifest_digest = hashlib.sha256(manifest).hexdigest()
+            index = jcs_bytes({
+                "schemaVersion": 2,
+                "manifests": [{
+                    "mediaType": "application/vnd.oci.image.manifest.v1+json",
+                    "digest": "sha256:" + manifest_digest,
+                    "size": len(manifest),
+                }],
+            })
+
+            def write_archive(path: Path, *, extra: bool) -> None:
+                files = {
+                    "oci-layout": jcs_bytes({"imageLayoutVersion": "1.0.0"}),
+                    "index.json": index,
+                    f"blobs/sha256/{manifest_digest}": manifest,
+                    f"blobs/sha256/{config_digest}": config,
+                    f"blobs/sha256/{layer_digest}": layer,
+                }
+                if extra:
+                    payload = b"unreachable"
+                    files[f"blobs/sha256/{hashlib.sha256(payload).hexdigest()}"] = payload
+                with tarfile.open(path, "w") as stream:
+                    for name, payload in files.items():
+                        info = tarfile.TarInfo(name)
+                        info.size = len(payload)
+                        stream.addfile(info, io.BytesIO(payload))
+
+            archive = root / "image.oci.tar"
+            write_archive(archive, extra=False)
+            self.assertEqual(
+                producer_cli._inspect_oci_archive(archive),
+                {
+                    "imageIndexDigest": "sha256:" + manifest_digest,
+                    "imagePlatformDigest": "sha256:" + manifest_digest,
+                    "imageConfigDigest": "sha256:" + config_digest,
+                },
+            )
+            rejected = root / "extra.oci.tar"
+            write_archive(rejected, extra=True)
+            with self.assertRaisesRegex(producer_cli.ProducerRejectedError, "closure"):
+                producer_cli._inspect_oci_archive(rejected)
+
+    def test_oci_handoff_binds_model_content_and_same_run_artifact(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            model_root = root / "models-artifact"
+            (model_root / "models/detector").mkdir(parents=True)
+            (model_root / "models/recognizer").mkdir(parents=True)
+            for role in ("detector", "recognizer"):
+                (model_root / "models" / role / f"{role}.bin").write_bytes(role.encode())
+            trees = {
+                role: tree_sha256(model_root / "models" / role)
+                for role in ("detector", "recognizer")
+            }
+            legal = b'{"schemaVersion":1}'
+            pipeline = b"schemaVersion: 1\n"
+            (model_root / "legal-inventory.json").write_bytes(legal)
+            (model_root / "ocr-pipeline.yaml").write_bytes(pipeline)
+            lock_value = valid_input_lock()
+            for model in lock_value["models"]:  # type: ignore[union-attr]
+                model["treeSha256"] = trees[model["role"]]
+            lock_value["legalInventorySha256"] = hashlib.sha256(legal).hexdigest()
+            lock = root / "producer-input.lock.json"
+            lock.write_bytes(jcs_bytes(lock_value))
+            pair_sha = sha256_hex(jcs_bytes(trees))
+            model_manifest = {
+                "schemaVersion": 1,
+                "inputLockSha256": sha256_hex(lock.read_bytes()),
+                "legalInventorySha256": hashlib.sha256(legal).hexdigest(),
+                "pipelineSha256": hashlib.sha256(pipeline).hexdigest(),
+                "modelTreeDigests": trees,
+                "modelPairSha256": pair_sha,
+            }
+            (model_root / "model-manifest.json").write_bytes(jcs_bytes(model_manifest))
+            staging_manifest = {
+                **model_manifest,
+                "kind": "MODELS",
+                "artifactName": "paddleocr-models-44.2",
+                "runId": 44,
+                "runAttempt": 2,
+                "attemptId": "44.2",
+                "files": producer_cli._manifest_descriptors(model_root),
+            }
+            manifest_path = model_root / "staging-manifest.json"
+            manifest_path.write_bytes(jcs_bytes(staging_manifest))
+            model_content = sha256_hex(canonical_tree_manifest(model_root))
+
+            config = jcs_bytes({"architecture": "amd64", "os": "linux"})
+            layer = b"offline-image-layer"
+            config_digest = hashlib.sha256(config).hexdigest()
+            layer_digest = hashlib.sha256(layer).hexdigest()
+            manifest = jcs_bytes({
+                "schemaVersion": 2,
+                "mediaType": "application/vnd.oci.image.manifest.v1+json",
+                "config": {
+                    "mediaType": "application/vnd.oci.image.config.v1+json",
+                    "digest": "sha256:" + config_digest,
+                    "size": len(config),
+                },
+                "layers": [{
+                    "mediaType": "application/vnd.oci.image.layer.v1.tar",
+                    "digest": "sha256:" + layer_digest,
+                    "size": len(layer),
+                }],
+            })
+            manifest_digest = hashlib.sha256(manifest).hexdigest()
+            index = jcs_bytes({
+                "schemaVersion": 2,
+                "manifests": [{
+                    "mediaType": "application/vnd.oci.image.manifest.v1+json",
+                    "digest": "sha256:" + manifest_digest,
+                    "size": len(manifest),
+                }],
+            })
+            oci_root = root / "oci"
+            oci_root.mkdir()
+            oci_tar = oci_root / "paddleocr-service.oci.tar"
+            with tarfile.open(oci_tar, "w") as stream:
+                for name, payload in {
+                    "oci-layout": jcs_bytes({"imageLayoutVersion": "1.0.0"}),
+                    "index.json": index,
+                    f"blobs/sha256/{manifest_digest}": manifest,
+                    f"blobs/sha256/{config_digest}": config,
+                    f"blobs/sha256/{layer_digest}": layer,
+                }.items():
+                    info = tarfile.TarInfo(name)
+                    info.size = len(payload)
+                    stream.addfile(info, io.BytesIO(payload))
+            build_receipt = root / "build-receipt.json"
+            build_receipt.write_bytes(jcs_bytes({
+                "schemaVersion": 1,
+                "startedAt": "2025-06-15T15:06:40Z",
+                "finishedAt": "2025-06-15T15:06:41Z",
+                "durationSeconds": 1,
+                "networkMode": "NONE",
+                "cacheMode": "DISABLED",
+                "sourceDateEpoch": 1_750_000_000,
+            }))
+            result = producer_cli._create_oci_handoff(producer_cli.argparse.Namespace(
+                input_lock=lock,
+                models_manifest=manifest_path,
+                oci_tar=oci_tar,
+                run_id=44,
+                run_attempt=2,
+                staging_artifact_sha256=model_content,
+                build_receipt=build_receipt,
+                output=oci_root / "handoff.json",
+            ))
+            self.assertEqual(result["data"]["imageIndexDigest"], "sha256:" + manifest_digest)
+            validated = producer_cli._validate_oci_artifact(producer_cli.argparse.Namespace(
+                input_lock=lock,
+                root=oci_root,
+                artifact_id=103,
+                artifact_digest="sha256:" + SHA_A,
+                content_sha256=result["data"]["contentSha256"],
+                run_id=44,
+                run_attempt=2,
+            ))
+            self.assertEqual(validated["status"], "PASS")
+            changed = json.loads((oci_root / "handoff.json").read_bytes())
+            changed["buildReceipt"]["cacheMode"] = "ENABLED"
+            with self.assertRaisesRegex(ProducerValidationError, "isolation"):
+                producer_cli.validate_oci_handoff(changed)
+
 
 class LifecycleContractTest(unittest.TestCase):
     def test_status_table_exhaustively_accepts_only_declared_stage_and_mapping(self) -> None:

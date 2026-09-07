@@ -15,6 +15,7 @@ from paddle_ocr_producer_lib.evidence import (
     validate_evidence_file_manifest,
     validate_producer_evidence,
     validate_remote_evidence_manifest,
+    validate_same_run_artifact,
     verify_public_evidence,
 )
 
@@ -119,6 +120,59 @@ def complete_producer_evidence() -> dict[str, object]:
 
 
 class EvidenceContractTest(unittest.TestCase):
+    def test_same_run_artifact_binding_rejects_cross_run_swap_and_rename(self) -> None:
+        receipt = {
+            "schemaVersion": 1,
+            "kind": "MODELS",
+            "artifactName": "paddleocr-models-44.2",
+            "artifactId": 123,
+            "artifactDigest": "sha256:" + "a" * 64,
+            "runId": 44,
+            "runAttempt": 2,
+            "attemptId": "44.2",
+            "inputLockSha256": "b" * 64,
+            "contentSha256": "c" * 64,
+        }
+        validated = validate_same_run_artifact(
+            receipt,
+            expected_kind="MODELS",
+            expected_artifact_name="paddleocr-models-44.2",
+            expected_artifact_id=123,
+            expected_artifact_digest="sha256:" + "a" * 64,
+            expected_run_id=44,
+            expected_run_attempt=2,
+            expected_input_lock_sha256="b" * 64,
+            expected_content_sha256="c" * 64,
+        )
+        self.assertEqual(validated, receipt)
+        mutations = (
+            ("schemaVersion", 2),
+            ("kind", "WHEELHOUSE"),
+            ("artifactName", "paddleocr-models-renamed"),
+            ("artifactId", 124),
+            ("artifactDigest", "sha256:" + "d" * 64),
+            ("runId", 45),
+            ("runAttempt", 3),
+            ("attemptId", "45.2"),
+            ("inputLockSha256", "e" * 64),
+            ("contentSha256", "f" * 64),
+        )
+        for field, value in mutations:
+            changed = dict(receipt)
+            changed[field] = value
+            with self.subTest(field=field), self.assertRaises(ProducerValidationError):
+                validate_same_run_artifact(
+                    changed,
+                    expected_kind="MODELS",
+                    expected_artifact_name="paddleocr-models-44.2",
+                    expected_artifact_id=123,
+                    expected_artifact_digest="sha256:" + "a" * 64,
+                    expected_run_id=44,
+                    expected_run_attempt=2,
+                    expected_input_lock_sha256="b" * 64,
+                    expected_content_sha256="c" * 64,
+                )
+
     def test_producer_evidence_rejects_status_stage_and_attestation_drift(self) -> None:
         for mutate, message in (
             (

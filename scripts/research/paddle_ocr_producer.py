@@ -3,6 +3,8 @@ from __future__ import annotations
 """Fail-closed CLI for the Issue #638 PaddleOCR trusted producer."""
 
 import argparse
+import datetime
+import hashlib
 import logging
 import os
 import re
@@ -12,6 +14,7 @@ import signal
 import stat
 import subprocess
 import sys
+import tarfile
 import time
 from collections.abc import Iterator, Sequence
 from contextlib import contextmanager
@@ -21,6 +24,7 @@ from typing import Any
 from urllib.parse import urlsplit
 
 from paddle_ocr_producer_lib.contracts import (
+    AttemptIdentity,
     ProducerValidationError,
     exact_object,
     jcs_bytes,
@@ -35,6 +39,7 @@ from paddle_ocr_producer_lib.evidence import (
     validate_ledger_fragment,
     validate_oci_handoff,
     validate_producer_evidence,
+    validate_same_run_artifact,
     verify_public_evidence,
 )
 from paddle_ocr_producer_lib.filesystem import (
@@ -1046,6 +1051,691 @@ def _stage_inputs(args: argparse.Namespace) -> dict[str, Any]:
     )
 
 
+def _validated_input_lock(path: Path) -> tuple[dict[str, Any], bytes]:
+    lock, raw = _load_canonical_document(path)
+    try:
+        return validate_input_lock(lock, allowed_hosts=_hosts_from_lock(lock)), raw
+    except ProducerValidationError as exc:
+        raise ProducerBlockedError("input lock violates its contract") from exc
+
+
+def _manifest_descriptors(root: Path) -> list[dict[str, Any]]:
+    for current, directories, files in os.walk(root, followlinks=False):
+        current_path = Path(current)
+        for name in directories:
+            if (current_path / name).is_symlink():
+                raise ProducerRejectedError("artifact tree must not contain symlink directories")
+        for name in files:
+            metadata = (current_path / name).lstat()
+            if metadata.st_nlink != 1:
+                raise ProducerRejectedError("artifact tree must not contain hard links")
+    rows = canonical_tree_manifest(root).decode("utf-8").splitlines()
+    return [
+        {"path": path, "bytes": int(size), "sha256": digest}
+        for path, size, digest in (row.split("\t") for row in rows)
+    ]
+
+
+def _regular_file_receipt(path: Path, max_bytes: int) -> tuple[int, str]:
+    flags = os.O_RDONLY | getattr(os, "O_CLOEXEC", 0) | getattr(os, "O_NOFOLLOW", 0)
+    try:
+        descriptor = os.open(path, flags)
+    except OSError as exc:
+        raise ProducerRejectedError("artifact must be a regular non-symlink file") from exc
+    digest = hashlib.sha256()
+    total = 0
+    try:
+        metadata = os.fstat(descriptor)
+        if not stat.S_ISREG(metadata.st_mode) or metadata.st_nlink != 1:
+            raise ProducerRejectedError("artifact must be a unique regular file")
+        if metadata.st_size <= 0 or metadata.st_size > max_bytes:
+            raise ProducerRejectedError("artifact file byte count exceeds limit")
+        while True:
+            chunk = os.read(descriptor, 1024 * 1024)
+            if not chunk:
+                break
+            total += len(chunk)
+            digest.update(chunk)
+        if total != metadata.st_size:
+            raise ProducerRejectedError("artifact file byte count changed")
+    finally:
+        os.close(descriptor)
+    return total, digest.hexdigest()
+
+
+def _validate_manifest_files(root: Path, files: Any, manifest_name: str) -> None:
+    if not isinstance(files, list) or not files:
+        raise ProducerRejectedError("artifact file manifest is invalid")
+    expected: dict[str, tuple[int, str]] = {}
+    for value in files:
+        try:
+            descriptor = exact_object(value, required={"path", "bytes", "sha256"})
+            relative = PurePosixPath(descriptor["path"])
+            if relative.is_absolute() or any(part in {"", ".", ".."} for part in relative.parts):
+                raise ProducerValidationError("artifact path escapes root")
+            if descriptor["path"] in expected:
+                raise ProducerValidationError("artifact path is duplicated")
+            if type(descriptor["bytes"]) is not int or descriptor["bytes"] <= 0:
+                raise ProducerValidationError("artifact bytes must be positive")
+            require_sha256(descriptor["sha256"], "artifact file sha256")
+        except (KeyError, TypeError, ProducerValidationError) as exc:
+            raise ProducerRejectedError("artifact file manifest is invalid") from exc
+        expected[descriptor["path"]] = (descriptor["bytes"], descriptor["sha256"])
+    actual = {
+        item["path"]: (item["bytes"], item["sha256"])
+        for item in _manifest_descriptors(root)
+        if item["path"] != manifest_name
+    }
+    if actual != expected:
+        raise ProducerRejectedError("artifact file inventory differs")
+
+
+def _fetch_locked_inputs(args: argparse.Namespace) -> dict[str, Any]:
+    lock, lock_raw = _validated_input_lock(args.input_lock)
+    if args.output_root.exists() or args.output_root.is_symlink():
+        raise ProducerBlockedError("locked input output root already exists")
+    args.output_root.mkdir(parents=True, mode=0o700)
+    hosts = _hosts_from_lock(lock)
+    try:
+        artifacts: list[tuple[dict[str, Any], Path]] = []
+        if args.kind == "models":
+            artifacts = [
+                (model, args.output_root / f"{model['role']}.tar.gz")
+                for model in lock["models"]
+            ]
+        else:
+            artifacts = [
+                (package, args.output_root / package["filename"])
+                for package in lock["packages"]
+                if "url" in package
+            ]
+        for artifact, destination in artifacts:
+            fetch_to_regular_file(artifact, destination, allowed_hosts=hosts)
+        content_sha = sha256_hex(canonical_tree_manifest(args.output_root))
+    except BaseException:
+        shutil.rmtree(args.output_root, ignore_errors=True)
+        raise
+    return _success(
+        "fetch-locked-inputs",
+        {
+            "kind": args.kind.upper(),
+            "inputLockSha256": sha256_hex(lock_raw),
+            "fileCount": len(artifacts),
+            "contentSha256": content_sha,
+        },
+    )
+
+
+def _stage_models(args: argparse.Namespace) -> dict[str, Any]:
+    lock, lock_raw = _validated_input_lock(args.input_lock)
+    legal, legal_raw = _load_canonical_document(args.legal)
+    _validate_legal_inventory(legal)
+    if lock["legalInventorySha256"] != sha256_hex(legal_raw):
+        raise ProducerLegalError("legal inventory sha256 differs")
+    _validate_model_legal_files(lock, args.input_lock.parent)
+    pipeline_raw = _read_regular_bytes(args.pipeline, 1024 * 1024)
+    archives = _parse_model_archives(args.model_archive)
+    models = {model["role"]: model for model in lock["models"]}
+    for role, model in models.items():
+        try:
+            verify_regular_file(
+                archives[role],
+                expected_bytes=model["bytes"],
+                expected_sha256=model["sha256"],
+            )
+        except ProducerValidationError as exc:
+            raise ProducerRejectedError("model archive receipt differs") from exc
+    identity = AttemptIdentity.from_run(args.run_id, args.run_attempt)
+    expected_name = f"paddleocr-models-{identity.attempt_id}"
+    if args.artifact_name != expected_name:
+        raise ProducerBlockedError("model artifact name differs from run identity")
+    if args.output_root.exists() or args.output_root.is_symlink():
+        raise ProducerBlockedError("model artifact already exists")
+    temporary = args.output_root.parent / ("." + args.output_root.name + ".partial")
+    if temporary.exists() or temporary.is_symlink():
+        raise ProducerBlockedError("model artifact temporary path already exists")
+    temporary.mkdir(parents=True, mode=0o700)
+    try:
+        tree_digests: dict[str, str] = {}
+        for role in ("detector", "recognizer"):
+            model_root = temporary / "models" / role
+            extract_archive(archives[role], model_root, ARCHIVE_LIMITS, strip_single_root=True)
+            digest = tree_sha256(model_root)
+            if digest != models[role]["treeSha256"]:
+                raise ProducerRejectedError("model tree sha256 differs")
+            tree_digests[role] = digest
+        pair_sha = sha256_hex(jcs_bytes(tree_digests))
+        pipeline_sha = _atomic_write_new(temporary / "ocr-pipeline.yaml", pipeline_raw)
+        legal_sha = _atomic_write_new(temporary / "legal-inventory.json", legal_raw)
+        model_manifest = {
+            "schemaVersion": 1,
+            "inputLockSha256": sha256_hex(lock_raw),
+            "legalInventorySha256": legal_sha,
+            "pipelineSha256": pipeline_sha,
+            "modelTreeDigests": tree_digests,
+            "modelPairSha256": pair_sha,
+        }
+        _atomic_write_new(temporary / "model-manifest.json", jcs_bytes(model_manifest))
+        staging_manifest = {
+            **model_manifest,
+            "kind": "MODELS",
+            "artifactName": expected_name,
+            "runId": identity.run_id,
+            "runAttempt": identity.run_attempt,
+            "attemptId": identity.attempt_id,
+            "files": _manifest_descriptors(temporary),
+        }
+        _atomic_write_new(temporary / "staging-manifest.json", jcs_bytes(staging_manifest))
+        content_sha = sha256_hex(canonical_tree_manifest(temporary))
+        os.rename(temporary, args.output_root)
+    except BaseException:
+        shutil.rmtree(temporary, ignore_errors=True)
+        raise
+    return _success(
+        "stage-models",
+        {
+            "artifactName": expected_name,
+            "contentSha256": content_sha,
+            "modelTreeDigests": tree_digests,
+            "modelPairSha256": pair_sha,
+        },
+    )
+
+
+def _seal_wheelhouse(args: argparse.Namespace) -> dict[str, Any]:
+    lock, lock_raw = _validated_input_lock(args.input_lock)
+    requirements_raw = _read_regular_bytes(args.requirements_lock, 8 * 1024 * 1024)
+    _validate_requirements_lock(requirements_raw, lock["packages"])
+    if args.wheelhouse.is_symlink() or not args.wheelhouse.is_dir():
+        raise ProducerBlockedError("wheelhouse must be a non-symlink directory")
+    expected = {package["filename"] for package in lock["packages"]}
+    actual = {path.name for path in args.wheelhouse.iterdir() if path.is_file() and not path.is_symlink()}
+    if actual != expected:
+        raise ProducerRejectedError("wheelhouse file inventory differs from input lock")
+    for package in lock["packages"]:
+        try:
+            verify_regular_file(
+                args.wheelhouse / package["filename"],
+                expected_bytes=package["bytes"],
+                expected_sha256=package["sha256"],
+            )
+        except ProducerValidationError as exc:
+            raise ProducerRejectedError("wheelhouse package receipt differs") from exc
+    identity = AttemptIdentity.from_run(args.run_id, args.run_attempt)
+    expected_name = f"paddleocr-wheelhouse-{identity.attempt_id}"
+    if args.artifact_name != expected_name:
+        raise ProducerBlockedError("wheelhouse artifact name differs from run identity")
+    if args.output_root.exists() or args.output_root.is_symlink():
+        raise ProducerBlockedError("wheelhouse artifact already exists")
+    temporary = args.output_root.parent / ("." + args.output_root.name + ".partial")
+    if temporary.exists() or temporary.is_symlink():
+        raise ProducerBlockedError("wheelhouse artifact temporary path already exists")
+    temporary.mkdir(parents=True, mode=0o700)
+    try:
+        for package in lock["packages"]:
+            _copy_regular_file(
+                args.wheelhouse / package["filename"],
+                temporary / "wheelhouse" / package["filename"],
+            )
+        requirements_sha = _atomic_write_new(
+            temporary / "requirements.cpu.lock.txt", requirements_raw
+        )
+        manifest = {
+            "schemaVersion": 1,
+            "kind": "WHEELHOUSE",
+            "artifactName": expected_name,
+            "runId": identity.run_id,
+            "runAttempt": identity.run_attempt,
+            "attemptId": identity.attempt_id,
+            "inputLockSha256": sha256_hex(lock_raw),
+            "requirementsSha256": requirements_sha,
+            "files": _manifest_descriptors(temporary),
+        }
+        _atomic_write_new(temporary / "wheelhouse-manifest.json", jcs_bytes(manifest))
+        content_sha = sha256_hex(canonical_tree_manifest(temporary))
+        os.rename(temporary, args.output_root)
+    except BaseException:
+        shutil.rmtree(temporary, ignore_errors=True)
+        raise
+    return _success(
+        "seal-wheelhouse",
+        {"artifactName": expected_name, "contentSha256": content_sha},
+    )
+
+
+def _validate_artifact_identity(
+    manifest: dict[str, Any],
+    *,
+    kind: str,
+    run_id: int,
+    run_attempt: int,
+    input_lock_sha256: str,
+) -> None:
+    identity = AttemptIdentity.from_run(run_id, run_attempt)
+    expected_name = f"paddleocr-{kind.lower()}-{identity.attempt_id}"
+    for field, expected in (
+        ("schemaVersion", 1),
+        ("kind", kind),
+        ("artifactName", expected_name),
+        ("runId", run_id),
+        ("runAttempt", run_attempt),
+        ("attemptId", identity.attempt_id),
+        ("inputLockSha256", input_lock_sha256),
+    ):
+        if manifest.get(field) != expected:
+            raise ProducerRejectedError(f"{kind.lower()} artifact {field} differs")
+
+
+def _validate_model_artifact(
+    root: Path, lock: dict[str, Any], lock_sha: str, run_id: int, run_attempt: int
+) -> tuple[dict[str, Any], str]:
+    manifest, _ = _load_canonical_document(root / "staging-manifest.json")
+    required = {
+        "schemaVersion", "kind", "artifactName", "runId", "runAttempt", "attemptId",
+        "inputLockSha256", "legalInventorySha256", "pipelineSha256", "modelTreeDigests",
+        "modelPairSha256", "files",
+    }
+    try:
+        manifest = exact_object(manifest, required=required)
+    except ProducerValidationError as exc:
+        raise ProducerRejectedError("model artifact manifest violates its contract") from exc
+    _validate_artifact_identity(
+        manifest, kind="MODELS", run_id=run_id, run_attempt=run_attempt,
+        input_lock_sha256=lock_sha,
+    )
+    _validate_manifest_files(root, manifest["files"], "staging-manifest.json")
+    model_paths = {descriptor["path"] for descriptor in manifest["files"]}
+    exact_root_files = {
+        "legal-inventory.json", "model-manifest.json", "ocr-pipeline.yaml"
+    }
+    if not exact_root_files.issubset(model_paths) or any(
+        path not in exact_root_files
+        and not path.startswith("models/detector/")
+        and not path.startswith("models/recognizer/")
+        for path in model_paths
+    ):
+        raise ProducerRejectedError("model artifact path allowlist differs")
+    if manifest["legalInventorySha256"] != lock["legalInventorySha256"]:
+        raise ProducerRejectedError("model artifact legal inventory differs")
+    legal_raw = _read_regular_bytes(root / "legal-inventory.json")
+    pipeline_raw = _read_regular_bytes(root / "ocr-pipeline.yaml")
+    if sha256_hex(legal_raw) != manifest["legalInventorySha256"]:
+        raise ProducerRejectedError("model artifact legal inventory hash differs")
+    if sha256_hex(pipeline_raw) != manifest["pipelineSha256"]:
+        raise ProducerRejectedError("model artifact pipeline hash differs")
+    trees = {role: tree_sha256(root / "models" / role) for role in ("detector", "recognizer")}
+    expected_trees = {model["role"]: model["treeSha256"] for model in lock["models"]}
+    if trees != expected_trees or trees != manifest["modelTreeDigests"]:
+        raise ProducerRejectedError("model artifact tree digests differ")
+    if sha256_hex(jcs_bytes(trees)) != manifest["modelPairSha256"]:
+        raise ProducerRejectedError("model artifact pair digest differs")
+    model_manifest, _ = _load_canonical_document(root / "model-manifest.json")
+    embedded = {
+        key: manifest[key]
+        for key in (
+            "schemaVersion", "inputLockSha256", "legalInventorySha256",
+            "pipelineSha256", "modelTreeDigests", "modelPairSha256",
+        )
+    }
+    if model_manifest != embedded:
+        raise ProducerRejectedError("embedded model manifest differs")
+    return manifest, sha256_hex(canonical_tree_manifest(root))
+
+
+def _validate_wheelhouse_artifact(
+    root: Path, lock: dict[str, Any], lock_sha: str, run_id: int, run_attempt: int
+) -> tuple[dict[str, Any], str]:
+    manifest, _ = _load_canonical_document(root / "wheelhouse-manifest.json")
+    required = {
+        "schemaVersion", "kind", "artifactName", "runId", "runAttempt", "attemptId",
+        "inputLockSha256", "requirementsSha256", "files",
+    }
+    try:
+        manifest = exact_object(manifest, required=required)
+    except ProducerValidationError as exc:
+        raise ProducerRejectedError("wheelhouse artifact manifest violates its contract") from exc
+    _validate_artifact_identity(
+        manifest, kind="WHEELHOUSE", run_id=run_id, run_attempt=run_attempt,
+        input_lock_sha256=lock_sha,
+    )
+    _validate_manifest_files(root, manifest["files"], "wheelhouse-manifest.json")
+    expected_paths = {
+        "requirements.cpu.lock.txt",
+        *(f"wheelhouse/{package['filename']}" for package in lock["packages"]),
+    }
+    if {descriptor["path"] for descriptor in manifest["files"]} != expected_paths:
+        raise ProducerRejectedError("wheelhouse artifact path allowlist differs")
+    requirements_raw = _read_regular_bytes(root / "requirements.cpu.lock.txt", 8 * 1024 * 1024)
+    if sha256_hex(requirements_raw) != manifest["requirementsSha256"]:
+        raise ProducerRejectedError("wheelhouse requirements hash differs")
+    _validate_requirements_lock(requirements_raw, lock["packages"])
+    expected = {package["filename"] for package in lock["packages"]}
+    actual = {path.name for path in (root / "wheelhouse").iterdir() if path.is_file() and not path.is_symlink()}
+    if actual != expected:
+        raise ProducerRejectedError("wheelhouse artifact files differ")
+    for package in lock["packages"]:
+        try:
+            verify_regular_file(
+                root / "wheelhouse" / package["filename"],
+                expected_bytes=package["bytes"], expected_sha256=package["sha256"],
+            )
+        except ProducerValidationError as exc:
+            raise ProducerRejectedError("wheelhouse artifact package differs") from exc
+    return manifest, sha256_hex(canonical_tree_manifest(root))
+
+
+def _artifact_receipt(
+    manifest: dict[str, Any], *, artifact_id: int, artifact_digest: str, content_sha: str
+) -> dict[str, Any]:
+    return {
+        "schemaVersion": 1,
+        "kind": manifest["kind"],
+        "artifactName": manifest["artifactName"],
+        "artifactId": artifact_id,
+        "artifactDigest": artifact_digest,
+        "runId": manifest["runId"],
+        "runAttempt": manifest["runAttempt"],
+        "attemptId": manifest["attemptId"],
+        "inputLockSha256": manifest["inputLockSha256"],
+        "contentSha256": content_sha,
+    }
+
+
+def _validate_build_artifacts(args: argparse.Namespace) -> dict[str, Any]:
+    lock, lock_raw = _validated_input_lock(args.input_lock)
+    lock_sha = sha256_hex(lock_raw)
+    model_manifest, model_content = _validate_model_artifact(
+        args.models_root, lock, lock_sha, args.run_id, args.run_attempt
+    )
+    wheel_manifest, wheel_content = _validate_wheelhouse_artifact(
+        args.wheelhouse_root, lock, lock_sha, args.run_id, args.run_attempt
+    )
+    for kind, manifest, artifact_id, artifact_digest, content, expected_content in (
+        (
+            "MODELS", model_manifest, args.models_artifact_id, args.models_artifact_digest,
+            model_content, args.models_content_sha256,
+        ),
+        (
+            "WHEELHOUSE", wheel_manifest, args.wheelhouse_artifact_id,
+            args.wheelhouse_artifact_digest, wheel_content, args.wheelhouse_content_sha256,
+        ),
+    ):
+        require_sha256(expected_content, f"{kind.lower()} expected content sha256")
+        if content != expected_content:
+            raise ProducerRejectedError(f"{kind.lower()} artifact content differs")
+        receipt = _artifact_receipt(
+            manifest, artifact_id=artifact_id, artifact_digest=artifact_digest,
+            content_sha=content,
+        )
+        validate_same_run_artifact(
+            receipt,
+            expected_kind=kind,
+            expected_artifact_name=manifest["artifactName"],
+            expected_artifact_id=artifact_id,
+            expected_artifact_digest=artifact_digest,
+            expected_run_id=args.run_id,
+            expected_run_attempt=args.run_attempt,
+            expected_input_lock_sha256=lock_sha,
+            expected_content_sha256=content,
+        )
+    return _success(
+        "validate-build-artifacts",
+        {"modelsContentSha256": model_content, "wheelhouseContentSha256": wheel_content},
+    )
+
+
+def _read_tar_member(archive: tarfile.TarFile, member: tarfile.TarInfo, limit: int) -> bytes:
+    if member.size <= 0 or member.size > limit:
+        raise ProducerRejectedError("OCI metadata blob byte count is invalid")
+    stream = archive.extractfile(member)
+    if stream is None:
+        raise ProducerRejectedError("OCI archive member is unreadable")
+    raw = stream.read(limit + 1)
+    if len(raw) != member.size:
+        raise ProducerRejectedError("OCI archive member byte count differs")
+    return raw
+
+
+def _inspect_oci_archive(path: Path) -> dict[str, str]:
+    _regular_file_receipt(path, 8 * 1024 * 1024 * 1024)
+    try:
+        with tarfile.open(path, "r:*") as archive:
+            members: dict[str, tarfile.TarInfo] = {}
+            total = 0
+            for member in archive.getmembers():
+                if member.isdir():
+                    continue
+                relative = PurePosixPath(member.name)
+                if (
+                    not member.isfile()
+                    or relative.is_absolute()
+                    or any(part in {"", ".", ".."} for part in relative.parts)
+                    or member.name in members
+                ):
+                    raise ProducerRejectedError("OCI archive contains an unsafe member")
+                if member.name not in {"oci-layout", "index.json"} and re.fullmatch(
+                    r"blobs/sha256/[0-9a-f]{64}", member.name
+                ) is None:
+                    raise ProducerRejectedError("OCI archive member is outside the allowlist")
+                total += member.size
+                if len(members) >= 1024 or total > 8 * 1024 * 1024 * 1024:
+                    raise ProducerRejectedError("OCI archive exceeds limits")
+                members[member.name] = member
+            if not {"oci-layout", "index.json"}.issubset(members):
+                raise ProducerRejectedError("OCI archive root metadata is incomplete")
+            layout = load_json_bytes(_read_tar_member(archive, members["oci-layout"], 4096), 4096)
+            if layout != {"imageLayoutVersion": "1.0.0"}:
+                raise ProducerRejectedError("OCI layout version differs")
+            index_raw = _read_tar_member(archive, members["index.json"], 4 * 1024 * 1024)
+            index = load_json_bytes(index_raw, 4 * 1024 * 1024)
+
+            cached: dict[str, bytes] = {}
+            for name, member in members.items():
+                if not name.startswith("blobs/sha256/"):
+                    continue
+                stream = archive.extractfile(member)
+                if stream is None:
+                    raise ProducerRejectedError("OCI blob is unreadable")
+                digest = hashlib.sha256()
+                collected = bytearray()
+                read = 0
+                while True:
+                    chunk = stream.read(1024 * 1024)
+                    if not chunk:
+                        break
+                    read += len(chunk)
+                    digest.update(chunk)
+                    if member.size <= 4 * 1024 * 1024:
+                        collected.extend(chunk)
+                if read != member.size or digest.hexdigest() != name.rsplit("/", 1)[1]:
+                    raise ProducerRejectedError("OCI blob digest or byte count differs")
+                if collected:
+                    cached[name] = bytes(collected)
+
+            def descriptor(value: Any, field: str) -> dict[str, Any]:
+                if not isinstance(value, dict):
+                    raise ProducerRejectedError(f"{field} descriptor is invalid")
+                media_type = value.get("mediaType")
+                digest = value.get("digest")
+                size = value.get("size")
+                if (
+                    not isinstance(media_type, str)
+                    or not isinstance(digest, str)
+                    or re.fullmatch(r"sha256:[0-9a-f]{64}", digest) is None
+                    or type(size) is not int
+                    or size <= 0
+                ):
+                    raise ProducerRejectedError(f"{field} descriptor is invalid")
+                name = "blobs/sha256/" + digest[7:]
+                if name not in members or members[name].size != size:
+                    raise ProducerRejectedError(f"{field} descriptor is unavailable")
+                return value
+
+            manifests = index.get("manifests")
+            if index.get("schemaVersion") != 2 or not isinstance(manifests, list) or len(manifests) != 1:
+                raise ProducerRejectedError("OCI index must contain exactly one root descriptor")
+            top = descriptor(manifests[0], "root")
+            expected = {"blobs/sha256/" + top["digest"][7:]}
+            if top["mediaType"] == "application/vnd.oci.image.index.v1+json":
+                nested_raw = cached.get(next(iter(expected)))
+                if nested_raw is None:
+                    raise ProducerRejectedError("OCI image index exceeds metadata limit")
+                nested = load_json_bytes(nested_raw, 4 * 1024 * 1024)
+                candidates = []
+                for value in nested.get("manifests", []):
+                    platform = value.get("platform") if isinstance(value, dict) else None
+                    if isinstance(platform, dict) and platform.get("os") == "linux" and platform.get("architecture") == "amd64" and platform.get("variant") in (None, ""):
+                        candidates.append(value)
+                if len(candidates) != 1:
+                    raise ProducerRejectedError("OCI index has no unique linux/amd64 manifest")
+                platform = descriptor(candidates[0], "platform")
+                expected.add("blobs/sha256/" + platform["digest"][7:])
+            elif top["mediaType"] == "application/vnd.oci.image.manifest.v1+json":
+                platform = top
+            else:
+                raise ProducerRejectedError("OCI root descriptor media type differs")
+            manifest_name = "blobs/sha256/" + platform["digest"][7:]
+            manifest_raw = cached.get(manifest_name)
+            if manifest_raw is None:
+                raise ProducerRejectedError("OCI platform manifest exceeds metadata limit")
+            manifest = load_json_bytes(manifest_raw, 4 * 1024 * 1024)
+            if manifest.get("schemaVersion") != 2 or manifest.get("mediaType") != "application/vnd.oci.image.manifest.v1+json":
+                raise ProducerRejectedError("OCI platform manifest contract differs")
+            config = descriptor(manifest.get("config"), "config")
+            layers = manifest.get("layers")
+            if not isinstance(layers, list) or not layers:
+                raise ProducerRejectedError("OCI platform manifest layers are invalid")
+            expected.add("blobs/sha256/" + config["digest"][7:])
+            for index_value, layer in enumerate(layers):
+                value = descriptor(layer, f"layer[{index_value}]")
+                expected.add("blobs/sha256/" + value["digest"][7:])
+            actual_blobs = {name for name in members if name.startswith("blobs/sha256/")}
+            if actual_blobs != expected:
+                raise ProducerRejectedError("OCI archive blob closure differs")
+            config_name = "blobs/sha256/" + config["digest"][7:]
+            config_raw = cached.get(config_name)
+            if config_raw is None:
+                raise ProducerRejectedError("OCI image config exceeds metadata limit")
+            config_document = load_json_bytes(config_raw, 4 * 1024 * 1024)
+            if config_document.get("os") != "linux" or config_document.get("architecture") != "amd64":
+                raise ProducerRejectedError("OCI image config platform differs")
+    except (tarfile.TarError, OSError, ProducerValidationError) as exc:
+        if isinstance(exc, ProducerRejectedError):
+            raise
+        raise ProducerRejectedError("OCI archive could not be inspected") from exc
+    return {
+        "imageIndexDigest": top["digest"],
+        "imagePlatformDigest": platform["digest"],
+        "imageConfigDigest": config["digest"],
+    }
+
+
+def _create_oci_handoff(args: argparse.Namespace) -> dict[str, Any]:
+    lock, lock_raw = _validated_input_lock(args.input_lock)
+    lock_sha = sha256_hex(lock_raw)
+    manifest, model_content = _validate_model_artifact(
+        args.models_manifest.parent, lock, lock_sha, args.run_id, args.run_attempt
+    )
+    require_sha256(args.staging_artifact_sha256, "staging artifact sha256")
+    if model_content != args.staging_artifact_sha256:
+        raise ProducerRejectedError("staging artifact sha256 differs")
+    if args.oci_tar.name != "paddleocr-service.oci.tar" or args.output != args.oci_tar.parent / "handoff.json":
+        raise ProducerBlockedError("OCI handoff paths differ from the exact contract")
+    digests = _inspect_oci_archive(args.oci_tar)
+    derived = [package for package in lock["packages"] if "derivedSourceId" in package]
+    if len(derived) != 1:
+        raise ProducerBlockedError("source date epoch is ambiguous")
+    epoch = derived[0]["buildToolchain"]["sourceDateEpoch"]
+    build_receipt, _ = _load_canonical_document(args.build_receipt)
+    identity = AttemptIdentity.from_run(args.run_id, args.run_attempt)
+    document = {
+        "schemaVersion": 1,
+        "attemptId": identity.attempt_id,
+        "runId": identity.run_id,
+        "runAttempt": identity.run_attempt,
+        "inputLockSha256": lock_sha,
+        "stagingArtifactSha256": model_content,
+        "imageTarSha256": _regular_file_receipt(
+            args.oci_tar, 8 * 1024 * 1024 * 1024
+        )[1],
+        **digests,
+        "baseDigest": lock["baseImage"]["platformDigest"],
+        "targetPlatform": lock["targetPlatform"],
+        "sourceDateEpoch": epoch,
+        "modelTreeDigests": manifest["modelTreeDigests"],
+        "modelPairSha256": manifest["modelPairSha256"],
+        "createdAt": datetime.datetime.fromtimestamp(
+            epoch, tz=datetime.timezone.utc
+        ).isoformat().replace("+00:00", "Z"),
+        "buildReceipt": build_receipt,
+    }
+    validate_oci_handoff(document)
+    _atomic_write_new(args.output, jcs_bytes(document))
+    content_sha = sha256_hex(canonical_tree_manifest(args.output.parent))
+    return _success(
+        "create-oci-handoff",
+        {**digests, "contentSha256": content_sha, "handoffSha256": sha256_hex(jcs_bytes(document))},
+    )
+
+
+def _validate_oci_artifact(args: argparse.Namespace) -> dict[str, Any]:
+    lock, lock_raw = _validated_input_lock(args.input_lock)
+    lock_sha = sha256_hex(lock_raw)
+    if args.root.is_symlink() or not args.root.is_dir():
+        raise ProducerRejectedError("OCI artifact root must be a non-symlink directory")
+    if {path.name for path in args.root.iterdir()} != {"paddleocr-service.oci.tar", "handoff.json"}:
+        raise ProducerRejectedError("OCI artifact file inventory differs")
+    handoff, _ = _load_canonical_document(args.root / "handoff.json")
+    validate_oci_handoff(handoff)
+    identity = AttemptIdentity.from_run(args.run_id, args.run_attempt)
+    if (
+        handoff["runId"] != identity.run_id
+        or handoff["runAttempt"] != identity.run_attempt
+        or handoff["attemptId"] != identity.attempt_id
+        or handoff["inputLockSha256"] != lock_sha
+    ):
+        raise ProducerRejectedError("OCI artifact run or input binding differs")
+    derived = [package for package in lock["packages"] if "derivedSourceId" in package]
+    expected_trees = {model["role"]: model["treeSha256"] for model in lock["models"]}
+    if (
+        len(derived) != 1
+        or handoff["baseDigest"] != lock["baseImage"]["platformDigest"]
+        or handoff["targetPlatform"] != lock["targetPlatform"]
+        or handoff["sourceDateEpoch"] != derived[0]["buildToolchain"]["sourceDateEpoch"]
+        or handoff["modelTreeDigests"] != expected_trees
+        or handoff["modelPairSha256"] != sha256_hex(jcs_bytes(expected_trees))
+    ):
+        raise ProducerRejectedError("OCI artifact locked input identity differs")
+    tar_path = args.root / "paddleocr-service.oci.tar"
+    tar_sha = _regular_file_receipt(tar_path, 8 * 1024 * 1024 * 1024)[1]
+    if tar_sha != handoff["imageTarSha256"]:
+        raise ProducerRejectedError("OCI artifact tar sha256 differs")
+    digests = _inspect_oci_archive(tar_path)
+    if any(handoff[name] != value for name, value in digests.items()):
+        raise ProducerRejectedError("OCI artifact image identity differs")
+    content_sha = sha256_hex(canonical_tree_manifest(args.root))
+    require_sha256(args.content_sha256, "OCI expected content sha256")
+    if content_sha != args.content_sha256:
+        raise ProducerRejectedError("OCI artifact content differs")
+    manifest = {
+        "kind": "OCI", "artifactName": f"paddleocr-oci-{identity.attempt_id}",
+        "runId": identity.run_id, "runAttempt": identity.run_attempt,
+        "attemptId": identity.attempt_id, "inputLockSha256": lock_sha,
+    }
+    receipt = _artifact_receipt(
+        manifest, artifact_id=args.artifact_id, artifact_digest=args.artifact_digest,
+        content_sha=content_sha,
+    )
+    validate_same_run_artifact(
+        receipt, expected_kind="OCI", expected_artifact_name=manifest["artifactName"],
+        expected_artifact_id=args.artifact_id, expected_artifact_digest=args.artifact_digest,
+        expected_run_id=identity.run_id, expected_run_attempt=identity.run_attempt,
+        expected_input_lock_sha256=lock_sha,
+        expected_content_sha256=content_sha,
+    )
+    return _success("validate-oci-artifact", {**digests, "contentSha256": content_sha})
+
+
 def _inspect_image_raw(reference: str) -> bytes:
     completed = subprocess.run(
         ["docker", "buildx", "imagetools", "inspect", "--raw", reference],
@@ -1580,6 +2270,68 @@ def build_parser() -> StrictArgumentParser:
     stage.add_argument("--model-archive", action="append", default=[])
     stage.add_argument("--output-artifact", type=Path, required=True)
     stage.set_defaults(handler=_stage_inputs)
+
+    fetch_locked = subparsers.add_parser("fetch-locked-inputs")
+    fetch_locked.add_argument("--input-lock", type=Path, required=True)
+    fetch_locked.add_argument("--kind", choices=("models", "packages"), required=True)
+    fetch_locked.add_argument("--output-root", type=Path, required=True)
+    fetch_locked.set_defaults(handler=_fetch_locked_inputs)
+
+    stage_models = subparsers.add_parser("stage-models")
+    stage_models.add_argument("--input-lock", type=Path, required=True)
+    stage_models.add_argument("--legal", type=Path, required=True)
+    stage_models.add_argument("--pipeline", type=Path, required=True)
+    stage_models.add_argument("--model-archive", action="append", default=[])
+    stage_models.add_argument("--run-id", type=int, required=True)
+    stage_models.add_argument("--run-attempt", type=int, required=True)
+    stage_models.add_argument("--artifact-name", required=True)
+    stage_models.add_argument("--output-root", type=Path, required=True)
+    stage_models.set_defaults(handler=_stage_models)
+
+    seal_wheelhouse = subparsers.add_parser("seal-wheelhouse")
+    seal_wheelhouse.add_argument("--input-lock", type=Path, required=True)
+    seal_wheelhouse.add_argument("--requirements-lock", type=Path, required=True)
+    seal_wheelhouse.add_argument("--wheelhouse", type=Path, required=True)
+    seal_wheelhouse.add_argument("--run-id", type=int, required=True)
+    seal_wheelhouse.add_argument("--run-attempt", type=int, required=True)
+    seal_wheelhouse.add_argument("--artifact-name", required=True)
+    seal_wheelhouse.add_argument("--output-root", type=Path, required=True)
+    seal_wheelhouse.set_defaults(handler=_seal_wheelhouse)
+
+    validate_build = subparsers.add_parser("validate-build-artifacts")
+    validate_build.add_argument("--input-lock", type=Path, required=True)
+    validate_build.add_argument("--models-root", type=Path, required=True)
+    validate_build.add_argument("--models-artifact-id", type=int, required=True)
+    validate_build.add_argument("--models-artifact-digest", required=True)
+    validate_build.add_argument("--models-content-sha256", required=True)
+    validate_build.add_argument("--wheelhouse-root", type=Path, required=True)
+    validate_build.add_argument("--wheelhouse-artifact-id", type=int, required=True)
+    validate_build.add_argument("--wheelhouse-artifact-digest", required=True)
+    validate_build.add_argument("--wheelhouse-content-sha256", required=True)
+    validate_build.add_argument("--run-id", type=int, required=True)
+    validate_build.add_argument("--run-attempt", type=int, required=True)
+    validate_build.set_defaults(handler=_validate_build_artifacts)
+
+    create_handoff = subparsers.add_parser("create-oci-handoff")
+    create_handoff.add_argument("--input-lock", type=Path, required=True)
+    create_handoff.add_argument("--models-manifest", type=Path, required=True)
+    create_handoff.add_argument("--oci-tar", type=Path, required=True)
+    create_handoff.add_argument("--run-id", type=int, required=True)
+    create_handoff.add_argument("--run-attempt", type=int, required=True)
+    create_handoff.add_argument("--staging-artifact-sha256", required=True)
+    create_handoff.add_argument("--build-receipt", type=Path, required=True)
+    create_handoff.add_argument("--output", type=Path, required=True)
+    create_handoff.set_defaults(handler=_create_oci_handoff)
+
+    validate_oci = subparsers.add_parser("validate-oci-artifact")
+    validate_oci.add_argument("--input-lock", type=Path, required=True)
+    validate_oci.add_argument("--root", type=Path, required=True)
+    validate_oci.add_argument("--artifact-id", type=int, required=True)
+    validate_oci.add_argument("--artifact-digest", required=True)
+    validate_oci.add_argument("--content-sha256", required=True)
+    validate_oci.add_argument("--run-id", type=int, required=True)
+    validate_oci.add_argument("--run-attempt", type=int, required=True)
+    validate_oci.set_defaults(handler=_validate_oci_artifact)
 
     resolve = subparsers.add_parser("resolve-inputs")
     resolve.add_argument("--target-platform", required=True)
