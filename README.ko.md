@@ -63,6 +63,14 @@ Production 이미지 API는 detector boundary에서 runtime-free 상태를 유�
   [#3](https://github.com/bluetape4k/bluetape4k-image/issues/3)과
   [#551](https://github.com/bluetape4k/bluetape4k-image/issues/551)은
   `DEFER`입니다.
+- **Trusted producer evidence** — [#638](https://github.com/bluetape4k/bluetape4k-image/issues/638)는
+  [#609](https://github.com/bluetape4k/bluetape4k-image/issues/609)와
+  [#611](https://github.com/bluetape4k/bluetape4k-image/issues/611)에 전달할
+  evidence를 만듭니다. 두 issue의 adoption 상태는 PENDING입니다.
+  PRODUCER_PASS receipt는 PaddleOCR adoption(채택) 승인이 아니며 Kotlin runtime
+  dependency를 추가하지 않습니다. 자세한 절차는
+  [PaddleOCR producer runbook](docs/superpowers/runbooks/2026-09-07-issue-638-paddleocr-producer.md)을
+  참고합니다.
 - **보류 범위** — PaddleOCR model download, ONNX production backend, ML
   runtime dependency, benchmark adoption, model-serving train은 현재
   활성화하지 않습니다.

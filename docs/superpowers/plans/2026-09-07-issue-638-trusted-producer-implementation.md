@@ -1213,7 +1213,7 @@ git commit -m 'ci: producer 중단과 quarantine을 증거로 종결한다' \
 - Modify: `CHANGELOG.md`
 - Modify: `WIP.md`
 
-- [ ] **Step 1: runbook에 exact 실행·read-back 명령을 기록한다.**
+- [x] **Step 1: runbook에 exact 실행·read-back 명령을 기록한다.**
 
 ```bash
 REPO=bluetape4k/bluetape4k-image
@@ -1362,18 +1362,18 @@ GH_HTTP_TIMEOUT=60 gh workflow run paddleocr-producer.yml \
 `NONE`으로 출력한다. 위 dispatch도 exact head/target과 fresh RECONCILE 승인을 다시 받은
 뒤에만 실행한다.
 
-- [ ] **Step 2: README 영어/한국어 구조를 함께 갱신한다.**
+- [x] **Step 2: README 영어/한국어 구조를 함께 갱신한다.**
 
 AI/ML status의 같은 bullet 위치에 producer가 adoption이 아니라 #609/#611 evidence
 source임을 기록한다. model/runtime을 Kotlin module에 포함한다고 쓰지 않고 runbook을
 연결한다. 중앙 manual을 복제하지 않는다.
 
-- [ ] **Step 3: CHANGELOG와 WIP를 한국어로 갱신한다.**
+- [x] **Step 3: CHANGELOG와 WIP를 한국어로 갱신한다.**
 
 `CHANGELOG.md`의 `Unreleased / 추가`에 #638 workflow/strict evidence contract를,
 `WIP.md`에는 implementation merge와 dispatch/visibility gate의 분리를 기록한다.
 
-- [ ] **Step 4: 문서 link/parity와 diff를 검증한다.**
+- [x] **Step 4: 문서 link/parity와 diff를 검증한다.**
 
 ```bash
 python3 -m json.tool docker/paddleocr/producer-input.lock.json >/dev/null
@@ -1391,7 +1391,7 @@ macOS/Linux path fixture에서 block을 실행한다.
 run selection fixture의 fake CLI는 nested `data.databaseId`/`data.runAttempt`만 반환해
 전체 block의 extraction이 성공하는지 검사하고 top-level key로 회귀하면 실패한다.
 
-- [ ] **Step 5: 문서 commit을 만든다.**
+- [x] **Step 5: 문서 commit을 만든다.**
 
 ```bash
 git add docs README.md README.ko.md CHANGELOG.md WIP.md \
