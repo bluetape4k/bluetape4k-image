@@ -1062,7 +1062,7 @@ git commit -m 'ci: unprivileged build를 private staging과 분리한다' \
 - Modify: `scripts/research/paddle_ocr_producer_lib/evidence.py`
 - Modify: `scripts/research/test_paddle_ocr_producer_evidence.py`
 
-- [ ] **Step 1: same-subject, permission separation과 public credential RED test를 추가한다.**
+- [x] **Step 1: same-subject, permission separation과 public credential RED test를 추가한다.**
 
 ```python
 assert_job_permissions(workflow, "staging-attest", {
@@ -1074,27 +1074,27 @@ assert_job_permissions(workflow, "consumer-verify-public", {"contents": "read"})
 assert_no_credentials(workflow, "consumer-verify-public")
 ```
 
-- [ ] **Step 2: RED를 확인한다.**
+- [x] **Step 2: RED를 확인한다.**
 
 Run: `python3 .github/scripts/test-paddleocr-producer-workflow.py`
 
 Expected: attest/promotion/evidence/public jobs가 불완전해 실패한다.
 
-- [ ] **Step 3: platform digest subject의 SPDX/provenance와 read-back을 구현한다.**
+- [x] **Step 3: platform digest subject의 SPDX/provenance와 read-back을 구현한다.**
 
 attest job은 OIDC write를 독점하고 readback job은 read permission만 사용한다. 두
 attestation은 `linux/amd64` platform manifest digest를 같은 subject로 사용한다. API와
 `gh attestation verify` 결과가 repository, workflow full SHA/ref, environment, issuer,
 signer, audience, run/attempt와 exact-match해야 다음 job이 실행된다.
 
-- [ ] **Step 4: digest-preserving promotion과 public evidence verification을 구현한다.**
+- [x] **Step 4: digest-preserving promotion과 public evidence verification을 구현한다.**
 
 release-promotion은 staging→release copy 후 four-digest equality를 읽는다. exact 11 files를
 evidence OCI로 push하고 private consumer를 먼저 통과한다. visibility는 workflow가
 바꾸지 않는다. 별도 외부 변경과 protected read-back 뒤 public consumer가 credential
 없이 ORAS SHA, descriptor, streamed blobs와 두 bundle을 검증한다.
 
-- [ ] **Step 5: contract/syntax를 GREEN으로 만들고 commit한다.**
+- [x] **Step 5: contract/syntax를 GREEN으로 만들고 commit한다.**
 
 ```bash
 python3 .github/scripts/test-paddleocr-producer-workflow.py

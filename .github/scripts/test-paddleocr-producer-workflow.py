@@ -237,6 +237,70 @@ class ProducerWorkflowContractTest(unittest.TestCase):
         self.assertIn('"private"', push)
         self.assertIn('"registry-config.json"', self.blocks["validation"])
 
+    def test_attestation_promotion_and_public_evidence_are_digest_bound(self) -> None:
+        staging_attest = self.blocks["staging-attest"]
+        self.assertEqual(job_needs(staging_attest), {"staging-push"})
+        self.assertIn("actions/attest-build-provenance@", staging_attest)
+        self.assertIn("actions/attest-sbom@", staging_attest)
+        self.assertEqual(
+            staging_attest.count("          subject-digest: ${{ needs.staging-push.outputs.image-platform-digest }}"),
+            2,
+        )
+        self.assertIn("paddleocr-staging-attestations-${{ env.ATTEMPT_ID }}", staging_attest)
+
+        staging_readback = self.blocks["staging-readback"]
+        for required in (
+            "gh attestation verify",
+            '--signer-digest "$GITHUB_SHA"',
+            '--source-digest "$GITHUB_SHA"',
+            '--source-ref "$GITHUB_REF"',
+            "repos/$GITHUB_REPOSITORY/attestations/sha256:",
+            "validate-attestation-identity",
+        ):
+            self.assertIn(required, staging_readback)
+
+        promotion = self.blocks["release-promotion"]
+        self.assertEqual(job_needs(promotion), {"staging-readback"})
+        self.assertIn('"$ORAS_BIN" cp', promotion)
+        self.assertIn("validate-release-digests", promotion)
+        self.assertNotIn("id-token", promotion)
+
+        release_attest = self.blocks["release-attest"]
+        self.assertEqual(job_needs(release_attest), {"release-promotion"})
+        self.assertEqual(
+            release_attest.count("          subject-digest: ${{ needs.release-promotion.outputs.release-digest }}"),
+            2,
+        )
+        self.assertIn("paddleocr-release-attestations-${{ env.ATTEMPT_ID }}", release_attest)
+
+        evidence_push = self.blocks["release-evidence-push"]
+        self.assertEqual(job_needs(evidence_push), {"release-readback"})
+        self.assertIn("create-evidence-oci", evidence_push)
+        for path in (
+            "producer-evidence.json",
+            "artifact-ledger.fragment.json",
+            "inputs/producer-input.lock.json",
+            "manifests/package-lock.json",
+            "manifests/model-detector.json",
+            "manifests/model-recognizer.json",
+            "platform-manifest.json",
+            "sbom.spdx.json",
+            "legal-inventory.json",
+            "attestations/provenance.bundle.jsonl",
+            "attestations/sbom.bundle.jsonl",
+        ):
+            self.assertIn(path, evidence_push)
+
+        self.assertEqual(job_needs(self.blocks["consumer-verify-private"]), {"release-evidence-push"})
+        self.assertEqual(job_needs(self.blocks["public-visibility-readback"]), {"consumer-verify-private"})
+        public = self.blocks["consumer-verify-public"]
+        self.assertEqual(job_needs(public), {"public-visibility-readback"})
+        self.assertIn("verify-public-evidence", public)
+        for forbidden in (
+            "GH_TOKEN:", "GITHUB_TOKEN:", "${{ github.token }}", "registry-config", "oras login",
+        ):
+            self.assertNotIn(forbidden, public)
+
     def test_ci_routes_every_producer_surface_to_credential_free_matrix(self) -> None:
         self.assertIn("paddleocr-producer: ${{ steps.filter.outputs.paddleocr-producer }}", self.ci)
         for path in (

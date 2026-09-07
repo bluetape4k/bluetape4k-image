@@ -11,9 +11,12 @@ from paddle_ocr_producer_lib.contracts import ProducerValidationError, jcs_bytes
 from paddle_ocr_producer_lib.evidence import (
     EVIDENCE_FILES,
     MaterializationLimits,
+    create_evidence_oci_layout,
     materialize_evidence_files,
+    validate_attestation_identity,
     validate_evidence_file_manifest,
     validate_producer_evidence,
+    validate_release_digests,
     validate_remote_evidence_manifest,
     validate_same_run_artifact,
     verify_public_evidence,
@@ -120,6 +123,105 @@ def complete_producer_evidence() -> dict[str, object]:
 
 
 class EvidenceContractTest(unittest.TestCase):
+    def test_attestation_identity_and_release_digests_are_exact(self) -> None:
+        subject = "sha256:" + "a" * 64
+        identity = {
+            "schemaVersion": 1,
+            "repository": "bluetape4k/bluetape4k-image",
+            "workflow": ".github/workflows/paddleocr-producer.yml",
+            "workflowSha": "1" * 40,
+            "ref": "refs/heads/develop",
+            "environment": "paddleocr-producer",
+            "issuer": "https://token.actions.githubusercontent.com",
+            "audience": "sigstore",
+            "runId": 44,
+            "runAttempt": 2,
+            "headSha": "1" * 40,
+            "subjectName": "ghcr.io/bluetape4k/paddleocr-service-staging",
+            "subjectDigest": subject,
+            "predicateType": "https://slsa.dev/provenance/v1",
+            "verified": True,
+        }
+        self.assertEqual(
+            validate_attestation_identity(
+                identity,
+                expected_subject_name=identity["subjectName"],
+                expected_subject_digest=subject,
+                expected_predicate_type=identity["predicateType"],
+                expected_run_id=44,
+                expected_run_attempt=2,
+                expected_head_sha="1" * 40,
+            ),
+            identity,
+        )
+        for field, value in (
+            ("repository", "other/repository"),
+            ("workflowSha", "2" * 40),
+            ("environment", "other"),
+            ("audience", "other"),
+            ("runAttempt", 3),
+            ("subjectDigest", "sha256:" + "b" * 64),
+            ("verified", False),
+        ):
+            changed = dict(identity)
+            changed[field] = value
+            with self.subTest(field=field), self.assertRaises(ProducerValidationError):
+                validate_attestation_identity(
+                    changed,
+                    expected_subject_name=identity["subjectName"],
+                    expected_subject_digest=subject,
+                    expected_predicate_type=identity["predicateType"],
+                    expected_run_id=44,
+                    expected_run_attempt=2,
+                    expected_head_sha="1" * 40,
+                )
+
+        chain = {
+            "schemaVersion": 1,
+            "stagingDigest": subject,
+            "releaseDigest": subject,
+            "handoffDigest": subject,
+            "attestationSubjectDigest": subject,
+        }
+        self.assertEqual(validate_release_digests(chain), chain)
+        changed = dict(chain, releaseDigest="sha256:" + "b" * 64)
+        with self.assertRaisesRegex(ProducerValidationError, "four-digest"):
+            validate_release_digests(changed)
+
+    def test_evidence_oci_layout_is_canonical_and_subject_bound(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            workspace = Path(temporary)
+            source = workspace / "source"
+            source.mkdir()
+            payloads = {path: (path + "\n").encode() for path in EVIDENCE_FILES}
+            for path, raw in payloads.items():
+                target = source / path
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_bytes(raw)
+            platform_digest = "sha256:" + hashlib.sha256(payloads["platform-manifest.json"]).hexdigest()
+            output = workspace / "layout"
+            receipt = create_evidence_oci_layout(
+                source,
+                output,
+                image_index_digest="sha256:" + "b" * 64,
+                image_platform_digest=platform_digest,
+                image_config_digest="sha256:" + "c" * 64,
+                base_digest="sha256:" + "d" * 64,
+                run_id=44,
+                run_attempt=2,
+                input_lock_sha256="e" * 64,
+                revocations_sha256="f" * 64,
+                revocations_commit_sha="1" * 40,
+            )
+            self.assertEqual(receipt["subjectDigest"], platform_digest)
+            index = __import__("json").loads((output / "index.json").read_bytes())
+            root_digest = index["manifests"][0]["digest"]
+            outer = __import__("json").loads(
+                (output / "blobs" / "sha256" / root_digest.split(":", 1)[1]).read_bytes()
+            )
+            self.assertEqual(set(validate_remote_evidence_manifest(outer)), {"evidence-manifest.json", *EVIDENCE_FILES})
+            self.assertEqual(outer["subject"]["digest"], platform_digest)
+
     def test_same_run_artifact_binding_rejects_cross_run_swap_and_rename(self) -> None:
         receipt = {
             "schemaVersion": 1,

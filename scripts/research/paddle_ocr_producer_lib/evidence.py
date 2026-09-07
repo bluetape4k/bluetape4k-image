@@ -327,6 +327,250 @@ def validate_evidence_file_manifest(
     return document
 
 
+def validate_attestation_identity(
+    value: Mapping[str, Any],
+    *,
+    expected_subject_name: str,
+    expected_subject_digest: str,
+    expected_predicate_type: str,
+    expected_run_id: int,
+    expected_run_attempt: int,
+    expected_head_sha: str,
+) -> dict[str, Any]:
+    """Validate the authenticated identity normalized from one attestation read-back."""
+
+    document = _exact(
+        value,
+        {
+            "schemaVersion", "repository", "workflow", "workflowSha", "ref",
+            "environment", "issuer", "audience", "runId", "runAttempt", "headSha",
+            "subjectName", "subjectDigest", "predicateType", "verified",
+        },
+        "attestation identity",
+    )
+    expected = {
+        "schemaVersion": 1,
+        "repository": "bluetape4k/bluetape4k-image",
+        "workflow": ".github/workflows/paddleocr-producer.yml",
+        "workflowSha": expected_head_sha,
+        "ref": "refs/heads/develop",
+        "environment": "paddleocr-producer",
+        "issuer": _OIDC_ISSUER,
+        "audience": "sigstore",
+        "runId": expected_run_id,
+        "runAttempt": expected_run_attempt,
+        "headSha": expected_head_sha,
+        "subjectName": expected_subject_name,
+        "subjectDigest": expected_subject_digest,
+        "predicateType": expected_predicate_type,
+        "verified": True,
+    }
+    if not isinstance(expected_subject_name, str) or not expected_subject_name.startswith(
+        "ghcr.io/bluetape4k/paddleocr-service"
+    ):
+        raise ProducerValidationError("expected subjectName is invalid")
+    _oci_digest(expected_subject_digest, "expected subjectDigest")
+    if not isinstance(expected_predicate_type, str) or not expected_predicate_type:
+        raise ProducerValidationError("expected predicateType is invalid")
+    _positive(expected_run_id, "expected runId")
+    _positive(expected_run_attempt, "expected runAttempt")
+    if not isinstance(expected_head_sha, str) or _COMMIT_RE.fullmatch(expected_head_sha) is None:
+        raise ProducerValidationError("expected headSha is invalid")
+    for field, expected_value in expected.items():
+        if document[field] != expected_value:
+            raise ProducerValidationError(f"attestation identity {field} differs")
+    return document
+
+
+def validate_release_digests(value: Mapping[str, Any]) -> dict[str, Any]:
+    """Require staging, release, handoff and attestation to name one platform digest."""
+
+    document = _exact(
+        value,
+        {
+            "schemaVersion", "stagingDigest", "releaseDigest", "handoffDigest",
+            "attestationSubjectDigest",
+        },
+        "release digest chain",
+    )
+    if document["schemaVersion"] != 1:
+        raise ProducerValidationError("release digest chain schemaVersion must be 1")
+    values = []
+    for field in (
+        "stagingDigest", "releaseDigest", "handoffDigest", "attestationSubjectDigest",
+    ):
+        values.append(_oci_digest(document[field], field))
+    if len(set(values)) != 1:
+        raise ProducerValidationError("four-digest release equality differs")
+    return document
+
+
+def _write_blob(root: Path, raw: bytes) -> dict[str, Any]:
+    digest = sha256_hex(raw)
+    target = root / "blobs" / "sha256" / digest
+    target.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+    descriptor = os.open(target, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
+    try:
+        _write_all(descriptor, raw)
+    finally:
+        os.close(descriptor)
+    return {"digest": "sha256:" + digest, "size": len(raw)}
+
+
+def create_evidence_oci_layout(
+    source_root: Path,
+    output_root: Path,
+    *,
+    image_index_digest: str,
+    image_platform_digest: str,
+    image_config_digest: str,
+    base_digest: str,
+    run_id: int,
+    run_attempt: int,
+    input_lock_sha256: str,
+    revocations_sha256: str,
+    revocations_commit_sha: str,
+    limits: MaterializationLimits | None = None,
+) -> dict[str, Any]:
+    """Create a canonical OCI layout containing the closed public evidence file set."""
+
+    active = limits or MaterializationLimits()
+    if output_root.exists() or output_root.is_symlink():
+        raise ProducerValidationError("evidence OCI output already exists")
+    if not source_root.is_dir() or source_root.is_symlink():
+        raise ProducerValidationError("evidence source root must be a directory")
+    for field, digest in (
+        ("imageIndexDigest", image_index_digest),
+        ("imagePlatformDigest", image_platform_digest),
+        ("imageConfigDigest", image_config_digest),
+        ("baseDigest", base_digest),
+    ):
+        _oci_digest(digest, field)
+    _positive(run_id, "runId")
+    _positive(run_attempt, "runAttempt")
+    require_sha256(input_lock_sha256, "inputLockSha256")
+    require_sha256(revocations_sha256, "revocationsSha256")
+    if not isinstance(revocations_commit_sha, str) or _COMMIT_RE.fullmatch(revocations_commit_sha) is None:
+        raise ProducerValidationError("revocationsCommitSha is invalid")
+
+    actual: set[str] = set()
+    for current, directories, files in os.walk(source_root, followlinks=False):
+        current_path = Path(current)
+        for name in directories:
+            if (current_path / name).is_symlink():
+                raise ProducerValidationError("evidence source contains a symlink directory")
+        for name in files:
+            path = current_path / name
+            relative = path.relative_to(source_root).as_posix()
+            if path.is_symlink() or not path.is_file() or path.stat().st_nlink != 1:
+                raise ProducerValidationError("evidence source must contain owned regular files")
+            actual.add(relative)
+    if actual != set(EVIDENCE_FILES):
+        raise ProducerValidationError("evidence source must contain exactly the evidence allowlist")
+
+    temporary = output_root.parent / ("." + output_root.name + ".partial")
+    if temporary.exists() or temporary.is_symlink():
+        raise ProducerValidationError("evidence OCI temporary output already exists")
+    temporary.mkdir(parents=True, mode=0o700)
+    try:
+        files: list[dict[str, Any]] = []
+        file_layers: list[dict[str, Any]] = []
+        total = 0
+        platform_bytes = 0
+        for relative in EVIDENCE_FILES:
+            raw = (source_root / relative).read_bytes()
+            size = len(raw)
+            if size <= 0 or size > active.max_file_bytes:
+                raise ProducerValidationError("evidence source file bytes exceed limit")
+            total += size
+            if total > active.max_files_bytes:
+                raise ProducerValidationError("evidence source total bytes exceed limit")
+            digest = sha256_hex(raw)
+            blob = _write_blob(temporary, raw)
+            files.append({"path": relative, "bytes": size, "sha256": digest})
+            file_layers.append({
+                "mediaType": EVIDENCE_FILE_MEDIA_TYPE,
+                **blob,
+                "annotations": {"org.opencontainers.image.title": relative},
+            })
+            if relative == "platform-manifest.json":
+                platform_bytes = size
+                if "sha256:" + digest != image_platform_digest:
+                    raise ProducerValidationError("platform manifest bytes differ from imagePlatformDigest")
+
+        attempt_id = f"{run_id}.{run_attempt}"
+        internal = validate_evidence_file_manifest({
+            "schemaVersion": 1,
+            "artifactType": ARTIFACT_TYPE,
+            "imageIndexDigest": image_index_digest,
+            "imagePlatformDigest": image_platform_digest,
+            "imageConfigDigest": image_config_digest,
+            "baseDigest": base_digest,
+            "subjectDigest": image_platform_digest,
+            "runId": run_id,
+            "runAttempt": run_attempt,
+            "attemptId": attempt_id,
+            "inputLockSha256": input_lock_sha256,
+            "revocationsSha256": revocations_sha256,
+            "revocationsCommitSha": revocations_commit_sha,
+            "files": files,
+        }, limits=active)
+        internal_raw = jcs_bytes(internal)
+        if len(internal_raw) > active.max_manifest_bytes:
+            raise ProducerValidationError("evidence manifest bytes exceed limit")
+        internal_blob = _write_blob(temporary, internal_raw)
+        config_raw = jcs_bytes({
+            "schemaVersion": 1,
+            "artifactType": ARTIFACT_TYPE,
+            "attemptId": attempt_id,
+            "subjectDigest": image_platform_digest,
+        })
+        config_blob = _write_blob(temporary, config_raw)
+        outer = {
+            "schemaVersion": 2,
+            "mediaType": OCI_MANIFEST_MEDIA_TYPE,
+            "artifactType": ARTIFACT_TYPE,
+            "config": {"mediaType": EVIDENCE_CONFIG_MEDIA_TYPE, **config_blob},
+            "layers": [{
+                "mediaType": EVIDENCE_MANIFEST_MEDIA_TYPE,
+                **internal_blob,
+                "annotations": {"org.opencontainers.image.title": "evidence-manifest.json"},
+            }, *file_layers],
+            "subject": {
+                "mediaType": OCI_MANIFEST_MEDIA_TYPE,
+                "digest": image_platform_digest,
+                "size": platform_bytes,
+            },
+        }
+        validate_remote_evidence_manifest(outer, limits=active)
+        outer_raw = jcs_bytes(outer)
+        if len(outer_raw) > active.max_manifest_bytes:
+            raise ProducerValidationError("evidence OCI manifest bytes exceed limit")
+        outer_blob = _write_blob(temporary, outer_raw)
+        index_raw = jcs_bytes({
+            "schemaVersion": 2,
+            "mediaType": "application/vnd.oci.image.index.v1+json",
+            "manifests": [{
+                "mediaType": OCI_MANIFEST_MEDIA_TYPE,
+                **outer_blob,
+                "annotations": {"org.opencontainers.image.ref.name": attempt_id},
+            }],
+        })
+        _write_blob(temporary, index_raw)
+        (temporary / "index.json").write_bytes(index_raw)
+        (temporary / "oci-layout").write_bytes(jcs_bytes({"imageLayoutVersion": "1.0.0"}))
+        os.rename(temporary, output_root)
+    except BaseException:
+        shutil.rmtree(temporary, ignore_errors=True)
+        raise
+    return {
+        "attemptId": attempt_id,
+        "manifestDigest": outer_blob["digest"],
+        "fileManifestSha256": sha256_hex(internal_raw),
+        "subjectDigest": image_platform_digest,
+    }
+
+
 def _validate_artifact_file(value: Any, field: str) -> dict[str, Any]:
     descriptor = _exact(value, {"path", "bytes", "sha256"}, field)
     if not isinstance(descriptor["path"], str) or not descriptor["path"]:

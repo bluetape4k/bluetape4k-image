@@ -29,16 +29,20 @@ from paddle_ocr_producer_lib.contracts import (
     exact_object,
     jcs_bytes,
     load_json_bytes,
+    load_jsonl_bytes,
     require_sha256,
     sha256_hex,
     validate_input_lock,
 )
 from paddle_ocr_producer_lib.evidence import (
     MaterializationLimits,
+    create_evidence_oci_layout,
+    validate_attestation_identity,
     validate_evidence_file_manifest,
     validate_ledger_fragment,
     validate_oci_handoff,
     validate_producer_evidence,
+    validate_release_digests,
     validate_same_run_artifact,
     verify_public_evidence,
 )
@@ -2082,6 +2086,284 @@ def _validate_evidence_manifest(args: argparse.Namespace) -> dict[str, Any]:
     )
 
 
+def _validate_attestation_identity(args: argparse.Namespace) -> dict[str, Any]:
+    document, raw = _load_canonical_document(args.receipt, contract_error=True)
+    validated = validate_attestation_identity(
+        document,
+        expected_subject_name=args.subject_name,
+        expected_subject_digest=args.subject_digest,
+        expected_predicate_type=args.predicate_type,
+        expected_run_id=args.run_id,
+        expected_run_attempt=args.run_attempt,
+        expected_head_sha=args.head_sha,
+    )
+    return _success(
+        "validate-attestation-identity",
+        {
+            "subjectDigest": validated["subjectDigest"],
+            "predicateType": validated["predicateType"],
+            "identitySha256": sha256_hex(raw),
+        },
+    )
+
+
+def _validate_release_digest_chain(args: argparse.Namespace) -> dict[str, Any]:
+    document, raw = _load_canonical_document(args.receipt, contract_error=True)
+    validated = validate_release_digests(document)
+    return _success(
+        "validate-release-digests",
+        {"releaseDigest": validated["releaseDigest"], "receiptSha256": sha256_hex(raw)},
+    )
+
+
+def _extract_platform_manifest(args: argparse.Namespace) -> dict[str, Any]:
+    handoff, _ = _load_canonical_document(args.handoff, contract_error=True)
+    validate_oci_handoff(handoff)
+    member_name = "blobs/sha256/" + handoff["imagePlatformDigest"].split(":", 1)[1]
+    try:
+        with tarfile.open(args.oci_tar, "r") as archive:
+            members = [member for member in archive.getmembers() if member.name == member_name]
+            if len(members) != 1 or not members[0].isfile():
+                raise ProducerRejectedError("OCI platform manifest member differs")
+            raw = _read_tar_member(archive, members[0], 4 * 1024 * 1024)
+    except (tarfile.TarError, OSError) as exc:
+        raise ProducerRejectedError("OCI platform manifest could not be read") from exc
+    if "sha256:" + sha256_hex(raw) != handoff["imagePlatformDigest"]:
+        raise ProducerRejectedError("OCI platform manifest digest differs")
+    digest = _atomic_write_new(args.output, raw)
+    return _success(
+        "extract-platform-manifest",
+        {"imagePlatformDigest": "sha256:" + digest, "bytes": len(raw)},
+    )
+
+
+def _create_spdx(args: argparse.Namespace) -> dict[str, Any]:
+    lock, _ = _validated_input_lock(args.input_lock)
+    legal, legal_raw = _load_canonical_document(args.legal, contract_error=True)
+    _validate_legal_inventory(legal)
+    if lock["legalInventorySha256"] != sha256_hex(legal_raw):
+        raise ProducerLegalError("legal inventory sha256 differs")
+    identity = AttemptIdentity.from_run(args.run_id, args.run_attempt)
+    packages = []
+    describes = []
+    values = [
+        {
+            "id": "base-image",
+            "name": lock["baseImage"]["reference"],
+            "version": lock["baseImage"]["platformDigest"],
+            "sha256": lock["baseImage"]["platformDigest"].split(":", 1)[1],
+            "license": "NOASSERTION",
+            "url": "NOASSERTION",
+        },
+        *(
+            {
+                "id": "package-" + package["id"],
+                "name": package["name"],
+                "version": package["version"],
+                "sha256": package["sha256"],
+                "license": next(
+                    component["licenseExpression"]
+                    for component in legal["components"]
+                    if component["id"] == package["id"]
+                ),
+                "url": package.get("url", "NOASSERTION"),
+            }
+            for package in lock["packages"]
+        ),
+        *(
+            {
+                "id": "model-" + model["role"],
+                "name": model["modelId"],
+                "version": model["modelRevision"],
+                "sha256": model["sha256"],
+                "license": model["licenseExpression"],
+                "url": model["url"],
+            }
+            for model in lock["models"]
+        ),
+    ]
+    for index, value in enumerate(values, start=1):
+        spdx_id = f"SPDXRef-Package-{index}"
+        describes.append(spdx_id)
+        packages.append({
+            "SPDXID": spdx_id,
+            "name": value["name"],
+            "versionInfo": value["version"],
+            "downloadLocation": value["url"],
+            "filesAnalyzed": False,
+            "licenseConcluded": value["license"],
+            "licenseDeclared": value["license"],
+            "checksums": [{"algorithm": "SHA256", "checksumValue": value["sha256"]}],
+            "supplier": "NOASSERTION",
+        })
+    source_epoch = next(
+        package["buildToolchain"]["sourceDateEpoch"]
+        for package in lock["packages"]
+        if "derivedSourceId" in package
+    )
+    document = {
+        "spdxVersion": "SPDX-2.3",
+        "dataLicense": "CC0-1.0",
+        "SPDXID": "SPDXRef-DOCUMENT",
+        "name": "bluetape4k-paddleocr-service-" + identity.attempt_id,
+        "documentNamespace": (
+            "https://github.com/bluetape4k/bluetape4k-image/actions/runs/"
+            f"{identity.run_id}/attempts/{identity.run_attempt}/sbom"
+        ),
+        "creationInfo": {
+            "created": datetime.datetime.fromtimestamp(
+                source_epoch, tz=datetime.timezone.utc
+            ).isoformat().replace("+00:00", "Z"),
+            "creators": ["Organization: bluetape4k"],
+        },
+        "documentDescribes": describes,
+        "packages": packages,
+    }
+    digest = _atomic_write_new(args.output, jcs_bytes(document))
+    return _success("create-spdx", {"sbomSha256": digest, "packageCount": len(packages)})
+
+
+def _copy_evidence_file(source: Path, destination: Path) -> dict[str, Any]:
+    raw = _read_regular_bytes(source, 128 * 1024 * 1024)
+    _atomic_write_new(destination, raw)
+    return {"path": destination.as_posix(), "bytes": len(raw), "sha256": sha256_hex(raw)}
+
+
+def _prepare_evidence(args: argparse.Namespace) -> dict[str, Any]:
+    lock, lock_raw = _validated_input_lock(args.input_lock)
+    revocations, revocations_raw = _load_canonical_document(args.revocations, contract_error=True)
+    validate_revocations(revocations)
+    identity = AttemptIdentity.from_run(args.run_id, args.run_attempt)
+    require_sha256(args.reconciliation_sha256, "reconciliationSha256")
+    require_sha256(args.cleanup_sha256, "cleanupSha256")
+    if args.output_root.exists() or args.output_root.is_symlink():
+        raise ProducerBlockedError("evidence source already exists")
+    args.output_root.mkdir(parents=True, mode=0o700)
+    try:
+        copies = {
+            "inputs/producer-input.lock.json": args.input_lock,
+            "platform-manifest.json": args.platform_manifest,
+            "sbom.spdx.json": args.sbom,
+            "legal-inventory.json": args.legal,
+            "attestations/provenance.bundle.jsonl": args.provenance_bundle,
+            "attestations/sbom.bundle.jsonl": args.sbom_bundle,
+        }
+        for relative, source in copies.items():
+            _copy_evidence_file(source, args.output_root / relative)
+        for bundle in (args.provenance_bundle, args.sbom_bundle):
+            if not load_jsonl_bytes(
+                _read_regular_bytes(bundle, 4 * 1024 * 1024),
+                4 * 1024 * 1024,
+                max_lines=30,
+            ).envelopes:
+                raise ProducerRejectedError("attestation bundle is empty")
+        package_lock = {"schemaVersion": 1, "packages": lock["packages"]}
+        _atomic_write_new(
+            args.output_root / "manifests/package-lock.json", jcs_bytes(package_lock)
+        )
+        for model in lock["models"]:
+            _atomic_write_new(
+                args.output_root / f"manifests/model-{model['role']}.json", jcs_bytes(model)
+            )
+        subject_raw = _read_regular_bytes(args.output_root / "platform-manifest.json")
+        subject = "sha256:" + sha256_hex(subject_raw)
+        if subject != args.release_digest or args.staging_digest != args.release_digest:
+            raise ProducerRejectedError("evidence image digest chain differs")
+
+        def descriptor(relative: str) -> dict[str, Any]:
+            raw = _read_regular_bytes(args.output_root / relative, 128 * 1024 * 1024)
+            return {"path": relative, "bytes": len(raw), "sha256": sha256_hex(raw)}
+
+        attestation = {
+            **descriptor("attestations/provenance.bundle.jsonl"),
+            "predicateType": "https://slsa.dev/provenance/v1",
+            "subjectDigest": subject,
+            "signer": "bluetape4k/bluetape4k-image/.github/workflows/paddleocr-producer.yml",
+            "issuer": "https://token.actions.githubusercontent.com",
+            "verified": True,
+        }
+        sbom_attestation = {
+            **descriptor("attestations/sbom.bundle.jsonl"),
+            **{key: value for key, value in attestation.items() if key not in {"path", "bytes", "sha256"}},
+            "predicateType": "https://spdx.dev/Document/v2.3",
+        }
+        platform = descriptor("platform-manifest.json")
+        evidence = {
+            "schemaVersion": 1,
+            "attemptId": identity.attempt_id,
+            "producerStatus": "RELEASE_UNVERIFIED",
+            "lastCompletedStage": "RELEASE",
+            "inputLockSha256": sha256_hex(lock_raw),
+            "staging": platform,
+            "release": platform,
+            "payload": {
+                "packageLock": descriptor("manifests/package-lock.json"),
+                "detectorModel": descriptor("manifests/model-detector.json"),
+                "recognizerModel": descriptor("manifests/model-recognizer.json"),
+                "legalInventory": descriptor("legal-inventory.json"),
+                "spdx": descriptor("sbom.spdx.json"),
+                "provenanceAttestation": attestation,
+                "sbomAttestation": sbom_attestation,
+            },
+            "evidenceSubjectDigest": subject,
+        }
+        validate_producer_evidence(evidence)
+        evidence_raw = jcs_bytes(evidence)
+        _atomic_write_new(args.output_root / "producer-evidence.json", evidence_raw)
+        ledger = {
+            "schemaVersion": 1,
+            "attemptId": identity.attempt_id,
+            "producerStatus": "RELEASE_UNVERIFIED",
+            "lastCompletedStage": "RELEASE",
+            "mapped609Status": "PENDING",
+            "inputLockSha256": sha256_hex(lock_raw),
+            "imagePlatformDigest": subject,
+            "evidenceSha256": sha256_hex(evidence_raw),
+            "reconciliationSha256": args.reconciliation_sha256,
+            "cleanupSha256": args.cleanup_sha256,
+            "revocationsSha256": sha256_hex(revocations_raw),
+            "revocationsCommitSha": args.revocations_commit_sha,
+        }
+        validate_ledger_fragment(ledger)
+        _atomic_write_new(args.output_root / "artifact-ledger.fragment.json", jcs_bytes(ledger))
+        if {path.relative_to(args.output_root).as_posix() for path in args.output_root.rglob("*") if path.is_file()} != {
+            "producer-evidence.json", "artifact-ledger.fragment.json",
+            "inputs/producer-input.lock.json", "manifests/package-lock.json",
+            "manifests/model-detector.json", "manifests/model-recognizer.json",
+            "platform-manifest.json", "sbom.spdx.json", "legal-inventory.json",
+            "attestations/provenance.bundle.jsonl", "attestations/sbom.bundle.jsonl",
+        }:
+            raise ProducerRejectedError("evidence source file inventory differs")
+    except BaseException:
+        shutil.rmtree(args.output_root, ignore_errors=True)
+        raise
+    return _success(
+        "prepare-evidence",
+        {
+            "attemptId": identity.attempt_id,
+            "subjectDigest": subject,
+            "evidenceSha256": sha256_hex(evidence_raw),
+        },
+    )
+
+
+def _create_evidence_oci(args: argparse.Namespace) -> dict[str, Any]:
+    receipt = create_evidence_oci_layout(
+        args.source_root,
+        args.output_root,
+        image_index_digest=args.image_index_digest,
+        image_platform_digest=args.image_platform_digest,
+        image_config_digest=args.image_config_digest,
+        base_digest=args.base_digest,
+        run_id=args.run_id,
+        run_attempt=args.run_attempt,
+        input_lock_sha256=args.input_lock_sha256,
+        revocations_sha256=args.revocations_sha256,
+        revocations_commit_sha=args.revocations_commit_sha,
+    )
+    return _success("create-evidence-oci", receipt)
+
+
 def _bootstrap_oras(args: argparse.Namespace) -> dict[str, Any]:
     oras_bin = bootstrap_oras_archive(args.archive, args.tool_root)
     return _success(
@@ -2395,6 +2677,66 @@ def build_parser() -> StrictArgumentParser:
     evidence_manifest = subparsers.add_parser("validate-evidence-manifest")
     evidence_manifest.add_argument("--manifest", type=Path, required=True)
     evidence_manifest.set_defaults(handler=_validate_evidence_manifest)
+
+    attestation_identity = subparsers.add_parser("validate-attestation-identity")
+    attestation_identity.add_argument("--receipt", type=Path, required=True)
+    attestation_identity.add_argument("--subject-name", required=True)
+    attestation_identity.add_argument("--subject-digest", required=True)
+    attestation_identity.add_argument("--predicate-type", required=True)
+    attestation_identity.add_argument("--run-id", type=int, required=True)
+    attestation_identity.add_argument("--run-attempt", type=int, required=True)
+    attestation_identity.add_argument("--head-sha", required=True)
+    attestation_identity.set_defaults(handler=_validate_attestation_identity)
+
+    release_digests = subparsers.add_parser("validate-release-digests")
+    release_digests.add_argument("--receipt", type=Path, required=True)
+    release_digests.set_defaults(handler=_validate_release_digest_chain)
+
+    platform_manifest = subparsers.add_parser("extract-platform-manifest")
+    platform_manifest.add_argument("--oci-tar", type=Path, required=True)
+    platform_manifest.add_argument("--handoff", type=Path, required=True)
+    platform_manifest.add_argument("--output", type=Path, required=True)
+    platform_manifest.set_defaults(handler=_extract_platform_manifest)
+
+    spdx = subparsers.add_parser("create-spdx")
+    spdx.add_argument("--input-lock", type=Path, required=True)
+    spdx.add_argument("--legal", type=Path, required=True)
+    spdx.add_argument("--run-id", type=int, required=True)
+    spdx.add_argument("--run-attempt", type=int, required=True)
+    spdx.add_argument("--output", type=Path, required=True)
+    spdx.set_defaults(handler=_create_spdx)
+
+    prepare_evidence = subparsers.add_parser("prepare-evidence")
+    prepare_evidence.add_argument("--input-lock", type=Path, required=True)
+    prepare_evidence.add_argument("--legal", type=Path, required=True)
+    prepare_evidence.add_argument("--platform-manifest", type=Path, required=True)
+    prepare_evidence.add_argument("--sbom", type=Path, required=True)
+    prepare_evidence.add_argument("--provenance-bundle", type=Path, required=True)
+    prepare_evidence.add_argument("--sbom-bundle", type=Path, required=True)
+    prepare_evidence.add_argument("--staging-digest", required=True)
+    prepare_evidence.add_argument("--release-digest", required=True)
+    prepare_evidence.add_argument("--reconciliation-sha256", required=True)
+    prepare_evidence.add_argument("--cleanup-sha256", required=True)
+    prepare_evidence.add_argument("--revocations", type=Path, required=True)
+    prepare_evidence.add_argument("--revocations-commit-sha", required=True)
+    prepare_evidence.add_argument("--run-id", type=int, required=True)
+    prepare_evidence.add_argument("--run-attempt", type=int, required=True)
+    prepare_evidence.add_argument("--output-root", type=Path, required=True)
+    prepare_evidence.set_defaults(handler=_prepare_evidence)
+
+    evidence_oci = subparsers.add_parser("create-evidence-oci")
+    evidence_oci.add_argument("--source-root", type=Path, required=True)
+    evidence_oci.add_argument("--output-root", type=Path, required=True)
+    evidence_oci.add_argument("--image-index-digest", required=True)
+    evidence_oci.add_argument("--image-platform-digest", required=True)
+    evidence_oci.add_argument("--image-config-digest", required=True)
+    evidence_oci.add_argument("--base-digest", required=True)
+    evidence_oci.add_argument("--run-id", type=int, required=True)
+    evidence_oci.add_argument("--run-attempt", type=int, required=True)
+    evidence_oci.add_argument("--input-lock-sha256", required=True)
+    evidence_oci.add_argument("--revocations-sha256", required=True)
+    evidence_oci.add_argument("--revocations-commit-sha", required=True)
+    evidence_oci.set_defaults(handler=_create_evidence_oci)
 
     oras = subparsers.add_parser("bootstrap-oras")
     oras.add_argument("--archive", type=Path, required=True)
