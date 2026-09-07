@@ -1,0 +1,353 @@
+name: PaddleOCR trusted producer
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 실행 모드
+        required: true
+        type: choice
+        options:
+          - PRODUCE
+          - RECONCILE
+      resumeAttemptId:
+        description: 재조정할 이전 attempt ID 또는 NONE
+        required: true
+        default: 'NONE'
+        type: string
+      expectedPriorStatus:
+        description: 예상 이전 상태 또는 NONE
+        required: true
+        default: 'NONE'
+        type: string
+      expectedInputLockSha256:
+        description: 예상 input lock SHA-256 또는 NONE
+        required: true
+        default: 'NONE'
+        type: string
+      expectedStagingDigest:
+        description: 예상 staging digest 또는 NONE
+        required: true
+        default: 'NONE'
+        type: string
+      expectedReleaseDigest:
+        description: 예상 release digest 또는 NONE
+        required: true
+        default: 'NONE'
+        type: string
+      expectedEvidenceDigest:
+        description: 예상 evidence digest 또는 NONE
+        required: true
+        default: 'NONE'
+        type: string
+
+permissions: {}
+
+concurrency:
+  group: paddleocr-producer-${{ github.repository }}-linux-amd64
+  cancel-in-progress: false
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+  PRODUCER_INPUT_LOCK: docker/paddleocr/producer-input.lock.json
+  PRODUCER_TRUST_POLICY: docker/paddleocr/trust-policy.json
+  PRODUCER_LEGAL_INVENTORY: docker/paddleocr/legal-inventory.json
+
+jobs:
+  validation:
+    name: PaddleOCR producer / validation
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      PRODUCER_JOB: validation
+    permissions:
+      contents: read
+    steps: &producer-steps
+      - name: Checkout exact dispatch head
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Set up pinned Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.13'
+      - name: Validate trust context
+        env:
+          DISPATCH_MODE: ${{ inputs.mode }}
+          RESUME_ATTEMPT_ID: ${{ inputs.resumeAttemptId }}
+          EXPECTED_PRIOR_STATUS: ${{ inputs.expectedPriorStatus }}
+          EXPECTED_INPUT_LOCK_SHA256: ${{ inputs.expectedInputLockSha256 }}
+          EXPECTED_STAGING_DIGEST: ${{ inputs.expectedStagingDigest }}
+          EXPECTED_RELEASE_DIGEST: ${{ inputs.expectedReleaseDigest }}
+          EXPECTED_EVIDENCE_DIGEST: ${{ inputs.expectedEvidenceDigest }}
+          RUNNER_ENVIRONMENT: ${{ runner.environment }}
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REPOSITORY" = "bluetape4k/bluetape4k-image"
+          test "$GITHUB_REF" = "refs/heads/develop"
+          test "$GITHUB_SHA" = "$(git rev-parse HEAD)"
+          test "$RUNNER_OS" = "Linux"
+          test "$RUNNER_ARCH" = "X64"
+          test "$GITHUB_ACTOR" = "debop"
+          python3 scripts/research/paddle_ocr_producer.py validate-trust-context \
+            --lock "$PRODUCER_INPUT_LOCK" \
+            --policy "$PRODUCER_TRUST_POLICY" \
+            --legal "$PRODUCER_LEGAL_INVENTORY" \
+            --repository "$GITHUB_REPOSITORY" \
+            --workflow .github/workflows/paddleocr-producer.yml \
+            --ref "$GITHUB_REF" \
+            --actor "$GITHUB_ACTOR" \
+            --runner-environment "$RUNNER_ENVIRONMENT" \
+            --oidc-issuer https://token.actions.githubusercontent.com \
+            --audience sigstore
+          python3 scripts/research/paddle_ocr_producer.py validate-dispatch \
+            --mode "$DISPATCH_MODE" \
+            --resume-attempt-id "$RESUME_ATTEMPT_ID" \
+            --expected-prior-status "$EXPECTED_PRIOR_STATUS" \
+            --expected-input-lock-sha256 "$EXPECTED_INPUT_LOCK_SHA256" \
+            --expected-staging-digest "$EXPECTED_STAGING_DIGEST" \
+            --expected-release-digest "$EXPECTED_RELEASE_DIGEST" \
+            --expected-evidence-digest "$EXPECTED_EVIDENCE_DIGEST"
+      - name: Reject duplicate successful input lock
+        if: ${{ env.PRODUCER_JOB == 'validation' }}
+        run: |
+          echo "중복 PRODUCER_PASS 검사는 publish 구현 전까지 fail-closed 상태입니다."
+          exit 10
+      - name: Execute producer stage
+        run: |
+          echo "$PRODUCER_JOB stage는 후속 구현 task가 완료될 때까지 publish하지 않습니다."
+          exit 10
+      - name: Merge cleanup aggregate
+        if: ${{ always() }}
+        run: |
+          mkdir -p .producer-state
+          printf '{"job":"%s","status":"PENDING"}' "$PRODUCER_JOB" > ".producer-state/cleanup-$PRODUCER_JOB.json"
+      - name: Write step summary
+        if: ${{ always() }}
+        run: |
+          python3 - <<'PY'
+          import hashlib
+          import json
+          import os
+          from pathlib import Path
+          lock = Path(os.environ["PRODUCER_INPUT_LOCK"]).read_bytes()
+          document = {
+              "schemaVersion": 1,
+              "attemptId": os.environ["GITHUB_RUN_ID"] + "." + os.environ["GITHUB_RUN_ATTEMPT"],
+              "producerStatus": "FAILED",
+              "exitCode": 30,
+              "lastCompletedStage": "NONE",
+              "documentDigests": {"input-lock": hashlib.sha256(lock).hexdigest()},
+              "imageDigest": None,
+              "evidenceDigest": None,
+              "retryCount": 0,
+              "cleanupVerified": False,
+              "incidentCandidate": "https://github.com/bluetape4k/bluetape4k-image/issues/638",
+          }
+          Path(".producer-state/summary-input.json").write_bytes(
+              json.dumps(document, separators=(",", ":"), sort_keys=True).encode()
+          )
+          PY
+          python3 scripts/research/paddle_ocr_producer.py write-step-summary \
+            --input .producer-state/summary-input.json \
+            --summary "$GITHUB_STEP_SUMMARY"
+      - name: Emit terminal result
+        if: ${{ always() }}
+        run: test -s "$GITHUB_STEP_SUMMARY"
+  staging:
+    name: PaddleOCR producer / staging
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    needs: [validation]
+    if: ${{ inputs.mode == 'PRODUCE' }}
+    env:
+      PRODUCER_JOB: staging
+    permissions:
+      contents: read
+    steps: *producer-steps
+  source-repro-check:
+    name: PaddleOCR producer / source-repro-check
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    needs: [validation]
+    if: ${{ inputs.mode == 'PRODUCE' }}
+    env:
+      PRODUCER_JOB: source-repro-check
+    permissions:
+      contents: read
+    steps: *producer-steps
+  image-build:
+    name: PaddleOCR producer / image-build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    needs: [validation, staging, source-repro-check]
+    if: ${{ inputs.mode == 'PRODUCE' }}
+    env:
+      PRODUCER_JOB: image-build
+    permissions:
+      contents: read
+      actions: read
+    steps: *producer-steps
+  staging-push:
+    name: PaddleOCR producer / staging-push
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    needs: [validation, source-repro-check, image-build]
+    if: ${{ inputs.mode == 'PRODUCE' }}
+    environment: paddleocr-producer
+    env:
+      PRODUCER_JOB: staging-push
+    permissions:
+      contents: read
+      actions: read
+      packages: write
+    steps: *producer-steps
+  staging-attest:
+    name: PaddleOCR producer / staging-attest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    needs: [staging-push]
+    if: ${{ inputs.mode == 'PRODUCE' }}
+    environment: paddleocr-producer
+    env:
+      PRODUCER_JOB: staging-attest
+    permissions:
+      contents: read
+      actions: read
+      packages: read
+      attestations: write
+      id-token: write
+    steps: *producer-steps
+  staging-readback:
+    name: PaddleOCR producer / staging-readback
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    needs: [staging-attest]
+    if: ${{ always() && !cancelled() }}
+    env:
+      PRODUCER_JOB: staging-readback
+    permissions:
+      contents: read
+      packages: read
+      attestations: read
+    steps: *producer-steps
+  consumer-verify-private:
+    name: PaddleOCR producer / consumer-verify-private
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    needs: [staging-readback]
+    if: ${{ inputs.mode == 'PRODUCE' }}
+    env:
+      PRODUCER_JOB: consumer-verify-private
+    permissions:
+      contents: read
+      packages: read
+    steps: *producer-steps
+  release-promotion:
+    name: PaddleOCR producer / release-promotion
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    needs: [consumer-verify-private]
+    if: ${{ inputs.mode == 'PRODUCE' }}
+    environment: paddleocr-producer
+    env:
+      PRODUCER_JOB: release-promotion
+    permissions:
+      contents: read
+      packages: write
+    steps: *producer-steps
+  release-attest:
+    name: PaddleOCR producer / release-attest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    needs: [release-promotion]
+    if: ${{ inputs.mode == 'PRODUCE' }}
+    environment: paddleocr-producer
+    env:
+      PRODUCER_JOB: release-attest
+    permissions:
+      contents: read
+      actions: read
+      packages: read
+      attestations: write
+      id-token: write
+    steps: *producer-steps
+  release-readback:
+    name: PaddleOCR producer / release-readback
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    needs: [release-attest]
+    if: ${{ always() && !cancelled() }}
+    env:
+      PRODUCER_JOB: release-readback
+    permissions:
+      contents: read
+      packages: read
+      attestations: read
+    steps: *producer-steps
+  release-evidence-push:
+    name: PaddleOCR producer / release-evidence-push
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    needs: [release-readback]
+    if: ${{ inputs.mode == 'PRODUCE' }}
+    environment: paddleocr-producer
+    env:
+      PRODUCER_JOB: release-evidence-push
+    permissions:
+      contents: read
+      actions: read
+      packages: write
+    steps: *producer-steps
+  public-visibility-readback:
+    name: PaddleOCR producer / public-visibility-readback
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    needs: [release-evidence-push]
+    if: ${{ always() && !cancelled() }}
+    env:
+      PRODUCER_JOB: public-visibility-readback
+    permissions:
+      contents: read
+      packages: read
+    steps: *producer-steps
+  consumer-verify-public:
+    name: PaddleOCR producer / consumer-verify-public
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    needs: [public-visibility-readback]
+    if: ${{ always() && !cancelled() }}
+    env:
+      PRODUCER_JOB: consumer-verify-public
+    permissions:
+      contents: read
+    steps: *producer-steps
+  emergency-deny-attest:
+    name: PaddleOCR producer / emergency-deny-attest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    needs: [staging-readback]
+    if: ${{ always() && !cancelled() }}
+    environment: paddleocr-producer
+    env:
+      PRODUCER_JOB: emergency-deny-attest
+    permissions:
+      contents: read
+      actions: read
+      attestations: write
+      id-token: write
+    steps: *producer-steps
+  release-readback-finalize:
+    name: PaddleOCR producer / release-readback-finalize
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    needs: [consumer-verify-public, emergency-deny-attest]
+    if: ${{ always() && !cancelled() }}
+    env:
+      PRODUCER_JOB: release-readback-finalize
+    permissions:
+      contents: read
+      actions: read
+      packages: read
+      attestations: read
+    steps: *producer-steps

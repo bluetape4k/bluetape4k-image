@@ -1,0 +1,11 @@
+/.github/workflows/paddleocr-producer.yml @debop
+/.github/workflows/ci.yml @debop
+/.github/CODEOWNERS @debop
+/.github/scripts/test-paddleocr-producer-workflow.py @debop
+/docker/paddleocr/ @debop
+/scripts/research/paddle_ocr_producer.py @debop
+/scripts/research/paddle_ocr_producer_lib/ @debop
+/scripts/research/test_paddle_ocr_producer*.py @debop
+/scripts/research/paddle_ocr_smoke.py @debop
+/scripts/research/test_paddle_ocr_smoke.py @debop
+/docs/superpowers/runbooks/2026-09-07-issue-638-paddleocr-producer.md @debop

@@ -82,6 +82,19 @@ EXPOSE 8080
 ENTRYPOINT [\"/opt/bluetape4k/bin/bluetape4k-paddleocr-service\"]
 CMD [\"--host\", \"127.0.0.1\", \"--port\", \"8080\"]
 """
+RECONCILE_PRIOR_STATUSES = {
+    "PUBLISHED_UNVERIFIED",
+    "PROMOTING",
+    "RELEASE_UNVERIFIED",
+    "QUARANTINE_PENDING",
+    "QUARANTINED",
+    "INTERRUPTED",
+}
+SUMMARY_KEYS = {
+    "schemaVersion", "attemptId", "producerStatus", "exitCode",
+    "lastCompletedStage", "documentDigests", "imageDigest", "evidenceDigest",
+    "retryCount", "cleanupVerified", "incidentCandidate",
+}
 
 
 class ProducerUsageError(ValueError):
@@ -375,6 +388,63 @@ def _validate_inputs(args: argparse.Namespace) -> dict[str, Any]:
     )
 
 
+def validate_trust_context(
+    policy: Any,
+    repository: Any,
+    workflow: Any,
+    ref: Any,
+    actor: Any,
+    runner_environment: Any,
+    oidc_issuer: Any,
+    audience: Any,
+) -> tuple[str, ...]:
+    try:
+        _policy_hosts(policy)
+    except ProducerValidationError as exc:
+        raise ProducerBlockedError("trust policy violates its contract") from exc
+    expected = (
+        ("repositories", repository),
+        ("workflows", workflow),
+        ("refs", ref),
+        ("actors", actor),
+        ("runnerEnvironments", runner_environment),
+        ("oidcIssuers", oidc_issuer),
+        ("audiences", audience),
+    )
+    for field, value in expected:
+        if not isinstance(value, str) or value not in policy[field]:
+            raise ProducerBlockedError(f"trust context {field} is not allowlisted")
+    return tuple(value for _, value in expected)
+
+
+def _validate_trust_context(args: argparse.Namespace) -> dict[str, Any]:
+    policy, _ = _load_canonical_document(args.policy)
+    values = validate_trust_context(
+        policy,
+        args.repository,
+        args.workflow,
+        args.ref,
+        args.actor,
+        args.runner_environment,
+        args.oidc_issuer,
+        args.audience,
+    )
+    validated_inputs = _validate_inputs(args)["data"]
+    return _success(
+        "validate-trust-context",
+        {
+            **validated_inputs,
+            "repository": values[0],
+            "workflow": values[1],
+            "ref": values[2],
+            "actor": values[3],
+            "runnerEnvironment": values[4],
+            "oidcIssuer": values[5],
+            "audience": values[6],
+        },
+    )
+
+
 def _input_value(args: argparse.Namespace) -> dict[str, Any]:
     lock, lock_raw = _load_canonical_document(args.lock)
     try:
@@ -441,6 +511,162 @@ def _verify_dockerfile(args: argparse.Namespace) -> dict[str, Any]:
             "command": ["--host", "127.0.0.1", "--port", "8080"],
         },
     )
+
+
+def validate_dispatch_inputs(
+    mode: Any,
+    resume_attempt_id: Any,
+    expected_prior_status: Any,
+    expected_input_lock_sha256: Any,
+    expected_staging_digest: Any,
+    expected_release_digest: Any,
+    expected_evidence_digest: Any,
+) -> dict[str, str | None]:
+    fields = {
+        "resumeAttemptId": resume_attempt_id,
+        "expectedPriorStatus": expected_prior_status,
+        "expectedInputLockSha256": expected_input_lock_sha256,
+        "expectedStagingDigest": expected_staging_digest,
+        "expectedReleaseDigest": expected_release_digest,
+        "expectedEvidenceDigest": expected_evidence_digest,
+    }
+    if mode == "PRODUCE":
+        if any(value != "NONE" for value in fields.values()):
+            raise ProducerValidationError("PRODUCE forbids reconcile input values")
+        return {name: None for name in fields}
+    if mode != "RECONCILE":
+        raise ProducerValidationError("dispatch mode must be PRODUCE or RECONCILE")
+    if not isinstance(resume_attempt_id, str) or re.fullmatch(r"[1-9][0-9]*\.[1-9][0-9]*", resume_attempt_id) is None:
+        raise ProducerValidationError("resume attempt id is invalid")
+    if expected_prior_status not in RECONCILE_PRIOR_STATUSES:
+        raise ProducerValidationError("reconcile prior status is invalid")
+    require_sha256(expected_input_lock_sha256, "expected input lock sha256")
+
+    def require_digest(value: Any, label: str, *, nullable: bool = False) -> str | None:
+        if nullable and value == "NONE":
+            return None
+        if not isinstance(value, str) or not value.startswith("sha256:"):
+            raise ProducerValidationError(f"{label} must be a digest or exact NONE sentinel")
+        require_sha256(value[7:], label)
+        return value
+
+    return {
+        "resumeAttemptId": resume_attempt_id,
+        "expectedPriorStatus": expected_prior_status,
+        "expectedInputLockSha256": expected_input_lock_sha256,
+        "expectedStagingDigest": require_digest(expected_staging_digest, "staging digest"),
+        "expectedReleaseDigest": require_digest(
+            expected_release_digest, "release digest", nullable=True
+        ),
+        "expectedEvidenceDigest": require_digest(
+            expected_evidence_digest, "evidence digest", nullable=True
+        ),
+    }
+
+
+def _validate_summary_document(value: Any) -> dict[str, Any]:
+    document = exact_object(value, required=SUMMARY_KEYS)
+    if document["schemaVersion"] != 1:
+        raise ProducerValidationError("summary schemaVersion must be 1")
+    if not isinstance(document["attemptId"], str) or re.fullmatch(
+        r"[1-9][0-9]*\.[1-9][0-9]*", document["attemptId"]
+    ) is None:
+        raise ProducerValidationError("summary attemptId is invalid")
+    if document["producerStatus"] not in STATUS_CONTRACT:
+        raise ProducerValidationError("summary producerStatus is invalid")
+    if type(document["exitCode"]) is not int or not 0 <= document["exitCode"] <= 255:
+        raise ProducerValidationError("summary exitCode is invalid")
+    stages = {stage for contract in STATUS_CONTRACT.values() for stage in contract.allowed_stages}
+    if document["lastCompletedStage"] not in stages:
+        raise ProducerValidationError("summary lastCompletedStage is invalid")
+    digests = document["documentDigests"]
+    if not isinstance(digests, dict) or not digests or len(digests) > 16:
+        raise ProducerValidationError("summary documentDigests is invalid")
+    for name, digest in digests.items():
+        if not isinstance(name, str) or re.fullmatch(r"[a-z][a-zA-Z0-9-]{0,63}", name) is None:
+            raise ProducerValidationError("summary document digest name is invalid")
+        require_sha256(digest, "summary document digest")
+    for name in ("imageDigest", "evidenceDigest"):
+        digest = document[name]
+        if digest is not None:
+            if not isinstance(digest, str) or not digest.startswith("sha256:"):
+                raise ProducerValidationError(f"summary {name} is invalid")
+            require_sha256(digest[7:], f"summary {name}")
+    if type(document["retryCount"]) is not int or not 0 <= document["retryCount"] <= 100:
+        raise ProducerValidationError("summary retryCount is invalid")
+    if type(document["cleanupVerified"]) is not bool:
+        raise ProducerValidationError("summary cleanupVerified is invalid")
+    incident = document["incidentCandidate"]
+    if incident is not None and (
+        not isinstance(incident, str)
+        or re.fullmatch(r"https://github\.com/bluetape4k/bluetape4k-image/issues/[1-9][0-9]*", incident) is None
+    ):
+        raise ProducerValidationError("summary incidentCandidate is invalid")
+    return document
+
+
+def write_step_summary(path: Path, value: Any) -> dict[str, Any]:
+    document = _validate_summary_document(value)
+    digest_lines = "\n".join(
+        f"  - `{name}`: `{digest}`" for name, digest in sorted(document["documentDigests"].items())
+    )
+    payload = (
+        "## PaddleOCR producer\n\n"
+        f"- Attempt: `{document['attemptId']}`\n"
+        f"- Status / exit: `{document['producerStatus']}` / `{document['exitCode']}`\n"
+        f"- Last stage: `{document['lastCompletedStage']}`\n"
+        f"- Image digest: `{document['imageDigest'] or 'NONE'}`\n"
+        f"- Evidence digest: `{document['evidenceDigest'] or 'NONE'}`\n"
+        f"- Retry count: `{document['retryCount']}`\n"
+        f"- Cleanup verified: `{str(document['cleanupVerified']).lower()}`\n"
+        f"- Incident candidate: `{document['incidentCandidate'] or 'NONE'}`\n"
+        "- Document digests:\n"
+        f"{digest_lines}\n"
+    ).encode()
+    if len(payload) > 16 * 1024:
+        raise ProducerValidationError("summary payload exceeds byte limit")
+    flags = os.O_WRONLY | os.O_APPEND | getattr(os, "O_CLOEXEC", 0) | getattr(os, "O_NOFOLLOW", 0)
+    try:
+        descriptor = os.open(path, flags)
+    except OSError as exc:
+        raise ProducerBlockedError("step summary is unavailable") from exc
+    try:
+        metadata = os.fstat(descriptor)
+        if not stat.S_ISREG(metadata.st_mode) or metadata.st_nlink != 1:
+            raise ProducerBlockedError("step summary must be a unique regular file")
+        if metadata.st_size + len(payload) > MAX_DOCUMENT_BYTES:
+            raise ProducerBlockedError("step summary exceeds byte limit")
+        written = 0
+        while written < len(payload):
+            written += os.write(descriptor, payload[written:])
+        os.fsync(descriptor)
+    finally:
+        os.close(descriptor)
+    raw = _read_regular_bytes(path)
+    if not raw.endswith(payload):
+        raise ProducerBlockedError("step summary read-back differs")
+    return {
+        "summarySha256": sha256_hex(raw),
+        "documentDigests": dict(document["documentDigests"]),
+    }
+
+
+def _validate_dispatch(args: argparse.Namespace) -> dict[str, Any]:
+    result = validate_dispatch_inputs(
+        args.mode,
+        args.resume_attempt_id,
+        args.expected_prior_status,
+        args.expected_input_lock_sha256,
+        args.expected_staging_digest,
+        args.expected_release_digest,
+        args.expected_evidence_digest,
+    )
+    return _success("validate-dispatch", result)
+
+
+def _write_step_summary(args: argparse.Namespace) -> dict[str, Any]:
+    document, _ = _load_canonical_document(args.input, contract_error=True)
+    return _success("write-step-summary", write_step_summary(args.summary, document))
 
 
 def _validate_requirements_lock(raw: bytes, packages: list[dict[str, Any]]) -> None:
@@ -1290,6 +1516,19 @@ def build_parser() -> StrictArgumentParser:
     validate.add_argument("--legal", type=Path, required=True)
     validate.set_defaults(handler=_validate_inputs)
 
+    trust = subparsers.add_parser("validate-trust-context")
+    trust.add_argument("--lock", type=Path, required=True)
+    trust.add_argument("--policy", type=Path, required=True)
+    trust.add_argument("--legal", type=Path, required=True)
+    trust.add_argument("--repository", required=True)
+    trust.add_argument("--workflow", required=True)
+    trust.add_argument("--ref", required=True)
+    trust.add_argument("--actor", required=True)
+    trust.add_argument("--runner-environment", required=True)
+    trust.add_argument("--oidc-issuer", required=True)
+    trust.add_argument("--audience", required=True)
+    trust.set_defaults(handler=_validate_trust_context)
+
     input_value = subparsers.add_parser("input-value")
     input_value.add_argument("--lock", type=Path, required=True)
     input_value.add_argument("--field", choices=("sourceDateEpoch",), required=True)
@@ -1317,6 +1556,21 @@ def build_parser() -> StrictArgumentParser:
     dockerfile.add_argument("--dockerfile", type=Path, required=True)
     dockerfile.add_argument("--input-lock", type=Path, required=True)
     dockerfile.set_defaults(handler=_verify_dockerfile)
+
+    dispatch = subparsers.add_parser("validate-dispatch")
+    dispatch.add_argument("--mode", required=True)
+    dispatch.add_argument("--resume-attempt-id", required=True)
+    dispatch.add_argument("--expected-prior-status", required=True)
+    dispatch.add_argument("--expected-input-lock-sha256", required=True)
+    dispatch.add_argument("--expected-staging-digest", required=True)
+    dispatch.add_argument("--expected-release-digest", required=True)
+    dispatch.add_argument("--expected-evidence-digest", required=True)
+    dispatch.set_defaults(handler=_validate_dispatch)
+
+    summary = subparsers.add_parser("write-step-summary")
+    summary.add_argument("--input", type=Path, required=True)
+    summary.add_argument("--summary", type=Path, required=True)
+    summary.set_defaults(handler=_write_step_summary)
 
     stage = subparsers.add_parser("stage-inputs")
     stage.add_argument("--input-lock", type=Path, required=True)

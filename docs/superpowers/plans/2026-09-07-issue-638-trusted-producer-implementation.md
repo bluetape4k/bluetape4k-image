@@ -799,8 +799,10 @@ git commit -m 'feat: PaddleOCR model을 image 안에 고정한다' \
 - Create: `.github/scripts/test-paddleocr-producer-workflow.py`
 - Create: `.github/CODEOWNERS`
 - Modify: `.github/workflows/ci.yml`
+- Modify: `scripts/research/paddle_ocr_producer.py`
+- Modify: `scripts/research/test_paddle_ocr_producer.py`
 
-- [ ] **Step 1: job graph, dispatch mode, permission과 action pin RED test를 작성한다.**
+- [x] **Step 1: job graph, dispatch mode, permission과 action pin RED test를 작성한다.**
 
 ```python
 REQUIRED_JOBS = {
@@ -829,13 +831,13 @@ assert_exact_job_timeouts(workflow_text, {
 })
 ```
 
-- [ ] **Step 2: RED를 확인한다.**
+- [x] **Step 2: RED를 확인한다.**
 
 Run: `python3 .github/scripts/test-paddleocr-producer-workflow.py`
 
 Expected: workflow file이 없어 실패한다.
 
-- [ ] **Step 3: `PRODUCE|RECONCILE` workflow skeleton과 verified action pins를 구현한다.**
+- [x] **Step 3: `PRODUCE|RECONCILE` workflow skeleton과 verified action pins를 구현한다.**
 
 workflow는 `workflow_dispatch`만 허용하고 mode는 `PRODUCE|RECONCILE`다. PR의
 credential-free validation은 `ci.yml`이 담당한다. top-level `permissions: {}`, concurrency는
@@ -859,6 +861,14 @@ Expected: 각 행이 40-hex SHA와 `true`를 출력한다. 하나라도 아니�
 map으로 계획/코드에 기록한다. contract test는 모든 `uses:`가 이 map과 exact-match하고
 unexpected repository, tag/runtime lookup, unsigned 또는 다른 SHA를 fail closed한다.
 
+2026-09-07 live verification 결과는 `actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1`,
+`actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97`,
+`actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a`,
+`actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c`,
+`actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a`,
+`actions/attest-sbom@4651f806c01d8637787e274ac3bdf724ef169f34`이며 모두 GitHub commit
+verification `true`다. workflow contract의 `ALLOWED_ACTIONS`는 이 exact map을 사용한다.
+
 모든 checkout은 `persist-credentials: false`다. privileged job은 첫 단계에서 공통
 `validate-trust-context`를 실행해 repository/ref/dispatch HEAD, native linux/amd64,
 github-hosted runner, actor, environment/ruleset, non-empty trust policy membership와
@@ -868,7 +878,7 @@ exact permission equality를 검증하고 예상 밖 `contents: write`, packages
 id-token, secret context, public verifier의 `GH_TOKEN`/registry credential을 거부한다.
 GitHub/OIDC token은 build context/arg/secret/cache/artifact에 전달하지 않는다.
 
-- [ ] **Step 4: `ci.yml`에 producer path와 contract job을 연결한다.**
+- [x] **Step 4: `ci.yml`에 producer path와 contract job을 연결한다.**
 
 ```yaml
 # changes.outputs
@@ -950,7 +960,7 @@ digest, retry, cleanup, incident candidate를 기록하며 write/digest read-bac
 fail closed한다. workflow contract는 summary step이 cleanup aggregate 뒤, terminal result
 전에 있고 required field를 모두 쓰는지 검사한다.
 
-- [ ] **Step 5: contract/syntax를 GREEN으로 만들고 commit한다.**
+- [x] **Step 5: contract/syntax를 GREEN으로 만들고 commit한다.**
 
 ```bash
 python3 .github/scripts/test-paddleocr-producer-workflow.py

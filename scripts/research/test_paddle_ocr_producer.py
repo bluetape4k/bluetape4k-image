@@ -734,6 +734,80 @@ class ProducerCliTest(unittest.TestCase):
         self.assertEqual(rejected.returncode, 10)
         self.assertEqual(json.loads(rejected.stdout)["status"], "BLOCKED_INPUT")
 
+    def test_dispatch_contract_separates_produce_and_reconcile_inputs(self) -> None:
+        empty = ["NONE"] * 6
+        produced = producer_cli.validate_dispatch_inputs("PRODUCE", *empty)
+        self.assertTrue(all(value is None for value in produced.values()))
+        reconciled = producer_cli.validate_dispatch_inputs(
+            "RECONCILE",
+            "1234.2",
+            "PUBLISHED_UNVERIFIED",
+            SHA_A,
+            "sha256:" + SHA_B,
+            "NONE",
+            "sha256:" + SHA_C,
+        )
+        self.assertIsNone(reconciled["expectedReleaseDigest"])
+        self.assertEqual(reconciled["expectedEvidenceDigest"], "sha256:" + SHA_C)
+        invalid = (
+            ("PRODUCE", "1234.2", *empty[1:]),
+            ("RECONCILE", *empty),
+            ("RECONCILE", "1234.2", "PRODUCER_PASS", SHA_A, "sha256:" + SHA_B, "NONE", "NONE"),
+            ("RECONCILE", "1234.2", "INTERRUPTED", SHA_A, "sha256:" + SHA_B, "", "NONE"),
+        )
+        for values in invalid:
+            with self.subTest(values=values), self.assertRaises(ProducerValidationError):
+                producer_cli.validate_dispatch_inputs(*values)
+
+    def test_step_summary_is_bounded_redacted_and_read_back(self) -> None:
+        summary = self.root / "step-summary.md"
+        summary.touch(mode=0o600)
+        document = {
+            "schemaVersion": 1,
+            "attemptId": "1234.2",
+            "producerStatus": "PRODUCER_PASS",
+            "exitCode": 0,
+            "lastCompletedStage": "PUBLIC_EVIDENCE",
+            "documentDigests": {"attempt": SHA_A, "cleanup": SHA_B},
+            "imageDigest": "sha256:" + SHA_A,
+            "evidenceDigest": "sha256:" + SHA_B,
+            "retryCount": 1,
+            "cleanupVerified": True,
+            "incidentCandidate": None,
+        }
+        result = producer_cli.write_step_summary(summary, document)
+        self.assertEqual(result["documentDigests"], document["documentDigests"])
+        self.assertEqual(result["summarySha256"], sha256_hex(summary.read_bytes()))
+        self.assertNotIn("token", summary.read_text(encoding="utf-8").lower())
+
+    def test_trust_context_requires_exact_policy_membership(self) -> None:
+        policy = {
+            "schemaVersion": 1,
+            "repositories": ["bluetape4k/bluetape4k-image"],
+            "workflows": [".github/workflows/paddleocr-producer.yml"],
+            "refs": ["refs/heads/develop"],
+            "actors": ["debop"],
+            "runnerEnvironments": ["github-hosted"],
+            "oidcIssuers": ["https://token.actions.githubusercontent.com"],
+            "audiences": ["sigstore"],
+            "hosts": ["github.com"],
+        }
+        values = (
+            "bluetape4k/bluetape4k-image",
+            ".github/workflows/paddleocr-producer.yml",
+            "refs/heads/develop",
+            "debop",
+            "github-hosted",
+            "https://token.actions.githubusercontent.com",
+            "sigstore",
+        )
+        self.assertEqual(producer_cli.validate_trust_context(policy, *values), values)
+        for index in range(len(values)):
+            changed = list(values)
+            changed[index] = "unexpected"
+            with self.subTest(index=index), self.assertRaises(producer_cli.ProducerBlockedError):
+                producer_cli.validate_trust_context(policy, *changed)
+
     def _write_inputs(self) -> tuple[Path, Path, Path]:
         license_file = self.root / "LICENSE"
         license_file.write_bytes(b"license evidence")
