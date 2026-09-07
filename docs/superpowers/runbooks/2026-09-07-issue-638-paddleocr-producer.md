@@ -384,9 +384,11 @@ GH_HTTP_TIMEOUT=60 gh workflow run paddleocr-producer.yml \
 ~~~
 
 RECONCILE workflow와 같은 read-back을 로컬에서 재현하려면 다음 명령을 사용한다.
-`PRIOR_STATE`는 exact prior run의 `paddleocr-reconcile-state-<attemptId>` artifact에서
-받은 `reconcile-state.json`이어야 한다. 이 block은 package visibility나 tag를 바꾸지
-않는다.
+`PRIOR_STATE`, `PRIOR_RESULT`, `PRIOR_EVIDENCE`, `PRIOR_RECONCILIATION`,
+`PRIOR_CLEANUP`은 exact prior run의
+`paddleocr-reconcile-state-<attemptId>` artifact에서 받은 다섯 파일이어야 한다.
+validator는 state가 기록한 네 document hash를 실제 canonical bytes와 다시 비교한다.
+이 block은 package visibility나 tag를 바꾸지 않는다.
 
 ~~~bash
 RESUME_RUN_ID="$(printf '%s' "$RESUME_ATTEMPT_ID" | cut -d. -f1)"
@@ -412,6 +414,10 @@ python3 scripts/research/paddle_ocr_producer.py validate-reconcile-state \
   --expected-release-digest "$EXPECTED_RELEASE_DIGEST" \
   --expected-evidence-digest "$EXPECTED_EVIDENCE_DIGEST" \
   --prior-state "$PRIOR_STATE" \
+  --prior-result "$PRIOR_RESULT" \
+  --prior-evidence "$PRIOR_EVIDENCE" \
+  --prior-reconciliation "$PRIOR_RECONCILIATION" \
+  --prior-cleanup "$PRIOR_CLEANUP" \
   --package-readback build/package-readback-reconcile.json \
   --input-lock docker/paddleocr/producer-input.lock.json \
   --output build/reconcile-observation.json
@@ -475,6 +481,8 @@ python3 scripts/research/paddle_ocr_producer.py close-incident \
 python3 scripts/research/paddle_ocr_producer.py readback-incident \
   --repo "$REPO" --run-id "$RUN_ID" --run-attempt "$RUN_ATTEMPT" \
   --reconciliation build/incident-closed.json \
+  --expected-sha256 "$(sha256sum build/incident-closed.json | awk '{print $1}')" \
+  --gh-bin "$GH_BIN" --operation-timeout-seconds 60 \
   --output build/incident-readback.json
 ~~~
 
@@ -543,6 +551,7 @@ python3 scripts/research/paddle_ocr_producer.py execute-known-good-rollback \
   --approval-marker "$APPROVAL_MARKER" \
   --expected-current-digest "$CURRENT_DIGEST" \
   --known-good-digest "$KNOWN_GOOD_DIGEST" \
+  --mutation visibility-and-stable-tag \
   --oras-bin "$ORAS_BIN" \
   --registry-config "$REGISTRY_CONFIG" \
   --operation-timeout-seconds 60 \
@@ -550,7 +559,6 @@ python3 scripts/research/paddle_ocr_producer.py execute-known-good-rollback \
 python3 scripts/research/paddle_ocr_producer.py readback-known-good-rollback \
   --repo "$REPO" --release-package-id "$RELEASE_PACKAGE_ID" \
   --expected-digest "$KNOWN_GOOD_DIGEST" \
-  --oras-bin "$ORAS_BIN" \
   --operation-timeout-seconds 60 \
   --output build/known-good-rollback-readback.json
 ~~~

@@ -1301,11 +1301,21 @@ class ProducerCliTest(unittest.TestCase):
     def test_validate_reconcile_state_binds_prior_hashes_and_remote_absence(self) -> None:
         lock, _, _ = self._write_inputs()
         input_lock_sha = sha256_hex(lock.read_bytes())
+        prior_documents = {}
+        for name, value in (
+            ("result", {"kind": "result"}),
+            ("evidence", {"kind": "evidence"}),
+            ("reconciliation", {"kind": "reconciliation"}),
+            ("cleanup", {"kind": "cleanup"}),
+        ):
+            path = self.root / f"prior-{name}.json"
+            path.write_bytes(jcs_bytes(value))
+            prior_documents[name] = path
         document_hashes = {
-            "resultSha256": SHA_A,
-            "evidenceSha256": SHA_B,
-            "reconciliationSha256": SHA_C,
-            "cleanupSha256": "d" * 64,
+            "resultSha256": sha256_hex(prior_documents["result"].read_bytes()),
+            "evidenceSha256": sha256_hex(prior_documents["evidence"].read_bytes()),
+            "reconciliationSha256": sha256_hex(prior_documents["reconciliation"].read_bytes()),
+            "cleanupSha256": sha256_hex(prior_documents["cleanup"].read_bytes()),
         }
         prior_state = self.root / "prior-state.json"
         prior_state.write_bytes(jcs_bytes({
@@ -1341,6 +1351,10 @@ class ProducerCliTest(unittest.TestCase):
             "--expected-release-digest", "NONE",
             "--expected-evidence-digest", "NONE",
             "--prior-state", str(prior_state),
+            "--prior-result", str(prior_documents["result"]),
+            "--prior-evidence", str(prior_documents["evidence"]),
+            "--prior-reconciliation", str(prior_documents["reconciliation"]),
+            "--prior-cleanup", str(prior_documents["cleanup"]),
             "--package-readback", str(package_readback),
             "--input-lock", str(lock),
             "--output", str(output),
@@ -1360,6 +1374,11 @@ class ProducerCliTest(unittest.TestCase):
         }
         package_readback.write_bytes(jcs_bytes(tampered))
         rejected = self._run(*command[:-2], "--output", str(self.root / "rejected-state.json"))
+        self.assertEqual(rejected.returncode, 40)
+        tampered["data"]["release"] = None
+        package_readback.write_bytes(jcs_bytes(tampered))
+        prior_documents["evidence"].write_bytes(jcs_bytes({"kind": "tampered"}))
+        rejected = self._run(*command[:-2], "--output", str(self.root / "rejected-hash.json"))
         self.assertEqual(rejected.returncode, 40)
 
     def test_remote_run_selection_keeps_selected_identity_under_data(self) -> None:
@@ -1399,9 +1418,23 @@ class ProducerCliTest(unittest.TestCase):
         fake_gh = self.root / "fake-gh"
         fake_gh.write_text(
             f"#!{sys.executable}\n"
+            "import json, sys\n"
             "from pathlib import Path\n"
-            f"Path({str(called)!r}).write_text('called')\n"
-            "print('https://github.com/bluetape4k/bluetape4k-image/issues/638#issuecomment-1')\n",
+            f"state = Path({str(self.root / 'incident-state.json')!r})\n"
+            f"called = Path({str(called)!r})\n"
+            "if sys.argv[1] == 'api':\n"
+            "    item = json.loads(state.read_text()) if state.exists() else None\n"
+            "    if '/issues/comments/' in ' '.join(sys.argv):\n"
+            "        print(json.dumps(item))\n"
+            "    else:\n"
+            "        print(json.dumps({'items': [item] if item else []}))\n"
+            "else:\n"
+            "    count = int(called.read_text()) + 1 if called.exists() else 1\n"
+            "    called.write_text(str(count))\n"
+            "    body = sys.argv[sys.argv.index('--body') + 1]\n"
+            "    item = {'html_url': 'https://github.com/bluetape4k/bluetape4k-image/issues/638#issuecomment-1', 'body': body}\n"
+            "    state.write_text(json.dumps(item))\n"
+            "    print(item['html_url'])\n",
             encoding="utf-8",
         )
         fake_gh.chmod(0o700)
@@ -1428,6 +1461,121 @@ class ProducerCliTest(unittest.TestCase):
         )
         self.assertEqual(accepted.returncode, 0, accepted.stdout.decode())
         self.assertTrue(called.exists())
+        linked = self._run(
+            "open-or-link-incident",
+            "--repo", "bluetape4k/bluetape4k-image",
+            "--reconciliation", str(reconciliation),
+            "--expected-sha256", digest,
+            "--approval-marker", f"issue-638-incident:{digest}",
+            "--gh-bin", str(fake_gh),
+            "--output", str(self.root / "incident-linked.json"),
+        )
+        self.assertEqual(linked.returncode, 0, linked.stdout.decode())
+        self.assertEqual(called.read_text(), "1")
+        live_reconciliation = valid_reconciliation("FAILED")
+        live_reconciliation["incidentUrl"] = (
+            "https://github.com/bluetape4k/bluetape4k-image/issues/638#issuecomment-1"
+        )
+        reconciliation.write_bytes(jcs_bytes(live_reconciliation))
+        live_digest = sha256_hex(reconciliation.read_bytes())
+        readback = self._run(
+            "readback-incident",
+            "--repo", "bluetape4k/bluetape4k-image",
+            "--run-id", "1234", "--run-attempt", "2",
+            "--reconciliation", str(reconciliation),
+            "--expected-sha256", live_digest,
+            "--gh-bin", str(fake_gh),
+            "--output", str(self.root / "incident-readback.json"),
+        )
+        self.assertEqual(readback.returncode, 0, readback.stdout.decode())
+
+    def test_github_api_retries_transient_http_status(self) -> None:
+        attempts = self.root / "gh-attempts"
+        fake_gh = self.root / "fake-gh-retry"
+        fake_gh.write_text(
+            f"#!{sys.executable}\n"
+            "import json, sys\n"
+            "from pathlib import Path\n"
+            f"attempts = Path({str(attempts)!r})\n"
+            "count = int(attempts.read_text()) + 1 if attempts.exists() else 1\n"
+            "attempts.write_text(str(count))\n"
+            "if count < 3:\n"
+            "    print('gh: HTTP 500', file=sys.stderr)\n"
+            "    raise SystemExit(1)\n"
+            "print(json.dumps({'ok': True}))\n",
+            encoding="utf-8",
+        )
+        fake_gh.chmod(0o700)
+        args = producer_cli.argparse.Namespace(
+            gh_bin=fake_gh,
+            operation_timeout_seconds=60,
+            connect_timeout_seconds=10,
+            read_timeout_seconds=30,
+            max_page_bytes=2 * 1024 * 1024,
+        )
+        original = producer_cli.run_with_retry
+
+        def without_sleep(*positional: object, **keywords: object) -> object:
+            keywords["sleeper"] = lambda _: None
+            return original(*positional, **keywords)
+
+        with patch.object(producer_cli, "run_with_retry", side_effect=without_sleep):
+            result = producer_cli._gh_json(args, "repos/bluetape4k/bluetape4k-image")
+        self.assertEqual(result, {"ok": True})
+        self.assertEqual(attempts.read_text(), "3")
+        self.assertEqual(args._retry_receipts[0]["attempts"], 3)
+
+        fake_gh.write_text(
+            f"#!{sys.executable}\n"
+            "import sys\n"
+            "print('gh: HTTP 404', file=sys.stderr)\n"
+            "raise SystemExit(1)\n",
+            encoding="utf-8",
+        )
+        with self.assertRaises(producer_cli.ProducerRejectedError):
+            producer_cli._gh_json(args, "repos/bluetape4k/bluetape4k-image/missing")
+
+    def test_rollback_rejects_stable_digest_drift_before_mutation(self) -> None:
+        current = "sha256:" + SHA_A
+        known_good = "sha256:" + SHA_B
+        plan = self.root / "rollback-plan.json"
+        plan.write_bytes(jcs_bytes({
+            "currentDigest": current,
+            "knownGoodDigest": known_good,
+            "dryRun": True,
+        }))
+        args = producer_cli.argparse.Namespace(
+            repo="bluetape4k/bluetape4k-image",
+            release_package_id=7,
+            rollback_plan=plan,
+            approval_marker=f"issue-638-rollback:7:{current}:{known_good}",
+            expected_current_digest=current,
+            known_good_digest=known_good,
+            mutation="visibility-and-stable-tag",
+            gh_bin=None,
+            oras_bin=None,
+            registry_config=self.root / "registry-config.json",
+            operation_timeout_seconds=60,
+            connect_timeout_seconds=10,
+            read_timeout_seconds=30,
+            max_page_bytes=2 * 1024 * 1024,
+            max_page_items=100,
+            max_pages=20,
+            max_total_bytes=40 * 1024 * 1024,
+            output=self.root / "rollback-result.json",
+        )
+        with (
+            patch.object(producer_cli, "_package_metadata", return_value={"packageId": 7}),
+            patch.object(
+                producer_cli,
+                "_package_version",
+                return_value={"manifestDigest": "sha256:" + SHA_C},
+            ),
+            patch.object(producer_cli, "_run_bounded_command") as mutation,
+            self.assertRaises(producer_cli.ProducerRejectedError),
+        ):
+            producer_cli._execute_known_good_rollback(args)
+        mutation.assert_not_called()
 
     def test_verify_attempt_emits_exact_result_and_rejects_cross_document_identity(self) -> None:
         bundle = self.root / "bundle"

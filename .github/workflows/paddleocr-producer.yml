@@ -1304,7 +1304,7 @@ jobs:
           )
           PY
           test "$(find .producer-state/prior-state -type l -print -quit)" = ""
-          test "$(find .producer-state/prior-state -type f | wc -l | tr -d ' ')" = 3
+          test "$(find .producer-state/prior-state -type f | wc -l | tr -d ' ')" = 5
           test "$(find .producer-state/prior-state -type f -exec wc -c {} + | awk 'END {print $1}')" -le 1048576
           PRIOR_STATE=.producer-state/prior-state/reconcile-state.json
           PRIOR_HEAD=$(jq -er '.workflowHeadSha' "$PRIOR_STATE")
@@ -1332,6 +1332,10 @@ jobs:
             --expected-release-digest "$EXPECTED_RELEASE_DIGEST" \
             --expected-evidence-digest "$EXPECTED_EVIDENCE_DIGEST" \
             --prior-state "$PRIOR_STATE" \
+            --prior-result .producer-state/prior-state/producer-result.json \
+            --prior-evidence .producer-state/prior-state/evidence-reference.json \
+            --prior-reconciliation .producer-state/prior-state/reconciliation-readback.json \
+            --prior-cleanup .producer-state/prior-state/cleanup.json \
             --package-readback .producer-state/package-readback.json \
             --input-lock "$PRODUCER_INPUT_LOCK" \
             --output .producer-state/reconcile-observation.json
@@ -1614,8 +1618,10 @@ jobs:
           name: paddleocr-reconcile-state-${{ env.ATTEMPT_ID }}
           path: |
             .producer-state/finalizer/reconcile-state.json
+            .producer-state/finalizer/producer-result.json
             .producer-state/finalizer/evidence-reference.json
             .producer-state/finalizer/reconciliation-readback.json
+            .producer-state/finalizer/cleanup.json
           if-no-files-found: error
           include-hidden-files: false
           compression-level: 0

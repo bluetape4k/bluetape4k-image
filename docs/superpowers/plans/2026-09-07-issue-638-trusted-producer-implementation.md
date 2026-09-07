@@ -1423,6 +1423,7 @@ import importlib.util
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path("scripts/research").resolve()))
 importlib.import_module("scripts.research.paddle_ocr_producer_lib.contracts")
 importlib.import_module("scripts.research.paddle_ocr_smoke")
 for module_name, relative_path in (

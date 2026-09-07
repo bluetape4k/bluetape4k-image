@@ -269,6 +269,15 @@ class ProducerWorkflowContractTest(unittest.TestCase):
         for forbidden in ("visibility public", "visibility private", "delete-package-version", "execute-known-good-rollback"):
             self.assertNotIn(forbidden, self.workflow)
         self.assertIn("paddleocr-reconcile-state-${{ env.ATTEMPT_ID }}", finalizer)
+        self.assertIn('= 5', reconcile)
+        for path in (
+            "producer-result.json",
+            "evidence-reference.json",
+            "reconciliation-readback.json",
+            "cleanup.json",
+        ):
+            self.assertIn(path, reconcile)
+            self.assertIn(path, finalizer)
         self.assertIn('NEEDS_JSON: ${{ toJSON(needs) }}', cleanup)
 
     def test_unprivileged_build_and_private_push_use_same_run_artifacts(self) -> None:

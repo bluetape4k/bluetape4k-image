@@ -76,6 +76,7 @@ from paddle_ocr_producer_lib.lifecycle import (
     validate_revocations,
 )
 from paddle_ocr_producer_lib.registry import (
+    HttpStatusError,
     run_with_retry,
     select_dispatched_run,
     select_exact_version,
@@ -2171,6 +2172,16 @@ def _validate_reconcile_state(args: argparse.Namespace) -> dict[str, Any]:
     )
     for field, value in hashes.items():
         require_sha256(value, field)
+    prior_documents = {
+        "resultSha256": args.prior_result,
+        "evidenceSha256": args.prior_evidence,
+        "reconciliationSha256": args.prior_reconciliation,
+        "cleanupSha256": args.prior_cleanup,
+    }
+    for field, path in prior_documents.items():
+        _, document_raw = _load_canonical_document(path, contract_error=True)
+        if sha256_hex(document_raw) != hashes[field]:
+            raise ProducerValidationError(f"{field} differs from prior reconcile state")
 
     readback, _ = _load_canonical_document(
         args.package_readback, contract_error=True
@@ -2679,7 +2690,11 @@ def _bootstrap_oras(args: argparse.Namespace) -> dict[str, Any]:
 
 
 def _run_bounded_command(
-    command: Sequence[str], limit: int, timeout_seconds: int
+    command: Sequence[str],
+    limit: int,
+    timeout_seconds: int,
+    *,
+    classify_http_errors: bool = False,
 ) -> bytes:
     process: subprocess.Popen[bytes] | None = None
     try:
@@ -2687,28 +2702,44 @@ def _run_bounded_command(
             list(command),
             stdin=subprocess.DEVNULL,
             stdout=subprocess.PIPE,
-            stderr=subprocess.DEVNULL,
+            stderr=subprocess.PIPE if classify_http_errors else subprocess.DEVNULL,
             env=dict(os.environ),
         )
         if process.stdout is None:
             raise ProducerRejectedError("public evidence command stdout is unavailable")
         deadline = time.monotonic() + timeout_seconds
         chunks: list[bytes] = []
+        error_chunks: list[bytes] = []
         total = 0
+        error_total = 0
+        streams = {process.stdout.fileno(): (process.stdout, False)}
+        if classify_http_errors and process.stderr is not None:
+            streams[process.stderr.fileno()] = (process.stderr, True)
         while True:
+            if not streams:
+                break
             remaining = deadline - time.monotonic()
             if remaining <= 0:
                 raise ProducerInterrupted()
-            readable, _, _ = select.select([process.stdout.fileno()], [], [], remaining)
+            readable, _, _ = select.select(list(streams), [], [], remaining)
             if not readable:
                 raise ProducerInterrupted()
-            chunk = os.read(process.stdout.fileno(), min(64 * 1024, limit + 1 - total))
-            if not chunk:
-                break
-            total += len(chunk)
-            if total > limit:
-                raise ProducerRejectedError("public evidence command output violates byte limit")
-            chunks.append(chunk)
+            for descriptor in readable:
+                stream, is_error = streams[descriptor]
+                chunk = os.read(descriptor, 64 * 1024)
+                if not chunk:
+                    stream.close()
+                    del streams[descriptor]
+                    continue
+                if is_error:
+                    error_total += len(chunk)
+                    if error_total <= 16 * 1024:
+                        error_chunks.append(chunk)
+                    continue
+                total += len(chunk)
+                if total > limit:
+                    raise ProducerRejectedError("public evidence command output violates byte limit")
+                chunks.append(chunk)
         remaining = deadline - time.monotonic()
         if remaining <= 0:
             raise ProducerInterrupted()
@@ -2721,9 +2752,16 @@ def _run_bounded_command(
             process.wait()
         raise
     finally:
-        if process is not None and process.stdout is not None:
+        if process is not None and process.stdout is not None and not process.stdout.closed:
             process.stdout.close()
+        if process is not None and process.stderr is not None and not process.stderr.closed:
+            process.stderr.close()
     if return_code != 0:
+        if classify_http_errors:
+            error = b"".join(error_chunks).decode("utf-8", errors="replace")
+            match = re.search(r"\bHTTP\s+([1-5][0-9]{2})\b", error, re.IGNORECASE)
+            if match is not None:
+                raise HttpStatusError(int(match.group(1)))
         raise ProducerRejectedError("public evidence command failed")
     output = b"".join(chunks)
     if not output:
@@ -2792,6 +2830,7 @@ def _gh_json(
                 command,
                 limit,
                 min(read_timeout, max(1, (operation_timeout - 6) // 3)),
+                classify_http_errors=True,
             )
         except ProducerInterrupted as exc:
             raise TimeoutError("GitHub API operation timed out") from exc
@@ -2803,6 +2842,10 @@ def _gh_json(
             invoke,
             deadline_seconds=operation_timeout,
         )
+    except HttpStatusError as exc:
+        if exc.status in {401, 403}:
+            raise ProducerBlockedError("GitHub API authorization is unavailable") from exc
+        raise ProducerRejectedError("GitHub API rejected the request") from exc
     except ProducerValidationError as exc:
         if "transient" in str(exc) or "deadline" in str(exc):
             raise ProducerInterrupted() from exc
@@ -3101,17 +3144,45 @@ def _open_or_link_incident(args: argparse.Namespace) -> dict[str, Any]:
     expected_marker = f"issue-638-incident:{expected_sha}"
     if args.approval_marker != expected_marker:
         raise ProducerValidationError("incident approval marker is absent or stale")
+    comment_marker = f"<!-- issue-638-reconciliation:{expected_sha} -->"
     body = (
         f"Issue #638 producer incident: attempt `{validated['attemptId']}`, "
-        f"status `{validated['producerStatus']}`, reconciliation `{expected_sha}`."
+        f"status `{validated['producerStatus']}`, reconciliation `{expected_sha}`.\n\n"
+        f"{comment_marker}"
     )
-    gh_bin = _resolved_tool(args.gh_bin, "gh")
-    raw_url = _run_bounded_command(
-        [str(gh_bin), "issue", "comment", "638", "--repo", args.repo, "--body", body],
-        8 * 1024,
-        _operation_timeout(args),
-    )
-    incident_url = raw_url.decode("utf-8", errors="strict").strip()
+    items: list[Any] = []
+    for page in range(1, 21):
+        existing = _gh_json(
+            args,
+            f"repos/{args.repo}/issues/638/comments?per_page=100&page={page}",
+            jq='{"items":.}',
+        )
+        page_items = existing.get("items")
+        if not isinstance(page_items, list) or len(page_items) > 100:
+            raise ProducerRejectedError("incident comment read-back is invalid")
+        items.extend(page_items)
+        if len(page_items) < 100:
+            break
+    else:
+        raise ProducerRejectedError("incident comment pagination exceeds page limit")
+    matches = [
+        item for item in items
+        if isinstance(item, dict)
+        and isinstance(item.get("body"), str)
+        and comment_marker in item["body"]
+    ]
+    if len(matches) > 1:
+        raise ProducerRejectedError("duplicate incident comments exist")
+    if matches:
+        incident_url = matches[0].get("html_url")
+    else:
+        gh_bin = _resolved_tool(args.gh_bin, "gh")
+        raw_url = _run_bounded_command(
+            [str(gh_bin), "issue", "comment", "638", "--repo", args.repo, "--body", body],
+            8 * 1024,
+            _operation_timeout(args),
+        )
+        incident_url = raw_url.decode("utf-8", errors="strict").strip()
     if re.fullmatch(
         r"https://github\.com/bluetape4k/bluetape4k-image/issues/638#issuecomment-[1-9][0-9]*",
         incident_url,
@@ -3137,8 +3208,27 @@ def _readback_incident(args: argparse.Namespace) -> dict[str, Any]:
     validated = validate_reconciliation(reconciliation)
     if validated["attemptId"] != f"{args.run_id}.{args.run_attempt}":
         raise ProducerValidationError("incident run identity differs")
+    expected_sha = require_sha256(args.expected_sha256, "expectedSha256")
+    if sha256_hex(raw) != expected_sha:
+        raise ProducerValidationError("reconciliation SHA-256 differs")
+    incident_url = validated["incidentUrl"]
+    match = re.fullmatch(
+        r"https://github\.com/bluetape4k/bluetape4k-image/issues/638#issuecomment-([1-9][0-9]*)",
+        incident_url or "",
+    )
+    if match is None:
+        raise ProducerValidationError("incident comment URL is invalid")
+    live = _gh_json(args, f"repos/{args.repo}/issues/comments/{match.group(1)}")
+    body = str(live.get("body", ""))
+    marker = re.search(r"<!-- issue-638-reconciliation:([0-9a-f]{64}) -->", body)
+    if (
+        live.get("html_url") != incident_url
+        or marker is None
+        or f"attempt `{validated['attemptId']}`" not in body
+    ):
+        raise ProducerRejectedError("incident comment read-back differs")
     result = {
-            "incidentUrl": validated["incidentUrl"],
+            "incidentUrl": incident_url,
             "ownerAcknowledgedAt": validated["ownerAcknowledgedAt"],
             "closedAt": validated["closedAt"],
             "cleanupVerified": validated["cleanupVerified"],
@@ -3219,13 +3309,16 @@ def _execute_known_good_rollback(args: argparse.Namespace) -> dict[str, Any]:
     marker = f"issue-638-rollback:{args.release_package_id}:{current}:{known_good}"
     if args.approval_marker != marker or args.mutation != "visibility-and-stable-tag":
         raise ProducerValidationError("rollback approval marker is absent or stale")
-    gh_bin = _resolved_tool(args.gh_bin, "gh")
-    oras_bin = _resolved_tool(args.oras_bin, "oras")
     owner = args.repo.split("/", 1)[0]
     package = "paddleocr-service"
     metadata = _package_metadata(args, owner, package)
     if metadata["packageId"] != args.release_package_id:
         raise ProducerRejectedError("release package ID differs")
+    stable = _package_version(args, owner, package, "stable")
+    if stable is None or stable["manifestDigest"] != current:
+        raise ProducerRejectedError("current stable digest differs from approved rollback")
+    gh_bin = _resolved_tool(args.gh_bin, "gh")
+    oras_bin = _resolved_tool(args.oras_bin, "oras")
     registry_config = args.registry_config.resolve()
     if (
         args.registry_config.is_symlink()
@@ -3654,6 +3747,10 @@ def build_parser() -> StrictArgumentParser:
     validate_reconcile.add_argument("--expected-release-digest", required=True)
     validate_reconcile.add_argument("--expected-evidence-digest", required=True)
     validate_reconcile.add_argument("--prior-state", type=Path, required=True)
+    validate_reconcile.add_argument("--prior-result", type=Path, required=True)
+    validate_reconcile.add_argument("--prior-evidence", type=Path, required=True)
+    validate_reconcile.add_argument("--prior-reconciliation", type=Path, required=True)
+    validate_reconcile.add_argument("--prior-cleanup", type=Path, required=True)
     validate_reconcile.add_argument("--package-readback", type=Path, required=True)
     validate_reconcile.add_argument("--input-lock", type=Path, required=True)
     validate_reconcile.add_argument("--output", type=Path, required=True)
@@ -3666,6 +3763,8 @@ def build_parser() -> StrictArgumentParser:
     open_incident.add_argument("--approval-marker", required=True)
     open_incident.add_argument("--gh-bin", type=Path)
     open_incident.add_argument("--operation-timeout-seconds", type=int, default=60)
+    open_incident.add_argument("--connect-timeout-seconds", type=int, default=10)
+    open_incident.add_argument("--read-timeout-seconds", type=int, default=30)
     open_incident.add_argument("--output", type=Path, required=True)
     open_incident.set_defaults(handler=_open_or_link_incident)
 
@@ -3674,6 +3773,11 @@ def build_parser() -> StrictArgumentParser:
     readback_incident.add_argument("--run-id", type=int, required=True)
     readback_incident.add_argument("--run-attempt", type=int, required=True)
     readback_incident.add_argument("--reconciliation", type=Path, required=True)
+    readback_incident.add_argument("--expected-sha256", required=True)
+    readback_incident.add_argument("--gh-bin", type=Path)
+    readback_incident.add_argument("--operation-timeout-seconds", type=int, default=60)
+    readback_incident.add_argument("--connect-timeout-seconds", type=int, default=10)
+    readback_incident.add_argument("--read-timeout-seconds", type=int, default=30)
     readback_incident.add_argument("--output", type=Path, required=True)
     readback_incident.set_defaults(handler=_readback_incident)
 
@@ -3716,6 +3820,12 @@ def build_parser() -> StrictArgumentParser:
     execute_rollback.add_argument("--oras-bin", type=Path)
     execute_rollback.add_argument("--registry-config", type=Path, required=True)
     execute_rollback.add_argument("--operation-timeout-seconds", type=int, default=60)
+    execute_rollback.add_argument("--connect-timeout-seconds", type=int, default=10)
+    execute_rollback.add_argument("--read-timeout-seconds", type=int, default=30)
+    execute_rollback.add_argument("--max-page-bytes", type=int, default=2 * 1024 * 1024)
+    execute_rollback.add_argument("--max-page-items", type=int, default=100)
+    execute_rollback.add_argument("--max-pages", type=int, default=20)
+    execute_rollback.add_argument("--max-total-bytes", type=int, default=40 * 1024 * 1024)
     execute_rollback.add_argument("--output", type=Path, required=True)
     execute_rollback.set_defaults(handler=_execute_known_good_rollback)
 
