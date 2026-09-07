@@ -48,6 +48,7 @@ FIXTURE_KEYS = {"id", "path", "bytes", "sha256"}
 MODEL_FILE_KEYS = {"path", "bytes", "sha256"}
 CONFIG_KEYS = {
     "schemaVersion",
+    "modelSource",
     "host",
     "port",
     "network",
@@ -81,6 +82,7 @@ class SmokeValidationError(ValueError):
 
 @dataclass(frozen=True)
 class ServiceConfig:
+    model_source: str
     host: str
     port: int
     network: str
@@ -88,7 +90,7 @@ class ServiceConfig:
     request_max_bytes: int
     response_max_bytes: int
     readiness_timeout_seconds: int
-    model_mount: str
+    model_mount: str | None
     output_mount: str
 
 
@@ -102,12 +104,12 @@ class ModelSnapshot:
 @dataclass(frozen=True)
 class ValidatedInputs:
     image: str
-    model_manifest_sha256: str
-    model_tree_sha256: str
+    model_manifest_sha256: str | None
+    model_tree_sha256: str | None
     fixture_manifest_sha256: str
     config_sha256: str
     config: ServiceConfig
-    model_snapshot: ModelSnapshot
+    model_snapshot: ModelSnapshot | None
     docker_command: tuple[str, ...]
 
 
@@ -526,10 +528,10 @@ def load_service_config(path: Path) -> tuple[str, ServiceConfig]:
     port = _positive_int(config["port"], "service config.port", maximum=65535)
     if config["network"] != "none":
         raise SmokeValidationError("service config.network must be none")
-    model_mount = _string(config["modelMount"], "service config.modelMount")
+    model_source = _string(config["modelSource"], "service config.modelSource")
     output_mount = _string(config["outputMount"], "service config.outputMount")
-    if (model_mount, output_mount) != ("/models", "/out"):
-        raise SmokeValidationError("service config mounts must be /models and /out")
+    if output_mount != "/out":
+        raise SmokeValidationError("service config.outputMount must be /out")
     command = config["command"]
     if (
         not isinstance(command, list)
@@ -541,21 +543,27 @@ def load_service_config(path: Path) -> tuple[str, ServiceConfig]:
         )
     if any(FORBIDDEN_COMMAND_PATTERN.search(token) for token in command):
         raise SmokeValidationError("service config.command contains shell syntax")
-    expected_command = [
-        "paddlex",
-        "--serve",
-        "--pipeline",
-        "OCR",
-        "--host",
-        host,
-        "--port",
-        str(port),
-    ]
+    if model_source == "LEGACY_MOUNT":
+        model_mount = _string(config["modelMount"], "service config.modelMount")
+        if model_mount != "/models":
+            raise SmokeValidationError("LEGACY_MOUNT modelMount must be /models")
+        expected_command = [
+            "paddlex", "--serve", "--pipeline", "OCR",
+            "--host", host, "--port", str(port),
+        ]
+    elif model_source == "IMAGE":
+        if config["modelMount"] is not None:
+            raise SmokeValidationError("IMAGE modelMount must be null")
+        model_mount = None
+        expected_command = ["--host", host, "--port", str(port)]
+    else:
+        raise SmokeValidationError("service config.modelSource is invalid")
     if command != expected_command:
         raise SmokeValidationError(
             "service config.command must be the pinned loopback OCR serving argv"
         )
     return hashlib.sha256(payload).hexdigest(), ServiceConfig(
+        model_source=model_source,
         host=host,
         port=port,
         network="none",
@@ -753,14 +761,13 @@ def _verify_model_snapshot(snapshot: ModelSnapshot) -> Path:
 
 def build_docker_command(
     image: str,
-    model_snapshot: ModelSnapshot,
+    model_snapshot: ModelSnapshot | None,
     output_root: Path,
     config: ServiceConfig,
 ) -> tuple[str, ...]:
     image = validate_image_reference(image)
-    model_root = _verify_model_snapshot(model_snapshot).resolve()
     output_root = _empty_directory(output_root, "output root").resolve()
-    return (
+    command = (
         "docker",
         "run",
         "--rm",
@@ -781,23 +788,30 @@ def build_docker_command(
         "2",
         "--tmpfs",
         "/tmp:rw,noexec,nosuid,size=64m",
-        "--volume",
-        f"{model_root}:{config.model_mount}:ro",
-        "--volume",
-        f"{output_root}:{config.output_mount}:rw",
-        image,
-        *config.command,
+    )
+    if config.model_source == "LEGACY_MOUNT":
+        if model_snapshot is None or config.model_mount != "/models":
+            raise SmokeValidationError("LEGACY_MOUNT requires a verified model snapshot object")
+        model_root = _verify_model_snapshot(model_snapshot).resolve()
+        command += ("--volume", f"{model_root}:{config.model_mount}:ro")
+    elif config.model_source == "IMAGE":
+        if model_snapshot is not None or config.model_mount is not None:
+            raise SmokeValidationError("IMAGE forbids an external model snapshot")
+    else:
+        raise SmokeValidationError("service model source is invalid")
+    return command + (
+        "--volume", f"{output_root}:{config.output_mount}:rw", image, *config.command
     )
 
 
 def _redact_command(
-    command: Sequence[str], model_root: Path, output_root: Path
+    command: Sequence[str], model_root: Path | None, output_root: Path
 ) -> list[str]:
-    model_prefix = str(model_root.resolve()) + ":"
+    model_prefix = str(model_root.resolve()) + ":" if model_root is not None else None
     output_prefix = str(output_root.resolve()) + ":"
     redacted: list[str] = []
     for token in command:
-        if token.startswith(model_prefix):
+        if model_prefix is not None and token.startswith(model_prefix):
             redacted.append("<MODEL_ROOT>:" + token[len(model_prefix) :])
         elif token.startswith(output_prefix):
             redacted.append("<OUTPUT_ROOT>:" + token[len(output_prefix) :])
@@ -809,25 +823,34 @@ def _redact_command(
 def validate_inputs(
     *,
     image: str,
-    model_manifest: Path,
-    model_root: Path,
+    model_manifest: Path | None,
+    model_root: Path | None,
     fixture_manifest: Path,
     config: Path,
     output_root: Path,
 ) -> ValidatedInputs:
     image = validate_image_reference(image)
-    model_manifest_sha, model_info = load_model_manifest(model_manifest, model_root)
-    model_snapshot = _create_model_snapshot(model_root, model_info)
+    config_sha, service_config = load_service_config(config)
+    model_manifest_sha: str | None = None
+    model_tree_sha: str | None = None
+    model_snapshot: ModelSnapshot | None = None
+    if service_config.model_source == "LEGACY_MOUNT":
+        if model_manifest is None or model_root is None:
+            raise SmokeValidationError("LEGACY_MOUNT requires model manifest and root")
+        model_manifest_sha, model_info = load_model_manifest(model_manifest, model_root)
+        model_tree_sha = model_info["treeSha256"]
+        model_snapshot = _create_model_snapshot(model_root, model_info)
+    elif model_manifest is not None or model_root is not None:
+        raise SmokeValidationError("IMAGE forbids model manifest and root")
     try:
         fixture_manifest_sha = load_fixture_manifest(fixture_manifest)
-        config_sha, service_config = load_service_config(config)
         docker_command = build_docker_command(
             image, model_snapshot, output_root, service_config
         )
         return ValidatedInputs(
             image=image,
             model_manifest_sha256=model_manifest_sha,
-            model_tree_sha256=model_info["treeSha256"],
+            model_tree_sha256=model_tree_sha,
             fixture_manifest_sha256=fixture_manifest_sha,
             config_sha256=config_sha,
             config=service_config,
@@ -835,12 +858,14 @@ def validate_inputs(
             docker_command=docker_command,
         )
     except BaseException:
-        model_snapshot.temp_dir.cleanup()
+        if model_snapshot is not None:
+            model_snapshot.temp_dir.cleanup()
         raise
 
 
 def build_plan(inputs: ValidatedInputs, output_root: Path) -> dict[str, Any]:
-    _verify_model_snapshot(inputs.model_snapshot)
+    if inputs.model_snapshot is not None:
+        _verify_model_snapshot(inputs.model_snapshot)
     runtime_limits = {
         "requestMaxBytes": inputs.config.request_max_bytes,
         "responseMaxBytes": inputs.config.response_max_bytes,
@@ -855,12 +880,22 @@ def build_plan(inputs: ValidatedInputs, output_root: Path) -> dict[str, Any]:
         "fixtureManifestSha256": inputs.fixture_manifest_sha256,
         "modelManifestSha256": inputs.model_manifest_sha256,
         "modelTreeSha256": inputs.model_tree_sha256,
+        "modelSource": inputs.config.model_source,
         "configSha256": inputs.config_sha256,
         "runtimeLimits": runtime_limits,
         "redactedDockerCommand": _redact_command(
-            inputs.docker_command, inputs.model_snapshot.root, output_root
+            inputs.docker_command,
+            inputs.model_snapshot.root if inputs.model_snapshot is not None else None,
+            output_root,
         ),
-        "securityPlan": SECURITY_PLAN,
+        "securityPlan": {
+            **SECURITY_PLAN,
+            "modelMountReadOnly": inputs.config.model_source == "LEGACY_MOUNT",
+            "modelSnapshot": (
+                "CREATED_AND_VERIFIED_BEFORE_MOUNT"
+                if inputs.config.model_source == "LEGACY_MOUNT" else "BAKED_IN_IMAGE"
+            ),
+        },
     }
 
 
@@ -869,7 +904,8 @@ def run_preflight(
     *,
     runner: Callable[..., subprocess.CompletedProcess[str]] = subprocess.run,
 ) -> dict[str, Any]:
-    _verify_model_snapshot(inputs.model_snapshot)
+    if inputs.model_snapshot is not None:
+        _verify_model_snapshot(inputs.model_snapshot)
     inspect_command = (
         "docker",
         "image",
@@ -908,13 +944,21 @@ def run_preflight(
         "fixtureManifestSha256": inputs.fixture_manifest_sha256,
         "modelManifestSha256": inputs.model_manifest_sha256,
         "modelTreeSha256": inputs.model_tree_sha256,
+        "modelSource": inputs.config.model_source,
         "configSha256": inputs.config_sha256,
         "runtimeLimits": {
             "requestMaxBytes": inputs.config.request_max_bytes,
             "responseMaxBytes": inputs.config.response_max_bytes,
             "readinessTimeoutSeconds": inputs.config.readiness_timeout_seconds,
         },
-        "securityPlan": SECURITY_PLAN,
+        "securityPlan": {
+            **SECURITY_PLAN,
+            "modelMountReadOnly": inputs.config.model_source == "LEGACY_MOUNT",
+            "modelSnapshot": (
+                "CREATED_AND_VERIFIED_BEFORE_MOUNT"
+                if inputs.config.model_source == "LEGACY_MOUNT" else "BAKED_IN_IMAGE"
+            ),
+        },
         "nextGate": "offline service execution and receipt generation",
     }
 
@@ -948,8 +992,8 @@ def _write_report(path: Path, report: dict[str, Any]) -> None:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--image", required=True)
-    parser.add_argument("--model-manifest", type=Path, required=True)
-    parser.add_argument("--model-root", type=Path, required=True)
+    parser.add_argument("--model-manifest", type=Path)
+    parser.add_argument("--model-root", type=Path)
     parser.add_argument("--fixture-manifest", type=Path, required=True)
     parser.add_argument("--config", type=Path, required=True)
     parser.add_argument("--output-root", type=Path, required=True)
@@ -980,7 +1024,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"FAIL: {error}", file=sys.stderr)
         return 1
     finally:
-        if inputs is not None:
+        if inputs is not None and inputs.model_snapshot is not None:
             inputs.model_snapshot.temp_dir.cleanup()
 
 

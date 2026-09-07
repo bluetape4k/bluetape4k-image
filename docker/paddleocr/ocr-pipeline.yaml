@@ -1,0 +1,7 @@
+pipeline_name: OCR
+use_doc_preprocessor: false
+use_textline_orientation: false
+text_detection_model_name: PP-OCRv5_mobile_det
+text_detection_model_dir: /opt/bluetape4k/paddleocr/models/detector
+text_recognition_model_name: PP-OCRv5_mobile_rec
+text_recognition_model_dir: /opt/bluetape4k/paddleocr/models/recognizer

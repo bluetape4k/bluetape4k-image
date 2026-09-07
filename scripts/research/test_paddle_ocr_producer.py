@@ -694,6 +694,46 @@ class ProducerCliTest(unittest.TestCase):
         self.assertTrue({"--oras-bin", "--gh-bin", "--ref", "--root"}.issubset(options))
         self.assertTrue({"--token", "--username", "--password", "--registry-config"}.isdisjoint(options))
 
+    def test_build_base_is_derived_from_the_input_lock(self) -> None:
+        lock = valid_input_lock()
+        self.assertEqual(
+            producer_cli.verify_build_base(lock["baseImage"]["reference"], lock),
+            lock["baseImage"],
+        )
+        for value in ("python:3.10", "example.invalid/base@sha256:" + "f" * 64):
+            with self.subTest(value=value), self.assertRaises(ProducerValidationError):
+                producer_cli.verify_build_base(value, lock)
+
+    def test_dockerfile_verifier_accepts_only_the_exact_offline_contract(self) -> None:
+        input_lock = self.root / "producer-input.lock.json"
+        input_lock.write_bytes(jcs_bytes(valid_input_lock()))
+        dockerfile = self.root / "Dockerfile"
+        dockerfile.write_bytes(producer_cli.DOCKERFILE_CONTRACT)
+
+        completed = self._run(
+            "verify-dockerfile",
+            "--dockerfile", str(dockerfile),
+            "--input-lock", str(input_lock),
+        )
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+        result = json.loads(completed.stdout)
+        self.assertEqual(result["status"], "PASS")
+        self.assertEqual(
+            result["data"]["baseReference"],
+            valid_input_lock()["baseImage"]["reference"],
+        )
+
+        dockerfile.write_bytes(
+            producer_cli.DOCKERFILE_CONTRACT + b"ADD https://example.invalid/model /models\n"
+        )
+        rejected = self._run(
+            "verify-dockerfile",
+            "--dockerfile", str(dockerfile),
+            "--input-lock", str(input_lock),
+        )
+        self.assertEqual(rejected.returncode, 10)
+        self.assertEqual(json.loads(rejected.stdout)["status"], "BLOCKED_INPUT")
+
     def _write_inputs(self) -> tuple[Path, Path, Path]:
         license_file = self.root / "LICENSE"
         license_file.write_bytes(b"license evidence")

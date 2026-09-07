@@ -64,6 +64,24 @@ from paddle_ocr_producer_lib.lifecycle import (
 
 MAX_DOCUMENT_BYTES = 1024 * 1024
 LOGGER = logging.getLogger("paddle_ocr_producer")
+DOCKERFILE_CONTRACT = b"""ARG BASE_IMAGE
+FROM ${BASE_IMAGE}
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
+WORKDIR /app
+COPY wheelhouse/ /wheelhouse/
+COPY requirements.cpu.lock.txt /app/requirements.cpu.lock.txt
+RUN python -m pip install --disable-pip-version-check --no-index --no-deps --require-hashes --find-links=/wheelhouse -r /app/requirements.cpu.lock.txt
+COPY models/ /opt/bluetape4k/paddleocr/models/
+COPY model-manifest.json /opt/bluetape4k/paddleocr/model-manifest.json
+COPY ocr-pipeline.yaml /opt/bluetape4k/paddleocr/ocr-pipeline.yaml
+COPY legal-inventory.json /opt/bluetape4k/paddleocr/legal-inventory.json
+COPY service.py /app/service.py
+COPY bin/bluetape4k-paddleocr-service /opt/bluetape4k/bin/bluetape4k-paddleocr-service
+USER 65532:65532
+EXPOSE 8080
+ENTRYPOINT [\"/opt/bluetape4k/bin/bluetape4k-paddleocr-service\"]
+CMD [\"--host\", \"127.0.0.1\", \"--port\", \"8080\"]
+"""
 
 
 class ProducerUsageError(ValueError):
@@ -378,6 +396,51 @@ def _input_value(args: argparse.Namespace) -> dict[str, Any]:
     raw = jcs_bytes(document)
     _atomic_write_new(args.output, raw)
     return document
+
+
+def verify_build_base(reference: Any, input_lock: Any) -> dict[str, Any]:
+    """Return the validated base only when the caller uses the lock's exact reference."""
+    try:
+        validated = validate_input_lock(
+            input_lock,
+            allowed_hosts=_hosts_from_lock(input_lock),
+        )
+    except (ProducerValidationError, TypeError) as exc:
+        raise ProducerValidationError("input lock violates its contract") from exc
+    base = validated["baseImage"]
+    if not isinstance(reference, str) or reference != base["reference"]:
+        raise ProducerValidationError("build base must equal the input lock reference")
+    repository, separator, digest = reference.partition("@")
+    if (
+        not separator
+        or not repository
+        or digest != base["indexDigest"]
+        or base["os"] + "/" + base["architecture"] != validated["targetPlatform"]
+        or base["variant"] is not None
+    ):
+        raise ProducerValidationError("build base digest or platform differs from the input lock")
+    return base
+
+
+def _verify_dockerfile(args: argparse.Namespace) -> dict[str, Any]:
+    lock, _ = _load_canonical_document(args.input_lock)
+    base = verify_build_base(lock["baseImage"]["reference"], lock)
+    raw = _read_regular_bytes(args.dockerfile, MAX_DOCUMENT_BYTES)
+    if raw != DOCKERFILE_CONTRACT:
+        raise ProducerBlockedError("Dockerfile differs from the immutable image contract")
+    return _success(
+        "verify-dockerfile",
+        {
+            "baseReference": base["reference"],
+            "baseDigests": {
+                "index": base["indexDigest"],
+                "platform": base["platformDigest"],
+                "config": base["configDigest"],
+            },
+            "entrypoint": ["/opt/bluetape4k/bin/bluetape4k-paddleocr-service"],
+            "command": ["--host", "127.0.0.1", "--port", "8080"],
+        },
+    )
 
 
 def _validate_requirements_lock(raw: bytes, packages: list[dict[str, Any]]) -> None:
@@ -1249,6 +1312,11 @@ def build_parser() -> StrictArgumentParser:
     )
     source_reproducibility.add_argument("--registry-wheelhouse", type=Path)
     source_reproducibility.set_defaults(handler=_verify_source_reproducibility)
+
+    dockerfile = subparsers.add_parser("verify-dockerfile")
+    dockerfile.add_argument("--dockerfile", type=Path, required=True)
+    dockerfile.add_argument("--input-lock", type=Path, required=True)
+    dockerfile.set_defaults(handler=_verify_dockerfile)
 
     stage = subparsers.add_parser("stage-inputs")
     stage.add_argument("--input-lock", type=Path, required=True)

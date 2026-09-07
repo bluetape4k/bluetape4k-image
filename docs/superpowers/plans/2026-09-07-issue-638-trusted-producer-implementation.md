@@ -651,12 +651,13 @@ git commit -m 'feat: OCI evidence를 digest 기준으로 검증한다' \
 - Create: `docker/paddleocr/Dockerfile`
 - Create: `docker/paddleocr/service.py`
 - Create: `docker/paddleocr/bin/bluetape4k-paddleocr-service`
+- Create: `docker/paddleocr/ocr-pipeline.yaml`
 - Create: `docker/paddleocr/test_service.py`
 - Modify: `scripts/research/paddle_ocr_smoke.py`
 - Modify: `scripts/research/test_paddle_ocr_smoke.py`
 - Modify: `scripts/research/test_paddle_ocr_producer.py`
 
-- [ ] **Step 1: external model override, missing model, readiness와 request bound RED test를 작성한다.**
+- [x] **Step 1: external model override, missing model, readiness와 request bound RED test를 작성한다.**
 
 ```python
 def test_external_model_root_is_rejected(self) -> None:
@@ -696,13 +697,13 @@ def test_image_mode_uses_entrypoint_without_model_volume(self) -> None:
     )
 ```
 
-- [ ] **Step 2: RED를 확인한다.**
+- [x] **Step 2: RED를 확인한다.**
 
 Run: `python3 docker/paddleocr/test_service.py -v`
 
 Expected: service API 미구현으로 실패한다.
 
-- [ ] **Step 3: fixed runtime wrapper와 immutable-base Dockerfile을 구현한다.**
+- [x] **Step 3: fixed runtime wrapper와 immutable-base Dockerfile을 구현한다.**
 
 ```dockerfile
 ARG BASE_IMAGE
@@ -765,7 +766,7 @@ argv 전체가 output volume 뒤 즉시
 모든 token의 `:/models:ro` suffix 거부를 함께 사용해 host path가 붙은 model volume도
 통과하지 못하게 한다.
 
-- [ ] **Step 4: service/Dockerfile contract를 GREEN으로 만든다.**
+- [x] **Step 4: service/Dockerfile contract를 GREEN으로 만든다.**
 
 ```bash
 python3 docker/paddleocr/test_service.py -v
@@ -781,7 +782,7 @@ request/response/readiness timeout boundary도 unit test로 검증한다. throug
 runtime resource와 no-egress 성능 증거는 #609-E/#544의 `PENDING`이며 #638 PASS로
 완료 처리하지 않는다.
 
-- [ ] **Step 5: image contract commit을 만든다.**
+- [x] **Step 5: image contract commit을 만든다.**
 
 ```bash
 git add docker/paddleocr scripts/research
