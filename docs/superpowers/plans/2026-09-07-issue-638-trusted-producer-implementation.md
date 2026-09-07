@@ -1,6 +1,6 @@
 # Issue #638 PaddleOCR Trusted Producer Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** 고정된 PaddleOCR/PaddleX/source/model 입력으로 native `linux/amd64` image를 만들고, 동일 platform digest의 SBOM·provenance·public evidence를 fail-closed 방식으로 검증하는 수동 GitHub Actions producer를 구축한다.
 
@@ -119,7 +119,7 @@ strict primitives
 평가하지 않는다. Python 3.9/3.13 import smoke가 producer lib, CLI, service와 smoke module을
 각각 import한 뒤 test를 실행한다.
 
-- [ ] **Step 1: duplicate key, size, unknown field, JCS와 attempt identity RED test를 작성한다.**
+- [x] **Step 1: duplicate key, size, unknown field, JCS와 attempt identity RED test를 작성한다.**
 
 ```python
 class StrictContractTest(unittest.TestCase):
@@ -139,13 +139,13 @@ class StrictContractTest(unittest.TestCase):
         self.assertEqual(identity.evidence_tag, "evidence-1234.2")
 ```
 
-- [ ] **Step 2: RED를 확인한다.**
+- [x] **Step 2: RED를 확인한다.**
 
 Run: `python3 scripts/research/test_paddle_ocr_producer.py -v`
 
 Expected: module 또는 symbol 미구현으로 실패한다.
 
-- [ ] **Step 3: bounded loader, exact object, digest, tag와 JCS primitive를 구현한다.**
+- [x] **Step 3: bounded loader, exact object, digest, tag와 JCS primitive를 구현한다.**
 
 ```python
 @dataclass(frozen=True)
@@ -182,7 +182,7 @@ JSONL loader는 raw bytes와 LF 경계를 보존하며 BOM, CR, blank/trailing l
 envelope와 signed content의 재정렬/재직렬화를 거부한다. byte/depth/entry 경계 바로
 아래/위를 test하고 secret/path fixture가 validation error에 포함되지 않음을 확인한다.
 
-- [ ] **Step 4: 새 kernel과 기존 regression을 GREEN으로 만든다.**
+- [x] **Step 4: 새 kernel과 기존 regression을 GREEN으로 만든다.**
 
 ```bash
 python3 scripts/research/test_paddle_ocr_producer.py -v
@@ -192,7 +192,7 @@ python3 scripts/research/test_paddle_ocr_smoke.py
 
 Expected: 새 test와 기존 `22 + 23` tests가 모두 `OK`다.
 
-- [ ] **Step 5: Lore commit을 만든다.**
+- [x] **Step 5: Lore commit을 만든다.**
 
 ```bash
 git add scripts/research/paddle_ocr_producer_lib scripts/research/test_paddle_ocr_producer.py
@@ -215,7 +215,7 @@ git commit -m 'feat: producer 입력을 fail-closed로 해석한다' \
 - Modify: `scripts/research/paddle_ocr_producer_lib/filesystem.py`
 - Modify: `scripts/research/test_paddle_ocr_producer.py`
 
-- [ ] **Step 1: incomplete legal/model/source lock RED test를 추가한다.**
+- [x] **Step 1: incomplete legal/model/source lock RED test를 추가한다.**
 
 ```python
 def test_input_lock_requires_two_complete_model_roles(self) -> None:
@@ -248,13 +248,13 @@ def test_allowlisted_fetcher_rejects_every_ssrf_bypass(self) -> None:
             fetch_to_regular_file(source_fixture(fixture), transport=transport_fixture(fixture))
 ```
 
-- [ ] **Step 2: RED를 확인한다.**
+- [x] **Step 2: RED를 확인한다.**
 
 Run: `python3 scripts/research/test_paddle_ocr_producer.py -v`
 
 Expected: input lock API 미구현으로 실패한다.
 
-- [ ] **Step 3: `validate-inputs`, `resolve-inputs`, `accept-resolved-inputs`, `stage-inputs`, `input-value`, `verify-source-reproducibility`를 구현한다.**
+- [x] **Step 3: `validate-inputs`, `resolve-inputs`, `accept-resolved-inputs`, `stage-inputs`, `input-value`, `verify-source-reproducibility`를 구현한다.**
 
 ```python
 def main(argv: Sequence[str] | None = None) -> int:
@@ -336,7 +336,7 @@ human-readable stdout/exit 0이며 missing/unknown/conflicting 실행 인자는 
 exception이 보유하며 argparse namespace의 optional field를 읽지 않는다. 모든 network
 subcommand/error/stage 조합을 table-driven test로 검증한다.
 
-- [ ] **Step 4: 통제된 resolution을 실행해 tracked lock을 생성한다.**
+- [x] **Step 4: 통제된 resolution을 실행해 tracked lock을 생성한다.**
 
 ```bash
 python3 scripts/research/paddle_ocr_producer.py resolve-inputs \
@@ -358,7 +358,7 @@ Expected: archive/wheel/model/license/NOTICE URL, bytes, SHA-256, source revisio
 role tree/pair hash가 채워진다. model 재배포 근거가 없으면 exit `11`
 `BLOCKED_LEGAL_INVENTORY`로 끝나며 publish mode를 실행하지 않는다.
 
-- [ ] **Step 5: source build를 두 번 수행해 wheelhouse equality를 검증한다.**
+- [x] **Step 5: source build를 두 번 수행해 wheelhouse equality를 검증한다.**
 
 ```bash
 python3 scripts/research/paddle_ocr_producer.py input-value \
@@ -391,7 +391,7 @@ full-block fixture는 command가 쓴 nested `data.sourceDateEpoch`을 읽어
 `SOURCE_DATE_EPOCH` 환경 변수로 export하는 단계까지 실행하고 generic `data.value`나
 top-level key로 drift하면 실패한다.
 
-- [ ] **Step 6: resolved input commit을 만든다.**
+- [x] **Step 6: resolved input commit을 만든다.**
 
 ```bash
 git add docker/paddleocr scripts/research

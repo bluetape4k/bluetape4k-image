@@ -1,0 +1,230 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bluetape4k.github.io/schema/paddleocr/producer-input.schema.json",
+  "title": "PaddleOCR trusted producer input",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "targetPlatform",
+    "baseImage",
+    "sources",
+    "packages",
+    "models",
+    "legalInventorySha256"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "targetPlatform": { "const": "linux/amd64" },
+    "baseImage": { "$ref": "#/$defs/baseImage" },
+    "sources": {
+      "type": "array",
+      "minItems": 2,
+      "items": { "$ref": "#/$defs/source" }
+    },
+    "packages": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "oneOf": [
+          { "$ref": "#/$defs/registryPackage" },
+          { "$ref": "#/$defs/derivedPackage" }
+        ]
+      }
+    },
+    "models": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": { "$ref": "#/$defs/model" }
+    },
+    "legalInventorySha256": { "$ref": "#/$defs/sha256" }
+  },
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "httpsUrl": {
+      "type": "string",
+      "pattern": "^https://[^/?#@]+(?::443)?/[^#]*$"
+    },
+    "artifactCommon": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "bytes": { "type": "integer", "minimum": 1 },
+        "sha256": { "$ref": "#/$defs/sha256" },
+        "mediaType": { "type": "string", "minLength": 1 }
+      },
+      "required": ["id", "bytes", "sha256", "mediaType"]
+    },
+    "baseImage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "reference",
+        "indexDigest",
+        "platformDigest",
+        "configDigest",
+        "os",
+        "architecture",
+        "variant"
+      ],
+      "properties": {
+        "reference": {
+          "type": "string",
+          "pattern": "^[^\\s@]+@sha256:[0-9a-f]{64}$"
+        },
+        "indexDigest": { "$ref": "#/$defs/digest" },
+        "platformDigest": { "$ref": "#/$defs/digest" },
+        "configDigest": { "$ref": "#/$defs/digest" },
+        "os": { "const": "linux" },
+        "architecture": { "const": "amd64" },
+        "variant": { "type": ["string", "null"] }
+      }
+    },
+    "source": {
+      "allOf": [
+        { "$ref": "#/$defs/artifactCommon" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["id", "url", "bytes", "sha256", "mediaType", "revision"],
+          "properties": {
+            "id": { "type": "string", "minLength": 1 },
+            "url": { "$ref": "#/$defs/httpsUrl" },
+            "bytes": { "type": "integer", "minimum": 1 },
+            "sha256": { "$ref": "#/$defs/sha256" },
+            "mediaType": { "type": "string", "minLength": 1 },
+            "revision": { "type": "string", "pattern": "^[0-9a-f]{40}$" }
+          }
+        }
+      ]
+    },
+    "packageCommonProperties": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "name": { "type": "string", "minLength": 1 },
+        "version": { "type": "string", "minLength": 1 },
+        "filename": { "type": "string", "minLength": 1 },
+        "wheelTags": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "bytes": { "type": "integer", "minimum": 1 },
+        "sha256": { "$ref": "#/$defs/sha256" },
+        "mediaType": { "type": "string", "minLength": 1 }
+      }
+    },
+    "registryPackage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id", "name", "version", "filename", "wheelTags", "url",
+        "bytes", "sha256", "mediaType"
+      ],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "name": { "type": "string", "minLength": 1 },
+        "version": { "type": "string", "minLength": 1 },
+        "filename": { "type": "string", "minLength": 1 },
+        "wheelTags": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "url": { "$ref": "#/$defs/httpsUrl" },
+        "bytes": { "type": "integer", "minimum": 1 },
+        "sha256": { "$ref": "#/$defs/sha256" },
+        "mediaType": { "type": "string", "minLength": 1 }
+      }
+    },
+    "derivedPackage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id", "name", "version", "filename", "wheelTags",
+        "derivedSourceId", "sourceRevision", "bytes", "sha256",
+        "mediaType", "buildToolchain"
+      ],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "name": { "type": "string", "minLength": 1 },
+        "version": { "type": "string", "minLength": 1 },
+        "filename": { "type": "string", "minLength": 1 },
+        "wheelTags": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "derivedSourceId": { "type": "string", "minLength": 1 },
+        "sourceRevision": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+        "bytes": { "type": "integer", "minimum": 1 },
+        "sha256": { "$ref": "#/$defs/sha256" },
+        "mediaType": { "type": "string", "minLength": 1 },
+        "buildToolchain": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["backend", "backendVersion", "pythonVersion", "sourceDateEpoch", "artifacts"],
+          "properties": {
+            "backend": { "type": "string", "minLength": 1 },
+            "backendVersion": { "type": "string", "minLength": 1 },
+            "pythonVersion": { "type": "string", "minLength": 1 },
+            "sourceDateEpoch": { "type": "integer", "minimum": 1 },
+            "artifacts": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["name", "version", "filename", "url", "bytes", "sha256"],
+                "properties": {
+                  "name": { "type": "string", "minLength": 1 },
+                  "version": { "type": "string", "minLength": 1 },
+                  "filename": { "type": "string", "minLength": 1 },
+                  "url": { "$ref": "#/$defs/httpsUrl" },
+                  "bytes": { "type": "integer", "minimum": 1 },
+                  "sha256": { "$ref": "#/$defs/sha256" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "model": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "modelId", "modelRevision", "sourceId", "role", "url", "bytes",
+        "sha256", "mediaType", "archiveType", "treeSha256",
+        "licenseExpression", "licenseSourcePath", "licenseSha256",
+        "noticePath", "noticeSha256"
+      ],
+      "properties": {
+        "modelId": { "type": "string", "minLength": 1 },
+        "modelRevision": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+        "sourceId": { "type": "string", "minLength": 1 },
+        "role": { "enum": ["detector", "recognizer"] },
+        "url": { "$ref": "#/$defs/httpsUrl" },
+        "bytes": { "type": "integer", "minimum": 1 },
+        "sha256": { "$ref": "#/$defs/sha256" },
+        "mediaType": { "type": "string", "minLength": 1 },
+        "archiveType": { "enum": ["tar", "tar.gz", "zip"] },
+        "treeSha256": { "$ref": "#/$defs/sha256" },
+        "licenseExpression": { "type": "string", "minLength": 1 },
+        "licenseSourcePath": { "type": "string", "minLength": 1 },
+        "licenseSha256": { "$ref": "#/$defs/sha256" },
+        "noticePath": { "type": "string", "minLength": 1 },
+        "noticeSha256": { "$ref": "#/$defs/sha256" }
+      }
+    }
+  }
+}

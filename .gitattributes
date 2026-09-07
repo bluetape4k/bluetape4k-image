@@ -1,0 +1,3 @@
+# Preserve upstream legal evidence byte-for-byte, including original whitespace.
+docker/paddleocr/legal/base/* -whitespace
+docker/paddleocr/legal/models/*.MODEL_CARD.md -whitespace
