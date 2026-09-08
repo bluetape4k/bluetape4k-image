@@ -313,6 +313,10 @@ pipeline
 `TileProcessor`는 큰 이미지를 격자 타일로 분할하고, 각 타일을 병렬로 변환한 다음,
 하나의 출력 이미지로 재조립합니다. 이미지 전체를 한 번에 처리하기 어려울 때 유용합니다.
 
+작은 이미지를 분할할 때 타일 크기로 `Int.MAX_VALUE`까지 지정할 수 있습니다.
+병합 이미지를 할당하기 전에 음수 좌표, 출력 영역을 벗어난 타일, 선언한 크기와
+실제 이미지 크기가 다른 타일을 거부합니다.
+
 ```kotlin
 import com.sksamuel.scrimage.ImmutableImage
 import com.sksamuel.scrimage.filter.GrayscaleFilter

@@ -307,6 +307,10 @@ pipeline
 and reassembles them into a single output image. Useful for applying localised filters to images that
 are too large to process as a whole.
 
+Tile dimensions may reach `Int.MAX_VALUE` when splitting a small image. Before allocating
+the merged image, the processor rejects negative coordinates, out-of-bounds tiles, and
+declared dimensions that do not match the actual tile image.
+
 ```kotlin
 import com.sksamuel.scrimage.ImmutableImage
 import com.sksamuel.scrimage.filter.GrayscaleFilter

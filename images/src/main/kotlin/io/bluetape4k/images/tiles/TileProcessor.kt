@@ -83,12 +83,12 @@ class TileProcessor(
     fun split(image: ImmutableImage, tileSize: TileSize): List<ImageTile> {
         val tilesX = image.width.ceilDiv(tileSize.width)
         val tilesY = image.height.ceilDiv(tileSize.height)
-        val tileCount = tilesX * tilesY
+        val tileCount = tilesX.toLong() * tilesY
         require(tileCount <= maxTileCount) {
             "타일 수가 허용 한도를 초과했습니다. tileCount=$tileCount, maxTileCount=$maxTileCount"
         }
 
-        return buildList(tileCount) {
+        return buildList(tileCount.toInt()) {
             for (y in 0 until image.height step tileSize.height) {
                 for (x in 0 until image.width step tileSize.width) {
                     val width = minOf(tileSize.width, image.width - x)
@@ -104,7 +104,8 @@ class TileProcessor(
      *
      * 각 타일을 [ImageTile.y] → [ImageTile.x] 순서로 정렬한 뒤 `width × height` 크기의
      * 새 이미지에 순서대로 합성합니다. 타일이 출력 이미지 영역을 벗어나거나 좌표가 음수이면
-     * [IllegalArgumentException]이 발생합니다.
+     * [IllegalArgumentException]이 발생합니다. 선언된 타일 크기는 실제 이미지 크기와
+     * 같아야 하며, 모든 타일은 출력 이미지 할당과 그리기 전에 검증합니다.
      *
      * ```kotlin
      * import com.sksamuel.scrimage.ImmutableImage
@@ -130,7 +131,8 @@ class TileProcessor(
      * @param height 출력 이미지의 높이 (픽셀)
      * @return 타일이 합성된 [ImmutableImage]
      * @throws IllegalArgumentException tiles가 비어있거나, [maxTileCount]를 초과하거나,
-     *   타일 좌표가 출력 이미지 영역을 벗어난 경우
+     *   타일 좌표가 출력 이미지 영역을 벗어나거나, 타일 크기가 양수가 아니거나
+     *   실제 이미지 크기와 일치하지 않는 경우
      */
     fun merge(
         tiles: Collection<ImageTile>,
@@ -144,14 +146,23 @@ class TileProcessor(
             "타일 수가 허용 한도를 초과했습니다. tileCount=${tiles.size}, maxTileCount=$maxTileCount"
         }
 
+        val orderedTiles = tiles.sortedWith(TILE_ORDER)
+        orderedTiles.forEach { tile ->
+            require(tile.x >= 0 && tile.y >= 0) { "타일 좌표는 0 이상이어야 합니다. tile=$tile" }
+            tile.width.requirePositiveNumber("tile.width")
+            tile.height.requirePositiveNumber("tile.height")
+            require(tile.width == tile.image.width && tile.height == tile.image.height) {
+                "타일 크기는 실제 이미지 크기와 같아야 합니다. tile=$tile"
+            }
+            require(tile.x.toLong() + tile.width <= width && tile.y.toLong() + tile.height <= height) {
+                "타일이 출력 이미지 영역을 벗어났습니다. tile=$tile, width=$width, height=$height"
+            }
+        }
+
         val output = BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB)
         val graphics = output.createGraphics()
         try {
-            tiles.sortedWith(TILE_ORDER).forEach { tile ->
-                require(tile.x >= 0 && tile.y >= 0) { "타일 좌표는 0 이상이어야 합니다. tile=$tile" }
-                require(tile.x + tile.width <= width && tile.y + tile.height <= height) {
-                    "타일이 출력 이미지 영역을 벗어났습니다. tile=$tile, width=$width, height=$height"
-                }
+            orderedTiles.forEach { tile ->
                 graphics.drawImage(tile.image.awt(), tile.x, tile.y, null)
             }
         } finally {
@@ -200,7 +211,7 @@ class TileProcessor(
         tiles.mapParallel(parallelism) { tile -> transform(tile) }
 
     private fun Int.ceilDiv(divisor: Int): Int =
-        (this + divisor - CEIL_DIV_OFFSET) / divisor
+        (this - CEIL_DIV_OFFSET) / divisor + CEIL_DIV_OFFSET
 
     private companion object {
         private const val CEIL_DIV_OFFSET = 1
