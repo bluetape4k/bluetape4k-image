@@ -269,13 +269,12 @@ class S3ImageStorage @JvmOverloads constructor(
 
     override suspend fun exists(key: ImageObjectKey): Boolean = withContext(Dispatchers.IO) {
         try {
-            val fullKey = objectKey(key)
-            val page = operations.listPage(bucket = bucket, prefix = fullKey, maxKeys = 1)
-            page.objects.any { it.key() == fullKey }
+            headObject(key)
+            true
         } catch (e: CancellationException) {
             throw e
-        } catch (e: Throwable) {
-            throw e.toImageStorageException(key)
+        } catch (_: ImageStorageException.NotFoundException) {
+            false
         }
     }
 

@@ -34,6 +34,12 @@ import kotlin.coroutines.CoroutineContext
  * 경우는 VALIDATION 단계 실패로 처리됩니다. [ImageProcessingOptions.skipFailures]가
  * `true`이면 실패 항목을 건너뛰고 계속 처리하며, `false`(기본값)이면 예외를 던져 중단합니다.
  *
+ * 입력과 출력은 각각 [ImageProcessingOptions.maxPixels] 이하이어야 합니다.
+ * 각 작업은 입력·출력 픽셀 합을 [ImageProcessingOptions.maxInFlightPixels]에서 예약하고
+ * 쓰기가 끝나거나 실패·취소되면 반환합니다. 합계가 한도보다 크면 변환 전에 거부합니다.
+ * 이 예산은 인코더·크롭의 임시 메모리나 호출자가 보관하는 결과 이미지의 전체 메모리 한도가 아닙니다.
+ * 처리 중 원본 파일을 변경하지 않아야 하며, 디코딩한 픽셀이 예약량보다 크면 변환 전에 거부합니다.
+ *
  * ```kotlin
  * import io.bluetape4k.images.batch.ImageProcessingOptions
  * import io.bluetape4k.images.coroutines.SuspendJpegWriter
@@ -164,17 +170,16 @@ class ThumbnailPipeline private constructor(
                         message = "이미지 크기를 확인할 수 없어 처리를 중단합니다. source=$source, output=$output",
                     )
             }
-            runStage(source, output, ImageBatchFailureStage.VALIDATION) {
-                probedPixels.requireWithinMaxPixels(source)
+            val permitPixels = runStage(source, output, ImageBatchFailureStage.VALIDATION) {
+                requiredPixels(source, size, probedPixels)
             }
-            val permitPixels = probedPixels
 
             return limiter.withPermit(permitPixels) {
                 val image = runStage(source, output, ImageBatchFailureStage.LOAD) {
                     withContext(ioDispatcher) { immutableImageOf(source) }
                 }
                 runStage(source, output, ImageBatchFailureStage.VALIDATION) {
-                    image.pixelCount().requireWithinMaxPixels(source)
+                    validateDecodedInput(image, source, probedPixels)
                 }
                 val thumbnail = runStage(source, output, ImageBatchFailureStage.TRANSFORM) {
                     withContext(transformDispatcher) { image.toThumbnail(size, crop) }
@@ -201,6 +206,29 @@ class ThumbnailPipeline private constructor(
                 output,
                 size,
             )
+        }
+    }
+
+    /** 입력과 출력의 개별 한도를 검사한 뒤 예약할 픽셀 합을 반환합니다. */
+    private fun requiredPixels(source: Path, size: ThumbnailSize, inputPixels: Long): Long {
+        inputPixels.requireWithinMaxPixels(source)
+        val outputPixels = size.width.toLong() * size.height
+        outputPixels.requireWithinMaxPixels(source)
+        return Math.addExact(inputPixels, outputPixels).also { combinedPixels ->
+            require(combinedPixels <= maxInFlightPixels) {
+                "입력과 출력 픽셀 합이 동시 처리 한도를 초과했습니다. " +
+                    "pixels=$combinedPixels, maxInFlightPixels=$maxInFlightPixels"
+            }
+        }
+    }
+
+    /** 디코딩 결과가 미리 예약한 입력 예산을 넘으면 변환을 시작하지 않습니다. */
+    private fun validateDecodedInput(image: ImmutableImage, source: Path, reservedPixels: Long) {
+        val actualPixels = image.pixelCount()
+        actualPixels.requireWithinMaxPixels(source)
+        require(actualPixels <= reservedPixels) {
+            "디코딩한 이미지가 예약한 입력 픽셀 수를 초과했습니다. " +
+                "pixels=$actualPixels, reservedPixels=$reservedPixels"
         }
     }
 
@@ -390,12 +418,15 @@ class ThumbnailPipeline private constructor(
          *     .build()   // ThumbnailPipeline 인스턴스 반환
          * ```
          *
+         * 크기 목록을 복사하므로 이후 Builder를 변경해도 이미 생성한 파이프라인에 영향을 주지 않습니다.
+         * Builder 자체를 여러 스레드에서 동시에 수정하는 것은 지원하지 않습니다.
+         *
          * @return 구성된 [ThumbnailPipeline] 인스턴스
          * @throws IllegalArgumentException [outputDirectory]가 설정되지 않은 경우
          */
         fun build(): ThumbnailPipeline {
             val directory = requireNotNull(outputDirectory) { "outputDirectory를 지정해야 합니다." }
-            val thumbnailSizes = sizes.ifEmpty { listOf(DEFAULT_THUMBNAIL_SIZE) }
+            val thumbnailSizes = sizes.toList().ifEmpty { listOf(DEFAULT_THUMBNAIL_SIZE) }
             options.parallelism.requirePositiveNumber("parallelism")
 
             return ThumbnailPipeline(
