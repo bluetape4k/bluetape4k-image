@@ -1,17 +1,22 @@
 from __future__ import annotations
 
+import hashlib
+import io
 import json
 import os
 import re
 import subprocess
 import sys
+import tarfile
 import tempfile
 import textwrap
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts/research"))
+from paddle_ocr_producer_lib import filesystem as producer_filesystem
 from paddle_ocr_producer_lib.evidence import validate_same_run_artifact
 
 WORKFLOW = ROOT / ".github/workflows/paddleocr-producer.yml"
@@ -221,6 +226,79 @@ class ProducerWorkflowContractTest(unittest.TestCase):
                 if present:
                     self.assertEqual(config["log-driver"], "local")
                     self.assertIs(config["features"]["other"], True)
+
+    def test_oras_workflow_preparation_allows_fresh_extraction(self) -> None:
+        jobs = {
+            job: block
+            for job, block in self.blocks.items()
+            if "bootstrap-oras" in block
+        }
+        self.assertEqual(
+            set(jobs),
+            {
+                "staging-push",
+                "release-promotion",
+                "release-evidence-push",
+                "consumer-verify-private",
+                "consumer-verify-public",
+            },
+        )
+        for job, block in jobs.items():
+            with self.subTest(job=job), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                archive = root / "fixture.tar.gz"
+                with tarfile.open(archive, "w:gz") as stream:
+                    payload = b"verified-test-binary"
+                    info = tarfile.TarInfo("oras")
+                    info.size = len(payload)
+                    stream.addfile(info, io.BytesIO(payload))
+                digest = hashlib.sha256(archive.read_bytes()).hexdigest()
+                step = block.split("      - name: Bootstrap verified", 1)[1]
+                preparation = step.split("        run: |\n", 1)[1].split(
+                    "          python3 scripts/research/paddle_ocr_producer.py bootstrap-oras",
+                    1,
+                )[0]
+                self.assertIn("--tool-root .producer-state/tools", step)
+                mock_curl = r"""curl() {
+                    while [ "$#" -gt 0 ]; do
+                        if [ "$1" = --output ]; then
+                            cp "$ORAS_FIXTURE" "$2"
+                            return
+                        fi
+                        shift
+                    done
+                    return 99
+                }
+                """
+                subprocess.run(
+                    [
+                        "bash",
+                        "-euo",
+                        "pipefail",
+                        "-c",
+                        mock_curl + textwrap.dedent(preparation),
+                    ],
+                    cwd=root,
+                    env={**os.environ, "ORAS_FIXTURE": str(archive)},
+                    check=True,
+                    capture_output=True,
+                    text=True,
+                )
+                target = root / ".producer-state/tools"
+                downloaded = root / ".producer-state/oras.tar.gz"
+                with patch.object(
+                    producer_filesystem, "ORAS_LINUX_AMD64_SHA256", digest
+                ):
+                    binary = producer_filesystem.bootstrap_oras_archive(
+                        downloaded, target
+                    )
+                    self.assertEqual(binary.read_bytes(), payload)
+                    with self.assertRaisesRegex(
+                        producer_filesystem.ProducerValidationError,
+                        "archive destination already exists",
+                    ):
+                        producer_filesystem.bootstrap_oras_archive(downloaded, target)
+                    self.assertEqual(binary.read_bytes(), payload)
 
     def test_manual_dispatch_inputs_and_serialization_are_exact(self) -> None:
         event_block = self.workflow.split("\npermissions:", 1)[0]

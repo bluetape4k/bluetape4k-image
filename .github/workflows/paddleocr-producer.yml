@@ -576,7 +576,7 @@ jobs:
             --run-attempt "$GITHUB_RUN_ATTEMPT"
       - name: Bootstrap verified ORAS
         run: |
-          mkdir -p .producer-state/tools
+          mkdir -p .producer-state
           curl --fail --location --silent --show-error \
             https://github.com/oras-project/oras/releases/download/v1.3.4/oras_1.3.4_linux_amd64.tar.gz \
             --output .producer-state/oras.tar.gz
@@ -856,7 +856,7 @@ jobs:
       - *trust-step
       - name: Bootstrap verified ORAS
         run: |
-          mkdir -p .producer-state/tools
+          mkdir -p .producer-state
           curl --fail --location --silent --show-error \
             https://github.com/oras-project/oras/releases/download/v1.3.4/oras_1.3.4_linux_amd64.tar.gz \
             --output .producer-state/oras.tar.gz
@@ -1140,7 +1140,7 @@ jobs:
           test -s .producer-state/evidence-source/attestations/sbom.bundle.jsonl
       - name: Bootstrap verified ORAS
         run: |
-          mkdir -p .producer-state/tools
+          mkdir -p .producer-state
           curl --fail --location --silent --show-error \
             https://github.com/oras-project/oras/releases/download/v1.3.4/oras_1.3.4_linux_amd64.tar.gz \
             --output .producer-state/oras.tar.gz
@@ -1198,7 +1198,7 @@ jobs:
       - *trust-step
       - name: Bootstrap verified ORAS
         run: |
-          mkdir -p .producer-state/tools
+          mkdir -p .producer-state
           curl --fail --location --silent --show-error \
             https://github.com/oras-project/oras/releases/download/v1.3.4/oras_1.3.4_linux_amd64.tar.gz \
             --output .producer-state/oras.tar.gz
@@ -1274,7 +1274,7 @@ jobs:
       - *trust-step
       - name: Bootstrap verified anonymous ORAS
         run: |
-          mkdir -p .producer-state/tools
+          mkdir -p .producer-state
           curl --fail --location --silent --show-error --max-time 30 \
             https://github.com/oras-project/oras/releases/download/v1.3.4/oras_1.3.4_linux_amd64.tar.gz \
             --output .producer-state/oras.tar.gz
