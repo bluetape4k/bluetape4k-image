@@ -490,6 +490,7 @@ class FfmVipsRuntimeConcurrencyTest {
                 }
                 retryOwnerReference.set(retryOwner)
                 retryOwnerEntered.await(5, TimeUnit.SECONDS).shouldBeTrue()
+                clock.set(timeoutNanos)
                 firstWaitCompleted.countDown()
             }
         }
@@ -515,7 +516,6 @@ class FfmVipsRuntimeConcurrencyTest {
         releaseFirstOwner.countDown()
         ownerFailureReady.await(5, TimeUnit.SECONDS).shouldBeTrue()
         firstWaitCompleted.await(5, TimeUnit.SECONDS).shouldBeTrue()
-        clock.set(timeoutNanos)
         waiterSecondWaitStarted.await(5, TimeUnit.SECONDS).shouldBeTrue()
 
         try {
@@ -719,6 +719,7 @@ class FfmVipsRuntimeConcurrencyTest {
                 }
                 retryOwnerReference.set(retryOwner)
                 retryOwnerEntered.await(5, TimeUnit.SECONDS).shouldBeTrue()
+                clock.set(timeoutNanos)
                 firstWaitCompleted.countDown()
             }
         }
@@ -744,7 +745,6 @@ class FfmVipsRuntimeConcurrencyTest {
         releaseFirstOwner.countDown()
         ownerFailureReady.await(5, TimeUnit.SECONDS).shouldBeTrue()
         firstWaitCompleted.await(5, TimeUnit.SECONDS).shouldBeTrue()
-        clock.set(timeoutNanos)
         waiterSecondWaitStarted.await(5, TimeUnit.SECONDS).shouldBeTrue()
 
         try {
