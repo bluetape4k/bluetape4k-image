@@ -3,11 +3,15 @@ from __future__ import annotations
 import os
 import re
 import subprocess
+import sys
 import textwrap
 import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT / "scripts/research"))
+from paddle_ocr_producer_lib.evidence import validate_same_run_artifact
+
 WORKFLOW = ROOT / ".github/workflows/paddleocr-producer.yml"
 CI = ROOT / ".github/workflows/ci.yml"
 CODEOWNERS = ROOT / ".github/CODEOWNERS"
@@ -319,6 +323,38 @@ class ProducerWorkflowContractTest(unittest.TestCase):
         self.assertIn("packages/container/paddleocr-service-staging --jq .visibility", push)
         self.assertIn('"private"', push)
         self.assertIn('"registry-config.json"', self.blocks["validation"])
+
+    def test_upload_digest_outputs_satisfy_same_run_receipt_contract(self) -> None:
+        raw_digest = "8d43a2f81370c0a3eef75e4efb65532a08c17cca2bd51facd0dae94f2c8a7ea6"
+        for job, step, kind, artifact in (
+            ("staging", "upload-models", "MODELS", "models"),
+            ("source-repro-check", "upload-wheelhouse", "WHEELHOUSE", "wheelhouse"),
+            ("image-build", "upload-oci", "OCI", "oci"),
+        ):
+            with self.subTest(job=job):
+                output = re.search(
+                    r"^      artifact-digest: (.+)$", self.blocks[job], re.MULTILINE
+                ).group(1)
+                # 실제 upload-artifact 출력은 접두사 없는 SHA-256이다.
+                digest = output.replace(
+                    "${{ steps." + step + ".outputs.artifact-digest }}", raw_digest
+                )
+                name = f"paddleocr-{artifact}-34227504119.1"
+                receipt = {
+                    "schemaVersion": 1, "kind": kind, "artifactName": name,
+                    "artifactId": 10056399406, "artifactDigest": digest,
+                    "runId": 34227504119, "runAttempt": 1,
+                    "attemptId": "34227504119.1",
+                    "inputLockSha256": "a" * 64, "contentSha256": "b" * 64,
+                }
+                validate_same_run_artifact(
+                    receipt, expected_kind=kind, expected_artifact_name=name,
+                    expected_artifact_id=10056399406,
+                    expected_artifact_digest="sha256:" + raw_digest,
+                    expected_run_id=34227504119, expected_run_attempt=1,
+                    expected_input_lock_sha256="a" * 64,
+                    expected_content_sha256="b" * 64,
+                )
 
     def test_attestation_promotion_and_public_evidence_are_digest_bound(self) -> None:
         staging_attest = self.blocks["staging-attest"]
