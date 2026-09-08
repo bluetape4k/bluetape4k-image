@@ -430,6 +430,20 @@ jobs:
           cp .producer-state/models/legal-inventory.json .producer-state/context/legal-inventory.json
           cp -R .producer-state/wheelhouse/wheelhouse .producer-state/context/wheelhouse
           cp .producer-state/wheelhouse/requirements.cpu.lock.txt .producer-state/context/requirements.cpu.lock.txt
+      - name: Enable containerd image store for OCI export
+        run: |
+          set -euo pipefail
+          if sudo test -f /etc/docker/daemon.json; then
+            sudo cat /etc/docker/daemon.json | tee daemon-before.json > /dev/null
+          else
+            printf '{}\n' > daemon-before.json
+          fi
+          jq '.features["containerd-snapshotter"] = true' daemon-before.json > daemon-oci.json
+          sudo dockerd --validate --config-file=daemon-oci.json
+          cat daemon-oci.json | sudo tee /etc/docker/daemon.json > /dev/null
+          sudo systemctl restart docker
+          docker info --format '{{json .DriverStatus}}' | \
+            jq -e 'any(.[]; . == ["driver-type", "io.containerd.snapshotter.v1"])'
       - name: Build network-none OCI archive without remote cache
         run: |
           set -euo pipefail
@@ -447,6 +461,7 @@ jobs:
           BUILD_STARTED_EPOCH=$(date +%s)
           mkdir -p .producer-state/oci
           docker buildx build \
+            --builder default \
             --network=none \
             --no-cache \
             --platform linux/amd64 \

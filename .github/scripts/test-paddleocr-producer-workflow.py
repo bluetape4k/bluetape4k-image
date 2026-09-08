@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import json
 import os
 import re
 import subprocess
 import sys
+import tempfile
 import textwrap
 import unittest
 from pathlib import Path
@@ -152,6 +154,73 @@ class ProducerWorkflowContractTest(unittest.TestCase):
         cls.workflow = WORKFLOW.read_text(encoding="utf-8")
         cls.blocks = job_blocks(cls.workflow)
         cls.ci = CI.read_text(encoding="utf-8")
+
+    def test_oci_exporter_setup_preserves_config_and_fails_closed(self) -> None:
+        block = self.blocks["image-build"]
+        name = "      - name: Enable containerd image store for OCI export\n"
+        self.assertIn(name, block)
+        setup = block.split(name, 1)[1].split("      - name:", 1)[0]
+        script = textwrap.dedent(setup.split("        run: |\n", 1)[1])
+        self.assertLess(block.index(name), block.index("- name: Build network-none"))
+        self.assertIn("--builder default", block)
+        for present, valid, snapshotter in (
+            (True, True, True),
+            (False, True, True),
+            (True, False, True),
+            (True, True, False),
+        ):
+            with (
+                self.subTest(present=present, valid=valid, snapshotter=snapshotter),
+                tempfile.TemporaryDirectory() as directory,
+            ):
+                root = Path(directory)
+                original = {"log-driver": "local", "features": {"other": True}}
+                if present:
+                    (root / "daemon.json").write_text(json.dumps(original))
+                mocks = r"""sudo() {
+                  case "$1" in
+                    test) test -f "$TEST_ROOT/daemon.json" ;;
+                    cat) cat "$TEST_ROOT/daemon.json" ;;
+                    tee) cat > "$TEST_ROOT/daemon.json" ;;
+                    dockerd) test "$VALID" = yes ;;
+                    systemctl) echo restart >> "$TEST_ROOT/events" ;;
+                    *) return 99 ;;
+                  esac
+                }
+                docker() {
+                  echo info >> "$TEST_ROOT/events"
+                  if [ "$SNAPSHOTTER" = yes ]; then
+                    echo '[["driver-type","io.containerd.snapshotter.v1"]]'
+                  else
+                    echo '[["Backing Filesystem","extfs"]]'
+                  fi
+                }
+                """
+                result = subprocess.run(
+                    ["bash", "-c", mocks + script],
+                    cwd=root,
+                    env={
+                        **os.environ,
+                        "TEST_ROOT": directory,
+                        "VALID": "yes" if valid else "no",
+                        "SNAPSHOTTER": "yes" if snapshotter else "no",
+                    },
+                    capture_output=True,
+                    text=True,
+                    check=False,
+                )
+                self.assertEqual(
+                    result.returncode == 0, valid and snapshotter, result.stderr
+                )
+                config = json.loads((root / "daemon.json").read_text())
+                if valid:
+                    self.assertIs(config["features"]["containerd-snapshotter"], True)
+                else:
+                    self.assertEqual(config, original)
+                    self.assertFalse((root / "events").exists())
+                if present:
+                    self.assertEqual(config["log-driver"], "local")
+                    self.assertIs(config["features"]["other"], True)
 
     def test_manual_dispatch_inputs_and_serialization_are_exact(self) -> None:
         event_block = self.workflow.split("\npermissions:", 1)[0]
