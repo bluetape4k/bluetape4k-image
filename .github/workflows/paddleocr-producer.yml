@@ -264,7 +264,7 @@ jobs:
       PRODUCER_JOB: staging
     outputs:
       artifact-id: ${{ steps.upload-models.outputs.artifact-id }}
-      artifact-digest: ${{ steps.upload-models.outputs.artifact-digest }}
+      artifact-digest: sha256:${{ steps.upload-models.outputs.artifact-digest }}
       content-sha256: ${{ steps.stage-models.outputs.content-sha256 }}
     permissions:
       contents: read
@@ -320,7 +320,7 @@ jobs:
       PRODUCER_JOB: source-repro-check
     outputs:
       artifact-id: ${{ steps.upload-wheelhouse.outputs.artifact-id }}
-      artifact-digest: ${{ steps.upload-wheelhouse.outputs.artifact-digest }}
+      artifact-digest: sha256:${{ steps.upload-wheelhouse.outputs.artifact-digest }}
       content-sha256: ${{ steps.seal-wheelhouse.outputs.content-sha256 }}
     permissions:
       contents: read
@@ -381,7 +381,7 @@ jobs:
       PRODUCER_JOB: image-build
     outputs:
       artifact-id: ${{ steps.upload-oci.outputs.artifact-id }}
-      artifact-digest: ${{ steps.upload-oci.outputs.artifact-digest }}
+      artifact-digest: sha256:${{ steps.upload-oci.outputs.artifact-digest }}
       image-index-digest: ${{ steps.create-handoff.outputs.image-index-digest }}
       image-platform-digest: ${{ steps.create-handoff.outputs.image-platform-digest }}
       image-config-digest: ${{ steps.create-handoff.outputs.image-config-digest }}
