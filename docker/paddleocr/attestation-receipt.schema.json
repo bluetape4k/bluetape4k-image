@@ -1,0 +1,266 @@
+{
+  "$id": "https://bluetape4k.github.io/schema/paddleocr/attestation-receipt.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "PaddleOCR trusted attestation receipt for Issue 609-D",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "kind",
+    "status",
+    "scope",
+    "subject",
+    "producer",
+    "attestations",
+    "evidence",
+    "verification",
+    "checksum"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "kind": { "const": "ATTESTATION_RECEIPT" },
+    "status": { "const": "PASS" },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["gate", "deferred"],
+      "properties": {
+        "gate": { "const": "609-D" },
+        "deferred": {
+          "type": "array",
+          "prefixItems": [
+            { "const": "609-E" },
+            { "const": "544-B" },
+            { "const": "547" }
+          ],
+          "items": false,
+          "minItems": 3,
+          "maxItems": 3
+        }
+      }
+    },
+    "subject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "digest"],
+      "properties": {
+        "name": { "const": "ghcr.io/bluetape4k/paddleocr-service" },
+        "digest": { "$ref": "#/$defs/ociDigest" }
+      }
+    },
+    "producer": { "$ref": "#/$defs/producer" },
+    "attestations": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "prefixItems": [
+        {
+          "allOf": [
+            { "$ref": "#/$defs/attestation" },
+            { "type": "object", "properties": { "predicateType": { "const": "https://slsa.dev/provenance/v1" } } }
+          ]
+        },
+        {
+          "allOf": [
+            { "$ref": "#/$defs/attestation" },
+            { "type": "object", "properties": { "predicateType": { "const": "https://spdx.dev/Document/v2.3" } } }
+          ]
+        }
+      ],
+      "items": false
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["manifest", "ledger", "platformManifest", "spdx", "provenanceBundle", "sbomBundle"],
+      "properties": {
+        "manifest": { "$ref": "#/$defs/descriptor" },
+        "ledger": { "$ref": "#/$defs/descriptor" },
+        "platformManifest": { "$ref": "#/$defs/descriptor" },
+        "spdx": { "$ref": "#/$defs/descriptor" },
+        "provenanceBundle": { "$ref": "#/$defs/descriptor" },
+        "sbomBundle": { "$ref": "#/$defs/descriptor" }
+      }
+    },
+    "verification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ledgerChecksumMatches",
+        "evidenceDescriptorsMatch",
+        "provenanceSubjectMatches",
+        "sbomSubjectMatches",
+        "sameSubject",
+        "sameProducerIdentity",
+        "verifiedTimestamps",
+        "localBundlesBound"
+      ],
+      "properties": {
+        "ledgerChecksumMatches": { "const": true },
+        "evidenceDescriptorsMatch": { "const": true },
+        "provenanceSubjectMatches": { "const": true },
+        "sbomSubjectMatches": { "const": true },
+        "sameSubject": { "const": true },
+        "sameProducerIdentity": { "const": true },
+        "verifiedTimestamps": { "const": true },
+        "localBundlesBound": { "const": true }
+      }
+    },
+    "checksum": { "$ref": "#/$defs/checksum" }
+  },
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "ociDigest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "commit": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "attemptId": {
+      "type": "string",
+      "pattern": "^[1-9][0-9]*\\.[1-9][0-9]*$"
+    },
+    "nonEmptyString": {
+      "type": "string",
+      "minLength": 1
+    },
+    "descriptor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "bytes", "sha256"],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9._/-]+$"
+        },
+        "bytes": { "type": "integer", "minimum": 1, "maximum": 4194304 },
+        "sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "producer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "environment",
+        "headSha",
+        "issuer",
+        "ref",
+        "repository",
+        "runId",
+        "runAttempt",
+        "runInvocationURI",
+        "runnerEnvironment",
+        "signerIdentity",
+        "sourceRepositoryDigest",
+        "sourceRepositoryRef",
+        "sourceRepositoryURI",
+        "workflow",
+        "workflowRef",
+        "workflowSha"
+      ],
+      "properties": {
+        "environment": { "const": "paddleocr-producer" },
+        "headSha": { "$ref": "#/$defs/commit" },
+        "issuer": { "const": "https://token.actions.githubusercontent.com" },
+        "ref": { "const": "refs/heads/develop" },
+        "repository": { "const": "bluetape4k/bluetape4k-image" },
+        "runAttempt": { "type": "integer", "minimum": 1 },
+        "runId": { "type": "integer", "minimum": 1 },
+        "runInvocationURI": { "$ref": "#/$defs/nonEmptyString" },
+        "runnerEnvironment": { "const": "github-hosted" },
+        "signerIdentity": { "const": "bluetape4k/bluetape4k-image/.github/workflows/paddleocr-producer.yml" },
+        "sourceRepositoryDigest": { "$ref": "#/$defs/commit" },
+        "sourceRepositoryRef": { "const": "refs/heads/develop" },
+        "sourceRepositoryURI": { "const": "https://github.com/bluetape4k/bluetape4k-image" },
+        "workflow": { "const": ".github/workflows/paddleocr-producer.yml" },
+        "workflowRef": { "$ref": "#/$defs/nonEmptyString" },
+        "workflowSha": { "$ref": "#/$defs/commit" }
+      }
+    },
+    "attestation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "repository",
+        "workflow",
+        "workflowRef",
+        "workflowSha",
+        "ref",
+        "environment",
+        "runnerEnvironment",
+        "issuer",
+        "sourceRepositoryURI",
+        "sourceRepositoryDigest",
+        "sourceRepositoryRef",
+        "subjectAlternativeName",
+        "signerIdentity",
+        "audience",
+        "runId",
+        "runAttempt",
+        "headSha",
+        "subjectName",
+        "subjectDigest",
+        "predicateType",
+        "verified",
+        "bundleBytes",
+        "bundleSha256",
+        "dssePayloadSha256",
+        "dssePayloadType",
+        "signatureCount",
+        "tlogCount",
+        "timestampCount",
+        "runInvocationURI"
+      ],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "repository": { "const": "bluetape4k/bluetape4k-image" },
+        "workflow": { "const": ".github/workflows/paddleocr-producer.yml" },
+        "workflowRef": { "$ref": "#/$defs/nonEmptyString" },
+        "workflowSha": { "$ref": "#/$defs/commit" },
+        "ref": { "const": "refs/heads/develop" },
+        "environment": { "const": "paddleocr-producer" },
+        "runnerEnvironment": { "const": "github-hosted" },
+        "issuer": { "const": "https://token.actions.githubusercontent.com" },
+        "sourceRepositoryURI": { "const": "https://github.com/bluetape4k/bluetape4k-image" },
+        "sourceRepositoryDigest": { "$ref": "#/$defs/commit" },
+        "sourceRepositoryRef": { "const": "refs/heads/develop" },
+        "subjectAlternativeName": { "$ref": "#/$defs/nonEmptyString" },
+        "signerIdentity": { "const": "bluetape4k/bluetape4k-image/.github/workflows/paddleocr-producer.yml" },
+        "audience": { "const": "sigstore" },
+        "runId": { "type": "integer", "minimum": 1 },
+        "runAttempt": { "type": "integer", "minimum": 1 },
+        "headSha": { "$ref": "#/$defs/commit" },
+        "subjectName": { "const": "ghcr.io/bluetape4k/paddleocr-service" },
+        "subjectDigest": { "$ref": "#/$defs/ociDigest" },
+        "predicateType": { "$ref": "#/$defs/nonEmptyString" },
+        "verified": { "const": true },
+        "bundleBytes": { "type": "integer", "minimum": 1, "maximum": 4194304 },
+        "bundleSha256": { "$ref": "#/$defs/sha256" },
+        "dssePayloadSha256": { "$ref": "#/$defs/sha256" },
+        "dssePayloadType": { "const": "application/vnd.in-toto+json" },
+        "signatureCount": { "const": 1 },
+        "tlogCount": { "type": "integer", "minimum": 1 },
+        "timestampCount": { "type": "integer", "minimum": 1 },
+        "runInvocationURI": { "$ref": "#/$defs/nonEmptyString" }
+      }
+    },
+    "checksum": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["algorithm", "canonicalization", "covers", "sha256"],
+      "properties": {
+        "algorithm": { "const": "SHA-256" },
+        "canonicalization": { "const": "JCS" },
+        "covers": { "const": "receipt-without-checksum" },
+        "sha256": { "$ref": "#/$defs/sha256" }
+      }
+    }
+  }
+}
