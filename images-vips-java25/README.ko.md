@@ -307,8 +307,11 @@ val heic = report.codec(VipsImageFormat.HEIC)
 ```
 
 Report는 decode용 `heifload_buffer`와 encode용 `heifsave_buffer`를 확인합니다.
-정확한 배포 호스트 검증에는 caller-provided AVIF/HEIC sample로
-`FfmVipsRuntime.smokeTestCodec(...)`을 실행하세요.
+정상적으로 operation이 없음을 확인한 경우에는 `UNAVAILABLE`로, native
+탐색 자체가 실패한 경우에는 민감한 경로·환경 값을 제외한 안전한 원인과 함께
+`UNKNOWN`으로 보고합니다. 실제 operation 경로는 계속 fail-closed로 동작하며
+fatal JVM error를 codec 부재로 바꾸지 않습니다. 정확한 배포 호스트 검증에는
+caller-provided AVIF/HEIC sample로 `FfmVipsRuntime.smokeTestCodec(...)`을 실행하세요.
 
 ### 최대 픽셀 수
 

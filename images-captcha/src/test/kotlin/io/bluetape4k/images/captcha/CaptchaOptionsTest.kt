@@ -104,6 +104,42 @@ class CaptchaOptionsTest {
     }
 
     @Test
+    fun `constructor and copy snapshot mutable collections`() {
+        val colors = mutableListOf(Color.BLACK, Color.BLUE)
+        val fonts = mutableListOf(CaptchaFont("Dialog", CaptchaFontStyle.PLAIN))
+        val options = CaptchaOptions(textColors = colors, fonts = fonts)
+
+        colors.clear()
+        fonts.clear()
+
+        options.textColors shouldBeEqualTo listOf(Color.BLACK, Color.BLUE)
+        options.fonts shouldBeEqualTo listOf(CaptchaFont("Dialog", CaptchaFontStyle.PLAIN))
+
+        val copiedColors = mutableListOf(Color.RED, Color.BLUE)
+        val copied = options.copy(textColors = copiedColors)
+        copiedColors.clear()
+
+        copied.textColors shouldBeEqualTo listOf(Color.RED, Color.BLUE)
+        copied.fonts shouldBeEqualTo options.fonts
+    }
+
+    @Test
+    fun `manual value contract keeps source compatibility while changing data reflection`() {
+        val options = CaptchaOptions()
+        options.component1() shouldBeEqualTo options.length
+        options.component2() shouldBeEqualTo options.charSet
+        options.component3() shouldBeEqualTo options.imageSize
+        options.component4() shouldBeEqualTo options.fontSize
+        options.component5() shouldBeEqualTo options.noise
+        options.component6() shouldBeEqualTo options.distortion
+        options.component7() shouldBeEqualTo options.backgroundColor
+        options.component8() shouldBeEqualTo options.textColors
+        options.component9() shouldBeEqualTo options.expiresAfter
+        options.component10() shouldBeEqualTo options.fonts
+        CaptchaOptions::class.isData shouldBeEqualTo false
+    }
+
+    @Test
     fun `serializable options round trip keeps duration and singleton options`() {
         val options = CaptchaOptions(
             expiresAfter = 3.minutes,
