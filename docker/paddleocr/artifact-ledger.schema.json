@@ -1,0 +1,354 @@
+{
+  "$id": "https://bluetape4k.github.io/schema/paddleocr/artifact-ledger.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "PaddleOCR image and model ledger for Issue 609-C",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "kind",
+    "status",
+    "scope",
+    "producer",
+    "image",
+    "model",
+    "licenseNotice",
+    "trustPolicy",
+    "evidence",
+    "verification",
+    "checksum"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "kind": { "const": "IMAGE_MODEL_LEDGER" },
+    "status": { "const": "PASS" },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["gate", "deferred"],
+      "properties": {
+        "gate": { "const": "609-C" },
+        "deferred": {
+          "type": "array",
+          "prefixItems": [
+            { "const": "609-D" },
+            { "const": "609-E" },
+            { "const": "544-B" },
+            { "const": "547" }
+          ],
+          "items": false,
+          "minItems": 4,
+          "maxItems": 4
+        }
+      }
+    },
+    "producer": { "$ref": "#/$defs/producer" },
+    "image": { "$ref": "#/$defs/image" },
+    "model": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["models", "pairBindingSha256"],
+      "properties": {
+        "models": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": { "$ref": "#/$defs/model" }
+        },
+        "pairBindingSha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "licenseNotice": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["inventoryPath", "inventorySha256", "files", "complete", "verified"],
+      "properties": {
+        "inventoryPath": { "const": "legal-inventory.json" },
+        "inventorySha256": { "$ref": "#/$defs/sha256" },
+        "files": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": { "$ref": "#/$defs/legalFile" }
+        },
+        "complete": { "const": true },
+        "verified": { "const": true }
+      }
+    },
+    "trustPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "allowedRepositories",
+        "allowedWorkflowPaths",
+        "allowedWorkflowRefs",
+        "allowedBuilderIdentities",
+        "allowedSignerIdentities",
+        "allowedOidcIssuers",
+        "sourceRevisionPolicy",
+        "policySha256",
+        "allowlistNonEmpty"
+      ],
+      "properties": {
+        "allowedRepositories": { "$ref": "#/$defs/nonEmptyStringArray" },
+        "allowedWorkflowPaths": { "$ref": "#/$defs/nonEmptyStringArray" },
+        "allowedWorkflowRefs": { "$ref": "#/$defs/nonEmptyStringArray" },
+        "allowedBuilderIdentities": { "$ref": "#/$defs/nonEmptyStringArray" },
+        "allowedSignerIdentities": { "$ref": "#/$defs/nonEmptyStringArray" },
+        "allowedOidcIssuers": { "$ref": "#/$defs/nonEmptyStringArray" },
+        "sourceRevisionPolicy": { "const": "full-commit" },
+        "policySha256": { "$ref": "#/$defs/sha256" },
+        "allowlistNonEmpty": { "const": true }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "manifest",
+        "files",
+        "inputLock",
+        "packageLock",
+        "platformManifest",
+        "modelManifests",
+        "legalInventory"
+      ],
+      "properties": {
+        "manifest": { "$ref": "#/$defs/descriptor" },
+        "files": {
+          "type": "array",
+          "minItems": 7,
+          "maxItems": 7,
+          "items": { "$ref": "#/$defs/descriptor" }
+        },
+        "inputLock": { "$ref": "#/$defs/descriptor" },
+        "packageLock": { "$ref": "#/$defs/descriptor" },
+        "platformManifest": { "$ref": "#/$defs/descriptor" },
+        "modelManifests": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["detector", "recognizer"],
+          "properties": {
+            "detector": { "$ref": "#/$defs/descriptor" },
+            "recognizer": { "$ref": "#/$defs/descriptor" }
+          }
+        },
+        "legalInventory": { "$ref": "#/$defs/descriptor" }
+      }
+    },
+    "verification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "indexSelectsPlatformManifest",
+        "manifestConfigMatches",
+        "baseDigestsMatch",
+        "packageLockMatches",
+        "modelFilesMatch",
+        "modelTreeRecomputed",
+        "pairBindingMatches",
+        "licenseNoticeVerified",
+        "trustPolicyMatched",
+        "canonicalJson"
+      ],
+      "properties": {
+        "indexSelectsPlatformManifest": { "const": true },
+        "manifestConfigMatches": { "const": true },
+        "baseDigestsMatch": { "const": true },
+        "packageLockMatches": { "const": true },
+        "modelFilesMatch": { "const": true },
+        "modelTreeRecomputed": { "const": true },
+        "pairBindingMatches": { "const": true },
+        "licenseNoticeVerified": { "const": true },
+        "trustPolicyMatched": { "const": true },
+        "canonicalJson": { "const": true }
+      }
+    },
+    "checksum": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["algorithm", "canonicalization", "covers", "sha256"],
+      "properties": {
+        "algorithm": { "const": "SHA-256" },
+        "canonicalization": { "const": "JCS" },
+        "covers": { "const": "ledger-without-checksum" },
+        "sha256": { "$ref": "#/$defs/sha256" }
+      }
+    }
+  },
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "ociDigest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "commit": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "attemptId": {
+      "type": "string",
+      "pattern": "^[1-9][0-9]*\\.[1-9][0-9]*$"
+    },
+    "nonEmptyString": {
+      "type": "string",
+      "minLength": 1
+    },
+    "nonEmptyStringArray": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/nonEmptyString" }
+    },
+    "descriptor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "bytes", "sha256"],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[^\\\\/][^\\\\]*$"
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 536870912
+        },
+        "sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "modelFile": {
+      "allOf": [
+        { "$ref": "#/$defs/descriptor" },
+        {
+          "type": "object",
+          "properties": {
+            "path": { "pattern": "^models/(detector|recognizer)/[^/].*$" }
+          }
+        }
+      ]
+    },
+    "legalFile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "path", "bytes", "sha256"],
+      "properties": {
+        "kind": { "enum": ["license", "notice"] },
+        "path": { "type": "string", "pattern": "^legal/[^/].*$" },
+        "bytes": { "type": "integer", "minimum": 1, "maximum": 536870912 },
+        "sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "model": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "role",
+        "modelId",
+        "modelRevision",
+        "sourceId",
+        "sourceUrl",
+        "archiveBytes",
+        "archiveSha256",
+        "mediaType",
+        "archiveType",
+        "licenseExpression",
+        "licensePath",
+        "licenseSha256",
+        "noticePath",
+        "noticeSha256",
+        "files",
+        "treeSha256"
+      ],
+      "properties": {
+        "role": { "enum": ["detector", "recognizer"] },
+        "modelId": { "$ref": "#/$defs/nonEmptyString" },
+        "modelRevision": { "$ref": "#/$defs/commit" },
+        "sourceId": { "$ref": "#/$defs/nonEmptyString" },
+        "sourceUrl": { "type": "string", "pattern": "^https://[^/?#@]+/[^#]*$" },
+        "archiveBytes": { "type": "integer", "minimum": 1, "maximum": 536870912 },
+        "archiveSha256": { "$ref": "#/$defs/sha256" },
+        "mediaType": { "$ref": "#/$defs/nonEmptyString" },
+        "archiveType": { "enum": ["tar", "tar.gz", "zip"] },
+        "licenseExpression": { "$ref": "#/$defs/nonEmptyString" },
+        "licensePath": { "type": "string", "pattern": "^legal/[^/].*$" },
+        "licenseSha256": { "$ref": "#/$defs/sha256" },
+        "noticePath": { "type": "string", "pattern": "^legal/[^/].*$" },
+        "noticeSha256": { "$ref": "#/$defs/sha256" },
+        "files": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/modelFile" }
+        },
+        "treeSha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "producer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "repository",
+        "workflow",
+        "workflowRef",
+        "workflowSha",
+        "ref",
+        "workflowRunId",
+        "sourceRevision",
+        "builderIdentity",
+        "runnerEnvironment",
+        "signerIdentity",
+        "oidcIssuer"
+      ],
+      "properties": {
+        "repository": { "const": "bluetape4k/bluetape4k-image" },
+        "workflow": { "const": ".github/workflows/paddleocr-producer.yml" },
+        "workflowRef": { "$ref": "#/$defs/nonEmptyString" },
+        "workflowSha": { "$ref": "#/$defs/commit" },
+        "ref": { "const": "refs/heads/develop" },
+        "workflowRunId": { "$ref": "#/$defs/attemptId" },
+        "sourceRevision": { "$ref": "#/$defs/commit" },
+        "builderIdentity": { "$ref": "#/$defs/nonEmptyString" },
+        "runnerEnvironment": { "$ref": "#/$defs/nonEmptyString" },
+        "signerIdentity": { "$ref": "#/$defs/nonEmptyString" },
+        "oidcIssuer": { "const": "https://token.actions.githubusercontent.com" }
+      }
+    },
+    "image": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "imageRef",
+        "imageIndexDigest",
+        "platformManifestDigest",
+        "configDigest",
+        "os",
+        "architecture",
+        "variant",
+        "targetPlatform",
+        "baseImageDigests",
+        "packageLockSha256"
+      ],
+      "properties": {
+        "imageRef": { "type": "string", "pattern": "^[^\\s@]+@sha256:[0-9a-f]{64}$" },
+        "imageIndexDigest": { "$ref": "#/$defs/ociDigest" },
+        "platformManifestDigest": { "$ref": "#/$defs/ociDigest" },
+        "configDigest": { "$ref": "#/$defs/ociDigest" },
+        "os": { "const": "linux" },
+        "architecture": { "const": "amd64" },
+        "variant": { "type": "null" },
+        "targetPlatform": { "const": "linux/amd64" },
+        "baseImageDigests": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1,
+          "items": { "$ref": "#/$defs/ociDigest" }
+        },
+        "packageLockSha256": { "$ref": "#/$defs/sha256" }
+      }
+    }
+  }
+}
