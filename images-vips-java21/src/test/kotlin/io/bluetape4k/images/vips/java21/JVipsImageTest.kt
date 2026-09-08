@@ -6,6 +6,7 @@ import io.bluetape4k.images.vips.VipsEncodeOptions
 import io.bluetape4k.images.vips.VipsImageFormat
 import io.bluetape4k.images.vips.coroutines.suspendToBytes
 import io.bluetape4k.images.vips.testfixtures.VipsTestFixtures
+import io.bluetape4k.images.vips.testfixtures.assertWebpLosslessContract
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.okio.asSource
 import io.bluetape4k.okio.buffered
@@ -29,6 +30,11 @@ import java.nio.file.StandardOpenOption.READ
 
 @OptIn(VipsIncubatingApi::class)
 class JVipsImageTest : AbstractJVipsTest() {
+
+    @Test
+    fun `public WebP lossless encoding preserves RGBA and default stays lossy`() {
+        assertWebpLosslessContract { vipsImageOf(it) }
+    }
 
     companion object {
         private val JPEG_MAGIC = byteArrayOf(0xFF.toByte(), 0xD8.toByte(), 0xFF.toByte())

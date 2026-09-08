@@ -76,7 +76,7 @@ dependencies {
 - **Security by Default**: Format allowlist (JPEG/PNG/WebP/AVIF/HEIC), 50 MB input limit, maxPixels validation
 - **Immutable Operations**: All image operations return new instances (no in-place mutation)
 - **Coroutine Support**: Async variants wrap blocking JNI calls with `Dispatchers.IO`
-- **Multiple Output Formats**: JPEG (lossy), PNG (lossless), WebP (best compression), capability-gated AVIF
+- **Multiple Output Formats**: JPEG (lossy), PNG (lossless), WebP (lossy by default; lossless with `VipsEncodeOptions(lossless = true)`), capability-gated AVIF
 - **Virtual Thread Safe**: Uses `AtomicReference<State>` CAS instead of `@Synchronized` blocks
 
 ## Usage Examples
