@@ -76,7 +76,7 @@ dependencies {
 - **기본 보안**: 포맷 허용 목록(JPEG/PNG/WebP/AVIF/HEIC), 50 MB 입력 제한, maxPixels 검증
 - **불변 연산**: 모든 이미지 연산은 새 인스턴스 반환 (제자리 변이 없음)
 - **코루틴 지원**: 비동기 변형은 `Dispatchers.IO`로 블로킹 JNI 호출을 래핑
-- **다양한 출력 포맷**: JPEG(손실), PNG(무손실), WebP(고압축), capability-gated AVIF
+- **다양한 출력 포맷**: JPEG(손실), PNG(무손실), WebP(기본값은 손실 압축, `VipsEncodeOptions(lossless = true)`로 무손실 압축), 지원 여부를 확인한 뒤 사용하는 AVIF
 - **Virtual Thread 안전**: `@Synchronized` 블록 대신 `AtomicReference<State>` CAS 사용
 
 ## 사용 예제

@@ -153,6 +153,16 @@ providers and does not advertise it for custom storage implementations that do n
 implement the interface.
 
 S3 metadata uses one `S3Operations.headObject` snapshot without opening the body.
+Byte-array downloads reuse `S3Operations.resource` and the existing
+`bluetape4k-io.readAllBytes(maxBytes)` helper instead of materializing an unbounded body.
+Overflow detection reads at most one extra byte; the stream is closed on success and failure.
+The limit is `min(maxSizeBytes, Int.MAX_VALUE)`. Result assembly temporarily needs about
+twice the actual body size, so configure the limit for available memory. Blocking read
+timeouts must be configured on the S3 client.
+Cancelling the caller may leave a blocking read active until its SDK timeout, but no result
+is returned to the cancelled caller after reading completes. S3 operation instrumentation
+now measures `resource` construction rather than `download`; use image-storage metrics
+for the complete download duration.
 Both byte-array and `Path` downloads perform the same HEAD size pre-check and then
 compare the streamed byte count with that snapshot before exposing the result. A
 HEAD failure or a size race fails closed; there is no `listPage` or resource-size

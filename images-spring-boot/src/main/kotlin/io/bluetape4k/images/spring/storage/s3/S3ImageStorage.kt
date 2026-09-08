@@ -3,6 +3,8 @@ package io.bluetape4k.images.spring.storage.s3
 import io.bluetape4k.aws.spring.s3.S3Operations
 import io.bluetape4k.aws.spring.s3.S3ObjectMetadata as AwsS3ObjectMetadata
 import io.bluetape4k.io.writeAtomically
+import io.bluetape4k.io.ByteLimitExceededException
+import io.bluetape4k.io.readAllBytes
 import io.bluetape4k.images.spring.ImageObjectKey
 import io.bluetape4k.images.spring.ImageObjectMetadata
 import io.bluetape4k.images.spring.ImageStorageException
@@ -53,6 +55,8 @@ import kotlin.jvm.JvmOverloads
  *   [ImageStorageException.ValidationException]으로 거부됩니다. download는 단일 `headObject` snapshot으로
  *   시작 전에 object size를 확인하고, body를 반환하거나 destination file을 교체하기 전에 limit과 snapshot의
  *   실제 byte count를 다시 검사합니다. 두 값이 다르면 object 교체 경합으로 보고 fail closed합니다.
+ * - byte-array download는 [readAllBytes]로 읽는 중 크기를 제한하고 스트림을 항상 닫습니다.
+ *   상한은 `min(maxSizeBytes, Int.MAX_VALUE)`이며 결과 조립에는 실제 본문의 약 두 배 메모리가 필요합니다.
  * - [Path] upload는 source를 bounded streaming 임시 snapshot으로 고정한 뒤
  *   [S3PathTransferOperations]의 file transfer를 사용합니다. transfer capability가 없으면 source를
  *   `ByteArray`로 적재하지 않고
@@ -193,12 +197,21 @@ class S3ImageStorage @JvmOverloads constructor(
         val metadata = headObject(key)
         validateDownloadSize(key, metadata.sizeBytes)
         try {
-            val bytes = operations.downloadBytes(bucket = bucket, key = objectKey(key))
-            validateDownloadSize(key, bytes.size.toLong())
+            val limit = minOf(properties.maxSizeBytes, Int.MAX_VALUE.toLong()).toInt()
+            val bytes = operations.resource(bucket = bucket, key = objectKey(key)).getInputStream().use { input ->
+                input.readAllBytes(limit)
+            }
+            currentCoroutineContext().ensureActive()
             validateSnapshotSize(key, metadata.sizeBytes, bytes.size.toLong())
             bytes
         } catch (e: CancellationException) {
             throw e
+        } catch (e: ByteLimitExceededException) {
+            throw ImageStorageException.ValidationException(
+                key = key,
+                message = "Object exceeds byte-array download limit (${e.maxBytes})",
+                cause = e,
+            )
         } catch (e: Throwable) {
             throw e.toImageStorageException(key)
         }
@@ -256,13 +269,12 @@ class S3ImageStorage @JvmOverloads constructor(
 
     override suspend fun exists(key: ImageObjectKey): Boolean = withContext(Dispatchers.IO) {
         try {
-            val fullKey = objectKey(key)
-            val page = operations.listPage(bucket = bucket, prefix = fullKey, maxKeys = 1)
-            page.objects.any { it.key() == fullKey }
+            headObject(key)
+            true
         } catch (e: CancellationException) {
             throw e
-        } catch (e: Throwable) {
-            throw e.toImageStorageException(key)
+        } catch (_: ImageStorageException.NotFoundException) {
+            false
         }
     }
 

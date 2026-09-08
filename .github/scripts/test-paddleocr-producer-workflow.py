@@ -755,7 +755,11 @@ class ProducerWorkflowContractTest(unittest.TestCase):
             "TEST_PADDLEOCR_PRODUCER_RESULT": "skipped",
         }
         for name in (
-            "IMAGES", "IMAGES_BARCODE_API", "IMAGES_BARCODE_ZXING", "IMAGES_CAPTCHA",
+            "IMAGES",
+            "IMAGES_BENCHMARK",
+            "IMAGES_BARCODE_API",
+            "IMAGES_BARCODE_ZXING",
+            "IMAGES_CAPTCHA",
             "IMAGES_OCR", "IMAGES_KTOR", "IMAGES_SPRING_BOOT", "IMAGES_VIPS_API",
             "IMAGES_VIPS_JAVA21", "IMAGES_VIPS_JAVA25", "VIPS_VERIFICATION",
         ):
