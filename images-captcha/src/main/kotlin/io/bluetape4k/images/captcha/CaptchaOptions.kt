@@ -6,6 +6,7 @@ import io.bluetape4k.support.requireNotEmpty
 import io.bluetape4k.support.requirePositiveNumber
 import java.awt.Color
 import java.io.Serializable
+import java.util.Collections
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 
@@ -15,18 +16,30 @@ import kotlin.time.Duration.Companion.minutes
  * 기본값은 uppercase character만 사용하고 모호한 `I`, `O`, `0`, `1`을 제외해
  * 사용자 입력 실수를 줄입니다.
  */
-data class CaptchaOptions(
-    val length: Int = DEFAULT_LENGTH,
-    val charSet: String = DEFAULT_CHAR_SET,
-    val imageSize: CaptchaImageSize = CaptchaImageSize(),
-    val fontSize: Int = DEFAULT_FONT_SIZE,
-    val noise: CaptchaNoise = CaptchaNoise.Medium,
-    val distortion: CaptchaDistortion = CaptchaDistortion.None,
-    val backgroundColor: Color = Color.WHITE,
-    val textColors: List<Color> = listOf(Color.DARK_GRAY),
-    val expiresAfter: Duration = DEFAULT_EXPIRES_AFTER,
-    val fonts: List<CaptchaFont> = CaptchaFont.defaults(),
+@Suppress("TooManyFunctions")
+class CaptchaOptions(
+    length: Int = DEFAULT_LENGTH,
+    charSet: String = DEFAULT_CHAR_SET,
+    imageSize: CaptchaImageSize = CaptchaImageSize(),
+    fontSize: Int = DEFAULT_FONT_SIZE,
+    noise: CaptchaNoise = CaptchaNoise.Medium,
+    distortion: CaptchaDistortion = CaptchaDistortion.None,
+    backgroundColor: Color = Color.WHITE,
+    textColors: List<Color> = listOf(Color.DARK_GRAY),
+    expiresAfter: Duration = DEFAULT_EXPIRES_AFTER,
+    fonts: List<CaptchaFont> = CaptchaFont.defaults(),
 ): Serializable {
+
+    val length: Int = length
+    val charSet: String = charSet
+    val imageSize: CaptchaImageSize = imageSize
+    val fontSize: Int = fontSize
+    val noise: CaptchaNoise = noise
+    val distortion: CaptchaDistortion = distortion
+    val backgroundColor: Color = backgroundColor
+    val textColors: List<Color> = Collections.unmodifiableList(textColors.toList())
+    val expiresAfter: Duration = expiresAfter
+    val fonts: List<CaptchaFont> = Collections.unmodifiableList(fonts.toList())
 
     init {
         validateLength(length)
@@ -40,6 +53,76 @@ data class CaptchaOptions(
         require(expiresAfter > Duration.ZERO) { "expiresAfter must be greater than zero" }
         fonts.requireNotEmpty("fonts")
     }
+
+    operator fun component1(): Int = length
+    operator fun component2(): String = charSet
+    operator fun component3(): CaptchaImageSize = imageSize
+    operator fun component4(): Int = fontSize
+    operator fun component5(): CaptchaNoise = noise
+    operator fun component6(): CaptchaDistortion = distortion
+    operator fun component7(): Color = backgroundColor
+    operator fun component8(): List<Color> = textColors
+    operator fun component9(): Duration = expiresAfter
+    operator fun component10(): List<CaptchaFont> = fonts
+
+    fun copy(
+        length: Int = this.length,
+        charSet: String = this.charSet,
+        imageSize: CaptchaImageSize = this.imageSize,
+        fontSize: Int = this.fontSize,
+        noise: CaptchaNoise = this.noise,
+        distortion: CaptchaDistortion = this.distortion,
+        backgroundColor: Color = this.backgroundColor,
+        textColors: List<Color> = this.textColors,
+        expiresAfter: Duration = this.expiresAfter,
+        fonts: List<CaptchaFont> = this.fonts,
+    ): CaptchaOptions = CaptchaOptions(
+        length,
+        charSet,
+        imageSize,
+        fontSize,
+        noise,
+        distortion,
+        backgroundColor,
+        textColors,
+        expiresAfter,
+        fonts,
+    )
+
+    override fun equals(other: Any?): Boolean =
+        this === other || (other is CaptchaOptions &&
+            length == other.length &&
+            charSet == other.charSet &&
+            imageSize == other.imageSize &&
+            fontSize == other.fontSize &&
+            noise == other.noise &&
+            distortion == other.distortion &&
+            backgroundColor == other.backgroundColor &&
+            textColors == other.textColors &&
+            expiresAfter == other.expiresAfter &&
+            fonts == other.fonts)
+
+    override fun hashCode(): Int {
+        var result = length
+        result = 31 * result + charSet.hashCode()
+        result = 31 * result + imageSize.hashCode()
+        result = 31 * result + fontSize
+        result = 31 * result + noise.hashCode()
+        result = 31 * result + distortion.hashCode()
+        result = 31 * result + backgroundColor.hashCode()
+        result = 31 * result + textColors.hashCode()
+        result = 31 * result + expiresAfter.hashCode()
+        result = 31 * result + fonts.hashCode()
+        return result
+    }
+
+    override fun toString(): String =
+        "CaptchaOptions(length=$length, charSet=$charSet, imageSize=$imageSize, " +
+            "fontSize=$fontSize, noise=$noise, distortion=$distortion, " +
+            "backgroundColor=$backgroundColor, textColors=$textColors, " +
+            "expiresAfter=$expiresAfter, fonts=$fonts)"
+
+    private fun readResolve(): Any = copy()
 
     companion object {
         private const val serialVersionUID: Long = -5633101925229847169L
