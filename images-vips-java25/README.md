@@ -307,6 +307,9 @@ val heic = report.codec(VipsImageFormat.HEIC)
 ```
 
 The report checks `heifload_buffer` for decode and `heifsave_buffer` for encode.
+It keeps a confirmed missing operation as `UNAVAILABLE`, while a native probe
+failure is reported as `UNKNOWN` with a sanitized reason. The operation path
+still fails closed, and fatal JVM errors are not converted into codec absence.
 Use `FfmVipsRuntime.smokeTestCodec(...)` with caller-provided AVIF/HEIC samples
 to verify the exact deployment host.
 

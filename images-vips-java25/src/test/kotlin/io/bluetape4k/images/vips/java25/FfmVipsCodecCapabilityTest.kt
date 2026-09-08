@@ -3,12 +3,15 @@ package io.bluetape4k.images.vips.java25
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.assertions.shouldNotContain
+import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.images.vips.VipsIncubatingApi
 import io.bluetape4k.images.vips.VipsCodecDirection
 import io.bluetape4k.images.vips.VipsCodecSupport
 import io.bluetape4k.images.vips.VipsImageFormat
 import io.bluetape4k.images.vips.java25.internal.DefaultFfmVipsCodecProbe
 import io.bluetape4k.images.vips.java25.internal.FfmVipsCodecProbe
+import io.bluetape4k.images.vips.java25.internal.FfmVipsCodecProbeResult
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -17,8 +20,12 @@ import org.junit.jupiter.api.Test
 class FfmVipsCodecCapabilityTest {
 
     private val testProbe = object : FfmVipsCodecProbe {
-        override fun supportsOperation(name: String): Boolean =
-            name == "heifload_buffer"
+        override fun inspectOperation(name: String): FfmVipsCodecProbeResult =
+            if (name == "heifload_buffer") {
+                FfmVipsCodecProbeResult.Available
+            } else {
+                FfmVipsCodecProbeResult.Unavailable
+            }
 
         override fun libvipsVersion(): String =
             "8.17.0-test"
@@ -45,6 +52,50 @@ class FfmVipsCodecCapabilityTest {
         report.codec(VipsImageFormat.AVIF).encode.support shouldBeEqualTo VipsCodecSupport.UNAVAILABLE
         report.codec(VipsImageFormat.HEIC).decode.support shouldBeEqualTo VipsCodecSupport.AVAILABLE
         report.codec(VipsImageFormat.HEIC).encode.support shouldBeEqualTo VipsCodecSupport.UNAVAILABLE
+    }
+
+    @Test
+    fun `codec probe keeps unavailable and failed operation inspection distinct`() {
+        val probe = object : FfmVipsCodecProbe {
+            override fun inspectOperation(name: String): FfmVipsCodecProbeResult =
+                when (name) {
+                    "available" -> FfmVipsCodecProbeResult.Available
+                    "unavailable" -> FfmVipsCodecProbeResult.Unavailable
+                    else -> FfmVipsCodecProbeResult.Failed("secret=/run/secrets/libvips-path")
+                }
+        }
+
+        probe.supportsOperation("available") shouldBeEqualTo true
+        probe.supportsOperation("unavailable") shouldBeEqualTo false
+        probe.supportsOperation("failed") shouldBeEqualTo false
+
+        FfmVipsRuntime.codecProbe = object : FfmVipsCodecProbe {
+            override fun inspectOperation(name: String): FfmVipsCodecProbeResult =
+                if (name == "heifload_buffer") {
+                    FfmVipsCodecProbeResult.Failed("secret=/run/secrets/libvips-path")
+                } else {
+                    FfmVipsCodecProbeResult.Unavailable
+                }
+        }
+
+        val report = FfmVipsRuntime.codecCapabilityReport()
+        val decode = report.codec(VipsImageFormat.AVIF).decode
+        decode.support shouldBeEqualTo VipsCodecSupport.UNKNOWN
+        decode.reason.orEmpty() shouldContain "Codec operation probe failed"
+        decode.reason.orEmpty() shouldNotContain "/run/secrets/libvips-path"
+        report.codec(VipsImageFormat.AVIF).encode.support shouldBeEqualTo VipsCodecSupport.UNAVAILABLE
+    }
+
+    @Test
+    fun `fatal probe errors are not converted to codec absence`() {
+        FfmVipsRuntime.codecProbe = object : FfmVipsCodecProbe {
+            override fun inspectOperation(name: String): FfmVipsCodecProbeResult =
+                throw AssertionError("fatal native linkage")
+        }
+
+        assertFailsWith<AssertionError> {
+            FfmVipsRuntime.codecCapabilityReport()
+        }
     }
 
     @Test

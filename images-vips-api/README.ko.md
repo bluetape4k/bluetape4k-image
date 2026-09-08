@@ -80,7 +80,10 @@ loader 또는 saver가 없으면 sanitized `VipsDecodeException` 또는 `VipsEnc
 `VipsRuntime.codecCapabilityReport()`를 사용하십시오. Report는 JPEG, PNG, WebP를 항상
 stable format으로 표시하고, AVIF/HEIC decode/encode는 `AVAILABLE`, `UNAVAILABLE`,
 `UNKNOWN` 중 하나로 보고합니다. 백엔드가 확인할 수 있는 경우 `heifload_buffer`,
-`heifsave_buffer` 같은 native operation 단서도 함께 제공합니다.
+`heifsave_buffer` 같은 native operation 단서도 함께 제공합니다. `UNKNOWN`은 operation
+탐색 자체가 실패했다는 뜻이며, 원인은 native 경로·환경 값·raw exception text를 노출하지
+않도록 정제해야 합니다. 백엔드는 해당 operation을 fail-closed로 처리하되 fatal JVM
+error는 호출자에게 보존해야 합니다.
 
 배포 환경 검증에는 같은 호스트 이미지 파이프라인에서 준비한 작은 AVIF/HEIC 샘플로
 `VipsRuntime.smokeTestCodec(...)`을 실행하십시오. 이 binding 전용 capability API는

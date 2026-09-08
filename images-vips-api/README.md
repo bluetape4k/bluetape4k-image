@@ -80,7 +80,10 @@ Use `VipsRuntime.codecCapabilityReport()` before advertising AVIF/HEIC support
 from a service endpoint. The report always lists JPEG, PNG, and WebP as stable
 formats, then marks AVIF/HEIC decode and encode as `AVAILABLE`, `UNAVAILABLE`,
 or `UNKNOWN` with backend-specific native operation clues such as
-`heifload_buffer` and `heifsave_buffer`.
+`heifload_buffer` and `heifsave_buffer`. `UNKNOWN` means the operation probe
+itself failed; its reason is sanitized and must not expose native paths,
+environment values, or raw exception text. A backend should fail closed for
+the operation while preserving fatal JVM errors for the caller.
 
 For deployment checks, run `VipsRuntime.smokeTestCodec(...)` with small
 caller-provided AVIF or HEIC samples from the same host image pipeline. This
