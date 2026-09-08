@@ -1,0 +1,123 @@
+name: PaddleOCR bounded artifact upload
+description: Retry the pinned artifact upload at most three times.
+inputs:
+  name:
+    description: Forwarded name input.
+    required: true
+  path:
+    description: Forwarded path input.
+    required: true
+  if-no-files-found:
+    description: Forwarded if-no-files-found input.
+    required: false
+    default: 'error'
+  include-hidden-files:
+    description: Forwarded include-hidden-files input.
+    required: false
+    default: 'false'
+  compression-level:
+    description: Forwarded compression-level input.
+    required: false
+    default: '0'
+  retention-days:
+    description: Forwarded retention-days input.
+    required: false
+    default: '90'
+outputs:
+  artifact-id:
+    description: Successful transfer artifact-id.
+    value: ${{ steps.result.outputs.artifact-id }}
+  artifact-digest:
+    description: Successful transfer artifact-digest.
+    value: ${{ steps.result.outputs.artifact-digest }}
+  artifact-url:
+    description: Successful transfer artifact-url.
+    value: ${{ steps.result.outputs.artifact-url }}
+runs:
+  using: composite
+  steps:
+    - name: Artifact upload attempt 1
+      id: attempt1
+      if: ${{ always() }}
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+      continue-on-error: true
+      with:
+        name: ${{ inputs.name }}
+        path: ${{ inputs.path }}
+        if-no-files-found: ${{ inputs.if-no-files-found }}
+        include-hidden-files: ${{ inputs.include-hidden-files }}
+        compression-level: ${{ inputs.compression-level }}
+        retention-days: ${{ inputs.retention-days }}
+        overwrite: false
+    - name: Wait before attempt 2
+      if: ${{ !cancelled() && steps.attempt1.outcome == 'failure' }}
+      shell: bash
+      run: sleep 10
+    - name: Artifact upload attempt 2
+      id: attempt2
+      if: ${{ !cancelled() && steps.attempt1.outcome == 'failure' }}
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+      continue-on-error: true
+      with:
+        name: ${{ inputs.name }}
+        path: ${{ inputs.path }}
+        if-no-files-found: ${{ inputs.if-no-files-found }}
+        include-hidden-files: ${{ inputs.include-hidden-files }}
+        compression-level: ${{ inputs.compression-level }}
+        retention-days: ${{ inputs.retention-days }}
+        # 실패한 같은 이름의 미인계 artifact만 교체한다.
+        overwrite: true
+    - name: Wait before attempt 3
+      if: ${{ !cancelled() && steps.attempt2.outcome == 'failure' }}
+      shell: bash
+      run: sleep 10
+    - name: Artifact upload attempt 3
+      id: attempt3
+      if: ${{ !cancelled() && steps.attempt2.outcome == 'failure' }}
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+      continue-on-error: false
+      with:
+        name: ${{ inputs.name }}
+        path: ${{ inputs.path }}
+        if-no-files-found: ${{ inputs.if-no-files-found }}
+        include-hidden-files: ${{ inputs.include-hidden-files }}
+        compression-level: ${{ inputs.compression-level }}
+        retention-days: ${{ inputs.retention-days }}
+        overwrite: true
+    - name: Export only a successful transfer
+      id: result
+      if: ${{ always() }}
+      shell: bash
+      env:
+        OUTCOME_1: ${{ steps.attempt1.outcome }}
+        ARTIFACT_ID_1: ${{ steps.attempt1.outputs.artifact-id }}
+        ARTIFACT_DIGEST_1: ${{ steps.attempt1.outputs.artifact-digest }}
+        ARTIFACT_URL_1: ${{ steps.attempt1.outputs.artifact-url }}
+        OUTCOME_2: ${{ steps.attempt2.outcome }}
+        ARTIFACT_ID_2: ${{ steps.attempt2.outputs.artifact-id }}
+        ARTIFACT_DIGEST_2: ${{ steps.attempt2.outputs.artifact-digest }}
+        ARTIFACT_URL_2: ${{ steps.attempt2.outputs.artifact-url }}
+        OUTCOME_3: ${{ steps.attempt3.outcome }}
+        ARTIFACT_ID_3: ${{ steps.attempt3.outputs.artifact-id }}
+        ARTIFACT_DIGEST_3: ${{ steps.attempt3.outputs.artifact-digest }}
+        ARTIFACT_URL_3: ${{ steps.attempt3.outputs.artifact-url }}
+      run: |
+        set -euo pipefail
+        for attempt in 1 2 3; do
+          outcome_key="OUTCOME_$attempt"
+          if [[ "${!outcome_key}" != success ]]; then continue; fi
+          id_key="ARTIFACT_ID_$attempt"
+          digest_key="ARTIFACT_DIGEST_$attempt"
+          url_key="ARTIFACT_URL_$attempt"
+          [[ "${!id_key}" =~ ^[1-9][0-9]*$ ]] || exit 1
+          [[ "${!digest_key}" =~ ^[0-9a-f]{64}$ ]] || exit 1
+          [[ -n "${!url_key}" && "${!url_key}" != *$'\n'* ]] || exit 1
+          {
+            printf 'artifact-id=%s\n' "${!id_key}"
+            printf 'artifact-digest=%s\n' "${!digest_key}"
+            printf 'artifact-url=%s\n' "${!url_key}"
+          } >> "$GITHUB_OUTPUT"
+          exit 0
+        done
+        echo "Artifact transfer did not complete successfully." >&2
+        exit 1

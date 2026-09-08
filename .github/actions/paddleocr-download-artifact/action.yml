@@ -1,0 +1,96 @@
+name: PaddleOCR bounded artifact download
+description: Retry the pinned artifact download at most three times.
+inputs:
+  artifact-ids:
+    description: Forwarded artifact-ids input.
+    required: false
+    default: ''
+  name:
+    description: Forwarded name input.
+    required: false
+    default: ''
+  pattern:
+    description: Forwarded pattern input.
+    required: false
+    default: ''
+  path:
+    description: Forwarded path input.
+    required: true
+  merge-multiple:
+    description: Forwarded merge-multiple input.
+    required: false
+    default: 'false'
+outputs:
+  download-path:
+    description: Successful transfer download-path.
+    value: ${{ steps.result.outputs.download-path }}
+runs:
+  using: composite
+  steps:
+    - name: Artifact download attempt 1
+      id: attempt1
+      if: ${{ always() }}
+      uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+      continue-on-error: true
+      with:
+        artifact-ids: ${{ inputs.artifact-ids }}
+        name: ${{ inputs.name }}
+        pattern: ${{ inputs.pattern }}
+        path: ${{ inputs.path }}
+        merge-multiple: ${{ inputs.merge-multiple }}
+        digest-mismatch: error
+    - name: Wait before attempt 2
+      if: ${{ !cancelled() && steps.attempt1.outcome == 'failure' }}
+      shell: bash
+      run: sleep 10
+    - name: Artifact download attempt 2
+      id: attempt2
+      if: ${{ !cancelled() && steps.attempt1.outcome == 'failure' }}
+      uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+      continue-on-error: true
+      with:
+        artifact-ids: ${{ inputs.artifact-ids }}
+        name: ${{ inputs.name }}
+        pattern: ${{ inputs.pattern }}
+        path: ${{ inputs.path }}
+        merge-multiple: ${{ inputs.merge-multiple }}
+        digest-mismatch: error
+    - name: Wait before attempt 3
+      if: ${{ !cancelled() && steps.attempt2.outcome == 'failure' }}
+      shell: bash
+      run: sleep 10
+    - name: Artifact download attempt 3
+      id: attempt3
+      if: ${{ !cancelled() && steps.attempt2.outcome == 'failure' }}
+      uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+      continue-on-error: false
+      with:
+        artifact-ids: ${{ inputs.artifact-ids }}
+        name: ${{ inputs.name }}
+        pattern: ${{ inputs.pattern }}
+        path: ${{ inputs.path }}
+        merge-multiple: ${{ inputs.merge-multiple }}
+        digest-mismatch: error
+    - name: Export only a successful transfer
+      id: result
+      if: ${{ always() }}
+      shell: bash
+      env:
+        OUTCOME_1: ${{ steps.attempt1.outcome }}
+        DOWNLOAD_PATH_1: ${{ steps.attempt1.outputs.download-path }}
+        OUTCOME_2: ${{ steps.attempt2.outcome }}
+        DOWNLOAD_PATH_2: ${{ steps.attempt2.outputs.download-path }}
+        OUTCOME_3: ${{ steps.attempt3.outcome }}
+        DOWNLOAD_PATH_3: ${{ steps.attempt3.outputs.download-path }}
+      run: |
+        set -euo pipefail
+        for attempt in 1 2 3; do
+          outcome_key="OUTCOME_$attempt"
+          if [[ "${!outcome_key}" != success ]]; then continue; fi
+          path_key="DOWNLOAD_PATH_$attempt"
+          [[ -n "${!path_key}" && "${!path_key}" != *$'\n'* ]] || exit 1
+          printf 'download-path=%s\n' "${!path_key}" >> "$GITHUB_OUTPUT"
+          exit 0
+        done
+        echo "Artifact transfer did not complete successfully." >&2
+        exit 1
