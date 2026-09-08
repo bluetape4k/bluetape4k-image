@@ -1249,10 +1249,23 @@ jobs:
       - *python-step
       - *trust-step
       - name: Execute producer stage - require external public visibility
+        timeout-minutes: 6
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          test "$(gh api /orgs/bluetape4k/packages/container/paddleocr-service --jq .visibility)" = public
+          set -euo pipefail
+          for attempt in {1..30}; do
+            visibility=$(timeout 5s gh api /orgs/bluetape4k/packages/container/paddleocr-service --jq .visibility)
+            case "$visibility" in
+              public) exit 0 ;;
+              private)
+                if (( attempt < 30 )); then sleep 5; fi
+                ;;
+              *) exit 1 ;;
+            esac
+          done
+          echo "Release package remained private within the visibility wait limit." >&2
+          exit 1
       - *cleanup-step
       - *cleanup-fragment-step
       - *cleanup-upload-step

@@ -360,6 +360,58 @@ class ProducerWorkflowContractTest(unittest.TestCase):
             self.assertEqual((ambient / "hosts.yml").read_text(), "fixture-only")
             self.assertEqual((ambient / "config.json").read_text(), "fixture-only")
 
+    def test_public_visibility_wait_is_bounded_and_fail_closed(self) -> None:
+        stage = self.blocks["public-visibility-readback"].split("        run: |\n", 1)[
+            1
+        ]
+        shell = textwrap.dedent(stage.split("      - *cleanup-step", 1)[0])
+        for scenario, expected_success, expected_calls in (
+            ("publish", True, 3),
+            ("private", False, 30),
+            ("internal", False, 1),
+            ("api-error", False, 1),
+        ):
+            with (
+                self.subTest(scenario=scenario),
+                tempfile.TemporaryDirectory() as directory,
+            ):
+                root = Path(directory)
+                gh = root / "gh"
+                gh.write_text(
+                    f"#!{sys.executable}\n"
+                    "import os, sys\nfrom pathlib import Path\n"
+                    "p = Path('calls')\n"
+                    "count = int(p.read_text()) + 1 if p.exists() else 1\n"
+                    "p.write_text(str(count))\n"
+                    "mode = os.environ['SCENARIO']\n"
+                    "if mode == 'api-error': sys.exit(1)\n"
+                    "print('public' if mode == 'publish' and count >= 3 else "
+                    "'internal' if mode == 'internal' else 'private')\n"
+                )
+                timeout = root / "timeout"
+                timeout.write_text(
+                    '#!/bin/sh\ntest "$1" = 5s || exit 9\nshift\nexec "$@"\n'
+                )
+                sleep = root / "sleep"
+                sleep.write_text('#!/bin/sh\ntest "$1" = 5\n')
+                for executable in (gh, timeout, sleep):
+                    executable.chmod(0o755)
+                environment = dict(os.environ, SCENARIO=scenario)
+                environment["PATH"] = str(root) + os.pathsep + os.environ["PATH"]
+                result = subprocess.run(
+                    ["bash", "-c", shell],
+                    cwd=root,
+                    env=environment,
+                    text=True,
+                    capture_output=True,
+                    timeout=10,
+                    check=False,
+                )
+                self.assertEqual(
+                    result.returncode == 0, expected_success, result.stderr
+                )
+                self.assertEqual(int((root / "calls").read_text()), expected_calls)
+
     def test_manual_dispatch_inputs_and_serialization_are_exact(self) -> None:
         event_block = self.workflow.split("\npermissions:", 1)[0]
         self.assertIn("on:\n  workflow_dispatch:\n    inputs:", event_block)
