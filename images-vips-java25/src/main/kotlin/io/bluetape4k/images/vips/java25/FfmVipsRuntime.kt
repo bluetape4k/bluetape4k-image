@@ -23,6 +23,7 @@ import io.bluetape4k.logging.KLogging
 import kotlinx.coroutines.CancellationException
 import org.jetbrains.annotations.VisibleForTesting
 import java.util.concurrent.atomic.AtomicReference
+import java.util.concurrent.locks.LockSupport
 
 /**
  * vips-ffm(FFM API) 기반 libvips 런타임 싱글턴.
@@ -56,6 +57,19 @@ object FfmVipsRuntime : VipsRuntime, KLogging() {
 
     @VisibleForTesting
     internal var codecProbe: FfmVipsCodecProbe = DefaultFfmVipsCodecProbe
+
+    /** 테스트에서 owner 정체를 빠르게 재현하기 위한 대기 제한 override입니다. */
+    @VisibleForTesting
+    internal var initializationWaitTimeoutNanos: Long = INITIALIZATION_WAIT_TIMEOUT_NANOS
+
+    @VisibleForTesting
+    internal var initializationWaitClock: () -> Long = System::nanoTime
+
+    @VisibleForTesting
+    internal var initializationWaitStartedHook: (() -> Unit)? = null
+
+    @VisibleForTesting
+    internal var initializationWaitCompletedHook: (() -> Unit)? = null
 
     @Volatile
     private var _concurrencyCapability: VipsConcurrencyCapability = unsupportedConcurrencyCapability()
@@ -94,26 +108,21 @@ object FfmVipsRuntime : VipsRuntime, KLogging() {
         }
 
         if (!state.compareAndSet(RuntimeState.UNINITIALIZED, RuntimeState.INITIALIZING)) {
-            var spinCount = 0
-            while (state.get() == RuntimeState.INITIALIZING) {
-                if (++spinCount > 10_000) {
-                    java.util.concurrent.locks.LockSupport.parkNanos(1_000_000L) // 1ms backoff
-                    spinCount = 0
-                } else {
-                    Thread.onSpinWait()
+            // 다른 스레드가 CAS에서 이겼습니다. 완료까지 bounded wait 하되 owner는 건드리지 않습니다.
+            val deadline = initializationWaitClock() + initializationWaitTimeoutNanos
+            while (true) {
+                awaitInitializationCompletion("libvips init", deadline)
+                when (state.get()) {
+                    RuntimeState.INITIALIZED -> return verifyEffectiveConfiguration(requestedConfiguration)
+                    RuntimeState.SHUTDOWN -> throw VipsInitializationException(
+                        "libvips was shut down during concurrent initialization"
+                    )
+                    RuntimeState.UNINITIALIZED -> throw VipsInitializationException(
+                        "Concurrent initialization attempt failed — retry"
+                    )
+                    RuntimeState.INITIALIZING -> continue
                 }
             }
-            when (state.get()) {
-                RuntimeState.INITIALIZED -> verifyEffectiveConfiguration(requestedConfiguration)
-                RuntimeState.SHUTDOWN -> throw VipsInitializationException(
-                    "libvips was shut down during concurrent initialization"
-                )
-                RuntimeState.UNINITIALIZED -> throw VipsInitializationException(
-                    "Concurrent initialization attempt failed — retry"
-                )
-                else -> {}
-            }
-            return
         }
 
         try {
@@ -134,8 +143,10 @@ object FfmVipsRuntime : VipsRuntime, KLogging() {
     }
 
     override fun shutdown() {
-        // INITIALIZING 중 shutdown()이 호출되면 spin-wait 후 전이.
-        // UNINITIALIZED/SHUTDOWN 상태에서는 아무것도 하지 않음.
+        // INITIALIZING 중 shutdown()이 호출되면 bounded wait 후 전이합니다.
+        // 대기자가 timeout/interrupt로 이탈해도 owner와 native 자원은 변경하지 않습니다.
+        // UNINITIALIZED/SHUTDOWN 상태에서는 아무것도 하지 않습니다.
+        val deadline = initializationWaitClock() + initializationWaitTimeoutNanos
         while (true) {
             when (state.get()) {
                 RuntimeState.SHUTDOWN, RuntimeState.UNINITIALIZED -> return
@@ -146,7 +157,7 @@ object FfmVipsRuntime : VipsRuntime, KLogging() {
                         return
                     }
                 }
-                RuntimeState.INITIALIZING -> Thread.onSpinWait()
+                RuntimeState.INITIALIZING -> awaitInitializationCompletion("libvips shutdown", deadline)
             }
         }
     }
@@ -236,8 +247,46 @@ object FfmVipsRuntime : VipsRuntime, KLogging() {
         state.set(RuntimeState.UNINITIALIZED)
         nativeRuntime = DefaultFfmVipsNativeRuntime
         codecProbe = DefaultFfmVipsCodecProbe
+        initializationWaitTimeoutNanos = INITIALIZATION_WAIT_TIMEOUT_NANOS
+        initializationWaitClock = System::nanoTime
+        initializationWaitStartedHook = null
+        initializationWaitCompletedHook = null
         effectiveConfiguration.set(null)
         _concurrencyCapability = unsupportedConcurrencyCapability()
+    }
+
+    /**
+     * INITIALIZING owner의 완료를 monotonic deadline으로 기다립니다.
+     *
+     * 이 함수는 state를 변경하거나 native API를 호출하지 않습니다. 경쟁 호출자는 timeout 또는
+     * interrupt 시 자신만 [VipsInitializationException]으로 반환하며, interrupt flag는 소비하지 않습니다.
+     */
+    private fun awaitInitializationCompletion(operation: String, deadline: Long) {
+        initializationWaitStartedHook?.invoke()
+        var spinCount = 0
+        while (state.get() == RuntimeState.INITIALIZING) {
+            if (Thread.currentThread().isInterrupted) {
+                throw VipsInitializationException(
+                    "$operation interrupted while waiting for libvips initialization"
+                )
+            }
+
+            val remainingNanos = deadline - initializationWaitClock()
+            if (remainingNanos <= 0L) {
+                throw VipsInitializationException(
+                    "$operation timed out waiting for libvips initialization " +
+                        "after $INITIALIZATION_WAIT_TIMEOUT_SECONDS seconds"
+                )
+            }
+
+            if (++spinCount <= WAIT_SPIN_LIMIT) {
+                Thread.onSpinWait()
+            } else {
+                LockSupport.parkNanos(minOf(remainingNanos, WAIT_PARK_NANOS))
+                spinCount = 0
+            }
+        }
+        initializationWaitCompletedHook?.invoke()
     }
 
     private fun verifyEffectiveConfiguration(requested: InitConfiguration) {
@@ -315,4 +364,8 @@ object FfmVipsRuntime : VipsRuntime, KLogging() {
     private const val BACKEND_NAME = "vips-ffm"
     private const val HEIF_LOAD_OPERATION = "heifload_buffer"
     private const val HEIF_SAVE_OPERATION = "heifsave_buffer"
+    private const val INITIALIZATION_WAIT_TIMEOUT_NANOS = 60_000_000_000L
+    private const val INITIALIZATION_WAIT_TIMEOUT_SECONDS = 60
+    private const val WAIT_SPIN_LIMIT = 10_000
+    private const val WAIT_PARK_NANOS = 1_000_000L
 }

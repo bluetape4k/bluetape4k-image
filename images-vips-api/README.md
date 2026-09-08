@@ -282,6 +282,8 @@ val resized = image.resize(640, 480)  // Both leak if not closed
 
 - **Thread-safe initialization**: Using atomic CAS, not `@Synchronized`
 - **Virtual Thread friendly**: No monitor locking, compatible with Virtual Threads
+- **Bounded concurrent waits**: A competing `init()` or `shutdown()` caller waits at most 60 seconds; interruption or timeout raises `VipsInitializationException` without changing the owner or native resources
+- **Retry after owner failure**: If the initialization owner fails, the runtime returns to a retryable state; a waiter receives the failure exception and may retry after checking the cause
 - **Terminal shutdown**: `shutdown()` is irreversible; `init()` after shutdown throws `VipsInitializationException`
 
 ```kotlin
