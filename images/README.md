@@ -297,7 +297,14 @@ pipeline
     }
 ```
 
+The pipeline checks both input and requested output against `maxPixels` before resizing.
+Each in-flight task reserves the sum of its input and output pixels until writing finishes;
+requests exceeding `maxInFlightPixels` fail at `VALIDATION`. This budget does not include
+encoder/crop scratch memory or result images retained by consumers. Keep source files unchanged
+during processing; decoded input larger than its reservation is rejected before transformation.
+
 `ThumbnailCrop` variants:
+
 - `ThumbnailCrop.Fit` — scale to fit within the bounding box (default)
 - `ThumbnailCrop.Smart()` — saliency-based crop then resize to exact dimensions
 
