@@ -103,6 +103,19 @@ class PaddleOcrRunbookTest(unittest.TestCase):
                 block,
             )
 
+    def test_workflow_run_adapter_uses_github_api_workflow_identifier(self) -> None:
+        produce = self.text.split(
+            "## 2. PRODUCE dispatch와 exact run 선택", 1
+        )[1].split("## 3. staging, release, attestation read-back", 1)[0]
+        self.assertEqual(
+            produce.count("--workflow paddleocr-producer.yml"),
+            2,
+        )
+        self.assertIn(
+            "--expected-workflow .github/workflows/paddleocr-producer.yml",
+            produce,
+        )
+
     def test_all_local_links_exist(self) -> None:
         for target in LOCAL_LINK.findall(self.text):
             if target.startswith(("http://", "https://", "#")):

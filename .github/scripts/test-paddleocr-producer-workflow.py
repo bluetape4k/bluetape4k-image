@@ -210,6 +210,13 @@ class ProducerWorkflowContractTest(unittest.TestCase):
                     self.assertLess(trust, side_effect)
         validation = self.blocks["validation"]
         self.assertIn("PRODUCER_JOB_STATUS: ${{ job.status }}", validation)
+        self.assertIn(
+            '> .producer-state/step-summary-result.json',
+            validation,
+        )
+        terminal = validation.split("name: Emit terminal result", 1)[1]
+        self.assertIn(".producer-state/step-summary-result.json", terminal)
+        self.assertNotIn("GITHUB_STEP_SUMMARY", terminal)
         self.assertIn("Execute producer stage - validate immutable inputs", validation)
         self.assertIn(" validate-inputs ", validation)
         self.assertIn(" verify-dockerfile ", validation)

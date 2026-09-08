@@ -136,7 +136,7 @@ case "$GH_BIN" in /*) ;; *) exit 40 ;; esac
 BEFORE_RUNS="$REPO_ROOT/build/before-workflow-runs.json"
 python3 scripts/research/paddle_ocr_producer.py snapshot-workflow-runs \
   --repo "$REPO" \
-  --workflow .github/workflows/paddleocr-producer.yml \
+  --workflow paddleocr-producer.yml \
   --branch develop \
   --event workflow_dispatch \
   --gh-bin "$GH_BIN" \
@@ -164,7 +164,7 @@ dispatch 직후에는 새 run 하나만 선택해야 한다. 수동 rerun은 run
 python3 scripts/research/paddle_ocr_producer.py select-dispatched-run \
   --before "$BEFORE_RUNS" \
   --repo "$REPO" \
-  --workflow .github/workflows/paddleocr-producer.yml \
+  --workflow paddleocr-producer.yml \
   --branch develop \
   --event workflow_dispatch \
   --gh-bin "$GH_BIN" \
