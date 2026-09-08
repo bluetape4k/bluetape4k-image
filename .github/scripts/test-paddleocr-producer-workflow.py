@@ -95,6 +95,9 @@ EXPECTED_PERMISSIONS = {
 
 EXPECTED_CODEOWNERS = {
     "/.github/workflows/paddleocr-producer.yml @debop",
+    "/.github/actions/paddleocr-upload-artifact/ @debop",
+    "/.github/actions/paddleocr-download-artifact/ @debop",
+    "/.github/scripts/test-paddleocr-artifact-retry.py @debop",
     "/.github/workflows/ci.yml @debop",
     "/.github/CODEOWNERS @debop",
     "/.github/scripts/test-paddleocr-producer-workflow.py @debop",
@@ -437,9 +440,23 @@ class ProducerWorkflowContractTest(unittest.TestCase):
                 self.assertEqual(job_permissions(block), EXPECTED_PERMISSIONS[job])
                 self.assertNotIn("contents: write", block)
 
+    def test_producer_artifact_transfers_use_bounded_retry_actions(self) -> None:
+        self.assertNotRegex(self.workflow, r"uses: actions/(upload|download)-artifact@")
+        for operation in ("upload", "download"):
+            self.assertIn(f"uses: ./.github/actions/paddleocr-{operation}-artifact", self.workflow)
+        self.assertIn("python3 .github/scripts/test-paddleocr-artifact-retry.py", self.ci)
+
     def test_actions_are_verified_full_sha_pins_and_checkout_drops_credentials(self) -> None:
         uses = re.findall(r"(?m)^\s+(?:- )?uses: ([^\s]+)$", self.workflow)
         self.assertTrue(uses)
+        for operation in ("upload", "download"):
+            local = f"./.github/actions/paddleocr-{operation}-artifact"
+            self.assertIn(local, uses)
+            composite = (ROOT / local / "action.yml").read_text(encoding="utf-8")
+            uses = [value for value in uses if value != local]
+            nested = re.findall(r"(?m)^\s+(?:- )?uses: ([^\s]+)$", composite)
+            self.assertEqual(len(nested), 3)
+            uses.extend(nested)
         for value in uses:
             with self.subTest(uses=value):
                 repository, separator, revision = value.partition("@")
@@ -509,7 +526,7 @@ class ProducerWorkflowContractTest(unittest.TestCase):
             "emergency-deny-attest", "cleanup-aggregate",
         })
         self.assertIn("if: ${{ always() }}", finalizer)
-        self.assertLess(finalizer.index("download-artifact@"), finalizer.index(" finalize-run "))
+        self.assertLess(finalizer.index("paddleocr-download-artifact"), finalizer.index(" finalize-run "))
         emergency = self.blocks["emergency-deny-attest"]
         self.assertEqual(job_needs(emergency), {"consumer-verify-public"})
         self.assertIn("QUARANTINE_PENDING", emergency)

@@ -9,3 +9,6 @@
 /scripts/research/paddle_ocr_smoke.py @debop
 /scripts/research/test_paddle_ocr_smoke.py @debop
 /docs/superpowers/runbooks/2026-09-07-issue-638-paddleocr-producer.md @debop
+/.github/actions/paddleocr-upload-artifact/ @debop
+/.github/actions/paddleocr-download-artifact/ @debop
+/.github/scripts/test-paddleocr-artifact-retry.py @debop

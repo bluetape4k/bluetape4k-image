@@ -169,7 +169,7 @@ jobs:
       - &cleanup-upload-step
         name: Upload cleanup fragment
         if: ${{ always() }}
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        uses: ./.github/actions/paddleocr-upload-artifact
         with:
           name: cleanup-fragment-${{ env.ATTEMPT_ID }}-${{ env.PRODUCER_JOB }}
           path: .producer-state/cleanup-fragments/${{ env.PRODUCER_JOB }}.json
@@ -297,7 +297,7 @@ jobs:
             >> "$GITHUB_OUTPUT"
       - name: Upload exact model artifact
         id: upload-models
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        uses: ./.github/actions/paddleocr-upload-artifact
         with:
           name: paddleocr-models-${{ env.ATTEMPT_ID }}
           path: .producer-state/models/
@@ -358,7 +358,7 @@ jobs:
             >> "$GITHUB_OUTPUT"
       - name: Upload exact wheelhouse artifact
         id: upload-wheelhouse
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        uses: ./.github/actions/paddleocr-upload-artifact
         with:
           name: paddleocr-wheelhouse-${{ env.ATTEMPT_ID }}
           path: .producer-state/wheelhouse-artifact/
@@ -395,12 +395,12 @@ jobs:
       - *python-step
       - *trust-step
       - name: Download same-run model artifact by ID
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        uses: ./.github/actions/paddleocr-download-artifact
         with:
           artifact-ids: ${{ needs.staging.outputs.artifact-id }}
           path: .producer-state/models
       - name: Download same-run wheelhouse artifact by ID
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        uses: ./.github/actions/paddleocr-download-artifact
         with:
           artifact-ids: ${{ needs.source-repro-check.outputs.artifact-id }}
           path: .producer-state/wheelhouse
@@ -520,7 +520,7 @@ jobs:
           } >> "$GITHUB_OUTPUT"
       - name: Upload exact OCI handoff artifact
         id: upload-oci
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        uses: ./.github/actions/paddleocr-upload-artifact
         with:
           name: paddleocr-oci-${{ env.ATTEMPT_ID }}
           path: .producer-state/oci/
@@ -560,7 +560,7 @@ jobs:
       - *python-step
       - *trust-step
       - name: Download same-run OCI artifact by ID
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        uses: ./.github/actions/paddleocr-download-artifact
         with:
           artifact-ids: ${{ needs.image-build.outputs.artifact-id }}
           path: .producer-state/oci
@@ -651,7 +651,7 @@ jobs:
       - *python-step
       - *trust-step
       - name: Download same-run OCI artifact by ID
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        uses: ./.github/actions/paddleocr-download-artifact
         with:
           artifact-ids: ${{ needs.staging-push.outputs.oci-artifact-id }}
           path: .producer-state/oci
@@ -702,7 +702,7 @@ jobs:
           cp .producer-state/oci/handoff.json .producer-state/attestations/handoff.json
       - name: Upload exact staging attestation artifact
         id: upload-staging-attestations
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        uses: ./.github/actions/paddleocr-upload-artifact
         with:
           name: paddleocr-staging-attestations-${{ env.ATTEMPT_ID }}
           path: .producer-state/attestations/
@@ -740,7 +740,7 @@ jobs:
       - *python-step
       - *trust-step
       - name: Download exact staging attestation artifact
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        uses: ./.github/actions/paddleocr-download-artifact
         with:
           artifact-ids: ${{ needs.staging-attest.outputs.artifact-id }}
           path: .producer-state/attestations
@@ -942,7 +942,7 @@ jobs:
       - *python-step
       - *trust-step
       - name: Download verified staging evidence inputs
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        uses: ./.github/actions/paddleocr-download-artifact
         with:
           artifact-ids: ${{ needs.release-promotion.outputs.staging-attestation-artifact-id }}
           path: .producer-state/attestations
@@ -971,7 +971,7 @@ jobs:
             .producer-state/attestations/sbom.bundle.jsonl
       - name: Upload exact release attestation artifact
         id: upload-release-attestations
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        uses: ./.github/actions/paddleocr-upload-artifact
         with:
           name: paddleocr-release-attestations-${{ env.ATTEMPT_ID }}
           path: .producer-state/attestations/
@@ -1009,7 +1009,7 @@ jobs:
       - *python-step
       - *trust-step
       - name: Download exact release attestation artifact
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        uses: ./.github/actions/paddleocr-download-artifact
         with:
           artifact-ids: ${{ needs.release-attest.outputs.artifact-id }}
           path: .producer-state/attestations
@@ -1082,7 +1082,7 @@ jobs:
       - *python-step
       - *trust-step
       - name: Download exact release attestation artifact
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        uses: ./.github/actions/paddleocr-download-artifact
         with:
           artifact-ids: ${{ needs.release-readback.outputs.release-attestation-artifact-id }}
           path: .producer-state/attestations
@@ -1466,7 +1466,7 @@ jobs:
           )
           PY
       - name: Upload quarantine candidate
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        uses: ./.github/actions/paddleocr-upload-artifact
         with:
           name: paddleocr-quarantine-pending-${{ env.ATTEMPT_ID }}
           path: .producer-state/quarantine-pending.json
@@ -1495,7 +1495,7 @@ jobs:
       - *checkout-step
       - *python-step
       - name: Download cleanup fragments
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        uses: ./.github/actions/paddleocr-download-artifact
         with:
           pattern: cleanup-fragment-${{ env.ATTEMPT_ID }}-*
           path: .producer-state/cleanup-fragments
@@ -1528,7 +1528,7 @@ jobs:
             --merged-at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
             --output .producer-state/cleanup.json
       - name: Upload cleanup aggregate
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        uses: ./.github/actions/paddleocr-upload-artifact
         with:
           name: paddleocr-cleanup-${{ env.ATTEMPT_ID }}
           path: .producer-state/cleanup.json
@@ -1554,7 +1554,7 @@ jobs:
       - *python-step
       - *trust-step
       - name: Download cleanup aggregate
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        uses: ./.github/actions/paddleocr-download-artifact
         with:
           name: paddleocr-cleanup-${{ env.ATTEMPT_ID }}
           path: .producer-state/finalizer
@@ -1680,7 +1680,7 @@ jobs:
           (root / "reconcile-state.json").write_bytes(canonical(state))
           PY
       - name: Upload terminal result
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        uses: ./.github/actions/paddleocr-upload-artifact
         with:
           name: paddleocr-result-${{ env.ATTEMPT_ID }}
           path: .producer-state/finalizer/producer-result.json
@@ -1689,7 +1689,7 @@ jobs:
           compression-level: 0
           retention-days: 90
       - name: Upload reconciliation state
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        uses: ./.github/actions/paddleocr-upload-artifact
         with:
           name: paddleocr-reconcile-state-${{ env.ATTEMPT_ID }}
           path: |
