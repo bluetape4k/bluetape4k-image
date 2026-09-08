@@ -1,10 +1,10 @@
 package io.bluetape4k.images.vips.java25
 
+import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.assertions.shouldNotContain
-import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.images.vips.VipsIncubatingApi
 import io.bluetape4k.images.vips.VipsCodecDirection
 import io.bluetape4k.images.vips.VipsCodecSupport
@@ -12,6 +12,7 @@ import io.bluetape4k.images.vips.VipsImageFormat
 import io.bluetape4k.images.vips.java25.internal.DefaultFfmVipsCodecProbe
 import io.bluetape4k.images.vips.java25.internal.FfmVipsCodecProbe
 import io.bluetape4k.images.vips.java25.internal.FfmVipsCodecProbeResult
+import io.bluetape4k.images.vips.java25.internal.classifyFfmVipsCodecProbe
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -84,6 +85,18 @@ class FfmVipsCodecCapabilityTest {
         decode.reason.orEmpty() shouldContain "Codec operation probe failed"
         decode.reason.orEmpty() shouldNotContain "/run/secrets/libvips-path"
         report.codec(VipsImageFormat.AVIF).encode.support shouldBeEqualTo VipsCodecSupport.UNAVAILABLE
+    }
+
+    @Test
+    fun `default probe classifier separates true false exception and fatal error`() {
+        classifyFfmVipsCodecProbe { true } shouldBeEqualTo FfmVipsCodecProbeResult.Available
+        classifyFfmVipsCodecProbe { false } shouldBeEqualTo FfmVipsCodecProbeResult.Unavailable
+        classifyFfmVipsCodecProbe { error("secret native path") } shouldBeEqualTo
+            FfmVipsCodecProbeResult.Failed(FfmVipsCodecProbeResult.SAFE_FAILURE_REASON)
+
+        assertFailsWith<AssertionError> {
+            classifyFfmVipsCodecProbe { throw AssertionError("fatal native linkage") }
+        }
     }
 
     @Test

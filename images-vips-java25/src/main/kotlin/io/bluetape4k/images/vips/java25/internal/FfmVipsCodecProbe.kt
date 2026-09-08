@@ -34,6 +34,21 @@ internal interface FfmVipsCodecProbe {
 }
 
 /**
+ * native operation lookup 결과를 안전한 probe 상태로 분류합니다.
+ *
+ * [Exception]은 탐색 실패로 보존하지만 [Error]는 호출자에게 전파합니다.
+ */
+internal fun classifyFfmVipsCodecProbe(operationLookup: () -> Boolean): FfmVipsCodecProbeResult = try {
+    if (operationLookup()) {
+        FfmVipsCodecProbeResult.Available
+    } else {
+        FfmVipsCodecProbeResult.Unavailable
+    }
+} catch (_: Exception) {
+    FfmVipsCodecProbeResult.Failed(FfmVipsCodecProbeResult.SAFE_FAILURE_REASON)
+}
+
+/**
  * `vips_type_find`를 기반으로 하는 기본 vips-ffm codec probe입니다.
  */
 internal object DefaultFfmVipsCodecProbe : FfmVipsCodecProbe {
@@ -43,20 +58,13 @@ internal object DefaultFfmVipsCodecProbe : FfmVipsCodecProbe {
         null
     }
 
-    override fun inspectOperation(name: String): FfmVipsCodecProbeResult = try {
-        val available =
+    override fun inspectOperation(name: String): FfmVipsCodecProbeResult =
+        classifyFfmVipsCodecProbe {
             Arena.ofConfined().use { arena ->
                 VipsRaw.vips_type_find(
                     arena.allocateFrom("VipsOperation"),
                     arena.allocateFrom(name),
                 ) != 0L
             }
-        if (available) {
-            FfmVipsCodecProbeResult.Available
-        } else {
-            FfmVipsCodecProbeResult.Unavailable
         }
-    } catch (_: Exception) {
-        FfmVipsCodecProbeResult.Failed(FfmVipsCodecProbeResult.SAFE_FAILURE_REASON)
-    }
 }
