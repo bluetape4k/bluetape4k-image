@@ -237,11 +237,23 @@ jobs:
           PY
           python3 scripts/research/paddle_ocr_producer.py write-step-summary \
             --input .producer-state/summary-input.json \
-            --summary "$GITHUB_STEP_SUMMARY"
+            --summary "$GITHUB_STEP_SUMMARY" \
+            > .producer-state/step-summary-result.json
       - &terminal-step
         name: Emit terminal result
         if: ${{ always() }}
-        run: test -s "$GITHUB_STEP_SUMMARY"
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          result = json.loads(
+              Path(".producer-state/step-summary-result.json").read_text(encoding="utf-8")
+          )
+          if result.get("command") != "write-step-summary":
+              raise SystemExit(40)
+          if result.get("status") != "PASS" or result.get("errorCode") != "NONE":
+              raise SystemExit(40)
+          PY
   staging:
     name: PaddleOCR producer / staging
     runs-on: ubuntu-24.04
