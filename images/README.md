@@ -297,7 +297,17 @@ pipeline
     }
 ```
 
+The pipeline checks both input and requested output against `maxPixels` before resizing.
+Each in-flight task reserves the sum of its input and output pixels until writing finishes;
+requests exceeding `maxInFlightPixels` fail at `VALIDATION`. This budget does not include
+encoder/crop scratch memory or result images retained by consumers. Keep source files unchanged
+during processing; decoded input larger than its reservation is rejected before transformation.
+
+Each `build()` snapshots the configured sizes. Reusing the builder does not alter existing
+pipelines, but concurrent modification of the builder itself is not supported.
+
 `ThumbnailCrop` variants:
+
 - `ThumbnailCrop.Fit` — scale to fit within the bounding box (default)
 - `ThumbnailCrop.Smart()` — saliency-based crop then resize to exact dimensions
 
@@ -306,6 +316,10 @@ pipeline
 `TileProcessor` splits large images into a grid of tiles, applies parallel transforms to each tile,
 and reassembles them into a single output image. Useful for applying localised filters to images that
 are too large to process as a whole.
+
+Tile dimensions may reach `Int.MAX_VALUE` when splitting a small image. Before allocating
+the merged image, the processor rejects negative coordinates, out-of-bounds tiles, and
+declared dimensions that do not match the actual tile image.
 
 ```kotlin
 import com.sksamuel.scrimage.ImmutableImage

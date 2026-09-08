@@ -74,6 +74,90 @@ class S3ImageStorageTest {
     }
 
     @Test
+    fun `exists uses exact key HEAD and does not require LIST permission`() = runTest {
+        coEvery {
+            operations.headObject(bucket = bucket, key = objectKey)
+        } returns S3ObjectMetadata(sizeBytes = 4)
+
+        storage.exists(key) shouldBeEqualTo true
+
+        coVerify(exactly = 1) { operations.headObject(bucket = bucket, key = objectKey) }
+        coVerify(exactly = 0) { operations.listPage(any(), any(), any(), any()) }
+        confirmVerified(operations)
+    }
+
+    @Test
+    fun `exists maps missing HEAD object to false`() = runTest {
+        coEvery {
+            operations.headObject(bucket = bucket, key = objectKey)
+        } throws software.amazon.awssdk.services.s3.model.NoSuchKeyException.builder().build()
+
+        storage.exists(key) shouldBeEqualTo false
+
+        coVerify(exactly = 1) { operations.headObject(bucket = bucket, key = objectKey) }
+        coVerify(exactly = 0) { operations.listPage(any(), any(), any(), any()) }
+        confirmVerified(operations)
+    }
+
+    @Test
+    fun `exists maps HEAD 404 to false`() = runTest {
+        coEvery {
+            operations.headObject(bucket = bucket, key = objectKey)
+        } throws S3Exception.builder().statusCode(404).build()
+
+        storage.exists(key) shouldBeEqualTo false
+
+        coVerify(exactly = 1) { operations.headObject(bucket = bucket, key = objectKey) }
+        coVerify(exactly = 0) { operations.listPage(any(), any(), any(), any()) }
+        confirmVerified(operations)
+    }
+
+    @Test
+    fun `exists propagates HEAD access denial`() = runTest {
+        coEvery {
+            operations.headObject(bucket = bucket, key = objectKey)
+        } throws S3Exception.builder().statusCode(403).build()
+
+        assertFailsWith<ImageStorageException.AccessDeniedException> {
+            storage.exists(key)
+        }
+
+        coVerify(exactly = 1) { operations.headObject(bucket = bucket, key = objectKey) }
+        coVerify(exactly = 0) { operations.listPage(any(), any(), any(), any()) }
+        confirmVerified(operations)
+    }
+
+    @Test
+    fun `exists propagates HEAD transport failures`() = runTest {
+        coEvery {
+            operations.headObject(bucket = bucket, key = objectKey)
+        } throws RuntimeException("HEAD unavailable")
+
+        assertFailsWith<ImageStorageException.TransientException> {
+            storage.exists(key)
+        }
+
+        coVerify(exactly = 1) { operations.headObject(bucket = bucket, key = objectKey) }
+        coVerify(exactly = 0) { operations.listPage(any(), any(), any(), any()) }
+        confirmVerified(operations)
+    }
+
+    @Test
+    fun `exists propagates HEAD cancellation`() = runTest {
+        coEvery {
+            operations.headObject(bucket = bucket, key = objectKey)
+        } throws CancellationException("cancelled")
+
+        assertFailsWith<CancellationException> {
+            storage.exists(key)
+        }
+
+        coVerify(exactly = 1) { operations.headObject(bucket = bucket, key = objectKey) }
+        coVerify(exactly = 0) { operations.listPage(any(), any(), any(), any()) }
+        confirmVerified(operations)
+    }
+
+    @Test
     fun `download maps a missing object from HEAD without reading the body`() = runTest {
         coEvery {
             operations.headObject(bucket = bucket, key = objectKey)
@@ -236,7 +320,9 @@ class S3ImageStorageTest {
     }
 
     @Test
-    fun `path download preserves destination and cleans staged file on snapshot mismatch`(@TempDir tempDir: Path) = runTest {
+    fun `path download preserves destination and cleans staged file on snapshot mismatch`(
+        @TempDir tempDir: Path,
+    ) = runTest {
         val destination = tempDir.resolve("photo.jpg")
         val original = "existing".toByteArray()
         Files.write(destination, original)

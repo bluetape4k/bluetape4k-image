@@ -1,7 +1,6 @@
 package io.bluetape4k.images.vips.java21.writer
 
 import com.criteo.vips.VipsImage
-import com.criteo.vips.enums.VipsImageFormat
 import io.bluetape4k.images.vips.VipsEncodeException
 import io.bluetape4k.images.vips.VipsEncodeOptions
 import com.criteo.vips.VipsException
@@ -22,8 +21,8 @@ internal object JVipsWebpWriter {
      */
     fun writeToBytes(image: VipsImage, options: VipsEncodeOptions): ByteArray {
         return try {
-            // writeToArray 인자 순서: VipsImageFormat, quality, strip
-            image.writeToArray(VipsImageFormat.WEBP, options.quality, options.stripMetadata)
+            // WebP 전용 API로 무손실 옵션까지 전달합니다.
+            image.writeWEBPToArray(options.quality, options.lossless, options.stripMetadata)
         } catch (e: VipsException) {
             throw VipsEncodeException("WebP encoding failed", e)
         }

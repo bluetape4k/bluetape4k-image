@@ -5,6 +5,7 @@ import io.bluetape4k.support.requireNotEmpty
 import io.bluetape4k.support.requirePositiveNumber
 import java.awt.Rectangle
 import java.io.Serializable
+import java.util.Collections
 import net.sourceforge.tess4j.ITessAPI
 
 /**
@@ -23,24 +24,35 @@ import net.sourceforge.tess4j.ITessAPI
  * val options = OcrOptions(languages = listOf("eng", "kor"))
  * ```
  */
-data class OcrOptions(
-    val languages: List<String> = listOf(DEFAULT_LANGUAGE),
-    val tessdataPath: String? = null,
-    val engineMode: TesseractEngineMode = TesseractEngineMode.DEFAULT,
-    val pageSegmentationMode: TesseractPageSegmentationMode = TesseractPageSegmentationMode.AUTO,
-    val variables: Map<String, String> = emptyMap(),
-    val configs: List<String> = emptyList(),
-    val trimText: Boolean = true,
-    val structuredDetail: OcrStructuredDetail = OcrStructuredDetail.PLAIN_TEXT,
-    val regions: List<OcrRegion> = emptyList(),
+@Suppress("TooManyFunctions")
+class OcrOptions(
+    languages: List<String> = listOf(DEFAULT_LANGUAGE),
+    tessdataPath: String? = null,
+    engineMode: TesseractEngineMode = TesseractEngineMode.DEFAULT,
+    pageSegmentationMode: TesseractPageSegmentationMode = TesseractPageSegmentationMode.AUTO,
+    variables: Map<String, String> = emptyMap(),
+    configs: List<String> = emptyList(),
+    trimText: Boolean = true,
+    structuredDetail: OcrStructuredDetail = OcrStructuredDetail.PLAIN_TEXT,
+    regions: List<OcrRegion> = emptyList(),
 ): Serializable {
 
+    val languages: List<String> = Collections.unmodifiableList(languages.toList())
+    val tessdataPath: String? = tessdataPath
+    val engineMode: TesseractEngineMode = engineMode
+    val pageSegmentationMode: TesseractPageSegmentationMode = pageSegmentationMode
+    val variables: Map<String, String> = Collections.unmodifiableMap(variables.toMap())
+    val configs: List<String> = Collections.unmodifiableList(configs.toList())
+    val trimText: Boolean = trimText
+    val structuredDetail: OcrStructuredDetail = structuredDetail
+    val regions: List<OcrRegion> = Collections.unmodifiableList(regions.toList())
+
     init {
-        languages.requireNotEmpty("languages")
-        languages.forEach { it.requireNotBlank("language") }
-        tessdataPath?.requireNotBlank("tessdataPath")
-        variables.keys.forEach { it.requireNotBlank("variable key") }
-        configs.forEach { it.requireNotBlank("config") }
+        this.languages.requireNotEmpty("languages")
+        this.languages.forEach { it.requireNotBlank("language") }
+        this.tessdataPath?.requireNotBlank("tessdataPath")
+        this.variables.keys.forEach { it.requireNotBlank("variable key") }
+        this.configs.forEach { it.requireNotBlank("config") }
     }
 
     /**
@@ -48,6 +60,71 @@ data class OcrOptions(
      */
     val languageExpression: String
         get() = languages.joinToString(separator = "+")
+
+    operator fun component1(): List<String> = languages
+    operator fun component2(): String? = tessdataPath
+    operator fun component3(): TesseractEngineMode = engineMode
+    operator fun component4(): TesseractPageSegmentationMode = pageSegmentationMode
+    operator fun component5(): Map<String, String> = variables
+    operator fun component6(): List<String> = configs
+    operator fun component7(): Boolean = trimText
+    operator fun component8(): OcrStructuredDetail = structuredDetail
+    operator fun component9(): List<OcrRegion> = regions
+
+    fun copy(
+        languages: List<String> = this.languages,
+        tessdataPath: String? = this.tessdataPath,
+        engineMode: TesseractEngineMode = this.engineMode,
+        pageSegmentationMode: TesseractPageSegmentationMode = this.pageSegmentationMode,
+        variables: Map<String, String> = this.variables,
+        configs: List<String> = this.configs,
+        trimText: Boolean = this.trimText,
+        structuredDetail: OcrStructuredDetail = this.structuredDetail,
+        regions: List<OcrRegion> = this.regions,
+    ): OcrOptions = OcrOptions(
+        languages,
+        tessdataPath,
+        engineMode,
+        pageSegmentationMode,
+        variables,
+        configs,
+        trimText,
+        structuredDetail,
+        regions,
+    )
+
+    override fun equals(other: Any?): Boolean =
+        this === other || (other is OcrOptions &&
+            languages == other.languages &&
+            tessdataPath == other.tessdataPath &&
+            engineMode == other.engineMode &&
+            pageSegmentationMode == other.pageSegmentationMode &&
+            variables == other.variables &&
+            configs == other.configs &&
+            trimText == other.trimText &&
+            structuredDetail == other.structuredDetail &&
+            regions == other.regions)
+
+    override fun hashCode(): Int {
+        var result = languages.hashCode()
+        result = 31 * result + (tessdataPath?.hashCode() ?: 0)
+        result = 31 * result + engineMode.hashCode()
+        result = 31 * result + pageSegmentationMode.hashCode()
+        result = 31 * result + variables.hashCode()
+        result = 31 * result + configs.hashCode()
+        result = 31 * result + trimText.hashCode()
+        result = 31 * result + structuredDetail.hashCode()
+        result = 31 * result + regions.hashCode()
+        return result
+    }
+
+    override fun toString(): String =
+        "OcrOptions(languages=$languages, tessdataPath=$tessdataPath, " +
+            "engineMode=$engineMode, pageSegmentationMode=$pageSegmentationMode, " +
+            "variables=$variables, configs=$configs, trimText=$trimText, " +
+            "structuredDetail=$structuredDetail, regions=$regions)"
+
+    private fun readResolve(): Any = copy()
 
     companion object {
         private const val serialVersionUID: Long = -2101859296994037212L
