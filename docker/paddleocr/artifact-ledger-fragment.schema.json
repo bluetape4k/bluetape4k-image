@@ -1,0 +1,100 @@
+{
+  "$id": "https://bluetape4k.github.io/schema/paddleocr/artifact-ledger-fragment.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "attemptId": {
+      "pattern": "^[1-9][0-9]*\\.[1-9][0-9]*$",
+      "type": "string"
+    },
+    "cleanupSha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "evidenceSha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "imagePlatformDigest": {
+      "oneOf": [
+        {
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "inputLockSha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "lastCompletedStage": {
+      "enum": [
+        "NONE",
+        "STAGING",
+        "EVIDENCE",
+        "RELEASE",
+        "PUBLIC_EVIDENCE"
+      ]
+    },
+    "mapped609Status": {
+      "enum": [
+        "PENDING",
+        "BLOCKED",
+        "REJECTED"
+      ]
+    },
+    "producerStatus": {
+      "enum": [
+        "VALIDATING",
+        "BLOCKED_INPUT",
+        "BLOCKED_LEGAL_INVENTORY",
+        "BUILDING",
+        "PUBLISHED_UNVERIFIED",
+        "PROMOTING",
+        "RELEASE_UNVERIFIED",
+        "QUARANTINE_PENDING",
+        "QUARANTINED",
+        "PRODUCER_PASS",
+        "REJECTED",
+        "REVOKED",
+        "FAILED",
+        "CANCELLED",
+        "INTERRUPTED"
+      ]
+    },
+    "reconciliationSha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "revocationsCommitSha": {
+      "pattern": "^[0-9a-f]{40}$",
+      "type": "string"
+    },
+    "revocationsSha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "schemaVersion": {
+      "const": 1
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "attemptId",
+    "producerStatus",
+    "lastCompletedStage",
+    "mapped609Status",
+    "inputLockSha256",
+    "imagePlatformDigest",
+    "evidenceSha256",
+    "reconciliationSha256",
+    "cleanupSha256",
+    "revocationsSha256",
+    "revocationsCommitSha"
+  ],
+  "title": "PaddleOCR producer artifact ledger fragment",
+  "type": "object"
+}

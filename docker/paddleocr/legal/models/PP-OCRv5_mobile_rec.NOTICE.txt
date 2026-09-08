@@ -1,0 +1,1 @@
+PP-OCRv5_mobile_rec inference model from PaddlePaddle/PaddleX, pinned to model-card revision 682f20538d8c086cb2128e5cfac775e6c4904e85 and PaddleX source revision ffb64904d23708863ff5b8da312a5cbd52a7f462.

@@ -97,6 +97,7 @@ class PaddleOcrSmokeTest(unittest.TestCase):
             json.dumps(
                 {
                     "schemaVersion": 1,
+                    "modelSource": "LEGACY_MOUNT",
                     "host": "127.0.0.1",
                     "port": 8080,
                     "network": "none",
@@ -131,6 +132,53 @@ class PaddleOcrSmokeTest(unittest.TestCase):
         )
         self.snapshots.append(inputs.model_snapshot)
         return inputs
+
+    def _write_image_config(self) -> None:
+        value = json.loads(self.config.read_text(encoding="utf-8"))
+        value.update({
+            "modelSource": "IMAGE",
+            "modelMount": None,
+            "command": ["--host", "127.0.0.1", "--port", "8080"],
+        })
+        self.config.write_text(json.dumps(value), encoding="utf-8")
+
+    def test_image_mode_uses_entrypoint_without_model_volume(self) -> None:
+        self._write_image_config()
+        _, config = load_service_config(self.config)
+        command = build_docker_command(IMAGE, None, self.output_root, config)
+        self.assertFalse(any(token.endswith(":/models:ro") for token in command))
+        self.assertEqual(
+            command,
+            (
+                "docker", "run", "--rm", "--network", "none", "--read-only",
+                "--cap-drop", "ALL", "--security-opt", "no-new-privileges:true",
+                "--user", "65532:65532", "--pids-limit", "128", "--memory", "1g",
+                "--cpus", "2", "--tmpfs", "/tmp:rw,noexec,nosuid,size=64m",
+                "--volume", f"{self.output_root.resolve()}:/out:rw", IMAGE,
+                "--host", "127.0.0.1", "--port", "8080",
+            ),
+        )
+
+    def test_service_config_rejects_cross_mode_fields(self) -> None:
+        base = json.loads(self.config.read_text(encoding="utf-8"))
+        fixtures = []
+        image_with_mount = dict(base)
+        image_with_mount.update({
+            "modelSource": "IMAGE",
+            "command": ["--host", "127.0.0.1", "--port", "8080"],
+        })
+        fixtures.append(image_with_mount)
+        legacy_without_mount = dict(base)
+        legacy_without_mount["modelMount"] = None
+        fixtures.append(legacy_without_mount)
+        image_with_legacy_command = dict(base)
+        image_with_legacy_command.update({"modelSource": "IMAGE", "modelMount": None})
+        fixtures.append(image_with_legacy_command)
+        for index, value in enumerate(fixtures):
+            with self.subTest(index=index):
+                self.config.write_text(json.dumps(value), encoding="utf-8")
+                with self.assertRaises(SmokeValidationError):
+                    load_service_config(self.config)
 
     def test_valid_digest_pinned_inputs_build_a_redacted_plan(self) -> None:
         inputs = self._inputs()

@@ -1,6 +1,6 @@
 # WIP - bluetape4k-image
 
-- 기준일: 2026-09-02 KST
+- 기준일: 2026-09-07 KST
 - 최신 안정 버전: `1.0.0`
 - 안정 tag commit: `b38d4891b66dff8bc63db0018b5e41810d1da9bc`
 - 현재 개발선: `1.1.0-SNAPSHOT`
@@ -9,6 +9,12 @@
 ## 현재 상태
 
 `1.0.0` artifact와 GitHub Release 배포를 완료했다. `develop`은 `1.1.0` minor 개발선을 사용한다. 공개 Image manual은 `1.0.0` tag source로 갱신한다.
+
+Issue #638 trusted producer 구현은 local/merge 검증과 external dispatch/visibility
+gate를 분리한다. PR에서는 credential-free contract만 검증하며, 실제 PRODUCE,
+package visibility 전환, public evidence read-back은 별도의 승인과 exact-head
+확인 뒤에 수행한다. producer PASS는 #609/#611 evidence 입력일 뿐 adoption 승인이
+아니다.
 
 ## 다음 개발선 규칙
 

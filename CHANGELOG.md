@@ -7,6 +7,12 @@
 
 ## [Unreleased]
 
+### 추가
+
+- Issue #638 trusted PaddleOCR producer workflow와 strict evidence contract를
+  추가했다. 동일 digest의 image·SBOM·provenance·signature·public evidence를
+  read-back하고, producer PASS와 adoption 결정을 분리한다.
+
 ### 변경
 
 - `1.0.0` 정식 배포 후 다음 minor 개발선을 `1.1.0-SNAPSHOT`으로 열었다.

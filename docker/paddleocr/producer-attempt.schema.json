@@ -1,0 +1,338 @@
+{
+  "$id": "https://bluetape4k.github.io/schema/paddleocr/producer-attempt.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "actor": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "attemptId": {
+      "pattern": "^[1-9][0-9]*\\.[1-9][0-9]*$",
+      "type": "string"
+    },
+    "cleanupSha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "environment": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "evidenceSha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "headSha": {
+      "pattern": "^[0-9a-f]{40}$",
+      "type": "string"
+    },
+    "inputLockSha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "lastCompletedStage": {
+      "enum": [
+        "NONE",
+        "STAGING",
+        "EVIDENCE",
+        "RELEASE",
+        "PUBLIC_EVIDENCE"
+      ]
+    },
+    "ledgerFragmentSha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "policySha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "previousDocumentSha256": {
+      "oneOf": [
+        {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "producerStatus": {
+      "enum": [
+        "VALIDATING",
+        "BLOCKED_INPUT",
+        "BLOCKED_LEGAL_INVENTORY",
+        "BUILDING",
+        "PUBLISHED_UNVERIFIED",
+        "PROMOTING",
+        "RELEASE_UNVERIFIED",
+        "QUARANTINE_PENDING",
+        "QUARANTINED",
+        "PRODUCER_PASS",
+        "REJECTED",
+        "REVOKED",
+        "FAILED",
+        "CANCELLED",
+        "INTERRUPTED"
+      ]
+    },
+    "reconciliationSha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "ref": {
+      "const": "refs/heads/develop"
+    },
+    "replacedAttemptSha256": {
+      "oneOf": [
+        {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "replacedCleanupSha256": {
+      "oneOf": [
+        {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "replacedEvidenceDigest": {
+      "oneOf": [
+        {
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "replacedEvidenceSha256": {
+      "oneOf": [
+        {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "replacedReconciliationSha256": {
+      "oneOf": [
+        {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "replacedReleaseDigest": {
+      "oneOf": [
+        {
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "replacesAttemptId": {
+      "oneOf": [
+        {
+          "pattern": "^[1-9][0-9]*\\.[1-9][0-9]*$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "repository": {
+      "const": "bluetape4k/bluetape4k-image"
+    },
+    "revocationsCommitSha": {
+      "pattern": "^[0-9a-f]{40}$",
+      "type": "string"
+    },
+    "revocationsSha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "runAttempt": {
+      "minimum": 1,
+      "type": "integer"
+    },
+    "runId": {
+      "minimum": 1,
+      "type": "integer"
+    },
+    "runner": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "schemaVersion": {
+      "const": 1
+    },
+    "timestamps": {
+      "additionalProperties": false,
+      "properties": {
+        "BUILDING": {
+          "oneOf": [
+            {
+              "format": "date-time",
+              "pattern": "Z$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "EVIDENCE": {
+          "oneOf": [
+            {
+              "format": "date-time",
+              "pattern": "Z$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "PUBLIC_EVIDENCE": {
+          "oneOf": [
+            {
+              "format": "date-time",
+              "pattern": "Z$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "RELEASE": {
+          "oneOf": [
+            {
+              "format": "date-time",
+              "pattern": "Z$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "STAGING": {
+          "oneOf": [
+            {
+              "format": "date-time",
+              "pattern": "Z$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "TERMINAL": {
+          "oneOf": [
+            {
+              "format": "date-time",
+              "pattern": "Z$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "VALIDATING": {
+          "oneOf": [
+            {
+              "format": "date-time",
+              "pattern": "Z$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "VALIDATING",
+        "BUILDING",
+        "STAGING",
+        "EVIDENCE",
+        "RELEASE",
+        "PUBLIC_EVIDENCE",
+        "TERMINAL"
+      ],
+      "type": "object"
+    },
+    "workflowPath": {
+      "const": ".github/workflows/paddleocr-producer.yml"
+    },
+    "workflowRef": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "workflowSha": {
+      "pattern": "^[0-9a-f]{40}$",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "attemptId",
+    "producerStatus",
+    "lastCompletedStage",
+    "inputLockSha256",
+    "policySha256",
+    "repository",
+    "workflowPath",
+    "workflowRef",
+    "workflowSha",
+    "ref",
+    "headSha",
+    "runId",
+    "runAttempt",
+    "actor",
+    "runner",
+    "environment",
+    "replacesAttemptId",
+    "replacedReleaseDigest",
+    "replacedEvidenceDigest",
+    "replacedAttemptSha256",
+    "replacedEvidenceSha256",
+    "replacedReconciliationSha256",
+    "replacedCleanupSha256",
+    "timestamps",
+    "evidenceSha256",
+    "reconciliationSha256",
+    "cleanupSha256",
+    "ledgerFragmentSha256",
+    "revocationsSha256",
+    "revocationsCommitSha",
+    "previousDocumentSha256"
+  ],
+  "title": "PaddleOCR producer attempt",
+  "type": "object"
+}

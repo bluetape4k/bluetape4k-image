@@ -1,0 +1,1659 @@
+name: PaddleOCR trusted producer
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 실행 모드
+        required: true
+        type: choice
+        options:
+          - PRODUCE
+          - RECONCILE
+      resumeAttemptId:
+        description: 재조정할 이전 attempt ID 또는 NONE
+        required: true
+        default: 'NONE'
+        type: string
+      expectedPriorStatus:
+        description: 예상 이전 상태 또는 NONE
+        required: true
+        default: 'NONE'
+        type: string
+      expectedInputLockSha256:
+        description: 예상 input lock SHA-256 또는 NONE
+        required: true
+        default: 'NONE'
+        type: string
+      expectedStagingDigest:
+        description: 예상 staging digest 또는 NONE
+        required: true
+        default: 'NONE'
+        type: string
+      expectedReleaseDigest:
+        description: 예상 release digest 또는 NONE
+        required: true
+        default: 'NONE'
+        type: string
+      expectedEvidenceDigest:
+        description: 예상 evidence digest 또는 NONE
+        required: true
+        default: 'NONE'
+        type: string
+
+permissions: {}
+
+concurrency:
+  group: paddleocr-producer-${{ github.repository }}-linux-amd64
+  cancel-in-progress: false
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+  PRODUCER_INPUT_LOCK: docker/paddleocr/producer-input.lock.json
+  PRODUCER_TRUST_POLICY: docker/paddleocr/trust-policy.json
+  PRODUCER_LEGAL_INVENTORY: docker/paddleocr/legal-inventory.json
+  ATTEMPT_ID: ${{ github.run_id }}.${{ github.run_attempt }}
+
+jobs:
+  validation:
+    name: PaddleOCR producer / validation
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      PRODUCER_JOB: validation
+    permissions:
+      contents: read
+    steps:
+      - &checkout-step
+        name: Checkout exact dispatch head
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - &python-step
+        name: Set up pinned Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.13'
+      - &trust-step
+        name: Validate trust context
+        env:
+          DISPATCH_MODE: ${{ inputs.mode }}
+          RESUME_ATTEMPT_ID: ${{ inputs.resumeAttemptId }}
+          EXPECTED_PRIOR_STATUS: ${{ inputs.expectedPriorStatus }}
+          EXPECTED_INPUT_LOCK_SHA256: ${{ inputs.expectedInputLockSha256 }}
+          EXPECTED_STAGING_DIGEST: ${{ inputs.expectedStagingDigest }}
+          EXPECTED_RELEASE_DIGEST: ${{ inputs.expectedReleaseDigest }}
+          EXPECTED_EVIDENCE_DIGEST: ${{ inputs.expectedEvidenceDigest }}
+          RUNNER_ENVIRONMENT: ${{ runner.environment }}
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REPOSITORY" = "bluetape4k/bluetape4k-image"
+          test "$GITHUB_REF" = "refs/heads/develop"
+          test "$GITHUB_SHA" = "$(git rev-parse HEAD)"
+          test "$RUNNER_OS" = "Linux"
+          test "$RUNNER_ARCH" = "X64"
+          test "$GITHUB_ACTOR" = "debop"
+          python3 scripts/research/paddle_ocr_producer.py validate-trust-context \
+            --lock "$PRODUCER_INPUT_LOCK" \
+            --policy "$PRODUCER_TRUST_POLICY" \
+            --legal "$PRODUCER_LEGAL_INVENTORY" \
+            --repository "$GITHUB_REPOSITORY" \
+            --workflow .github/workflows/paddleocr-producer.yml \
+            --ref "$GITHUB_REF" \
+            --actor "$GITHUB_ACTOR" \
+            --runner-environment "$RUNNER_ENVIRONMENT" \
+            --oidc-issuer https://token.actions.githubusercontent.com \
+            --audience sigstore
+          python3 scripts/research/paddle_ocr_producer.py validate-dispatch \
+            --mode "$DISPATCH_MODE" \
+            --resume-attempt-id "$RESUME_ATTEMPT_ID" \
+            --expected-prior-status "$EXPECTED_PRIOR_STATUS" \
+            --expected-input-lock-sha256 "$EXPECTED_INPUT_LOCK_SHA256" \
+            --expected-staging-digest "$EXPECTED_STAGING_DIGEST" \
+            --expected-release-digest "$EXPECTED_RELEASE_DIGEST" \
+            --expected-evidence-digest "$EXPECTED_EVIDENCE_DIGEST"
+      - name: Execute producer stage - validate immutable inputs
+        if: ${{ env.PRODUCER_JOB == 'validation' }}
+        run: |
+          set -euo pipefail
+          python3 scripts/research/paddle_ocr_producer.py validate-inputs \
+            --lock "$PRODUCER_INPUT_LOCK" \
+            --policy "$PRODUCER_TRUST_POLICY" \
+            --legal "$PRODUCER_LEGAL_INVENTORY"
+          python3 scripts/research/paddle_ocr_producer.py verify-dockerfile \
+            --input-lock "$PRODUCER_INPUT_LOCK" \
+            --dockerfile docker/paddleocr/Dockerfile
+      - &cleanup-step
+        name: Merge cleanup aggregate
+        if: ${{ always() }}
+        run: |
+          python3 - <<'PY'
+          import shutil
+          from pathlib import Path
+          root = Path(".producer-state")
+          sensitive = root / "registry-config.json"
+          if sensitive.is_symlink() or sensitive.is_file():
+              sensitive.unlink(missing_ok=True)
+          if root.is_symlink() or root.is_file():
+              root.unlink(missing_ok=True)
+          elif root.is_dir():
+              shutil.rmtree(root)
+          PY
+          mkdir -p .producer-state
+          python3 - <<'PY'
+          import json
+          import os
+          from datetime import datetime, timezone
+          from pathlib import Path
+          now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+          fragment = {
+              "schemaVersion": 1,
+              "attemptId": os.environ["ATTEMPT_ID"],
+              "jobId": os.environ["PRODUCER_JOB"],
+              "originalProducerStatus": "FAILED",
+              "startedAt": now,
+              "finishedAt": now,
+              "targets": [],
+          }
+          Path(f".producer-state/cleanup-{os.environ['PRODUCER_JOB']}.json").write_text(
+              json.dumps(fragment, separators=(",", ":"), sort_keys=True),
+              encoding="utf-8",
+          )
+          PY
+      - &cleanup-fragment-step
+        name: Write cleanup fragment
+        if: ${{ always() }}
+        run: |
+          mkdir -p .producer-state/cleanup-fragments
+          cp ".producer-state/cleanup-$PRODUCER_JOB.json"             ".producer-state/cleanup-fragments/$PRODUCER_JOB.json"
+      - &cleanup-upload-step
+        name: Upload cleanup fragment
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: cleanup-fragment-${{ env.ATTEMPT_ID }}-${{ env.PRODUCER_JOB }}
+          path: .producer-state/cleanup-fragments/${{ env.PRODUCER_JOB }}.json
+          if-no-files-found: error
+          include-hidden-files: false
+          compression-level: 0
+          retention-days: 90
+      - &summary-step
+        name: Write step summary
+        if: ${{ always() }}
+        env:
+          PRODUCER_JOB_STATUS: ${{ job.status }}
+        run: |
+          python3 - <<'PY'
+          import hashlib
+          import json
+          import os
+          from pathlib import Path
+          lock = Path(os.environ["PRODUCER_INPUT_LOCK"]).read_bytes()
+          job_status = os.environ["PRODUCER_JOB_STATUS"]
+          if job_status not in {"success", "failure", "cancelled"}:
+              raise SystemExit(40)
+          successful_phase = {
+              "validation": ("VALIDATING", "NONE"),
+              "staging": ("BUILDING", "NONE"),
+              "source-repro-check": ("BUILDING", "NONE"),
+              "image-build": ("BUILDING", "NONE"),
+              "staging-push": ("PUBLISHED_UNVERIFIED", "STAGING"),
+              "staging-attest": ("PUBLISHED_UNVERIFIED", "STAGING"),
+              "staging-readback": ("PUBLISHED_UNVERIFIED", "STAGING"),
+              "release-promotion": ("PROMOTING", "EVIDENCE"),
+              "release-attest": ("RELEASE_UNVERIFIED", "RELEASE"),
+              "release-readback": ("RELEASE_UNVERIFIED", "RELEASE"),
+              "release-evidence-push": ("RELEASE_UNVERIFIED", "PUBLIC_EVIDENCE"),
+              "consumer-verify-private": ("RELEASE_UNVERIFIED", "PUBLIC_EVIDENCE"),
+              "public-visibility-readback": ("RELEASE_UNVERIFIED", "PUBLIC_EVIDENCE"),
+              "consumer-verify-public": ("PRODUCER_PASS", "PUBLIC_EVIDENCE"),
+              "reconcile-readback": ("VALIDATING", "NONE"),
+              "emergency-deny-attest": ("QUARANTINE_PENDING", "PUBLIC_EVIDENCE"),
+          }
+          if job_status == "success":
+              producer_status, last_stage = successful_phase[os.environ["PRODUCER_JOB"]]
+              exit_code = 0
+          elif job_status == "cancelled":
+              producer_status, last_stage, exit_code = "CANCELLED", "NONE", 31
+          else:
+              producer_status, last_stage, exit_code = "FAILED", "NONE", 30
+          document = {
+              "schemaVersion": 1,
+              "attemptId": os.environ["GITHUB_RUN_ID"] + "." + os.environ["GITHUB_RUN_ATTEMPT"],
+              "jobStatus": job_status,
+              "producerStatus": producer_status,
+              "exitCode": exit_code,
+              "lastCompletedStage": last_stage,
+              "documentDigests": {"input-lock": hashlib.sha256(lock).hexdigest()},
+              "imageDigest": None,
+              "evidenceDigest": None,
+              "retryCount": 0,
+              "cleanupVerified": False,
+              "incidentCandidate": None if job_status == "success" else "https://github.com/bluetape4k/bluetape4k-image/issues/638",
+          }
+          Path(".producer-state/summary-input.json").write_bytes(
+              json.dumps(document, separators=(",", ":"), sort_keys=True).encode()
+          )
+          PY
+          python3 scripts/research/paddle_ocr_producer.py write-step-summary \
+            --input .producer-state/summary-input.json \
+            --summary "$GITHUB_STEP_SUMMARY"
+      - &terminal-step
+        name: Emit terminal result
+        if: ${{ always() }}
+        run: test -s "$GITHUB_STEP_SUMMARY"
+  staging:
+    name: PaddleOCR producer / staging
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    needs: [validation]
+    if: ${{ inputs.mode == 'PRODUCE' }}
+    env:
+      PRODUCER_JOB: staging
+    outputs:
+      artifact-id: ${{ steps.upload-models.outputs.artifact-id }}
+      artifact-digest: ${{ steps.upload-models.outputs.artifact-digest }}
+      content-sha256: ${{ steps.stage-models.outputs.content-sha256 }}
+    permissions:
+      contents: read
+    steps:
+      - *checkout-step
+      - *python-step
+      - *trust-step
+      - name: Fetch locked model archives
+        run: |
+          python3 scripts/research/paddle_ocr_producer.py fetch-locked-inputs \
+            --input-lock "$PRODUCER_INPUT_LOCK" \
+            --kind models \
+            --output-root .producer-state/model-archives
+      - name: Stage verified model artifact
+        id: stage-models
+        run: |
+          python3 scripts/research/paddle_ocr_producer.py stage-models \
+            --input-lock "$PRODUCER_INPUT_LOCK" \
+            --legal "$PRODUCER_LEGAL_INVENTORY" \
+            --pipeline docker/paddleocr/ocr-pipeline.yaml \
+            --model-archive detector=.producer-state/model-archives/detector.tar.gz \
+            --model-archive recognizer=.producer-state/model-archives/recognizer.tar.gz \
+            --run-id "$GITHUB_RUN_ID" \
+            --run-attempt "$GITHUB_RUN_ATTEMPT" \
+            --artifact-name "paddleocr-models-$ATTEMPT_ID" \
+            --output-root .producer-state/models \
+            > .producer-state/stage-models-receipt.json
+          printf 'content-sha256=%s\n' \
+            "$(jq -er '.data.contentSha256' .producer-state/stage-models-receipt.json)" \
+            >> "$GITHUB_OUTPUT"
+      - name: Upload exact model artifact
+        id: upload-models
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: paddleocr-models-${{ env.ATTEMPT_ID }}
+          path: .producer-state/models/
+          if-no-files-found: error
+          include-hidden-files: true
+          compression-level: 0
+          retention-days: 2
+      - *cleanup-step
+      - *cleanup-fragment-step
+      - *cleanup-upload-step
+      - *summary-step
+      - *terminal-step
+  source-repro-check:
+    name: PaddleOCR producer / source-repro-check
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    needs: [validation]
+    if: ${{ inputs.mode == 'PRODUCE' }}
+    env:
+      PRODUCER_JOB: source-repro-check
+    outputs:
+      artifact-id: ${{ steps.upload-wheelhouse.outputs.artifact-id }}
+      artifact-digest: ${{ steps.upload-wheelhouse.outputs.artifact-digest }}
+      content-sha256: ${{ steps.seal-wheelhouse.outputs.content-sha256 }}
+    permissions:
+      contents: read
+    steps:
+      - *checkout-step
+      - *python-step
+      - *trust-step
+      - name: Fetch locked registry wheels
+        run: |
+          python3 scripts/research/paddle_ocr_producer.py fetch-locked-inputs \
+            --input-lock "$PRODUCER_INPUT_LOCK" \
+            --kind packages \
+            --output-root .producer-state/registry-wheelhouse
+      - name: Reproduce source wheel twice
+        run: |
+          python3 scripts/research/paddle_ocr_producer.py verify-source-reproducibility \
+            --input-lock "$PRODUCER_INPUT_LOCK" \
+            --work-root .producer-state/source-repro \
+            --registry-wheelhouse .producer-state/registry-wheelhouse \
+            --output-wheelhouse .producer-state/verified-wheelhouse
+      - name: Seal exact wheelhouse artifact
+        id: seal-wheelhouse
+        run: |
+          python3 scripts/research/paddle_ocr_producer.py seal-wheelhouse \
+            --input-lock "$PRODUCER_INPUT_LOCK" \
+            --requirements-lock docker/paddleocr/requirements.cpu.lock.txt \
+            --wheelhouse .producer-state/verified-wheelhouse \
+            --run-id "$GITHUB_RUN_ID" \
+            --run-attempt "$GITHUB_RUN_ATTEMPT" \
+            --artifact-name "paddleocr-wheelhouse-$ATTEMPT_ID" \
+            --output-root .producer-state/wheelhouse-artifact \
+            > .producer-state/seal-wheelhouse-receipt.json
+          printf 'content-sha256=%s\n' \
+            "$(jq -er '.data.contentSha256' .producer-state/seal-wheelhouse-receipt.json)" \
+            >> "$GITHUB_OUTPUT"
+      - name: Upload exact wheelhouse artifact
+        id: upload-wheelhouse
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: paddleocr-wheelhouse-${{ env.ATTEMPT_ID }}
+          path: .producer-state/wheelhouse-artifact/
+          if-no-files-found: error
+          include-hidden-files: true
+          compression-level: 0
+          retention-days: 2
+      - *cleanup-step
+      - *cleanup-fragment-step
+      - *cleanup-upload-step
+      - *summary-step
+      - *terminal-step
+  image-build:
+    name: PaddleOCR producer / image-build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    needs: [validation, staging, source-repro-check]
+    if: ${{ inputs.mode == 'PRODUCE' }}
+    env:
+      PRODUCER_JOB: image-build
+    outputs:
+      artifact-id: ${{ steps.upload-oci.outputs.artifact-id }}
+      artifact-digest: ${{ steps.upload-oci.outputs.artifact-digest }}
+      image-index-digest: ${{ steps.create-handoff.outputs.image-index-digest }}
+      image-platform-digest: ${{ steps.create-handoff.outputs.image-platform-digest }}
+      image-config-digest: ${{ steps.create-handoff.outputs.image-config-digest }}
+      base-digest: ${{ steps.create-handoff.outputs.base-digest }}
+      content-sha256: ${{ steps.create-handoff.outputs.content-sha256 }}
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - *checkout-step
+      - *python-step
+      - *trust-step
+      - name: Download same-run model artifact by ID
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          artifact-ids: ${{ needs.staging.outputs.artifact-id }}
+          path: .producer-state/models
+      - name: Download same-run wheelhouse artifact by ID
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          artifact-ids: ${{ needs.source-repro-check.outputs.artifact-id }}
+          path: .producer-state/wheelhouse
+      - name: Validate same-run build inputs
+        run: |
+          python3 scripts/research/paddle_ocr_producer.py validate-build-artifacts \
+            --input-lock "$PRODUCER_INPUT_LOCK" \
+            --models-root .producer-state/models \
+            --models-artifact-id "${{ needs.staging.outputs.artifact-id }}" \
+            --models-artifact-digest "${{ needs.staging.outputs.artifact-digest }}" \
+            --models-content-sha256 "${{ needs.staging.outputs.content-sha256 }}" \
+            --wheelhouse-root .producer-state/wheelhouse \
+            --wheelhouse-artifact-id "${{ needs.source-repro-check.outputs.artifact-id }}" \
+            --wheelhouse-artifact-digest "${{ needs.source-repro-check.outputs.artifact-digest }}" \
+            --wheelhouse-content-sha256 "${{ needs.source-repro-check.outputs.content-sha256 }}" \
+            --run-id "$GITHUB_RUN_ID" \
+            --run-attempt "$GITHUB_RUN_ATTEMPT"
+      - name: Materialize bounded Docker context
+        run: |
+          mkdir -p .producer-state/context/bin
+          cp docker/paddleocr/Dockerfile .producer-state/context/Dockerfile
+          cp docker/paddleocr/service.py .producer-state/context/service.py
+          cp docker/paddleocr/bin/bluetape4k-paddleocr-service .producer-state/context/bin/
+          cp -R .producer-state/models/models .producer-state/context/models
+          cp .producer-state/models/model-manifest.json .producer-state/context/model-manifest.json
+          cp .producer-state/models/ocr-pipeline.yaml .producer-state/context/ocr-pipeline.yaml
+          cp .producer-state/models/legal-inventory.json .producer-state/context/legal-inventory.json
+          cp -R .producer-state/wheelhouse/wheelhouse .producer-state/context/wheelhouse
+          cp .producer-state/wheelhouse/requirements.cpu.lock.txt .producer-state/context/requirements.cpu.lock.txt
+      - name: Build network-none OCI archive without remote cache
+        run: |
+          set -euo pipefail
+          python3 scripts/research/paddle_ocr_producer.py verify-dockerfile \
+            --dockerfile docker/paddleocr/Dockerfile \
+            --input-lock "$PRODUCER_INPUT_LOCK" > .producer-state/dockerfile-receipt.json
+          python3 scripts/research/paddle_ocr_producer.py input-value \
+            --lock "$PRODUCER_INPUT_LOCK" \
+            --field sourceDateEpoch \
+            --output .producer-state/source-date-epoch.json \
+            > /dev/null
+          BASE_IMAGE=$(jq -er '.data.baseReference' .producer-state/dockerfile-receipt.json)
+          SOURCE_DATE_EPOCH=$(jq -er '.data.sourceDateEpoch' .producer-state/source-date-epoch.json)
+          BUILD_STARTED_AT=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
+          BUILD_STARTED_EPOCH=$(date +%s)
+          mkdir -p .producer-state/oci
+          docker buildx build \
+            --network=none \
+            --no-cache \
+            --platform linux/amd64 \
+            --build-arg "BASE_IMAGE=$BASE_IMAGE" \
+            --build-arg "SOURCE_DATE_EPOCH=$SOURCE_DATE_EPOCH" \
+            --tag "paddleocr-service:$ATTEMPT_ID" \
+            --output type=oci,dest=.producer-state/oci/paddleocr-service.oci.tar \
+            .producer-state/context
+          BUILD_FINISHED_AT=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
+          BUILD_FINISHED_EPOCH=$(date +%s)
+          BUILD_STARTED_AT="$BUILD_STARTED_AT" \
+          BUILD_FINISHED_AT="$BUILD_FINISHED_AT" \
+          BUILD_DURATION_SECONDS="$((BUILD_FINISHED_EPOCH - BUILD_STARTED_EPOCH))" \
+          SOURCE_DATE_EPOCH="$SOURCE_DATE_EPOCH" \
+          python3 - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+          receipt = {
+              "schemaVersion": 1,
+              "startedAt": os.environ["BUILD_STARTED_AT"],
+              "finishedAt": os.environ["BUILD_FINISHED_AT"],
+              "durationSeconds": int(os.environ["BUILD_DURATION_SECONDS"]),
+              "networkMode": "NONE",
+              "cacheMode": "DISABLED",
+              "sourceDateEpoch": int(os.environ["SOURCE_DATE_EPOCH"]),
+          }
+          Path(".producer-state/build-receipt.json").write_bytes(
+              json.dumps(receipt, separators=(",", ":"), sort_keys=True).encode()
+          )
+          PY
+      - name: Create exact OCI handoff
+        id: create-handoff
+        run: |
+          python3 scripts/research/paddle_ocr_producer.py create-oci-handoff \
+            --input-lock "$PRODUCER_INPUT_LOCK" \
+            --models-manifest .producer-state/models/staging-manifest.json \
+            --oci-tar .producer-state/oci/paddleocr-service.oci.tar \
+            --run-id "$GITHUB_RUN_ID" \
+            --run-attempt "$GITHUB_RUN_ATTEMPT" \
+            --staging-artifact-sha256 "${{ needs.staging.outputs.content-sha256 }}" \
+            --build-receipt .producer-state/build-receipt.json \
+            --output .producer-state/oci/handoff.json \
+            > .producer-state/create-handoff-receipt.json
+          {
+            printf 'image-index-digest=%s\n' \
+              "$(jq -er '.data.imageIndexDigest' .producer-state/create-handoff-receipt.json)"
+            printf 'image-platform-digest=%s\n' \
+              "$(jq -er '.data.imagePlatformDigest' .producer-state/create-handoff-receipt.json)"
+            printf 'image-config-digest=%s\n' \
+              "$(jq -er '.data.imageConfigDigest' .producer-state/create-handoff-receipt.json)"
+            printf 'base-digest=%s\n' \
+              "$(jq -er '.baseDigest' .producer-state/oci/handoff.json)"
+            printf 'content-sha256=%s\n' \
+              "$(jq -er '.data.contentSha256' .producer-state/create-handoff-receipt.json)"
+          } >> "$GITHUB_OUTPUT"
+      - name: Upload exact OCI handoff artifact
+        id: upload-oci
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: paddleocr-oci-${{ env.ATTEMPT_ID }}
+          path: .producer-state/oci/
+          if-no-files-found: error
+          include-hidden-files: false
+          compression-level: 0
+          retention-days: 2
+      - *cleanup-step
+      - *cleanup-fragment-step
+      - *cleanup-upload-step
+      - *summary-step
+      - *terminal-step
+  staging-push:
+    name: PaddleOCR producer / staging-push
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    needs: [validation, source-repro-check, image-build]
+    if: ${{ inputs.mode == 'PRODUCE' }}
+    environment: paddleocr-producer
+    env:
+      PRODUCER_JOB: staging-push
+    outputs:
+      staging-digest: ${{ steps.push-staging.outputs.staging-digest }}
+      image-index-digest: ${{ needs.image-build.outputs.image-index-digest }}
+      image-platform-digest: ${{ needs.image-build.outputs.image-platform-digest }}
+      image-config-digest: ${{ needs.image-build.outputs.image-config-digest }}
+      base-digest: ${{ needs.image-build.outputs.base-digest }}
+      oci-artifact-id: ${{ needs.image-build.outputs.artifact-id }}
+      oci-artifact-digest: ${{ needs.image-build.outputs.artifact-digest }}
+      oci-content-sha256: ${{ needs.image-build.outputs.content-sha256 }}
+    permissions:
+      contents: read
+      actions: read
+      packages: write
+    steps:
+      - *checkout-step
+      - *python-step
+      - *trust-step
+      - name: Download same-run OCI artifact by ID
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          artifact-ids: ${{ needs.image-build.outputs.artifact-id }}
+          path: .producer-state/oci
+      - name: Validate OCI handoff before registry access
+        run: |
+          python3 scripts/research/paddle_ocr_producer.py validate-oci-artifact \
+            --input-lock "$PRODUCER_INPUT_LOCK" \
+            --root .producer-state/oci \
+            --artifact-id "${{ needs.image-build.outputs.artifact-id }}" \
+            --artifact-digest "${{ needs.image-build.outputs.artifact-digest }}" \
+            --content-sha256 "${{ needs.image-build.outputs.content-sha256 }}" \
+            --run-id "$GITHUB_RUN_ID" \
+            --run-attempt "$GITHUB_RUN_ATTEMPT"
+      - name: Bootstrap verified ORAS
+        run: |
+          mkdir -p .producer-state/tools
+          curl --fail --location --silent --show-error \
+            https://github.com/oras-project/oras/releases/download/v1.3.4/oras_1.3.4_linux_amd64.tar.gz \
+            --output .producer-state/oras.tar.gz
+          python3 scripts/research/paddle_ocr_producer.py bootstrap-oras \
+            --archive .producer-state/oras.tar.gz \
+            --tool-root .producer-state/tools
+      - name: Execute producer stage
+        id: push-staging
+        env:
+          REGISTRY_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          ORAS_BIN="$PWD/.producer-state/tools/oras"
+          REGISTRY_CONFIG="$PWD/.producer-state/registry-config.json"
+          STAGING_REPOSITORY="ghcr.io/bluetape4k/paddleocr-service-staging"
+          STAGING_REF="$STAGING_REPOSITORY:image-$ATTEMPT_ID"
+          printf '%s' "$REGISTRY_TOKEN" | "$ORAS_BIN" login ghcr.io \
+            --username "$GITHUB_ACTOR" \
+            --password-stdin \
+            --registry-config "$REGISTRY_CONFIG"
+          "$ORAS_BIN" cp \
+            --from-oci-layout \
+            --to-registry-config "$REGISTRY_CONFIG" \
+            ".producer-state/oci/paddleocr-service.oci.tar:$ATTEMPT_ID" \
+            "$STAGING_REF"
+          STAGING_DIGEST=$("$ORAS_BIN" resolve \
+            --registry-config "$REGISTRY_CONFIG" \
+            "$STAGING_REF")
+          test "$STAGING_DIGEST" = "${{ needs.image-build.outputs.image-index-digest }}"
+          "$ORAS_BIN" manifest fetch \
+            --registry-config "$REGISTRY_CONFIG" \
+            "$STAGING_REPOSITORY@$STAGING_DIGEST" \
+            > .producer-state/staging-manifest-readback.json
+          test "sha256:$(shasum -a 256 .producer-state/staging-manifest-readback.json | awk '{print $1}')" = \
+            "$STAGING_DIGEST"
+          test "$(jq -er '.config.digest' .producer-state/staging-manifest-readback.json)" = \
+            "$(jq -er '.imageConfigDigest' .producer-state/oci/handoff.json)"
+          test "$(gh api /orgs/bluetape4k/packages/container/paddleocr-service-staging --jq .visibility)" = \
+            "private"
+          printf 'staging-digest=%s\n' "$STAGING_DIGEST" >> "$GITHUB_OUTPUT"
+      - *cleanup-step
+      - *cleanup-fragment-step
+      - *cleanup-upload-step
+      - *summary-step
+      - *terminal-step
+  staging-attest:
+    name: PaddleOCR producer / staging-attest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    needs: [staging-push]
+    if: ${{ inputs.mode == 'PRODUCE' }}
+    environment: paddleocr-producer
+    env:
+      PRODUCER_JOB: staging-attest
+    outputs:
+      artifact-id: ${{ steps.upload-staging-attestations.outputs.artifact-id }}
+      artifact-digest: ${{ steps.upload-staging-attestations.outputs.artifact-digest }}
+      subject-digest: ${{ needs.staging-push.outputs.image-platform-digest }}
+      image-index-digest: ${{ needs.staging-push.outputs.image-index-digest }}
+      image-platform-digest: ${{ needs.staging-push.outputs.image-platform-digest }}
+      image-config-digest: ${{ needs.staging-push.outputs.image-config-digest }}
+      base-digest: ${{ needs.staging-push.outputs.base-digest }}
+    permissions:
+      contents: read
+      actions: read
+      packages: read
+      attestations: write
+      id-token: write
+    steps:
+      - *checkout-step
+      - *python-step
+      - *trust-step
+      - name: Download same-run OCI artifact by ID
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          artifact-ids: ${{ needs.staging-push.outputs.oci-artifact-id }}
+          path: .producer-state/oci
+      - name: Prepare platform manifest and SPDX subject
+        run: |
+          python3 scripts/research/paddle_ocr_producer.py validate-oci-artifact \
+            --input-lock "$PRODUCER_INPUT_LOCK" \
+            --root .producer-state/oci \
+            --artifact-id "${{ needs.staging-push.outputs.oci-artifact-id }}" \
+            --artifact-digest "${{ needs.staging-push.outputs.oci-artifact-digest }}" \
+            --content-sha256 "${{ needs.staging-push.outputs.oci-content-sha256 }}" \
+            --run-id "$GITHUB_RUN_ID" \
+            --run-attempt "$GITHUB_RUN_ATTEMPT"
+          mkdir -p .producer-state/attestations
+          python3 scripts/research/paddle_ocr_producer.py extract-platform-manifest \
+            --oci-tar .producer-state/oci/paddleocr-service.oci.tar \
+            --handoff .producer-state/oci/handoff.json \
+            --output .producer-state/attestations/platform-manifest.json
+          python3 scripts/research/paddle_ocr_producer.py create-spdx \
+            --input-lock "$PRODUCER_INPUT_LOCK" \
+            --legal "$PRODUCER_LEGAL_INVENTORY" \
+            --run-id "$GITHUB_RUN_ID" \
+            --run-attempt "$GITHUB_RUN_ATTEMPT" \
+            --output .producer-state/attestations/sbom.spdx.json
+      - name: Execute producer stage - attest staging provenance
+        id: staging-provenance
+        uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a
+        with:
+          subject-name: ghcr.io/bluetape4k/paddleocr-service-staging
+          subject-digest: ${{ needs.staging-push.outputs.image-platform-digest }}
+          push-to-registry: false
+          show-summary: false
+      - name: Attest staging SPDX SBOM
+        id: staging-sbom
+        uses: actions/attest-sbom@4651f806c01d8637787e274ac3bdf724ef169f34
+        with:
+          subject-name: ghcr.io/bluetape4k/paddleocr-service-staging
+          subject-digest: ${{ needs.staging-push.outputs.image-platform-digest }}
+          sbom-path: .producer-state/attestations/sbom.spdx.json
+          push-to-registry: false
+          show-summary: false
+      - name: Collect exact staging attestation artifact
+        run: |
+          cp "${{ steps.staging-provenance.outputs.bundle-path }}" \
+            .producer-state/attestations/provenance.bundle.jsonl
+          cp "${{ steps.staging-sbom.outputs.bundle-path }}" \
+            .producer-state/attestations/sbom.bundle.jsonl
+          cp .producer-state/oci/handoff.json .producer-state/attestations/handoff.json
+      - name: Upload exact staging attestation artifact
+        id: upload-staging-attestations
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: paddleocr-staging-attestations-${{ env.ATTEMPT_ID }}
+          path: .producer-state/attestations/
+          if-no-files-found: error
+          include-hidden-files: false
+          compression-level: 0
+          retention-days: 2
+      - *cleanup-step
+      - *cleanup-fragment-step
+      - *cleanup-upload-step
+      - *summary-step
+      - *terminal-step
+  staging-readback:
+    name: PaddleOCR producer / staging-readback
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    needs: [staging-attest]
+    if: ${{ always() && inputs.mode == 'PRODUCE' }}
+    env:
+      PRODUCER_JOB: staging-readback
+    outputs:
+      staging-digest: ${{ needs.staging-attest.outputs.subject-digest }}
+      attestation-subject-digest: ${{ steps.readback-staging.outputs.subject-digest }}
+      attestation-artifact-id: ${{ needs.staging-attest.outputs.artifact-id }}
+      image-index-digest: ${{ needs.staging-attest.outputs.image-index-digest }}
+      image-platform-digest: ${{ needs.staging-attest.outputs.image-platform-digest }}
+      image-config-digest: ${{ needs.staging-attest.outputs.image-config-digest }}
+      base-digest: ${{ needs.staging-attest.outputs.base-digest }}
+    permissions:
+      contents: read
+      packages: read
+      attestations: read
+    steps:
+      - *checkout-step
+      - *python-step
+      - *trust-step
+      - name: Download exact staging attestation artifact
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          artifact-ids: ${{ needs.staging-attest.outputs.artifact-id }}
+          path: .producer-state/attestations
+      - name: Execute producer stage - verify staging attestations
+        id: readback-staging
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SUBJECT_DIGEST: ${{ needs.staging-attest.outputs.subject-digest }}
+        run: |
+          set -euo pipefail
+          SUBJECT_NAME=ghcr.io/bluetape4k/paddleocr-service-staging
+          gh api "repos/$GITHUB_REPOSITORY/attestations/sha256:${SUBJECT_DIGEST#sha256:}" \
+            > .producer-state/staging-attestation-api.json
+          jq -e '.attestations | type == "array" and length >= 2' \
+            .producer-state/staging-attestation-api.json > /dev/null
+          verify_one() {
+            local bundle=$1 predicate=$2 output=$3
+            gh attestation verify .producer-state/attestations/platform-manifest.json \
+              --repo "$GITHUB_REPOSITORY" \
+              --bundle "$bundle" \
+              --signer-workflow "$GITHUB_REPOSITORY/.github/workflows/paddleocr-producer.yml" \
+              --signer-digest "$GITHUB_SHA" \
+              --source-digest "$GITHUB_SHA" \
+              --source-ref "$GITHUB_REF" \
+              --cert-oidc-issuer https://token.actions.githubusercontent.com \
+              --predicate-type "$predicate" \
+              --deny-self-hosted-runners \
+              --format json > "$output"
+            jq -e --arg name "$SUBJECT_NAME" --arg digest "$SUBJECT_DIGEST" --arg predicate "$predicate" \
+              --arg sha "$GITHUB_SHA" --arg ref "$GITHUB_REF" \
+              --arg repository "https://github.com/$GITHUB_REPOSITORY" \
+              --arg invocation "https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/attempts/$GITHUB_RUN_ATTEMPT" \
+              'length == 1 and .[0].verificationResult.statement.predicateType == $predicate and
+               .[0].verificationResult.signature.certificate.buildSignerDigest == $sha and
+               .[0].verificationResult.signature.certificate.sourceRepositoryDigest == $sha and
+               .[0].verificationResult.signature.certificate.sourceRepositoryRef == $ref and
+               .[0].verificationResult.signature.certificate.sourceRepositoryURI == $repository and
+               .[0].verificationResult.signature.certificate.runnerEnvironment == "github-hosted" and
+               .[0].verificationResult.signature.certificate.runInvocationURI == $invocation and
+               any(.[0].verificationResult.statement.subject[];
+                   .name == $name and .digest.sha256 == ($digest | sub("^sha256:"; "")))' \
+              "$output" > /dev/null
+          }
+          verify_one .producer-state/attestations/provenance.bundle.jsonl \
+            https://slsa.dev/provenance/v1 .producer-state/staging-provenance-readback.json
+          verify_one .producer-state/attestations/sbom.bundle.jsonl \
+            https://spdx.dev/Document/v2.3 .producer-state/staging-sbom-readback.json
+          for predicate in https://slsa.dev/provenance/v1 https://spdx.dev/Document/v2.3; do
+            PREDICATE="$predicate" SUBJECT_NAME="$SUBJECT_NAME" SUBJECT_DIGEST="$SUBJECT_DIGEST" \
+              python3 - <<'PY'
+          import json, os
+          from pathlib import Path
+          document = {
+              "schemaVersion": 1,
+              "repository": os.environ["GITHUB_REPOSITORY"],
+              "workflow": ".github/workflows/paddleocr-producer.yml",
+              "workflowSha": os.environ["GITHUB_SHA"],
+              "ref": os.environ["GITHUB_REF"],
+              "environment": "paddleocr-producer",
+              "issuer": "https://token.actions.githubusercontent.com",
+              "audience": "sigstore",
+              "runId": int(os.environ["GITHUB_RUN_ID"]),
+              "runAttempt": int(os.environ["GITHUB_RUN_ATTEMPT"]),
+              "headSha": os.environ["GITHUB_SHA"],
+              "subjectName": os.environ["SUBJECT_NAME"],
+              "subjectDigest": os.environ["SUBJECT_DIGEST"],
+              "predicateType": os.environ["PREDICATE"],
+              "verified": True,
+          }
+          Path(".producer-state/attestation-identity.json").write_bytes(
+              json.dumps(document, separators=(",", ":"), sort_keys=True).encode()
+          )
+          PY
+            python3 scripts/research/paddle_ocr_producer.py validate-attestation-identity \
+              --receipt .producer-state/attestation-identity.json \
+              --subject-name "$SUBJECT_NAME" \
+              --subject-digest "$SUBJECT_DIGEST" \
+              --predicate-type "$predicate" \
+              --run-id "$GITHUB_RUN_ID" \
+              --run-attempt "$GITHUB_RUN_ATTEMPT" \
+              --head-sha "$GITHUB_SHA"
+          done
+          printf 'subject-digest=%s\n' "$SUBJECT_DIGEST" >> "$GITHUB_OUTPUT"
+      - *cleanup-step
+      - *cleanup-fragment-step
+      - *cleanup-upload-step
+      - *summary-step
+      - *terminal-step
+  release-promotion:
+    name: PaddleOCR producer / release-promotion
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    needs: [staging-readback]
+    if: ${{ inputs.mode == 'PRODUCE' }}
+    environment: paddleocr-producer
+    env:
+      PRODUCER_JOB: release-promotion
+    outputs:
+      release-digest: ${{ steps.promote-release.outputs.release-digest }}
+      staging-digest: ${{ needs.staging-readback.outputs.staging-digest }}
+      attestation-subject-digest: ${{ needs.staging-readback.outputs.attestation-subject-digest }}
+      staging-attestation-artifact-id: ${{ needs.staging-readback.outputs.attestation-artifact-id }}
+      image-index-digest: ${{ needs.staging-readback.outputs.image-index-digest }}
+      image-platform-digest: ${{ needs.staging-readback.outputs.image-platform-digest }}
+      image-config-digest: ${{ needs.staging-readback.outputs.image-config-digest }}
+      base-digest: ${{ needs.staging-readback.outputs.base-digest }}
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - *checkout-step
+      - *python-step
+      - *trust-step
+      - name: Bootstrap verified ORAS
+        run: |
+          mkdir -p .producer-state/tools
+          curl --fail --location --silent --show-error \
+            https://github.com/oras-project/oras/releases/download/v1.3.4/oras_1.3.4_linux_amd64.tar.gz \
+            --output .producer-state/oras.tar.gz
+          python3 scripts/research/paddle_ocr_producer.py bootstrap-oras \
+            --archive .producer-state/oras.tar.gz \
+            --tool-root .producer-state/tools
+      - name: Execute producer stage - promote exact digest
+        id: promote-release
+        env:
+          REGISTRY_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ github.token }}
+          STAGING_DIGEST: ${{ needs.staging-readback.outputs.staging-digest }}
+          ATTESTATION_SUBJECT_DIGEST: ${{ needs.staging-readback.outputs.attestation-subject-digest }}
+        run: |
+          set -euo pipefail
+          ORAS_BIN="$PWD/.producer-state/tools/oras"
+          REGISTRY_CONFIG="$PWD/.producer-state/registry-config.json"
+          STAGING_REPOSITORY=ghcr.io/bluetape4k/paddleocr-service-staging
+          RELEASE_REPOSITORY=ghcr.io/bluetape4k/paddleocr-service
+          printf '%s' "$REGISTRY_TOKEN" | "$ORAS_BIN" login ghcr.io \
+            --username "$GITHUB_ACTOR" --password-stdin --registry-config "$REGISTRY_CONFIG"
+          "$ORAS_BIN" cp \
+            --from-registry-config "$REGISTRY_CONFIG" \
+            --to-registry-config "$REGISTRY_CONFIG" \
+            "$STAGING_REPOSITORY@$STAGING_DIGEST" \
+            "$RELEASE_REPOSITORY:image-$ATTEMPT_ID"
+          RELEASE_DIGEST=$("$ORAS_BIN" resolve \
+            --registry-config "$REGISTRY_CONFIG" "$RELEASE_REPOSITORY:image-$ATTEMPT_ID")
+          "$ORAS_BIN" manifest fetch --registry-config "$REGISTRY_CONFIG" \
+            "$RELEASE_REPOSITORY@$RELEASE_DIGEST" > .producer-state/release-platform-manifest.json
+          HANDOFF_DIGEST=$(printf '%s' "${{ needs.staging-readback.outputs.image-platform-digest }}")
+          STAGING_DIGEST="$STAGING_DIGEST" RELEASE_DIGEST="$RELEASE_DIGEST" \
+          HANDOFF_DIGEST="$HANDOFF_DIGEST" ATTESTATION_SUBJECT_DIGEST="$ATTESTATION_SUBJECT_DIGEST" \
+            python3 - <<'PY'
+          import json, os
+          from pathlib import Path
+          document = {
+              "schemaVersion": 1,
+              "stagingDigest": os.environ["STAGING_DIGEST"],
+              "releaseDigest": os.environ["RELEASE_DIGEST"],
+              "handoffDigest": os.environ["HANDOFF_DIGEST"],
+              "attestationSubjectDigest": os.environ["ATTESTATION_SUBJECT_DIGEST"],
+          }
+          Path(".producer-state/release-digests.json").write_bytes(
+              json.dumps(document, separators=(",", ":"), sort_keys=True).encode()
+          )
+          PY
+          python3 scripts/research/paddle_ocr_producer.py validate-release-digests \
+            --receipt .producer-state/release-digests.json
+          test "$(gh api /orgs/bluetape4k/packages/container/paddleocr-service --jq .visibility)" = private
+          printf 'release-digest=%s\n' "$RELEASE_DIGEST" >> "$GITHUB_OUTPUT"
+      - *cleanup-step
+      - *cleanup-fragment-step
+      - *cleanup-upload-step
+      - *summary-step
+      - *terminal-step
+  release-attest:
+    name: PaddleOCR producer / release-attest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    needs: [release-promotion]
+    if: ${{ inputs.mode == 'PRODUCE' }}
+    environment: paddleocr-producer
+    env:
+      PRODUCER_JOB: release-attest
+    outputs:
+      artifact-id: ${{ steps.upload-release-attestations.outputs.artifact-id }}
+      artifact-digest: ${{ steps.upload-release-attestations.outputs.artifact-digest }}
+      subject-digest: ${{ needs.release-promotion.outputs.release-digest }}
+      staging-digest: ${{ needs.release-promotion.outputs.staging-digest }}
+      image-index-digest: ${{ needs.release-promotion.outputs.image-index-digest }}
+      image-platform-digest: ${{ needs.release-promotion.outputs.image-platform-digest }}
+      image-config-digest: ${{ needs.release-promotion.outputs.image-config-digest }}
+      base-digest: ${{ needs.release-promotion.outputs.base-digest }}
+    permissions:
+      contents: read
+      actions: read
+      packages: read
+      attestations: write
+      id-token: write
+    steps:
+      - *checkout-step
+      - *python-step
+      - *trust-step
+      - name: Download verified staging evidence inputs
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          artifact-ids: ${{ needs.release-promotion.outputs.staging-attestation-artifact-id }}
+          path: .producer-state/attestations
+      - name: Execute producer stage - attest release provenance
+        id: release-provenance
+        uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a
+        with:
+          subject-name: ghcr.io/bluetape4k/paddleocr-service
+          subject-digest: ${{ needs.release-promotion.outputs.release-digest }}
+          push-to-registry: false
+          show-summary: false
+      - name: Attest release SPDX SBOM
+        id: release-sbom
+        uses: actions/attest-sbom@4651f806c01d8637787e274ac3bdf724ef169f34
+        with:
+          subject-name: ghcr.io/bluetape4k/paddleocr-service
+          subject-digest: ${{ needs.release-promotion.outputs.release-digest }}
+          sbom-path: .producer-state/attestations/sbom.spdx.json
+          push-to-registry: false
+          show-summary: false
+      - name: Collect exact release attestation artifact
+        run: |
+          cp "${{ steps.release-provenance.outputs.bundle-path }}" \
+            .producer-state/attestations/provenance.bundle.jsonl
+          cp "${{ steps.release-sbom.outputs.bundle-path }}" \
+            .producer-state/attestations/sbom.bundle.jsonl
+      - name: Upload exact release attestation artifact
+        id: upload-release-attestations
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: paddleocr-release-attestations-${{ env.ATTEMPT_ID }}
+          path: .producer-state/attestations/
+          if-no-files-found: error
+          include-hidden-files: false
+          compression-level: 0
+          retention-days: 3
+      - *cleanup-step
+      - *cleanup-fragment-step
+      - *cleanup-upload-step
+      - *summary-step
+      - *terminal-step
+  release-readback:
+    name: PaddleOCR producer / release-readback
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    needs: [release-attest]
+    if: ${{ always() && inputs.mode == 'PRODUCE' }}
+    env:
+      PRODUCER_JOB: release-readback
+    outputs:
+      release-digest: ${{ needs.release-attest.outputs.subject-digest }}
+      release-attestation-artifact-id: ${{ needs.release-attest.outputs.artifact-id }}
+      staging-digest: ${{ needs.release-attest.outputs.staging-digest }}
+      image-index-digest: ${{ needs.release-attest.outputs.image-index-digest }}
+      image-platform-digest: ${{ needs.release-attest.outputs.image-platform-digest }}
+      image-config-digest: ${{ needs.release-attest.outputs.image-config-digest }}
+      base-digest: ${{ needs.release-attest.outputs.base-digest }}
+    permissions:
+      contents: read
+      packages: read
+      attestations: read
+    steps:
+      - *checkout-step
+      - *python-step
+      - *trust-step
+      - name: Download exact release attestation artifact
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          artifact-ids: ${{ needs.release-attest.outputs.artifact-id }}
+          path: .producer-state/attestations
+      - name: Execute producer stage - verify release attestations
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SUBJECT_DIGEST: ${{ needs.release-attest.outputs.subject-digest }}
+        run: |
+          set -euo pipefail
+          gh api "repos/$GITHUB_REPOSITORY/attestations/sha256:${SUBJECT_DIGEST#sha256:}" \
+            > .producer-state/release-attestation-api.json
+          jq -e '.attestations | type == "array" and length >= 2' \
+            .producer-state/release-attestation-api.json > /dev/null
+          verify_release() {
+            local bundle=$1 predicate=$2 output=$3
+            gh attestation verify .producer-state/attestations/platform-manifest.json \
+              --repo "$GITHUB_REPOSITORY" \
+              --bundle ".producer-state/attestations/$bundle" \
+              --signer-workflow "$GITHUB_REPOSITORY/.github/workflows/paddleocr-producer.yml" \
+              --signer-digest "$GITHUB_SHA" \
+              --source-digest "$GITHUB_SHA" \
+              --source-ref "$GITHUB_REF" \
+              --cert-oidc-issuer https://token.actions.githubusercontent.com \
+              --predicate-type "$predicate" \
+              --deny-self-hosted-runners \
+              --format json > "$output"
+            jq -e --arg name ghcr.io/bluetape4k/paddleocr-service \
+              --arg digest "$SUBJECT_DIGEST" --arg predicate "$predicate" \
+              --arg sha "$GITHUB_SHA" --arg ref "$GITHUB_REF" \
+              --arg repository "https://github.com/$GITHUB_REPOSITORY" \
+              --arg invocation "https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/attempts/$GITHUB_RUN_ATTEMPT" \
+              'length == 1 and .[0].verificationResult.statement.predicateType == $predicate and
+               .[0].verificationResult.signature.certificate.buildSignerDigest == $sha and
+               .[0].verificationResult.signature.certificate.sourceRepositoryDigest == $sha and
+               .[0].verificationResult.signature.certificate.sourceRepositoryRef == $ref and
+               .[0].verificationResult.signature.certificate.sourceRepositoryURI == $repository and
+               .[0].verificationResult.signature.certificate.runnerEnvironment == "github-hosted" and
+               .[0].verificationResult.signature.certificate.runInvocationURI == $invocation and
+               any(.[0].verificationResult.statement.subject[];
+                   .name == $name and .digest.sha256 == ($digest | sub("^sha256:"; "")))' \
+              "$output" > /dev/null
+          }
+          verify_release provenance.bundle.jsonl https://slsa.dev/provenance/v1 \
+            .producer-state/release-provenance-readback.json
+          verify_release sbom.bundle.jsonl https://spdx.dev/Document/v2.3 \
+            .producer-state/release-sbom-readback.json
+      - *cleanup-step
+      - *cleanup-fragment-step
+      - *cleanup-upload-step
+      - *summary-step
+      - *terminal-step
+  release-evidence-push:
+    name: PaddleOCR producer / release-evidence-push
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    needs: [release-readback]
+    if: ${{ inputs.mode == 'PRODUCE' }}
+    environment: paddleocr-producer
+    env:
+      PRODUCER_JOB: release-evidence-push
+    outputs:
+      evidence-digest: ${{ steps.push-evidence.outputs.evidence-digest }}
+      release-digest: ${{ needs.release-readback.outputs.release-digest }}
+    permissions:
+      contents: read
+      actions: read
+      packages: write
+    steps:
+      - *checkout-step
+      - *python-step
+      - *trust-step
+      - name: Download exact release attestation artifact
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          artifact-ids: ${{ needs.release-readback.outputs.release-attestation-artifact-id }}
+          path: .producer-state/attestations
+      - name: Prepare exact 11-file evidence source
+        run: |
+          mkdir -p .producer-state/pre-public
+          printf '{"attemptId":"%s","stage":"RELEASE"}' "$ATTEMPT_ID" \
+            > .producer-state/pre-public/reconciliation.json
+          printf '{"attemptId":"%s","scope":"PRE_PUBLIC"}' "$ATTEMPT_ID" \
+            > .producer-state/pre-public/cleanup.json
+          RECONCILIATION_SHA=$(shasum -a 256 .producer-state/pre-public/reconciliation.json | awk '{print $1}')
+          CLEANUP_SHA=$(shasum -a 256 .producer-state/pre-public/cleanup.json | awk '{print $1}')
+          REVOCATIONS_SHA=$(shasum -a 256 docker/paddleocr/revocations.json | awk '{print $1}')
+          REVOCATIONS_COMMIT=$(git log -1 --format=%H -- docker/paddleocr/revocations.json)
+          INPUT_LOCK_SHA=$(shasum -a 256 "$PRODUCER_INPUT_LOCK" | awk '{print $1}')
+          python3 scripts/research/paddle_ocr_producer.py prepare-evidence \
+            --input-lock "$PRODUCER_INPUT_LOCK" \
+            --legal "$PRODUCER_LEGAL_INVENTORY" \
+            --platform-manifest .producer-state/attestations/platform-manifest.json \
+            --sbom .producer-state/attestations/sbom.spdx.json \
+            --provenance-bundle .producer-state/attestations/provenance.bundle.jsonl \
+            --sbom-bundle .producer-state/attestations/sbom.bundle.jsonl \
+            --staging-digest "${{ needs.release-readback.outputs.staging-digest }}" \
+            --release-digest "${{ needs.release-readback.outputs.release-digest }}" \
+            --reconciliation-sha256 "$RECONCILIATION_SHA" \
+            --cleanup-sha256 "$CLEANUP_SHA" \
+            --revocations docker/paddleocr/revocations.json \
+            --revocations-commit-sha "$REVOCATIONS_COMMIT" \
+            --run-id "$GITHUB_RUN_ID" \
+            --run-attempt "$GITHUB_RUN_ATTEMPT" \
+            --output-root .producer-state/evidence-source
+          python3 scripts/research/paddle_ocr_producer.py create-evidence-oci \
+            --source-root .producer-state/evidence-source \
+            --output-root .producer-state/evidence-oci \
+            --image-index-digest "${{ needs.release-readback.outputs.image-index-digest }}" \
+            --image-platform-digest "${{ needs.release-readback.outputs.image-platform-digest }}" \
+            --image-config-digest "${{ needs.release-readback.outputs.image-config-digest }}" \
+            --base-digest "${{ needs.release-readback.outputs.base-digest }}" \
+            --run-id "$GITHUB_RUN_ID" \
+            --run-attempt "$GITHUB_RUN_ATTEMPT" \
+            --input-lock-sha256 "$INPUT_LOCK_SHA" \
+            --revocations-sha256 "$REVOCATIONS_SHA" \
+            --revocations-commit-sha "$REVOCATIONS_COMMIT" \
+            > .producer-state/create-evidence-oci-receipt.json
+          test -s .producer-state/evidence-source/producer-evidence.json
+          test -s .producer-state/evidence-source/artifact-ledger.fragment.json
+          test -s .producer-state/evidence-source/inputs/producer-input.lock.json
+          test -s .producer-state/evidence-source/manifests/package-lock.json
+          test -s .producer-state/evidence-source/manifests/model-detector.json
+          test -s .producer-state/evidence-source/manifests/model-recognizer.json
+          test -s .producer-state/evidence-source/platform-manifest.json
+          test -s .producer-state/evidence-source/sbom.spdx.json
+          test -s .producer-state/evidence-source/legal-inventory.json
+          test -s .producer-state/evidence-source/attestations/provenance.bundle.jsonl
+          test -s .producer-state/evidence-source/attestations/sbom.bundle.jsonl
+      - name: Bootstrap verified ORAS
+        run: |
+          mkdir -p .producer-state/tools
+          curl --fail --location --silent --show-error \
+            https://github.com/oras-project/oras/releases/download/v1.3.4/oras_1.3.4_linux_amd64.tar.gz \
+            --output .producer-state/oras.tar.gz
+          python3 scripts/research/paddle_ocr_producer.py bootstrap-oras \
+            --archive .producer-state/oras.tar.gz \
+            --tool-root .producer-state/tools
+      - name: Execute producer stage - push evidence OCI
+        id: push-evidence
+        env:
+          REGISTRY_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          ORAS_BIN="$PWD/.producer-state/tools/oras"
+          REGISTRY_CONFIG="$PWD/.producer-state/registry-config.json"
+          RELEASE_REPOSITORY=ghcr.io/bluetape4k/paddleocr-service
+          printf '%s' "$REGISTRY_TOKEN" | "$ORAS_BIN" login ghcr.io \
+            --username "$GITHUB_ACTOR" --password-stdin --registry-config "$REGISTRY_CONFIG"
+          "$ORAS_BIN" cp --from-oci-layout --to-registry-config "$REGISTRY_CONFIG" \
+            ".producer-state/evidence-oci:$ATTEMPT_ID" \
+            "$RELEASE_REPOSITORY:evidence-$ATTEMPT_ID"
+          EVIDENCE_DIGEST=$("$ORAS_BIN" resolve --registry-config "$REGISTRY_CONFIG" \
+            "$RELEASE_REPOSITORY:evidence-$ATTEMPT_ID")
+          test "$EVIDENCE_DIGEST" = \
+            "$(jq -er '.data.manifestDigest' .producer-state/create-evidence-oci-receipt.json)"
+          "$ORAS_BIN" manifest fetch --registry-config "$REGISTRY_CONFIG" \
+            "$RELEASE_REPOSITORY@$EVIDENCE_DIGEST" > .producer-state/evidence-manifest-readback.json
+          test "sha256:$(shasum -a 256 .producer-state/evidence-manifest-readback.json | awk '{print $1}')" = \
+            "$EVIDENCE_DIGEST"
+          test "$(jq -er '.subject.digest' .producer-state/evidence-manifest-readback.json)" = \
+            "${{ needs.release-readback.outputs.release-digest }}"
+          test "$(gh api /orgs/bluetape4k/packages/container/paddleocr-service --jq .visibility)" = private
+          printf 'evidence-digest=%s\n' "$EVIDENCE_DIGEST" >> "$GITHUB_OUTPUT"
+      - *cleanup-step
+      - *cleanup-fragment-step
+      - *cleanup-upload-step
+      - *summary-step
+      - *terminal-step
+  consumer-verify-private:
+    name: PaddleOCR producer / consumer-verify-private
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    needs: [release-evidence-push]
+    if: ${{ inputs.mode == 'PRODUCE' }}
+    env:
+      PRODUCER_JOB: consumer-verify-private
+    outputs:
+      evidence-digest: ${{ needs.release-evidence-push.outputs.evidence-digest }}
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - *checkout-step
+      - *python-step
+      - *trust-step
+      - name: Bootstrap verified ORAS
+        run: |
+          mkdir -p .producer-state/tools
+          curl --fail --location --silent --show-error \
+            https://github.com/oras-project/oras/releases/download/v1.3.4/oras_1.3.4_linux_amd64.tar.gz \
+            --output .producer-state/oras.tar.gz
+          python3 scripts/research/paddle_ocr_producer.py bootstrap-oras \
+            --archive .producer-state/oras.tar.gz \
+            --tool-root .producer-state/tools
+      - name: Execute producer stage - verify private evidence
+        env:
+          REGISTRY_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ github.token }}
+          EVIDENCE_DIGEST: ${{ needs.release-evidence-push.outputs.evidence-digest }}
+        run: |
+          set -euo pipefail
+          ORAS_BIN="$PWD/.producer-state/tools/oras"
+          REGISTRY_CONFIG="$PWD/.producer-state/registry-config.json"
+          EVIDENCE_REF="ghcr.io/bluetape4k/paddleocr-service@$EVIDENCE_DIGEST"
+          printf '%s' "$REGISTRY_TOKEN" | "$ORAS_BIN" login ghcr.io \
+            --username "$GITHUB_ACTOR" --password-stdin --registry-config "$REGISTRY_CONFIG"
+          "$ORAS_BIN" manifest fetch --registry-config "$REGISTRY_CONFIG" \
+            "$EVIDENCE_REF" > .producer-state/private-evidence-manifest.json
+          test "sha256:$(shasum -a 256 .producer-state/private-evidence-manifest.json | awk '{print $1}')" = \
+            "$EVIDENCE_DIGEST"
+          test "$(jq -er '.artifactType' .producer-state/private-evidence-manifest.json)" = \
+            application/vnd.bluetape4k.paddleocr.producer-evidence.v1
+          test "$(jq -er '.subject.digest' .producer-state/private-evidence-manifest.json)" = \
+            "${{ needs.release-evidence-push.outputs.release-digest }}"
+      - *cleanup-step
+      - *cleanup-fragment-step
+      - *cleanup-upload-step
+      - *summary-step
+      - *terminal-step
+  public-visibility-readback:
+    name: PaddleOCR producer / public-visibility-readback
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    needs: [consumer-verify-private]
+    if: ${{ always() && !cancelled() }}
+    environment: paddleocr-producer
+    env:
+      PRODUCER_JOB: public-visibility-readback
+    outputs:
+      evidence-digest: ${{ needs.consumer-verify-private.outputs.evidence-digest }}
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - *checkout-step
+      - *python-step
+      - *trust-step
+      - name: Execute producer stage - require external public visibility
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          test "$(gh api /orgs/bluetape4k/packages/container/paddleocr-service --jq .visibility)" = public
+      - *cleanup-step
+      - *cleanup-fragment-step
+      - *cleanup-upload-step
+      - *summary-step
+      - *terminal-step
+  consumer-verify-public:
+    name: PaddleOCR producer / consumer-verify-public
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    needs: [public-visibility-readback]
+    if: ${{ always() && !cancelled() }}
+    env:
+      PRODUCER_JOB: consumer-verify-public
+    permissions:
+      contents: read
+    steps:
+      - *checkout-step
+      - *python-step
+      - *trust-step
+      - name: Bootstrap verified anonymous ORAS
+        run: |
+          mkdir -p .producer-state/tools
+          curl --fail --location --silent --show-error --max-time 30 \
+            https://github.com/oras-project/oras/releases/download/v1.3.4/oras_1.3.4_linux_amd64.tar.gz \
+            --output .producer-state/oras.tar.gz
+          test "$(wc -c < .producer-state/oras.tar.gz)" -le 8388608
+          python3 scripts/research/paddle_ocr_producer.py bootstrap-oras \
+            --archive .producer-state/oras.tar.gz \
+            --tool-root .producer-state/tools
+      - name: Execute producer stage - anonymous public evidence verification
+        env:
+          EVIDENCE_DIGEST: ${{ needs.public-visibility-readback.outputs.evidence-digest }}
+        run: |
+          set -euo pipefail
+          EVIDENCE_REF="ghcr.io/bluetape4k/paddleocr-service@$EVIDENCE_DIGEST"
+          env -u GH_TOKEN -u GITHUB_TOKEN -u DOCKER_CONFIG -u REGISTRY_AUTH_FILE \
+            python3 scripts/research/paddle_ocr_producer.py verify-public-evidence \
+              --oras-bin "$PWD/.producer-state/tools/oras" \
+              --gh-bin "$(command -v gh)" \
+              --ref "$EVIDENCE_REF" \
+              --root .producer-state/public-evidence \
+              --operation-timeout-seconds 30 \
+              --materialization-timeout-seconds 600
+      - *cleanup-step
+      - *cleanup-fragment-step
+      - *cleanup-upload-step
+      - *summary-step
+      - *terminal-step
+  reconcile-readback:
+    name: PaddleOCR producer / reconcile-readback
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    needs: [validation]
+    if: ${{ inputs.mode == 'RECONCILE' }}
+    env:
+      PRODUCER_JOB: reconcile-readback
+      GH_TOKEN: ${{ github.token }}
+    outputs:
+      producer-status: ${{ steps.validate-reconcile.outputs.producer-status }}
+      staging-digest: ${{ steps.validate-reconcile.outputs.staging-digest }}
+      release-digest: ${{ steps.validate-reconcile.outputs.release-digest }}
+      evidence-digest: ${{ steps.validate-reconcile.outputs.evidence-digest }}
+    permissions:
+      contents: read
+      actions: read
+      packages: read
+      attestations: read
+    steps:
+      - *checkout-step
+      - *python-step
+      - *trust-step
+      - name: Execute producer stage - reconcile readback only
+        id: validate-reconcile
+        env:
+          RESUME_ATTEMPT_ID: ${{ inputs.resumeAttemptId }}
+          EXPECTED_PRIOR_STATUS: ${{ inputs.expectedPriorStatus }}
+          EXPECTED_INPUT_LOCK_SHA256: ${{ inputs.expectedInputLockSha256 }}
+          EXPECTED_STAGING_DIGEST: ${{ inputs.expectedStagingDigest }}
+          EXPECTED_RELEASE_DIGEST: ${{ inputs.expectedReleaseDigest }}
+          EXPECTED_EVIDENCE_DIGEST: ${{ inputs.expectedEvidenceDigest }}
+        run: |
+          set -euo pipefail
+          python3 scripts/research/paddle_ocr_producer.py validate-dispatch \
+            --mode RECONCILE \
+            --resume-attempt-id "$RESUME_ATTEMPT_ID" \
+            --expected-prior-status "$EXPECTED_PRIOR_STATUS" \
+            --expected-input-lock-sha256 "$EXPECTED_INPUT_LOCK_SHA256" \
+            --expected-staging-digest "$EXPECTED_STAGING_DIGEST" \
+            --expected-release-digest "$EXPECTED_RELEASE_DIGEST" \
+            --expected-evidence-digest "$EXPECTED_EVIDENCE_DIGEST"
+          RESUME_RUN_ID=${RESUME_ATTEMPT_ID%%.*}
+          RESUME_RUN_ATTEMPT=${RESUME_ATTEMPT_ID##*.}
+          python3 - "$RESUME_RUN_ID" "$RESUME_ATTEMPT_ID" <<'PY'
+          import os
+          import subprocess
+          import sys
+          subprocess.run(
+              [
+                  "gh", "run", "download", sys.argv[1],
+                  "--repo", os.environ["GITHUB_REPOSITORY"],
+                  "--name", "paddleocr-reconcile-state-" + sys.argv[2],
+                  "--dir", ".producer-state/prior-state",
+              ],
+              check=True,
+              stdin=subprocess.DEVNULL,
+              timeout=60,
+          )
+          PY
+          test "$(find .producer-state/prior-state -type l -print -quit)" = ""
+          test "$(find .producer-state/prior-state -type f | wc -l | tr -d ' ')" = 5
+          test "$(find .producer-state/prior-state -type f -exec wc -c {} + | awk 'END {print $1}')" -le 1048576
+          PRIOR_STATE=.producer-state/prior-state/reconcile-state.json
+          PRIOR_HEAD=$(jq -er '.workflowHeadSha' "$PRIOR_STATE")
+          python3 scripts/research/paddle_ocr_producer.py readback-workflow-run \
+            --repo "$GITHUB_REPOSITORY" \
+            --run-id "$RESUME_RUN_ID" \
+            --run-attempt "$RESUME_RUN_ATTEMPT" \
+            --expected-head "$PRIOR_HEAD" \
+            --operation-timeout-seconds 60 \
+            --output .producer-state/prior-run-readback.json
+          python3 scripts/research/paddle_ocr_producer.py readback-packages \
+            --owner bluetape4k \
+            --staging-package paddleocr-service-staging \
+            --release-package paddleocr-service \
+            --attempt-id "$RESUME_ATTEMPT_ID" \
+            --image-tag "image-$RESUME_ATTEMPT_ID" \
+            --evidence-tag "evidence-$RESUME_ATTEMPT_ID" \
+            --operation-timeout-seconds 60 \
+            > .producer-state/package-readback.json
+          python3 scripts/research/paddle_ocr_producer.py validate-reconcile-state \
+            --resume-attempt-id "$RESUME_ATTEMPT_ID" \
+            --expected-prior-status "$EXPECTED_PRIOR_STATUS" \
+            --expected-input-lock-sha256 "$EXPECTED_INPUT_LOCK_SHA256" \
+            --expected-staging-digest "$EXPECTED_STAGING_DIGEST" \
+            --expected-release-digest "$EXPECTED_RELEASE_DIGEST" \
+            --expected-evidence-digest "$EXPECTED_EVIDENCE_DIGEST" \
+            --prior-state "$PRIOR_STATE" \
+            --prior-result .producer-state/prior-state/producer-result.json \
+            --prior-evidence .producer-state/prior-state/evidence-reference.json \
+            --prior-reconciliation .producer-state/prior-state/reconciliation-readback.json \
+            --prior-cleanup .producer-state/prior-state/cleanup.json \
+            --package-readback .producer-state/package-readback.json \
+            --input-lock "$PRODUCER_INPUT_LOCK" \
+            --output .producer-state/reconcile-observation.json
+          printf 'producer-status=%s\n' \
+            "$(jq -er '.producerStatus' .producer-state/reconcile-observation.json)" >> "$GITHUB_OUTPUT"
+          for artifact in staging release evidence; do
+            digest=$(jq -er --arg artifact "$artifact" \
+              '.[$artifact].manifestDigest // ""' .producer-state/reconcile-observation.json)
+            printf '%s-digest=%s\n' "$artifact" "$digest" >> "$GITHUB_OUTPUT"
+          done
+      - *cleanup-step
+      - *cleanup-fragment-step
+      - *cleanup-upload-step
+      - *summary-step
+      - *terminal-step
+  emergency-deny-attest:
+    name: PaddleOCR producer / quarantine-pending
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    needs: [consumer-verify-public]
+    if: ${{ always() && !cancelled() && needs.consumer-verify-public.result == 'failure' }}
+    env:
+      PRODUCER_JOB: emergency-deny-attest
+    permissions:
+      contents: read
+    steps:
+      - *checkout-step
+      - *python-step
+      - *trust-step
+      - name: Execute producer stage - record QUARANTINE_PENDING candidate
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+          document = {
+              "schemaVersion": 1,
+              "attemptId": os.environ["ATTEMPT_ID"],
+              "producerStatus": "QUARANTINE_PENDING",
+              "reasonCode": "PUBLIC_VERIFICATION_FAILED",
+              "requiredNextEvidence": [
+                  "protected-develop-revocation",
+                  "signed-emergency-receipt",
+                  "visibility-readback",
+                  "downstream-readback",
+              ],
+          }
+          Path(".producer-state/quarantine-pending.json").write_text(
+              json.dumps(document, separators=(",", ":"), sort_keys=True),
+              encoding="utf-8",
+          )
+          PY
+      - name: Upload quarantine candidate
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: paddleocr-quarantine-pending-${{ env.ATTEMPT_ID }}
+          path: .producer-state/quarantine-pending.json
+          if-no-files-found: error
+          include-hidden-files: false
+          compression-level: 0
+          retention-days: 90
+      - *cleanup-step
+      - *cleanup-fragment-step
+      - *cleanup-upload-step
+      - *summary-step
+      - *terminal-step
+  cleanup-aggregate:
+    name: PaddleOCR producer / cleanup-aggregate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    needs: [validation, staging, source-repro-check, image-build, staging-push, staging-attest, staging-readback, release-promotion, release-attest, release-readback, release-evidence-push, consumer-verify-private, public-visibility-readback, consumer-verify-public, reconcile-readback, emergency-deny-attest]
+    if: ${{ always() }}
+    env:
+      PRODUCER_JOB: cleanup-aggregate
+      NEEDS_JSON: ${{ toJSON(needs) }}
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - *checkout-step
+      - *python-step
+      - name: Download cleanup fragments
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          pattern: cleanup-fragment-${{ env.ATTEMPT_ID }}-*
+          path: .producer-state/cleanup-fragments
+          merge-multiple: true
+      - name: Merge cleanup fragments
+        run: |
+          set -euo pipefail
+          mapfile -t FRAGMENTS < <(find .producer-state/cleanup-fragments -type f -name '*.json' -print | sort)
+          ARGS=()
+          python3 - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+          needs = json.loads(os.environ["NEEDS_JSON"])
+          started = sorted(job for job, state in needs.items() if state.get("result") != "skipped")
+          Path(".producer-state/started-jobs.txt").write_text(
+              "".join(job + "\n" for job in started), encoding="utf-8"
+          )
+          PY
+          while IFS= read -r job; do
+            test -n "$job" && ARGS+=(--started-job "$job")
+          done < .producer-state/started-jobs.txt
+          for fragment in "${FRAGMENTS[@]}"; do
+            ARGS+=(--fragment "$fragment")
+          done
+          python3 scripts/research/paddle_ocr_producer.py merge-cleanup \
+            --attempt-id "$ATTEMPT_ID" \
+            --original-status FAILED \
+            "${ARGS[@]}" \
+            --merged-at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            --output .producer-state/cleanup.json
+      - name: Upload cleanup aggregate
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: paddleocr-cleanup-${{ env.ATTEMPT_ID }}
+          path: .producer-state/cleanup.json
+          if-no-files-found: error
+          include-hidden-files: false
+          compression-level: 0
+          retention-days: 90
+  release-readback-finalize:
+    name: PaddleOCR producer / release-readback-finalize
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    needs: [staging-push, release-promotion, release-evidence-push, consumer-verify-public, reconcile-readback, emergency-deny-attest, cleanup-aggregate]
+    if: ${{ always() }}
+    env:
+      PRODUCER_JOB: release-readback-finalize
+    permissions:
+      contents: read
+      actions: read
+      packages: read
+      attestations: read
+    steps:
+      - *checkout-step
+      - *python-step
+      - *trust-step
+      - name: Download cleanup aggregate
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          name: paddleocr-cleanup-${{ env.ATTEMPT_ID }}
+          path: .producer-state/finalizer
+      - name: Build immutable finalizer input
+        env:
+          DISPATCH_MODE: ${{ inputs.mode }}
+          PUBLIC_RESULT: ${{ needs.consumer-verify-public.result }}
+          RECONCILE_RESULT: ${{ needs.reconcile-readback.result }}
+          RECONCILE_STATUS: ${{ needs.reconcile-readback.outputs.producer-status }}
+          QUARANTINE_RESULT: ${{ needs.emergency-deny-attest.result }}
+          CLEANUP_RESULT: ${{ needs.cleanup-aggregate.result }}
+          STAGING_DIGEST: ${{ needs.staging-push.outputs.staging-digest }}
+          RELEASE_DIGEST: ${{ needs.release-promotion.outputs.release-digest }}
+          EVIDENCE_DIGEST: ${{ needs.release-evidence-push.outputs.evidence-digest }}
+          RECONCILE_STAGING_DIGEST: ${{ needs.reconcile-readback.outputs.staging-digest }}
+          RECONCILE_RELEASE_DIGEST: ${{ needs.reconcile-readback.outputs.release-digest }}
+          RECONCILE_EVIDENCE_DIGEST: ${{ needs.reconcile-readback.outputs.evidence-digest }}
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+          reconcile = os.environ["DISPATCH_MODE"] == "RECONCILE"
+          if reconcile:
+              status = os.environ.get("RECONCILE_STATUS") or "INTERRUPTED"
+              conclusion = "success" if os.environ["RECONCILE_RESULT"] == "success" else "failure"
+          elif os.environ["PUBLIC_RESULT"] == "success":
+              status = "PRODUCER_PASS"
+              conclusion = "success"
+          elif os.environ["QUARANTINE_RESULT"] == "success" and os.environ.get("EVIDENCE_DIGEST"):
+              status = "QUARANTINE_PENDING"
+              conclusion = "failure"
+          elif os.environ.get("RELEASE_DIGEST"):
+              status = "RELEASE_UNVERIFIED"
+              conclusion = "failure"
+          elif os.environ.get("STAGING_DIGEST"):
+              status = "PUBLISHED_UNVERIFIED"
+              conclusion = "failure"
+          else:
+              status = "FAILED"
+              conclusion = "failure"
+          staging_digest = os.environ.get("RECONCILE_STAGING_DIGEST") if reconcile else os.environ.get("STAGING_DIGEST")
+          release_digest = os.environ.get("RECONCILE_RELEASE_DIGEST") if reconcile else os.environ.get("RELEASE_DIGEST")
+          evidence_digest = os.environ.get("RECONCILE_EVIDENCE_DIGEST") if reconcile else os.environ.get("EVIDENCE_DIGEST")
+          stage = (
+              "PUBLIC_EVIDENCE" if evidence_digest else
+              "RELEASE" if release_digest else
+              "STAGING" if staging_digest else
+              "NONE"
+          )
+          document = {
+              "producerStatus": status,
+              "lastCompletedStage": stage,
+              "runConclusion": conclusion,
+          }
+          Path(".producer-state/finalizer/input.json").write_text(
+              json.dumps(document, separators=(",", ":"), sort_keys=True), encoding="utf-8"
+          )
+          PY
+      - name: Finalize terminal result
+        run: |
+          python3 scripts/research/paddle_ocr_producer.py finalize-run \
+            --input .producer-state/finalizer/input.json \
+            --cleanup .producer-state/finalizer/cleanup.json \
+            --output .producer-state/finalizer/producer-result.json
+      - name: Build immutable reconciliation state
+        env:
+          STAGING_DIGEST: ${{ needs.staging-push.outputs.staging-digest }}
+          RELEASE_DIGEST: ${{ needs.release-promotion.outputs.release-digest }}
+          EVIDENCE_DIGEST: ${{ needs.release-evidence-push.outputs.evidence-digest }}
+          RECONCILE_STAGING_DIGEST: ${{ needs.reconcile-readback.outputs.staging-digest }}
+          RECONCILE_RELEASE_DIGEST: ${{ needs.reconcile-readback.outputs.release-digest }}
+          RECONCILE_EVIDENCE_DIGEST: ${{ needs.reconcile-readback.outputs.evidence-digest }}
+          DISPATCH_MODE: ${{ inputs.mode }}
+        run: |
+          python3 - <<'PY'
+          import hashlib
+          import json
+          import os
+          from pathlib import Path
+
+          root = Path(".producer-state/finalizer")
+          canonical = lambda value: json.dumps(value, separators=(",", ":"), sort_keys=True).encode()
+          artifact = lambda digest: None if not digest else {"manifestDigest": digest}
+          reconcile = os.environ["DISPATCH_MODE"] == "RECONCILE"
+          staging_digest = os.environ.get("RECONCILE_STAGING_DIGEST") if reconcile else os.environ.get("STAGING_DIGEST")
+          release_digest = os.environ.get("RECONCILE_RELEASE_DIGEST") if reconcile else os.environ.get("RELEASE_DIGEST")
+          evidence_digest = os.environ.get("RECONCILE_EVIDENCE_DIGEST") if reconcile else os.environ.get("EVIDENCE_DIGEST")
+          evidence_reference = {
+              "attemptId": os.environ["ATTEMPT_ID"],
+              "manifestDigest": evidence_digest or None,
+          }
+          reconciliation_readback = {
+              "attemptId": os.environ["ATTEMPT_ID"],
+              "staging": artifact(staging_digest),
+              "release": artifact(release_digest),
+              "evidence": artifact(evidence_digest),
+          }
+          evidence_raw = canonical(evidence_reference)
+          reconciliation_raw = canonical(reconciliation_readback)
+          (root / "evidence-reference.json").write_bytes(evidence_raw)
+          (root / "reconciliation-readback.json").write_bytes(reconciliation_raw)
+          result_raw = (root / "producer-result.json").read_bytes()
+          cleanup_raw = (root / "cleanup.json").read_bytes()
+          result = json.loads(result_raw)
+          input_lock_raw = Path(os.environ["PRODUCER_INPUT_LOCK"]).read_bytes()
+          state = {
+              "schemaVersion": 1,
+              "attemptId": os.environ["ATTEMPT_ID"],
+              "workflowHeadSha": os.environ["GITHUB_SHA"],
+              "producerStatus": result["producerStatus"],
+              "inputLockSha256": hashlib.sha256(input_lock_raw).hexdigest(),
+              "staging": reconciliation_readback["staging"],
+              "release": reconciliation_readback["release"],
+              "evidence": reconciliation_readback["evidence"],
+              "documentHashes": {
+                  "resultSha256": hashlib.sha256(result_raw).hexdigest(),
+                  "evidenceSha256": hashlib.sha256(evidence_raw).hexdigest(),
+                  "reconciliationSha256": hashlib.sha256(reconciliation_raw).hexdigest(),
+                  "cleanupSha256": hashlib.sha256(cleanup_raw).hexdigest(),
+              },
+          }
+          (root / "reconcile-state.json").write_bytes(canonical(state))
+          PY
+      - name: Upload terminal result
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: paddleocr-result-${{ env.ATTEMPT_ID }}
+          path: .producer-state/finalizer/producer-result.json
+          if-no-files-found: error
+          include-hidden-files: false
+          compression-level: 0
+          retention-days: 90
+      - name: Upload reconciliation state
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: paddleocr-reconcile-state-${{ env.ATTEMPT_ID }}
+          path: |
+            .producer-state/finalizer/reconcile-state.json
+            .producer-state/finalizer/producer-result.json
+            .producer-state/finalizer/evidence-reference.json
+            .producer-state/finalizer/reconciliation-readback.json
+            .producer-state/finalizer/cleanup.json
+          if-no-files-found: error
+          include-hidden-files: false
+          compression-level: 0
+          retention-days: 90

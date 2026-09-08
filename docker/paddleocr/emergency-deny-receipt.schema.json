@@ -1,0 +1,130 @@
+{
+  "$id": "https://bluetape4k.github.io/schema/paddleocr/emergency-deny-receipt.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "developHeadSha": {
+      "pattern": "^[0-9a-f]{40}$",
+      "type": "string"
+    },
+    "evidenceDigest": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "imageDigest": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "incidentUrl": {
+      "pattern": "^https://github\\.com/bluetape4k/bluetape4k-image/(issues|pull)/[1-9][0-9]*(#issuecomment-[1-9][0-9]*)?$",
+      "type": "string"
+    },
+    "issuedAt": {
+      "format": "date-time",
+      "pattern": "Z$",
+      "type": "string"
+    },
+    "oidcAudience": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "oidcIssuer": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "reasonCode": {
+      "pattern": "^[A-Z][A-Z0-9_]*$",
+      "type": "string"
+    },
+    "repository": {
+      "const": "bluetape4k/bluetape4k-image"
+    },
+    "revocationEntries": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "artifactKind": {
+            "enum": [
+              "IMAGE",
+              "EVIDENCE"
+            ]
+          },
+          "digest": {
+            "pattern": "^sha256:[0-9a-f]{64}$",
+            "type": "string"
+          },
+          "entrySha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "artifactKind",
+          "digest",
+          "entrySha256"
+        ],
+        "type": "object"
+      },
+      "maxItems": 2,
+      "minItems": 2,
+      "type": "array"
+    },
+    "revocationsCommitSha": {
+      "pattern": "^[0-9a-f]{40}$",
+      "type": "string"
+    },
+    "revocationsSha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "runAttempt": {
+      "minimum": 1,
+      "type": "integer"
+    },
+    "runId": {
+      "minimum": 1,
+      "type": "integer"
+    },
+    "schemaVersion": {
+      "const": 1
+    },
+    "signer": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "workflowPath": {
+      "const": ".github/workflows/paddleocr-producer.yml"
+    },
+    "workflowRef": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "workflowSha": {
+      "pattern": "^[0-9a-f]{40}$",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "imageDigest",
+    "evidenceDigest",
+    "incidentUrl",
+    "reasonCode",
+    "repository",
+    "workflowPath",
+    "workflowRef",
+    "workflowSha",
+    "runId",
+    "runAttempt",
+    "signer",
+    "oidcIssuer",
+    "oidcAudience",
+    "developHeadSha",
+    "revocationsCommitSha",
+    "revocationsSha256",
+    "issuedAt",
+    "revocationEntries"
+  ],
+  "title": "PaddleOCR emergency deny receipt",
+  "type": "object"
+}

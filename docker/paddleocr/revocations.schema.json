@@ -1,0 +1,83 @@
+{
+  "$id": "https://bluetape4k.github.io/schema/paddleocr/revocations.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "digests": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "acknowledgedAt": {
+            "format": "date-time",
+            "pattern": "Z$",
+            "type": "string"
+          },
+          "artifactKind": {
+            "enum": [
+              "IMAGE",
+              "EVIDENCE"
+            ]
+          },
+          "digest": {
+            "pattern": "^sha256:[0-9a-f]{64}$",
+            "type": "string"
+          },
+          "incidentId": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "incidentUrl": {
+            "pattern": "^https://github\\.com/bluetape4k/bluetape4k-image/(issues|pull)/[1-9][0-9]*(#issuecomment-[1-9][0-9]*)?$",
+            "type": "string"
+          },
+          "issuedAt": {
+            "format": "date-time",
+            "pattern": "Z$",
+            "type": "string"
+          },
+          "reasonCode": {
+            "pattern": "^[A-Z][A-Z0-9_]*$",
+            "type": "string"
+          },
+          "signer": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "incidentId",
+          "artifactKind",
+          "digest",
+          "reasonCode",
+          "incidentUrl",
+          "issuedAt",
+          "acknowledgedAt",
+          "signer"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "previousDocumentSha256": {
+      "oneOf": [
+        {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "schemaVersion": {
+      "const": 1
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "previousDocumentSha256",
+    "digests"
+  ],
+  "title": "PaddleOCR producer append-only revocations",
+  "type": "object"
+}

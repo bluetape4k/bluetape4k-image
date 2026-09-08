@@ -1,0 +1,895 @@
+{
+  "$id": "https://bluetape4k.github.io/schema/paddleocr/producer-reconciliation.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "lastCompletedStage": {
+            "const": "NONE"
+          }
+        },
+        "required": [
+          "lastCompletedStage"
+        ]
+      },
+      "then": {
+        "properties": {
+          "evidence": {
+            "type": "null"
+          },
+          "lastCompletedStage": {
+            "const": "NONE"
+          },
+          "release": {
+            "type": "null"
+          },
+          "staging": {
+            "type": "null"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "lastCompletedStage": {
+            "const": "STAGING"
+          }
+        },
+        "required": [
+          "lastCompletedStage"
+        ]
+      },
+      "then": {
+        "properties": {
+          "evidence": {
+            "type": "null"
+          },
+          "lastCompletedStage": {
+            "const": "STAGING"
+          },
+          "release": {
+            "type": "null"
+          },
+          "staging": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "lastCompletedStage": {
+            "const": "EVIDENCE"
+          }
+        },
+        "required": [
+          "lastCompletedStage"
+        ]
+      },
+      "then": {
+        "properties": {
+          "evidence": {
+            "type": "null"
+          },
+          "lastCompletedStage": {
+            "const": "EVIDENCE"
+          },
+          "release": {
+            "type": "null"
+          },
+          "staging": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "lastCompletedStage": {
+            "const": "RELEASE"
+          }
+        },
+        "required": [
+          "lastCompletedStage"
+        ]
+      },
+      "then": {
+        "properties": {
+          "evidence": {
+            "type": "null"
+          },
+          "lastCompletedStage": {
+            "const": "RELEASE"
+          },
+          "release": {
+            "type": "object"
+          },
+          "staging": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "lastCompletedStage": {
+            "const": "PUBLIC_EVIDENCE"
+          }
+        },
+        "required": [
+          "lastCompletedStage"
+        ]
+      },
+      "then": {
+        "properties": {
+          "evidence": {
+            "type": "object"
+          },
+          "lastCompletedStage": {
+            "const": "PUBLIC_EVIDENCE"
+          },
+          "release": {
+            "type": "object"
+          },
+          "staging": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "producerStatus": {
+            "const": "VALIDATING"
+          }
+        },
+        "required": [
+          "producerStatus"
+        ]
+      },
+      "then": {
+        "properties": {
+          "lastCompletedStage": {
+            "enum": [
+              "NONE"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "producerStatus": {
+            "const": "BLOCKED_INPUT"
+          }
+        },
+        "required": [
+          "producerStatus"
+        ]
+      },
+      "then": {
+        "properties": {
+          "lastCompletedStage": {
+            "enum": [
+              "NONE"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "producerStatus": {
+            "const": "BLOCKED_LEGAL_INVENTORY"
+          }
+        },
+        "required": [
+          "producerStatus"
+        ]
+      },
+      "then": {
+        "properties": {
+          "lastCompletedStage": {
+            "enum": [
+              "NONE"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "producerStatus": {
+            "const": "BUILDING"
+          }
+        },
+        "required": [
+          "producerStatus"
+        ]
+      },
+      "then": {
+        "properties": {
+          "lastCompletedStage": {
+            "enum": [
+              "NONE"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "producerStatus": {
+            "const": "PUBLISHED_UNVERIFIED"
+          }
+        },
+        "required": [
+          "producerStatus"
+        ]
+      },
+      "then": {
+        "properties": {
+          "lastCompletedStage": {
+            "enum": [
+              "STAGING"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "producerStatus": {
+            "const": "PROMOTING"
+          }
+        },
+        "required": [
+          "producerStatus"
+        ]
+      },
+      "then": {
+        "properties": {
+          "lastCompletedStage": {
+            "enum": [
+              "EVIDENCE"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "producerStatus": {
+            "const": "RELEASE_UNVERIFIED"
+          }
+        },
+        "required": [
+          "producerStatus"
+        ]
+      },
+      "then": {
+        "properties": {
+          "lastCompletedStage": {
+            "enum": [
+              "RELEASE",
+              "PUBLIC_EVIDENCE"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "producerStatus": {
+            "const": "QUARANTINE_PENDING"
+          }
+        },
+        "required": [
+          "producerStatus"
+        ]
+      },
+      "then": {
+        "properties": {
+          "lastCompletedStage": {
+            "enum": [
+              "PUBLIC_EVIDENCE"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "producerStatus": {
+            "const": "QUARANTINED"
+          }
+        },
+        "required": [
+          "producerStatus"
+        ]
+      },
+      "then": {
+        "properties": {
+          "lastCompletedStage": {
+            "enum": [
+              "PUBLIC_EVIDENCE"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "producerStatus": {
+            "const": "PRODUCER_PASS"
+          }
+        },
+        "required": [
+          "producerStatus"
+        ]
+      },
+      "then": {
+        "properties": {
+          "lastCompletedStage": {
+            "enum": [
+              "PUBLIC_EVIDENCE"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "producerStatus": {
+            "const": "PRODUCER_PASS"
+          }
+        },
+        "required": [
+          "producerStatus"
+        ]
+      },
+      "then": {
+        "properties": {
+          "cleanupVerified": {
+            "const": true
+          },
+          "closedAt": {
+            "type": "null"
+          },
+          "denylistVerified": {
+            "const": true
+          },
+          "downstreamReadBack": {
+            "const": true
+          },
+          "incidentUrl": {
+            "type": "null"
+          },
+          "mapped609Status": {
+            "const": "PENDING"
+          },
+          "ownerAcknowledgedAt": {
+            "type": "null"
+          },
+          "secretScan": {
+            "const": "PASS"
+          },
+          "visibilityReadBack": {
+            "const": true
+          }
+        }
+      }
+    }
+  ],
+  "properties": {
+    "attemptId": {
+      "pattern": "^[1-9][0-9]*\\.[1-9][0-9]*$",
+      "type": "string"
+    },
+    "cleanupVerified": {
+      "type": "boolean"
+    },
+    "closedAt": {
+      "oneOf": [
+        {
+          "format": "date-time",
+          "pattern": "Z$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "denylistVerified": {
+      "type": "boolean"
+    },
+    "downstreamReadBack": {
+      "type": "boolean"
+    },
+    "evidence": {
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "artifactType": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "attemptTag": {
+              "pattern": "^evidence-[1-9][0-9]*\\.[1-9][0-9]*$",
+              "type": "string"
+            },
+            "fileManifestSha256": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "manifestDigest": {
+              "pattern": "^sha256:[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "package": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "pullMode": {
+              "enum": [
+                "PACKAGES_READ",
+                "ANONYMOUS"
+              ]
+            },
+            "pullVerified": {
+              "type": "boolean"
+            },
+            "subjectDigest": {
+              "pattern": "^sha256:[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "versionId": {
+              "minimum": 1,
+              "type": "integer"
+            },
+            "visibility": {
+              "enum": [
+                "private",
+                "public"
+              ]
+            }
+          },
+          "required": [
+            "package",
+            "versionId",
+            "attemptTag",
+            "visibility",
+            "pullMode",
+            "pullVerified",
+            "artifactType",
+            "manifestDigest",
+            "subjectDigest",
+            "fileManifestSha256"
+          ],
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "incidentUrl": {
+      "oneOf": [
+        {
+          "pattern": "^https://github\\.com/bluetape4k/bluetape4k-image/(issues|pull)/[1-9][0-9]*(#issuecomment-[1-9][0-9]*)?$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "inputLockSha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "lastCompletedStage": {
+      "enum": [
+        "NONE",
+        "STAGING",
+        "EVIDENCE",
+        "RELEASE",
+        "PUBLIC_EVIDENCE"
+      ]
+    },
+    "mapped609Status": {
+      "enum": [
+        "PENDING",
+        "BLOCKED",
+        "REJECTED"
+      ]
+    },
+    "ownerAcknowledgedAt": {
+      "oneOf": [
+        {
+          "format": "date-time",
+          "pattern": "Z$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "previousDocumentSha256": {
+      "oneOf": [
+        {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "producerStatus": {
+      "enum": [
+        "VALIDATING",
+        "BLOCKED_INPUT",
+        "BLOCKED_LEGAL_INVENTORY",
+        "BUILDING",
+        "PUBLISHED_UNVERIFIED",
+        "PROMOTING",
+        "RELEASE_UNVERIFIED",
+        "QUARANTINE_PENDING",
+        "QUARANTINED",
+        "PRODUCER_PASS",
+        "REJECTED",
+        "REVOKED",
+        "FAILED",
+        "CANCELLED",
+        "INTERRUPTED"
+      ]
+    },
+    "release": {
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "attemptTag": {
+              "pattern": "^image-[1-9][0-9]*\\.[1-9][0-9]*$",
+              "type": "string"
+            },
+            "baseDigest": {
+              "pattern": "^sha256:[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "configDigest": {
+              "pattern": "^sha256:[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "indexDigest": {
+              "pattern": "^sha256:[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "manifestDigest": {
+              "pattern": "^sha256:[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "package": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "pullMode": {
+              "enum": [
+                "PACKAGES_READ",
+                "ANONYMOUS"
+              ]
+            },
+            "pullVerified": {
+              "type": "boolean"
+            },
+            "versionId": {
+              "minimum": 1,
+              "type": "integer"
+            },
+            "visibility": {
+              "enum": [
+                "private",
+                "public"
+              ]
+            }
+          },
+          "required": [
+            "package",
+            "versionId",
+            "attemptTag",
+            "visibility",
+            "pullMode",
+            "pullVerified",
+            "indexDigest",
+            "manifestDigest",
+            "configDigest",
+            "baseDigest"
+          ],
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "replacedAttemptSha256": {
+      "oneOf": [
+        {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "replacedCleanupSha256": {
+      "oneOf": [
+        {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "replacedEvidenceDigest": {
+      "oneOf": [
+        {
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "replacedEvidenceSha256": {
+      "oneOf": [
+        {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "replacedReconciliationSha256": {
+      "oneOf": [
+        {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "replacedReleaseDigest": {
+      "oneOf": [
+        {
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "replacesAttemptId": {
+      "oneOf": [
+        {
+          "pattern": "^[1-9][0-9]*\\.[1-9][0-9]*$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "retryReceipts": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "attempts": {
+            "maximum": 3,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "delaysSeconds": {
+            "items": {
+              "enum": [
+                2,
+                4
+              ]
+            },
+            "maxItems": 2,
+            "type": "array"
+          },
+          "kind": {
+            "enum": [
+              "HTTP_DOWNLOAD",
+              "GITHUB_API",
+              "REGISTRY"
+            ]
+          },
+          "operationId": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "terminal": {
+            "enum": [
+              "SUCCESS",
+              "TRANSIENT_EXHAUSTED",
+              "PERMANENT_FAILURE"
+            ]
+          }
+        },
+        "required": [
+          "operationId",
+          "kind",
+          "attempts",
+          "delaysSeconds",
+          "terminal"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "revocationsCommitSha": {
+      "pattern": "^[0-9a-f]{40}$",
+      "type": "string"
+    },
+    "revocationsSha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "schemaVersion": {
+      "const": 1
+    },
+    "secretScan": {
+      "enum": [
+        "NOT_RUN",
+        "PASS",
+        "FAIL"
+      ]
+    },
+    "staging": {
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "attemptTag": {
+              "pattern": "^image-[1-9][0-9]*\\.[1-9][0-9]*$",
+              "type": "string"
+            },
+            "baseDigest": {
+              "pattern": "^sha256:[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "configDigest": {
+              "pattern": "^sha256:[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "indexDigest": {
+              "pattern": "^sha256:[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "manifestDigest": {
+              "pattern": "^sha256:[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "package": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "pullMode": {
+              "enum": [
+                "PACKAGES_READ",
+                "ANONYMOUS"
+              ]
+            },
+            "pullVerified": {
+              "type": "boolean"
+            },
+            "versionId": {
+              "minimum": 1,
+              "type": "integer"
+            },
+            "visibility": {
+              "enum": [
+                "private",
+                "public"
+              ]
+            }
+          },
+          "required": [
+            "package",
+            "versionId",
+            "attemptTag",
+            "visibility",
+            "pullMode",
+            "pullVerified",
+            "indexDigest",
+            "manifestDigest",
+            "configDigest",
+            "baseDigest"
+          ],
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "statusChangedAt": {
+      "format": "date-time",
+      "pattern": "Z$",
+      "type": "string"
+    },
+    "visibilityReadBack": {
+      "type": "boolean"
+    },
+    "workflowRetryOrdinal": {
+      "minimum": 1,
+      "type": "integer"
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "attemptId",
+    "producerStatus",
+    "lastCompletedStage",
+    "mapped609Status",
+    "inputLockSha256",
+    "staging",
+    "release",
+    "evidence",
+    "replacesAttemptId",
+    "replacedReleaseDigest",
+    "replacedEvidenceDigest",
+    "replacedAttemptSha256",
+    "replacedEvidenceSha256",
+    "replacedReconciliationSha256",
+    "replacedCleanupSha256",
+    "workflowRetryOrdinal",
+    "retryReceipts",
+    "secretScan",
+    "cleanupVerified",
+    "denylistVerified",
+    "visibilityReadBack",
+    "downstreamReadBack",
+    "revocationsSha256",
+    "revocationsCommitSha",
+    "previousDocumentSha256",
+    "statusChangedAt",
+    "incidentUrl",
+    "ownerAcknowledgedAt",
+    "closedAt"
+  ],
+  "title": "PaddleOCR producer reconciliation",
+  "type": "object"
+}

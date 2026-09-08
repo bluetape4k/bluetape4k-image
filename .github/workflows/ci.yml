@@ -99,6 +99,7 @@ jobs:
       images-vips-java21: ${{ steps.filter.outputs.images-vips-java21 }}
       images-vips-java25: ${{ steps.filter.outputs.images-vips-java25 }}
       vips-verification: ${{ steps.filter.outputs.vips-verification }}
+      paddleocr-producer: ${{ steps.filter.outputs.paddleocr-producer }}
     steps:
       - uses: actions/checkout@v7
       - uses: dorny/paths-filter@v4
@@ -138,6 +139,46 @@ jobs:
               - 'images-vips-java21/**'
               - 'images-vips-java25/**'
               - '.github/workflows/ci.yml'
+            paddleocr-producer:
+              - 'docker/paddleocr/**'
+              - 'scripts/research/paddle_ocr_producer.py'
+              - 'scripts/research/paddle_ocr_producer_lib/**'
+              - 'scripts/research/test_paddle_ocr_producer*.py'
+              - 'scripts/research/paddle_ocr_smoke.py'
+              - 'scripts/research/test_paddle_ocr_smoke.py'
+              - '.github/scripts/test-paddleocr-producer-workflow.py'
+              - '.github/workflows/paddleocr-producer.yml'
+              - '.github/CODEOWNERS'
+              - '.github/workflows/ci.yml'
+
+  producer-contract:
+    name: Test / PaddleOCR producer contract / Python ${{ matrix.python-version }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    needs: [changes]
+    if: ${{ needs.changes.outputs['paddleocr-producer'] == 'true' || needs.changes.outputs['build-logic'] == 'true' || github.event_name == 'workflow_dispatch' }}
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.9', '3.13']
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Validate producer contracts
+        run: |
+          python3 scripts/research/test_paddle_ocr_producer.py -v
+          python3 scripts/research/test_paddle_ocr_producer_registry.py -v
+          python3 scripts/research/test_paddle_ocr_producer_evidence.py -v
+          python3 scripts/research/test_paddle_ocr_receipt.py
+          python3 scripts/research/test_paddle_ocr_smoke.py
+          python3 docker/paddleocr/test_service.py -v
+          python3 .github/scripts/test-paddleocr-producer-workflow.py
 
   catalog-governance:
     name: Central Catalog Governance
@@ -1013,6 +1054,7 @@ jobs:
       - test-images-vips-java21
       - test-images-vips-java25
       - vips-verification
+      - producer-contract
     if: always()
     steps:
       - name: Check all jobs
@@ -1031,6 +1073,7 @@ jobs:
           IMAGES_VIPS_JAVA21_CHANGED: ${{ needs.changes.outputs['images-vips-java21'] }}
           IMAGES_VIPS_JAVA25_CHANGED: ${{ needs.changes.outputs['images-vips-java25'] }}
           VIPS_VERIFICATION_CHANGED: ${{ needs.changes.outputs['vips-verification'] }}
+          PADDLEOCR_PRODUCER_CHANGED: ${{ needs.changes.outputs['paddleocr-producer'] }}
           TEST_IMAGES_RESULT: ${{ needs['test-images'].result }}
           TEST_IMAGES_BARCODE_API_RESULT: ${{ needs['test-images-barcode-api'].result }}
           TEST_IMAGES_BARCODE_ZXING_RESULT: ${{ needs['test-images-barcode-zxing'].result }}
@@ -1043,6 +1086,7 @@ jobs:
           TEST_IMAGES_VIPS_JAVA21_RESULT: ${{ needs['test-images-vips-java21'].result }}
           TEST_IMAGES_VIPS_JAVA25_RESULT: ${{ needs['test-images-vips-java25'].result }}
           VIPS_VERIFICATION_RESULT: ${{ needs['vips-verification'].result }}
+          TEST_PADDLEOCR_PRODUCER_RESULT: ${{ needs['producer-contract'].result }}
         run: |
           echo "Job results: $RESULTS"
           if echo "$RESULTS" | grep -qE "failure|cancelled"; then
@@ -1075,5 +1119,6 @@ jobs:
           require_test "images-vips-java21" "$IMAGES_VIPS_JAVA21_CHANGED" "$TEST_IMAGES_VIPS_JAVA21_RESULT"
           require_test "images-vips-java25" "$IMAGES_VIPS_JAVA25_CHANGED" "$TEST_IMAGES_VIPS_JAVA25_RESULT"
           require_test "vips-verification" "$VIPS_VERIFICATION_CHANGED" "$VIPS_VERIFICATION_RESULT"
+          require_test "paddleocr-producer" "$PADDLEOCR_PRODUCER_CHANGED" "$TEST_PADDLEOCR_PRODUCER_RESULT"
 
           echo "CI passed (skipped jobs were only for unaffected modules)"

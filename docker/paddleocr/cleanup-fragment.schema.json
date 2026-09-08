@@ -1,0 +1,102 @@
+{
+  "$id": "https://bluetape4k.github.io/schema/paddleocr/cleanup-fragment.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "attemptId": {
+      "pattern": "^[1-9][0-9]*\\.[1-9][0-9]*$",
+      "type": "string"
+    },
+    "finishedAt": {
+      "format": "date-time",
+      "pattern": "Z$",
+      "type": "string"
+    },
+    "jobId": {
+      "enum": [
+        "validation",
+        "staging",
+        "source-repro-check",
+        "image-build",
+        "staging-push",
+        "staging-attest",
+        "staging-readback",
+        "release-promotion",
+        "release-attest",
+        "release-readback",
+        "release-evidence-push",
+        "consumer-verify-private",
+        "public-visibility-readback",
+        "consumer-verify-public",
+        "emergency-deny-attest"
+      ]
+    },
+    "originalProducerStatus": {
+      "enum": [
+        "VALIDATING",
+        "BLOCKED_INPUT",
+        "BLOCKED_LEGAL_INVENTORY",
+        "BUILDING",
+        "PUBLISHED_UNVERIFIED",
+        "PROMOTING",
+        "RELEASE_UNVERIFIED",
+        "QUARANTINE_PENDING",
+        "QUARANTINED",
+        "PRODUCER_PASS",
+        "REJECTED",
+        "REVOKED",
+        "FAILED",
+        "CANCELLED",
+        "INTERRUPTED"
+      ]
+    },
+    "schemaVersion": {
+      "const": 1
+    },
+    "startedAt": {
+      "format": "date-time",
+      "pattern": "Z$",
+      "type": "string"
+    },
+    "targets": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "idSha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "type": "string"
+          },
+          "kind": {
+            "pattern": "^[A-Z][A-Z0-9_]*$",
+            "type": "string"
+          },
+          "result": {
+            "enum": [
+              "REMOVED",
+              "ABSENT",
+              "FAILED"
+            ]
+          }
+        },
+        "required": [
+          "kind",
+          "idSha256",
+          "result"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "attemptId",
+    "jobId",
+    "originalProducerStatus",
+    "startedAt",
+    "finishedAt",
+    "targets"
+  ],
+  "title": "PaddleOCR producer cleanup fragment",
+  "type": "object"
+}

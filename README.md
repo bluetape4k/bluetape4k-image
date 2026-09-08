@@ -68,6 +68,12 @@ or bundle third-party ML model weights.
   `Backlog / DEFERRED`. The image-classification ONNX decision in
   [#3](https://github.com/bluetape4k/bluetape4k-image/issues/3) and
   [#551](https://github.com/bluetape4k/bluetape4k-image/issues/551) is `DEFER`.
+- **Trusted producer evidence** — [#638](https://github.com/bluetape4k/bluetape4k-image/issues/638)
+  produces evidence for [#609](https://github.com/bluetape4k/bluetape4k-image/issues/609)
+  and [#611](https://github.com/bluetape4k/bluetape4k-image/issues/611); their
+  adoption status remains PENDING. A PRODUCER_PASS receipt is not an adoption
+  approval and does not add a Kotlin runtime dependency. Follow the
+  [PaddleOCR producer runbook](docs/superpowers/runbooks/2026-09-07-issue-638-paddleocr-producer.md).
 - **Deferred scope** — no PaddleOCR model download, ONNX production backend, ML
   runtime dependency, benchmark adoption, or model-serving train is active.
 - **Re-entry gate** — resume only after compatible license/`NOTICE`, immutable
