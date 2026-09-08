@@ -18,6 +18,7 @@ import io.bluetape4k.images.vips.VipsRuntime
 import io.bluetape4k.images.vips.java25.internal.DefaultFfmVipsCodecProbe
 import io.bluetape4k.images.vips.java25.internal.DefaultFfmVipsNativeRuntime
 import io.bluetape4k.images.vips.java25.internal.FfmVipsCodecProbe
+import io.bluetape4k.images.vips.java25.internal.FfmVipsCodecProbeResult
 import io.bluetape4k.images.vips.java25.internal.FfmVipsNativeRuntime
 import io.bluetape4k.logging.KLogging
 import kotlinx.coroutines.CancellationException
@@ -169,8 +170,8 @@ object FfmVipsRuntime : VipsRuntime, KLogging() {
         get() = state.get() == RuntimeState.SHUTDOWN
 
     override fun codecCapabilityReport(): VipsCodecCapabilityReport {
-        val canLoadHeif = codecProbe.supportsOperation(HEIF_LOAD_OPERATION)
-        val canSaveHeif = codecProbe.supportsOperation(HEIF_SAVE_OPERATION)
+        val loadProbe = codecProbe.inspectOperation(HEIF_LOAD_OPERATION)
+        val saveProbe = codecProbe.inspectOperation(HEIF_SAVE_OPERATION)
 
         return VipsCodecCapabilityReport(
             backendName = BACKEND_NAME,
@@ -178,14 +179,14 @@ object FfmVipsRuntime : VipsRuntime, KLogging() {
             codecs = listOf(
                 heifCapability(
                     format = VipsImageFormat.AVIF,
-                    canLoadHeif = canLoadHeif,
-                    canSaveHeif = canSaveHeif,
+                    loadProbe = loadProbe,
+                    saveProbe = saveProbe,
                     nativeDependencies = listOf("libvips", "libheif", "libaom"),
                 ),
                 heifCapability(
                     format = VipsImageFormat.HEIC,
-                    canLoadHeif = canLoadHeif,
-                    canSaveHeif = canSaveHeif,
+                    loadProbe = loadProbe,
+                    saveProbe = saveProbe,
                     nativeDependencies = listOf("libvips", "libheif", "HEVC encoder"),
                 ),
             ),
@@ -311,8 +312,8 @@ object FfmVipsRuntime : VipsRuntime, KLogging() {
 
     private fun heifCapability(
         format: VipsImageFormat,
-        canLoadHeif: Boolean,
-        canSaveHeif: Boolean,
+        loadProbe: FfmVipsCodecProbeResult,
+        saveProbe: FfmVipsCodecProbeResult,
         nativeDependencies: List<String>,
     ): VipsCodecCapability =
         VipsCodecCapability.heifFamily(
@@ -320,13 +321,13 @@ object FfmVipsRuntime : VipsRuntime, KLogging() {
             decode = operationCapability(
                 direction = VipsCodecDirection.DECODE,
                 operationName = HEIF_LOAD_OPERATION,
-                available = canLoadHeif,
+                probe = loadProbe,
                 unavailableReason = "$HEIF_LOAD_OPERATION is unavailable; install libvips with libheif support.",
             ),
             encode = operationCapability(
                 direction = VipsCodecDirection.ENCODE,
                 operationName = HEIF_SAVE_OPERATION,
-                available = canSaveHeif,
+                probe = saveProbe,
                 unavailableReason = "$HEIF_SAVE_OPERATION is unavailable; install libvips with HEIF encoder support.",
             ),
             nativeDependencies = nativeDependencies,
@@ -335,13 +336,19 @@ object FfmVipsRuntime : VipsRuntime, KLogging() {
     private fun operationCapability(
         direction: VipsCodecDirection,
         operationName: String,
-        available: Boolean,
+        probe: FfmVipsCodecProbeResult,
         unavailableReason: String,
-    ): VipsCodecOperationCapability =
-        if (available) {
+    ): VipsCodecOperationCapability = when (probe) {
+        FfmVipsCodecProbeResult.Available ->
             VipsCodecOperationCapability.available(direction, operationName)
-        } else {
+        FfmVipsCodecProbeResult.Unavailable ->
             VipsCodecOperationCapability.unavailable(direction, operationName, unavailableReason)
+        is FfmVipsCodecProbeResult.Failed ->
+            VipsCodecOperationCapability.unknown(
+                direction,
+                operationName,
+                FfmVipsCodecProbeResult.SAFE_FAILURE_REASON,
+            )
         }
 
     private fun checkNativeAccessEnabled() {
