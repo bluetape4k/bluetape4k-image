@@ -103,7 +103,7 @@ permission, missing parent, cancellation 결과를 기록하며, provider나 pro
 대체하지 않고 시작 단계에서 실패합니다. 애플리케이션이 S3 저장소 구현을
 의도적으로 대체하려면 별도의 `ImageStorage` 빈을 제공하세요.
 
-`Path` 업로드는 먼저 bounded streaming snapshot을 만든 뒤 선택적인
+`Path` 업로드는 먼저 크기를 제한하며 읽어 임시 복사본을 만든 뒤 선택적인
 `S3TransferOperations` 파일 전송 capability가 있을 때 이를 사용합니다. 이 capability는
 모듈의 transfer-neutral `S3PathTransferOperations` adapter로 연결되므로 transfer class나
 bean이 없어도 byte/object CRUD는 계속 사용할 수 있습니다. capability가 없으면 source
@@ -118,7 +118,7 @@ filesystem capability와 AWS SDK interaction 세부 사항은 provider별 전용
 | 계약 | Local fixture | S3 fixture | CI 범위 |
 | --- | --- | --- | --- |
 | 기본 CRUD와 overwrite | 실제 임시 filesystem | stateful in-memory operations | module test |
-| `Path` 원자성과 destination 보존 | descriptor-relative staging | transfer snapshot과 resource stream | module test |
+| `Path` 원자성과 destination 보존 | descriptor-relative staging | 전송용 임시 복사본과 resource stream | module test |
 | cold listing과 cancellation cleanup | secure directory 순회 | 관찰 가능한 Flow collector | module test |
 | filesystem capability matrix | Linux/macOS provider | N/A | Linux/macOS matrix |
 
@@ -145,9 +145,18 @@ type은 `null`입니다.
 Micrometer decorator는 capability를 지원하는 provider에서만 이를 보존하고,
 지원하지 않는 custom storage에는 capability를 광고하지 않습니다.
 
-S3 메타데이터는 body를 열지 않고 단일 `S3Operations.headObject` snapshot으로
-조회합니다. byte-array와 `Path` 다운로드 모두 같은 HEAD size를 먼저 확인한 뒤
-실제 스트림 byte 수를 snapshot과 비교하고 결과를 노출합니다. HEAD 실패나 object
+S3 메타데이터는 body를 열지 않고 단일 `S3Operations.headObject` 응답으로
+조회합니다. byte-array 다운로드는 기존 `S3Operations.resource` 스트림과
+`bluetape4k-io.readAllBytes(maxBytes)`를 재사용하여 전체 본문을 먼저 적재하지 않습니다.
+상한 초과 판정에는 최대 한 byte를 추가로 읽으며, 성공·실패 모두 스트림을 닫습니다.
+상한은 `min(maxSizeBytes, Int.MAX_VALUE)`이고 결과 조립 중에는 실제 본문 크기의
+약 두 배 메모리가 일시적으로 필요하므로 운영 환경의 메모리에 맞게 제한을 설정해야 합니다.
+blocking read의 timeout은 S3 client에서 설정해야 합니다.
+호출 작업을 취소해도 진행 중인 blocking read는 SDK timeout까지 남을 수 있지만,
+읽기가 끝난 뒤에는 취소된 호출자에게 결과를 반환하지 않습니다. S3 operation 계측은
+`download` 대신 `resource` 생성만 측정하므로 전체 다운로드 지연은 이미지 저장소 계측을 사용하세요.
+byte-array와 `Path` 다운로드 모두 같은 HEAD size를 먼저 확인한 뒤
+실제 스트림 byte 수를 HEAD 응답의 크기와 비교하고 결과를 노출합니다. HEAD 실패나 object
 교체로 인한 크기 불일치는 fail closed하며 `listPage` 또는 resource size fallback은
 사용하지 않습니다. 정렬된 `bluetape4k-aws-spring-boot` artifact에는 upstream
 PR [#516](https://github.com/bluetape4k/bluetape4k-aws/pull/516)의 `headObject`
@@ -197,7 +206,7 @@ bluetape4k.images.cdn:
 collaborator를 보유하는 객체이므로 Java 직렬화 상태가 아닙니다. `ObjectOutputStream`
 graph에 넣지 말고 Spring 설정으로 startup 시 다시 생성하세요. CloudFront private-key
 PEM과 path property는 Jackson wire view에서 제외하고 `toString()`과 Actuator 진단에서도
-마스킹합니다. 기존 runtime 직렬화 사용은 애플리케이션 snapshot으로 migration해야 하며,
+마스킹합니다. 기존 runtime 직렬화 사용은 애플리케이션 상태의 별도 저장 방식으로 전환해야 하며,
 남아 있는 직렬화 시도는 `NotSerializableException`으로 실패합니다.
 
 ### 헬스 체크

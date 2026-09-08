@@ -112,7 +112,7 @@ class S3ImageStorageTest {
         coEvery {
             operations.headObject(bucket = bucket, key = objectKey)
         } returns S3ObjectMetadata(sizeBytes = 4L)
-        coEvery { operations.downloadBytes(bucket = bucket, key = objectKey) } returns ByteArray(8)
+        stubDownloadBody(ByteArray(8))
 
         assertFailsWith<ImageStorageException.ValidationException> {
             storage.download(key)
@@ -190,18 +190,16 @@ class S3ImageStorageTest {
         coEvery {
             operations.headObject(bucket = bucket, key = objectKey)
         } returns S3ObjectMetadata(sizeBytes = 4)
-        coEvery {
-            operations.downloadBytes(bucket = bucket, key = objectKey)
-        } returns ByteArray(4) { it.toByte() }
+        stubDownloadBody(ByteArray(4) { it.toByte() })
 
         storage.download(key).size shouldBeEqualTo 4
 
         coVerifyOrder {
             operations.headObject(bucket = bucket, key = objectKey)
-            operations.downloadBytes(bucket = bucket, key = objectKey)
+            operations.resource(bucket = bucket, key = objectKey)
         }
         coVerify(exactly = 1) { operations.headObject(bucket = bucket, key = objectKey) }
-        coVerify(exactly = 1) { operations.downloadBytes(bucket = bucket, key = objectKey) }
+        verifyDownloadedOnce()
         confirmVerified(operations)
     }
 
@@ -210,16 +208,14 @@ class S3ImageStorageTest {
         coEvery {
             operations.headObject(bucket = bucket, key = objectKey)
         } returns S3ObjectMetadata(sizeBytes = 4)
-        coEvery {
-            operations.downloadBytes(bucket = bucket, key = objectKey)
-        } returns ByteArray(3)
+        stubDownloadBody(ByteArray(3))
 
         assertFailsWith<ImageStorageException.ValidationException> {
             storage.download(key)
         }
 
         coVerify(exactly = 1) { operations.headObject(bucket = bucket, key = objectKey) }
-        coVerify(exactly = 1) { operations.downloadBytes(bucket = bucket, key = objectKey) }
+        verifyDownloadedOnce()
         confirmVerified(operations)
     }
 
@@ -228,16 +224,14 @@ class S3ImageStorageTest {
         coEvery {
             operations.headObject(bucket = bucket, key = objectKey)
         } returns S3ObjectMetadata(sizeBytes = 4)
-        coEvery {
-            operations.downloadBytes(bucket = bucket, key = objectKey)
-        } returns ByteArray(5)
+        stubDownloadBody(ByteArray(5))
 
         assertFailsWith<ImageStorageException.ValidationException> {
             storage.download(key)
         }
 
         coVerify(exactly = 1) { operations.headObject(bucket = bucket, key = objectKey) }
-        coVerify(exactly = 1) { operations.downloadBytes(bucket = bucket, key = objectKey) }
+        verifyDownloadedOnce()
         confirmVerified(operations)
     }
 
@@ -445,15 +439,21 @@ class S3ImageStorageTest {
     }
 
     private fun verifyDownloadNotStarted() {
+        verify(exactly = 0) { operations.resource(any(), any()) }
         coVerify(exactly = 0) {
             operations.downloadBytes(any(), any())
         }
     }
 
     private fun verifyDownloadedOnce() {
-        coVerify(exactly = 1) {
-            operations.downloadBytes(bucket = bucket, key = objectKey)
-        }
+        verify(exactly = 1) { operations.resource(bucket, objectKey) }
+        coVerify(exactly = 0) { operations.downloadBytes(any(), any()) }
+    }
+
+    private fun stubDownloadBody(bytes: ByteArray) {
+        val resource = mockk<S3Resource>()
+        every { operations.resource(bucket, objectKey) } returns resource
+        every { resource.getInputStream() } answers { ByteArrayInputStream(bytes) }
     }
 
 }
