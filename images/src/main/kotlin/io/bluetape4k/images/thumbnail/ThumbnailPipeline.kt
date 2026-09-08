@@ -418,12 +418,15 @@ class ThumbnailPipeline private constructor(
          *     .build()   // ThumbnailPipeline 인스턴스 반환
          * ```
          *
+         * 크기 목록을 복사하므로 이후 Builder를 변경해도 이미 생성한 파이프라인에 영향을 주지 않습니다.
+         * Builder 자체를 여러 스레드에서 동시에 수정하는 것은 지원하지 않습니다.
+         *
          * @return 구성된 [ThumbnailPipeline] 인스턴스
          * @throws IllegalArgumentException [outputDirectory]가 설정되지 않은 경우
          */
         fun build(): ThumbnailPipeline {
             val directory = requireNotNull(outputDirectory) { "outputDirectory를 지정해야 합니다." }
-            val thumbnailSizes = sizes.ifEmpty { listOf(DEFAULT_THUMBNAIL_SIZE) }
+            val thumbnailSizes = sizes.toList().ifEmpty { listOf(DEFAULT_THUMBNAIL_SIZE) }
             options.parallelism.requirePositiveNumber("parallelism")
 
             return ThumbnailPipeline(

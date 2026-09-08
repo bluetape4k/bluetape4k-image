@@ -303,6 +303,9 @@ requests exceeding `maxInFlightPixels` fail at `VALIDATION`. This budget does no
 encoder/crop scratch memory or result images retained by consumers. Keep source files unchanged
 during processing; decoded input larger than its reservation is rejected before transformation.
 
+Each `build()` snapshots the configured sizes. Reusing the builder does not alter existing
+pipelines, but concurrent modification of the builder itself is not supported.
+
 `ThumbnailCrop` variants:
 
 - `ThumbnailCrop.Fit` — scale to fit within the bounding box (default)
