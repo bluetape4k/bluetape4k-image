@@ -25,7 +25,11 @@ interface VipsRuntime {
      * 이미 초기화된 경우 두 값이 모두 같은 요청만 idempotent하게 즉시 반환합니다.
      * 다른 값을 요청하면 requested/effective configuration을 포함한
      * [VipsInitializationException]이 발생합니다.
-     * 다른 스레드가 초기화 중인 경우 완료될 때까지 스핀 대기한 뒤 같은 비교를 수행합니다.
+     * 다른 스레드가 초기화 중인 경우 최대 60초 동안 완료를 기다린 뒤 같은 비교를 수행합니다.
+     * 대기 중인 호출자는 인터럽트되거나 제한 시간이 만료되면 [VipsInitializationException]으로
+     * 반환하며, 초기화 소유자의 상태나 native 자원에는 영향을 주지 않습니다.
+     * 초기화 소유자가 실패하면 런타임은 재시도 가능한 상태로 복구되고, 경쟁 호출자는 실패 예외를
+     * 받습니다. 호출자는 원인을 확인한 뒤 [init]을 다시 시도할 수 있습니다.
      * 초기화가 끝난 뒤에도 잘못된 인자(`concurrency <= 0` 또는 `maxPixels <= 0`)는 검증됩니다.
      *
      * @param concurrency libvips 내부 스레드 수 (기본값: [VipsLimits.DEFAULT_CONCURRENCY]).
@@ -43,7 +47,11 @@ interface VipsRuntime {
      * libvips 런타임을 종료합니다.
      *
      * 이미 종료된 경우 아무 동작도 하지 않습니다.
+     * 초기화가 진행 중이면 최대 60초 동안 완료를 기다리며, 대기 중 인터럽트되거나 제한 시간이 만료되면
+     * [VipsInitializationException]을 반환합니다. 이 경우 초기화 소유자와 native 자원은 변경되지 않습니다.
      * **되돌릴 수 없음**: 이후 [init] 호출은 [VipsInitializationException]을 발생시킵니다.
+     *
+     * @throws VipsInitializationException 초기화 대기 중 인터럽트되거나 제한 시간이 만료된 경우
      */
     fun shutdown()
 
