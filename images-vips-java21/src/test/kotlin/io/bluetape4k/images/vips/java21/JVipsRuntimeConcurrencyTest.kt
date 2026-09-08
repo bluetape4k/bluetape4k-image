@@ -442,6 +442,7 @@ class JVipsRuntimeConcurrencyTest {
         val releaseRetryOwner = CountDownLatch(1)
         val waiterFirstWaitStarted = CountDownLatch(1)
         val waiterSecondWaitStarted = CountDownLatch(1)
+        val firstWaitCompleted = CountDownLatch(1)
         val attempts = AtomicInteger(0)
         val waitStarts = AtomicInteger(0)
         val completionHookUsed = AtomicBoolean(false)
@@ -489,6 +490,7 @@ class JVipsRuntimeConcurrencyTest {
                 }
                 retryOwnerReference.set(retryOwner)
                 retryOwnerEntered.await(5, TimeUnit.SECONDS).shouldBeTrue()
+                firstWaitCompleted.countDown()
             }
         }
 
@@ -512,6 +514,7 @@ class JVipsRuntimeConcurrencyTest {
         waiterFirstWaitStarted.await(5, TimeUnit.SECONDS).shouldBeTrue()
         releaseFirstOwner.countDown()
         ownerFailureReady.await(5, TimeUnit.SECONDS).shouldBeTrue()
+        firstWaitCompleted.await(5, TimeUnit.SECONDS).shouldBeTrue()
         clock.set(timeoutNanos)
         waiterSecondWaitStarted.await(5, TimeUnit.SECONDS).shouldBeTrue()
 
@@ -668,6 +671,7 @@ class JVipsRuntimeConcurrencyTest {
         val releaseRetryOwner = CountDownLatch(1)
         val waiterFirstWaitStarted = CountDownLatch(1)
         val waiterSecondWaitStarted = CountDownLatch(1)
+        val firstWaitCompleted = CountDownLatch(1)
         val attempts = AtomicInteger(0)
         val waitStarts = AtomicInteger(0)
         val completionHookUsed = AtomicBoolean(false)
@@ -715,6 +719,7 @@ class JVipsRuntimeConcurrencyTest {
                 }
                 retryOwnerReference.set(retryOwner)
                 retryOwnerEntered.await(5, TimeUnit.SECONDS).shouldBeTrue()
+                firstWaitCompleted.countDown()
             }
         }
 
@@ -738,6 +743,7 @@ class JVipsRuntimeConcurrencyTest {
         waiterFirstWaitStarted.await(5, TimeUnit.SECONDS).shouldBeTrue()
         releaseFirstOwner.countDown()
         ownerFailureReady.await(5, TimeUnit.SECONDS).shouldBeTrue()
+        firstWaitCompleted.await(5, TimeUnit.SECONDS).shouldBeTrue()
         clock.set(timeoutNanos)
         waiterSecondWaitStarted.await(5, TimeUnit.SECONDS).shouldBeTrue()
 
