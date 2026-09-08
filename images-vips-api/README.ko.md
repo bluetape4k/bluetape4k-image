@@ -80,7 +80,10 @@ loader 또는 saver가 없으면 sanitized `VipsDecodeException` 또는 `VipsEnc
 `VipsRuntime.codecCapabilityReport()`를 사용하십시오. Report는 JPEG, PNG, WebP를 항상
 stable format으로 표시하고, AVIF/HEIC decode/encode는 `AVAILABLE`, `UNAVAILABLE`,
 `UNKNOWN` 중 하나로 보고합니다. 백엔드가 확인할 수 있는 경우 `heifload_buffer`,
-`heifsave_buffer` 같은 native operation 단서도 함께 제공합니다.
+`heifsave_buffer` 같은 native operation 단서도 함께 제공합니다. `UNKNOWN`은 operation
+탐색 자체가 실패했다는 뜻이며, 원인은 native 경로·환경 값·raw exception text를 노출하지
+않도록 정제해야 합니다. 백엔드는 해당 operation을 fail-closed로 처리하되 fatal JVM
+error는 호출자에게 보존해야 합니다.
 
 배포 환경 검증에는 같은 호스트 이미지 파이프라인에서 준비한 작은 AVIF/HEIC 샘플로
 `VipsRuntime.smokeTestCodec(...)`을 실행하십시오. 이 binding 전용 capability API는
@@ -282,6 +285,8 @@ val resized = image.resize(640, 480)  // 정리하지 않으면 둘 다 누수
 
 - **스레드 안전 초기화**: atomic CAS 사용, `@Synchronized` 미사용
 - **Virtual Thread 친화적**: 모니터 잠금 없음, Virtual Thread 호환
+- **동시 대기 제한**: 경쟁 `init()` 또는 `shutdown()` 호출은 최대 60초만 기다리며, 인터럽트나 시간 초과 시 `VipsInitializationException`을 반환합니다. 이때 owner와 native 자원은 변경하지 않습니다
+- **owner 실패 후 재시도**: 초기화 owner가 실패하면 런타임은 재시도 가능한 상태로 복구되고, 대기자는 실패 예외를 받습니다. 원인을 확인한 뒤 다시 시도할 수 있습니다
 - **터미널 종료**: `shutdown()` 은 불가역적이며, 종료 후 `init()` 호출 시 `VipsInitializationException` 발생
 
 ```kotlin
