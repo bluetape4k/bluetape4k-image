@@ -1288,7 +1288,12 @@ jobs:
         run: |
           set -euo pipefail
           EVIDENCE_REF="ghcr.io/bluetape4k/paddleocr-service@$EVIDENCE_DIGEST"
-          env -u GH_TOKEN -u GITHUB_TOKEN -u DOCKER_CONFIG -u REGISTRY_AUTH_FILE \
+          ANONYMOUS_ROOT=$(mktemp -d "$PWD/.producer-state/anonymous.XXXXXX")
+          mkdir -p "$ANONYMOUS_ROOT/home" "$ANONYMOUS_ROOT/docker" "$ANONYMOUS_ROOT/gh"
+          env -u GH_TOKEN -u GITHUB_TOKEN -u DOCKER_AUTH_CONFIG \
+            -u REGISTRY_AUTH_FILE -u ORAS_AUTH_FILE \
+            HOME="$ANONYMOUS_ROOT/home" DOCKER_CONFIG="$ANONYMOUS_ROOT/docker" \
+            GH_CONFIG_DIR="$ANONYMOUS_ROOT/gh" \
             python3 scripts/research/paddle_ocr_producer.py verify-public-evidence \
               --oras-bin "$PWD/.producer-state/tools/oras" \
               --gh-bin "$(command -v gh)" \

@@ -300,6 +300,66 @@ class ProducerWorkflowContractTest(unittest.TestCase):
                         producer_filesystem.bootstrap_oras_archive(downloaded, target)
                     self.assertEqual(binary.read_bytes(), payload)
 
+    def test_public_verifier_shell_isolates_ambient_credentials(self) -> None:
+        stage = self.blocks["consumer-verify-public"].split(
+            "name: Execute producer stage - anonymous public evidence verification", 1
+        )[1]
+        shell = textwrap.dedent(
+            stage.split("        run: |\n", 1)[1].split("      - *cleanup-step", 1)[0]
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / ".producer-state").mkdir()
+            tools = root / "bin"
+            tools.mkdir()
+            ambient = root / "ambient"
+            ambient.mkdir()
+            (ambient / "hosts.yml").write_text("fixture-only")
+            (ambient / "config.json").write_text("fixture-only")
+            probe = tools / "python3"
+            probe.write_text(
+                f"#!{sys.executable}\n"
+                "import os, sys\n"
+                f"sys.path.insert(0, {str(ROOT / 'scripts/research')!r})\n"
+                "from paddle_ocr_producer_lib.registry import validate_anonymous_environment\n"
+                "validate_anonymous_environment(dict(os.environ))\n"
+                "from pathlib import Path\n"
+                "for key in ('HOME', 'DOCKER_CONFIG', 'GH_CONFIG_DIR'):\n"
+                "    path = Path(os.environ[key])\n"
+                "    assert path.is_dir() and Path.cwd() / '.producer-state' in path.parents\n"
+            )
+            probe.chmod(0o755)
+            gh = tools / "gh"
+            gh.write_text("#!/bin/sh\nexit 0\n")
+            gh.chmod(0o755)
+            environment = dict(os.environ)
+            environment.update(
+                {
+                    "PATH": str(tools) + os.pathsep + os.environ["PATH"],
+                    "HOME": str(ambient),
+                    "DOCKER_CONFIG": str(ambient),
+                    "GH_CONFIG_DIR": str(ambient),
+                    "GH_TOKEN": "fixture-only",
+                    "GITHUB_TOKEN": "fixture-only",
+                    "DOCKER_AUTH_CONFIG": "fixture-only",
+                    "REGISTRY_AUTH_FILE": str(ambient / "config.json"),
+                    "ORAS_AUTH_FILE": str(ambient / "config.json"),
+                    "EVIDENCE_DIGEST": "sha256:" + "a" * 64,
+                }
+            )
+            result = subprocess.run(
+                ["bash", "-c", shell],
+                cwd=root,
+                env=environment,
+                capture_output=True,
+                text=True,
+                timeout=10,
+                check=False,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual((ambient / "hosts.yml").read_text(), "fixture-only")
+            self.assertEqual((ambient / "config.json").read_text(), "fixture-only")
+
     def test_manual_dispatch_inputs_and_serialization_are_exact(self) -> None:
         event_block = self.workflow.split("\npermissions:", 1)[0]
         self.assertIn("on:\n  workflow_dispatch:\n    inputs:", event_block)
