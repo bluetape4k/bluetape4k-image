@@ -6,7 +6,8 @@
 - Epic: #656
 - 대상 이슈: #653
 - 구현 기준: `refactor/issue-652-s3-head` (`0558d3fce5b471a0281f4cc4556a4c1e9c570dd0`)
-- 검토 대상 exact head: `7af92ea7da55fb62f97dbfd2ce4f4bfcd637a7b4`
+- 최종 코드 exact head: `fc7ab8626d5391c6e1a86f1b57bce9162b232b38` (fake-clock ordering fix 포함)
+- 구현 커밋 이력: `7af92ea` → `8e19f37` → `fc7ab86`
 - 대상 모듈: `images-vips-api`, `images-vips-java21`, `images-vips-java25`
 - 승인된 범위: 공개 `VipsRuntime` API와 native owner 소유권을 유지하면서 경쟁 `init()`/`shutdown()` waiter에 60초 cap과 interrupt exit를 적용
 
@@ -44,8 +45,8 @@
 
 최신 순차 실행 결과:
 
-- `./gradlew :bluetape4k-images-vips-java21:test --rerun-tasks --tests 'io.bluetape4k.images.vips.java21.JVipsRuntimeConcurrencyTest'`: 19/19 PASS
-- `./gradlew :bluetape4k-images-vips-java25:test --rerun-tasks --tests 'io.bluetape4k.images.vips.java25.FfmVipsRuntimeConcurrencyTest'`: 22/22 PASS
+- JVips targeted: 19/19 PASS를 3회 연속 실행
+- FFM targeted: 22/22 PASS를 3회 연속 실행
 - JVips 전체: 65 실행, 23 PASS, 42 native-gated SKIPPED
 - FFM 전체: 90 PASS
 - vips-api 전체: 23 PASS
@@ -63,13 +64,14 @@
 
 | reviewer | 범위 | 실행 모델/노력 | 결과 |
 | --- | --- | --- | --- |
-| code-reviewer | exact head의 두 runtime, API, tests, docs | `gpt-5.6-luna / max` | P0=0, P1=0, P2=0, `CLEAR` |
+| code-reviewer | 최종 코드 exact head의 두 runtime, API, tests, docs | `gpt-5.6-luna / max` | P0=0, P1=0, P2=0, `CLEAR` |
 | architect | lifecycle, owner/native 경계, ABI, cumulative deadline 증거 | `gpt-5.6-sol / high` | P0=0, P1=0, P2=0, `CLEAR` |
 
 이전 review에서 발견된 두 가지 결함도 exact head에 반영됐다.
 
 - owner 실패 직후 retry owner가 `INITIALIZING`을 재획득할 때 waiter가 조기 성공할 수 있던 race를 `INITIALIZING -> continue` 재확인 루프와 결정적 테스트로 수정했다.
 - retry loop마다 새 60초 deadline을 만들 수 있던 누적 대기 결함을 호출 단위 absolute deadline과 fake monotonic clock 회귀 테스트로 수정했다.
+- fake clock을 main thread에서 전진시키던 ordering race를 completion hook 내부의 `clock.set()` → `firstWaitCompleted.countDown()` 순서로 고정했다. 이 보강 뒤 두 backend targeted suite를 각각 3회 연속 재실행했다.
 
 ## 잔여 위험과 범위 밖 검증
 
