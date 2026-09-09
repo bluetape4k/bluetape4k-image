@@ -7,6 +7,12 @@ on:
         description: 현재 브랜치에서 검증할 exact commit SHA
         required: true
         type: string
+  workflow_call:
+    inputs:
+      expectedHead:
+        description: 호출한 workflow에서 검증할 exact commit SHA
+        required: true
+        type: string
 
 permissions: {}
 
