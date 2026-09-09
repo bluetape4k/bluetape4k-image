@@ -135,7 +135,7 @@ jobs:
             --config "$RUN_ROOT/image-service-config.json" \
             --output-root "$RUN_ROOT/output" \
             --report "$RUN_ROOT/acceptance-receipt.json" \
-            --container-name "paddleocr-acceptance-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+            --container-name "bluetape4k-paddleocr-${GITHUB_RUN_ID}${GITHUB_RUN_ATTEMPT}"
 
       - name: Validate acceptance receipt
         run: |
