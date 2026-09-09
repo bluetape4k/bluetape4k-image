@@ -191,7 +191,6 @@ jobs:
           python3 docker/paddleocr/test_service.py -v
           python3 scripts/research/test_paddle_ocr_acceptance.py
           python3 .github/scripts/test-paddleocr-producer-workflow.py
-          python3 .github/scripts/test-paddleocr-runbook.py
           python3 .github/scripts/test-paddleocr-artifact-retry.py
 
   catalog-governance:

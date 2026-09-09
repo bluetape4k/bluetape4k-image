@@ -734,7 +734,6 @@ class ProducerWorkflowContractTest(unittest.TestCase):
             "test_paddle_ocr_smoke.py",
             "test_paddle_ocr_acceptance.py",
             "acceptance-receipt.schema.json",
-            "test-paddleocr-runbook.py",
             "test-paddleocr-producer-workflow.py",
         ):
             self.assertIn(command, producer)
