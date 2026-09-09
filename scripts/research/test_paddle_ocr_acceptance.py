@@ -12,6 +12,7 @@ from subprocess import CompletedProcess
 
 from paddle_ocr_acceptance import (
     AcceptanceValidationError,
+    _POST_PROBE,
     _docker_inspect,
     _write_report,
     build_container_command,
@@ -117,6 +118,7 @@ class PaddleOcrAcceptanceTest(unittest.TestCase):
         self.assertEqual(parse_image_inspect("linux/amd64\n" + IMAGE + "\n", IMAGE)[0], "linux/amd64")
         with self.assertRaisesRegex(AcceptanceValidationError, "UTF-8"):
             parse_probe_output(b"\xff")
+        self.assertIn("http://127.0.0.1:8080{path}", _POST_PROBE)
 
     def test_docker_inspect_rejects_invalid_json(self) -> None:
         with self.assertRaisesRegex(AcceptanceValidationError, "invalid JSON"):

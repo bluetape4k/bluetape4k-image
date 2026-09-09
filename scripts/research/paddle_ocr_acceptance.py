@@ -75,7 +75,7 @@ print('BLUETAPE4K_PROBE:' + json.dumps({'status': status, 'bytes': len(body), 's
 _POST_PROBE = """\
 import hashlib, json, sys, urllib.error, urllib.request
 body = sys.stdin.buffer.read(16777217)
-request = urllib.request.Request('http://127.0.0.1{path}', data=body, method='POST')
+request = urllib.request.Request('http://127.0.0.1:8080{path}', data=body, method='POST')
 request.add_header('Content-Type', 'application/json')
 opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
 try:
