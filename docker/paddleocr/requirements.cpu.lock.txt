@@ -15,7 +15,9 @@ click==8.5.0 --hash=sha256:255bc9599cf7748b4b1a446ccc735421bd08a2ae529a8b88597d3
 colorlog==6.12.0 --hash=sha256:30d392604e9110045a2c2aeefc27d7a017abbab63f3a8aee594eac0801df784e  # colorlog-6.12.0-py3-none-any.whl
 crc32c==2.9 --hash=sha256:1399d598259cb25596adebe2a9f6fd928ad58089337f6cb0d5f53c8b4b481b8d  # crc32c-2.9-cp310-cp310-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl
 exceptiongroup==1.3.1 --hash=sha256:a7a39a3bd276781e98394987d3a5701d0c4edffb633bb7a5144577f82c773598  # exceptiongroup-1.3.1-py3-none-any.whl
+fastapi==0.115.14 --hash=sha256:6c0c8bf9420bd58f565e585036d971872472b4f7d3f6c73b698e10cffdefb3ca  # fastapi-0.115.14-py3-none-any.whl
 filelock==3.32.4 --hash=sha256:22e58ca3b1ae3b98993b762d7338367ae64fe50252bf78d59da3bfebcdf1cedd  # filelock-3.32.4-py3-none-any.whl
+filetype==1.2.0 --hash=sha256:7ce71b6880181241cf7ac8697a2f1eb6a8bd9b429f7ad6d27b8db9ba5f1c2d25  # filetype-1.2.0-py2.py3-none-any.whl
 frozenlist==1.8.0 --hash=sha256:f57fb59d9f385710aa7060e89410aeb5058b99e62f4d16b08b91986b9a2140c2  # frozenlist-1.8.0-cp310-cp310-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl
 fsspec==2026.7.0 --hash=sha256:b57ddbafedfaef7018c1ecab32aa200a9d7ca26b77965f64e48b70061249d279  # fsspec-2026.7.0-py3-none-any.whl
 future==1.0.0 --hash=sha256:929292d34f5872e70396626ef385ec22355a1fae8ad29e1a734c3e43f9fbc216  # future-1.0.0-py3-none-any.whl
@@ -31,7 +33,7 @@ modelscope-hub==0.3.0 --hash=sha256:024952bb3a3cdb1a547455653fd676da5078b6b01664
 multidict==6.7.1 --hash=sha256:9b0d9b91d1aa44db9c1f1ecd0d9d2ae610b2f4f856448664e01a3b35899f3f92  # multidict-6.7.1-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl
 networkx==3.4.2 --hash=sha256:df5d4365b724cf81b8c6a7312509d0c22386097011ad1abe274afd5e9d3bbc5f  # networkx-3.4.2-py3-none-any.whl
 numpy==2.2.6 --hash=sha256:fc7b73d02efb0e18c000e9ad8b83480dfcd5dfd11065997ed4c6747470ae8915  # numpy-2.2.6-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
-opencv-contrib-python==4.10.0.84 --hash=sha256:a261223db41f6e512d76deaf21c8fcfb4fbbcbc2de62ca7f74a05f2c9ee489ef  # opencv_contrib_python-4.10.0.84-cp37-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
+opencv-contrib-python-headless==4.10.0.84 --hash=sha256:89c16eb5f888aee7bf664106e12c423705d29d1b094876b66aa4e33d4e8ec905  # opencv_contrib_python_headless-4.10.0.84-cp37-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
 opt-einsum==3.3.0 --hash=sha256:2455e59e3947d3c275477df7f5205b30635e266fe6dc300e3d9f9646bfcea147  # opt_einsum-3.3.0-py3-none-any.whl
 packaging==26.3 --hash=sha256:d7193f7c8e4e93f444fde0262bf90af30e16fa0ad0ad44cb553c87339b23cd1c  # packaging-26.3-py3-none-any.whl
 paddleocr==3.7.0 --hash=sha256:7874634cb8780d6fdb2b7a7469ab0102d69c68e53b7dd79f23c4c9a1071c4a25  # paddleocr-3.7.0-py3-none-any.whl
@@ -59,11 +61,13 @@ safetensors==0.8.0 --hash=sha256:fd6f3f93c9a0a7cc2788ee63fb763353d4bd2e89b0751bc
 setuptools==84.0.0 --hash=sha256:51a52592b3b99e102b609654876bd65f19f999935166d1352678931132b0c670  # setuptools-84.0.0-py3-none-any.whl
 shapely==2.1.2 --hash=sha256:e38a190442aacc67ff9f75ce60aec04893041f16f97d242209106d502486a142  # shapely-2.1.2-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.whl
 six==1.17.0 --hash=sha256:4721f391ed90541fddacab5acf947aa0d3dc7d27b2e1e8eda2be8970586c3274  # six-1.17.0-py2.py3-none-any.whl
+starlette==0.46.2 --hash=sha256:595633ce89f8ffa71a015caed34a5b2dc1c0cdb3f0f1fbd1e69339cf2abeec35  # starlette-0.46.2-py3-none-any.whl
 tqdm==4.70.0 --hash=sha256:7f585706bfddbdebf89daac705b2dfcc16890130727d3197ca62c732b4310953  # tqdm-4.70.0-py3-none-any.whl
 typing_extensions==4.16.0 --hash=sha256:481caa481374e813c1b176ada14e97f1f67a4539ce9cfeb3f350d78d6370c2e8  # typing_extensions-4.16.0-py3-none-any.whl
 typing-inspection==0.4.4 --hash=sha256:65b8397ba37ccbce054456aaccddfc91e6e3083c92824df348d96ca832f3f147  # typing_inspection-0.4.4-py3-none-any.whl
 tzdata==2026.3 --hash=sha256:dc096730c87af6cab1b171c9d532be840741ff5d459015e7f6947bd7d7e54931  # tzdata-2026.3-py2.py3-none-any.whl
 ujson==5.13.0 --hash=sha256:b877fe7926107d25d54b655c5b8dd94b294b22c157233163ad29fdb54ac10cf4  # ujson-5.13.0-cp310-cp310-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl
 urllib3==2.7.0 --hash=sha256:9fb4c81ebbb1ce9531cce37674bbc6f1360472bc18ca9a553ede278ef7276897  # urllib3-2.7.0-py3-none-any.whl
+uvicorn==0.35.0 --hash=sha256:197535216b25ff9b785e29a0b79199f55222193d47f820816e7da751e9bc8d4a  # uvicorn-0.35.0-py3-none-any.whl
 wcwidth==0.8.3 --hash=sha256:d5b73dba6158a595ec9370350e7f2637bcac8d6c5e4fde34f30fcffb6103a5e4  # wcwidth-0.8.3-py3-none-any.whl
 yarl==1.24.5 --hash=sha256:7fa5e51397466ea7e98de493fa2ff1b8193cfef8a7b0f9b4842f92d342df0dba  # yarl-1.24.5-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl

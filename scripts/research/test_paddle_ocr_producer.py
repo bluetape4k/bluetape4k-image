@@ -1948,6 +1948,10 @@ class ProducerArtifactCliContractTest(unittest.TestCase):
             (model_root / "models/recognizer").mkdir(parents=True)
             for role in ("detector", "recognizer"):
                 (model_root / "models" / role / f"{role}.bin").write_bytes(role.encode())
+                (model_root / "models" / f"{role}.manifest.txt").write_text(
+                    f"{role}.bin\t{len(role.encode())}\t{hashlib.sha256(role.encode()).hexdigest()}\n",
+                    encoding="utf-8",
+                )
             trees = {
                 role: tree_sha256(model_root / "models" / role)
                 for role in ("detector", "recognizer")

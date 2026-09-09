@@ -150,6 +150,8 @@ jobs:
               - 'scripts/research/test_paddle_ocr_producer*.py'
               - 'scripts/research/paddle_ocr_smoke.py'
               - 'scripts/research/test_paddle_ocr_smoke.py'
+              - 'scripts/research/paddle_ocr_acceptance.py'
+              - 'scripts/research/test_paddle_ocr_acceptance.py'
               - 'scripts/research/paddle_ocr_attestation.py'
               - 'scripts/research/test_paddle_ocr_attestation.py'
               - '.github/scripts/test-paddleocr-producer-workflow.py'
@@ -185,8 +187,11 @@ jobs:
           python3 scripts/research/test_paddle_ocr_smoke.py
           python3 scripts/research/test_paddle_ocr_attestation.py
           python3 -m json.tool docker/paddleocr/attestation-receipt.schema.json >/dev/null
+          python3 -m json.tool docker/paddleocr/acceptance-receipt.schema.json >/dev/null
           python3 docker/paddleocr/test_service.py -v
+          python3 scripts/research/test_paddle_ocr_acceptance.py
           python3 .github/scripts/test-paddleocr-producer-workflow.py
+          python3 .github/scripts/test-paddleocr-runbook.py
           python3 .github/scripts/test-paddleocr-artifact-retry.py
 
   catalog-governance:

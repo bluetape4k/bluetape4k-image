@@ -1,0 +1,158 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bluetape4k.github.io/schema/paddleocr/acceptance-receipt.schema.json",
+  "title": "Issue 609-E PaddleOCR no-egress acceptance receipt",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "kind",
+    "status",
+    "executionStatus",
+    "image",
+    "fixtureManifestSha256",
+    "configSha256",
+    "runtimeLimits"
+  ],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "kind": {"const": "paddle-ocr-acceptance"},
+    "status": {"enum": ["PASS", "FAIL"]},
+    "executionStatus": {"enum": ["PASS", "FAILED", "NOT_STARTED"]},
+    "image": {"$ref": "#/$defs/imageReference"},
+    "fixtureManifestSha256": {"$ref": "#/$defs/sha256"},
+    "configSha256": {"$ref": "#/$defs/sha256"},
+    "runtimeLimits": {"$ref": "#/$defs/runtimeLimits"},
+    "failure": {"type": "string", "maxLength": 4096},
+    "platform": {"$ref": "#/$defs/platform"},
+    "observed": {"$ref": "#/$defs/observed"},
+    "security": {"$ref": "#/$defs/security"}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"executionStatus": {"const": "PASS"}}},
+      "then": {
+        "required": ["platform", "observed", "security"],
+        "properties": {
+          "status": {"const": "PASS"},
+          "observed": {"required": ["containerId", "readiness", "ocr", "requestLimit", "security", "logs", "resources", "cleanup"]},
+          "security": {"$ref": "#/$defs/security"}
+        }
+      }
+    },
+    {
+      "if": {"properties": {"executionStatus": {"const": "FAILED"}}},
+      "then": {
+        "required": ["failure"],
+        "properties": {"status": {"const": "FAIL"}}
+      }
+    }
+  ],
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "imageReference": {"type": "string", "pattern": "^[^\\u0000-\\u001f\\u007f\\s@]+@sha256:[0-9a-f]{64}$"},
+    "runtimeLimits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["requestMaxBytes", "responseMaxBytes", "readinessTimeoutSeconds"],
+      "properties": {
+        "requestMaxBytes": {"type": "integer", "minimum": 1, "maximum": 16777216},
+        "responseMaxBytes": {"type": "integer", "minimum": 1, "maximum": 16777216},
+        "readinessTimeoutSeconds": {"type": "integer", "minimum": 1, "maximum": 300}
+      }
+    },
+    "platform": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["required", "image", "host", "imageReference"],
+      "properties": {
+        "required": {"const": "linux/amd64"},
+        "image": {"const": "linux/amd64"},
+        "host": {"const": "linux/amd64"},
+        "imageReference": {"$ref": "#/$defs/imageReference"}
+      }
+    },
+    "probe": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "bytes", "sha256"],
+      "properties": {
+        "status": {"type": "integer", "minimum": 100, "maximum": 599},
+        "bytes": {"type": "integer", "minimum": 0, "maximum": 16777217},
+        "sha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "containerSecurity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["nonRoot", "readOnlyRoot", "capabilitiesDropped", "noNewPrivileges", "networkEgressDenied", "portsUnpublished", "pidsLimit", "memoryLimit", "cpuLimit", "stateRunning"],
+      "properties": {
+        "nonRoot": {"const": true},
+        "readOnlyRoot": {"const": true},
+        "capabilitiesDropped": {"const": true},
+        "noNewPrivileges": {"const": true},
+        "networkEgressDenied": {"const": true},
+        "portsUnpublished": {"const": true},
+        "pidsLimit": {"const": true},
+        "memoryLimit": {"const": true},
+        "cpuLimit": {"const": true},
+        "stateRunning": {"const": true}
+      }
+    },
+    "cleanup": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["stopExitCode", "removeExitCode", "inspectExitCode", "errors", "verified"],
+      "properties": {
+        "stopExitCode": {"type": ["integer", "null"]},
+        "removeExitCode": {"type": ["integer", "null"]},
+        "inspectExitCode": {"type": ["integer", "null"]},
+        "errors": {"type": "array", "maxItems": 3, "items": {"type": "string", "maxLength": 256}},
+        "verified": {"type": "boolean"}
+      }
+    },
+    "logs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tail"],
+      "properties": {"tail": {"type": "string", "maxLength": 1048576}}
+    },
+    "resources": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["stats"],
+      "properties": {"stats": {"type": "string", "maxLength": 1048576}}
+    },
+    "observed": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "containerId": {"type": "string", "pattern": "^[0-9a-f]{12,128}$"},
+        "readiness": {"$ref": "#/$defs/probe"},
+        "ocr": {"$ref": "#/$defs/probe"},
+        "requestLimit": {"$ref": "#/$defs/probe"},
+        "security": {"$ref": "#/$defs/containerSecurity"},
+        "logs": {"$ref": "#/$defs/logs"},
+        "resources": {"$ref": "#/$defs/resources"},
+        "cleanup": {"$ref": "#/$defs/cleanup"}
+      }
+    },
+    "security": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["offlineStartup", "networkEgressDenied", "portsUnpublished", "requestLimitsEnforced", "nonRoot", "readOnlyRoot", "capabilitiesDropped", "noNewPrivileges", "sensitiveLogScanPassed", "cleanupVerified"],
+      "properties": {
+        "offlineStartup": {"const": true},
+        "networkEgressDenied": {"const": true},
+        "portsUnpublished": {"const": true},
+        "requestLimitsEnforced": {"const": true},
+        "nonRoot": {"const": true},
+        "readOnlyRoot": {"const": true},
+        "capabilitiesDropped": {"const": true},
+        "noNewPrivileges": {"const": true},
+        "sensitiveLogScanPassed": {"const": true},
+        "cleanupVerified": {"const": true}
+      }
+    }
+  }
+}

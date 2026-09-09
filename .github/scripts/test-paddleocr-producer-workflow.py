@@ -107,7 +107,10 @@ EXPECTED_CODEOWNERS = {
     "/scripts/research/test_paddle_ocr_producer*.py @debop",
     "/scripts/research/paddle_ocr_smoke.py @debop",
     "/scripts/research/test_paddle_ocr_smoke.py @debop",
+    "/scripts/research/paddle_ocr_acceptance.py @debop",
+    "/scripts/research/test_paddle_ocr_acceptance.py @debop",
     "/docs/superpowers/runbooks/2026-09-07-issue-638-paddleocr-producer.md @debop",
+    "/docs/superpowers/runbooks/2026-09-09-issue-609e-offline-smoke.md @debop",
 }
 
 
@@ -709,6 +712,8 @@ class ProducerWorkflowContractTest(unittest.TestCase):
             "scripts/research/test_paddle_ocr_producer*.py",
             "scripts/research/paddle_ocr_smoke.py",
             "scripts/research/test_paddle_ocr_smoke.py",
+            "scripts/research/paddle_ocr_acceptance.py",
+            "scripts/research/test_paddle_ocr_acceptance.py",
             ".github/scripts/test-paddleocr-producer-workflow.py",
             ".github/workflows/paddleocr-producer.yml",
             ".github/CODEOWNERS",
@@ -727,6 +732,9 @@ class ProducerWorkflowContractTest(unittest.TestCase):
             "test_paddle_ocr_producer_evidence.py -v",
             "test_paddle_ocr_receipt.py",
             "test_paddle_ocr_smoke.py",
+            "test_paddle_ocr_acceptance.py",
+            "acceptance-receipt.schema.json",
+            "test-paddleocr-runbook.py",
             "test-paddleocr-producer-workflow.py",
         ):
             self.assertIn(command, producer)

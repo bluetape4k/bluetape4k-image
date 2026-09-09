@@ -3,8 +3,10 @@ from __future__ import annotations
 """Fail-closed loopback wrapper for the baked PaddleOCR CPU service image."""
 
 import argparse
+import ctypes
 import hashlib
 import http.client
+import importlib.metadata
 import json
 import os
 import re
@@ -12,6 +14,7 @@ import signal
 import stat
 import subprocess
 import sys
+import tempfile
 import time
 from collections.abc import Mapping
 from dataclasses import dataclass, replace
@@ -33,12 +36,13 @@ _SHA256_RE = re.compile(r"\A[0-9a-f]{64}\Z")
 _SAFE_PATH_RE = re.compile(r"\A(?!/)(?!.*\\)(?!.*(?:^|/)\.\.(?:/|$))[A-Za-z0-9._/-]+\Z")
 _MANIFEST_KEYS = {
     "schemaVersion", "inputLockSha256", "legalInventorySha256",
-    "requirementsSha256", "modelTreeDigests", "modelPairSha256",
+    "pipelineSha256", "modelTreeDigests", "modelPairSha256",
 }
 _OVERRIDE_KEYS = {
     "PADDLEOCR_MODEL_ROOT", "PADDLEOCR_MODEL_DIR", "PADDLEX_MODEL_ROOT",
     "PADDLEOCR_HOME", "PADDLEX_HOME", "PADDLE_HOME",
     "PADDLE_PDX_CACHE_HOME", "PADDLE_PDX_MODEL_SOURCE",
+    "LD_LIBRARY_PATH", "LD_PRELOAD", "PYTHONHOME", "PYTHONPATH",
 }
 
 
@@ -231,6 +235,111 @@ def _verify_model_role(runtime_root: Path, role: str, expected_tree: str) -> Non
         raise ServiceConfigurationError(f"{role} model file set differs")
 
 
+def build_upstream_environment(
+    environment: Mapping[str, str] | None = None,
+) -> dict[str, str]:
+    """Build a deterministic, proxy-free environment for the upstream process."""
+
+    active_environment = os.environ if environment is None else environment
+    if any(key in active_environment for key in _OVERRIDE_KEYS):
+        raise ServiceConfigurationError("external runtime override is forbidden")
+    result = {
+        "HOME": "/tmp",
+        "TMP": "/tmp",
+        "TMPDIR": "/tmp",
+        "TEMP": "/tmp",
+        "PADDLE_PDX_CACHE_HOME": "/tmp/.paddlex",
+    }
+    for key, value in active_environment.items():
+        if key in result or key.lower().endswith("_proxy"):
+            continue
+        result[key] = value
+    return result
+
+
+def _bundled_iomp_library() -> Path | None:
+    candidates: list[Path] = []
+    for entry in sys.path:
+        if not isinstance(entry, str) or not entry:
+            continue
+        candidate = Path(entry) / "paddle" / "libs" / "libiomp5.so"
+        if candidate.is_file() and not candidate.is_symlink():
+            candidates.append(candidate)
+    unique = list(dict.fromkeys(candidates))
+    if len(unique) > 1:
+        raise ServiceConfigurationError("multiple bundled OpenMP runtimes found")
+    return unique[0] if unique else None
+
+
+def _opencv_headless_alias_required() -> bool:
+    try:
+        importlib.metadata.version("opencv-contrib-python")
+    except importlib.metadata.PackageNotFoundError:
+        try:
+            importlib.metadata.version("opencv-contrib-python-headless")
+        except importlib.metadata.PackageNotFoundError:
+            return False
+        return True
+    return False
+
+
+def _write_opencv_headless_alias(directory: Path) -> None:
+    path = directory / "sitecustomize.py"
+    path.write_text(
+        "from importlib import metadata as _metadata\n"
+        "_version = _metadata.version\n"
+        "def version(distribution_name):\n"
+        "    if distribution_name == \"opencv-contrib-python\":\n"
+        "        try:\n"
+        "            return _version(distribution_name)\n"
+        "        except _metadata.PackageNotFoundError:\n"
+        "            return _version(\"opencv-contrib-python-headless\")\n"
+        "    return _version(distribution_name)\n"
+        "_metadata.version = version\n",
+        encoding="utf-8",
+    )
+
+
+def prepare_upstream_environment(
+    environment: Mapping[str, str] | None = None,
+) -> tuple[dict[str, str], tempfile.TemporaryDirectory | None]:
+    """Add only scoped native-library and metadata compatibility shims."""
+
+    result = build_upstream_environment(environment)
+    temporary: tempfile.TemporaryDirectory | None = None
+
+    def ensure_temporary() -> Path:
+        nonlocal temporary
+        if temporary is None:
+            temporary = tempfile.TemporaryDirectory(prefix="bluetape4k-paddle-runtime-")
+        return Path(temporary.name)
+
+    try:
+        try:
+            ctypes.CDLL("libgomp.so.1")
+        except OSError:
+            bundled = _bundled_iomp_library()
+            if bundled is not None:
+                directory = ensure_temporary()
+                (directory / "libgomp.so.1").symlink_to(bundled)
+                existing = result.get("LD_LIBRARY_PATH")
+                result["LD_LIBRARY_PATH"] = str(directory) + (
+                    os.pathsep + existing if existing else ""
+                )
+        if _opencv_headless_alias_required():
+            directory = ensure_temporary()
+            _write_opencv_headless_alias(directory)
+            existing = result.get("PYTHONPATH")
+            result["PYTHONPATH"] = str(directory) + (
+                os.pathsep + existing if existing else ""
+            )
+        return result, temporary
+    except BaseException:
+        if temporary is not None:
+            temporary.cleanup()
+        raise
+
+
 def load_service_configuration(
     *,
     runtime_root: Path = RUNTIME_ROOT,
@@ -251,18 +360,13 @@ def load_service_configuration(
     if canonical != manifest_raw:
         raise ServiceConfigurationError("model manifest must be canonical JSON")
     for field in (
-        "inputLockSha256", "legalInventorySha256", "requirementsSha256", "modelPairSha256"
+        "inputLockSha256", "legalInventorySha256", "pipelineSha256", "modelPairSha256"
     ):
         _sha256(manifest[field], field)
     trees = _exact(manifest["modelTreeDigests"], {"detector", "recognizer"}, "modelTreeDigests")
     for role in ("detector", "recognizer"):
         _verify_model_role(runtime_root, role, _sha256(trees[role], f"{role} tree SHA-256"))
-    pair, pair_raw = _load_json(
-        runtime_root / "models/model-pair.json", MAX_MANIFEST_BYTES, "model pair"
-    )
-    _exact(pair, {"detector", "recognizer"}, "model pair")
-    if pair != trees or json.dumps(pair, separators=(",", ":"), sort_keys=True).encode() != pair_raw:
-        raise ServiceConfigurationError("model pair differs from model tree bindings")
+    pair_raw = json.dumps(trees, separators=(",", ":"), sort_keys=True).encode()
     if hashlib.sha256(pair_raw).hexdigest() != manifest["modelPairSha256"]:
         raise ServiceConfigurationError("model pair SHA-256 differs")
     legal_raw = _read_regular(
@@ -276,6 +380,10 @@ def load_service_configuration(
         text = pipeline_raw.decode("utf-8", errors="strict")
     except UnicodeDecodeError as exc:
         raise ServiceConfigurationError("OCR pipeline is not UTF-8") from exc
+    if hashlib.sha256(pipeline_raw).hexdigest() != manifest["pipelineSha256"]:
+        raise ServiceConfigurationError("OCR pipeline SHA-256 differs")
+    if re.search(r"(?m)^text_type:\s*general\s*$", text) is None:
+        raise ServiceConfigurationError("OCR pipeline text_type must be general")
     required_roots = (
         "/opt/bluetape4k/paddleocr/models/detector",
         "/opt/bluetape4k/paddleocr/models/recognizer",
@@ -436,17 +544,16 @@ def main(argv: list[str] | None = None) -> int:
     args = _parse_args(argv)
     process: subprocess.Popen[bytes] | None = None
     server: _ServiceServer | None = None
+    runtime_environment: tempfile.TemporaryDirectory | None = None
     try:
         configuration = load_service_configuration()
+        upstream_environment, runtime_environment = prepare_upstream_environment()
         process = subprocess.Popen(
             build_upstream_command(configuration),
             stdin=subprocess.DEVNULL,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
-            env={
-                key: value for key, value in os.environ.items()
-                if key not in _OVERRIDE_KEYS and not key.lower().endswith("_proxy")
-            },
+            env=upstream_environment,
         )
         deadline = time.monotonic() + configuration.readiness_timeout_seconds
         while not _probe_upstream():
@@ -480,6 +587,8 @@ def main(argv: list[str] | None = None) -> int:
             except subprocess.TimeoutExpired:
                 process.kill()
                 process.wait()
+        if runtime_environment is not None:
+            runtime_environment.cleanup()
 
 
 if __name__ == "__main__":
