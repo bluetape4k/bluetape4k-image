@@ -99,7 +99,7 @@ jobs:
               "command": ["--host", "127.0.0.1", "--port", "8080"],
               "requestMaxBytes": 1048576,
               "responseMaxBytes": 1048576,
-              "readinessTimeoutSeconds": 120,
+              "readinessTimeoutSeconds": 300,
               "modelMount": None,
               "outputMount": "/out",
           }
