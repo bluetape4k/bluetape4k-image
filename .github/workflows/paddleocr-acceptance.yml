@@ -1,0 +1,154 @@
+name: PaddleOCR native acceptance
+
+on:
+  workflow_dispatch:
+    inputs:
+      expectedHead:
+        description: 현재 브랜치에서 검증할 exact commit SHA
+        required: true
+        type: string
+
+permissions: {}
+
+concurrency:
+  group: paddleocr-acceptance-${{ github.repository }}-linux-amd64
+  cancel-in-progress: false
+
+jobs:
+  acceptance:
+    name: PaddleOCR acceptance / linux-amd64
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    env:
+      IMAGE: ghcr.io/bluetape4k/paddleocr-service@sha256:d08a5967dc6d95de2f6d6ed744d0b91376b1e2032e3511e596f9784fbf271810
+      EXPECTED_HEAD: ${{ inputs.expectedHead }}
+    steps:
+      - name: Checkout exact acceptance head
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Set up pinned Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.13'
+
+      - name: Verify dispatch, head, and native runner
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REPOSITORY" = "bluetape4k/bluetape4k-image"
+          test "$GITHUB_REF" = "refs/heads/feat/issue-609e-offline-smoke"
+          test "$GITHUB_SHA" = "$EXPECTED_HEAD"
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+          test "$RUNNER_OS" = "Linux"
+          test "$RUNNER_ARCH" = "X64"
+          test "$(docker info --format '{{.OSType}}/{{.Architecture}}')" = "linux/amd64"
+          test "$IMAGE" = "ghcr.io/bluetape4k/paddleocr-service@sha256:d08a5967dc6d95de2f6d6ed744d0b91376b1e2032e3511e596f9784fbf271810"
+
+      - name: Prepare immutable fixture and service config
+        run: |
+          set -euo pipefail
+          RUN_ROOT="$RUNNER_TEMP/paddleocr-acceptance/${GITHUB_RUN_ID}.${GITHUB_RUN_ATTEMPT}"
+          echo "RUN_ROOT=$RUN_ROOT" >> "$GITHUB_ENV"
+          mkdir -p "$RUN_ROOT/fixtures" "$RUN_ROOT/output"
+          cp benchmark/images-benchmark/src/main/resources/bench/ocr/clean-text.png \
+            "$RUN_ROOT/fixtures/clean-text.png"
+          RUN_ROOT="$RUN_ROOT" python3 - <<'PY'
+          import hashlib
+          import json
+          import os
+          from pathlib import Path
+
+          root = Path(os.environ["RUN_ROOT"])
+          fixture = root / "fixtures" / "clean-text.png"
+          payload = fixture.read_bytes()
+          manifest = {
+              "schemaVersion": 1,
+              "fixtures": [{
+                  "id": "clean-text",
+                  "path": "clean-text.png",
+                  "bytes": len(payload),
+                  "sha256": hashlib.sha256(payload).hexdigest(),
+              }],
+          }
+          (root / "fixtures" / "fixture-manifest.json").write_text(
+              json.dumps(manifest, separators=(",", ":"), sort_keys=True) + "\n",
+              encoding="utf-8",
+          )
+          config = {
+              "schemaVersion": 1,
+              "modelSource": "IMAGE",
+              "host": "127.0.0.1",
+              "port": 8080,
+              "network": "none",
+              "command": ["--host", "127.0.0.1", "--port", "8080"],
+              "requestMaxBytes": 1048576,
+              "responseMaxBytes": 1048576,
+              "readinessTimeoutSeconds": 120,
+              "modelMount": None,
+              "outputMount": "/out",
+          }
+          (root / "image-service-config.json").write_text(
+              json.dumps(config, separators=(",", ":"), sort_keys=True) + "\n",
+              encoding="utf-8",
+          )
+          PY
+
+      - name: Pull exact immutable image
+        run: |
+          set -euo pipefail
+          docker pull "$IMAGE"
+          docker image inspect "$IMAGE" --format '{{.Os}}/{{.Architecture}}{{printf "\n"}}{{index .RepoDigests 0}}'
+
+      - name: Run offline preflight
+        run: |
+          set -euo pipefail
+          python3 scripts/research/paddle_ocr_smoke.py \
+            --image "$IMAGE" \
+            --fixture-manifest "$RUN_ROOT/fixtures/fixture-manifest.json" \
+            --config "$RUN_ROOT/image-service-config.json" \
+            --output-root "$RUN_ROOT/output" \
+            --report "$RUN_ROOT/preflight-receipt.json" \
+            --execute
+
+      - name: Run native linux-amd64 acceptance
+        run: |
+          set -euo pipefail
+          python3 scripts/research/paddle_ocr_acceptance.py \
+            --image "$IMAGE" \
+            --fixture-manifest "$RUN_ROOT/fixtures/fixture-manifest.json" \
+            --config "$RUN_ROOT/image-service-config.json" \
+            --output-root "$RUN_ROOT/output" \
+            --report "$RUN_ROOT/acceptance-receipt.json" \
+            --container-name "paddleocr-acceptance-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+
+      - name: Validate acceptance receipt
+        run: |
+          set -euo pipefail
+          REPORT="$RUN_ROOT/acceptance-receipt.json" python3 - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          receipt = json.loads(Path(os.environ["REPORT"]).read_text(encoding="utf-8"))
+          assert receipt["status"] == "PASS"
+          assert receipt["executionStatus"] == "PASS"
+          assert receipt["platform"]["image"] == "linux/amd64"
+          assert receipt["platform"]["host"] == "linux/amd64"
+          assert all(receipt["security"].values())
+          assert receipt["observed"]["requestLimit"]["status"] == 413
+          assert receipt["observed"]["cleanup"]["verified"] is True
+          PY
+
+      - name: Upload native acceptance receipt
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: paddleocr-acceptance-${{ github.run_id }}.${{ github.run_attempt }}
+          path: ${{ runner.temp }}/paddleocr-acceptance/
+          if-no-files-found: error
+          include-hidden-files: true
+          compression-level: 0
+          retention-days: 90

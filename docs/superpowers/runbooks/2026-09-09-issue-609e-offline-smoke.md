@@ -51,6 +51,25 @@ config는 `modelSource=IMAGE`, `host=127.0.0.1`, `network=none`, `modelMount=nul
 request/response limit과 readiness timeout은 config의 정수 값을 그대로 receipt에
 기록한다.
 
+## GitHub-hosted native 실행
+
+로컬 Colima arm64는 native acceptance의 증거가 될 수 없으므로, exact PR head를
+GitHub-hosted `ubuntu-24.04` runner에서 실행한다. workflow는 image digest와
+브랜치/head를 고정하고 fixture, preflight receipt, acceptance receipt를 하나의
+artifact로 보존한다.
+
+```bash
+BRANCH='feat/issue-609e-offline-smoke'
+HEAD="$(git rev-parse HEAD)"
+gh workflow run paddleocr-acceptance.yml \
+  --ref "$BRANCH" \
+  -f expectedHead="$HEAD"
+```
+
+workflow run이 끝나면 `paddleocr-acceptance-<run-id>.<attempt>` artifact의
+`acceptance-receipt.json`이 PASS인지 확인하고, run URL과 receipt SHA-256을
+[#609](https://github.com/bluetape4k/bluetape4k-image/issues/609)에 기록한다.
+
 ## 실행 순서
 
 먼저 preflight를 실행해 fixture/config digest와 Docker argv를 확인한다. 이 단계는
