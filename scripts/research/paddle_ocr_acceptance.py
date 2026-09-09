@@ -55,6 +55,23 @@ except Exception:
 print('BLUETAPE4K_PROBE:' + json.dumps({'status': status, 'bytes': len(body), 'sha256': hashlib.sha256(body).hexdigest()}, sort_keys=True))
 """
 
+_UPSTREAM_HEALTH_PROBE = """\
+import hashlib, json, urllib.error, urllib.request
+request = urllib.request.Request('http://127.0.0.1:18080/health', method='GET')
+opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+try:
+    response = opener.open(request, timeout=3)
+    status = response.status
+    body = response.read(65537)
+except urllib.error.HTTPError as error:
+    status = error.code
+    body = error.read(65537)
+except Exception:
+    status = 599
+    body = b''
+print('BLUETAPE4K_PROBE:' + json.dumps({'status': status, 'bytes': len(body), 'sha256': hashlib.sha256(body).hexdigest()}, sort_keys=True))
+"""
+
 _POST_PROBE = """\
 import hashlib, json, sys, urllib.error, urllib.request
 body = sys.stdin.buffer.read(16777217)
@@ -297,6 +314,19 @@ def _capture_failure_diagnostics(
     return diagnostics
 
 
+def _capture_upstream_health(
+    runner: CommandRunner, container_name: str
+) -> dict[str, Any]:
+    command = build_exec_command(container_name, _UPSTREAM_HEALTH_PROBE)
+    try:
+        result = runner(command, timeout=10)
+        if result.returncode != 0:
+            return {"error": f"docker exec exited with code {result.returncode}"}
+        return parse_probe_output(_bounded_output(result))
+    except (AcceptanceValidationError, OSError, subprocess.TimeoutExpired) as error:
+        return {"error": _safe_failure(error)}
+
+
 def _cleanup_container(
     runner: CommandRunner, container_name: str
 ) -> dict[str, Any]:
@@ -411,6 +441,8 @@ def run_acceptance(
     }
     started = False
     container_id_valid = False
+    ocr_attempted = False
+    ocr_probe: dict[str, Any] | None = None
     cleanup: dict[str, Any] | None = None
     try:
         image_command = (
@@ -459,6 +491,7 @@ def run_acceptance(
         ocr_command = build_exec_command(
             container_name, _POST_PROBE.replace("{path}", "/ocr"), interactive=True
         )
+        ocr_attempted = True
         ocr_result = runner(ocr_command, input=request, timeout=40)
         ocr_probe = parse_probe_output(_bounded_output(ocr_result))
         report.setdefault("observed", {})["ocr"] = ocr_probe
@@ -501,9 +534,10 @@ def run_acceptance(
         report["failure"] = _safe_failure(error)
         report["executionStatus"] = "FAILED"
         if started and container_id_valid:
-            report.setdefault("observed", {})["failureDiagnostics"] = _capture_failure_diagnostics(
-                runner, container_name
-            )
+            diagnostics = _capture_failure_diagnostics(runner, container_name)
+            if ocr_attempted and (ocr_probe is None or not 200 <= ocr_probe["status"] <= 299):
+                diagnostics["upstreamHealth"] = _capture_upstream_health(runner, container_name)
+            report.setdefault("observed", {})["failureDiagnostics"] = diagnostics
     finally:
         if started:
             cleanup = _cleanup_container(runner, container_name)

@@ -357,6 +357,11 @@ class PaddleOcrAcceptanceTest(unittest.TestCase):
         self.assertEqual((report["status"], report["executionStatus"]), ("FAIL", "FAILED"))
         self.assertEqual(report["failure"], "OCR probe did not return a 2xx status (422)")
         self.assertEqual(report["observed"]["ocr"], probe_receipt)
+        self.assertEqual(report["observed"]["failureDiagnostics"]["upstreamHealth"], {
+            "status": 200,
+            "bytes": 2,
+            "sha256": "b" * 64,
+        })
         self.assertTrue(report["observed"]["cleanup"]["verified"])
 
     def test_cleanup_failure_forces_failed_report(self) -> None:
