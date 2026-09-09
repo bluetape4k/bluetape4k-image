@@ -661,6 +661,15 @@ class ProducerWorkflowContractTest(unittest.TestCase):
         self.assertEqual(job_needs(promotion), {"staging-readback"})
         self.assertIn('"$ORAS_BIN" cp', promotion)
         self.assertIn("validate-release-digests", promotion)
+        self.assertIn(
+            "RELEASE_VISIBILITY=$(gh api /orgs/bluetape4k/packages/container/paddleocr-service --jq .visibility)",
+            promotion,
+        )
+        self.assertIn('test "$RELEASE_DIGEST" = "$STAGING_DIGEST"', promotion)
+        self.assertIn(
+            "Release package is already public; exact staged digest retained.",
+            promotion,
+        )
         self.assertNotIn("id-token", promotion)
 
         release_attest = self.blocks["release-attest"]
@@ -674,6 +683,11 @@ class ProducerWorkflowContractTest(unittest.TestCase):
         evidence_push = self.blocks["release-evidence-push"]
         self.assertEqual(job_needs(evidence_push), {"release-readback"})
         self.assertIn("create-evidence-oci", evidence_push)
+        self.assertIn(
+            "RELEASE_VISIBILITY=$(gh api /orgs/bluetape4k/packages/container/paddleocr-service --jq .visibility)",
+            evidence_push,
+        )
+        self.assertIn('private|public) ;;', evidence_push)
         for path in (
             "producer-evidence.json",
             "artifact-ledger.fragment.json",
