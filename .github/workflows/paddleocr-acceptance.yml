@@ -28,7 +28,7 @@ jobs:
     permissions:
       contents: read
     env:
-      IMAGE: ghcr.io/bluetape4k/paddleocr-service@sha256:d08a5967dc6d95de2f6d6ed744d0b91376b1e2032e3511e596f9784fbf271810
+      IMAGE: ghcr.io/bluetape4k/paddleocr-service@sha256:9c083c0665c05c6578588af2e9cda5a2ca8c789ae33ad9e25ec551e5ba21a36b
       EXPECTED_HEAD: ${{ inputs.expectedHead }}
     steps:
       - name: Checkout exact acceptance head
@@ -49,7 +49,7 @@ jobs:
             "$GITHUB_REPOSITORY" "$GITHUB_REF" "$GITHUB_SHA" "$EXPECTED_HEAD" \
             "$RUNNER_OS" "$RUNNER_ARCH" "$DOCKER_PLATFORM"
           test "$GITHUB_REPOSITORY" = "bluetape4k/bluetape4k-image"
-          test "$GITHUB_REF" = "refs/heads/feat/issue-609e-offline-smoke"
+          test "$GITHUB_REF" = "refs/heads/develop"
           test "$GITHUB_SHA" = "$EXPECTED_HEAD"
           test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
           test "$RUNNER_OS" = "Linux"
@@ -58,7 +58,7 @@ jobs:
             linux/amd64|linux/x86_64) ;;
             *) printf 'unsupported docker platform: %s\n' "$DOCKER_PLATFORM" >&2; exit 1 ;;
           esac
-          test "$IMAGE" = "ghcr.io/bluetape4k/paddleocr-service@sha256:d08a5967dc6d95de2f6d6ed744d0b91376b1e2032e3511e596f9784fbf271810"
+          test "$IMAGE" = "ghcr.io/bluetape4k/paddleocr-service@sha256:9c083c0665c05c6578588af2e9cda5a2ca8c789ae33ad9e25ec551e5ba21a36b"
 
       - name: Prepare immutable fixture and service config
         run: |
