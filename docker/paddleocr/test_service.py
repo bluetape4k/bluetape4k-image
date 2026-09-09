@@ -4,6 +4,8 @@ import hashlib
 import io
 import json
 import os
+import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -16,6 +18,7 @@ from service import (
     _read_bounded_response,
     build_upstream_command,
     build_upstream_environment,
+    build_upstream_process_kwargs,
     load_service_configuration,
     prepare_upstream_environment,
     read_bounded_request,
@@ -95,6 +98,14 @@ class ServiceContractTest(unittest.TestCase):
                 "--host", "127.0.0.1", "--port", "18080",
             ),
         )
+
+    def test_upstream_process_keeps_stderr_for_failure_diagnostics(self) -> None:
+        environment = {"PATH": "/usr/bin"}
+        process_kwargs = build_upstream_process_kwargs(environment)
+        self.assertIs(process_kwargs["stdin"], subprocess.DEVNULL)
+        self.assertIs(process_kwargs["stdout"], subprocess.DEVNULL)
+        self.assertIs(process_kwargs["stderr"], sys.stderr)
+        self.assertEqual(process_kwargs["env"], environment)
 
     def test_missing_or_changed_model_never_opens_readiness(self) -> None:
         (self.root / "models/recognizer/inference.pdmodel").write_bytes(b"changed")
