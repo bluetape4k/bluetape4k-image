@@ -412,6 +412,17 @@ def build_upstream_command(configuration: ServiceConfiguration) -> tuple[str, ..
     )
 
 
+def build_upstream_process_kwargs(environment: Mapping[str, str]) -> dict[str, Any]:
+    """Keep the upstream process isolated while retaining failure diagnostics."""
+
+    return {
+        "stdin": subprocess.DEVNULL,
+        "stdout": subprocess.DEVNULL,
+        "stderr": sys.stderr,
+        "env": dict(environment),
+    }
+
+
 def render_readiness(state: ReadinessState) -> tuple[int, bytes]:
     ready = all((
         state.detector_verified,
@@ -550,10 +561,7 @@ def main(argv: list[str] | None = None) -> int:
         upstream_environment, runtime_environment = prepare_upstream_environment()
         process = subprocess.Popen(
             build_upstream_command(configuration),
-            stdin=subprocess.DEVNULL,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-            env=upstream_environment,
+            **build_upstream_process_kwargs(upstream_environment),
         )
         deadline = time.monotonic() + configuration.readiness_timeout_seconds
         while not _probe_upstream():
