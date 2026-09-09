@@ -283,6 +283,82 @@ class PaddleOcrAcceptanceTest(unittest.TestCase):
         self.assertEqual(diagnostics["logs"], "startup failed at <PATH>\n")
         self.assertTrue(report["observed"]["cleanup"]["verified"])
 
+    def test_ocr_failure_records_probe_receipt(self) -> None:
+        inputs = self._inputs()
+        inspect_value = {
+            "Config": {"User": "65532:65532"},
+            "HostConfig": {
+                "ReadonlyRootfs": True,
+                "CapDrop": ["ALL"],
+                "SecurityOpt": ["no-new-privileges:true"],
+                "NetworkMode": "none",
+                "PortBindings": {},
+                "PublishAllPorts": False,
+                "PidsLimit": 128,
+                "Memory": 1024 * 1024 * 1024,
+                "NanoCpus": 2_000_000_000,
+            },
+            "NetworkSettings": {"Ports": {}},
+            "State": {"Running": True},
+        }
+        inspect_calls = 0
+        probe_body = b'{"detail":"invalid input"}'
+        probe_receipt = {
+            "status": 422,
+            "bytes": len(probe_body),
+            "sha256": hashlib.sha256(probe_body).hexdigest(),
+        }
+
+        def runner(command, *, input=None, timeout=None):
+            del input, timeout
+            nonlocal inspect_calls
+            command = tuple(command)
+            if command[:3] == ("docker", "image", "inspect"):
+                return _completed(stdout=("linux/amd64\n" + IMAGE + "\n").encode())
+            if command[:2] == ("docker", "info"):
+                return _completed(stdout=b"linux/amd64\n")
+            if command[:2] == ("docker", "run"):
+                return _completed(stdout=b"abcdef123456\n")
+            if command[:3] == ("docker", "inspect", "bluetape4k-paddleocr-16"):
+                inspect_calls += 1
+                if inspect_calls == 1:
+                    return _completed(stdout=json.dumps([inspect_value]).encode())
+                return _completed(returncode=1)
+            if command[:2] == ("docker", "exec"):
+                if "--interactive" in command:
+                    return _completed(
+                        stdout=(
+                            "BLUETAPE4K_PROBE:" + json.dumps(probe_receipt, sort_keys=True)
+                        ).encode()
+                    )
+                return _completed(
+                    stdout=(
+                        "BLUETAPE4K_PROBE:" + json.dumps(
+                            {"status": 200, "bytes": 2, "sha256": "b" * 64},
+                            sort_keys=True,
+                        )
+                    ).encode()
+                )
+            if command[:3] == ("docker", "logs", "--tail"):
+                return _completed(stdout=b"service ready\n")
+            if command[:3] == ("docker", "stop", "--time"):
+                return _completed()
+            if command[:3] == ("docker", "rm", "--force"):
+                return _completed()
+            raise AssertionError(command)
+
+        report = run_acceptance(
+            inputs,
+            self.fixture_manifest,
+            self.output,
+            "bluetape4k-paddleocr-16",
+            runner=runner,
+        )
+        self.assertEqual((report["status"], report["executionStatus"]), ("FAIL", "FAILED"))
+        self.assertEqual(report["failure"], "OCR probe did not return a 2xx status (422)")
+        self.assertEqual(report["observed"]["ocr"], probe_receipt)
+        self.assertTrue(report["observed"]["cleanup"]["verified"])
+
     def test_cleanup_failure_forces_failed_report(self) -> None:
         inputs = self._inputs()
 
