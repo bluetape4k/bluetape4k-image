@@ -28,6 +28,7 @@ from paddle_ocr_smoke import (
 MAX_COMMAND_OUTPUT_BYTES = 1024 * 1024
 MAX_REPORT_BYTES = 1024 * 1024
 REQUIRED_PLATFORM = "linux/amd64"
+HOST_PLATFORM_ALIASES = frozenset((REQUIRED_PLATFORM, "linux/x86_64"))
 CONTAINER_NAME_PATTERN = re.compile(r"\Abluetape4k-paddleocr-[0-9]+\Z")
 PROBE_MARKER = "BLUETAPE4K_PROBE:"
 FORBIDDEN_LOG_PATTERN = re.compile(
@@ -200,7 +201,7 @@ def parse_image_inspect(raw: bytes | str, image: str) -> tuple[str, str]:
 
 def parse_host_platform(raw: bytes | str) -> str:
     text = _decode_utf8(raw, "docker host platform")
-    if text != REQUIRED_PLATFORM and text.rstrip("\n") != REQUIRED_PLATFORM:
+    if text.rstrip("\n") not in HOST_PLATFORM_ALIASES:
         raise AcceptanceValidationError("docker host platform must be linux/amd64")
     return REQUIRED_PLATFORM
 

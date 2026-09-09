@@ -111,6 +111,7 @@ class PaddleOcrAcceptanceTest(unittest.TestCase):
         with self.assertRaises(AcceptanceValidationError):
             parse_probe_output("noise\nBLUETAPE4K_PROBE:" + json.dumps(receipt))
         self.assertEqual(parse_host_platform("linux/amd64\n"), "linux/amd64")
+        self.assertEqual(parse_host_platform("linux/x86_64\n"), "linux/amd64")
         with self.assertRaises(AcceptanceValidationError):
             parse_host_platform("linux/aarch64")
         self.assertEqual(parse_image_inspect("linux/amd64\n" + IMAGE + "\n", IMAGE)[0], "linux/amd64")
