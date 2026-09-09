@@ -461,8 +461,11 @@ def run_acceptance(
         )
         ocr_result = runner(ocr_command, input=request, timeout=40)
         ocr_probe = parse_probe_output(_bounded_output(ocr_result))
+        report.setdefault("observed", {})["ocr"] = ocr_probe
         if not 200 <= ocr_probe["status"] <= 299:
-            raise AcceptanceValidationError("OCR probe did not return a 2xx status")
+            raise AcceptanceValidationError(
+                f"OCR probe did not return a 2xx status ({ocr_probe['status']})"
+            )
         limit_result = runner(ocr_command, input=oversized, timeout=40)
         limit_probe = parse_probe_output(_bounded_output(limit_result))
         if limit_probe["status"] != 413:
