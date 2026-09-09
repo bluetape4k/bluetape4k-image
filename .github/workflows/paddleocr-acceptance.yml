@@ -54,7 +54,10 @@ jobs:
           test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
           test "$RUNNER_OS" = "Linux"
           test "$RUNNER_ARCH" = "X64"
-          test "$DOCKER_PLATFORM" = "linux/amd64"
+          case "$DOCKER_PLATFORM" in
+            linux/amd64|linux/x86_64) ;;
+            *) printf 'unsupported docker platform: %s\n' "$DOCKER_PLATFORM" >&2; exit 1 ;;
+          esac
           test "$IMAGE" = "ghcr.io/bluetape4k/paddleocr-service@sha256:d08a5967dc6d95de2f6d6ed744d0b91376b1e2032e3511e596f9784fbf271810"
 
       - name: Prepare immutable fixture and service config
