@@ -253,6 +253,39 @@ def _safe_failure(error: BaseException) -> str:
     return text or type(error).__name__
 
 
+def _capture_failure_diagnostics(
+    runner: CommandRunner, container_name: str
+) -> dict[str, Any]:
+    diagnostics: dict[str, Any] = {}
+    try:
+        inspected = _docker_inspect(runner, container_name)
+        state = inspected.get("State")
+        if not isinstance(state, dict):
+            raise AcceptanceValidationError("container inspect state is incomplete")
+        diagnostics["state"] = {
+            "running": state.get("Running") is True,
+            "status": state.get("Status") if isinstance(state.get("Status"), str) else None,
+            "exitCode": state.get("ExitCode") if type(state.get("ExitCode")) is int else None,
+            "error": sanitize_logs(state.get("Error", ""))
+            if isinstance(state.get("Error", ""), str)
+            else None,
+            "oomKilled": state.get("OOMKilled") is True,
+        }
+    except (AcceptanceValidationError, OSError, subprocess.TimeoutExpired) as error:
+        diagnostics["inspectError"] = _safe_failure(error)
+
+    logs_command = ("docker", "logs", "--tail", "200", container_name)
+    try:
+        logs_result = runner(logs_command, timeout=30)
+        if logs_result.returncode == 0:
+            diagnostics["logs"] = sanitize_logs(_bounded_output(logs_result))
+        else:
+            diagnostics["logsError"] = f"docker logs exited with code {logs_result.returncode}"
+    except (AcceptanceValidationError, OSError, subprocess.TimeoutExpired) as error:
+        diagnostics["logsError"] = _safe_failure(error)
+    return diagnostics
+
+
 def _cleanup_container(
     runner: CommandRunner, container_name: str
 ) -> dict[str, Any]:
@@ -366,6 +399,7 @@ def run_acceptance(
         },
     }
     started = False
+    container_id_valid = False
     cleanup: dict[str, Any] | None = None
     try:
         image_command = (
@@ -394,6 +428,7 @@ def run_acceptance(
         container_id = _decode_utf8(started_output, "docker run output").strip()
         if re.fullmatch(r"[0-9a-f]{12,128}", container_id) is None:
             raise AcceptanceValidationError("docker run did not return a container id")
+        container_id_valid = True
         inspected = _docker_inspect(runner, container_name)
         inspect_checks = validate_container_inspect(inspected)
         deadline = time.monotonic() + inputs.config.readiness_timeout_seconds
@@ -451,6 +486,10 @@ def run_acceptance(
     except (AcceptanceValidationError, OSError, subprocess.TimeoutExpired) as error:
         report["failure"] = _safe_failure(error)
         report["executionStatus"] = "FAILED"
+        if started and container_id_valid:
+            report.setdefault("observed", {})["failureDiagnostics"] = _capture_failure_diagnostics(
+                runner, container_name
+            )
     finally:
         if started:
             cleanup = _cleanup_container(runner, container_name)

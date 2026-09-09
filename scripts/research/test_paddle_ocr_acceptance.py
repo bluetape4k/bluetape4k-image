@@ -213,6 +213,76 @@ class PaddleOcrAcceptanceTest(unittest.TestCase):
         self.assertTrue(report["observed"]["cleanup"]["verified"])
         self.assertIn("--network", next(command for command, _ in calls if command[:2] == ("docker", "run")))
 
+    def test_readiness_failure_records_sanitized_diagnostics(self) -> None:
+        inputs = self._inputs()
+        inspect_value = {
+            "Config": {"User": "65532:65532"},
+            "HostConfig": {
+                "ReadonlyRootfs": True,
+                "CapDrop": ["ALL"],
+                "SecurityOpt": ["no-new-privileges:true"],
+                "NetworkMode": "none",
+                "PortBindings": {},
+                "PublishAllPorts": False,
+                "PidsLimit": 128,
+                "Memory": 1024 * 1024 * 1024,
+                "NanoCpus": 2_000_000_000,
+            },
+            "NetworkSettings": {"Ports": {}},
+            "State": {
+                "Running": True,
+                "Status": "running",
+                "ExitCode": 0,
+                "Error": "",
+                "OOMKilled": False,
+            },
+        }
+        inspect_calls = 0
+
+        def runner(command, *, input=None, timeout=None):
+            del input, timeout
+            nonlocal inspect_calls
+            command = tuple(command)
+            if command[:3] == ("docker", "image", "inspect"):
+                return _completed(stdout=("linux/amd64\n" + IMAGE + "\n").encode())
+            if command[:2] == ("docker", "info"):
+                return _completed(stdout=b"linux/amd64\n")
+            if command[:2] == ("docker", "run"):
+                return _completed(stdout=b"abcdef123456\n")
+            if command[:3] == ("docker", "inspect", "bluetape4k-paddleocr-15"):
+                inspect_calls += 1
+                if inspect_calls < 3:
+                    return _completed(stdout=json.dumps([inspect_value]).encode())
+                return _completed(returncode=1)
+            if command[:2] == ("docker", "exec"):
+                return _completed(returncode=1, stderr=b"upstream is not ready")
+            if command[:3] == ("docker", "logs", "--tail"):
+                return _completed(stdout=b"startup failed at /tmp/paddleocr\n")
+            if command[:3] == ("docker", "stop", "--time"):
+                return _completed()
+            if command[:3] == ("docker", "rm", "--force"):
+                return _completed()
+            raise AssertionError(command)
+
+        report = run_acceptance(
+            inputs,
+            self.fixture_manifest,
+            self.output,
+            "bluetape4k-paddleocr-15",
+            runner=runner,
+        )
+        self.assertEqual((report["status"], report["executionStatus"]), ("FAIL", "FAILED"))
+        diagnostics = report["observed"]["failureDiagnostics"]
+        self.assertEqual(diagnostics["state"], {
+            "running": True,
+            "status": "running",
+            "exitCode": 0,
+            "error": "",
+            "oomKilled": False,
+        })
+        self.assertEqual(diagnostics["logs"], "startup failed at <PATH>\n")
+        self.assertTrue(report["observed"]["cleanup"]["verified"])
+
     def test_cleanup_failure_forces_failed_report(self) -> None:
         inputs = self._inputs()
 
