@@ -15,7 +15,9 @@ from service import (
     ServiceConfigurationError,
     _read_bounded_response,
     build_upstream_command,
+    build_upstream_environment,
     load_service_configuration,
+    prepare_upstream_environment,
     read_bounded_request,
     render_readiness,
 )
@@ -40,23 +42,28 @@ class ServiceContractTest(unittest.TestCase):
             manifest = f"inference.pdmodel\t{len(payload)}\t{sha256(payload)}\n".encode()
             (models / f"{role}.manifest.txt").write_bytes(manifest)
             tree_digests[role] = sha256(manifest)
-        pair = json.dumps(tree_digests, separators=(",", ":"), sort_keys=True).encode()
-        (models / "model-pair.json").write_bytes(pair)
         legal = b'{"components":[],"schemaVersion":1}'
         (self.root / "legal-inventory.json").write_bytes(legal)
         (self.root / "ocr-pipeline.yaml").write_text(
             "pipeline_name: OCR\n"
-            "text_det_model_dir: /opt/bluetape4k/paddleocr/models/detector\n"
-            "text_rec_model_dir: /opt/bluetape4k/paddleocr/models/recognizer\n",
+            "text_type: general\n"
+            "use_doc_preprocessor: false\n"
+            "TextDetection:\n"
+            "  model_dir: /opt/bluetape4k/paddleocr/models/detector\n"
+            "TextRecognition:\n"
+            "  model_dir: /opt/bluetape4k/paddleocr/models/recognizer\n",
             encoding="utf-8",
         )
+        pipeline = (self.root / "ocr-pipeline.yaml").read_bytes()
         manifest = {
             "schemaVersion": 1,
             "inputLockSha256": "a" * 64,
             "legalInventorySha256": sha256(legal),
-            "requirementsSha256": "b" * 64,
+            "pipelineSha256": sha256(pipeline),
             "modelTreeDigests": tree_digests,
-            "modelPairSha256": sha256(pair),
+            "modelPairSha256": sha256(
+                json.dumps(tree_digests, separators=(",", ":"), sort_keys=True).encode()
+            ),
         }
         (self.root / "model-manifest.json").write_text(
             json.dumps(manifest, separators=(",", ":"), sort_keys=True),
@@ -137,8 +144,55 @@ class ServiceContractTest(unittest.TestCase):
             + "remote_model: https://example.invalid/download\n",
             encoding="utf-8",
         )
+        manifest = json.loads((self.root / "model-manifest.json").read_text(encoding="utf-8"))
+        manifest["pipelineSha256"] = sha256(pipeline.read_bytes())
+        (self.root / "model-manifest.json").write_text(
+            json.dumps(manifest, separators=(",", ":"), sort_keys=True), encoding="utf-8"
+        )
         with self.assertRaisesRegex(ServiceConfigurationError, "remote model source"):
             load_service_configuration(runtime_root=self.root, environment={})
+
+    def test_pipeline_requires_general_text_type(self) -> None:
+        pipeline = self.root / "ocr-pipeline.yaml"
+        pipeline.write_text(
+            pipeline.read_text(encoding="utf-8").replace("text_type: general", "text_type: table"),
+            encoding="utf-8",
+        )
+        manifest = json.loads((self.root / "model-manifest.json").read_text(encoding="utf-8"))
+        manifest["pipelineSha256"] = sha256(pipeline.read_bytes())
+        (self.root / "model-manifest.json").write_text(
+            json.dumps(manifest, separators=(",", ":"), sort_keys=True), encoding="utf-8"
+        )
+        with self.assertRaisesRegex(ServiceConfigurationError, "text_type"):
+            load_service_configuration(runtime_root=self.root, environment={})
+
+    def test_environment_is_scoped_to_tmp_and_removes_proxies(self) -> None:
+        environment = build_upstream_environment({
+            "PATH": "/usr/bin",
+            "HTTP_PROXY": "http://proxy.invalid",
+            "NO_PROXY": "127.0.0.1",
+            "HOME": "/unsafe",
+        })
+        self.assertEqual(environment["HOME"], "/tmp")
+        self.assertEqual(environment["PADDLE_PDX_CACHE_HOME"], "/tmp/.paddlex")
+        self.assertNotIn("HTTP_PROXY", environment)
+        self.assertNotIn("NO_PROXY", environment)
+
+    def test_environment_rejects_runtime_overrides(self) -> None:
+        with self.assertRaisesRegex(ServiceConfigurationError, "runtime override"):
+            build_upstream_environment({"PYTHONPATH": "/tmp/override"})
+
+    def test_compatibility_shims_are_scoped_and_cleaned(self) -> None:
+        with patch("service.ctypes.CDLL", side_effect=OSError("missing")), patch(
+            "service._bundled_iomp_library", return_value=None
+        ), patch("service._opencv_headless_alias_required", return_value=False):
+            environment, temporary = prepare_upstream_environment({"PATH": "/usr/bin"})
+        self.assertNotIn("LD_LIBRARY_PATH", environment)
+        self.assertIsNone(temporary)
+
+    def test_manifest_does_not_require_legacy_model_pair_file(self) -> None:
+        self.assertFalse((self.root / "models/model-pair.json").exists())
+        self.assertIsNotNone(load_service_configuration(runtime_root=self.root, environment={}))
 
 
 if __name__ == "__main__":

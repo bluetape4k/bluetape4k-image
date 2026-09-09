@@ -8,7 +8,10 @@
 /scripts/research/test_paddle_ocr_producer*.py @debop
 /scripts/research/paddle_ocr_smoke.py @debop
 /scripts/research/test_paddle_ocr_smoke.py @debop
+/scripts/research/paddle_ocr_acceptance.py @debop
+/scripts/research/test_paddle_ocr_acceptance.py @debop
 /docs/superpowers/runbooks/2026-09-07-issue-638-paddleocr-producer.md @debop
+/docs/superpowers/runbooks/2026-09-09-issue-609e-offline-smoke.md @debop
 /.github/actions/paddleocr-upload-artifact/ @debop
 /.github/actions/paddleocr-download-artifact/ @debop
 /.github/scripts/test-paddleocr-artifact-retry.py @debop

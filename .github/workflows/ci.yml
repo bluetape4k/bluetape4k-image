@@ -9,6 +9,17 @@ permissions:
 
 on:
   workflow_dispatch:
+    inputs:
+      nativeAcceptance:
+        description: PaddleOCR native linux/amd64 acceptance만 별도로 실행
+        required: false
+        default: false
+        type: boolean
+      expectedHead:
+        description: native acceptance에서 검증할 exact commit SHA
+        required: false
+        default: ''
+        type: string
   push:
     branches: [develop, main]
     paths-ignore:
@@ -29,7 +40,7 @@ on:
       - 'LICENSE'
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.event_name == 'workflow_dispatch' && github.run_id || 'shared' }}
   cancel-in-progress: true
 
 env:
@@ -150,6 +161,8 @@ jobs:
               - 'scripts/research/test_paddle_ocr_producer*.py'
               - 'scripts/research/paddle_ocr_smoke.py'
               - 'scripts/research/test_paddle_ocr_smoke.py'
+              - 'scripts/research/paddle_ocr_acceptance.py'
+              - 'scripts/research/test_paddle_ocr_acceptance.py'
               - 'scripts/research/paddle_ocr_attestation.py'
               - 'scripts/research/test_paddle_ocr_attestation.py'
               - '.github/scripts/test-paddleocr-producer-workflow.py'
@@ -185,9 +198,18 @@ jobs:
           python3 scripts/research/test_paddle_ocr_smoke.py
           python3 scripts/research/test_paddle_ocr_attestation.py
           python3 -m json.tool docker/paddleocr/attestation-receipt.schema.json >/dev/null
+          python3 -m json.tool docker/paddleocr/acceptance-receipt.schema.json >/dev/null
           python3 docker/paddleocr/test_service.py -v
+          python3 scripts/research/test_paddle_ocr_acceptance.py
           python3 .github/scripts/test-paddleocr-producer-workflow.py
           python3 .github/scripts/test-paddleocr-artifact-retry.py
+
+  paddleocr-native-acceptance:
+    name: PaddleOCR native acceptance / linux-amd64
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.nativeAcceptance == true }}
+    uses: ./.github/workflows/paddleocr-acceptance.yml
+    with:
+      expectedHead: ${{ inputs.expectedHead }}
 
   catalog-governance:
     name: Central Catalog Governance

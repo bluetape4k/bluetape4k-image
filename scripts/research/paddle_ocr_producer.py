@@ -1224,6 +1224,10 @@ def _stage_models(args: argparse.Namespace) -> dict[str, Any]:
             if digest != models[role]["treeSha256"]:
                 raise ProducerRejectedError("model tree sha256 differs")
             tree_digests[role] = digest
+            _atomic_write_new(
+                temporary / "models" / f"{role}.manifest.txt",
+                canonical_tree_manifest(model_root),
+            )
         pair_sha = sha256_hex(jcs_bytes(tree_digests))
         pipeline_sha = _atomic_write_new(temporary / "ocr-pipeline.yaml", pipeline_raw)
         legal_sha = _atomic_write_new(temporary / "legal-inventory.json", legal_raw)
@@ -1370,6 +1374,7 @@ def _validate_model_artifact(
     }
     if not exact_root_files.issubset(model_paths) or any(
         path not in exact_root_files
+        and path not in {"models/detector.manifest.txt", "models/recognizer.manifest.txt"}
         and not path.startswith("models/detector/")
         and not path.startswith("models/recognizer/")
         for path in model_paths
@@ -1387,6 +1392,12 @@ def _validate_model_artifact(
     expected_trees = {model["role"]: model["treeSha256"] for model in lock["models"]}
     if trees != expected_trees or trees != manifest["modelTreeDigests"]:
         raise ProducerRejectedError("model artifact tree digests differ")
+    for role in ("detector", "recognizer"):
+        role_manifest = _read_regular_bytes(root / "models" / f"{role}.manifest.txt")
+        if role_manifest != canonical_tree_manifest(root / "models" / role):
+            raise ProducerRejectedError(f"{role} model manifest differs")
+        if sha256_hex(role_manifest) != trees[role]:
+            raise ProducerRejectedError(f"{role} model manifest hash differs")
     if sha256_hex(jcs_bytes(trees)) != manifest["modelPairSha256"]:
         raise ProducerRejectedError("model artifact pair digest differs")
     model_manifest, _ = _load_canonical_document(root / "model-manifest.json")
