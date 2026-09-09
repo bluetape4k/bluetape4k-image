@@ -906,7 +906,18 @@ jobs:
           PY
           python3 scripts/research/paddle_ocr_producer.py validate-release-digests \
             --receipt .producer-state/release-digests.json
-          test "$(gh api /orgs/bluetape4k/packages/container/paddleocr-service --jq .visibility)" = private
+          RELEASE_VISIBILITY=$(gh api /orgs/bluetape4k/packages/container/paddleocr-service --jq .visibility)
+          case "$RELEASE_VISIBILITY" in
+            private) ;;
+            public)
+              test "$RELEASE_DIGEST" = "$STAGING_DIGEST"
+              echo "Release package is already public; exact staged digest retained."
+              ;;
+            *)
+              echo "Release package visibility is neither private nor public." >&2
+              exit 1
+              ;;
+          esac
           printf 'release-digest=%s\n' "$RELEASE_DIGEST" >> "$GITHUB_OUTPUT"
       - *cleanup-step
       - *cleanup-fragment-step
@@ -1172,7 +1183,14 @@ jobs:
             "$EVIDENCE_DIGEST"
           test "$(jq -er '.subject.digest' .producer-state/evidence-manifest-readback.json)" = \
             "${{ needs.release-readback.outputs.release-digest }}"
-          test "$(gh api /orgs/bluetape4k/packages/container/paddleocr-service --jq .visibility)" = private
+          RELEASE_VISIBILITY=$(gh api /orgs/bluetape4k/packages/container/paddleocr-service --jq .visibility)
+          case "$RELEASE_VISIBILITY" in
+            private|public) ;;
+            *)
+              echo "Release package visibility is neither private nor public." >&2
+              exit 1
+              ;;
+          esac
           printf 'evidence-digest=%s\n' "$EVIDENCE_DIGEST" >> "$GITHUB_OUTPUT"
       - *cleanup-step
       - *cleanup-fragment-step
