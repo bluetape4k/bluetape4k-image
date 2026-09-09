@@ -44,13 +44,17 @@ jobs:
       - name: Verify dispatch, head, and native runner
         run: |
           set -euo pipefail
+          DOCKER_PLATFORM="$(docker info --format '{{.OSType}}/{{.Architecture}}')"
+          printf 'repository=%s ref=%s sha=%s expected=%s runner_os=%s runner_arch=%s docker_platform=%s\n' \
+            "$GITHUB_REPOSITORY" "$GITHUB_REF" "$GITHUB_SHA" "$EXPECTED_HEAD" \
+            "$RUNNER_OS" "$RUNNER_ARCH" "$DOCKER_PLATFORM"
           test "$GITHUB_REPOSITORY" = "bluetape4k/bluetape4k-image"
           test "$GITHUB_REF" = "refs/heads/feat/issue-609e-offline-smoke"
           test "$GITHUB_SHA" = "$EXPECTED_HEAD"
           test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
           test "$RUNNER_OS" = "Linux"
           test "$RUNNER_ARCH" = "X64"
-          test "$(docker info --format '{{.OSType}}/{{.Architecture}}')" = "linux/amd64"
+          test "$DOCKER_PLATFORM" = "linux/amd64"
           test "$IMAGE" = "ghcr.io/bluetape4k/paddleocr-service@sha256:d08a5967dc6d95de2f6d6ed744d0b91376b1e2032e3511e596f9784fbf271810"
 
       - name: Prepare immutable fixture and service config
