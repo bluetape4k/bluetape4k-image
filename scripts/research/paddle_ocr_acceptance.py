@@ -98,6 +98,17 @@ def _bounded_output(result: CompletedProcess[bytes]) -> bytes:
     return stdout
 
 
+def _bounded_combined_output(result: CompletedProcess[bytes]) -> bytes:
+    _bounded_output(result)
+    stdout = result.stdout or b""
+    stderr = result.stderr or b""
+    separator = b"\n" if stdout and stderr else b""
+    combined = stdout + separator + stderr
+    if len(combined) > MAX_COMMAND_OUTPUT_BYTES:
+        raise AcceptanceValidationError("command output exceeds the byte limit")
+    return combined
+
+
 def _require_success(
     result: CompletedProcess[bytes], command: Sequence[str], *, allow_failure: bool = False
 ) -> bytes:
@@ -278,7 +289,7 @@ def _capture_failure_diagnostics(
     try:
         logs_result = runner(logs_command, timeout=30)
         if logs_result.returncode == 0:
-            diagnostics["logs"] = sanitize_logs(_bounded_output(logs_result))
+            diagnostics["logs"] = sanitize_logs(_bounded_combined_output(logs_result))
         else:
             diagnostics["logsError"] = f"docker logs exited with code {logs_result.returncode}"
     except (AcceptanceValidationError, OSError, subprocess.TimeoutExpired) as error:

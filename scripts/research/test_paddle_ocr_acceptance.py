@@ -257,7 +257,7 @@ class PaddleOcrAcceptanceTest(unittest.TestCase):
             if command[:2] == ("docker", "exec"):
                 return _completed(returncode=1, stderr=b"upstream is not ready")
             if command[:3] == ("docker", "logs", "--tail"):
-                return _completed(stdout=b"startup failed at /tmp/paddleocr\n")
+                return _completed(stderr=b"startup failed at /tmp/paddleocr\n")
             if command[:3] == ("docker", "stop", "--time"):
                 return _completed()
             if command[:3] == ("docker", "rm", "--force"):
