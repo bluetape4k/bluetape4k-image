@@ -12,6 +12,7 @@ from subprocess import CompletedProcess
 
 from paddle_ocr_acceptance import (
     AcceptanceValidationError,
+    _LIMIT_PROBE,
     _POST_PROBE,
     _docker_inspect,
     _write_report,
@@ -119,6 +120,8 @@ class PaddleOcrAcceptanceTest(unittest.TestCase):
         with self.assertRaisesRegex(AcceptanceValidationError, "UTF-8"):
             parse_probe_output(b"\xff")
         self.assertIn("http://127.0.0.1:8080{path}", _POST_PROBE)
+        self.assertIn("Content-Length", _LIMIT_PROBE)
+        self.assertIn("{content_length}", _LIMIT_PROBE)
 
     def test_docker_inspect_rejects_invalid_json(self) -> None:
         with self.assertRaisesRegex(AcceptanceValidationError, "invalid JSON"):
@@ -191,7 +194,10 @@ class PaddleOcrAcceptanceTest(unittest.TestCase):
                 return _completed(returncode=1)
             if command[:2] == ("docker", "exec"):
                 if "--interactive" in command:
-                    status = 413 if input is not None and len(input) > 1024 else 200
+                    status = 413 if (
+                        "Content-Length" in command[-1]
+                        or input is not None and len(input) > 1024
+                    ) else 200
                 else:
                     status = 200
                 body = b"ok"
@@ -214,6 +220,13 @@ class PaddleOcrAcceptanceTest(unittest.TestCase):
         self.assertEqual(report["executionStatus"], "PASS")
         self.assertTrue(report["observed"]["cleanup"]["verified"])
         self.assertIn("--network", next(command for command, _ in calls if command[:2] == ("docker", "run")))
+        limit_command, limit_input = next(
+            (command, value)
+            for command, value in calls
+            if command[:2] == ("docker", "exec") and "Content-Length" in command[-1]
+        )
+        self.assertIn("Content-Length', '1025", limit_command[-1])
+        self.assertIsNone(limit_input)
 
     def test_readiness_failure_records_sanitized_diagnostics(self) -> None:
         inputs = self._inputs()
