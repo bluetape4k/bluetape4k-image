@@ -69,6 +69,8 @@ val vipsTransformReceiptFile = repositoryDirectory.file(
 ).asFile
 val ocrProtocolRunId = providers.gradleProperty("ocr.protocol.runId")
 val ocrProtocolOutput = providers.gradleProperty("ocr.protocol.output")
+val ocrComparisonInput = providers.gradleProperty("ocr.comparison.input")
+val ocrComparisonRunManifest = providers.gradleProperty("ocr.comparison.runManifest")
 val codecMatrixSourceDirectory = layout.buildDirectory.dir("generated/codec-matrix-source-fixtures")
 val codecMatrixRunDirectoryProvider = codecMatrixRunId.flatMap { runId ->
     require(codecMatrixRunIdPattern.matches(runId)) {
@@ -1430,6 +1432,38 @@ tasks.register<JavaExec>("validateOcrProtocolReceipt") {
                 ocrProtocolReceiptFile.absolutePath,
                 "--run-manifest",
                 ocrProtocolRunManifestFile.absolutePath,
+            ),
+        )
+    }
+}
+
+tasks.register<JavaExec>("validateOcrProviderComparisonReceipt") {
+    description = "Validate an Issue #544 provider comparison receipt and run manifest"
+    group = "verification"
+    dependsOn(tasks.named("benchmarkClasses"))
+    classpath = sourceSets.named("benchmark").get().runtimeClasspath
+    mainClass.set("io.bluetape4k.images.benchmark.OcrProviderComparisonValidateMain")
+    javaLauncher.set(selectedJavaLauncher)
+    workingDir(repositoryDirectory)
+    doFirst {
+        val input = ocrComparisonInput.orNull
+            ?: error("ocr.comparison.input is required and must be an absolute JSON path")
+        val runManifest = ocrComparisonRunManifest.orNull
+            ?: error("ocr.comparison.runManifest is required and must be an absolute JSON path")
+        val inputFile = file(input).absoluteFile.normalize()
+        val runManifestFile = file(runManifest).absoluteFile.normalize()
+        require(inputFile.isAbsolute && runManifestFile.isAbsolute) {
+            "OCR comparison receipt paths must be absolute"
+        }
+        require(inputFile.isFile && runManifestFile.isFile) {
+            "OCR comparison receipt or run manifest is missing"
+        }
+        setArgs(
+            listOf(
+                "--input",
+                inputFile.absolutePath,
+                "--run-manifest",
+                runManifestFile.absolutePath,
             ),
         )
     }

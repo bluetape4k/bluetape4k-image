@@ -118,6 +118,19 @@ class OcrProviderComparisonReceiptTest {
         warmIterationsError.message.orEmpty().shouldContain("at least 3")
     }
 
+    @Test
+    fun `validator rejects non-finite provider quality summary`() {
+        val manifest = OcrBenchmarkCorpusV2.loadManifest()
+        val valid = receipt(manifest, OcrProviderComparisonStatus.COMPARABLE)
+        val error = assertFailsWith<IllegalArgumentException> {
+            OcrProviderComparisonReceiptValidator.validate(
+                valid.copy(comparison = requireNotNull(valid.comparison).copy(baselineCer = Double.NaN)),
+                manifest,
+            )
+        }
+        error.message.orEmpty().shouldContain("provider CER/WER")
+    }
+
     private fun receipt(
         manifest: OcrBenchmarkCorpusManifest,
         status: OcrProviderComparisonStatus,

@@ -1,0 +1,179 @@
+name: PaddleOCR provider comparison
+
+on:
+  workflow_dispatch:
+    inputs:
+      expectedHead:
+        description: 현재 브랜치에서 검증할 exact commit SHA
+        required: true
+        type: string
+  workflow_call:
+    inputs:
+      expectedHead:
+        description: 호출한 workflow에서 검증할 exact commit SHA
+        required: true
+        type: string
+
+permissions: {}
+
+concurrency:
+  group: paddleocr-comparison-${{ github.repository }}-linux-amd64
+  cancel-in-progress: false
+
+jobs:
+  comparison:
+    name: PaddleOCR comparison / linux-amd64
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    permissions:
+      contents: read
+    env:
+      IMAGE: ghcr.io/bluetape4k/paddleocr-service@sha256:cc21ee6edc03c672d11cadaadda828ef83e4ecfdee0da8838b402a763fcdec46
+      PADDLE_MODEL_DIGEST: sha256:d2f455ea0e0a34cfa8fac7bba38887cf136d62525e69cf9f433eac8009d9dd8f
+      EXPECTED_HEAD: ${{ inputs.expectedHead }}
+    steps:
+      - name: Checkout exact comparison head
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Set up pinned Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.13'
+
+      - name: Verify dispatch, head, and platform
+        run: |
+          set -euo pipefail
+          DOCKER_PLATFORM="$(docker info --format '{{.OSType}}/{{.Architecture}}')"
+          printf 'repository=%s ref=%s sha=%s expected=%s runner_os=%s runner_arch=%s docker_platform=%s\n' \
+            "$GITHUB_REPOSITORY" "$GITHUB_REF" "$GITHUB_SHA" "$EXPECTED_HEAD" \
+            "$RUNNER_OS" "$RUNNER_ARCH" "$DOCKER_PLATFORM"
+          test "$GITHUB_REPOSITORY" = "bluetape4k/bluetape4k-image"
+          test "$GITHUB_SHA" = "$EXPECTED_HEAD"
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+          test "$RUNNER_OS" = "Linux"
+          test "$RUNNER_ARCH" = "X64"
+          test "$DOCKER_PLATFORM" = "linux/amd64"
+          test "$IMAGE" = "ghcr.io/bluetape4k/paddleocr-service@sha256:cc21ee6edc03c672d11cadaadda828ef83e4ecfdee0da8838b402a763fcdec46"
+          test "$PADDLE_MODEL_DIGEST" = "sha256:d2f455ea0e0a34cfa8fac7bba38887cf136d62525e69cf9f433eac8009d9dd8f"
+
+      - name: Set up Java 25 for receipt validation
+        uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: gradle
+
+      - name: Install native OCR languages
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends \
+            tesseract-ocr tesseract-ocr-eng tesseract-ocr-kor tesseract-ocr-jpn
+          tesseract --version
+          tesseract --list-langs
+
+      - name: Prepare canonical preflight input
+        env:
+          RUN_ROOT: ${{ runner.temp }}/paddleocr-comparison/${{ github.run_id }}.${{ github.run_attempt }}
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUN_ROOT/fixtures" "$RUN_ROOT/output"
+          cp benchmark/images-benchmark/src/main/resources/bench/ocr/clean-text.png \
+            "$RUN_ROOT/fixtures/clean-text.png"
+          RUN_ROOT="$RUN_ROOT" python3 - <<'PY'
+          import hashlib
+          import json
+          import os
+          from pathlib import Path
+
+          root = Path(os.environ["RUN_ROOT"])
+          fixture = root / "fixtures" / "clean-text.png"
+          payload = fixture.read_bytes()
+          manifest = {
+              "schemaVersion": 1,
+              "fixtures": [{
+                  "id": "clean-text",
+                  "path": "clean-text.png",
+                  "bytes": len(payload),
+                  "sha256": hashlib.sha256(payload).hexdigest(),
+              }],
+          }
+          (root / "fixtures" / "fixture-manifest.json").write_text(
+              json.dumps(manifest, separators=(",", ":"), sort_keys=True) + "\n",
+              encoding="utf-8",
+          )
+          config = {
+              "schemaVersion": 1,
+              "modelSource": "IMAGE",
+              "host": "127.0.0.1",
+              "port": 8080,
+              "network": "none",
+              "command": ["--host", "127.0.0.1", "--port", "8080"],
+              "requestMaxBytes": 16777216,
+              "responseMaxBytes": 16777216,
+              "readinessTimeoutSeconds": 300,
+              "modelMount": None,
+              "outputMount": "/out",
+          }
+          (root / "image-service-config.json").write_text(
+              json.dumps(config, separators=(",", ":"), sort_keys=True) + "\n",
+              encoding="utf-8",
+          )
+          PY
+          echo "RUN_ROOT=$RUN_ROOT" >> "$GITHUB_ENV"
+
+      - name: Verify Python contracts before execution
+        run: |
+          set -euo pipefail
+          python3 -m unittest scripts/research/test_paddle_ocr_comparison.py \
+            scripts/research/test_paddle_ocr_comparison_workflow.py
+
+      - name: Pull exact immutable PaddleOCR image
+        run: |
+          set -euo pipefail
+          docker pull "$IMAGE"
+          docker image inspect "$IMAGE" \
+            --format '{{.Os}}/{{.Architecture}}{{printf "\n"}}{{index .RepoDigests 0}}'
+
+      - name: Run offline image preflight
+        run: |
+          set -euo pipefail
+          python3 scripts/research/paddle_ocr_smoke.py \
+            --image "$IMAGE" \
+            --fixture-manifest "$RUN_ROOT/fixtures/fixture-manifest.json" \
+            --config "$RUN_ROOT/image-service-config.json" \
+            --output-root "$RUN_ROOT/output" \
+            --report "$RUN_ROOT/preflight-receipt.json" \
+            --execute
+
+      - name: Run full corpus provider comparison
+        run: |
+          set -euo pipefail
+          python3 scripts/research/paddle_ocr_comparison.py \
+            --repo-root "$GITHUB_WORKSPACE" \
+            --output-root "$RUN_ROOT" \
+            --receipt "$RUN_ROOT/comparison-receipt.json" \
+            --run-manifest "$RUN_ROOT/run-manifest.json" \
+            --image "$IMAGE" \
+            --config "$RUN_ROOT/image-service-config.json"
+
+      - name: Validate provider comparison receipt
+        run: |
+          set -euo pipefail
+          ./gradlew :bluetape4k-images-benchmark:validateOcrProviderComparisonReceipt \
+            -Pocr.comparison.input="$RUN_ROOT/comparison-receipt.json" \
+            -Pocr.comparison.runManifest="$RUN_ROOT/run-manifest.json" \
+            --no-daemon --max-workers=1 --console=plain
+
+      - name: Upload provider comparison evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: paddleocr-comparison-${{ github.run_id }}.${{ github.run_attempt }}
+          path: ${{ runner.temp }}/paddleocr-comparison/
+          if-no-files-found: error
+          include-hidden-files: true
+          compression-level: 0
+          retention-days: 90

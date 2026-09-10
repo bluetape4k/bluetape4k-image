@@ -88,6 +88,26 @@ internal data class OcrProviderComparisonSummary(
     val wer: Double,
     val throughputDeltaPercent: Double,
     val rssPeakDeltaBytes: Long,
+    /** baseline provider의 TEXT fixture 평균 CER입니다. */
+    val baselineCer: Double = cer,
+    /** candidate provider의 TEXT fixture 평균 CER입니다. */
+    val candidateCer: Double = cer,
+    /** baseline provider의 TEXT fixture 평균 WER입니다. */
+    val baselineWer: Double = wer,
+    /** candidate provider의 TEXT fixture 평균 WER입니다. */
+    val candidateWer: Double = wer,
+    /** ground-truth line geometry와의 IoU 기반 baseline 정확도입니다. */
+    val baselineGeometryAccuracy: Double = 0.0,
+    /** ground-truth line geometry와의 IoU 기반 candidate 정확도입니다. */
+    val candidateGeometryAccuracy: Double = 0.0,
+    /** 전체 fixture에서 expected outcome을 관측한 baseline 비율입니다. */
+    val baselineOutcomeAccuracy: Double = 0.0,
+    /** 전체 fixture에서 expected outcome을 관측한 candidate 비율입니다. */
+    val candidateOutcomeAccuracy: Double = 0.0,
+    /** cold latency의 candidate 대 baseline 변화율(%)입니다. */
+    val coldLatencyDeltaPercent: Double = 0.0,
+    /** warm latency의 candidate 대 baseline 변화율(%)입니다. */
+    val warmLatencyDeltaPercent: Double = 0.0,
 ) : Serializable {
     companion object {
         private const val serialVersionUID = 1L
@@ -244,6 +264,25 @@ internal object OcrProviderComparisonReceiptValidator {
             }
             require(summary.throughputDeltaPercent.isFinite()) {
                 "OCR comparison throughput delta is invalid"
+            }
+            require(
+                summary.baselineCer.isFinite() && summary.baselineCer in 0.0..1.0 &&
+                    summary.candidateCer.isFinite() && summary.candidateCer in 0.0..1.0 &&
+                    summary.baselineWer.isFinite() && summary.baselineWer in 0.0..1.0 &&
+                    summary.candidateWer.isFinite() && summary.candidateWer in 0.0..1.0
+            ) {
+                "OCR comparison provider CER/WER is invalid"
+            }
+            require(
+                summary.baselineGeometryAccuracy.isFinite() && summary.baselineGeometryAccuracy in 0.0..1.0 &&
+                    summary.candidateGeometryAccuracy.isFinite() && summary.candidateGeometryAccuracy in 0.0..1.0 &&
+                    summary.baselineOutcomeAccuracy.isFinite() && summary.baselineOutcomeAccuracy in 0.0..1.0 &&
+                    summary.candidateOutcomeAccuracy.isFinite() && summary.candidateOutcomeAccuracy in 0.0..1.0
+            ) {
+                "OCR comparison provider quality accuracy is invalid"
+            }
+            require(summary.coldLatencyDeltaPercent.isFinite() && summary.warmLatencyDeltaPercent.isFinite()) {
+                "OCR comparison latency delta is invalid"
             }
         }
     }
