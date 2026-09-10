@@ -91,6 +91,25 @@ except Exception:
 print('BLUETAPE4K_PROBE:' + json.dumps({'status': status, 'bytes': len(payload), 'sha256': hashlib.sha256(payload).hexdigest()}, sort_keys=True))
 """
 
+_LIMIT_PROBE = """\
+import hashlib, http.client, json
+connection = http.client.HTTPConnection('127.0.0.1', 8080, timeout=30)
+try:
+    connection.putrequest('POST', '/ocr')
+    connection.putheader('Content-Type', 'application/json')
+    connection.putheader('Content-Length', '{content_length}')
+    connection.endheaders()
+    response = connection.getresponse()
+    status = response.status
+    payload = response.read(16777217)
+except Exception:
+    status = 599
+    payload = b''
+finally:
+    connection.close()
+print('BLUETAPE4K_PROBE:' + json.dumps({'status': status, 'bytes': len(payload), 'sha256': hashlib.sha256(payload).hexdigest()}, sort_keys=True))
+"""
+
 
 class AcceptanceValidationError(ValueError):
     """Raised when an acceptance command or receipt violates its contract."""
@@ -424,7 +443,6 @@ def run_acceptance(
     request, fixture_sha = _fixture_request(fixture_manifest, inputs.config)
     if fixture_sha != inputs.fixture_manifest_sha256:
         raise AcceptanceValidationError("fixture manifest digest differs")
-    oversized = b"x" * (inputs.config.request_max_bytes + 1)
     report: dict[str, Any] = {
         "schemaVersion": 1,
         "kind": "paddle-ocr-acceptance",
@@ -499,7 +517,14 @@ def run_acceptance(
             raise AcceptanceValidationError(
                 f"OCR probe did not return a 2xx status ({ocr_probe['status']})"
             )
-        limit_result = runner(ocr_command, input=oversized, timeout=40)
+        limit_command = build_exec_command(
+            container_name,
+            _LIMIT_PROBE.replace(
+                "{content_length}", str(inputs.config.request_max_bytes + 1)
+            ),
+            interactive=True,
+        )
+        limit_result = runner(limit_command, timeout=40)
         limit_probe = parse_probe_output(_bounded_output(limit_result))
         if limit_probe["status"] != 413:
             raise AcceptanceValidationError("request limit probe did not return 413")
