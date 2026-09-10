@@ -97,8 +97,9 @@ jobs:
               "port": 8080,
               "network": "none",
               "command": ["--host", "127.0.0.1", "--port", "8080"],
-              "requestMaxBytes": 1048576,
-              "responseMaxBytes": 1048576,
+              # image wrapper의 고정 16 MiB request/response 한도와 맞춘다.
+              "requestMaxBytes": 16777216,
+              "responseMaxBytes": 16777216,
               "readinessTimeoutSeconds": 300,
               "modelMount": None,
               "outputMount": "/out",
