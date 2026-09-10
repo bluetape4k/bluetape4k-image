@@ -649,6 +649,7 @@ class ProducerWorkflowContractTest(unittest.TestCase):
         staging_readback = self.blocks["staging-readback"]
         for required in (
             "gh attestation verify",
+            "for attempt in 1 2 3",
             '--signer-digest "$GITHUB_SHA"',
             '--source-digest "$GITHUB_SHA"',
             '--source-ref "$GITHUB_REF"',
@@ -679,6 +680,9 @@ class ProducerWorkflowContractTest(unittest.TestCase):
             2,
         )
         self.assertIn("paddleocr-release-attestations-${{ env.ATTEMPT_ID }}", release_attest)
+
+        release_readback = self.blocks["release-readback"]
+        self.assertIn("for attempt in 1 2 3", release_readback)
 
         evidence_push = self.blocks["release-evidence-push"]
         self.assertEqual(job_needs(evidence_push), {"release-readback"})

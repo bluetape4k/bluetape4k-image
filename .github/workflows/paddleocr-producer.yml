@@ -758,17 +758,26 @@ jobs:
             .producer-state/staging-attestation-api.json > /dev/null
           verify_one() {
             local bundle=$1 predicate=$2 output=$3
-            gh attestation verify .producer-state/attestations/platform-manifest.json \
-              --repo "$GITHUB_REPOSITORY" \
-              --bundle "$bundle" \
-              --signer-workflow "$GITHUB_REPOSITORY/.github/workflows/paddleocr-producer.yml" \
-              --signer-digest "$GITHUB_SHA" \
-              --source-digest "$GITHUB_SHA" \
-              --source-ref "$GITHUB_REF" \
-              --cert-oidc-issuer https://token.actions.githubusercontent.com \
-              --predicate-type "$predicate" \
-              --deny-self-hosted-runners \
-              --format json > "$output"
+            for attempt in 1 2 3; do
+              rm -f "$output"
+              if gh attestation verify .producer-state/attestations/platform-manifest.json \
+                --repo "$GITHUB_REPOSITORY" \
+                --bundle "$bundle" \
+                --signer-workflow "$GITHUB_REPOSITORY/.github/workflows/paddleocr-producer.yml" \
+                --signer-digest "$GITHUB_SHA" \
+                --source-digest "$GITHUB_SHA" \
+                --source-ref "$GITHUB_REF" \
+                --cert-oidc-issuer https://token.actions.githubusercontent.com \
+                --predicate-type "$predicate" \
+                --deny-self-hosted-runners \
+                --format json > "$output"; then
+                break
+              fi
+              if [ "$attempt" -eq 3 ]; then
+                return 1
+              fi
+              sleep $((attempt * 2))
+            done
             jq -e --arg name "$SUBJECT_NAME" --arg digest "$SUBJECT_DIGEST" --arg predicate "$predicate" \
               --arg sha "$GITHUB_SHA" --arg ref "$GITHUB_REF" \
               --arg repository "https://github.com/$GITHUB_REPOSITORY" \
@@ -1036,17 +1045,26 @@ jobs:
             .producer-state/release-attestation-api.json > /dev/null
           verify_release() {
             local bundle=$1 predicate=$2 output=$3
-            gh attestation verify .producer-state/attestations/platform-manifest.json \
-              --repo "$GITHUB_REPOSITORY" \
-              --bundle ".producer-state/attestations/$bundle" \
-              --signer-workflow "$GITHUB_REPOSITORY/.github/workflows/paddleocr-producer.yml" \
-              --signer-digest "$GITHUB_SHA" \
-              --source-digest "$GITHUB_SHA" \
-              --source-ref "$GITHUB_REF" \
-              --cert-oidc-issuer https://token.actions.githubusercontent.com \
-              --predicate-type "$predicate" \
-              --deny-self-hosted-runners \
-              --format json > "$output"
+            for attempt in 1 2 3; do
+              rm -f "$output"
+              if gh attestation verify .producer-state/attestations/platform-manifest.json \
+                --repo "$GITHUB_REPOSITORY" \
+                --bundle ".producer-state/attestations/$bundle" \
+                --signer-workflow "$GITHUB_REPOSITORY/.github/workflows/paddleocr-producer.yml" \
+                --signer-digest "$GITHUB_SHA" \
+                --source-digest "$GITHUB_SHA" \
+                --source-ref "$GITHUB_REF" \
+                --cert-oidc-issuer https://token.actions.githubusercontent.com \
+                --predicate-type "$predicate" \
+                --deny-self-hosted-runners \
+                --format json > "$output"; then
+                break
+              fi
+              if [ "$attempt" -eq 3 ]; then
+                return 1
+              fi
+              sleep $((attempt * 2))
+            done
             jq -e --arg name ghcr.io/bluetape4k/paddleocr-service \
               --arg digest "$SUBJECT_DIGEST" --arg predicate "$predicate" \
               --arg sha "$GITHUB_SHA" --arg ref "$GITHUB_REF" \
