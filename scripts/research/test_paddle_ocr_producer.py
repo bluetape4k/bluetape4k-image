@@ -1412,6 +1412,56 @@ class ProducerCliTest(unittest.TestCase):
         self.assertEqual(document["data"]["runAttempt"], 1)
         self.assertNotIn("databaseId", {key: value for key, value in document.items() if key != "data"})
 
+    def test_package_readback_normalizes_github_version_metadata(self) -> None:
+        args = producer_cli.argparse.Namespace(
+            owner="bluetape4k",
+            staging_package="paddleocr-service-staging",
+            release_package="paddleocr-service",
+            attempt_id="1234.2",
+            image_tag="image-1234.2",
+            evidence_tag="evidence-1234.2",
+            operation_timeout_seconds=60,
+            max_page_bytes=2 * 1024 * 1024,
+            max_page_items=100,
+            max_pages=20,
+            max_total_bytes=40 * 1024 * 1024,
+        )
+
+        def fake_gh_json(_args: object, endpoint: str, **_kwargs: object) -> dict[str, object]:
+            if "/versions?" not in endpoint:
+                package = endpoint.rsplit("/", 1)[-1]
+                return {
+                    "name": package,
+                    "package_type": "container",
+                    "visibility": "private",
+                    "id": 7,
+                }
+            package = endpoint.split("/packages/container/", 1)[1].split("/versions", 1)[0]
+            tag = "image-1234.2" if package == "paddleocr-service-staging" else "stable"
+            return {
+                "items": [{
+                    "id": 11,
+                    "name": "sha256:" + SHA_A,
+                    "metadata": {
+                        "package_type": "container",
+                        "container": {"tags": [tag], "extra": "ignored"},
+                    },
+                    "created_at": "2026-09-10T00:00:00Z",
+                    "updated_at": "2026-09-10T00:00:00Z",
+                    "html_url": "https://github.com/example/package",
+                }],
+            }
+
+        with patch.object(producer_cli, "_gh_json", side_effect=fake_gh_json):
+            result = producer_cli._readback_packages(args)
+
+        self.assertEqual(result["status"], "PASS")
+        self.assertEqual(
+            result["data"]["staging"]["manifestDigest"], "sha256:" + SHA_A
+        )
+        self.assertIsNone(result["data"]["release"])
+        self.assertIsNone(result["data"]["evidence"])
+
     def test_incident_approval_is_validated_before_gh_mutation(self) -> None:
         reconciliation = self.root / "incident-reconciliation.json"
         reconciliation.write_bytes(jcs_bytes(valid_reconciliation("FAILED")))

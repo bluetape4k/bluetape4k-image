@@ -3083,7 +3083,20 @@ def _package_version(args: argparse.Namespace, owner: str, package: str, tag: st
         observed_bytes += len(jcs_bytes(document))
         if observed_bytes > max_total:
             raise ProducerRejectedError("package versions exceed total byte limit")
-        pages.append(items)
+        normalized_items = []
+        for index, item in enumerate(items):
+            if not isinstance(item, dict):
+                raise ProducerValidationError(f"package version {index} is not an object")
+            metadata = item.get("metadata")
+            container = metadata.get("container") if isinstance(metadata, dict) else None
+            if not isinstance(container, dict) or "tags" not in container:
+                raise ProducerValidationError(f"package version {index} metadata is invalid")
+            normalized_items.append({
+                "id": item.get("id"),
+                "name": item.get("name"),
+                "metadata": {"container": {"tags": container.get("tags")}},
+            })
+        pages.append(normalized_items)
         if len(items) < max_items:
             break
     else:
