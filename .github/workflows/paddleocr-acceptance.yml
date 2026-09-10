@@ -28,7 +28,7 @@ jobs:
     permissions:
       contents: read
     env:
-      IMAGE: ghcr.io/bluetape4k/paddleocr-service@sha256:9c083c0665c05c6578588af2e9cda5a2ca8c789ae33ad9e25ec551e5ba21a36b
+      IMAGE: ghcr.io/bluetape4k/paddleocr-service@sha256:0dc04f90e1a3bad117097de9dacdc2b59ac906de57c2fd65ef87d20ab5a7fc8c
       EXPECTED_HEAD: ${{ inputs.expectedHead }}
     steps:
       - name: Checkout exact acceptance head
@@ -58,7 +58,7 @@ jobs:
             linux/amd64|linux/x86_64) ;;
             *) printf 'unsupported docker platform: %s\n' "$DOCKER_PLATFORM" >&2; exit 1 ;;
           esac
-          test "$IMAGE" = "ghcr.io/bluetape4k/paddleocr-service@sha256:9c083c0665c05c6578588af2e9cda5a2ca8c789ae33ad9e25ec551e5ba21a36b"
+          test "$IMAGE" = "ghcr.io/bluetape4k/paddleocr-service@sha256:0dc04f90e1a3bad117097de9dacdc2b59ac906de57c2fd65ef87d20ab5a7fc8c"
 
       - name: Prepare immutable fixture and service config
         run: |
