@@ -99,6 +99,12 @@ class ServiceContractTest(unittest.TestCase):
             ),
         )
 
+    def test_production_pipeline_pins_cpu_engine_without_mkldnn(self) -> None:
+        pipeline = Path(__file__).resolve().with_name("ocr-pipeline.yaml").read_text(
+            encoding="utf-8"
+        )
+        self.assertEqual(pipeline.count("\nengine_config:\n  run_mode: paddle\n"), 1)
+
     def test_upstream_process_keeps_stderr_for_failure_diagnostics(self) -> None:
         environment = {"PATH": "/usr/bin"}
         process_kwargs = build_upstream_process_kwargs(environment)
