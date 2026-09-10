@@ -3,6 +3,9 @@ text_type: general
 use_doc_preprocessor: false
 use_textline_orientation: false
 
+engine_config:
+  run_mode: paddle
+
 SubModules:
   TextDetection:
     module_name: text_detection
