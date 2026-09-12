@@ -54,7 +54,16 @@ jobs:
           test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
           test "$RUNNER_OS" = "Linux"
           test "$RUNNER_ARCH" = "X64"
-          test "$DOCKER_PLATFORM" = "linux/amd64"
+          case "$DOCKER_PLATFORM" in
+            linux/amd64|linux/x86_64)
+              CANONICAL_DOCKER_PLATFORM="linux/amd64"
+              ;;
+            *)
+              echo "unsupported Docker platform: $DOCKER_PLATFORM" >&2
+              exit 1
+              ;;
+          esac
+          test "$CANONICAL_DOCKER_PLATFORM" = "linux/amd64"
           test "$IMAGE" = "ghcr.io/bluetape4k/paddleocr-service@sha256:cc21ee6edc03c672d11cadaadda828ef83e4ecfdee0da8838b402a763fcdec46"
           test "$PADDLE_MODEL_DIGEST" = "sha256:d2f455ea0e0a34cfa8fac7bba38887cf136d62525e69cf9f433eac8009d9dd8f"
 

@@ -13,12 +13,17 @@ class PaddleOcrComparisonWorkflowContractTest(unittest.TestCase):
         self.assertIn("EXPECTED_HEAD", workflow)
         self.assertIn('test "$GITHUB_SHA" = "$EXPECTED_HEAD"', workflow)
         self.assertIn("runs-on: ubuntu-24.04", workflow)
-        self.assertIn('test "$DOCKER_PLATFORM" = "linux/amd64"', workflow)
+        self.assertIn('test "$CANONICAL_DOCKER_PLATFORM" = "linux/amd64"', workflow)
         self.assertIn(
             "ghcr.io/bluetape4k/paddleocr-service@sha256:cc21ee6edc03c672d11cadaadda828ef83e4ecfdee0da8838b402a763fcdec46",
             workflow,
         )
         self.assertIn("PADDLE_MODEL_DIGEST", workflow)
+
+    def test_workflow_canonicalizes_docker_architecture_alias(self) -> None:
+        workflow = WORKFLOW.read_text(encoding="utf-8")
+        self.assertIn("linux/amd64|linux/x86_64)", workflow)
+        self.assertIn('CANONICAL_DOCKER_PLATFORM="linux/amd64"', workflow)
 
     def test_workflow_runs_full_corpus_and_kotlin_receipt_validator(self) -> None:
         workflow = WORKFLOW.read_text(encoding="utf-8")
