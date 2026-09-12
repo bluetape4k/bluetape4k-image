@@ -29,14 +29,15 @@ mutable tag, host model mount, 외부 network, implicit model download는 비교
 
 ## 실행
 
-먼저 비교 branch의 exact head를 원격에 올린다. workflow dispatch는 그 head를 입력으로
-받고 checkout 이후 `GITHUB_SHA`, `git rev-parse HEAD`, runner OS/architecture,
-Docker platform을 모두 다시 확인한다.
+먼저 비교 대상 commit을 원격에 올린다. workflow dispatch는 그 head를 입력으로 받고
+checkout 이후 `GITHUB_SHA`, `git rev-parse HEAD`, runner OS/architecture, Docker
+platform을 모두 다시 확인한다. 검증된 최신 실행은 PR #692 squash merge commit을
+`develop`에서 고정했다.
 
 ```bash
 HEAD_SHA="$(git rev-parse HEAD)"
 gh workflow run paddleocr-comparison.yml \
-  --ref feat/issue-544b-provider-comparison \
+  --ref develop \
   -f expectedHead="$HEAD_SHA"
 gh run list --workflow paddleocr-comparison.yml --limit 5
 gh run watch <run-id> --exit-status
@@ -73,6 +74,24 @@ workflow exact head를 Issue #544와 #609 댓글에 함께 기록한다.
   동일 결과의 재현성, resource/SLO, license·supply-chain, production boundary를
   별도 검토한 뒤 결정한다.
 
+## 최신 hosted 결과
+
+| 항목 | 검증값 |
+|---|---|
+| workflow | [run 34703859328](https://github.com/bluetape4k/bluetape4k-image/actions/runs/34703859328) |
+| exact head | `e645f43cf7cbe4a0032b1206f3aa37f2d50cd6cc` |
+| artifact | [paddleocr-comparison-34703859328.1](https://github.com/bluetape4k/bluetape4k-image/actions/runs/34703859328/artifacts/10301487561), digest `sha256:cebce4be5082fb164ed013335b3074fd80c00b01099c5582b5136611f7f2c0c5` |
+| receipt | `COMPARABLE`, 27 fixtures, SHA-256 `1a9dd256048377d90b47672ad61701df9f185b717a01ca27554563c4d1e949f8` |
+| validator | `Validated OCR provider comparison receipt: 2 providers, 27 fixtures`, `BUILD SUCCESSFUL` |
+| security | `linux/amd64`, network egress 차단, non-root, read-only root, capability drop, no-new-privileges, CPU/memory/PID limits, unpublished ports, cleanup verified |
+
+Tesseract 대비 PaddleOCR의 CER/WER는 `0.199738 → 0.116840`, `0.650759 →
+0.222273`으로 개선됐다. Geometry accuracy는 `0.015931 → 0.011558`로 낮아졌고,
+cold/warm latency는 각각 `+347.28%`/`+364.77%`, throughput은 `-77.33%`,
+peak RSS는 `+430,506,894 bytes`였다. 두 provider 모두 `TEXT 21 / EMPTY 3 /
+ERROR 3`을 동일하게 분류했다. 이 수치는 #547 `DEFER` decision의 입력이며,
+production PaddleOCR 채택을 의미하지 않는다.
+
 ## 사전 검증
 
 현재 branch에서 다음 검증은 실제 Paddle hosted 실행 전에 완료되어야 한다.
@@ -98,11 +117,12 @@ ERROR 3`인지 확인하는 용도다. 이 값은 Linux/amd64 Paddle 비교 rece
 - `SPW-03`: PASS — 한국어 문장과 machine-required digest/command/token을 보존했다.
 - `SPW-04`: PASS — #545 trusted image/model, #544 v2 manifest, #609-E, #547 DEFER를
   현재 비교 절차와 대조했다.
-- `SPW-05`: PASS — hosted 실행 전후에 확인할 exact head, cleanup, receipt hash와
-  `PENDING` 경계를 다시 읽을 수 있게 했다.
+- `SPW-05`: PASS — hosted run `34703859328`의 exact head, artifact/receipt hash,
+  cleanup/security, validator 결과와 `#547 DEFER` 경계를 기록했다.
 
 ## 상태
 
-`RUNNER_READY / HOSTED_COMPARISON_PENDING` — 계약·parser·validator·workflow는
-검증했지만 Linux/amd64에서 생성한 실제 PaddleOCR 비교 receipt가 생기기 전에는
-Issue #544-B 완료나 #547 채택 결론으로 승격하지 않는다.
+`HOSTED_COMPARISON_PASS / #547_DEFER_INPUT` — Linux/amd64에서 생성한 실제
+PaddleOCR 비교 receipt와 Kotlin validator가 PASS했다. 텍스트 CER/WER 개선과
+geometry·성능·메모리 trade-off를 #547 decision 입력으로 연결했으며, production
+채택 결론은 별도 gate로 유지한다.
