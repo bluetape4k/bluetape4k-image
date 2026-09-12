@@ -1302,6 +1302,19 @@ def _comparison_receipt(
     }
 
 
+def _paddle_identity(image: str) -> dict[str, str]:
+    if image != PADDLE_IMAGE_REFERENCE or IMAGE_RE.fullmatch(image) is None:
+        raise ComparisonValidationError(
+            "PaddleOCR image must match the trusted immutable digest"
+        )
+    return {
+        "provider": "paddleocr",
+        "runtime": "paddlex-http@OCR",
+        "model": PADDLE_MODEL_DIGEST,
+        "imageDigest": PADDLE_IMAGE_DIGEST,
+    }
+
+
 def _start_paddle(
     repo_root: Path,
     image: str,
@@ -1503,12 +1516,7 @@ def run_comparison(
             _run_paddle(entry, session, output_root / "raw" / "paddleocr")
             for entry in entries
         )
-        paddle_identity = {
-            "provider": "paddleocr",
-            "runtime": "paddlex-http@OCR",
-            "model": PADDLE_MODEL_DIGEST,
-            "imageDigest": image,
-        }
+        paddle_identity = _paddle_identity(image)
         paddle = ProviderRun(
             paddle_rows, _aggregate_metrics(entries, paddle_rows), paddle_identity
         )
