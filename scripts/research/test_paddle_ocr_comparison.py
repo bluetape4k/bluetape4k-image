@@ -13,6 +13,7 @@ from paddle_ocr_comparison import (
     PADDLE_QUERY_SCRIPT,
     ComparisonValidationError,
     _comparison_container_name,
+    _paddle_identity,
     _source_commit,
     geometry_accuracy,
     load_corpus,
@@ -26,6 +27,11 @@ from paddle_ocr_comparison import (
 class PaddleOcrComparisonContractTest(unittest.TestCase):
     def test_comparison_container_name_matches_acceptance_contract(self) -> None:
         self.assertEqual(_comparison_container_name(1234), "bluetape4k-paddleocr-1234")
+
+    def test_paddle_identity_records_bare_digest_for_receipt(self) -> None:
+        identity = _paddle_identity(PADDLE_IMAGE_REFERENCE)
+        self.assertEqual(identity["imageDigest"], PADDLE_IMAGE_DIGEST)
+        self.assertNotIn("@", identity["imageDigest"])
 
     def test_trusted_image_reference_uses_full_digest_reference(self) -> None:
         self.assertEqual(
