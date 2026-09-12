@@ -41,6 +41,12 @@
 
 ## 상태
 
-`RUNNER_READY / HOSTED_COMPARISON_PENDING` — local parser, contract test, actionlint,
-Kotlin validator는 통과했으며 actual Paddle result는 hosted Linux/amd64 실행에서만
-확정한다.
+`HOSTED_COMPARISON_PASS / #547_DEFER_INPUT` — hosted run `34703859328`이 PR #692
+merge commit `e645f43cf7cbe4a0032b1206f3aa37f2d50cd6cc`에서 exact head/platform/image
+검증, 27-fixture comparison, Kotlin validator, artifact upload를 모두 통과했다.
+
+receipt SHA-256은 `1a9dd256048377d90b47672ad61701df9f185b717a01ca27554563c4d1e949f8`,
+corpus manifest SHA-256은 `99502a59751f68aff19634c33239d0f0e50931a17746621e7384ef169faaebb6`이다.
+PaddleOCR는 Tesseract보다 CER/WER가 낮았지만 geometry accuracy가 낮고 cold/warm
+latency·peak RSS가 높으며 throughput이 낮았다. 결과는 #544와 #609에 기록했고
+#547 `DEFER`를 유지한다.
