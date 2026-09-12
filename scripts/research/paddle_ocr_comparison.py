@@ -59,6 +59,7 @@ PADDLE_MODEL_DIGEST = (
 PADDLE_IMAGE_DIGEST = (
     "sha256:cc21ee6edc03c672d11cadaadda828ef83e4ecfdee0da8838b402a763fcdec46"
 )
+PADDLE_IMAGE_REFERENCE = "ghcr.io/bluetape4k/paddleocr-service@" + PADDLE_IMAGE_DIGEST
 REQUIRED_PLATFORM = "linux/amd64"
 MAX_MANIFEST_BYTES = 256_000
 MAX_RESOURCE_BYTES = 5 * 1024 * 1024
@@ -1296,7 +1297,7 @@ def _start_paddle(
     fixture: CorpusEntry,
     container_name: str,
 ) -> tuple[dict[str, Any], Any]:
-    if image != PADDLE_IMAGE_DIGEST or IMAGE_RE.fullmatch(image) is None:
+    if image != PADDLE_IMAGE_REFERENCE or IMAGE_RE.fullmatch(image) is None:
         raise ComparisonValidationError(
             "PaddleOCR image must match the trusted immutable digest"
         )

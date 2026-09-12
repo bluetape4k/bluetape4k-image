@@ -8,6 +8,8 @@ sys.path.insert(0, str(SCRIPT_ROOT))
 
 from paddle_ocr_comparison import (
     MANIFEST_SHA256,
+    PADDLE_IMAGE_DIGEST,
+    PADDLE_IMAGE_REFERENCE,
     PADDLE_QUERY_SCRIPT,
     ComparisonValidationError,
     _source_commit,
@@ -21,6 +23,12 @@ from paddle_ocr_comparison import (
 
 
 class PaddleOcrComparisonContractTest(unittest.TestCase):
+    def test_trusted_image_reference_uses_full_digest_reference(self) -> None:
+        self.assertEqual(
+            PADDLE_IMAGE_REFERENCE,
+            "ghcr.io/bluetape4k/paddleocr-service@" + PADDLE_IMAGE_DIGEST,
+        )
+
     def test_normalize_and_score_use_nfc_lf_collapsed_whitespace(self) -> None:
         self.assertEqual(normalize_text("  A\r\nB\t"), "A B")
         rates = score_text("한글 A", "한글  A")
