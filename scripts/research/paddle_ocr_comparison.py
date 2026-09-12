@@ -42,6 +42,7 @@ from paddle_ocr_acceptance import (
     parse_image_inspect,
     parse_probe_output,
     validate_container_inspect,
+    validate_container_name,
 )
 from paddle_ocr_smoke import (
     SmokeValidationError,
@@ -94,6 +95,18 @@ class ProviderRun:
     rows: tuple[dict[str, Any], ...]
     metrics: dict[str, float]
     identity: dict[str, str]
+
+
+def _comparison_container_name(process_id: int) -> str:
+    if type(process_id) is not int or process_id <= 0:
+        raise ComparisonValidationError("process id is invalid")
+    name = f"bluetape4k-paddleocr-{process_id}"
+    try:
+        return validate_container_name(name)
+    except AcceptanceValidationError as error:
+        raise ComparisonValidationError(
+            "comparison container name is unsafe"
+        ) from error
 
 
 def _reject_duplicate_keys(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
@@ -1473,7 +1486,7 @@ def run_comparison(
     tesseract = ProviderRun(
         tesseract_rows, _aggregate_metrics(entries, tesseract_rows), tesseract_identity
     )
-    container_name = f"bluetape4k-paddleocr-comparison-{os.getpid()}"
+    container_name = _comparison_container_name(os.getpid())
     session: dict[str, Any] | None = None
     cleanup: dict[str, Any] | None = None
     receipt: dict[str, Any] | None = None
