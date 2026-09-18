@@ -678,7 +678,7 @@ jobs:
             --output .producer-state/attestations/sbom.spdx.json
       - name: Execute producer stage - attest staging provenance
         id: staging-provenance
-        uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8
         with:
           subject-name: ghcr.io/bluetape4k/paddleocr-service-staging
           subject-digest: ${{ needs.staging-push.outputs.image-platform-digest }}
@@ -686,7 +686,7 @@ jobs:
           show-summary: false
       - name: Attest staging SPDX SBOM
         id: staging-sbom
-        uses: actions/attest-sbom@4651f806c01d8637787e274ac3bdf724ef169f34
+        uses: actions/attest-sbom@c604332985a26aa8cf1bdc465b92731239ec6b9e
         with:
           subject-name: ghcr.io/bluetape4k/paddleocr-service-staging
           subject-digest: ${{ needs.staging-push.outputs.image-platform-digest }}
@@ -968,7 +968,7 @@ jobs:
           path: .producer-state/attestations
       - name: Execute producer stage - attest release provenance
         id: release-provenance
-        uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8
         with:
           subject-name: ghcr.io/bluetape4k/paddleocr-service
           subject-digest: ${{ needs.release-promotion.outputs.release-digest }}
@@ -976,7 +976,7 @@ jobs:
           show-summary: false
       - name: Attest release SPDX SBOM
         id: release-sbom
-        uses: actions/attest-sbom@4651f806c01d8637787e274ac3bdf724ef169f34
+        uses: actions/attest-sbom@c604332985a26aa8cf1bdc465b92731239ec6b9e
         with:
           subject-name: ghcr.io/bluetape4k/paddleocr-service
           subject-digest: ${{ needs.release-promotion.outputs.release-digest }}
