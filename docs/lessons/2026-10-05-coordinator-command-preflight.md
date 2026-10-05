@@ -10,6 +10,8 @@ PR #695의 CI 수정 중 작업 조정 도구의 인수를 여러 차례 잘못 
 
 교훈 문서를 다시 검토하려고 만든 `pr695-lesson-writer-r3` lane은 `2026-10-05T06:38:33Z`에 시작했을 때 ACK 기한 `2026-10-05T06:38:35Z`까지 2초만 남아 있었다. 입력 파일을 만들고 receipt를 갱신하는 동안 `observed_at=2026-10-05T06:38:05Z`부터 28초가 지나 subagent 호출 전에 ACK 기한이 만료됐다. 에이전트는 부르지 않고 `2026-10-05T06:39:27Z`에 lane을 취소했다. 기한을 잡을 때 후속 도구 호출에 필요한 시간을 반영하지 않은 사례다.
 
+마지막에는 `pr-695-ci-fix` component의 `coverage_state=covered`와 기존 `evidence_refs`를 확인하지 않은 채 `component-evidence`를 다시 실행했다. helper는 `component evidence is already attached`로 거부했고 receipt sequence는 20에서 변하지 않았다. 확인한 receipt 상태를 실행 전 조건에 반영하지 않은 중복 첨부 시도였다.
+
 ## 결정과 검증
 
 작업 범위가 현재 worktree와 다르면 최상위 `--help`의 위치 규칙에 따라 하위 명령 앞에 절대 경로 `--state-root`를 둔다. 상태 변경 전에는 해당 하위 명령의 `--help`와 읽기 전용 `verify`를 읽고, `receipt` 체크섬은 직전 `verify` 결과에서 가져온다. component ID는 현재 승인된 topology에서 복사한다. 복합 입력은 도구 계약의 최상위 JSON 형식으로 파일에 작성하고, 파서가 성공한 뒤에만 상태 변경 명령에 전달한다. 필수 `--at` 같은 인자도 하위 명령 도움말에서 확인한다.
@@ -18,4 +20,4 @@ reviewer의 `startup_ack_deadline`은 `lane-create` 등록 직전에 현재 시�
 
 ## 재발 방지
 
-상태 조정 도구는 최상위 및 하위 명령 도움말과 현재 `receipt`를 확인한 뒤 호출한다. 저장소 파일을 쓰기 전에는 각 절대 경로에 대해 `mutation-check`를 실행하고 결과를 확인한다. 값이 거부되면 형식을 추측해 다시 시도하지 말고, 읽기 전용 상태와 해당 인자 계약을 다시 읽는다. 에이전트 입력과 증거 파일은 먼저 준비한다. `lane-create` 입력의 `observed_at`과 ACK 기한은 등록 직전에 정하고, `lane-start`부터 subagent 호출과 ACK까지 필요한 시간이 남았는지 확인한다. 부족하거나 기한이 지났으면 에이전트를 부르지 말고 lane을 취소한 뒤 새 시각으로 다시 시작한다. 독립 reviewer를 부르기 전에는 `lane-create`, `lane-start`를 `receipt`에 차례로 기록하고, 응답을 관찰한 뒤에만 `startup-ack`를 기록한다. `startup_ack`의 실제 시각은 `receipt`에서 확인하고, 기한을 지난 ACK는 제때 시작한 것으로 보고하지 않는다.
+상태 조정 도구는 최상위 및 하위 명령 도움말과 현재 `receipt`를 확인한 뒤 호출한다. 저장소 파일을 쓰기 전에는 각 절대 경로에 대해 `mutation-check`를 실행하고 결과를 확인한다. 값이 거부되면 형식을 추측해 다시 시도하지 말고, 읽기 전용 상태와 해당 인자 계약을 다시 읽는다. 에이전트 입력과 증거 파일은 먼저 준비한다. `lane-create` 입력의 `observed_at`과 ACK 기한은 등록 직전에 정하고, `lane-start`부터 subagent 호출과 ACK까지 필요한 시간이 남았는지 확인한다. 부족하거나 기한이 지났으면 에이전트를 부르지 말고 lane을 취소한 뒤 새 시각으로 다시 시작한다. 독립 reviewer를 부르기 전에는 `lane-create`, `lane-start`를 `receipt`에 차례로 기록하고, 응답을 관찰한 뒤에만 `startup-ack`를 기록한다. `startup_ack`의 실제 시각은 `receipt`에서 확인하고, 기한을 지난 ACK는 제때 시작한 것으로 보고하지 않는다. `component-evidence`를 호출하기 전에는 component의 현재 `coverage_state`와 `evidence_refs`를 확인한다. 이미 evidence가 연결되어 있으면 중복 첨부하지 말고 필요한 `check-result`를 갱신한 뒤 `completion-check`로 진행한다.
