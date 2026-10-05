@@ -28,8 +28,8 @@ ALLOWED_ACTIONS = {
     "actions/setup-python": "5fda3b95a4ea91299a34e894583c3862153e4b97",
     "actions/upload-artifact": "043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
     "actions/download-artifact": "3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c",
-    "actions/attest-build-provenance": "977bb373ede98d70efdf65b84cb5f73e068dcc2a",
-    "actions/attest-sbom": "4651f806c01d8637787e274ac3bdf724ef169f34",
+    "actions/attest-build-provenance": "4d101475d8b20a2381f78447822ac1eab6504dd8",
+    "actions/attest-sbom": "c604332985a26aa8cf1bdc465b92731239ec6b9e",
 }
 
 EXPECTED_TIMEOUTS = {
