@@ -17,4 +17,4 @@ enum class PrivacyDerivativeCodecReason {
 class PrivacyDerivativeCodecException(
     val reason: PrivacyDerivativeCodecReason,
     message: String = reason.name,
-) : IllegalArgumentException(message)
+): IllegalArgumentException(message)

@@ -1,16 +1,18 @@
 package io.bluetape4k.images.filters
 
 import com.sksamuel.scrimage.ImmutableImage
-import io.bluetape4k.logging.coroutines.KLoggingChannel
-import java.awt.image.BufferedImage
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeLessThan
+import io.bluetape4k.images.useGraphics
+import io.bluetape4k.logging.KLogging
 import org.junit.jupiter.api.Test
+import java.awt.Color
+import java.awt.image.BufferedImage
 
-class RoundedCornerFilterTest : AbstractFilterTest() {
+class RoundedCornerFilterTest: AbstractFilterTest() {
 
-    companion object : KLoggingChannel()
+    companion object: KLogging()
 
     /**
      * 256×256 흰색 이미지를 생성합니다.
@@ -18,12 +20,9 @@ class RoundedCornerFilterTest : AbstractFilterTest() {
      */
     private fun createWhiteImage(): ImmutableImage {
         val buffered = BufferedImage(256, 256, BufferedImage.TYPE_INT_ARGB)
-        val g = buffered.createGraphics()
-        try {
-            g.color = java.awt.Color.WHITE
+        buffered.useGraphics { g ->
+            g.color = Color.WHITE
             g.fillRect(0, 0, 256, 256)
-        } finally {
-            g.dispose()
         }
         return ImmutableImage.fromAwt(buffered)
     }
@@ -78,11 +77,10 @@ class RoundedCornerFilterTest : AbstractFilterTest() {
      */
     private fun createColorTestImage(): ImmutableImage {
         val buffered = BufferedImage(256, 256, BufferedImage.TYPE_INT_ARGB)
-        val g = buffered.createGraphics()
-        try {
+        buffered.useGraphics { g ->
             val colors = listOf(
-                java.awt.Color.RED, java.awt.Color.GREEN, java.awt.Color.BLUE, java.awt.Color.YELLOW,
-                java.awt.Color.CYAN, java.awt.Color.MAGENTA, java.awt.Color.ORANGE, java.awt.Color.PINK,
+                Color.RED, Color.GREEN, Color.BLUE, Color.YELLOW,
+                Color.CYAN, Color.MAGENTA, Color.ORANGE, Color.PINK,
             )
             var idx = 0
             for (row in 0 until 4) {
@@ -91,8 +89,6 @@ class RoundedCornerFilterTest : AbstractFilterTest() {
                     g.fillRect(col * 64, row * 64, 64, 64)
                 }
             }
-        } finally {
-            g.dispose()
         }
         return ImmutableImage.fromAwt(buffered)
     }

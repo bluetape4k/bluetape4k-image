@@ -53,7 +53,7 @@ data class ImageMetadataReadOptions(
     val stripSensitiveMetadata: Boolean = true,
     val includeDiagnosticTags: Boolean = false,
     val maxDiagnosticValueLength: Int = DEFAULT_MAX_DIAGNOSTIC_VALUE_LENGTH,
-) : Serializable {
+): Serializable {
 
     init {
         maxBytes.requirePositiveNumber("maxBytes")
@@ -88,7 +88,7 @@ enum class ImageMetadataReadFailureKind {
  * 이 결과는 bounded report 또는 제한된 실패 분류만 담으므로 직렬화할 수 있지만,
  * parser 예외·원시 payload·caller-owned stream은 보존하지 않습니다.
  */
-sealed interface ImageMetadataReadResult : Serializable {
+sealed interface ImageMetadataReadResult: Serializable {
     /** metadata를 정상적으로 읽은 결과입니다. */
     data class Success(val report: ImageMetadataReport): ImageMetadataReadResult {
         companion object {
@@ -114,13 +114,13 @@ sealed interface ImageMetadataReadResult : Serializable {
  */
 sealed interface ImageMetadataReadOutcome {
     /** metadata를 정상적으로 읽은 결과입니다. */
-    data class Success(val report: ImageMetadataReport) : ImageMetadataReadOutcome
+    data class Success(val report: ImageMetadataReport): ImageMetadataReadOutcome
 
     /** metadata parser가 인코딩 입력을 거부한 결과입니다. */
-    data class Malformed(val cause: Throwable) : ImageMetadataReadOutcome
+    data class Malformed(val cause: Throwable): ImageMetadataReadOutcome
 
     /** parser 또는 I/O의 내부 실패입니다. */
-    data class Failure(val cause: Throwable) : ImageMetadataReadOutcome
+    data class Failure(val cause: Throwable): ImageMetadataReadOutcome
 }
 
 /**
@@ -133,7 +133,7 @@ data class ImageMetadataIccProfile(
     val byteCount: Int? = null,
     val colorSpace: String? = null,
     val profileVersion: String? = null,
-) : Serializable {
+): Serializable {
     private companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -148,7 +148,7 @@ data class ImageMetadataIccProfile(
 data class ImageMetadataHdrHints(
     val hasHdrHint: Boolean = false,
     val hasGainMapHint: Boolean = false,
-) : Serializable {
+): Serializable {
 
     val isEmpty: Boolean
         get() = !hasHdrHint && !hasGainMapHint
@@ -170,7 +170,7 @@ data class ImageMetadataHdrHints(
 data class ImageMetadataDirectoryReport(
     val name: String,
     val tags: Map<String, String> = emptyMap(),
-) : Serializable {
+): Serializable {
 
     init {
         name.requireNotBlank("name")
@@ -208,7 +208,7 @@ data class ImageMetadataReport(
     val containsExif: Boolean = false,
     /** GPS directory가 존재했는지 나타내며, 부분적으로만 채워진 GPS도 포함합니다. */
     val containsGps: Boolean = false,
-) : Serializable {
+): Serializable {
 
     val hasAnyMetadata: Boolean
         get() = this != EMPTY
@@ -618,7 +618,7 @@ private fun Metadata.findIccProfile(): ImageMetadataIccProfile? =
     }
 
 private fun Metadata.findHdrHints(): ImageMetadataHdrHints {
-    val searchableText = getDirectories().flatMap { directory ->
+    val searchableText = directories.flatMap { directory ->
         buildList {
             add(directory.name)
             directory.tags.forEach { tag ->
@@ -646,7 +646,7 @@ private fun Metadata.toDiagnostics(options: ImageMetadataReadOptions): List<Imag
         .mapNotNull { directory -> directory.toDiagnosticReport(options.maxDiagnosticValueLength) }
 
 private fun Directory.toDiagnosticReport(maxDiagnosticValueLength: Int): ImageMetadataDirectoryReport? {
-    val tags = getTags()
+    val tags = tags
         .mapNotNull { tag ->
             val name = tag.tagName.trim()
             val value = tag.description?.trim().orEmpty()
@@ -657,8 +657,8 @@ private fun Directory.toDiagnosticReport(maxDiagnosticValueLength: Int): ImageMe
             }
         }
         .toMap()
-    return ImageMetadataDirectoryReport(name = name, tags = tags)
-        .takeIf { it.tags.isNotEmpty() }
+
+    return ImageMetadataDirectoryReport(name = name, tags = tags).takeIf { it.tags.isNotEmpty() }
 }
 
 private fun Map<String, String>.toSafeDiagnosticTags(options: ImageMetadataReadOptions): Map<String, String> =
@@ -688,9 +688,10 @@ private fun String.isUnsafeDiagnosticKey(options: ImageMetadataReadOptions): Boo
         "address",
         "memory",
     ).any { it in compact }
+
     val blobUnsafe = listOf("blob", "raw", "bytes").any { it in normalized }
     val locationUnsafe = options.stripSensitiveMetadata &&
-        listOf("gps", "latitude", "longitude", "altitude").any { it in normalized }
+            listOf("gps", "latitude", "longitude", "altitude").any { it in normalized }
     return sourceUnsafe || blobUnsafe || locationUnsafe
 }
 

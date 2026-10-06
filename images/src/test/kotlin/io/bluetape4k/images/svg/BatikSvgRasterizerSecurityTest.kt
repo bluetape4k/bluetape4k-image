@@ -24,9 +24,9 @@ import java.util.concurrent.atomic.AtomicInteger
  * 실제로 악성 콘텐츠가 출력에 포함되지 않는지 검증합니다.
  */
 @TempFolderTest
-class BatikSvgRasterizerSecurityTest : AbstractImageTest() {
+class BatikSvgRasterizerSecurityTest: AbstractImageTest() {
 
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     private val rasterizer = BatikSvgRasterizer()
 
@@ -57,8 +57,8 @@ class BatikSvgRasterizerSecurityTest : AbstractImageTest() {
             // 예외 없이 처리된 경우: 출력에 /etc/passwd 특징적 내용이 없어야 함
             val outputStr = String(outputBytes, Charsets.ISO_8859_1)
             val containsPasswdMarkers = outputStr.contains("root:") ||
-                outputStr.contains("/bin/") ||
-                outputStr.contains("nobody:")
+                    outputStr.contains("/bin/") ||
+                    outputStr.contains("nobody:")
             containsPasswdMarkers.shouldBeFalse()
             log.debug { "DOCTYPE SVG: 예외 없이 처리됨, 파일 내용 미포함 확인됨" }
         }

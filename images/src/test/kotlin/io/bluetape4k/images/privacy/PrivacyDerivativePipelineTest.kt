@@ -205,7 +205,12 @@ class PrivacyDerivativePipelineTest {
                 width = 16,
                 height = 18,
             )
-            paintedBounds(result.image, Color.RED) shouldBeEqualTo PaintedBounds(x = 56, y = 90, width = 16, height = 18)
+            paintedBounds(result.image, Color.RED) shouldBeEqualTo PaintedBounds(
+                x = 56,
+                y = 90,
+                width = 16,
+                height = 18
+            )
             countPixels(result.image, Color.GREEN) shouldBeEqualTo 0
         }
 
@@ -686,13 +691,13 @@ class PrivacyDerivativePipelineTest {
         val y: Int,
         val width: Int,
         val height: Int,
-    ) : Serializable {
+    ): Serializable {
         companion object {
             private const val serialVersionUID: Long = 1L
         }
     }
 
-    private object MalformedImageWriter : SuspendImageWriter {
+    private object MalformedImageWriter: SuspendImageWriter {
         override fun write(image: AwtImage, metadata: ImageMetadata, out: OutputStream) {
             out.write(byteArrayOf(0x00, 0x01, 0x02))
         }
@@ -700,7 +705,7 @@ class PrivacyDerivativePipelineTest {
 
     private class PreservingImageWriter(
         private val bytes: ByteArray,
-    ) : SuspendImageWriter {
+    ): SuspendImageWriter {
         override fun write(image: AwtImage, metadata: ImageMetadata, out: OutputStream) {
             out.write(bytes)
         }

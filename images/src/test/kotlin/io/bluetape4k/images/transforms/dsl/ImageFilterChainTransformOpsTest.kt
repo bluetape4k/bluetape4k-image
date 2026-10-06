@@ -5,6 +5,10 @@ import ch.qos.logback.classic.Logger
 import ch.qos.logback.classic.spi.ILoggingEvent
 import ch.qos.logback.core.read.ListAppender
 import com.sksamuel.scrimage.ImmutableImage
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeGreaterThan
+import io.bluetape4k.assertions.shouldBeLessThan
+import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.images.AbstractImageTest
 import io.bluetape4k.images.filters.dsl.applyFilters
 import io.bluetape4k.images.filters.dsl.suspendApplyFilters
@@ -12,18 +16,14 @@ import io.bluetape4k.images.transforms.AspectRatio
 import io.bluetape4k.images.transforms.ImagePoint
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import kotlinx.coroutines.test.runTest
-import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldBeGreaterThan
-import io.bluetape4k.assertions.shouldBeLessThan
-import io.bluetape4k.assertions.shouldNotBeNull
 import org.junit.jupiter.api.Test
 import org.slf4j.LoggerFactory
 import java.awt.Color
 import java.awt.image.BufferedImage
 
-class ImageFilterChainTransformOpsTest : AbstractImageTest() {
+class ImageFilterChainTransformOpsTest: AbstractImageTest() {
 
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     private fun createSolidImage(w: Int = 100, h: Int = 100, color: Color = Color.BLUE): ImmutableImage {
         val buf = BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB)

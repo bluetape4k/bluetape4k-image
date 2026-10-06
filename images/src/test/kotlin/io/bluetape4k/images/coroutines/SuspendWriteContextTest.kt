@@ -1,5 +1,6 @@
 package io.bluetape4k.images.coroutines
 
+import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeGreaterThan
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldNotBeNull
@@ -9,8 +10,8 @@ import io.bluetape4k.images.immutableImageOf
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.junit5.tempfolder.TempFolder
 import io.bluetape4k.junit5.tempfolder.TempFolderTest
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.okio.coroutines.asSuspendedSink
-import io.bluetape4k.okio.coroutines.buffered as bufferedSuspended
 import okio.Buffer
 import org.junit.jupiter.api.Test
 import java.io.ByteArrayOutputStream
@@ -19,9 +20,12 @@ import java.nio.file.Path
 import java.nio.file.StandardOpenOption.CREATE
 import java.nio.file.StandardOpenOption.TRUNCATE_EXISTING
 import java.nio.file.StandardOpenOption.WRITE
+import io.bluetape4k.okio.coroutines.buffered as bufferedSuspended
 
 @TempFolderTest
-class SuspendWriteContextTest : AbstractImageTest() {
+class SuspendWriteContextTest: AbstractImageTest() {
+
+    companion object: KLoggingChannel()
 
     private val writer = SuspendJpegWriter.Default
 
@@ -118,6 +122,7 @@ class SuspendWriteContextTest : AbstractImageTest() {
         output.toFile().length() shouldBeGreaterThan 0L
         channel.isOpen.shouldBeTrue()
         sink.close()
+        channel.isOpen.shouldBeFalse()
     }
 
     @Test

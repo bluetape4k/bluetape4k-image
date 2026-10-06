@@ -201,7 +201,7 @@ sealed interface SensitiveRegionGeometry: Serializable {
             if (coordinateSpace == SensitiveCoordinateSpace.PIXEL) {
                 require(x + width <= imageDimensions.width.toDouble() && y + height <= imageDimensions.height.toDouble()) {
                     "rectangle is outside imageBounds=${imageDimensions.width}x${imageDimensions.height}: " +
-                        "x=$x, y=$y, width=$width, height=$height"
+                            "x=$x, y=$y, width=$width, height=$height"
                 }
             }
             return this
@@ -281,7 +281,7 @@ sealed interface SensitiveRegionGeometry: Serializable {
         override fun requireWithin(imageDimensions: ImageDimensions): SensitiveRegionGeometry {
             require(mask.width <= imageDimensions.width && mask.height <= imageDimensions.height) {
                 "mask is outside imageBounds=${imageDimensions.width}x${imageDimensions.height}: " +
-                    "mask=${mask.width}x${mask.height}"
+                        "mask=${mask.width}x${mask.height}"
             }
             return this
         }

@@ -3,19 +3,24 @@ package io.bluetape4k.images.filters.dsl
 import com.sksamuel.scrimage.ImmutableImage
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldBeInstanceOf
+import io.bluetape4k.assertions.shouldNotBe
 import io.bluetape4k.images.filters.AbstractFilterTest
+import io.bluetape4k.images.useGraphics
+import io.bluetape4k.logging.KLogging
 import org.junit.jupiter.api.Test
 import java.awt.image.BufferedImage
 
-class ImageFilterChainColorOpsTest : AbstractFilterTest() {
+class ImageFilterChainColorOpsTest: AbstractFilterTest() {
+
+    companion object: KLogging()
 
     private fun sampleImage(): ImmutableImage {
         val buf = BufferedImage(64, 64, BufferedImage.TYPE_INT_RGB)
-        val g = buf.createGraphics()
-        g.color = java.awt.Color(180, 100, 50)
-        g.fillRect(0, 0, 64, 64)
-        g.dispose()
+        buf.useGraphics { g ->
+            g.color = java.awt.Color(180, 100, 50)
+            g.fillRect(0, 0, 64, 64)
+        }
         return ImmutableImage.fromAwt(buf)
     }
 
@@ -74,7 +79,7 @@ class ImageFilterChainColorOpsTest : AbstractFilterTest() {
         val chain = ImageFilterChain()
         chain.rgb(1f, 1f, 1f)
         chain.build().size shouldBeEqualTo 1
-        (chain.build()[0] is ImageFilterChain.Op.Pixel).shouldBeTrue()
+        chain.build()[0].shouldBeInstanceOf<ImageFilterChain.Op.Pixel>()
     }
 
     @Test
@@ -133,7 +138,7 @@ class ImageFilterChainColorOpsTest : AbstractFilterTest() {
     fun `applyFilters with saturation changes pixel values`() {
         val image = sampleImage()
         val result = image.applyFilters { saturation(0f) }  // fully desaturate → grayscale
-        (result !== image).shouldBeTrue()
+        result shouldNotBe image
         result.width shouldBeEqualTo image.width
         result.height shouldBeEqualTo image.height
     }

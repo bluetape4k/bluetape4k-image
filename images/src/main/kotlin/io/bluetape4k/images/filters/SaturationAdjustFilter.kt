@@ -2,8 +2,10 @@ package io.bluetape4k.images.filters
 
 import com.sksamuel.scrimage.ImmutableImage
 import com.sksamuel.scrimage.filter.Filter
+import io.bluetape4k.ToStringBuilder
 import io.bluetape4k.images.filters.dsl.ColorSpaceConverter
-import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.support.requireGe
 
 /**
  * HSV 색공간에서 채도(Saturation)를 조정하는 [Filter].
@@ -15,13 +17,13 @@ import io.bluetape4k.logging.coroutines.KLoggingChannel
  *
  * @param factor 채도 배수. 1.0=원본, >1 증가, <1 감소, 0=흑백. 0 이상이어야 합니다.
  */
-class SaturationAdjustFilter(private val factor: Float) : Filter {
+class SaturationAdjustFilter(private val factor: Float): Filter {
 
     init {
-        require(factor >= 0f) { "factor must be >= 0, but was $factor" }
+        factor.requireGe(0f, "factor")
     }
 
-    companion object : KLoggingChannel()
+    companion object: KLogging()
 
     override fun apply(image: ImmutableImage) {
         val raster = image.awt().raster
@@ -48,6 +50,12 @@ class SaturationAdjustFilter(private val factor: Float) : Filter {
                 raster.setPixel(x, y, pixel)
             }
         }
+    }
+
+    override fun toString(): String {
+        return ToStringBuilder(this)
+            .add("factor", factor)
+            .toString()
     }
 }
 

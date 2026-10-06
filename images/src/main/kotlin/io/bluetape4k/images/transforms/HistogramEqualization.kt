@@ -138,9 +138,9 @@ fun ImmutableImage.clahe(tileSize: Int = 8, clipLimit: Double = 2.0): ImmutableI
             val v01 = tileLuts[ty1][tx0][yVal]
             val v11 = tileLuts[ty1][tx1][yVal]
             val yNew = ((1 - wx) * (1 - wy) * v00
-                + wx * (1 - wy) * v10
-                + (1 - wx) * wy * v01
-                + wx * wy * v11).toInt().coerceIn(0, 255)
+                    + wx * (1 - wy) * v10
+                    + (1 - wx) * wy * v01
+                    + wx * wy * v11).toInt().coerceIn(0, 255)
             yPlane[py * w + px] = yNew
         }
     }

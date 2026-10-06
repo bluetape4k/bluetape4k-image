@@ -2,7 +2,9 @@ package io.bluetape4k.images.avif
 
 import com.sksamuel.scrimage.ImmutableImage
 import io.bluetape4k.images.IncubatingImageApi
+import io.bluetape4k.support.requireInRange
 import java.io.OutputStream
+import java.io.Serializable
 
 /**
  * AVIF 인코딩 옵션입니다.
@@ -21,14 +23,16 @@ import java.io.OutputStream
 data class AvifEncodeOptions(
     val quality: Float = 0.85f,
     val lossless: Boolean = false,
-) {
+): Serializable {
     init {
-        require(quality in 0.0f..1.0f) { "quality must be in 0.0..1.0: $quality" }
+        quality.requireInRange(0.0f, 1.0f, "quality")
     }
 
     companion object {
         @JvmStatic
         val Default = AvifEncodeOptions()
+
+        private const val serialVersionUID = 1L
     }
 }
 

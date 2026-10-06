@@ -2,8 +2,10 @@ package io.bluetape4k.images.filters
 
 import com.sksamuel.scrimage.ImmutableImage
 import com.sksamuel.scrimage.filter.Filter
+import io.bluetape4k.ToStringBuilder
 import io.bluetape4k.images.filters.dsl.ColorSpaceConverter
-import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.support.requireInRange
 
 /**
  * 색온도(켈빈)를 기반으로 이미지의 색 균형을 조정하는 [Filter].
@@ -15,13 +17,13 @@ import io.bluetape4k.logging.coroutines.KLoggingChannel
  *
  * @param kelvin 목표 색온도 (켈빈). 1000~40000 범위여야 합니다. 5500K가 중성에 가깝습니다.
  */
-class ColorTemperatureFilter(private val kelvin: Int) : Filter {
+class ColorTemperatureFilter(private val kelvin: Int): Filter {
 
     init {
-        require(kelvin in 1000..40000) { "kelvin must be in 1000..40000, but was $kelvin" }
+        kelvin.requireInRange(1_000, 40_000, "kelvin")
     }
 
-    companion object : KLoggingChannel()
+    companion object: KLogging()
 
     override fun apply(image: ImmutableImage) {
         val (tr, tg, tb) = ColorSpaceConverter.kelvinToRgb(kelvin)
@@ -42,6 +44,12 @@ class ColorTemperatureFilter(private val kelvin: Int) : Filter {
                 raster.setPixel(x, y, pixel)
             }
         }
+    }
+
+    override fun toString(): String {
+        return ToStringBuilder(this)
+            .add("kelvin", kelvin)
+            .toString()
     }
 }
 

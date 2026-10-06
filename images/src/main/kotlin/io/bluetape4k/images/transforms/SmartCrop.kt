@@ -71,7 +71,7 @@ sealed interface SaliencyStrategy {
      * - 얼굴/객체 인식이 아니라 텍스처/엣지가 풍부한 영역을 선호.
      * - 단색 배경 위에 텍스트가 있는 이미지처럼 엣지가 또렷한 콘텐츠에 효과적.
      */
-    data object SobelEnergy : SaliencyStrategy
+    data object SobelEnergy: SaliencyStrategy
 }
 
 /**
@@ -194,9 +194,9 @@ internal fun ImmutableImage.smartCropWithBounds(
     for (y in 0..maxY) {
         for (x in 0..maxX) {
             val sum = integ[(y + winH) * iw + (x + winW)] -
-                integ[y * iw + (x + winW)] -
-                integ[(y + winH) * iw + x] +
-                integ[y * iw + x]
+                    integ[y * iw + (x + winW)] -
+                    integ[(y + winH) * iw + x] +
+                    integ[y * iw + x]
             if (sum > bestSum) {
                 bestSum = sum
                 bestX = x
@@ -224,7 +224,7 @@ internal fun ImmutableImage.smartCropWithBounds(
 
     log.debug {
         "smartCrop: orig=${origW}x${origH}, ds=${dsW}x${dsH} (scale=$dsScale), " +
-            "win=${winW}x${winH} at ds($bestX,$bestY) -> orig(${restoredX},${restoredY}) ${restoredW}x${restoredH}"
+                "win=${winW}x${winH} at ds($bestX,$bestY) -> orig(${restoredX},${restoredY}) ${restoredW}x${restoredH}"
     }
 
     return SmartCropResult(

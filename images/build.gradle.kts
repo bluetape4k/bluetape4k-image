@@ -35,6 +35,7 @@ dependencies {
     // Public snapshot codec uses Jackson 3 internally; the public API remains Jackson-neutral.
     implementation(platform(bt4k.jackson3.bom))
     implementation(bt4k.bluetape4k.jackson3)
+    // TODO: bt4k.jackson3.databind, bt4k.jackson3.module.kotlin 등으로 참조할 수 있게 하자 
     implementation("tools.jackson.core:jackson-databind")
     implementation("tools.jackson.module:jackson-module-kotlin")
     // Jackson 3 reuses the stable Jackson 2 annotation artifact for wire-property aliases.

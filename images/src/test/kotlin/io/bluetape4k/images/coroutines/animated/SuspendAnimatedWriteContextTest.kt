@@ -10,12 +10,15 @@ import io.bluetape4k.io.readAllBytesSuspending
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.junit5.tempfolder.TempFolder
 import io.bluetape4k.junit5.tempfolder.TempFolderTest
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import org.junit.jupiter.api.Test
 import java.io.ByteArrayOutputStream
 import java.nio.file.Path
 
 @TempFolderTest
-class SuspendAnimatedWriteContextTest : AbstractImageTest() {
+class SuspendAnimatedWriteContextTest: AbstractImageTest() {
+
+    companion object: KLoggingChannel()
 
     private val gifPath = Path.of("$BASE_PATH/animated.gif")
 

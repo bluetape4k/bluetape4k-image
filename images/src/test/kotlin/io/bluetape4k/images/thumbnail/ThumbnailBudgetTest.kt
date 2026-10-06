@@ -3,26 +3,26 @@ package io.bluetape4k.images.thumbnail
 import com.sksamuel.scrimage.AwtImage
 import com.sksamuel.scrimage.metadata.ImageMetadata
 import io.bluetape4k.assertions.assertFailsWith
-import io.bluetape4k.assertions.shouldBeFalse
-import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeInstanceOf
+import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.images.batch.ImageBatchException
 import io.bluetape4k.images.batch.ImageBatchFailureStage
 import io.bluetape4k.images.batch.ImageProcessingOptions
 import io.bluetape4k.images.batch.probeImagePixelCount
-import io.bluetape4k.images.coroutines.SuspendPngWriter
 import io.bluetape4k.images.coroutines.SuspendImageWriter
+import io.bluetape4k.images.coroutines.SuspendPngWriter
 import io.mockk.every
 import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.withContext
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import java.awt.image.BufferedImage
@@ -124,7 +124,7 @@ class ThumbnailBudgetTest {
             val writes = AtomicInteger()
             val active = AtomicInteger()
             val maximum = AtomicInteger()
-            val writer = object : SuspendImageWriter {
+            val writer = object: SuspendImageWriter {
                 override fun write(image: AwtImage, metadata: ImageMetadata, out: OutputStream) {
                     val count = active.incrementAndGet()
                     maximum.accumulateAndGet(count, ::maxOf)
@@ -154,7 +154,7 @@ class ThumbnailBudgetTest {
         @TempDir directory: Path,
     ) = runTest(timeout = 10.seconds) {
         val writes = AtomicInteger()
-        val writer = object : SuspendImageWriter {
+        val writer = object: SuspendImageWriter {
             override fun write(image: AwtImage, metadata: ImageMetadata, out: OutputStream) {
                 if (writes.incrementAndGet() == 1) throw IOException("first write fails")
                 SuspendPngWriter.MaxCompression.write(image, metadata, out)
@@ -177,7 +177,7 @@ class ThumbnailBudgetTest {
             val release = CountDownLatch(1)
             val writes = AtomicInteger()
             val failures = AtomicInteger()
-            val writer = object : SuspendImageWriter {
+            val writer = object: SuspendImageWriter {
                 override fun write(image: AwtImage, metadata: ImageMetadata, out: OutputStream) {
                     writes.incrementAndGet()
                     entered.countDown()
@@ -207,12 +207,14 @@ class ThumbnailBudgetTest {
             .size(5, 5, "first")
             .size(5, 5, "second")
             .format(ThumbnailFormat(writer, "png"))
-            .options(ImageProcessingOptions(
-                parallelism = 2,
-                maxPixels = 25,
-                maxInFlightPixels = 50,
-                skipFailures = true,
-            ))
+            .options(
+                ImageProcessingOptions(
+                    parallelism = 2,
+                    maxPixels = 25,
+                    maxInFlightPixels = 50,
+                    skipFailures = true,
+                )
+            )
 
     private fun sourceImage(directory: Path): Path = directory.resolve("source.png").also {
         ImageIO.write(BufferedImage(5, 5, BufferedImage.TYPE_INT_RGB), "png", it.toFile())

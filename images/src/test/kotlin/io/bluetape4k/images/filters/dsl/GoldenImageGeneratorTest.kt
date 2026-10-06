@@ -8,9 +8,12 @@ import io.bluetape4k.images.filters.hueFilterOf
 import io.bluetape4k.images.filters.medianBlurFilterOf
 import io.bluetape4k.images.filters.roundedCornerFilterOf
 import io.bluetape4k.images.filters.saturationFilterOf
-import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.images.useGraphics
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.info
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
+import java.awt.Color
 import java.awt.image.BufferedImage
 import java.nio.file.Paths
 
@@ -23,9 +26,9 @@ import java.nio.file.Paths
  * 실행 후 `src/test/resources/images/filters/` 에 PNG 파일이 생성됩니다.
  */
 @Disabled("골든 이미지 재생성 시에만 활성화")
-class GoldenImageGeneratorTest : AbstractFilterTest() {
+class GoldenImageGeneratorTest: AbstractFilterTest() {
 
-    companion object : KLoggingChannel() {
+    companion object: KLogging() {
         // Gradle 테스트 working directory = utils/images/
         private val RESOURCE_DIR = Paths.get("src/test/resources/images/filters")
     }
@@ -33,11 +36,10 @@ class GoldenImageGeneratorTest : AbstractFilterTest() {
     /** 256×256 컬러 타일 테스트 이미지 */
     private fun createTestImage(): ImmutableImage {
         val buffered = BufferedImage(256, 256, BufferedImage.TYPE_INT_RGB)
-        val g = buffered.createGraphics()
-        try {
+        buffered.useGraphics { g ->
             val colors = listOf(
-                java.awt.Color.RED, java.awt.Color.GREEN, java.awt.Color.BLUE, java.awt.Color.YELLOW,
-                java.awt.Color.CYAN, java.awt.Color.MAGENTA, java.awt.Color.ORANGE, java.awt.Color.PINK,
+                Color.RED, Color.GREEN, Color.BLUE, Color.YELLOW,
+                Color.CYAN, Color.MAGENTA, Color.ORANGE, Color.PINK,
             )
             var idx = 0
             for (row in 0 until 4) {
@@ -46,9 +48,7 @@ class GoldenImageGeneratorTest : AbstractFilterTest() {
                     g.fillRect(col * 64, row * 64, 64, 64)
                 }
             }
-        } finally {
-            g.dispose()
-        }
+        } 
         return ImmutableImage.fromAwt(buffered)
     }
 
@@ -56,7 +56,7 @@ class GoldenImageGeneratorTest : AbstractFilterTest() {
         val path = RESOURCE_DIR.resolve(filename)
         path.parent.toFile().mkdirs()
         this.forWriter(PngWriter.MaxCompression).write(path)
-        log.info("저장: $path")
+        log.info { "저장: $path" }
     }
 
     @Test
@@ -86,28 +86,34 @@ class GoldenImageGeneratorTest : AbstractFilterTest() {
 
     @Test
     fun `generate chain brightness-contrast-sepia golden`() {
-        createTestImage().applyFilters {
-            brightness(1.2f)
-            contrast(1.1)
-            sepia()
-        }.savePng("expected_chain_brightness_contrast_sepia.png")
+        createTestImage()
+            .applyFilters {
+                brightness(1.2f)
+                contrast(1.1)
+                sepia()
+            }
+            .savePng("expected_chain_brightness_contrast_sepia.png")
     }
 
     @Test
     fun `generate chain saturation-hue-temperature golden`() {
-        createTestImage().applyFilters {
-            saturation(1.3f)
-            hue(30f)
-            colorTemperature(5000)
-        }.savePng("expected_chain_saturation_hue_temperature.png")
+        createTestImage()
+            .applyFilters {
+                saturation(1.3f)
+                hue(30f)
+                colorTemperature(5_000)
+            }
+            .savePng("expected_chain_saturation_hue_temperature.png")
     }
 
     @Test
     fun `generate chain grayscale-median-vignette golden`() {
-        createTestImage().applyFilters {
-            grayscale()
-            medianBlur(1)
-            vignette()
-        }.savePng("expected_chain_grayscale_median_vignette.png")
+        createTestImage()
+            .applyFilters {
+                grayscale()
+                medianBlur(1)
+                vignette()
+            }
+            .savePng("expected_chain_grayscale_median_vignette.png")
     }
 }

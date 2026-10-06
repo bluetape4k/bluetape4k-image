@@ -3,6 +3,7 @@ package io.bluetape4k.images.analysis
 import com.sksamuel.scrimage.ImmutableImage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.io.Serializable
 
 /**
  * 이미지 블러 감지 결과.
@@ -14,12 +15,14 @@ import kotlinx.coroutines.withContext
 data class BlurScore(
     val score: Double,
     val threshold: Double,
-) {
+): Serializable {
     val isBlurry: Boolean get() = score < threshold
 
     companion object {
         /** blurScore() 기본 threshold 값 (~640x480 이미지 기준). 해상도에 따라 캘리브레이션 필요. */
         const val DEFAULT_THRESHOLD = 100.0
+
+        private const val serialVersionUID: Long = 1L
     }
 }
 

@@ -1,6 +1,7 @@
 package io.bluetape4k.images.coroutines
 
 import com.sksamuel.scrimage.nio.JpegWriter
+import io.bluetape4k.ToStringBuilder
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 
 /**
@@ -51,5 +52,12 @@ class SuspendJpegWriter(
      */
     override fun withProgressive(progressive: Boolean): SuspendJpegWriter {
         return SuspendJpegWriter(compression, progressive)
+    }
+
+    override fun toString(): String {
+        return ToStringBuilder(this)
+            .add("compression", compression)
+            .add("progressive", progressive)
+            .toString()
     }
 }

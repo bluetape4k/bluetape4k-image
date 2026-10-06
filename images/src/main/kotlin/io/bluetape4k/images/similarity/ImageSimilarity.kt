@@ -55,8 +55,8 @@ fun ImmutableImage.pixelAvgDeltaTo(other: ImmutableImage): Double {
     var total = 0L
     for (i in a.indices) {
         total += abs(a[i].red() - b[i].red()) +
-            abs(a[i].green() - b[i].green()) +
-            abs(a[i].blue() - b[i].blue())
+                abs(a[i].green() - b[i].green()) +
+                abs(a[i].blue() - b[i].blue())
     }
     return total.toDouble() / (a.size * 3)
 }

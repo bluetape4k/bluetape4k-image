@@ -1,5 +1,8 @@
 package io.bluetape4k.images.coroutines
 
+import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.shouldBeGreaterThan
+import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.images.AbstractImageTest
 import io.bluetape4k.images.IIORegistryUtils
 import io.bluetape4k.images.immutableImageOf
@@ -8,17 +11,15 @@ import io.bluetape4k.junit5.tempfolder.TempFolder
 import io.bluetape4k.junit5.tempfolder.TempFolderTest
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
-import io.bluetape4k.assertions.shouldBeGreaterThan
-import io.bluetape4k.assertions.shouldBeTrue
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import java.io.ByteArrayOutputStream
 import java.nio.file.Path
 
 @TempFolderTest
-class SuspendTiffMultiPageWriterTest : AbstractImageTest() {
+class SuspendTiffMultiPageWriterTest: AbstractImageTest() {
 
-    companion object : KLoggingChannel() {
+    companion object: KLoggingChannel() {
         @JvmStatic
         @BeforeAll
         fun registerSpis() {
@@ -86,11 +87,8 @@ class SuspendTiffMultiPageWriterTest : AbstractImageTest() {
         val writer = SuspendTiffMultiPageWriter.Default
         val bos = ByteArrayOutputStream()
 
-        try {
+        assertFailsWith<IllegalArgumentException> {
             writer.suspendWrite(emptyList(), bos)
-            throw AssertionError("예외가 발생해야 합니다")
-        } catch (e: IllegalArgumentException) {
-            log.debug { "예상된 예외: ${e.message}" }
         }
     }
 
@@ -100,11 +98,8 @@ class SuspendTiffMultiPageWriterTest : AbstractImageTest() {
         val writer = SuspendTiffMultiPageWriter(maxPages = 2)
         val bos = ByteArrayOutputStream()
 
-        try {
+        assertFailsWith<IllegalArgumentException> {
             writer.suspendWrite(listOf(image, image, image), bos)
-            throw AssertionError("예외가 발생해야 합니다")
-        } catch (e: IllegalArgumentException) {
-            log.debug { "예상된 예외: ${e.message}" }
         }
     }
 }

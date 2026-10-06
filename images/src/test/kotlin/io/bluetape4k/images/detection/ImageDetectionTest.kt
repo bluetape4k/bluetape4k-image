@@ -7,9 +7,9 @@ import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldHaveSize
 import io.bluetape4k.images.ImageDimensions
-import java.awt.Color
-import java.awt.image.BufferedImage
-import java.util.concurrent.atomic.AtomicInteger
+import io.bluetape4k.images.useGraphics
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
@@ -17,8 +17,13 @@ import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withContext
 import org.junit.jupiter.api.Test
+import java.awt.Color
+import java.awt.image.BufferedImage
+import java.util.concurrent.atomic.AtomicInteger
 
 class ImageDetectionTest {
+
+    companion object: KLogging()
 
     private val detector = DetectorIdentity(
         name = "unit-detector",
@@ -29,7 +34,6 @@ class ImageDetectionTest {
     @Test
     fun `detectRegions returns empty list from fake detector`() {
         val results = testImage().detectRegions(StaticImageDetector(emptyList()))
-
         results.shouldBeEmpty()
     }
 
@@ -59,11 +63,13 @@ class ImageDetectionTest {
 
         results shouldHaveSize 1
         val actual = results.single()
+
+        log.debug { "actual=$actual" }
         actual.label shouldBeEqualTo "face"
         actual.rawBackendLabel shouldBeEqualTo "frontal_face"
         actual.detector shouldBeEqualTo detector
         actual.pixelBoundingBox(ImageDimensions(width = 100, height = 80)) shouldBeEqualTo
-            DetectionBoundingBox(x = 10, y = 12, width = 30, height = 24)
+                DetectionBoundingBox(x = 10, y = 12, width = 30, height = 24)
     }
 
     @Test
@@ -88,15 +94,17 @@ class ImageDetectionTest {
             rawBackendLabel = "coffee-cup",
         )
 
-        val results = testImage().detectRegions(
-            detector = StaticImageDetector(listOf(face, lowConfidenceObject, matchedObject)),
-            options = DetectionOptions(
-                minimumConfidence = 0.8,
-                categories = setOf(DetectionCategory.OBJECT),
-                labels = setOf("coffee-cup"),
-            ),
-        )
+        val results = testImage()
+            .detectRegions(
+                detector = StaticImageDetector(listOf(face, lowConfidenceObject, matchedObject)),
+                options = DetectionOptions(
+                    minimumConfidence = 0.8,
+                    categories = setOf(DetectionCategory.OBJECT),
+                    labels = setOf("coffee-cup"),
+                ),
+            )
 
+        log.debug { "results=$results" }
         results shouldHaveSize 1
         results.single().label shouldBeEqualTo "mug"
     }
@@ -112,7 +120,7 @@ class ImageDetectionTest {
         )
 
         val box = geometry.toPixelBoundingBox(ImageDimensions(width = 200, height = 120))
-
+        log.debug { "box=$box" }
         box shouldBeEqualTo DetectionBoundingBox(x = 20, y = 30, width = 100, height = 30)
     }
 
@@ -209,19 +217,17 @@ class ImageDetectionTest {
 
     private fun testImage(width: Int = 100, height: Int = 80): ImmutableImage {
         val image = BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB)
-        val graphics = image.createGraphics()
-        try {
+        image.useGraphics { graphics ->
             graphics.color = Color.BLUE
             graphics.fillRect(0, 0, width, height)
-        } finally {
-            graphics.dispose()
         }
+
         return ImmutableImage.wrapAwt(image)
     }
 
     private class StaticImageDetector(
         private val results: List<DetectionResult>,
-    ) : ImageDetector {
+    ): ImageDetector {
         override fun detect(image: ImmutableImage, options: DetectionOptions): List<DetectionResult> = results
     }
 }

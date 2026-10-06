@@ -1,5 +1,8 @@
 package io.bluetape4k.images.coroutines
 
+import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.shouldBeGreaterThan
+import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.images.AbstractImageTest
 import io.bluetape4k.images.IIORegistryUtils
 import io.bluetape4k.images.immutableImageOf
@@ -8,8 +11,6 @@ import io.bluetape4k.junit5.tempfolder.TempFolder
 import io.bluetape4k.junit5.tempfolder.TempFolderTest
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
-import io.bluetape4k.assertions.shouldBeGreaterThan
-import io.bluetape4k.assertions.shouldBeTrue
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -18,9 +19,9 @@ import java.io.ByteArrayOutputStream
 import java.nio.file.Path
 
 @TempFolderTest
-class SuspendTiffWriterTest : AbstractImageTest() {
+class SuspendTiffWriterTest: AbstractImageTest() {
 
-    companion object : KLoggingChannel() {
+    companion object: KLoggingChannel() {
         @JvmStatic
         @BeforeAll
         fun registerSpis() {
@@ -85,21 +86,15 @@ class SuspendTiffWriterTest : AbstractImageTest() {
 
     @Test
     fun `quality 범위 초과 시 예외 발생`() {
-        try {
+        assertFailsWith<IllegalArgumentException> {
             SuspendTiffWriter(quality = 1.5f)
-            throw AssertionError("예외가 발생해야 합니다")
-        } catch (e: IllegalArgumentException) {
-            log.debug { "예상된 예외: ${e.message}" }
         }
     }
 
     @Test
     fun `quality 음수 시 예외 발생`() {
-        try {
+        assertFailsWith<IllegalArgumentException> {
             SuspendTiffWriter(quality = -0.1f)
-            throw AssertionError("예외가 발생해야 합니다")
-        } catch (e: IllegalArgumentException) {
-            log.debug { "예상된 예외: ${e.message}" }
         }
     }
 }

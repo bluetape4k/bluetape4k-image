@@ -1,16 +1,16 @@
 package io.bluetape4k.images.golden
 
 import com.sksamuel.scrimage.ImmutableImage
+import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.images.immutableImageOf
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.utils.Resourcex
-import java.awt.Color
-import java.awt.image.BufferedImage
-import io.bluetape4k.assertions.assertFailsWith
-import io.bluetape4k.assertions.shouldContain
 import org.junit.jupiter.api.Test
 import org.opentest4j.AssertionFailedError
 import org.opentest4j.TestAbortedException
+import java.awt.Color
+import java.awt.image.BufferedImage
 
 /**
  * [GoldenImageAssert] 자기 검증 테스트.
@@ -19,7 +19,7 @@ import org.opentest4j.TestAbortedException
  */
 class GoldenImageAssertTest {
 
-    companion object : KLoggingChannel() {
+    companion object: KLoggingChannel() {
         private const val GOLDEN_KEY = "resize-320x240"
     }
 

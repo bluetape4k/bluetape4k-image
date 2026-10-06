@@ -10,8 +10,7 @@ import io.bluetape4k.images.thumbnail.ThumbnailSize
 import io.bluetape4k.images.transforms.SaliencyStrategy
 import io.bluetape4k.support.requireNotBlank
 import java.io.Serializable
-import java.util.Collections
-import java.util.LinkedHashSet
+import java.util.*
 
 /** JSON/Java 직렬화에서 사용하는 안정적인 출력 포맷 식별자입니다. */
 enum class PrivacyDerivativeFormatId {
@@ -81,7 +80,7 @@ data class PrivacyThumbnailSizeSnapshot(
     val width: Int,
     val height: Int,
     val suffix: String,
-) : Serializable {
+): Serializable {
     init {
         require(width > 0) { "thumbnail width must be positive" }
         require(height > 0) { "thumbnail height must be positive" }
@@ -110,7 +109,7 @@ data class PrivacyRedactionSnapshot(
     val mode: PrivacyWireRedactionModeId,
     val maskColorArgb: Int,
     val maskOpacity: Double,
-) : Serializable {
+): Serializable {
     init {
         regionId.requireSafePrivacySourceId("regionId")
         require(x.isFinite() && y.isFinite() && width.isFinite() && height.isFinite()) {
@@ -164,7 +163,7 @@ class PrivacyDerivativeOptionsSnapshot(
     val thumbnailCrop: PrivacyThumbnailCropId,
     val outputFormat: PrivacyDerivativeFormatId,
     redactions: List<PrivacyRedactionSnapshot>,
-) : Serializable {
+): Serializable {
     private var storedRedactions: List<PrivacyRedactionSnapshot> = immutableList(redactions)
 
     val redactions: List<PrivacyRedactionSnapshot>
@@ -191,11 +190,11 @@ class PrivacyDerivativeOptionsSnapshot(
 
     override fun equals(other: Any?): Boolean =
         other is PrivacyDerivativeOptionsSnapshot &&
-            stripMetadata == other.stripMetadata && removeGps == other.removeGps &&
-            normalizeOrientation == other.normalizeOrientation && maxPixels == other.maxPixels &&
-            maxSide == other.maxSide && thumbnailSize == other.thumbnailSize &&
-            thumbnailCrop == other.thumbnailCrop && outputFormat == other.outputFormat &&
-            redactions == other.redactions
+                stripMetadata == other.stripMetadata && removeGps == other.removeGps &&
+                normalizeOrientation == other.normalizeOrientation && maxPixels == other.maxPixels &&
+                maxSide == other.maxSide && thumbnailSize == other.thumbnailSize &&
+                thumbnailCrop == other.thumbnailCrop && outputFormat == other.outputFormat &&
+                redactions == other.redactions
 
     override fun hashCode(): Int = listOf(
         stripMetadata, removeGps, normalizeOrientation, maxPixels, maxSide, thumbnailSize,
@@ -212,7 +211,7 @@ class PrivacyDerivativeOptionsSnapshot(
 data class PrivacyImageDimensionsSnapshot(
     val width: Int,
     val height: Int,
-) : Serializable {
+): Serializable {
     init {
         require(width > 0 && height > 0) { "image dimensions must be positive" }
     }
@@ -235,7 +234,7 @@ data class PrivacyAppliedRedactionSnapshot(
     val y: Double,
     val width: Double,
     val height: Double,
-) : Serializable {
+): Serializable {
     init {
         regionId.requireSafePrivacySourceId("regionId")
         require(x.isFinite() && y.isFinite() && width.isFinite() && height.isFinite()) {
@@ -269,7 +268,7 @@ class PrivacyMetadataVerificationSnapshot(
     sourcePresent: Set<PrivacyWireMetadataCategoryId>,
     remaining: Set<PrivacyWireMetadataCategoryId>,
     val verified: Boolean,
-) : Serializable {
+): Serializable {
     private var storedRequested: Set<PrivacyWireMetadataCategoryId> = immutableEnumSet(requested)
     private var storedSourcePresent: Set<PrivacyWireMetadataCategoryId> = immutableEnumSet(sourcePresent)
     private var storedRemaining: Set<PrivacyWireMetadataCategoryId> = immutableEnumSet(remaining)
@@ -296,7 +295,7 @@ class PrivacyMetadataVerificationSnapshot(
 
     override fun equals(other: Any?): Boolean =
         other is PrivacyMetadataVerificationSnapshot && requested == other.requested &&
-            sourcePresent == other.sourcePresent && remaining == other.remaining && verified == other.verified
+                sourcePresent == other.sourcePresent && remaining == other.remaining && verified == other.verified
 
     override fun hashCode(): Int = listOf(requested, sourcePresent, remaining, verified).hashCode()
 
@@ -310,7 +309,7 @@ class PrivacyMetadataVerificationSnapshot(
 data class PrivacyDerivativeFailureSnapshot(
     val stage: PrivacyWireFailureStageId,
     val code: PrivacyDerivativeFailureCode,
-) : Serializable {
+): Serializable {
     private fun readObject(input: java.io.ObjectInputStream) {
         input.defaultReadObject()
         require(stage != null && code != null) { "Invalid derivative failure snapshot" }
@@ -333,7 +332,7 @@ class PrivacyDerivativeReportSnapshot(
     failures: List<PrivacyDerivativeFailureSnapshot>,
     val elapsedMillis: Long,
     val metadataVerification: PrivacyMetadataVerificationSnapshot,
-) : Serializable {
+): Serializable {
     private var storedStrippedMetadataCategories: Set<PrivacyWireMetadataCategoryId> =
         immutableEnumSet(strippedMetadataCategories)
     private var storedAppliedActions: List<PrivacyWireDerivativeActionId> = immutableList(appliedActions)
@@ -377,10 +376,10 @@ class PrivacyDerivativeReportSnapshot(
 
     override fun equals(other: Any?): Boolean =
         other is PrivacyDerivativeReportSnapshot && sourceId == other.sourceId &&
-            sourceDimensions == other.sourceDimensions && outputDimensions == other.outputDimensions &&
-            strippedMetadataCategories == other.strippedMetadataCategories && appliedActions == other.appliedActions &&
-            redactions == other.redactions && failures == other.failures && elapsedMillis == other.elapsedMillis &&
-            metadataVerification == other.metadataVerification
+                sourceDimensions == other.sourceDimensions && outputDimensions == other.outputDimensions &&
+                strippedMetadataCategories == other.strippedMetadataCategories && appliedActions == other.appliedActions &&
+                redactions == other.redactions && failures == other.failures && elapsedMillis == other.elapsedMillis &&
+                metadataVerification == other.metadataVerification
 
     override fun hashCode(): Int = listOf(
         sourceId, sourceDimensions, outputDimensions, strippedMetadataCategories, appliedActions,
@@ -389,9 +388,9 @@ class PrivacyDerivativeReportSnapshot(
 
     override fun toString(): String =
         "PrivacyDerivativeReportSnapshot(sourceId=$sourceId, sourceDimensions=$sourceDimensions, " +
-            "outputDimensions=$outputDimensions, strippedMetadataCategories=$strippedMetadataCategories, " +
-            "appliedActions=$appliedActions, redactions=$redactions, failures=$failures, " +
-            "elapsedMillis=$elapsedMillis, metadataVerification=$metadataVerification)"
+                "outputDimensions=$outputDimensions, strippedMetadataCategories=$strippedMetadataCategories, " +
+                "appliedActions=$appliedActions, redactions=$redactions, failures=$failures, " +
+                "elapsedMillis=$elapsedMillis, metadataVerification=$metadataVerification)"
 
     private companion object {
         @JvmField
@@ -405,7 +404,7 @@ class PrivacyDerivativePayload(
     @param:JsonAlias("bytes")
     encodedBytes: ByteArray,
     val report: PrivacyDerivativeReportSnapshot,
-) : Serializable {
+): Serializable {
     private val storedBytes: ByteArray = encodedBytes.copyOf()
 
     /** 저장된 payload를 caller가 변경할 수 없도록 새 배열로 반환합니다. */
@@ -415,8 +414,8 @@ class PrivacyDerivativePayload(
 
     override fun equals(other: Any?): Boolean =
         other is PrivacyDerivativePayload &&
-            storedBytes.contentEquals(other.storedBytes) &&
-            report == other.report
+                storedBytes.contentEquals(other.storedBytes) &&
+                report == other.report
 
     override fun hashCode(): Int = 31 * storedBytes.contentHashCode() + report.hashCode()
 
@@ -443,7 +442,7 @@ data class PrivacyDerivativeBatchSnapshot(
     val sourceId: String,
     val payload: PrivacyDerivativePayload?,
     val failure: PrivacyDerivativeFailureSnapshot?,
-) : Serializable {
+): Serializable {
     init {
         sourceId.requireSafePrivacySourceId("sourceId")
         require((payload == null) xor (failure == null)) {
@@ -654,13 +653,13 @@ private fun PrivacyDerivativeFailureStage.toFailureCode(): PrivacyDerivativeFail
         PrivacyDerivativeFailureStage.VERIFY -> PrivacyDerivativeFailureCode.VERIFY
     }
 
-private fun <T : Enum<T>, R : Enum<R>> Iterable<T>.mapToEnumSet(transform: (T) -> R): Set<R> =
+private fun <T: Enum<T>, R: Enum<R>> Iterable<T>.mapToEnumSet(transform: (T) -> R): Set<R> =
     immutableEnumSet(map(transform))
 
 private fun <T> immutableList(values: Iterable<T>): List<T> =
     java.util.List.copyOf(values.toList())
 
-private fun <T : Enum<T>> immutableEnumSet(values: Iterable<T>): Set<T> =
+private fun <T: Enum<T>> immutableEnumSet(values: Iterable<T>): Set<T> =
     Collections.unmodifiableSet(LinkedHashSet(values.toList().sortedBy { it.name }))
 
 private fun String?.requireSafePrivacySourceId(name: String) {

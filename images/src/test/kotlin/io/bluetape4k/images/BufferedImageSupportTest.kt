@@ -1,13 +1,13 @@
 package io.bluetape4k.images
 
-import io.bluetape4k.junit5.tempfolder.TempFolder
-import io.bluetape4k.junit5.tempfolder.TempFolderTest
-import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeGreaterThan
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldNotBeEmpty
+import io.bluetape4k.junit5.tempfolder.TempFolder
+import io.bluetape4k.junit5.tempfolder.TempFolderTest
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import org.junit.jupiter.api.Test
 import java.awt.Color
 import java.io.ByteArrayOutputStream
@@ -84,9 +84,10 @@ class BufferedImageSupportTest: AbstractImageTest() {
             g.fillRect(0, 0, 100, 100)
         }
 
-        val bos = ByteArrayOutputStream()
-        image.write(ImageFormat.PNG, bos).shouldBeTrue()
-        bos.toByteArray().shouldNotBeEmpty()
+        ByteArrayOutputStream().use { bos ->
+            image.write(ImageFormat.PNG, bos).shouldBeTrue()
+            bos.toByteArray().shouldNotBeEmpty()
+        }
     }
 
     @Test
@@ -117,8 +118,7 @@ class BufferedImageSupportTest: AbstractImageTest() {
         }
 
         // 그래픽 작업 후 이미지가 정상적으로 인코딩되는지 확인
-        val bytes = image.toByteArray("png")
-        bytes.shouldNotBeEmpty()
+        image.toByteArray("png").shouldNotBeEmpty()
     }
 
     @Test
@@ -136,9 +136,7 @@ class BufferedImageSupportTest: AbstractImageTest() {
         }
 
         base.drawImage(overlay, 10, 10)
-
-        val bytes = base.toByteArray("png")
-        bytes.shouldNotBeEmpty()
+        base.toByteArray("png").shouldNotBeEmpty()
     }
 
     @Test
@@ -153,8 +151,7 @@ class BufferedImageSupportTest: AbstractImageTest() {
         val transform = java.awt.geom.AffineTransform.getTranslateInstance(50.0, 50.0)
         base.drawRenderedImage(source, transform)
 
-        val bytes = base.toByteArray("png")
-        bytes.shouldNotBeEmpty()
+        base.toByteArray("png").shouldNotBeEmpty()
     }
 
     @Test

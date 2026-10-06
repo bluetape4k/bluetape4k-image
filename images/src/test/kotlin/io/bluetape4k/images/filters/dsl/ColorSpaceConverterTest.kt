@@ -1,16 +1,16 @@
 package io.bluetape4k.images.filters.dsl
 
-import io.bluetape4k.logging.coroutines.KLoggingChannel
-import kotlin.math.abs
-import kotlin.random.Random
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeGreaterOrEqualTo
 import io.bluetape4k.assertions.shouldBeLessOrEqualTo
+import io.bluetape4k.logging.KLogging
 import org.junit.jupiter.api.Test
+import kotlin.math.abs
+import kotlin.random.Random
 
 class ColorSpaceConverterTest {
 
-    companion object : KLoggingChannel()
+    companion object: KLogging()
 
     /**
      * RGB → HSV → RGB 라운드트립 퍼즈 테스트.
@@ -18,16 +18,16 @@ class ColorSpaceConverterTest {
      */
     @Test
     fun `rgbToHsv and hsvToRgb roundtrip`() {
-        val random = Random(42)
         repeat(1000) {
-            val r = random.nextInt(256)
-            val g = random.nextInt(256)
-            val b = random.nextInt(256)
+            val r = Random.nextInt(256)
+            val g = Random.nextInt(256)
+            val b = Random.nextInt(256)
             val (h, s, v) = ColorSpaceConverter.rgbToHsv(r, g, b)
             val (r2, g2, b2) = ColorSpaceConverter.hsvToRgb(h, s, v)
-            abs(r - r2).shouldBeLessOrEqualTo(2)
-            abs(g - g2).shouldBeLessOrEqualTo(2)
-            abs(b - b2).shouldBeLessOrEqualTo(2)
+
+            abs(r - r2) shouldBeLessOrEqualTo 2
+            abs(g - g2) shouldBeLessOrEqualTo 2
+            abs(b - b2) shouldBeLessOrEqualTo 2
         }
     }
 
@@ -37,16 +37,15 @@ class ColorSpaceConverterTest {
      */
     @Test
     fun `rgbToYCbCr and yCbCrToRgb roundtrip`() {
-        val random = Random(42)
         repeat(1000) {
-            val r = random.nextInt(256)
-            val g = random.nextInt(256)
-            val b = random.nextInt(256)
+            val r = Random.nextInt(256)
+            val g = Random.nextInt(256)
+            val b = Random.nextInt(256)
             val (y, cb, cr) = ColorSpaceConverter.rgbToYCbCr(r, g, b)
             val (r2, g2, b2) = ColorSpaceConverter.yCbCrToRgb(y, cb, cr)
-            abs(r - r2).shouldBeLessOrEqualTo(3)
-            abs(g - g2).shouldBeLessOrEqualTo(3)
-            abs(b - b2).shouldBeLessOrEqualTo(3)
+            abs(r - r2) shouldBeLessOrEqualTo 3
+            abs(g - g2) shouldBeLessOrEqualTo 3
+            abs(b - b2) shouldBeLessOrEqualTo 3
         }
     }
 
@@ -73,7 +72,7 @@ class ColorSpaceConverterTest {
     @Test
     fun `kelvinToRgb clamps out-of-range input`() {
         ColorSpaceConverter.kelvinToRgb(500) shouldBeEqualTo ColorSpaceConverter.kelvinToRgb(ColorSpaceConverter.KELVIN_MIN)
-        ColorSpaceConverter.kelvinToRgb(50000) shouldBeEqualTo ColorSpaceConverter.kelvinToRgb(ColorSpaceConverter.KELVIN_MAX)
+        ColorSpaceConverter.kelvinToRgb(50_000) shouldBeEqualTo ColorSpaceConverter.kelvinToRgb(ColorSpaceConverter.KELVIN_MAX)
     }
 
     /**

@@ -6,6 +6,7 @@ import io.bluetape4k.images.coroutines.SuspendImageWriter
 import io.bluetape4k.images.immutableImageOf
 import io.bluetape4k.logging.KotlinLogging
 import io.bluetape4k.logging.warn
+import io.bluetape4k.support.requireNotBlank
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filterIsInstance
@@ -155,8 +156,7 @@ private suspend fun processOneImage(
         }
         probedPixels.requireWithinMaxPixels(source, options.maxPixels)
 
-        val permitPixels = probedPixels
-        return limiter.withPermit(permitPixels) {
+        return limiter.withPermit(probedPixels) {
             val image = runStage(source, ImageBatchFailureStage.LOAD) {
                 withContext(options.ioDispatcher) { immutableImageOf(source) }
             }
@@ -254,7 +254,7 @@ private suspend fun handleWriteFailure(
 }
 
 private fun resolveOutputPath(outputDirectory: Path, outputName: String): Path {
-    require(outputName.isNotBlank()) { "outputName은 blank일 수 없습니다." }
+    outputName.requireNotBlank("outputName")
     val base = outputDirectory.toAbsolutePath().normalize()
     val output = base.resolve(outputName).normalize()
     require(output.startsWith(base)) {

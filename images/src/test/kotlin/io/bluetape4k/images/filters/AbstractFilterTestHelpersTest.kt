@@ -1,8 +1,8 @@
 package io.bluetape4k.images.filters
 
 import com.sksamuel.scrimage.ImmutableImage
-import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.logging.KLogging
 import org.junit.jupiter.api.Test
 
 /**
@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test
  */
 class AbstractFilterTestHelpersTest: AbstractFilterTest() {
 
-    companion object: KLoggingChannel()
+    companion object: KLogging()
 
     @Test
     fun `동일 이미지는 assertSimilarToImage 기본 tolerance로 통과한다`() {

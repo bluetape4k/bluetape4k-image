@@ -12,6 +12,7 @@ import io.bluetape4k.images.filters.dsl.watermark
 import io.bluetape4k.images.fonts.DEFAULT_FONT
 import io.bluetape4k.images.transforms.SaliencyStrategy
 import io.bluetape4k.images.transforms.smartCropTo
+import io.bluetape4k.images.useGraphics
 import io.bluetape4k.support.requireInRange
 import io.bluetape4k.support.requirePositiveNumber
 import java.awt.AlphaComposite
@@ -263,12 +264,11 @@ class ImageProcessingDsl {
         val target = copy()
         val x = position.calculateX(target.width, target.height, logo.width, logo.height).coerceAtLeast(0)
         val y = position.calculateY(target.width, target.height, logo.width, logo.height).coerceAtLeast(0)
-        val graphics = target.awt().createGraphics()
-        try {
+
+        target.awt().useGraphics { graphics ->
             graphics.composite = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alpha)
             graphics.drawImage(logo.awt(), x, y, null)
-        } finally {
-            graphics.dispose()
+
         }
 
         return target

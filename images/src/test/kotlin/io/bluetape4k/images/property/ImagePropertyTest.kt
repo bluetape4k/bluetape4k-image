@@ -6,21 +6,21 @@ import com.sksamuel.scrimage.filter.SepiaFilter
 import com.sksamuel.scrimage.nio.ImmutableImageLoader
 import com.sksamuel.scrimage.nio.JpegWriter
 import com.sksamuel.scrimage.nio.PngWriter
-import io.bluetape4k.images.immutableImageOf
-import io.bluetape4k.logging.coroutines.KLoggingChannel
-import io.bluetape4k.utils.Resourcex
-import java.awt.Color
-import java.awt.image.BufferedImage
-import java.util.Random
-import java.util.stream.Stream
-import kotlin.math.abs
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeGreaterThan
 import io.bluetape4k.assertions.shouldBeLessOrEqualTo
+import io.bluetape4k.images.immutableImageOf
+import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.utils.Resourcex
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
+import java.awt.Color
+import java.awt.image.BufferedImage
+import java.util.*
+import java.util.stream.Stream
+import kotlin.math.abs
 
 /**
  * 결정론적 입력으로 이미지 처리 불변식 10개를 검증하는 PBT 스타일 테스트.
@@ -37,7 +37,7 @@ import org.junit.jupiter.params.provider.MethodSource
  */
 class ImagePropertyTest {
 
-    companion object : KLoggingChannel() {
+    companion object: KLoggingChannel() {
 
         private const val HOMER_JPG = "/images/homer.jpg"
 

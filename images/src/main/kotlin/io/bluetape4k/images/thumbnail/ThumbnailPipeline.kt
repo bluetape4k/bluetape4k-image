@@ -2,8 +2,8 @@ package io.bluetape4k.images.thumbnail
 
 import com.sksamuel.scrimage.ImmutableImage
 import io.bluetape4k.coroutines.flow.extensions.mapParallel
-import io.bluetape4k.images.batch.ImageBatchFailureStage
 import io.bluetape4k.images.batch.ImageBatchException
+import io.bluetape4k.images.batch.ImageBatchFailureStage
 import io.bluetape4k.images.batch.ImageProcessingOptions
 import io.bluetape4k.images.batch.PixelPermitLimiter
 import io.bluetape4k.images.batch.probeImagePixelCount
@@ -217,7 +217,7 @@ class ThumbnailPipeline private constructor(
         return Math.addExact(inputPixels, outputPixels).also { combinedPixels ->
             require(combinedPixels <= maxInFlightPixels) {
                 "입력과 출력 픽셀 합이 동시 처리 한도를 초과했습니다. " +
-                    "pixels=$combinedPixels, maxInFlightPixels=$maxInFlightPixels"
+                        "pixels=$combinedPixels, maxInFlightPixels=$maxInFlightPixels"
             }
         }
     }
@@ -228,7 +228,7 @@ class ThumbnailPipeline private constructor(
         actualPixels.requireWithinMaxPixels(source)
         require(actualPixels <= reservedPixels) {
             "디코딩한 이미지가 예약한 입력 픽셀 수를 초과했습니다. " +
-                "pixels=$actualPixels, reservedPixels=$reservedPixels"
+                    "pixels=$actualPixels, reservedPixels=$reservedPixels"
         }
     }
 

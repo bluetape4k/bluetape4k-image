@@ -2,22 +2,22 @@ package io.bluetape4k.images.similarity
 
 import com.sksamuel.scrimage.ImmutableImage
 import com.sksamuel.scrimage.nio.JpegWriter
-import io.bluetape4k.images.AbstractImageTest
-import io.bluetape4k.images.immutableImageOf
-import io.bluetape4k.logging.coroutines.KLoggingChannel
-import io.bluetape4k.utils.Resourcex
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeGreaterThan
 import io.bluetape4k.assertions.shouldBeLessThan
+import io.bluetape4k.images.AbstractImageTest
+import io.bluetape4k.images.immutableImageOf
+import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.utils.Resourcex
 import org.junit.jupiter.api.Test
 
 /**
  * [blockMeanDescriptor], [blockMeanSimilarityTo], [bestRotationSimilarityTo] 테스트.
  */
-class KeypointSimilarityTest : AbstractImageTest() {
+class KeypointSimilarityTest: AbstractImageTest() {
 
-    companion object : KLoggingChannel() {
+    companion object: KLoggingChannel() {
         private const val HOMER_JPG = "images/homer.jpg"
         private const val LANDSCAPE_JPG = "images/landscape.jpg"
     }

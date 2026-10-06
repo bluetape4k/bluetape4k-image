@@ -325,7 +325,7 @@ class ImageMetadataReportTest {
         }
     }
 
-    private class CancellingInputStream : InputStream() {
+    private class CancellingInputStream: InputStream() {
         override fun read(): Int = throw CancellationException("cancelled")
 
         override fun read(buffer: ByteArray, offset: Int, length: Int): Int =
