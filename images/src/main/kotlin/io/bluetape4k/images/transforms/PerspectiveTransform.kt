@@ -271,8 +271,8 @@ private fun solve8x8(a: DoubleArray, b: DoubleArray): DoubleArray {
  */
 private fun invert3x3(h: DoubleArray): DoubleArray {
     val det = h[0] * (h[4] * h[8] - h[5] * h[7]) -
-        h[1] * (h[3] * h[8] - h[5] * h[6]) +
-        h[2] * (h[3] * h[7] - h[4] * h[6])
+            h[1] * (h[3] * h[8] - h[5] * h[6]) +
+            h[2] * (h[3] * h[7] - h[4] * h[6])
 
     if (abs(det) < 1e-12) {
         throw IllegalArgumentException("homography matrix is degenerate")
@@ -326,13 +326,13 @@ private fun bilinearSample(pixels: IntArray, w: Int, h: Int, x: Double, y: Doubl
     val w11 = fx * fy
 
     val a = (w00 * c00.alphaComponent() + w10 * c10.alphaComponent() +
-        w01 * c01.alphaComponent() + w11 * c11.alphaComponent()).roundToInt().coerceIn(0, 255)
+            w01 * c01.alphaComponent() + w11 * c11.alphaComponent()).roundToInt().coerceIn(0, 255)
     val r = (w00 * c00.redComponent() + w10 * c10.redComponent() +
-        w01 * c01.redComponent() + w11 * c11.redComponent()).roundToInt().coerceIn(0, 255)
+            w01 * c01.redComponent() + w11 * c11.redComponent()).roundToInt().coerceIn(0, 255)
     val g = (w00 * c00.greenComponent() + w10 * c10.greenComponent() +
-        w01 * c01.greenComponent() + w11 * c11.greenComponent()).roundToInt().coerceIn(0, 255)
+            w01 * c01.greenComponent() + w11 * c11.greenComponent()).roundToInt().coerceIn(0, 255)
     val b = (w00 * c00.blueComponent() + w10 * c10.blueComponent() +
-        w01 * c01.blueComponent() + w11 * c11.blueComponent()).roundToInt().coerceIn(0, 255)
+            w01 * c01.blueComponent() + w11 * c11.blueComponent()).roundToInt().coerceIn(0, 255)
 
     return argb(a, r, g, b)
 }

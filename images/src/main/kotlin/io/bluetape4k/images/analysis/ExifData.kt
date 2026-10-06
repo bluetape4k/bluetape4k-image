@@ -5,7 +5,7 @@ import com.drew.metadata.exif.ExifIFD0Directory
 import com.drew.metadata.exif.ExifSubIFDDirectory
 import com.drew.metadata.exif.GpsDirectory
 import com.drew.metadata.jpeg.JpegDirectory
-import io.bluetape4k.logging.KotlinLogging
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.logging.warn
 import kotlinx.coroutines.Dispatchers
@@ -66,7 +66,7 @@ data class ExifData(
     val flashFired: Boolean? = null,
     /** 화이트 밸런스 설명 */
     val whiteBalance: String? = null,
-) : Serializable {
+): Serializable {
     /** GPS 좌표가 존재하면 true */
     val hasGps: Boolean get() = gpsLatitude != null && gpsLongitude != null
 
@@ -87,7 +87,7 @@ data class ExifData(
     }
 }
 
-private val log = KotlinLogging.logger(ExifData::class)
+private object ExifDataLog: KLogging()
 
 private val EXIF_DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy:MM:dd HH:mm:ss")
 private const val DEFAULT_EXIF_MAX_BYTES: Int = ImageMetadataReadOptions.DEFAULT_MAX_BYTES
@@ -105,15 +105,15 @@ fun readExif(
 ): ExifData {
     val options = exifReadOptions(maxBytes)
     require(bytes.size <= maxBytes) {
-        "이미지 바이트 배열이 ${maxBytes} bytes를 초과합니다: ${bytes.size} bytes"
+        "이미지 바이트 배열이 $maxBytes bytes를 초과합니다: ${bytes.size} bytes"
     }
     return try {
         readImageMetadataReport(bytes, options).exif
     } catch (e: IOException) {
-        log.warn(e) { "EXIF 읽기 I/O 오류 (ByteArray ${bytes.size} bytes)" }
+        ExifDataLog.log.warn(e) { "EXIF 읽기 I/O 오류 (ByteArray ${bytes.size} bytes)" }
         ExifData.EMPTY
     } catch (e: Exception) {
-        log.debug(e) { "EXIF 파싱 실패 (ByteArray ${bytes.size} bytes)" }
+        ExifDataLog.log.debug(e) { "EXIF 파싱 실패 (ByteArray ${bytes.size} bytes)" }
         ExifData.EMPTY
     }
 }
@@ -130,16 +130,16 @@ fun File.readExif(maxBytes: Int = DEFAULT_EXIF_MAX_BYTES): ExifData {
     val options = exifReadOptions(maxBytes)
     if (exists()) {
         require(length() <= maxBytes) {
-            "이미지 파일이 ${maxBytes} bytes를 초과합니다: ${length()} bytes"
+            "이미지 파일이 $maxBytes bytes를 초과합니다: ${length()} bytes"
         }
     }
     return try {
         readImageMetadataReport(options).exif
     } catch (e: IOException) {
-        log.warn(e) { "EXIF 읽기 I/O 오류: $absolutePath" }
+        ExifDataLog.log.warn(e) { "EXIF 읽기 I/O 오류: $absolutePath" }
         ExifData.EMPTY
     } catch (e: Exception) {
-        log.debug(e) { "EXIF 파싱 실패: $absolutePath" }
+        ExifDataLog.log.debug(e) { "EXIF 파싱 실패: $absolutePath" }
         ExifData.EMPTY
     }
 }
@@ -156,14 +156,13 @@ fun Path.readExif(maxBytes: Int = DEFAULT_EXIF_MAX_BYTES): ExifData {
     val options = exifReadOptions(maxBytes)
     return try {
         val size = Files.size(this)
-        require(size <= maxBytes) {
-            "이미지 경로가 ${maxBytes} bytes를 초과합니다: $size bytes"
-        }
+        require(size <= maxBytes) { "이미지 경로가 $maxBytes bytes를 초과합니다: $size bytes" }
+
         readImageMetadataReport(options).exif
     } catch (e: IllegalArgumentException) {
         throw e
     } catch (e: IOException) {
-        log.warn(e) { "EXIF 파일 열기 실패: $this" }
+        ExifDataLog.log.warn(e) { "EXIF 파일 열기 실패: $this" }
         ExifData.EMPTY
     }
 }
@@ -182,11 +181,11 @@ fun InputStream.readExif(maxBytes: Int = DEFAULT_EXIF_MAX_BYTES): ExifData {
         is ImageMetadataReadResult.Success -> result.report.exif
         is ImageMetadataReadResult.Failure -> when (result.kind) {
             ImageMetadataReadFailureKind.SIZE_LIMIT ->
-                throw IllegalArgumentException("이미지 스트림이 ${maxBytes} bytes를 초과합니다")
+                throw IllegalArgumentException("이미지 스트림이 $maxBytes bytes를 초과합니다")
 
             ImageMetadataReadFailureKind.IO,
             ImageMetadataReadFailureKind.PARSE,
-            -> ExifData.EMPTY
+                -> ExifData.EMPTY
         }
     }
 }
@@ -216,10 +215,11 @@ suspend fun Path.suspendReadExif(): ExifData =
 // ─── 내부 변환 ───────────────────────────────────────────────────────────────
 
 private inline fun <T> runCatchingDebug(tag: String, block: () -> T?): T? =
-    runCatching(block).getOrElse { e ->
-        log.debug(e) { "EXIF 필드 파싱 실패: $tag" }
-        null
-    }
+    runCatching(block)
+        .getOrElse { e ->
+            ExifDataLog.log.debug(e) { "EXIF 필드 파싱 실패: $tag" }
+            null
+        }
 
 internal fun Metadata.toExifData(): ExifData {
     val ifd0 = getFirstDirectoryOfType(ExifIFD0Directory::class.java)

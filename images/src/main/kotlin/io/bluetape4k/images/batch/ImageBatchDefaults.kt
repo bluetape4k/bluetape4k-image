@@ -1,5 +1,7 @@
 package io.bluetape4k.images.batch
 
+import io.bluetape4k.utils.Runtimex
+
 /**
  * 배치 이미지 처리의 기본 픽셀 한도입니다.
  */
@@ -53,4 +55,4 @@ internal const val PIXEL_PERMIT_RETRY_DELAY_MILLIS: Long = 1L
  * 현재 런타임에 맞춘 이미지 배치 기본 병렬도를 반환합니다.
  */
 fun defaultImageBatchParallelism(): Int =
-    Runtime.getRuntime().availableProcessors().coerceAtLeast(MIN_IMAGE_BATCH_PARALLELISM)
+    Runtimex.availableProcessors.coerceAtLeast(MIN_IMAGE_BATCH_PARALLELISM)

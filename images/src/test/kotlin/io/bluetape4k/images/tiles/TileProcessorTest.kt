@@ -1,10 +1,10 @@
 package io.bluetape4k.images.tiles
 
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeGreaterThan
 import io.bluetape4k.images.AbstractImageTest
 import io.bluetape4k.images.immutableImageOf
 import io.bluetape4k.utils.Resourcex
-import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldBeGreaterThan
 import org.junit.jupiter.api.Test
 
 class TileProcessorTest: AbstractImageTest() {

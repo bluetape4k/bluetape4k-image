@@ -5,14 +5,17 @@ import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeInstanceOf
 import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.logging.KLogging
 import org.junit.jupiter.api.Test
 import java.awt.Color
 import java.awt.image.BufferedImage
 import java.io.ByteArrayOutputStream
-import javax.imageio.ImageIO
 import javax.imageio.IIOException
+import javax.imageio.ImageIO
 
 class ImageDimensionProbeTest {
+
+    companion object: KLogging()
 
     @Test
     fun `probeImageDimensions reads dimensions from encoded bytes without full decode`() {
@@ -35,7 +38,7 @@ class ImageDimensionProbeTest {
     @Test
     fun `probeImageDimensionsDetailed distinguishes unavailable and malformed input`() {
         probeImageDimensionsDetailed(ByteArray(32) { 0x7F.toByte() }) shouldBeEqualTo
-            ImageDimensionProbeResult.Unavailable
+                ImageDimensionProbeResult.Unavailable
 
         val truncatedPng = byteArrayOf(
             0x89.toByte(),
@@ -49,6 +52,7 @@ class ImageDimensionProbeTest {
         )
         val malformed = probeImageDimensionsDetailed(truncatedPng)
             .shouldBeInstanceOf<ImageDimensionProbeResult.Malformed>()
+
         malformed.cause.shouldBeInstanceOf<IIOException>()
     }
 
@@ -86,9 +90,9 @@ class ImageDimensionProbeTest {
             graphics.dispose()
         }
 
-        return ByteArrayOutputStream().use { output ->
-            ImageIO.write(image, "png", output)
-            output.toByteArray()
+        return ByteArrayOutputStream().use { bos ->
+            ImageIO.write(image, "png", bos)
+            bos.toByteArray()
         }
     }
 }

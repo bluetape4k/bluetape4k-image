@@ -1,12 +1,16 @@
 package io.bluetape4k.images.analysis
 
 import com.sksamuel.scrimage.ImmutableImage
-import io.bluetape4k.logging.KotlinLogging
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.warn
+import io.bluetape4k.support.requireGe
+import io.bluetape4k.support.requireInRange
+import io.bluetape4k.support.requirePositiveNumber
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.io.Serializable
 
-private val log = KotlinLogging.logger {}
+private object DominantColorLog: KLogging()
 
 /**
  * 이미지에서 추출된 대표 색상.
@@ -23,12 +27,12 @@ data class DominantColor(
     val g: Int,
     val b: Int,
     val population: Int,
-) {
+): Serializable {
     init {
-        require(r in 0..255) { "r은 0..255 범위여야 합니다. 입력: $r" }
-        require(g in 0..255) { "g는 0..255 범위여야 합니다. 입력: $g" }
-        require(b in 0..255) { "b는 0..255 범위여야 합니다. 입력: $b" }
-        require(population >= 0) { "population은 0 이상이어야 합니다. 입력: $population" }
+        r.requireInRange(0, 255) { "r은 0..255 범위여야 합니다. 입력: $r" }
+        g.requireInRange(0, 255) { "g는 0..255 범위여야 합니다. 입력: $g" }
+        b.requireInRange(0, 255) { "b는 0..255 범위여야 합니다. 입력: $b" }
+        population.requireGe(0) { "population은 0 이상이어야 합니다. 입력: $population" }
     }
 
     /** `#rrggbb` 형식의 16진수 색상 코드 */
@@ -48,6 +52,8 @@ data class DominantColor(
                 b = rgb and 0xFF,
                 population = population,
             )
+
+        private const val serialVersionUID: Long = 1L
     }
 }
 
@@ -77,9 +83,9 @@ sealed interface DominantColorExtractor {
     data class MedianCut(
         val quality: Int = 10,
         val ignoreWhite: Boolean = false,
-    ) : DominantColorExtractor {
+    ): DominantColorExtractor {
         init {
-            require(quality in 1..30) { "quality는 1..30 범위여야 합니다. 입력: $quality" }
+            quality.requireInRange(1, 30) { "quality는 1..30 범위여야 합니다. 입력: $quality" }
         }
 
         override fun extract(image: ImmutableImage, count: Int): List<DominantColor> =
@@ -104,11 +110,11 @@ fun ImmutableImage.dominantColors(
     count: Int = 5,
     extractor: DominantColorExtractor = DominantColorExtractor.medianCut(),
 ): List<DominantColor> {
-    require(count >= 1) { "count는 1 이상이어야 합니다. 입력: $count" }
+    count.requirePositiveNumber("count")
     return try {
         extractor.extract(this, count)
     } catch (e: Exception) {
-        log.warn(e) { "대표 색상 추출 실패 (size=${width}x${height}, count=$count)" }
+        DominantColorLog.log.warn(e) { "대표 색상 추출 실패 (size=${width}x${height}, count=$count)" }
         emptyList()
     }
 }
@@ -123,7 +129,8 @@ fun ImmutableImage.dominantColors(
  */
 fun ImmutableImage.dominantColor(
     extractor: DominantColorExtractor = DominantColorExtractor.medianCut(),
-): DominantColor? = dominantColors(1, extractor).firstOrNull()
+): DominantColor? =
+    dominantColors(1, extractor).firstOrNull()
 
 /**
  * 이미지에서 [count]개의 대표 색상을 비동기로 추출한다.
@@ -136,4 +143,7 @@ fun ImmutableImage.dominantColor(
 suspend fun ImmutableImage.suspendDominantColors(
     count: Int = 5,
     extractor: DominantColorExtractor = DominantColorExtractor.medianCut(),
-): List<DominantColor> = withContext(Dispatchers.Default) { dominantColors(count, extractor) }
+): List<DominantColor> =
+    withContext(Dispatchers.Default) {
+        dominantColors(count, extractor)
+    }

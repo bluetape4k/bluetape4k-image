@@ -2,7 +2,9 @@ package io.bluetape4k.images.filters
 
 import com.sksamuel.scrimage.ImmutableImage
 import com.sksamuel.scrimage.filter.Filter
-import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.ToStringBuilder
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.support.requireGe
 
 /**
  * [MedianBlurFilter]가 윈도우 경계 밖의 픽셀을 처리하는 방식.
@@ -32,10 +34,10 @@ class MedianBlurFilter(
 ): Filter {
 
     init {
-        require(radius >= 0) { "radius must be >= 0, but was $radius" }
+        radius.requireGe(0, "radius")
     }
 
-    companion object: KLoggingChannel()
+    companion object: KLogging()
 
     override fun apply(image: ImmutableImage) {
         if (radius == 0) return
@@ -86,6 +88,13 @@ class MedianBlurFilter(
             val p = ((pos % period) + period) % period
             if (p >= size) period - 1 - p else p
         }
+    }
+
+    override fun toString(): String {
+        return ToStringBuilder(this)
+            .add("radius", radius)
+            .add("boundary", boundary)
+            .toString()
     }
 }
 

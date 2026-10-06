@@ -1,13 +1,14 @@
 package io.bluetape4k.images.analysis
 
-import io.bluetape4k.logging.coroutines.KLoggingChannel
-import io.bluetape4k.logging.debug
-import io.bluetape4k.utils.Resourcex
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeNull
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
+import io.bluetape4k.utils.Resourcex
 import org.junit.jupiter.api.Test
 import java.awt.image.BufferedImage
 import java.io.ByteArrayInputStream
@@ -19,7 +20,7 @@ import javax.imageio.ImageIO
 
 class ExifDataTest {
 
-    companion object: KLoggingChannel() {
+    companion object: KLogging() {
         private const val HOMER_JPG = "images/homer.jpg"
         private const val CAFE_JPG = "images/cafe.jpg"
 
@@ -30,9 +31,11 @@ class ExifDataTest {
             gfx.color = java.awt.Color(100, 150, 200)
             gfx.fillRect(0, 0, width, height)
             gfx.dispose()
-            val baos = ByteArrayOutputStream()
-            ImageIO.write(buf, "jpg", baos)
-            return baos.toByteArray()
+
+            ByteArrayOutputStream().use { bos ->
+                ImageIO.write(buf, "jpg", bos)
+                return bos.toByteArray()
+            }
         }
 
         private fun resourceFile(path: String): File? =
@@ -62,6 +65,7 @@ class ExifDataTest {
     fun `readExif on programmatic no-exif jpeg has no GPS`() {
         val bytes = noExifJpegBytes()
         val result = readExif(bytes)
+
         log.debug { "no-exif readExif: $result" }
         result.hasGps.shouldBeFalse()
         result.gpsLatitude.shouldBeNull()
@@ -71,6 +75,7 @@ class ExifDataTest {
     @Test
     fun `readExif 50MB guard throws`() {
         val oversized = ByteArray(50 * 1024 * 1024 + 1)
+
         assertFailsWith<IllegalArgumentException> {
             readExif(oversized)
         }
@@ -81,6 +86,7 @@ class ExifDataTest {
         // 유효한 JPEG가 아니므로 파싱 실패 → EMPTY 반환 (예외 아님)
         val maxSized = ByteArray(50 * 1024 * 1024)
         val result = readExif(maxSized)
+
         result shouldBeEqualTo ExifData.EMPTY
     }
 
@@ -114,8 +120,9 @@ class ExifDataTest {
 
     @Test
     fun `readExif on real photo bytes succeeds`() {
-        val bytes = Resourcex.getInputStream(HOMER_JPG)!!.use { it.readBytes() }
+        val bytes = Resourcex.getInputStream(HOMER_JPG).shouldNotBeNull().use { it.readBytes() }
         val result = readExif(bytes)
+
         log.debug { "homer readExif via bytes: $result" }
         // 예외 없이 ExifData를 반환해야 한다
         result.hasGps.shouldBeFalse()  // homer는 만화 이미지 → GPS 없음
@@ -126,6 +133,8 @@ class ExifDataTest {
     @Test
     fun `File readExif on nonexistent file returns EMPTY`() {
         val file = File("/tmp/does-not-exist-99999.jpg")
+        file.exists().shouldBeFalse()
+
         val result = file.readExif()
         result shouldBeEqualTo ExifData.EMPTY
     }
@@ -149,9 +158,19 @@ class ExifDataTest {
     // ─── Path.readExif() 검증 ───────────────────────────────────────────────
 
     @Test
-    fun `Path readExif on real photo file`() {
-        val path = resourcePath(HOMER_JPG) ?: return
+    fun `Path readExif on real photo file that has gps`() {
+        val path = resourcePath(CAFE_JPG).shouldNotBeNull()
         val result = path.readExif()
+
+        log.debug { "cafe Path.readExif: $result" }
+        result.hasGps.shouldBeTrue()
+    }
+
+    @Test
+    fun `Path readExif on real photo file that has no GPS`() {
+        val path = resourcePath(HOMER_JPG).shouldNotBeNull()
+        val result = path.readExif()
+
         log.debug { "homer Path.readExif: $result" }
         result.hasGps.shouldBeFalse()
     }
@@ -172,6 +191,7 @@ class ExifDataTest {
     fun `InputStream readExif on programmatic jpeg`() {
         val bytes = noExifJpegBytes()
         val result = ByteArrayInputStream(bytes).readExif()
+
         log.debug { "no-exif InputStream.readExif: $result" }
         result.hasGps.shouldBeFalse()
     }
@@ -183,9 +203,17 @@ class ExifDataTest {
         }
     }
 
+
     @Test
-    fun `InputStream readExif on real photo`() {
-        val result = Resourcex.getInputStream(HOMER_JPG)!!.readExif()
+    fun `InputStream readExif on real photo with GPS`() {
+        val result = Resourcex.getInputStream(CAFE_JPG).shouldNotBeNull().readExif()
+        log.debug { "cafe InputStream.readExif: $result" }
+        result.hasGps.shouldBeTrue()
+    }
+
+    @Test
+    fun `InputStream readExif on real photo with no GPS`() {
+        val result = Resourcex.getInputStream(HOMER_JPG).shouldNotBeNull().readExif()
         log.debug { "homer InputStream.readExif: $result" }
         result.hasGps.shouldBeFalse()
     }

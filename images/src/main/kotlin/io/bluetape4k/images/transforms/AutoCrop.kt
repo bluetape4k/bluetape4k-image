@@ -54,11 +54,11 @@ fun ImmutableImage.autoCrop(
         val bottomRight = pixels[h * w - 1]
 
         val avgR = ((topLeft ushr 16 and 0xFF) + (topRight ushr 16 and 0xFF) +
-            (bottomLeft ushr 16 and 0xFF) + (bottomRight ushr 16 and 0xFF)) / 4
+                (bottomLeft ushr 16 and 0xFF) + (bottomRight ushr 16 and 0xFF)) / 4
         val avgG = ((topLeft ushr 8 and 0xFF) + (topRight ushr 8 and 0xFF) +
-            (bottomLeft ushr 8 and 0xFF) + (bottomRight ushr 8 and 0xFF)) / 4
+                (bottomLeft ushr 8 and 0xFF) + (bottomRight ushr 8 and 0xFF)) / 4
         val avgB = ((topLeft and 0xFF) + (topRight and 0xFF) +
-            (bottomLeft and 0xFF) + (bottomRight and 0xFF)) / 4
+                (bottomLeft and 0xFF) + (bottomRight and 0xFF)) / 4
 
         Triple(avgR, avgG, avgB)
     }
@@ -69,8 +69,8 @@ fun ImmutableImage.autoCrop(
         val g = pixel ushr 8 and 0xFF
         val b = pixel and 0xFF
         return kotlin.math.abs(r - bgR) <= tolerance &&
-            kotlin.math.abs(g - bgG) <= tolerance &&
-            kotlin.math.abs(b - bgB) <= tolerance
+                kotlin.math.abs(g - bgG) <= tolerance &&
+                kotlin.math.abs(b - bgB) <= tolerance
     }
 
     // 위쪽 경계: 배경이 아닌 픽셀이 하나라도 있는 첫 번째 행

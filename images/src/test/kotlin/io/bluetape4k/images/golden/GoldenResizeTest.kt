@@ -14,7 +14,7 @@ import org.junit.jupiter.api.Test
  */
 class GoldenResizeTest {
 
-    companion object : KLoggingChannel() {
+    companion object: KLoggingChannel() {
         private const val HOMER_JPG = "/images/homer.jpg"
     }
 

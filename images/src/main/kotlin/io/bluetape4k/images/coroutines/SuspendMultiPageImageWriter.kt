@@ -28,7 +28,7 @@ interface SuspendMultiPageImageWriter {
      * @param images 쓸 이미지 리스트 (순서 보장)
      * @param out    쓰기 대상 [OutputStream]
      */
-    suspend fun suspendWrite(images: List<ImmutableImage>, out: OutputStream)
+    suspend fun suspendWrite(images: Collection<ImmutableImage>, out: OutputStream)
 }
 
 /**

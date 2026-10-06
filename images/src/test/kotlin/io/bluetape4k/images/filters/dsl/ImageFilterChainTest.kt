@@ -1,15 +1,16 @@
 package io.bluetape4k.images.filters.dsl
 
 import com.sksamuel.scrimage.filter.BrightnessFilter
-import io.bluetape4k.images.filters.AbstractFilterTest
-import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeInstanceOf
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.images.filters.AbstractFilterTest
+import io.bluetape4k.logging.KLogging
 import org.junit.jupiter.api.Test
 
-class ImageFilterChainTest : AbstractFilterTest() {
+class ImageFilterChainTest: AbstractFilterTest() {
 
-    companion object : KLoggingChannel()
+    companion object: KLogging()
 
     @Test
     fun `empty ops - build returns empty list`() {
@@ -35,7 +36,7 @@ class ImageFilterChainTest : AbstractFilterTest() {
 
         val ops = chain.build()
         ops.size shouldBeEqualTo 1
-        (ops[0] is ImageFilterChain.Op.Pixel).shouldBeTrue()
+        ops[0].shouldBeInstanceOf<ImageFilterChain.Op.Pixel>()
     }
 
     @Test
@@ -46,8 +47,8 @@ class ImageFilterChainTest : AbstractFilterTest() {
 
         val ops = chain.build()
         ops.size shouldBeEqualTo 2
-        (ops[0] is ImageFilterChain.Op.Native).shouldBeTrue()
-        (ops[1] is ImageFilterChain.Op.Pixel).shouldBeTrue()
+        ops[0].shouldBeInstanceOf<ImageFilterChain.Op.Native>()
+        ops[1].shouldBeInstanceOf<ImageFilterChain.Op.Pixel>()
     }
 
     @Test
@@ -59,8 +60,8 @@ class ImageFilterChainTest : AbstractFilterTest() {
 
         val ops = chain.build()
         ops.size shouldBeEqualTo 3
-        (ops[0] is ImageFilterChain.Op.Native).shouldBeTrue()
-        (ops[1] is ImageFilterChain.Op.Native).shouldBeTrue()
-        (ops[2] is ImageFilterChain.Op.Native).shouldBeTrue()
+        ops.forEach { op ->
+            op.shouldBeInstanceOf<ImageFilterChain.Op.Native>()
+        }
     }
 }

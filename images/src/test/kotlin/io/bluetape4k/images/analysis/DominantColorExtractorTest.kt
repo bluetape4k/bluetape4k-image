@@ -1,9 +1,6 @@
 package io.bluetape4k.images.analysis
 
 import com.sksamuel.scrimage.ImmutableImage
-import io.bluetape4k.logging.coroutines.KLoggingChannel
-import io.bluetape4k.logging.debug
-import io.bluetape4k.utils.Resourcex
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEmpty
 import io.bluetape4k.assertions.shouldBeEqualTo
@@ -15,6 +12,9 @@ import io.bluetape4k.assertions.shouldHaveSize
 import io.bluetape4k.assertions.shouldMatch
 import io.bluetape4k.assertions.shouldNotBeEmpty
 import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
+import io.bluetape4k.utils.Resourcex
 import org.junit.jupiter.api.Test
 import java.awt.image.BufferedImage
 import java.io.ByteArrayOutputStream
@@ -22,13 +22,13 @@ import javax.imageio.ImageIO
 
 class DominantColorExtractorTest {
 
-    companion object: KLoggingChannel() {
+    companion object: KLogging() {
         private const val HOMER_JPG = "images/homer.jpg"
         private const val CAFE_JPG = "images/cafe.jpg"
         private const val LANDSCAPE_JPG = "images/landscape.jpg"
 
         private fun loadImage(path: String): ImmutableImage =
-            ImmutableImage.loader().fromStream(Resourcex.getInputStream(path)!!)
+            ImmutableImage.loader().fromStream(Resourcex.getInputStream(path).shouldNotBeNull())
 
         /** 단색 JPEG 이미지를 프로그래밍으로 생성한다. */
         fun solidColorImage(r: Int, g: Int, b: Int, width: Int = 100, height: Int = 100): ImmutableImage {
@@ -38,9 +38,11 @@ class DominantColorExtractorTest {
             gfx.color = color
             gfx.fillRect(0, 0, width, height)
             gfx.dispose()
-            val baos = ByteArrayOutputStream()
-            ImageIO.write(buffered, "jpg", baos)
-            return ImmutableImage.loader().fromBytes(baos.toByteArray())
+
+            ByteArrayOutputStream().use { baos ->
+                ImageIO.write(buffered, "jpg", baos)
+                return ImmutableImage.loader().fromBytes(baos.toByteArray())
+            }
         }
 
         /** 단색 PNG 이미지를 프로그래밍으로 생성한다 (손실 없음 — ignoreWhite 테스트용). */
@@ -51,9 +53,11 @@ class DominantColorExtractorTest {
             gfx.color = color
             gfx.fillRect(0, 0, width, height)
             gfx.dispose()
-            val baos = ByteArrayOutputStream()
-            ImageIO.write(buffered, "png", baos)
-            return ImmutableImage.loader().fromBytes(baos.toByteArray())
+
+            ByteArrayOutputStream().use { baos ->
+                ImageIO.write(buffered, "png", baos)
+                return ImmutableImage.loader().fromBytes(baos.toByteArray())
+            }
         }
     }
 
@@ -61,6 +65,7 @@ class DominantColorExtractorTest {
     fun `dominantColors returns correct number of colors`() {
         val image = loadImage(HOMER_JPG)
         val colors = image.dominantColors(5)
+
         log.debug { "homer dominantColors(5): $colors" }
         colors.shouldNotBeEmpty()
         colors.size shouldBeLessOrEqualTo 5
@@ -78,6 +83,7 @@ class DominantColorExtractorTest {
     fun `red solid image returns reddish dominant color`() {
         val image = solidColorImage(220, 30, 30)
         val color = image.dominantColor()
+
         log.debug { "red solid dominantColor: $color" }
         color.shouldNotBeNull()
         color.r shouldBeGreaterOrEqualTo color.g
@@ -88,6 +94,7 @@ class DominantColorExtractorTest {
     fun `blue solid image returns bluish dominant color`() {
         val image = solidColorImage(30, 30, 200)
         val color = image.dominantColor()
+
         log.debug { "blue solid dominantColor: $color" }
         color.shouldNotBeNull()
         color.b shouldBeGreaterOrEqualTo color.r
@@ -138,6 +145,8 @@ class DominantColorExtractorTest {
     fun `fromRgb parses RGB integer correctly`() {
         val rgb = 0xFF8000 // orange: R=255 G=128 B=0
         val color = DominantColor.fromRgb(rgb, population = 42)
+
+        log.debug { "color: $color" }
         color.r shouldBeEqualTo 0xFF
         color.g shouldBeEqualTo 0x80
         color.b shouldBeEqualTo 0x00
@@ -148,6 +157,8 @@ class DominantColorExtractorTest {
     fun `toAwtColor returns correct color`() {
         val dominant = DominantColor(100, 150, 200, 50)
         val awt = dominant.toAwtColor()
+
+        log.debug { "awt color: $awt" }
         awt.red shouldBeEqualTo 100
         awt.green shouldBeEqualTo 150
         awt.blue shouldBeEqualTo 200
@@ -200,6 +211,7 @@ class DominantColorExtractorTest {
         log.debug { "fast: $fast, precise: $precise" }
         fast.shouldNotBeEmpty()
         precise.shouldNotBeEmpty()
+
         // quality=1은 모든 픽셀 샘플링 → 첫 번째 색상의 population이 더 큼
         precise.first().population shouldBeGreaterThan fast.first().population
     }
@@ -216,6 +228,7 @@ class DominantColorExtractorTest {
     fun `cafe image extracts multiple distinct colors`() {
         val image = loadImage(CAFE_JPG)
         val colors = image.dominantColors(5)
+
         log.debug { "cafe colors: ${colors.map { it.hex }}" }
         colors shouldHaveSize colors.distinctBy { it.hex }.size // 중복 hex 없어야 함
     }

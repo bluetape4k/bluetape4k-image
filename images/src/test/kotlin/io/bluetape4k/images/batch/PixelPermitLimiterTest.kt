@@ -2,16 +2,21 @@ package io.bluetape4k.images.batch
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.coroutines.support.log
 import io.bluetape4k.images.AbstractImageTest
+import io.bluetape4k.logging.KLogging
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.yield
 import org.junit.jupiter.api.Test
 import java.util.concurrent.atomic.AtomicInteger
 
-class PixelPermitLimiterTest : AbstractImageTest() {
+class PixelPermitLimiterTest: AbstractImageTest() {
+
+    companion object: KLogging()
 
     @Test
     fun `withPermit executes block and returns result when permits available`() = runTest {
@@ -72,7 +77,7 @@ class PixelPermitLimiterTest : AbstractImageTest() {
     fun `concurrent withPermit calls complete without corruption`() = runTest {
         val limiter = PixelPermitLimiter(maxPixels = 50_000L)
         val counter = AtomicInteger(0)
-        val jobs = (1..20).map {
+        val jobs = List(20) {
             launch {
                 limiter.withPermit(1_000L) {
                     counter.incrementAndGet()
@@ -98,11 +103,11 @@ class PixelPermitLimiterTest : AbstractImageTest() {
                 // test를 suspend해서 permit을 한동안 보유하는 상황을 흉내 냅니다.
                 delay(timeMillis = Long.MAX_VALUE)
             }
-        }
+        }.log("Job")
 
         // holder가 시작될 때까지 기다립니다.
         while (!holderStarted) {
-            kotlinx.coroutines.yield()
+            yield()
         }
 
         // 이제 waiter를 시작합니다. 즉시 acquire할 수 없습니다.
@@ -110,7 +115,7 @@ class PixelPermitLimiterTest : AbstractImageTest() {
             limiter.withPermit(1L) {
                 // 이 test 중에는 여기까지 도달하면 안 됩니다.
             }
-        }
+        }.log("Waiter")
 
         // waiter를 cancel합니다. 예외나 deadlock이 발생하면 안 됩니다.
         waiter.cancelAndJoin()

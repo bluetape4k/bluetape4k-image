@@ -1,8 +1,8 @@
 package io.bluetape4k.images.tiles
 
+import com.sksamuel.scrimage.ImmutableImage
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
-import com.sksamuel.scrimage.ImmutableImage
 import org.junit.jupiter.api.Test
 import java.awt.Color
 import java.awt.image.BufferedImage

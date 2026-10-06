@@ -28,7 +28,7 @@ abstract class AbstractImageTest {
     }
 
     protected fun getImageFileNames() = listOf(
-        "homer", "labor"
+        "homer", "labor", "cafe", "landscape"
     )
 
     protected fun getImage(path: String): InputStream =

@@ -8,7 +8,10 @@ import com.sksamuel.scrimage.ImmutableImage
  * - [RGB]: 일반적인 사진/그림 비교에 적합. 채널 간 독립.
  * - [HSV]: 조명 변화에 더 강건. 색상(H)/채도(S)/명도(V) 분리 비교.
  */
-enum class ColorSpace { RGB, HSV }
+enum class ColorSpace {
+    RGB,
+    HSV
+}
 
 /**
  * 이미지의 정규화된 색상 히스토그램을 생성합니다.
@@ -91,7 +94,7 @@ sealed interface HistogramSimilarity {
     /**
      * Chi-Square 거리 기반 유사도.
      *
- * 계산식: `d = sum((p-q)² / (p+q+ε))` → `similarity = exp(-d/2)`
+     * 계산식: `d = sum((p-q)² / (p+q+ε))` → `similarity = exp(-d/2)`
      *
      * 분포 차이에 민감하여 작은 색상 변화도 잘 잡아냅니다.
      *
@@ -157,7 +160,7 @@ sealed interface HistogramSimilarity {
     /**
      * 1D Earth Mover's Distance (CDF 차이의 합) 기반 유사도.
      *
- * 계산식: `similarity = 1 - emd/dMax`, `dMax = channels * (binsPerChannel - 1)`.
+     * 계산식: `similarity = 1 - emd/dMax`, `dMax = channels * (binsPerChannel - 1)`.
      *
      * 순서에 민감 — H 채널 wrap-around 미지원. RGB 또는 HSV의 S/V 채널 사용을 권장.
      *

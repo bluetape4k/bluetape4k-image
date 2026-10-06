@@ -1,6 +1,7 @@
 package io.bluetape4k.images.coroutines
 
 import com.sksamuel.scrimage.webp.WebpWriter
+import io.bluetape4k.ToStringBuilder
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 
 /**
@@ -83,5 +84,15 @@ class SuspendWebpWriter(
      */
     override fun withZ(z: Int): SuspendWebpWriter {
         return SuspendWebpWriter(z, q, m, lossless, noAlpha)
+    }
+
+    override fun toString(): String {
+        return ToStringBuilder(this)
+            .add("z", z)
+            .add("q", q)
+            .add("m", m)
+            .add("lossless", lossless)
+            .add("noAlpha", noAlpha)
+            .toString()
     }
 }

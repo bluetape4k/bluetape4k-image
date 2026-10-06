@@ -2,9 +2,9 @@ package io.bluetape4k.images.svg
 
 import com.sksamuel.scrimage.nio.PngWriter
 import io.bluetape4k.assertions.assertFailsWith
-import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldBeGreaterThan
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.images.AbstractImageTest
 import io.bluetape4k.junit5.coroutines.runSuspendIO
@@ -16,9 +16,9 @@ import io.bluetape4k.utils.Resourcex
 import org.junit.jupiter.api.Test
 
 @TempFolderTest
-class BatikSvgRasterizerTest : AbstractImageTest() {
+class BatikSvgRasterizerTest: AbstractImageTest() {
 
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     private val rasterizer = BatikSvgRasterizer()
 

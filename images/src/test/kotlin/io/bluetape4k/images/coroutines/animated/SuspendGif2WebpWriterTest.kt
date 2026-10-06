@@ -2,14 +2,14 @@ package io.bluetape4k.images.coroutines.animated
 
 import com.sksamuel.scrimage.nio.AnimatedGifReader
 import com.sksamuel.scrimage.nio.ImageSource
+import io.bluetape4k.assertions.shouldBeGreaterThan
+import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.images.AbstractImageTest
 import io.bluetape4k.io.readAllBytesSuspending
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.junit5.tempfolder.TempFolder
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
-import io.bluetape4k.assertions.shouldBeGreaterThan
-import io.bluetape4k.assertions.shouldBeTrue
 import org.junit.jupiter.api.Test
 import java.nio.file.Path
 
@@ -30,7 +30,8 @@ class SuspendGif2WebpWriterTest: AbstractImageTest() {
             gif2.forSuspendWriter(SuspendGif2WebpWriter.Default).write(Path.of("$BASE_PATH/animated.webp"))
         }
         log.debug { "save animated.webp file to $saved" }
+
         saved.toFile().exists().shouldBeTrue()
-        saved.toFile().length().shouldBeGreaterThan(0)
+        saved.toFile().length() shouldBeGreaterThan 0
     }
 }

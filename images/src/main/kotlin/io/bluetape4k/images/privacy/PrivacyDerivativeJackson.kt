@@ -3,8 +3,8 @@ package io.bluetape4k.images.privacy
 import tools.jackson.core.JacksonException
 import tools.jackson.core.JsonParser
 import tools.jackson.core.JsonToken
-import tools.jackson.core.StreamWriteFeature
 import tools.jackson.core.StreamReadConstraints
+import tools.jackson.core.StreamWriteFeature
 import tools.jackson.core.exc.StreamConstraintsException
 import tools.jackson.core.json.JsonFactory
 import tools.jackson.databind.DeserializationFeature
@@ -54,21 +54,40 @@ object PrivacyDerivativeJackson {
     fun encodeOptions(value: PrivacyDerivativeOptionsSnapshot): String = encode(KIND_OPTIONS, value)
 
     /** options snapshot JSON을 복원합니다. */
-    fun decodeOptions(json: String, limits: PrivacyDerivativeJsonLimits = PrivacyDerivativeJsonLimits()): PrivacyDerivativeOptionsSnapshot =
-        decode(json.toByteArray(StandardCharsets.UTF_8), KIND_OPTIONS, PrivacyDerivativeOptionsSnapshot::class.java, limits)
+    fun decodeOptions(
+        json: String,
+        limits: PrivacyDerivativeJsonLimits = PrivacyDerivativeJsonLimits(),
+    ): PrivacyDerivativeOptionsSnapshot =
+        decode(
+            json.toByteArray(StandardCharsets.UTF_8),
+            KIND_OPTIONS,
+            PrivacyDerivativeOptionsSnapshot::class.java,
+            limits
+        )
 
     /** report snapshot을 canonical envelope JSON으로 인코딩합니다. */
     fun encodeReport(value: PrivacyDerivativeReportSnapshot): String = encode(KIND_REPORT, value)
 
     /** report snapshot JSON을 복원합니다. */
-    fun decodeReport(json: String, limits: PrivacyDerivativeJsonLimits = PrivacyDerivativeJsonLimits()): PrivacyDerivativeReportSnapshot =
-        decode(json.toByteArray(StandardCharsets.UTF_8), KIND_REPORT, PrivacyDerivativeReportSnapshot::class.java, limits)
+    fun decodeReport(
+        json: String,
+        limits: PrivacyDerivativeJsonLimits = PrivacyDerivativeJsonLimits(),
+    ): PrivacyDerivativeReportSnapshot =
+        decode(
+            json.toByteArray(StandardCharsets.UTF_8),
+            KIND_REPORT,
+            PrivacyDerivativeReportSnapshot::class.java,
+            limits
+        )
 
     /** payload snapshot을 canonical envelope JSON으로 인코딩합니다. */
     fun encodePayload(value: PrivacyDerivativePayload): String = encode(KIND_PAYLOAD, value)
 
     /** payload snapshot JSON을 복원합니다. */
-    fun decodePayload(json: String, limits: PrivacyDerivativeJsonLimits = PrivacyDerivativeJsonLimits()): PrivacyDerivativePayload =
+    fun decodePayload(
+        json: String,
+        limits: PrivacyDerivativeJsonLimits = PrivacyDerivativeJsonLimits(),
+    ): PrivacyDerivativePayload =
         decode(json.toByteArray(StandardCharsets.UTF_8), KIND_PAYLOAD, PrivacyDerivativePayload::class.java, limits)
 
     /** payload snapshot을 UTF-8 byte로 인코딩합니다. */
@@ -76,7 +95,10 @@ object PrivacyDerivativeJackson {
         encodePayload(value).toByteArray(StandardCharsets.UTF_8)
 
     /** UTF-8 payload snapshot을 복원합니다. */
-    fun decodePayload(bytes: ByteArray, limits: PrivacyDerivativeJsonLimits = PrivacyDerivativeJsonLimits()): PrivacyDerivativePayload =
+    fun decodePayload(
+        bytes: ByteArray,
+        limits: PrivacyDerivativeJsonLimits = PrivacyDerivativeJsonLimits(),
+    ): PrivacyDerivativePayload =
         decode(bytes, KIND_PAYLOAD, PrivacyDerivativePayload::class.java, limits)
 
     /** payload snapshot을 caller stream에 한 번 쓰며 stream을 flush/close하지 않습니다. */
@@ -123,24 +145,42 @@ object PrivacyDerivativeJackson {
         encodeTo(KIND_BATCH, value, output)
 
     /** options snapshot을 caller stream에서 읽습니다. */
-    fun decodeOptions(input: InputStream, limits: PrivacyDerivativeJsonLimits = PrivacyDerivativeJsonLimits()): PrivacyDerivativeOptionsSnapshot =
+    fun decodeOptions(
+        input: InputStream,
+        limits: PrivacyDerivativeJsonLimits = PrivacyDerivativeJsonLimits(),
+    ): PrivacyDerivativeOptionsSnapshot =
         decode(input, KIND_OPTIONS, PrivacyDerivativeOptionsSnapshot::class.java, limits)
 
     /** report snapshot을 caller stream에서 읽습니다. */
-    fun decodeReport(input: InputStream, limits: PrivacyDerivativeJsonLimits = PrivacyDerivativeJsonLimits()): PrivacyDerivativeReportSnapshot =
+    fun decodeReport(
+        input: InputStream,
+        limits: PrivacyDerivativeJsonLimits = PrivacyDerivativeJsonLimits(),
+    ): PrivacyDerivativeReportSnapshot =
         decode(input, KIND_REPORT, PrivacyDerivativeReportSnapshot::class.java, limits)
 
     /** batch snapshot을 caller stream에서 읽습니다. */
-    fun decodeBatch(input: InputStream, limits: PrivacyDerivativeJsonLimits = PrivacyDerivativeJsonLimits()): PrivacyDerivativeBatchSnapshot =
+    fun decodeBatch(
+        input: InputStream,
+        limits: PrivacyDerivativeJsonLimits = PrivacyDerivativeJsonLimits(),
+    ): PrivacyDerivativeBatchSnapshot =
         decode(input, KIND_BATCH, PrivacyDerivativeBatchSnapshot::class.java, limits)
 
-    fun decodeOptions(bytes: ByteArray, limits: PrivacyDerivativeJsonLimits = PrivacyDerivativeJsonLimits()): PrivacyDerivativeOptionsSnapshot =
+    fun decodeOptions(
+        bytes: ByteArray,
+        limits: PrivacyDerivativeJsonLimits = PrivacyDerivativeJsonLimits(),
+    ): PrivacyDerivativeOptionsSnapshot =
         decode(bytes, KIND_OPTIONS, PrivacyDerivativeOptionsSnapshot::class.java, limits)
 
-    fun decodeReport(bytes: ByteArray, limits: PrivacyDerivativeJsonLimits = PrivacyDerivativeJsonLimits()): PrivacyDerivativeReportSnapshot =
+    fun decodeReport(
+        bytes: ByteArray,
+        limits: PrivacyDerivativeJsonLimits = PrivacyDerivativeJsonLimits(),
+    ): PrivacyDerivativeReportSnapshot =
         decode(bytes, KIND_REPORT, PrivacyDerivativeReportSnapshot::class.java, limits)
 
-    fun decodeBatch(bytes: ByteArray, limits: PrivacyDerivativeJsonLimits = PrivacyDerivativeJsonLimits()): PrivacyDerivativeBatchSnapshot =
+    fun decodeBatch(
+        bytes: ByteArray,
+        limits: PrivacyDerivativeJsonLimits = PrivacyDerivativeJsonLimits(),
+    ): PrivacyDerivativeBatchSnapshot =
         decode(bytes, KIND_BATCH, PrivacyDerivativeBatchSnapshot::class.java, limits)
 
     private fun encodeTo(kind: String, value: Any, output: OutputStream) {
@@ -170,7 +210,10 @@ object PrivacyDerivativeJackson {
     }
 
     /** batch snapshot JSON을 복원합니다. */
-    fun decodeBatch(json: String, limits: PrivacyDerivativeJsonLimits = PrivacyDerivativeJsonLimits()): PrivacyDerivativeBatchSnapshot =
+    fun decodeBatch(
+        json: String,
+        limits: PrivacyDerivativeJsonLimits = PrivacyDerivativeJsonLimits(),
+    ): PrivacyDerivativeBatchSnapshot =
         decode(json.toByteArray(StandardCharsets.UTF_8), KIND_BATCH, PrivacyDerivativeBatchSnapshot::class.java, limits)
 
     private fun encode(kind: String, value: Any): String =
@@ -180,7 +223,7 @@ object PrivacyDerivativeJackson {
             throw PrivacyDerivativeCodecException(PrivacyDerivativeCodecReason.INVALID_VALUE)
         }
 
-    private fun <T : Any> decode(
+    private fun <T: Any> decode(
         bytes: ByteArray,
         expectedKind: String,
         targetType: Class<T>,
@@ -192,7 +235,7 @@ object PrivacyDerivativeJackson {
         return decodeRoot(parseSingleDocument(bytes), expectedKind, targetType, limits)
     }
 
-    private fun <T : Any> decodeRoot(
+    private fun <T: Any> decodeRoot(
         root: JsonNode,
         expectedKind: String,
         targetType: Class<T>,
@@ -226,7 +269,7 @@ object PrivacyDerivativeJackson {
         }
     }
 
-    private fun <T : Any> decode(
+    private fun <T: Any> decode(
         input: InputStream,
         expectedKind: String,
         targetType: Class<T>,
@@ -266,7 +309,7 @@ object PrivacyDerivativeJackson {
      * allocating the typed value. This is a deliberate wire-contract guard for bounded
      * external input; encoders in this object always emit this order.
      */
-    private fun <T : Any> decodeEnvelope(
+    private fun <T: Any> decodeEnvelope(
         parser: JsonParser,
         expectedKind: String,
         targetType: Class<T>,
@@ -474,7 +517,7 @@ object PrivacyDerivativeJackson {
         }
     }
 
-    private fun <T : Any> validateDecoded(value: T, limits: PrivacyDerivativeJsonLimits) {
+    private fun <T: Any> validateDecoded(value: T, limits: PrivacyDerivativeJsonLimits) {
         when (value) {
             is PrivacyDerivativePayload -> {
                 if (value.bytes.size > limits.maxPayloadBytes) {
@@ -523,7 +566,7 @@ object PrivacyDerivativeJackson {
     private class BoundedInputStream(
         private val delegate: InputStream,
         private val maxBytes: Int,
-    ) : InputStream() {
+    ): InputStream() {
         private var consumed: Int = 0
         private var overflowChecked: Boolean = false
         private var overflow: Boolean = false
@@ -584,9 +627,14 @@ object PrivacyDerivativeJackson {
     }
 
     private fun JacksonException.isUnknownFieldFailure(): Boolean =
-        message?.let { it.contains("unknown", ignoreCase = true) || it.contains("unrecognized", ignoreCase = true) } == true
+        message?.let {
+            it.contains("unknown", ignoreCase = true) || it.contains(
+                "unrecognized",
+                ignoreCase = true
+            )
+        } == true
 
-    private class CodecInputLimitException : IOException("input limit exceeded")
+    private class CodecInputLimitException: IOException("input limit exceeded")
 
     private data class JsonEnvelope<T>(
         val schemaVersion: Int,

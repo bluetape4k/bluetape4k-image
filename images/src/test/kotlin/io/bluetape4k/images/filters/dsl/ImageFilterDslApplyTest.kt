@@ -1,19 +1,20 @@
 package io.bluetape4k.images.filters.dsl
 
 import com.sksamuel.scrimage.ImmutableImage
-import io.bluetape4k.images.filters.AbstractFilterTest
-import io.bluetape4k.junit5.coroutines.runSuspendIO
-import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldContain
+import io.bluetape4k.images.filters.AbstractFilterTest
+import io.bluetape4k.images.useGraphics
+import io.bluetape4k.junit5.coroutines.runSuspendIO
+import io.bluetape4k.logging.KLogging
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.awt.image.BufferedImage
 import java.util.concurrent.atomic.AtomicReference
 
-class ImageFilterDslApplyTest : AbstractFilterTest() {
+class ImageFilterDslApplyTest: AbstractFilterTest() {
 
-    companion object : KLoggingChannel()
+    companion object: KLogging()
 
     private lateinit var image: ImmutableImage
 
@@ -24,14 +25,11 @@ class ImageFilterDslApplyTest : AbstractFilterTest() {
 
     private fun createTestImage(): ImmutableImage {
         val buffered = BufferedImage(64, 64, BufferedImage.TYPE_INT_RGB)
-        val g = buffered.createGraphics()
-        try {
+        buffered.useGraphics { g ->
             g.color = java.awt.Color.RED; g.fillRect(0, 0, 32, 32)
             g.color = java.awt.Color.GREEN; g.fillRect(32, 0, 32, 32)
             g.color = java.awt.Color.BLUE; g.fillRect(0, 32, 32, 32)
             g.color = java.awt.Color.YELLOW; g.fillRect(32, 32, 32, 32)
-        } finally {
-            g.dispose()
         }
         return ImmutableImage.fromAwt(buffered)
     }

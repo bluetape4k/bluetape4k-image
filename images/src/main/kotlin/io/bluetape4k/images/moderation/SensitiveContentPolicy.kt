@@ -106,8 +106,8 @@ data class SensitiveModerationRule(
      */
     fun matches(detection: SensitiveContentDetection): Boolean =
         (categories.isEmpty() || detection.category in categories) &&
-            detection.severity >= minimumSeverity &&
-            detection.confidence >= minimumConfidence
+                detection.severity >= minimumSeverity &&
+                detection.confidence >= minimumConfidence
 
     companion object {
         private const val serialVersionUID: Long = -8978805960184835272L

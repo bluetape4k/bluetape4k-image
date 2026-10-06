@@ -2,14 +2,13 @@ package io.bluetape4k.images
 
 import com.sksamuel.scrimage.ImmutableImage
 import com.sksamuel.scrimage.nio.JpegWriter
-import io.bluetape4k.logging.coroutines.KLoggingChannel
-import io.bluetape4k.assertions.shouldBeGreaterThan
 import io.bluetape4k.assertions.shouldNotBeEmpty
+import io.bluetape4k.logging.KLogging
 import org.junit.jupiter.api.Test
 
 class WriteContextExtensionsTest: AbstractImageTest() {
 
-    companion object: KLoggingChannel()
+    companion object: KLogging()
 
     @Test
     fun `WriteContext를 ByteArray로 변환한다`() {
@@ -19,7 +18,6 @@ class WriteContextExtensionsTest: AbstractImageTest() {
 
             val bytes = writeContext.toByteArray()
             bytes.shouldNotBeEmpty()
-            bytes.size shouldBeGreaterThan 0
         }
     }
 

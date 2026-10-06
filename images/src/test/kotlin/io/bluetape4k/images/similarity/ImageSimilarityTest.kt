@@ -1,6 +1,10 @@
 package io.bluetape4k.images.similarity
 
 import com.sksamuel.scrimage.ImmutableImage
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeGreaterThan
+import io.bluetape4k.assertions.shouldBeInRange
+import io.bluetape4k.assertions.shouldBeLessThan
 import io.bluetape4k.images.AbstractImageTest
 import io.bluetape4k.images.coroutines.SuspendJpegWriter
 import io.bluetape4k.images.immutableImageOf
@@ -8,10 +12,6 @@ import io.bluetape4k.images.suspendBytes
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.utils.Resourcex
-import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldBeGreaterThan
-import io.bluetape4k.assertions.shouldBeInRange
-import io.bluetape4k.assertions.shouldBeLessThan
 import org.junit.jupiter.api.Test
 import java.awt.Color
 

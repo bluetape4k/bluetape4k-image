@@ -19,13 +19,13 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
-import kotlin.time.Duration.Companion.seconds
 import org.junit.jupiter.api.Test
 import java.io.IOException
 import java.io.OutputStream
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 import javax.imageio.ImageIO
+import kotlin.time.Duration.Companion.seconds
 
 class ThumbnailPipelineTest: AbstractImageTest() {
 
@@ -173,14 +173,14 @@ class ThumbnailPipelineTest: AbstractImageTest() {
         private const val BROKEN_IMAGE_TEXT = "not an image"
     }
 
-    private object FailingImageWriter : SuspendImageWriter {
+    private object FailingImageWriter: SuspendImageWriter {
         override fun write(image: AwtImage, metadata: ImageMetadata, out: OutputStream) {
             out.write(byteArrayOf(0x00, 0x01, 0x02))
             throw IOException("fixture writer failure")
         }
     }
 
-    private object CancellingImageWriter : SuspendImageWriter {
+    private object CancellingImageWriter: SuspendImageWriter {
         override fun write(image: AwtImage, metadata: ImageMetadata, out: OutputStream) {
             out.write(byteArrayOf(0x00, 0x01, 0x02))
             throw CancellationException("fixture cancellation")

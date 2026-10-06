@@ -18,7 +18,7 @@ import org.apache.batik.util.ParsedURL
 import org.xml.sax.XMLReader
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
-import java.util.Locale
+import java.util.*
 import javax.xml.parsers.SAXParserFactory
 
 /**
@@ -43,9 +43,9 @@ import javax.xml.parsers.SAXParserFactory
  * @see SuspendSvgRasterizer
  * @see SvgRasterizeOptions
  */
-class BatikSvgRasterizer : SuspendSvgRasterizer {
+class BatikSvgRasterizer: SuspendSvgRasterizer {
 
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     override suspend fun rasterize(
         input: InputStream,
@@ -121,7 +121,7 @@ class BatikSvgRasterizer : SuspendSvgRasterizer {
      */
     private class SchemeAwarePngTranscoder(
         private val options: SvgRasterizeOptions,
-    ) : PNGTranscoder() {
+    ): PNGTranscoder() {
 
         private val allowedSchemes = options.allowedSchemes
             .asSequence()
@@ -129,7 +129,7 @@ class BatikSvgRasterizer : SuspendSvgRasterizer {
             .toSet()
 
         override fun createUserAgent(): UserAgent =
-            object : SVGAbstractTranscoderUserAgent() {
+            object: SVGAbstractTranscoderUserAgent() {
                 override fun getExternalResourceSecurity(
                     resourceURL: ParsedURL?,
                     docURL: ParsedURL?,

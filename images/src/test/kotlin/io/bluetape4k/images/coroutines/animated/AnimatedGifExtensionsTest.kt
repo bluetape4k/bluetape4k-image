@@ -10,18 +10,20 @@ import io.bluetape4k.io.readAllBytesSuspending
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.junit5.tempfolder.TempFolder
 import io.bluetape4k.junit5.tempfolder.TempFolderTest
+import io.bluetape4k.logging.KLogging
 import org.junit.jupiter.api.Test
 import java.io.ByteArrayOutputStream
 import java.nio.file.Path
 
 @TempFolderTest
-class AnimatedGifExtensionsTest : AbstractImageTest() {
+class AnimatedGifExtensionsTest: AbstractImageTest() {
+
+    companion object: KLogging()
 
     private val gifPath = Path.of("$BASE_PATH/animated.gif")
 
-    private suspend fun loadTestGif() = AnimatedGifReader.read(
-        ImageSource.of(gifPath.readAllBytesSuspending())
-    )
+    private suspend fun loadTestGif() =
+        AnimatedGifReader.read(ImageSource.of(gifPath.readAllBytesSuspending()))
 
     @Test
     fun `suspendBytes returns non-empty byte array`() = runSuspendIO {

@@ -1,22 +1,22 @@
 package io.bluetape4k.images.transforms
 
 import com.sksamuel.scrimage.ImmutableImage
+import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeGreaterThan
+import io.bluetape4k.assertions.shouldBeLessThan
 import io.bluetape4k.images.AbstractImageTest
 import io.bluetape4k.images.immutableImageOf
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.utils.Resourcex
 import kotlinx.coroutines.test.runTest
-import io.bluetape4k.assertions.assertFailsWith
-import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldBeGreaterThan
-import io.bluetape4k.assertions.shouldBeLessThan
 import org.junit.jupiter.api.Test
 import java.awt.Color
 import java.awt.image.BufferedImage
 
-class PerspectiveTransformTest : AbstractImageTest() {
+class PerspectiveTransformTest: AbstractImageTest() {
 
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     /**
      * 단색으로 채워진 테스트용 [ImmutableImage]를 생성합니다.

@@ -1,18 +1,20 @@
 package io.bluetape4k.images.coroutines
 
 import com.sksamuel.scrimage.ImmutableImage
+import io.bluetape4k.ToStringBuilder
 import io.bluetape4k.images.IIORegistryUtils
 import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.logging.warn
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runInterruptible
+import java.io.ByteArrayOutputStream
+import java.io.OutputStream
 import javax.imageio.IIOImage
 import javax.imageio.ImageIO
 import javax.imageio.ImageTypeSpecifier
 import javax.imageio.ImageWriteParam
 import javax.imageio.stream.MemoryCacheImageOutputStream
-import java.io.ByteArrayOutputStream
-import java.io.OutputStream
 
 /**
  * 복수의 이미지 페이지를 단일 TIFF 파일로 기록하는 [SuspendMultiPageImageWriter] 구현체입니다.
@@ -46,9 +48,9 @@ class SuspendTiffMultiPageWriter(
     val compression: TiffCompression = TiffCompression.DEFLATE,
     val maxPages: Int = 1024,
     val maxPixelsPerPage: Long = 100_000_000L,
-) : SuspendMultiPageImageWriter {
+): SuspendMultiPageImageWriter {
 
-    companion object : KLoggingChannel() {
+    companion object: KLoggingChannel() {
         init {
             IIORegistryUtils.registerApplicationClasspathSpis()
         }
@@ -66,11 +68,10 @@ class SuspendTiffMultiPageWriter(
      * @throws java.io.IOException TIFF 쓰기 실패 시
      * @throws IllegalStateException TwelveMonkeys TIFF writer를 찾을 수 없는 경우
      */
-    override suspend fun suspendWrite(images: List<ImmutableImage>, out: OutputStream) {
+    override suspend fun suspendWrite(images: Collection<ImmutableImage>, out: OutputStream) {
         require(images.isNotEmpty()) { "images 리스트가 비어 있습니다." }
-        require(images.size <= maxPages) {
-            "페이지 수(${images.size})가 maxPages($maxPages)를 초과합니다."
-        }
+        require(images.size <= maxPages) { "페이지 수(${images.size})가 maxPages($maxPages)를 초과합니다." }
+
         images.forEachIndexed { idx, img ->
             val pixels = img.width.toLong() * img.height.toLong()
             require(pixels <= maxPixelsPerPage) {
@@ -83,7 +84,7 @@ class SuspendTiffMultiPageWriter(
         }
     }
 
-    private fun writeBlocking(images: List<ImmutableImage>, out: OutputStream) {
+    private fun writeBlocking(images: Collection<ImmutableImage>, out: OutputStream) {
         val firstImage = images.first()
         val type = ImageTypeSpecifier.createFromBufferedImageType(firstImage.awt().type)
         val writers = ImageIO.getImageWriters(type, "tiff")
@@ -105,7 +106,7 @@ class SuspendTiffMultiPageWriter(
         try {
             writer.output = ios
             writer.prepareWriteSequence(null)
-            for (image in images) {
+            images.forEach { image ->
                 writer.writeToSequence(IIOImage(image.awt(), null, null), param)
             }
             writer.endWriteSequence()
@@ -113,16 +114,28 @@ class SuspendTiffMultiPageWriter(
         } finally {
             // dispose()가 예외를 던져도 ios.close()가 반드시 실행되도록 분리
             // CancellationException은 반드시 재전파하여 runInterruptible 취소 계약을 보존
-            try { writer.dispose() } catch (e: Throwable) {
+            try {
+                writer.dispose()
+            } catch (e: Throwable) {
                 if (e is CancellationException) throw e
-                log.warn("TIFF writer.dispose() 실패", e)
+                log.warn(e) { "TIFF writer.dispose() 실패" }
             }
-            try { ios.close() } catch (e: Throwable) {
+            try {
+                ios.close()
+            } catch (e: Throwable) {
                 if (e is CancellationException) throw e
-                log.warn("TIFF ios.close() 실패", e)
+                log.warn(e) { "TIFF ios.close() 실패" }
             }
         }
         // 예외 없이 시퀀스가 완성된 경우에만 out으로 복사
         buffer.writeTo(out)
+    }
+
+    override fun toString(): String {
+        return ToStringBuilder(this)
+            .add("compression", compression)
+            .add("maxPages", maxPages)
+            .add("maxPixelsPerPage", maxPixelsPerPage)
+            .toString()
     }
 }

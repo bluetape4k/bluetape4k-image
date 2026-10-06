@@ -2,16 +2,11 @@ import dev.detekt.gradle.Detekt
 import dev.detekt.gradle.report.ReportMergeTask
 import nmcp.NmcpAggregationExtension
 import nmcp.NmcpExtension
-import org.gradle.api.artifacts.repositories.MavenArtifactRepository
-import org.gradle.api.artifacts.repositories.PasswordCredentials
-import org.gradle.api.tasks.compile.JavaCompile
-import org.gradle.authentication.http.BasicAuthentication
-import org.jetbrains.kotlin.gradle.dsl.KotlinProjectExtension
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.dsl.KotlinProjectExtension
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 import org.jetbrains.kotlin.gradle.dsl.abi.BinariesSource
 import org.jetbrains.kotlin.gradle.dsl.abi.ExperimentalAbiValidation
-import java.util.concurrent.TimeUnit
 
 plugins {
     base
@@ -370,7 +365,7 @@ subprojects {
         implementation(rootLibs.kotlinx.coroutines.core)
         implementation(rootBt4k.kotlinx.atomicfu)
 
-        api(bt4kLibrary("slf4j-api"))
+        api(rootBt4k.slf4j.api)
         testImplementation(rootBt4k.logback.asProvider())
         testImplementation(rootLibs.jcl.over.slf4j)
         testImplementation(rootLibs.jul.to.slf4j)

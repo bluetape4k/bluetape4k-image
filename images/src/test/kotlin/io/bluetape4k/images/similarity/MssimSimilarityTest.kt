@@ -2,16 +2,16 @@ package io.bluetape4k.images.similarity
 
 import com.sksamuel.scrimage.ImmutableImage
 import com.sksamuel.scrimage.nio.JpegWriter
-import io.bluetape4k.images.AbstractImageTest
-import io.bluetape4k.images.immutableImageOf
-import io.bluetape4k.logging.coroutines.KLoggingChannel
-import io.bluetape4k.logging.debug
-import io.bluetape4k.utils.Resourcex
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeGreaterThan
 import io.bluetape4k.assertions.shouldBeInRange
 import io.bluetape4k.assertions.shouldBeLessThan
 import io.bluetape4k.assertions.shouldNotBeEqualTo
+import io.bluetape4k.images.AbstractImageTest
+import io.bluetape4k.images.immutableImageOf
+import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.logging.debug
+import io.bluetape4k.utils.Resourcex
 import org.junit.jupiter.api.Test
 import java.awt.Color
 

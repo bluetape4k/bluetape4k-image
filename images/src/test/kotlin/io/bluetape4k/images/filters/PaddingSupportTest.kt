@@ -1,12 +1,12 @@
 package io.bluetape4k.images.filters
 
-import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.logging.KLogging
 import org.junit.jupiter.api.Test
 
 class PaddingSupportTest {
 
-    companion object: KLoggingChannel()
+    companion object: KLogging()
 
     @Test
     fun `동일 값으로 패딩을 생성한다`() {

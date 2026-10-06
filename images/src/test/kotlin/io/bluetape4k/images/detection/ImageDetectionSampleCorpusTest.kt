@@ -1,7 +1,5 @@
 package io.bluetape4k.images.detection
 
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.ObjectMapper
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeGreaterOrEqualTo
 import io.bluetape4k.assertions.shouldBeGreaterThan
@@ -15,9 +13,14 @@ import io.bluetape4k.images.analysis.dominantColors
 import io.bluetape4k.images.analysis.readExif
 import io.bluetape4k.images.immutableImageOf
 import io.bluetape4k.images.probeImageDimensions
+import io.bluetape4k.jackson3.Jackson
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
+import io.bluetape4k.support.requireNotNull
 import io.bluetape4k.utils.Resourcex
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import tools.jackson.databind.JsonNode
 import java.io.Serializable
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
@@ -27,12 +30,16 @@ import java.security.MessageDigest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ImageDetectionSampleCorpusTest {
 
+    private companion object: KLogging() {
+        private const val MANIFEST_PATH = "detection/samples/metadata.json"
+    }
+
     private val detector = DetectorIdentity(
         name = "sample-manifest",
         version = "0.4.0",
         backend = "curated-fixture",
     )
-    private val objectMapper = ObjectMapper()
+    private val jsonMapper = Jackson.defaultJsonMapper
 
     @Test
     fun `sample manifest matches committed resources`() {
@@ -45,13 +52,16 @@ class ImageDetectionSampleCorpusTest {
             probeImageDimensions(bytes) shouldBeEqualTo sample.expectedDimensions
 
             val image = immutableImageOf(bytes)
+            log.debug { "image=$image" }
             image.width shouldBeEqualTo sample.expectedDimensions.width
             image.height shouldBeEqualTo sample.expectedDimensions.height
             image.dominantColors(count = 3).shouldNotBeEmpty()
             image.blurScore().score shouldBeGreaterOrEqualTo 0.0
+
+            log.debug { "sample=$sample" }
             sample.expectedTags.shouldNotBeEmpty()
-            sample.sourcePage.shouldContain("https://commons.wikimedia.org/wiki/File:")
-            sample.license.shouldContain("Public domain")
+            sample.sourcePage shouldContain "https://commons.wikimedia.org/wiki/File:"
+            sample.license shouldContain "Public domain"
         }
     }
 
@@ -77,6 +87,7 @@ class ImageDetectionSampleCorpusTest {
 
             results shouldHaveSize sample.expectedDetections.size
             results.forEach { result ->
+                log.debug { "result=$result" }
                 result.detector shouldBeEqualTo detector
                 result.pixelBoundingBox(sample.expectedDimensions).shouldNotBeNull()
             }
@@ -103,6 +114,7 @@ class ImageDetectionSampleCorpusTest {
             )
         }
 
+        rows.forEach { log.debug { "rows=$it" } }
         rows.flatMap { it.categories }.toSet() shouldBeEqualTo setOf(
             DetectionCategory.FACE,
             DetectionCategory.PERSON,
@@ -122,10 +134,10 @@ class ImageDetectionSampleCorpusTest {
 
         samples.forEach { sample ->
             val preview = previewDir.resolve("${sample.id}-detections.png")
-            val dimensions = requireNotNull(probeImageDimensions(Files.readAllBytes(preview))) {
-                "Preview image cannot be decoded: $preview"
-            }
+            val dimensions = probeImageDimensions(Files.readAllBytes(preview))
+                .requireNotNull { "Preview image cannot be decoded: $preview" }
 
+            log.debug { "dimensions=$dimensions" }
             dimensions.width shouldBeGreaterThan 0
             dimensions.height shouldBeGreaterThan 0
         }
@@ -160,7 +172,7 @@ class ImageDetectionSampleCorpusTest {
 
     private fun loadSamples(): List<SampleEntry> {
         val manifest = Resourcex.getBytes(MANIFEST_PATH).toString(StandardCharsets.UTF_8)
-        return objectMapper.readTree(manifest).map { it.toSampleEntry() }
+        return jsonMapper.readTree(manifest).values().map { it.toSampleEntry() }
     }
 
     private fun JsonNode.toSampleEntry(): SampleEntry {
@@ -172,7 +184,7 @@ class ImageDetectionSampleCorpusTest {
             attribution = string("attribution"),
             sha256 = string("sha256"),
             expectedDimensions = obj("expectedDimensions").toDimensions(),
-            expectedTags = array("expectedTags").map { it.asText() },
+            expectedTags = array("expectedTags").map { it.asString() },
             expectedDetections = array("expectedDetections").map { it.toExpectedDetection() },
         )
     }
@@ -201,7 +213,7 @@ class ImageDetectionSampleCorpusTest {
         )
 
     private fun JsonNode.string(key: String): String =
-        required(key).asText()
+        required(key).asString()
 
     private fun JsonNode.int(key: String): Int =
         required(key).asInt()
@@ -280,8 +292,11 @@ class ImageDetectionSampleCorpusTest {
 
     private class SampleManifestDetector(
         private val results: List<DetectionResult>,
-    ) : ImageDetector {
-        override fun detect(image: com.sksamuel.scrimage.ImmutableImage, options: DetectionOptions): List<DetectionResult> =
+    ): ImageDetector {
+        override fun detect(
+            image: com.sksamuel.scrimage.ImmutableImage,
+            options: DetectionOptions,
+        ): List<DetectionResult> =
             results.filter(options::accepts)
     }
 
@@ -295,7 +310,7 @@ class ImageDetectionSampleCorpusTest {
         val expectedDimensions: ImageDimensions,
         val expectedTags: List<String>,
         val expectedDetections: List<ExpectedDetection>,
-    ) : Serializable {
+    ): Serializable {
         private companion object {
             private const val serialVersionUID: Long = 1L
         }
@@ -306,7 +321,7 @@ class ImageDetectionSampleCorpusTest {
         val category: DetectionCategory,
         val confidence: Double,
         val region: ExpectedRegion,
-    ) : Serializable {
+    ): Serializable {
         private companion object {
             private const val serialVersionUID: Long = 1L
         }
@@ -317,7 +332,7 @@ class ImageDetectionSampleCorpusTest {
         val y: Double,
         val width: Double,
         val height: Double,
-    ) : Serializable {
+    ): Serializable {
         private companion object {
             private const val serialVersionUID: Long = 1L
         }
@@ -331,13 +346,9 @@ class ImageDetectionSampleCorpusTest {
         val colors: String,
         val blurScore: Double,
         val hasExif: Boolean,
-    ) : Serializable {
+    ): Serializable {
         private companion object {
             private const val serialVersionUID: Long = 1L
         }
-    }
-
-    private companion object {
-        private const val MANIFEST_PATH = "detection/samples/metadata.json"
     }
 }

@@ -7,7 +7,7 @@ import io.bluetape4k.images.AbstractImageTest
 import org.junit.jupiter.api.Test
 import java.awt.image.BufferedImage
 
-class SimilarityScaleUtilsTest : AbstractImageTest() {
+class SimilarityScaleUtilsTest: AbstractImageTest() {
 
     private fun makeImage(width: Int, height: Int): ImmutableImage {
         val buf = BufferedImage(width, height, BufferedImage.TYPE_INT_RGB)

@@ -3,7 +3,7 @@ package io.bluetape4k.images.filters.dsl
 import com.sksamuel.scrimage.ImmutableImage
 import com.sksamuel.scrimage.filter.Filter
 import com.sksamuel.scrimage.filter.PipelineFilter
-import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.logging.KLogging
 
 /**
  * 이미지 필터 체인을 선언적으로 구성하는 DSL 빌더.
@@ -12,11 +12,11 @@ import io.bluetape4k.logging.coroutines.KLoggingChannel
 @ImageFilterDsl
 class ImageFilterChain internal constructor() {
 
-    companion object : KLoggingChannel()
+    companion object: KLogging()
 
     internal sealed interface Op {
-        class Native(val filter: Filter) : Op
-        class Pixel(val transform: (ImmutableImage) -> ImmutableImage) : Op
+        class Native(val filter: Filter): Op
+        class Pixel(val transform: (ImmutableImage) -> ImmutableImage): Op
     }
 
     private val ops: MutableList<Op> = mutableListOf()

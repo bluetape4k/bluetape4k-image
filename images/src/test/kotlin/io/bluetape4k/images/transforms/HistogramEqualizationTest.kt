@@ -1,18 +1,18 @@
 package io.bluetape4k.images.transforms
 
 import com.sksamuel.scrimage.ImmutableImage
-import io.bluetape4k.logging.coroutines.KLoggingChannel
-import java.awt.Color
-import java.awt.image.BufferedImage
-import kotlinx.coroutines.test.runTest
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeGreaterThan
+import io.bluetape4k.logging.coroutines.KLoggingChannel
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
+import java.awt.Color
+import java.awt.image.BufferedImage
 
 class HistogramEqualizationTest {
 
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     private fun createUniformImage(w: Int, h: Int, r: Int, g: Int, b: Int): ImmutableImage {
         val buf = BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB)

@@ -17,7 +17,7 @@ import org.junit.jupiter.api.Test
  */
 class GoldenEncoderTest {
 
-    companion object : KLoggingChannel() {
+    companion object: KLoggingChannel() {
         private const val HOMER_JPG = "/images/homer.jpg"
     }
 

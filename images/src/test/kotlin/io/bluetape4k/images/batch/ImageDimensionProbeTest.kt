@@ -2,10 +2,12 @@ package io.bluetape4k.images.batch
 
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeGreaterThan
+import io.bluetape4k.assertions.shouldBeNull
 import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.images.AbstractImageTest
 import io.bluetape4k.junit5.tempfolder.TempFolder
 import io.bluetape4k.junit5.tempfolder.TempFolderTest
+import io.bluetape4k.logging.KLogging
 import org.junit.jupiter.api.Test
 import java.awt.image.BufferedImage
 import java.nio.file.Files
@@ -13,7 +15,9 @@ import java.nio.file.Path
 import javax.imageio.ImageIO
 
 @TempFolderTest
-class ImageDimensionProbeTest : AbstractImageTest() {
+class ImageDimensionProbeTest: AbstractImageTest() {
+
+    companion object: KLogging()
 
     @Test
     fun `probeImagePixelCount returns width times height for valid jpeg`(tempFolder: TempFolder) {
@@ -36,7 +40,7 @@ class ImageDimensionProbeTest : AbstractImageTest() {
 
         val result = probeImagePixelCount(textFile.toPath())
 
-        result shouldBeEqualTo null
+        result.shouldBeNull()
     }
 
     @Test

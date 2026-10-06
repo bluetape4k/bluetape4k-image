@@ -4,17 +4,21 @@ import com.sksamuel.scrimage.ImmutableImage
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.images.filters.AbstractFilterTest
+import io.bluetape4k.images.useGraphics
+import io.bluetape4k.logging.KLogging
 import org.junit.jupiter.api.Test
 import java.awt.image.BufferedImage
 
-class ImageFilterChainTextOpsTest : AbstractFilterTest() {
+class ImageFilterChainTextOpsTest: AbstractFilterTest() {
+
+    companion object: KLogging()
 
     private fun sampleImage(width: Int = 128, height: Int = 96): ImmutableImage {
         val buf = BufferedImage(width, height, BufferedImage.TYPE_INT_RGB)
-        val g = buf.createGraphics()
-        g.color = java.awt.Color.DARK_GRAY
-        g.fillRect(0, 0, width, height)
-        g.dispose()
+        buf.useGraphics { g ->
+            g.color = java.awt.Color.DARK_GRAY
+            g.fillRect(0, 0, width, height)
+        }
         return ImmutableImage.fromAwt(buf)
     }
 

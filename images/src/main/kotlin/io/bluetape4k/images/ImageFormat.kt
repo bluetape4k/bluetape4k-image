@@ -1,6 +1,6 @@
 package io.bluetape4k.images
 
-import io.bluetape4k.images.ImageFormat.Companion.parse
+import io.bluetape4k.support.equalsIgnoreCase
 
 
 /**
@@ -52,7 +52,8 @@ enum class ImageFormat(val ioName: String) {
         fun parse(formatName: String): ImageFormat? {
             val normalized = formatName.trim()
             if (normalized.isEmpty()) return null
-            return entries.find { it.name.equals(normalized, ignoreCase = true) }
+            if (normalized.equalsIgnoreCase("jpeg")) return ImageFormat.JPG
+            return entries.find { it.name.equalsIgnoreCase(normalized) }
         }
 
         internal val NON_IMAGEIO_WRITABLE: Set<ImageFormat> = setOf(SVG, AVIF, HEIC)

@@ -1,13 +1,13 @@
 package io.bluetape4k.images.golden
 
 import com.sksamuel.scrimage.ImmutableImage
-import io.bluetape4k.logging.coroutines.KLoggingChannel
-import java.awt.Color
-import java.awt.image.BufferedImage
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import org.junit.jupiter.api.Test
 import org.opentest4j.TestAbortedException
+import java.awt.Color
+import java.awt.image.BufferedImage
 
 /**
  * GoldenImageAssert 갱신 모드 / CI 가드 / 비교 실패 흐름 검증.
@@ -22,7 +22,7 @@ import org.opentest4j.TestAbortedException
  */
 class GoldenUpdateModeTest {
 
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     private fun solidImage(w: Int, h: Int, color: Color): ImmutableImage {
         val buf = BufferedImage(w, h, BufferedImage.TYPE_INT_RGB)

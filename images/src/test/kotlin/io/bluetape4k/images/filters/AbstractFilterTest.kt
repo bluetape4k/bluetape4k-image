@@ -1,17 +1,16 @@
 package io.bluetape4k.images.filters
 
 import com.sksamuel.scrimage.ImmutableImage
+import io.bluetape4k.assertions.fail
 import io.bluetape4k.images.AbstractImageTest
 import io.bluetape4k.images.immutableImageOf
-import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.utils.Resourcex
 import kotlin.math.abs
-import io.bluetape4k.assertions.fail
-import io.bluetape4k.assertions.shouldBeEqualTo
 
 abstract class AbstractFilterTest: AbstractImageTest() {
 
-    companion object: KLoggingChannel() {
+    companion object: KLogging() {
         const val FILTERS_DIR = "/images/filters/"
     }
 
@@ -41,7 +40,7 @@ abstract class AbstractFilterTest: AbstractImageTest() {
         if (actual.width != expected.width || actual.height != expected.height) {
             fail(
                 "이미지 크기 불일치: actual=(${actual.width}x${actual.height}) " +
-                    "expected=(${expected.width}x${expected.height})"
+                        "expected=(${expected.width}x${expected.height})"
             )
         }
 
@@ -59,9 +58,9 @@ abstract class AbstractFilterTest: AbstractImageTest() {
                 val y = i / actual.width
                 fail(
                     "픽셀 ($x, $y) 에서 허용 오차($tolerance) 초과: " +
-                        "actual=(${a.red()},${a.green()},${a.blue()}) " +
-                        "expected=(${e.red()},${e.green()},${e.blue()}) " +
-                        "delta=(dr=$dr, dg=$dg, db=$db)"
+                            "actual=(${a.red()},${a.green()},${a.blue()}) " +
+                            "expected=(${e.red()},${e.green()},${e.blue()}) " +
+                            "delta=(dr=$dr, dg=$dg, db=$db)"
                 )
             }
         }

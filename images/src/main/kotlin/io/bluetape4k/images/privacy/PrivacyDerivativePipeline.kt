@@ -249,7 +249,7 @@ class PrivacyDerivativeVerificationException(
     val remainingCategories: Set<PrivacyMetadataCategory> = emptySet(),
     message: String,
     cause: Throwable? = null,
-) : IllegalStateException(message, cause)
+): IllegalStateException(message, cause)
 
 /**
  * 성공한 privacy derivative payload입니다.
@@ -271,14 +271,14 @@ sealed interface PrivacyDerivativeBatchResult {
     data class Success(
         override val source: Path,
         val result: PrivacyDerivativeResult,
-    ) : PrivacyDerivativeBatchResult
+    ): PrivacyDerivativeBatchResult
 
     /** derivative 생성 실패 item입니다. */
     data class Failure(
         override val source: Path,
         val stage: PrivacyDerivativeFailureStage,
         val cause: Throwable,
-    ) : PrivacyDerivativeBatchResult
+    ): PrivacyDerivativeBatchResult
 }
 
 /**
@@ -305,7 +305,8 @@ suspend fun ImmutableImage.suspendPrivacyDerivative(
     try {
         val transformed = applyDerivativeTransforms(options, sourceDimensions, sourceExif.orientation)
         val bytes = transformed.image.suspendBytes(options.outputFormat.writer)
-        val outputDimensions = PrivacyImageDimensions(width = transformed.image.width, height = transformed.image.height)
+        val outputDimensions =
+            PrivacyImageDimensions(width = transformed.image.width, height = transformed.image.height)
         val metadataVerification = verifyDerivativeMetadata(
             bytes = bytes,
             options = options,
@@ -458,7 +459,12 @@ private suspend inline fun <T> runDerivativeStage(
     } catch (e: PrivacyDerivativeException) {
         throw e
     } catch (e: Throwable) {
-        throw PrivacyDerivativeException(source, stage, "Privacy derivative stage failed. source=$source, stage=$stage", e)
+        throw PrivacyDerivativeException(
+            source,
+            stage,
+            "Privacy derivative stage failed. source=$source, stage=$stage",
+            e
+        )
     }
 
 private class PrivacyDerivativeException(
@@ -466,7 +472,7 @@ private class PrivacyDerivativeException(
     val stage: PrivacyDerivativeFailureStage,
     message: String,
     cause: Throwable,
-) : RuntimeException(message, cause)
+): RuntimeException(message, cause)
 
 private fun Throwable.derivativeStage(): PrivacyDerivativeFailureStage =
     (this as? PrivacyDerivativeException)?.stage ?: PrivacyDerivativeFailureStage.TRANSFORM
@@ -529,7 +535,12 @@ private fun ImmutableImage.applyDerivativeTransforms(
         else -> when (val crop = options.thumbnailCrop) {
             ThumbnailCrop.Fit -> PrivacyDerivativeImageTransform(
                 image = oriented.scaleTo(size.width, size.height),
-                crop = CropWindow(x = 0.0, y = 0.0, width = oriented.width.toDouble(), height = oriented.height.toDouble()),
+                crop = CropWindow(
+                    x = 0.0,
+                    y = 0.0,
+                    width = oriented.width.toDouble(),
+                    height = oriented.height.toDouble()
+                ),
             )
 
             is ThumbnailCrop.Smart -> oriented.smartCropToWithBounds(size.width, size.height, crop.strategy).let {

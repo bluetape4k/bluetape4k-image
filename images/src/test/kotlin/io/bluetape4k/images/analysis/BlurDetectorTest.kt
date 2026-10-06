@@ -1,15 +1,17 @@
 package io.bluetape4k.images.analysis
 
 import com.sksamuel.scrimage.ImmutableImage
-import io.bluetape4k.logging.coroutines.KLoggingChannel
-import io.bluetape4k.logging.debug
-import io.bluetape4k.utils.Resourcex
 import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeGreaterOrEqualTo
 import io.bluetape4k.assertions.shouldBeGreaterThan
 import io.bluetape4k.assertions.shouldBeLessOrEqualTo
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
+import io.bluetape4k.utils.Resourcex
 import org.junit.jupiter.api.Test
 import java.awt.image.BufferedImage
 import java.io.ByteArrayOutputStream
@@ -17,12 +19,12 @@ import javax.imageio.ImageIO
 
 class BlurDetectorTest {
 
-    companion object: KLoggingChannel() {
+    companion object: KLogging() {
         private const val HOMER_JPG = "images/homer.jpg"
         private const val LANDSCAPE_JPG = "images/landscape.jpg"
 
         private fun loadImage(path: String): ImmutableImage =
-            ImmutableImage.loader().fromStream(Resourcex.getInputStream(path)!!)
+            ImmutableImage.loader().fromStream(Resourcex.getInputStream(path).shouldNotBeNull())
 
         /** 단색 (완전 흐린) 이미지를 생성한다. Laplacian variance ≈ 0. */
         fun uniformImage(w: Int = 50, h: Int = 50): ImmutableImage {
@@ -31,9 +33,11 @@ class BlurDetectorTest {
             gfx.color = java.awt.Color(128, 128, 128)
             gfx.fillRect(0, 0, w, h)
             gfx.dispose()
-            val baos = ByteArrayOutputStream()
-            ImageIO.write(buf, "jpg", baos)
-            return ImmutableImage.loader().fromBytes(baos.toByteArray())
+
+            ByteArrayOutputStream().use { baos ->
+                ImageIO.write(buf, "jpg", baos)
+                return ImmutableImage.loader().fromBytes(baos.toByteArray())
+            }
         }
 
         /** 수직 줄무늬 (엣지 풍부) 이미지를 생성한다. Laplacian variance 높음. */
@@ -45,9 +49,10 @@ class BlurDetectorTest {
                     buf.setRGB(x, y, c.rgb)
                 }
             }
-            val baos = ByteArrayOutputStream()
-            ImageIO.write(buf, "jpg", baos)
-            return ImmutableImage.loader().fromBytes(baos.toByteArray())
+            ByteArrayOutputStream().use { baos ->
+                ImageIO.write(buf, "jpg", baos)
+                return ImmutableImage.loader().fromBytes(baos.toByteArray())
+            }
         }
     }
 
@@ -72,6 +77,7 @@ class BlurDetectorTest {
         val image = uniformImage()
         val result = image.blurScore(threshold = 100.0)
         log.debug { "uniform blurScore: ${result.score}" }
+
         // 단색 이미지는 Laplacian variance가 매우 낮다 (JPEG 인코딩으로 인한 약간의 noise 허용)
         result.score shouldBeLessOrEqualTo 200.0  // JPEG noise 허용
         result.isBlurry.shouldBeTrue()
@@ -91,12 +97,15 @@ class BlurDetectorTest {
     fun `isBlurry returns correct value based on threshold`() {
         val image = loadImage(HOMER_JPG)
         val score = image.blurScore()
+
         // 매우 낮은 threshold → isBlurry=false (선명)
         val veryLow = image.blurScore(threshold = 0.0)
         veryLow.isBlurry.shouldBeFalse()
+
         // 매우 높은 threshold → isBlurry=true
         val veryHigh = image.blurScore(threshold = Double.MAX_VALUE)
         veryHigh.isBlurry.shouldBeTrue()
+
         log.debug { "homer score=${score.score}, veryLow.isBlurry=${veryLow.isBlurry}, veryHigh.isBlurry=${veryHigh.isBlurry}" }
     }
 
@@ -106,8 +115,9 @@ class BlurDetectorTest {
         val threshold = 50.0
         val fromScore = image.blurScore(threshold).isBlurry
         val fromExt = image.isBlurry(threshold)
+
         log.debug { "isBlurry match: $fromScore == $fromExt" }
-        (fromScore == fromExt).shouldBeTrue()
+        fromScore shouldBeEqualTo fromExt
     }
 
     @Test

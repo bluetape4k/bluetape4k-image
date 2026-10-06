@@ -1,21 +1,21 @@
 package io.bluetape4k.images.transforms
 
 import com.sksamuel.scrimage.ImmutableImage
-import io.bluetape4k.images.AbstractImageTest
-import io.bluetape4k.images.immutableImageOf
-import io.bluetape4k.logging.coroutines.KLoggingChannel
-import kotlinx.coroutines.test.runTest
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeGreaterOrEqualTo
 import io.bluetape4k.assertions.shouldBeLessThan
+import io.bluetape4k.images.AbstractImageTest
+import io.bluetape4k.images.immutableImageOf
+import io.bluetape4k.logging.coroutines.KLoggingChannel
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import java.awt.Color
 import java.awt.image.BufferedImage
 
-class AutoCropTest : AbstractImageTest() {
+class AutoCropTest: AbstractImageTest() {
 
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     /**
      * 흰 배경 위에 지정한 색상의 사각형이 그려진 테스트용 이미지를 생성합니다.

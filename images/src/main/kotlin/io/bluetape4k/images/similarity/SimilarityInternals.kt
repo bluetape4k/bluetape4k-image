@@ -121,5 +121,9 @@ internal fun ImmutableImage.scaleToMaxSide(maxSide: Int): ImmutableImage {
     val longSide = maxOf(width, height)
     if (longSide <= maxSide) return this
     val scale = maxSide.toDouble() / longSide
-    return scaleTo((width * scale).toInt().coerceAtLeast(1), (height * scale).toInt().coerceAtLeast(1), HASH_SCALE_METHOD)
+    return scaleTo(
+        (width * scale).toInt().coerceAtLeast(1),
+        (height * scale).toInt().coerceAtLeast(1),
+        HASH_SCALE_METHOD
+    )
 }

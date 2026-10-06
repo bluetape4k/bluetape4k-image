@@ -7,7 +7,7 @@ import io.bluetape4k.images.AbstractImageTest
 import org.junit.jupiter.api.Test
 import java.awt.image.BufferedImage
 
-class TileModelsTest : AbstractImageTest() {
+class TileModelsTest: AbstractImageTest() {
 
     private fun sampleImage(w: Int = 64, h: Int = 64): ImmutableImage {
         val buf = BufferedImage(w, h, BufferedImage.TYPE_INT_RGB)

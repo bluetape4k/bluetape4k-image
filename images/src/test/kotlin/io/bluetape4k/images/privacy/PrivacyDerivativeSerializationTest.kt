@@ -4,9 +4,8 @@ import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldHaveSize
-import io.bluetape4k.assertions.shouldNotContain
 import io.bluetape4k.assertions.shouldNotBeNull
-import kotlinx.coroutines.test.runTest
+import io.bluetape4k.assertions.shouldNotContain
 import org.junit.jupiter.api.Test
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
@@ -19,7 +18,6 @@ import java.nio.charset.StandardCharsets
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
-import kotlin.time.Duration.Companion.seconds
 
 class PrivacyDerivativeSerializationTest {
 
@@ -279,7 +277,7 @@ class PrivacyDerivativeSerializationTest {
             ),
         )
 
-    private class RecordingOutputStream : OutputStream() {
+    private class RecordingOutputStream: OutputStream() {
         private val delegate = ByteArrayOutputStream()
         var closed: Boolean = false
             private set
@@ -301,13 +299,13 @@ class PrivacyDerivativeSerializationTest {
         fun toByteArray(): ByteArray = delegate.toByteArray()
     }
 
-    private class FailingInputStream : ByteArrayInputStream(byteArrayOf('{'.code.toByte())) {
+    private class FailingInputStream: ByteArrayInputStream(byteArrayOf('{'.code.toByte())) {
         override fun read(buffer: ByteArray, offset: Int, length: Int): Int = throw IOException("fixture")
 
         override fun read(): Int = throw IOException("fixture")
     }
 
-    private class FailingOutputStream : OutputStream() {
+    private class FailingOutputStream: OutputStream() {
         override fun write(b: Int) = throw IOException("fixture")
     }
 }

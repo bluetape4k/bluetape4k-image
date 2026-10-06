@@ -3,8 +3,7 @@
 [English](./README.md) | 한국어
 
 JPG, PNG, GIF, WebP, **TIFF/SVG** (Issue #134) 등의 이미지를 로드, 변환, 크기 조절, 분할, 필터 적용 등의 조작을 지원하는 라이브러리입니다.
-[Scrimage](https://github.com/sksamuel/scrimage) 라이브러리를 기반으로 하며, Coroutines를 활용한 비동기 이미지 처리를 제공합니다.
-AVIF·HEIC는 incubating 인터페이스로 제공되며, libvips 지원은 `images-vips-api`에서 노출하고 런타임은 JDK 25 JVips JNI 백엔드(호환성을 위해 `images-vips-java21` 이름으로 배포) 또는 JDK 25 FFM 백엔드(`images-vips-java25`)를 사용합니다.
+[Scrimage](https://github.com/sksamuel/scrimage) 라이브러리를 기반으로 하며, Coroutines를 활용한 비동기 이미지 처리를 제공합니다. AVIF·HEIC는 incubating 인터페이스로 제공되며, libvips 지원은 `images-vips-api`에서 노출하고 런타임은 JDK 25 JVips JNI 백엔드 (호환성을 위해 `images-vips-java21` 이름으로 배포) 또는 JDK 25 FFM 백엔드 (`images-vips-java25`)를 사용합니다.
 
 ## 아키텍처
 
@@ -30,16 +29,16 @@ AVIF·HEIC는 incubating 인터페이스로 제공되며, libvips 지원은 `ima
 
 ### 이미지 포맷 지원
 
-| 포맷   | Writer/Reader                    | 특징                                                              |
-|------|----------------------------------|------------------------------------------------------------------|
-| PNG  | `SuspendPngWriter`               | 무손실, 투명도 지원                                                     |
-| GIF  | `SuspendGifWriter`               | 애니메이션 지원                                                        |
-| JPG  | `SuspendJpegWriter`              | 빠른 처리, 손실 압축                                                     |
-| WEBP | `SuspendWebpWriter`              | 최고 압축률, 최신 포맷                                                    |
-| TIFF | `SuspendTiffWriter` / `SuspendTiffMultiPageWriter` | 다중 페이지, 다양한 압축 방식 (DEFLATE/LZW/NONE/JPEG) |
-| SVG  | `BatikSvgRasterizer`             | 래스터 변환; XXE/SSRF 방어 기본 적용                                        |
-| AVIF | `AvifWriter` *(incubating)*      | 인터페이스만 제공, native 지원이 있을 때 libvips 런타임 백엔드 사용             |
-| HEIC | `HeicReader` *(incubating)*      | 인터페이스만 제공, native 지원이 있을 때 libvips 런타임 백엔드 사용             |
+| 포맷 | Writer/Reader                                      | 특징                                                                |
+|------|----------------------------------------------------|---------------------------------------------------------------------|
+| PNG  | `SuspendPngWriter`                                 | 무손실, 투명도 지원                                                 |
+| GIF  | `SuspendGifWriter`                                 | 애니메이션 지원                                                     |
+| JPG  | `SuspendJpegWriter`                                | 빠른 처리, 손실 압축                                                |
+| WEBP | `SuspendWebpWriter`                                | 최고 압축률, 최신 포맷                                              |
+| TIFF | `SuspendTiffWriter` / `SuspendTiffMultiPageWriter` | 다중 페이지, 다양한 압축 방식 (DEFLATE/LZW/NONE/JPEG)               |
+| SVG  | `BatikSvgRasterizer`                               | 래스터 변환; XXE/SSRF 방어 기본 적용                                |
+| AVIF | `AvifWriter` *(incubating)*                        | 인터페이스만 제공, native 지원이 있을 때 libvips 런타임 백엔드 사용 |
+| HEIC | `HeicReader` *(incubating)*                        | 인터페이스만 제공, native 지원이 있을 때 libvips 런타임 백엔드 사용 |
 
 - **동적 생성**: JPG가 가장 빠름 (실시간 처리용)
 - **정적 파일**: WebP가 가장 효율적 (저장 공간 절약)
@@ -48,67 +47,67 @@ AVIF·HEIC는 incubating 인터페이스로 제공되며, libvips 지원은 `ima
 
 ### 주요 파일
 
-| 파일                                                   | 설명                            |
-|------------------------------------------------------|-------------------------------|
-| `ImmutableImageSupport.kt`                           | ImmutableImage 생성, 저장, 그래픽 작업 |
-| `BufferedImageSupport.kt`                            | BufferedImage 생성, 저장, 그래픽 작업  |
-| `ImageFormat.kt`                                     | 지원 이미지 포맷 열거형                 |
-| `WriteContextExtensions.kt`                          | 쓰기 컨텍스트 확장 함수                 |
-| `IIORegistryUtils.kt`                                | ImageIO 레지스트리 유틸리티            |
-| `batch/ImageBatchFlow.kt`                            | Coroutine Flow 기반 배치 이미지 처리   |
-| `batch/ImageProcessingDsl.kt`                        | 이름 있는 기본값을 쓰는 배치 변환 DSL   |
-| `thumbnail/ThumbnailPipeline.kt`                     | 여러 크기 썸네일 생성 파이프라인        |
-| `tiles/TileProcessor.kt`                             | 타일 분할/병합과 병렬 타일 처리         |
-| `scaler/ImageScaler.kt`                              | 이미지 크기 조절                     |
-| `splitter/ImageSplitter.kt`                          | 이미지 분할                        |
-| `filters/WatermarkFilterSupport.kt`                  | 워터마크 필터                       |
-| `filters/CaptionFilterSupport.kt`                    | 캡션 필터                         |
-| `filters/PaddingSupport.kt`                          | 패딩 필터                         |
-| `filters/WatermarkFilterType.kt`                     | 워터마크 타입 (COVER/STAMP)         |
-| `analysis/DominantColor.kt`                          | 대표 색상 추출 — `dominantColor()`, `dominantColors()` |
-| `analysis/BlurDetector.kt`                           | 블러 감지 — `blurScore()`, `isBlurry()` |
-| `analysis/ExifData.kt`                               | EXIF 파싱 — `readExif()`, GPS PII 제거 |
+| 파일                                                 | 설명                                                                     |
+|------------------------------------------------------|--------------------------------------------------------------------------|
+| `ImmutableImageSupport.kt`                           | ImmutableImage 생성, 저장, 그래픽 작업                                   |
+| `BufferedImageSupport.kt`                            | BufferedImage 생성, 저장, 그래픽 작업                                    |
+| `ImageFormat.kt`                                     | 지원 이미지 포맷 열거형                                                  |
+| `WriteContextExtensions.kt`                          | 쓰기 컨텍스트 확장 함수                                                  |
+| `IIORegistryUtils.kt`                                | ImageIO 레지스트리 유틸리티                                              |
+| `batch/ImageBatchFlow.kt`                            | Coroutine Flow 기반 배치 이미지 처리                                     |
+| `batch/ImageProcessingDsl.kt`                        | 이름 있는 기본값을 쓰는 배치 변환 DSL                                    |
+| `thumbnail/ThumbnailPipeline.kt`                     | 여러 크기 썸네일 생성 파이프라인                                         |
+| `tiles/TileProcessor.kt`                             | 타일 분할/병합과 병렬 타일 처리                                          |
+| `scaler/ImageScaler.kt`                              | 이미지 크기 조절                                                         |
+| `splitter/ImageSplitter.kt`                          | 이미지 분할                                                              |
+| `filters/WatermarkFilterSupport.kt`                  | 워터마크 필터                                                            |
+| `filters/CaptionFilterSupport.kt`                    | 캡션 필터                                                                |
+| `filters/PaddingSupport.kt`                          | 패딩 필터                                                                |
+| `filters/WatermarkFilterType.kt`                     | 워터마크 타입 (COVER/STAMP)                                              |
+| `analysis/DominantColor.kt`                          | 대표 색상 추출 — `dominantColor()`, `dominantColors()`                   |
+| `analysis/BlurDetector.kt`                           | 블러 감지 — `blurScore()`, `isBlurry()`                                  |
+| `analysis/ExifData.kt`                               | EXIF 파싱 — `readExif()`, GPS PII 제거                                   |
 | `analysis/ImageMetadataReport.kt`                    | 개인정보 보호형 metadata report — EXIF/XMP/IPTC/ICC/dimensions/HDR hints |
-| `moderation/SensitiveContentModels.kt`               | 백엔드 중립 민감 콘텐츠 감지 결과 모델 |
-| `moderation/SensitiveContentPolicy.kt`               | 렌더러 중립 moderation policy와 treatment decision |
-| `privacy/PrivacyDerivativePipeline.kt`               | metadata 제거, 크기 제한, redaction을 적용한 공개용 derivative 이미지 |
-| `similarity/ImageSimilarity.kt`                      | 핵심 유사도: 픽셀 Δ, MSE, PSNR, 전역 SSIM, pHash |
-| `similarity/MssimSimilarity.kt`                      | MSSIM — 슬라이딩 윈도우 Gaussian SSIM            |
-| `similarity/HashSimilarity.kt`                       | aHash/dHash/wHash/phashOf (64/256/1024bit), HashDistance |
-| `similarity/HistogramSimilarity.kt`                  | 색상 히스토그램: ChiSquare, Bhattacharyya, EarthMover |
-| `similarity/KeypointSimilarity.kt`                   | Block-Mean descriptor, bestRotationSimilarityTo  |
-| `similarity/SimilarityScaleUtils.kt`                 | prepareForSimilarity — MSSIM 전 다운스케일 유틸리티  |
-| `fonts/FontSupport.kt`                               | 폰트 유틸리티                       |
-| `filters/dsl/ImageFilterChain.kt`                    | 필터/색보정 DSL (`applyFilters`, `suspendApplyFilters`) |
-| `filters/dsl/ImageFilterChainDsl.kt`                 | DSL 멤버 함수 (40+ 필터)            |
-| `filters/SaturationAdjustFilter.kt`                  | HSV 채도 조절 필터                  |
-| `filters/HueAdjustFilter.kt`                         | HSV 색조 회전 필터                  |
-| `filters/ColorTemperatureFilter.kt`                  | 켈빈 색온도 조절 필터                 |
-| `filters/MedianBlurFilter.kt`                        | 미디언 블러 노이즈 제거 필터             |
-| `filters/RoundedCornerFilter.kt`                     | 모서리 둥글게 알파 마스크 필터            |
-| `filters/ColorSpaceConverter.kt`                     | RGB/HSV/YCbCr/켈빈 색 공간 변환     |
-| `io/ImageInputStreamSupport.kt`                      | 이미지 입력 스트림                    |
-| `io/ImageOutputStreamSupport.kt`                     | 이미지 출력 스트림                    |
-| `coroutines/SuspendImageWriter.kt`                   | 비동기 이미지 Writer 인터페이스          |
-| `coroutines/SuspendMultiPageImageWriter.kt`          | 비동기 다중 페이지 Writer 인터페이스       |
-| `coroutines/SuspendJpegWriter.kt`                    | 비동기 JPEG Writer               |
-| `coroutines/SuspendPngWriter.kt`                     | 비동기 PNG Writer                |
-| `coroutines/SuspendGifWriter.kt`                     | 비동기 GIF Writer                |
-| `coroutines/SuspendWebpWriter.kt`                    | 비동기 WebP Writer               |
-| `coroutines/SuspendTiffWriter.kt`                    | 비동기 TIFF Writer (단일 페이지, TwelveMonkeys) |
-| `coroutines/SuspendTiffMultiPageWriter.kt`           | 비동기 TIFF 다중 페이지 Writer        |
-| `coroutines/TiffCompression.kt`                      | TIFF 압축 방식 (DEFLATE/LZW/NONE/PACKBITS/JPEG) |
-| `coroutines/SuspendWriteContext.kt`                  | 비동기 쓰기 컨텍스트                   |
-| `coroutines/animated/SuspendAnimatedImageWriter.kt`  | 비동기 애니메이션 Writer              |
-| `coroutines/animated/SuspendGif2WebpWriter.kt`       | GIF → WebP 변환 Writer          |
-| `coroutines/animated/AnimatedGifExtensions.kt`       | AnimatedGif 확장 함수             |
-| `coroutines/animated/SuspendAnimatedWriteContext.kt` | 애니메이션 쓰기 컨텍스트                 |
-| `svg/SuspendSvgRasterizer.kt`                        | SVG 래스터라이저 인터페이스              |
-| `svg/BatikSvgRasterizer.kt`                          | SVG 래스터라이저 (Apache Batik, XXE-안전) |
-| `svg/SvgRasterizeOptions.kt`                         | SVG 래스터화 옵션                   |
-| `avif/AvifWriter.kt`                                 | AVIF Writer 인터페이스 *(incubating)* |
-| `heic/HeicReader.kt`                                 | HEIC Reader 인터페이스 *(incubating)* |
-| `IncubatingImageApi.kt`                              | incubating API용 `@RequiresOptIn` 어노테이션 |
+| `moderation/SensitiveContentModels.kt`               | 백엔드 중립 민감 콘텐츠 감지 결과 모델                                   |
+| `moderation/SensitiveContentPolicy.kt`               | 렌더러 중립 moderation policy와 treatment decision                       |
+| `privacy/PrivacyDerivativePipeline.kt`               | metadata 제거, 크기 제한, redaction을 적용한 공개용 derivative 이미지    |
+| `similarity/ImageSimilarity.kt`                      | 핵심 유사도: 픽셀 Δ, MSE, PSNR, 전역 SSIM, pHash                         |
+| `similarity/MssimSimilarity.kt`                      | MSSIM — 슬라이딩 윈도우 Gaussian SSIM                                    |
+| `similarity/HashSimilarity.kt`                       | aHash/dHash/wHash/phashOf (64/256/1024bit), HashDistance                 |
+| `similarity/HistogramSimilarity.kt`                  | 색상 히스토그램: ChiSquare, Bhattacharyya, EarthMover                    |
+| `similarity/KeypointSimilarity.kt`                   | Block-Mean descriptor, bestRotationSimilarityTo                          |
+| `similarity/SimilarityScaleUtils.kt`                 | prepareForSimilarity — MSSIM 전 다운스케일 유틸리티                      |
+| `fonts/FontSupport.kt`                               | 폰트 유틸리티                                                            |
+| `filters/dsl/ImageFilterChain.kt`                    | 필터/색보정 DSL (`applyFilters`, `suspendApplyFilters`)                  |
+| `filters/dsl/ImageFilterChainDsl.kt`                 | DSL 멤버 함수 (40+ 필터)                                                 |
+| `filters/SaturationAdjustFilter.kt`                  | HSV 채도 조절 필터                                                       |
+| `filters/HueAdjustFilter.kt`                         | HSV 색조 회전 필터                                                       |
+| `filters/ColorTemperatureFilter.kt`                  | 켈빈 색온도 조절 필터                                                    |
+| `filters/MedianBlurFilter.kt`                        | 미디언 블러 노이즈 제거 필터                                             |
+| `filters/RoundedCornerFilter.kt`                     | 모서리 둥글게 알파 마스크 필터                                           |
+| `filters/ColorSpaceConverter.kt`                     | RGB/HSV/YCbCr/켈빈 색 공간 변환                                          |
+| `io/ImageInputStreamSupport.kt`                      | 이미지 입력 스트림                                                       |
+| `io/ImageOutputStreamSupport.kt`                     | 이미지 출력 스트림                                                       |
+| `coroutines/SuspendImageWriter.kt`                   | 비동기 이미지 Writer 인터페이스                                          |
+| `coroutines/SuspendMultiPageImageWriter.kt`          | 비동기 다중 페이지 Writer 인터페이스                                     |
+| `coroutines/SuspendJpegWriter.kt`                    | 비동기 JPEG Writer                                                       |
+| `coroutines/SuspendPngWriter.kt`                     | 비동기 PNG Writer                                                        |
+| `coroutines/SuspendGifWriter.kt`                     | 비동기 GIF Writer                                                        |
+| `coroutines/SuspendWebpWriter.kt`                    | 비동기 WebP Writer                                                       |
+| `coroutines/SuspendTiffWriter.kt`                    | 비동기 TIFF Writer (단일 페이지, TwelveMonkeys)                          |
+| `coroutines/SuspendTiffMultiPageWriter.kt`           | 비동기 TIFF 다중 페이지 Writer                                           |
+| `coroutines/TiffCompression.kt`                      | TIFF 압축 방식 (DEFLATE/LZW/NONE/PACKBITS/JPEG)                          |
+| `coroutines/SuspendWriteContext.kt`                  | 비동기 쓰기 컨텍스트                                                     |
+| `coroutines/animated/SuspendAnimatedImageWriter.kt`  | 비동기 애니메이션 Writer                                                 |
+| `coroutines/animated/SuspendGif2WebpWriter.kt`       | GIF → WebP 변환 Writer                                                   |
+| `coroutines/animated/AnimatedGifExtensions.kt`       | AnimatedGif 확장 함수                                                    |
+| `coroutines/animated/SuspendAnimatedWriteContext.kt` | 애니메이션 쓰기 컨텍스트                                                 |
+| `svg/SuspendSvgRasterizer.kt`                        | SVG 래스터라이저 인터페이스                                              |
+| `svg/BatikSvgRasterizer.kt`                          | SVG 래스터라이저 (Apache Batik, XXE-안전)                                |
+| `svg/SvgRasterizeOptions.kt`                         | SVG 래스터화 옵션                                                        |
+| `avif/AvifWriter.kt`                                 | AVIF Writer 인터페이스 *(incubating)*                                    |
+| `heic/HeicReader.kt`                                 | HEIC Reader 인터페이스 *(incubating)*                                    |
+| `IncubatingImageApi.kt`                              | incubating API용 `@RequiresOptIn` 어노테이션                             |
 
 ## 사용 예시
 
@@ -148,10 +147,7 @@ val channel = AsynchronousFileChannel.open(Paths.get("image.jpg"), READ)
 val image = suspendLoadImage(channel.asSuspendedSource())
 ```
 
-`BufferedSource` 입력은 caller-owned로 보고 load helper가 닫지 않습니다.
-Helper가 source를 buffer하고 닫아야 한다면 raw `Source`를 전달하세요. Scrimage는
-여전히 JVM image memory로 decode하므로, Okio는 decoded pixel allocation을 없애는
-기능이 아니라 stream ownership과 integration을 개선하는 경계입니다.
+`BufferedSource` 입력은 caller-owned로 보고 load helper가 닫지 않습니다. Helper가 source를 buffer하고 닫아야 한다면 raw `Source`를 전달하세요. Scrimage는 여전히 JVM image memory로 decode하므로, Okio는 decoded pixel allocation을 없애는 기능이 아니라 stream ownership과 integration을 개선하는 경계입니다.
 
 ### BufferedImage 로드/저장
 
@@ -210,15 +206,12 @@ val jpegBytes = image.suspendBytes(SuspendJpegWriter.Default)
 val webpBytes = image.suspendBytes(SuspendWebpWriter.Default)
 ```
 
-`BufferedSink` 출력은 caller-owned로 보고 flush만 수행하며 닫지 않습니다. Helper가
-output boundary를 소유하고 닫아야 한다면 raw `Sink` 또는 `SuspendedSink`를
-전달하세요. Asynchronous file channel이나 coroutine 기반 service pipeline에서는
+`BufferedSink` 출력은 caller-owned로 보고 flush만 수행하며 닫지 않습니다. Helper가 output boundary를 소유하고 닫아야 한다면 raw `Sink` 또는 `SuspendedSink`를 전달하세요. Asynchronous file channel이나 coroutine 기반 service pipeline에서는
 `bluetape4k-okio`의 `SuspendedSource`/`SuspendedSink`를 우선 사용하세요.
 
 ### 배치 이미지 처리 (Issue #135)
 
-`ImageBatchFlow`는 대량 이미지에 동일한 변환을 적용하는 코루틴 Flow 파이프라인입니다.
-동시성 제어와 픽셀 단위 메모리 한도를 통해 안전하게 대규모 배치 작업을 처리합니다.
+`ImageBatchFlow`는 대량 이미지에 동일한 변환을 적용하는 코루틴 Flow 파이프라인입니다. 동시성 제어와 픽셀 단위 메모리 한도를 통해 안전하게 대규모 배치 작업을 처리합니다.
 
 ```kotlin
 import io.bluetape4k.images.batch.*
@@ -280,8 +273,8 @@ import java.nio.file.Path
 val pipeline = ThumbnailPipeline.builder()
     .outputDirectory(Path.of("output/thumbs"))
     .size(width = 1280, height = 720, suffix = "hd")
-    .size(width = 640,  height = 360, suffix = "md")
-    .size(width = 320,  height = 180, suffix = "sm")
+    .size(width = 640, height = 360, suffix = "md")
+    .size(width = 320, height = 180, suffix = "sm")
     .format(ThumbnailFormat(SuspendJpegWriter.Default.withCompression(85), "jpg"))
     .crop(ThumbnailCrop.Smart())                // 중요 영역 자동 크롭
     .options(ImageProcessingOptions(parallelism = 4, skipFailures = true))
@@ -304,14 +297,9 @@ pipeline
     }
 ```
 
-크기를 변환하기 전에 입력과 요청한 출력이 각각 `maxPixels` 이하인지 확인합니다.
-작업마다 입력·출력 픽셀 합을 쓰기가 끝날 때까지 예약하며, `maxInFlightPixels`를 넘는
-요청은 `VALIDATION` 단계에서 거부합니다. 인코더·크롭의 임시 메모리와 호출자가 보관하는
-결과 이미지는 이 예산에 포함하지 않습니다. 처리 중 원본 파일을 변경하지 않아야 하며,
-디코딩한 입력이 예약량보다 크면 변환 전에 거부합니다.
+크기를 변환하기 전에 입력과 요청한 출력이 각각 `maxPixels` 이하인지 확인합니다. 작업마다 입력·출력 픽셀 합을 쓰기가 끝날 때까지 예약하며, `maxInFlightPixels`를 넘는 요청은 `VALIDATION` 단계에서 거부합니다. 인코더·크롭의 임시 메모리와 호출자가 보관하는 결과 이미지는 이 예산에 포함하지 않습니다. 처리 중 원본 파일을 변경하지 않아야 하며, 디코딩한 입력이 예약량보다 크면 변환 전에 거부합니다.
 
-`build()`는 설정한 크기 목록을 복사합니다. Builder를 재사용해도 기존 파이프라인의
-설정은 바뀌지 않지만, Builder 자체를 여러 스레드에서 동시에 수정하는 것은 지원하지 않습니다.
+`build()`는 설정한 크기 목록을 복사합니다. Builder를 재사용해도 기존 파이프라인의 설정은 바뀌지 않지만, Builder 자체를 여러 스레드에서 동시에 수정하는 것은 지원하지 않습니다.
 
 `ThumbnailCrop` 종류:
 
@@ -320,12 +308,9 @@ pipeline
 
 ### 타일 처리
 
-`TileProcessor`는 큰 이미지를 격자 타일로 분할하고, 각 타일을 병렬로 변환한 다음,
-하나의 출력 이미지로 재조립합니다. 이미지 전체를 한 번에 처리하기 어려울 때 유용합니다.
+`TileProcessor`는 큰 이미지를 격자 타일로 분할하고, 각 타일을 병렬로 변환한 다음, 하나의 출력 이미지로 재조립합니다. 이미지 전체를 한 번에 처리하기 어려울 때 유용합니다.
 
-작은 이미지를 분할할 때 타일 크기로 `Int.MAX_VALUE`까지 지정할 수 있습니다.
-병합 이미지를 할당하기 전에 음수 좌표, 출력 영역을 벗어난 타일, 선언한 크기와
-실제 이미지 크기가 다른 타일을 거부합니다.
+작은 이미지를 분할할 때 타일 크기로 `Int.MAX_VALUE`까지 지정할 수 있습니다. 병합 이미지를 할당하기 전에 음수 좌표, 출력 영역을 벗어난 타일, 선언한 크기와 실제 이미지 크기가 다른 타일을 거부합니다.
 
 ```kotlin
 import com.sksamuel.scrimage.ImmutableImage
@@ -432,7 +417,7 @@ val scaled = bufferedImage.scale(xScale = 0.5, yScale = 0.5)
 
 ### 이미지 분할
 
-높이가 큰 이미지(예: 상품 상세 이미지)를 지정된 높이로 분할합니다.
+높이가 큰 이미지 (예: 상품 상세 이미지)를 지정된 높이로 분할합니다.
 
 ```kotlin
 import io.bluetape4k.images.splitter.ImageSplitter
@@ -579,13 +564,13 @@ a.phash()                      // 64bit Long
 a.phashDistanceTo(b)           // Hamming distance 0 ~ 64 (≤ 5 거의 동일, ≤ 10 유사)
 ```
 
-| 지표                  | 용도                            | 완전 동일 |
-|---------------------|-------------------------------|-------|
-| `pixelAvgDeltaTo`   | 바이트 단위 회귀 테스트 (허용 오차 비교)      | 0.0   |
-| `pixelMaxDeltaTo`   | 단일 픽셀 이상치 탐지                  | 0     |
-| `psnrTo`            | JPEG/WebP 압축 품질 평가            | +∞    |
-| `ssimTo`            | 전역 인지적 유사도                    | 1.0   |
-| `phashDistanceTo`   | 중복 이미지·크롭·리사이즈 탐지             | 0     |
+| 지표              | 용도                                     | 완전 동일 |
+|-------------------|------------------------------------------|-----------|
+| `pixelAvgDeltaTo` | 바이트 단위 회귀 테스트 (허용 오차 비교) | 0.0       |
+| `pixelMaxDeltaTo` | 단일 픽셀 이상치 탐지                    | 0         |
+| `psnrTo`          | JPEG/WebP 압축 품질 평가                 | +∞        |
+| `ssimTo`          | 전역 인지적 유사도                       | 1.0       |
+| `phashDistanceTo` | 중복 이미지·크롭·리사이즈 탐지           | 0         |
 
 ### MSSIM (슬라이딩 윈도우 SSIM)
 
@@ -611,7 +596,7 @@ val score = prepared.mssimTo(b.prepareForSimilarity(512))
 
 ### 확장 지각 해시 (aHash / dHash / wHash / pHash)
 
-가변 비트폭(64 / 256 / 1024bit) 지각 해시.
+가변 비트폭 (64 / 256 / 1024bit) 지각 해시.
 
 ```kotlin
 import io.bluetape4k.images.similarity.*
@@ -631,12 +616,12 @@ val p1024 = b.phashOf(PHashSize.BITS_1024)            // LongArray(16)
 val dist = HashDistance.hamming(a.phashOf(PHashSize.BITS_256), b.phashOf(PHashSize.BITS_256))
 ```
 
-| 해시  | 알고리즘                | 특징                         |
-|-------|---------------------|------------------------------|
-| aHash | 평균 밝기              | 빠르고 단순                    |
-| dHash | 인접 픽셀 그래디언트     | 약한 밝기 변화에 견고             |
-| wHash | Haar DWT LL subband | pHash보다 빠르고 정확도 유사       |
-| pHash | DCT 저주파 성분        | JPEG·리사이즈에 가장 견고           |
+| 해시  | 알고리즘             | 특징                         |
+|-------|----------------------|------------------------------|
+| aHash | 평균 밝기            | 빠르고 단순                  |
+| dHash | 인접 픽셀 그래디언트 | 약한 밝기 변화에 견고        |
+| wHash | Haar DWT LL subband  | pHash보다 빠르고 정확도 유사 |
+| pHash | DCT 저주파 성분      | JPEG·리사이즈에 가장 견고    |
 
 ### 색상 히스토그램 유사도
 
@@ -788,13 +773,13 @@ val result3 = image.applyFilters {
 
 ### 신규 필터 5종
 
-| 필터 | DSL 함수 | 설명 |
-|------|----------|------|
-| `SaturationAdjustFilter` | `saturation(factor)` | HSV 채도 배수 조정 (1.0=원본, 0=흑백) |
-| `HueAdjustFilter` | `hue(deltaDegrees)` | HSV 색조 회전 (도 단위) |
-| `ColorTemperatureFilter` | `colorTemperature(kelvin)` | 켈빈 색온도 조정 (1000–40000 K) |
-| `RoundedCornerFilter` | `roundedCorners(radius)` | 모서리 둥글게 (알파 마스크) |
-| `MedianBlurFilter` | `medianBlur(radius, boundary)` | 미디언 블러 노이즈 제거 (`MedianBoundaryMode`: REPLICATE/REFLECT) |
+| 필터                     | DSL 함수                       | 설명                                                              |
+|--------------------------|--------------------------------|-------------------------------------------------------------------|
+| `SaturationAdjustFilter` | `saturation(factor)`           | HSV 채도 배수 조정 (1.0=원본, 0=흑백)                             |
+| `HueAdjustFilter`        | `hue(deltaDegrees)`            | HSV 색조 회전 (도 단위)                                           |
+| `ColorTemperatureFilter` | `colorTemperature(kelvin)`     | 켈빈 색온도 조정 (1000–40000 K)                                   |
+| `RoundedCornerFilter`    | `roundedCorners(radius)`       | 모서리 둥글게 (알파 마스크)                                       |
+| `MedianBlurFilter`       | `medianBlur(radius, boundary)` | 미디언 블러 노이즈 제거 (`MedianBoundaryMode`: REPLICATE/REFLECT) |
 
 ### `ColorSpaceConverter`
 
@@ -817,7 +802,7 @@ val ycbcrArray = image.toYCbCrArray() // FloatArray [y0,cb0,cr0, ...]
 
 ## 이미지 변환 (Issue #132)
 
-순수 JVM(Java2D) 기반 고급 이미지 변환 연산. 모든 연산은 suspend 변형을 제공합니다.
+순수 JVM (Java2D) 기반 고급 이미지 변환 연산. 모든 연산은 suspend 변형을 제공합니다.
 
 ### 변환 아키텍처
 
@@ -863,7 +848,7 @@ val rotated = image.rotateDegrees(45.0)
 val rotatedRed = image.rotateDegrees(30.0, background = Color.RED)
 
 // 90도 단위 (scrimage 네이티브, 무손실)
-val cw90  = image.rotateRight()
+val cw90 = image.rotateRight()
 val ccw90 = image.rotateLeft()
 
 // 반전
@@ -895,7 +880,7 @@ val async = image.suspendPerspectiveTransform(src, dst, 500, 500)
 
 ### CLAHE — 히스토그램 균일화
 
-YCbCr 색공간(BT.601) 기반 CLAHE(Contrast Limited Adaptive Histogram Equalization).
+YCbCr 색공간 (BT.601) 기반 CLAHE (Contrast Limited Adaptive Histogram Equalization).
 
 ```kotlin
 // 기본 설정 (tileSize=8, clipLimit=2.0)
@@ -1028,17 +1013,17 @@ val vipsAwareReport = publicReport.withBackendHeaderFields(
 )
 ```
 
-metadata 부재 자체가 enforcement 판단의 근거라면 `readImageMetadataReportStrict`를 사용하세요. 이 함수는 읽을 수 없는 output을 `ImageMetadataReport.EMPTY`로 축약하지 않고 `ImageMetadataReadResult.Success` 또는 제한된 `Failure` 분류(`SIZE_LIMIT`, `IO`, `PARSE`)를 반환합니다. `ImageMetadataReport.containsExif`와 `containsGps`는 directory 존재 여부를 나타내므로, 알려지지 않은 EXIF tag나 일부 필드만 있는 GPS directory도 raw 값 노출 없이 policy 코드에서 확인할 수 있습니다.
+metadata 부재 자체가 enforcement 판단의 근거라면 `readImageMetadataReportStrict`를 사용하세요. 이 함수는 읽을 수 없는 output을 `ImageMetadataReport.EMPTY`로 축약하지 않고 `ImageMetadataReadResult.Success` 또는 제한된 `Failure` 분류 (`SIZE_LIMIT`, `IO`, `PARSE`)를 반환합니다. `ImageMetadataReport.containsExif`와 `containsGps`는 directory 존재 여부를 나타내므로, 알려지지 않은 EXIF tag나 일부 필드만 있는 GPS directory도 raw 값 노출 없이 policy 코드에서 확인할 수 있습니다.
 
 #### 주요 파일
 
-| 파일                                     | 설명                                              |
-|------------------------------------------|--------------------------------------------------|
-| `analysis/DominantColor.kt`             | `DominantColor` data class + `DominantColorExtractor` sealed interface |
-| `analysis/MedianCutQuantizer.kt`        | Median Cut quantization 엔진 (5-bit/channel)     |
-| `analysis/BlurDetector.kt`              | `BlurScore` + Laplacian variance 계산             |
-| `analysis/ExifData.kt`                  | `ExifData` 모델 + `readExif()` 진입점            |
-| `analysis/ImageMetadataReport.kt`       | 공개 API 안전 metadata report + 제한된 내부 diagnostics |
+| 파일                              | 설명                                                                   |
+|-----------------------------------|------------------------------------------------------------------------|
+| `analysis/DominantColor.kt`       | `DominantColor` data class + `DominantColorExtractor` sealed interface |
+| `analysis/MedianCutQuantizer.kt`  | Median Cut quantization 엔진 (5-bit/channel)                           |
+| `analysis/BlurDetector.kt`        | `BlurScore` + Laplacian variance 계산                                  |
+| `analysis/ExifData.kt`            | `ExifData` 모델 + `readExif()` 진입점                                  |
+| `analysis/ImageMetadataReport.kt` | 공개 API 안전 metadata report + 제한된 내부 diagnostics                |
 
 ### 민감 콘텐츠 Moderation Policy
 
@@ -1086,11 +1071,11 @@ val report = policy.evaluate(listOf(detection))
 
 지원 geometry:
 
-| Geometry | 용도 |
-|---|---|
-| `Rectangle` | pixel 또는 normalized 좌표의 축 정렬 박스 |
-| `Polygon` | 닫힌 영역. 첫 점을 마지막 점으로 반복해야 함 |
-| `Polyline` | 열린 경로 또는 contour |
+| Geometry     | 용도                                          |
+|--------------|-----------------------------------------------|
+| `Rectangle`  | pixel 또는 normalized 좌표의 축 정렬 박스     |
+| `Polygon`    | 닫힌 영역. 첫 점을 마지막 점으로 반복해야 함  |
+| `Polyline`   | 열린 경로 또는 contour                        |
 | `RasterMask` | 외부 mask reference 또는 raster mask metadata |
 
 검증 규칙:
@@ -1160,8 +1145,7 @@ val results = sourcePaths.processPrivacyDerivatives(
 
 ### Privacy Snapshot 직렬화 (0.5.0)
 
-Privacy runtime 객체는 의도적으로 Java 직렬화를 제공하지 않습니다. 보존하거나 전송할
-때는 concrete snapshot DTO만 사용하고 Jackson 3 codec을 명시적으로 호출하세요.
+Privacy runtime 객체는 의도적으로 Java 직렬화를 제공하지 않습니다. 보존하거나 전송할 때는 concrete snapshot DTO만 사용하고 Jackson 3 codec을 명시적으로 호출하세요.
 
 ```kotlin
 val snapshot = derivative.toPayload(sourceId = "upload-42")
@@ -1170,13 +1154,9 @@ val restored = PrivacyDerivativeJackson.decodePayload(json)
 check(restored.bytes.contentEquals(snapshot.bytes))
 ```
 
-JSON 계약은 `schemaVersion=1` typed envelope입니다. 고정 codec은 unknown field, 지원하지
-않는 version, trailing document, 안전하지 않은 source identifier, `PrivacyDerivativeJsonLimits`
+JSON 계약은 `schemaVersion=1` typed envelope입니다. 고정 codec은 unknown field, 지원하지 않는 version, trailing document, 안전하지 않은 source identifier, `PrivacyDerivativeJsonLimits`
 초과 입력을 거부하며 streaming decode가 caller의 `InputStream`을 닫지 않습니다.
-`PrivacyDerivativeFormat`, `PrivacyDerivativeResult`, batch result, Spring storage/CDN runtime
-collaborator는 0.5.0부터 `Serializable`을 선언하지 않습니다. 해당 runtime 객체를 기존 Java
-직렬화로 저장하던 사용자는 snapshot으로 migration해야 하며, 이제는 부분적인 객체 graph를
-만드는 대신 `NotSerializableException`이 발생합니다.
+`PrivacyDerivativeFormat`, `PrivacyDerivativeResult`, batch result, Spring storage/CDN runtime collaborator는 0.5.0부터 `Serializable`을 선언하지 않습니다. 해당 runtime 객체를 기존 Java 직렬화로 저장하던 사용자는 snapshot으로 migration해야 하며, 이제는 부분적인 객체 graph를 만드는 대신 `NotSerializableException`이 발생합니다.
 
 ## 테스트 & 품질
 
@@ -1190,20 +1170,20 @@ collaborator는 0.5.0부터 `Serializable`을 선언하지 않습니다. 해당 
 
 ### 속성 기반 테스트 (PBT)
 
-[`ImagePropertyTest`](src/test/kotlin/io/bluetape4k/images/property/ImagePropertyTest.kt)가 6개 결정론적 입력(320×240, 640×480, 1280×720, 3840×2160 단색/그라디언트/노이즈)에 대해 10개 불변식을 검증합니다.
+[`ImagePropertyTest`](src/test/kotlin/io/bluetape4k/images/property/ImagePropertyTest.kt)가 6개 결정론적 입력 (320×240, 640×480, 1280×720, 3840×2160 단색/그라디언트/노이즈)에 대해 10개 불변식을 검증합니다.
 
-| # | 불변식 | 설명 |
-|---|--------|------|
-| 1 | scaleTo 크기 일치 | `scaleTo(w, h)` 결과가 정확히 `w×h` |
-| 2 | fit 경계 내 | `fit(w, h)` 결과가 `w×h` 이내 |
-| 3 | grayscale R==G==B | grayscale 후 모든 픽셀 R==G==B |
-| 4 | resize 라운드트립 | decode→encode→decode 시 크기 유지 |
-| 5 | PNG 바이트 > 0 | PNG 인코딩은 항상 비어 있지 않은 바이트 반환 |
-| 6 | sepia ≠ grayscale | sepia와 grayscale은 서로 다른 결과 |
-| 7 | scaleTo 멱등성 | 동일 타겟으로 `scaleTo` 두 번 호출 시 결과 동일 |
-| 8 | resize 바이트 감소 | 다운스케일 JPEG ≤ 원본 JPEG 바이트 |
-| 9 | 단색 JPEG 라운드트립 | 단색 이미지 encode→decode 가능 |
-| 10 | filter 크기 보존 | `filter()` 후 원본 width/height 유지 |
+| #  | 불변식               | 설명                                            |
+|----|----------------------|-------------------------------------------------|
+| 1  | scaleTo 크기 일치    | `scaleTo(w, h)` 결과가 정확히 `w×h`             |
+| 2  | fit 경계 내          | `fit(w, h)` 결과가 `w×h` 이내                   |
+| 3  | grayscale R==G==B    | grayscale 후 모든 픽셀 R==G==B                  |
+| 4  | resize 라운드트립    | decode→encode→decode 시 크기 유지               |
+| 5  | PNG 바이트 > 0       | PNG 인코딩은 항상 비어 있지 않은 바이트 반환    |
+| 6  | sepia ≠ grayscale    | sepia와 grayscale은 서로 다른 결과              |
+| 7  | scaleTo 멱등성       | 동일 타겟으로 `scaleTo` 두 번 호출 시 결과 동일 |
+| 8  | resize 바이트 감소   | 다운스케일 JPEG ≤ 원본 JPEG 바이트              |
+| 9  | 단색 JPEG 라운드트립 | 단색 이미지 encode→decode 가능                  |
+| 10 | filter 크기 보존     | `filter()` 후 원본 width/height 유지            |
 
 ```bash
 # PBT + 골든 테스트 실행

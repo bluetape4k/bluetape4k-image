@@ -3,17 +3,20 @@ package io.bluetape4k.images.coroutines
 import com.sksamuel.scrimage.AwtImage
 import com.sksamuel.scrimage.metadata.ImageMetadata
 import com.sksamuel.scrimage.nio.ImageWriter
+import io.bluetape4k.ToStringBuilder
 import io.bluetape4k.images.IIORegistryUtils
 import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.logging.warn
+import io.bluetape4k.support.requireInRange
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runInterruptible
+import java.io.OutputStream
 import javax.imageio.IIOImage
 import javax.imageio.ImageIO
 import javax.imageio.ImageTypeSpecifier
 import javax.imageio.ImageWriteParam
 import javax.imageio.stream.MemoryCacheImageOutputStream
-import java.io.OutputStream
 
 /**
  * TIFF 형식의 이미지를 생성하는 [ImageWriter] + [SuspendImageWriter] 구현체입니다.
@@ -44,13 +47,13 @@ import java.io.OutputStream
 class SuspendTiffWriter(
     val compression: TiffCompression = TiffCompression.DEFLATE,
     val quality: Float = 0.9f,
-) : ImageWriter, SuspendImageWriter {
+): ImageWriter, SuspendImageWriter {
 
     init {
-        require(quality in 0.0f..1.0f) { "quality must be in 0.0..1.0: $quality" }
+        quality.requireInRange(0.0f, 1.0f, "quality")
     }
 
-    companion object : KLoggingChannel() {
+    companion object: KLoggingChannel() {
         init {
             IIORegistryUtils.registerApplicationClasspathSpis()
         }
@@ -113,14 +116,25 @@ class SuspendTiffWriter(
         } finally {
             // dispose()가 예외를 던져도 ios.close()가 반드시 실행되도록 분리
             // CancellationException은 반드시 재전파하여 코루틴 취소 계약을 보존
-            try { writer.dispose() } catch (e: Throwable) {
+            try {
+                writer.dispose()
+            } catch (e: Throwable) {
                 if (e is CancellationException) throw e
-                log.warn("TIFF writer.dispose() 실패", e)
+                log.warn(e) { "TIFF writer.dispose() 실패" }
             }
-            try { ios.close() } catch (e: Throwable) {
+            try {
+                ios.close()
+            } catch (e: Throwable) {
                 if (e is CancellationException) throw e
-                log.warn("TIFF ios.close() 실패", e)
+                log.warn(e) { "TIFF ios.close() 실패" }
             }
         }
+    }
+
+    override fun toString(): String {
+        return ToStringBuilder(this)
+            .add("compression", compression)
+            .add("quality", quality)
+            .toString()
     }
 }

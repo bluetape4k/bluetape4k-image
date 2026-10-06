@@ -1,7 +1,6 @@
 package io.bluetape4k.images.batch
 
 import io.bluetape4k.io.writeAtomically
-import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
 import java.io.OutputStream
@@ -19,10 +18,10 @@ internal suspend fun writeAtomically(
     output: Path,
     ioDispatcher: CoroutineContext,
     writer: (OutputStream) -> Unit,
-): Long = withContext(ioDispatcher) {
-    val coroutineContext = currentCoroutineContext()
-    output.writeAtomically { stream ->
-        writer(stream)
-        coroutineContext.ensureActive()
+): Long =
+    withContext(ioDispatcher) {
+        output.writeAtomically { stream ->
+            writer(stream)
+            coroutineContext.ensureActive()
+        }
     }
-}
