@@ -7,6 +7,7 @@ import java.io.Serializable
 import java.nio.file.Path
 import javax.imageio.IIOException
 import javax.imageio.ImageIO
+import javax.imageio.ImageReader
 import javax.imageio.stream.ImageInputStream
 
 /**
@@ -151,7 +152,7 @@ private fun probeImageDimensions(input: ImageInputStream): ImageDimensions? {
         return null
     }
 
-    val reader = readers.next()
+    val reader: ImageReader = readers.next()
     try {
         input.seek(0)
         reader.input = input

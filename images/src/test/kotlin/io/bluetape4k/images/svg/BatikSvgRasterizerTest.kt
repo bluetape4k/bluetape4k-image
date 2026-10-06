@@ -24,7 +24,7 @@ class BatikSvgRasterizerTest: AbstractImageTest() {
 
     @Test
     fun `SVG를 기본 옵션으로 래스터화`() = runSuspendIO {
-        val input = Resourcex.getInputStream("images/sample.svg")!!
+        val input = Resourcex.getInputStream("images/sample.svg").shouldNotBeNull()
         input.use {
             val image = rasterizer.rasterize(it)
 
@@ -37,7 +37,7 @@ class BatikSvgRasterizerTest: AbstractImageTest() {
 
     @Test
     fun `SVG를 지정 크기로 래스터화`() = runSuspendIO {
-        val input = Resourcex.getInputStream("images/sample.svg")!!
+        val input = Resourcex.getInputStream("images/sample.svg").shouldNotBeNull()
         val opts = SvgRasterizeOptions(width = 400, height = 400)
 
         input.use {
@@ -52,10 +52,10 @@ class BatikSvgRasterizerTest: AbstractImageTest() {
 
     @Test
     fun `SVG를 144 DPI로 래스터화`() = runSuspendIO {
-        val image96 = Resourcex.getInputStream("images/sample.svg")!!.use {
+        val image96 = Resourcex.getInputStream("images/sample.svg").shouldNotBeNull().use {
             rasterizer.rasterize(it, SvgRasterizeOptions(dpi = 96))
         }
-        val image144 = Resourcex.getInputStream("images/sample.svg")!!.use {
+        val image144 = Resourcex.getInputStream("images/sample.svg").shouldNotBeNull().use {
             rasterizer.rasterize(it, SvgRasterizeOptions(dpi = 144))
         }
 
@@ -89,10 +89,10 @@ class BatikSvgRasterizerTest: AbstractImageTest() {
             "maxHeightPx" to { SvgRasterizeOptions(maxHeightPx = 0) },
             "allowedSchemes" to { SvgRasterizeOptions(allowedSchemes = setOf("not a scheme")) },
         ).forEach { (field, factory) ->
+
             val error = assertFailsWith<IllegalArgumentException> {
                 factory()
             }
-
             error.message shouldContain field
         }
     }
@@ -101,11 +101,10 @@ class BatikSvgRasterizerTest: AbstractImageTest() {
     fun `maxWidthPx 초과 옵션 시 예외 발생`() = runSuspendIO {
         val opts = SvgRasterizeOptions(width = 9999, maxWidthPx = 8192)
 
-        try {
-            Resourcex.getInputStream("images/sample.svg")!!.use { rasterizer.rasterize(it, opts) }
-            throw AssertionError("예외가 발생해야 합니다")
-        } catch (e: IllegalArgumentException) {
-            log.debug { "예상된 예외: ${e.message}" }
+        assertFailsWith<IllegalArgumentException> {
+            Resourcex.getInputStream("images/sample.svg").shouldNotBeNull().use {
+                rasterizer.rasterize(it, opts)
+            }
         }
     }
 }

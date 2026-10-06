@@ -7,12 +7,18 @@ import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeInstanceOf
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldHaveSize
+import io.bluetape4k.concurrent.await
+import io.bluetape4k.coroutines.support.log
 import io.bluetape4k.images.batch.ImageBatchException
 import io.bluetape4k.images.batch.ImageBatchFailureStage
 import io.bluetape4k.images.batch.ImageProcessingOptions
 import io.bluetape4k.images.batch.probeImagePixelCount
 import io.bluetape4k.images.coroutines.SuspendImageWriter
 import io.bluetape4k.images.coroutines.SuspendPngWriter
+import io.bluetape4k.junit5.coroutines.runSuspendIO
+import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.logging.debug
 import io.mockk.every
 import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
@@ -38,11 +44,14 @@ import kotlin.time.Duration.Companion.seconds
 
 class ThumbnailBudgetTest {
 
+    companion object: KLoggingChannel()
+
     @Test
     fun `fit and smart crop reject excessive output before writing`(@TempDir directory: Path) = runTest {
         val source = sourceImage(directory)
         for ((index, crop) in listOf(ThumbnailCrop.Fit, ThumbnailCrop.Smart()).withIndex()) {
             val output = directory.resolve("output-$index")
+
             val pipeline = ThumbnailPipeline.builder()
                 .outputDirectory(output)
                 .size(100, 100)
@@ -50,6 +59,8 @@ class ThumbnailBudgetTest {
                 .format(ThumbnailFormat(SuspendPngWriter.MaxCompression, "png"))
                 .options(ImageProcessingOptions(maxPixels = 25, maxInFlightPixels = 25))
                 .build()
+
+            log.debug { "pipeline=$pipeline" }
 
             val failure = assertFailsWith<ImageBatchException> {
                 pipeline.process(flowOf(source)).single()
@@ -64,13 +75,17 @@ class ThumbnailBudgetTest {
         val source = sourceImage(directory)
         val output = directory.resolve("changed-input")
         mockkStatic("io.bluetape4k.images.batch.ImageDimensionProbeKt")
+
         try {
             every { probeImagePixelCount(source) } returns 24L
+
             val pipeline = ThumbnailPipeline.builder()
                 .outputDirectory(output)
                 .size(5, 5)
                 .options(ImageProcessingOptions(maxPixels = 25, maxInFlightPixels = 50))
                 .build()
+
+            log.debug { "pipeline=$pipeline" }
 
             val failure = assertFailsWith<ImageBatchException> {
                 pipeline.process(flowOf(source)).single()
@@ -92,6 +107,8 @@ class ThumbnailBudgetTest {
             .options(ImageProcessingOptions(maxPixels = 25, maxInFlightPixels = 49))
             .build()
 
+        log.debug { "pipeline=$pipeline" }
+
         val failure = assertFailsWith<ImageBatchException> {
             pipeline.process(flowOf(source)).single()
         }
@@ -111,10 +128,13 @@ class ThumbnailBudgetTest {
             .onFailure { observedFailures += it }
             .build()
 
+        log.debug { "pipeline=$pipeline" }
+
         val results = pipeline.process(flowOf(source)).toList()
+        log.debug { "results=$results" }
         results.single { it.size.suffix == "large" }.stage shouldBeEqualTo ImageBatchFailureStage.VALIDATION
-        results.single { it.size.suffix == "exact" }.status shouldBeInstanceOf ThumbnailStatus.Success::class
-        observedFailures.size shouldBeEqualTo 1
+        results.single { it.size.suffix == "exact" }.status.shouldBeInstanceOf<ThumbnailStatus.Success>()
+        observedFailures shouldHaveSize 1
     }
 
     @Test
@@ -124,6 +144,7 @@ class ThumbnailBudgetTest {
             val writes = AtomicInteger()
             val active = AtomicInteger()
             val maximum = AtomicInteger()
+
             val writer = object: SuspendImageWriter {
                 override fun write(image: AwtImage, metadata: ImageMetadata, out: OutputStream) {
                     val count = active.incrementAndGet()
@@ -142,41 +163,46 @@ class ThumbnailBudgetTest {
                 }
             }
 
-            val results = twoSizes(directory, writer).build().process(flowOf(sourceImage(directory))).toList()
+            val results = twoSizes(directory, writer)
+                .build()
+                .process(flowOf(sourceImage(directory)))
+                .toList()
 
-            results.size shouldBeEqualTo 2
-            results.all { it.status is ThumbnailStatus.Success }.shouldBeTrue()
+            log.debug { "results=$results" }
+            results shouldHaveSize 2
+            results.forEach { it.status.shouldBeInstanceOf<ThumbnailStatus.Success>() }
             maximum.get() shouldBeEqualTo 1
         }
 
     @Test
-    fun `write failure returns combined permits to the next size`(
-        @TempDir directory: Path,
-    ) = runTest(timeout = 10.seconds) {
-        val writes = AtomicInteger()
-        val writer = object: SuspendImageWriter {
-            override fun write(image: AwtImage, metadata: ImageMetadata, out: OutputStream) {
-                if (writes.incrementAndGet() == 1) throw IOException("first write fails")
-                SuspendPngWriter.MaxCompression.write(image, metadata, out)
+    fun `write failure returns combined permits to the next size`(@TempDir directory: Path) =
+        runTest(timeout = 10.seconds) {
+            val writes = AtomicInteger()
+
+            val writer = object: SuspendImageWriter {
+                override fun write(image: AwtImage, metadata: ImageMetadata, out: OutputStream) {
+                    if (writes.incrementAndGet() == 1) throw IOException("first write fails")
+                    SuspendPngWriter.MaxCompression.write(image, metadata, out)
+                }
             }
+            val pipeline = twoSizes(directory, writer).build()
+
+            val results = pipeline.process(flowOf(sourceImage(directory))).toList()
+
+            writes.get() shouldBeEqualTo 2
+            results.count { it.status is ThumbnailStatus.Success } shouldBeEqualTo 1
+            results.single { it.status is ThumbnailStatus.Failure }.stage shouldBeEqualTo ImageBatchFailureStage.WRITE
         }
-        val pipeline = twoSizes(directory, writer).build()
-
-        val results = pipeline.process(flowOf(sourceImage(directory))).toList()
-
-        writes.get() shouldBeEqualTo 2
-        results.count { it.status is ThumbnailStatus.Success } shouldBeEqualTo 1
-        results.single { it.status is ThumbnailStatus.Failure }.stage shouldBeEqualTo ImageBatchFailureStage.WRITE
-    }
 
     @Test
     fun `cancellation while holding combined permits preserves cancellation`(@TempDir directory: Path) =
-        runTest(timeout = 10.seconds) {
+        runSuspendIO(timeout = 10.seconds) {
             // 동기 writer 내부의 정확한 취소 지점을 고정하므로 반복 실행형 stress tester 대신 신호를 사용합니다.
             val entered = CountDownLatch(1)
             val release = CountDownLatch(1)
             val writes = AtomicInteger()
             val failures = AtomicInteger()
+
             val writer = object: SuspendImageWriter {
                 override fun write(image: AwtImage, metadata: ImageMetadata, out: OutputStream) {
                     writes.incrementAndGet()
@@ -186,9 +212,15 @@ class ThumbnailBudgetTest {
                 }
             }
             val pipeline = twoSizes(directory, writer).onFailure { failures.incrementAndGet() }.build()
-            val job = launch { pipeline.process(flowOf(sourceImage(directory))).toList() }
+
+            val job = launch {
+                pipeline.process(flowOf(sourceImage(directory))).toList()
+            }.log("Job")
+
             try {
-                withContext(Dispatchers.IO) { entered.await(5, TimeUnit.SECONDS) }.shouldBeTrue()
+                withContext(Dispatchers.IO) {
+                    entered.await(5.seconds).shouldBeTrue()
+                }
                 job.cancel()
             } finally {
                 release.countDown()
@@ -196,6 +228,7 @@ class ThumbnailBudgetTest {
             job.join()
 
             job.isCancelled.shouldBeTrue()
+
             writes.get() shouldBeEqualTo 1
             failures.get() shouldBeEqualTo 0
             Files.list(directory.resolve("two-sizes")).use { it.count() shouldBeEqualTo 0L }
@@ -216,7 +249,14 @@ class ThumbnailBudgetTest {
                 )
             )
 
-    private fun sourceImage(directory: Path): Path = directory.resolve("source.png").also {
-        ImageIO.write(BufferedImage(5, 5, BufferedImage.TYPE_INT_RGB), "png", it.toFile())
-    }
+    private fun sourceImage(directory: Path): Path =
+        directory
+            .resolve("source.png")
+            .also {
+                ImageIO.write(
+                    BufferedImage(5, 5, BufferedImage.TYPE_INT_RGB),
+                    "png",
+                    it.toFile()
+                )
+            }
 }

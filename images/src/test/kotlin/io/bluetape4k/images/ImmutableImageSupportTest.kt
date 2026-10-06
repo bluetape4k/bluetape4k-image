@@ -110,7 +110,9 @@ class ImmutableImageSupportTest: AbstractImageTest() {
         val original = immutableImageOf(whiteTestImage(10, 10))
 
         assertFailsWith<RuntimeException> {
-            original.withGraphics { throw RuntimeException("test error") }
+            original.withGraphics {
+                throw RuntimeException("test error")
+            }
         }
 
         // 예외 발생 후에도 원본 이미지가 정상 사용 가능 (Graphics2D dispose됨)

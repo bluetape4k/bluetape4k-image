@@ -1,15 +1,18 @@
 package io.bluetape4k.images.svg
 
+import com.sksamuel.scrimage.nio.PngWriter
 import com.sun.net.httpserver.HttpServer
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeGreaterThan
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.images.AbstractImageTest
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.junit5.tempfolder.TempFolderTest
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
+import io.bluetape4k.support.toUtf8Bytes
 import io.bluetape4k.utils.Resourcex
 import org.junit.jupiter.api.Test
 import java.io.ByteArrayInputStream
@@ -34,7 +37,7 @@ class BatikSvgRasterizerSecurityTest: AbstractImageTest() {
     fun `XXE DOCTYPE SVG - 처리 거부 또는 파일 내용 미포함 검증`() = runSuspendIO {
         // security_xxe.svg: DOCTYPE + file:///etc/passwd 외부 엔티티
         // disallow-doctype-decl=true 이므로 SAXParseException으로 거부 또는 엔티티 무시되어야 함
-        val input = Resourcex.getInputStream("images/security_xxe.svg")!!
+        val input = Resourcex.getInputStream("images/security_xxe.svg").shouldNotBeNull()
 
         var exceptionThrown = false
         var outputBytes = ByteArray(0)
@@ -43,11 +46,11 @@ class BatikSvgRasterizerSecurityTest: AbstractImageTest() {
             input.use {
                 val image = rasterizer.rasterize(it)
                 // 예외 없이 처리된 경우: 출력에 /etc/passwd 내용이 없어야 함
-                outputBytes = image.forWriter(com.sksamuel.scrimage.nio.PngWriter.MaxCompression).bytes()
+                outputBytes = image.forWriter(PngWriter.MaxCompression).bytes()
             }
         } catch (e: Exception) {
             exceptionThrown = true
-            log.debug { "DOCTYPE SVG: 예외로 거부됨 (올바른 동작): ${e.javaClass.simpleName}" }
+            log.debug(e) { "DOCTYPE SVG: 예외로 거부됨 (올바른 동작)" }
         }
 
         if (exceptionThrown) {
@@ -86,15 +89,16 @@ class BatikSvgRasterizerSecurityTest: AbstractImageTest() {
                      xlink:href="http://127.0.0.1:$port/remote.png"/>
             </svg>
         """.trimIndent()
+
         val opts = SvgRasterizeOptions(allowExternalResources = false)
 
         try {
-            ByteArrayInputStream(svg.toByteArray()).use {
+            ByteArrayInputStream(svg.toUtf8Bytes()).use {
                 val image = rasterizer.rasterize(it, opts)
                 log.debug { "외부 리소스 SVG: 래스터화 성공 (${image.width}x${image.height}), 외부 로드 없음" }
             }
         } catch (e: Exception) {
-            log.debug { "외부 리소스 SVG: 예외로 거부됨 (${e.javaClass.simpleName}), 요청 횟수=${requests.get()}" }
+            log.debug(e) { "외부 리소스 SVG: 예외로 거부됨, 요청 횟수=${requests.get()}" }
         } finally {
             server.stop(0)
         }
@@ -121,7 +125,7 @@ class BatikSvgRasterizerSecurityTest: AbstractImageTest() {
         """.trimIndent()
 
         try {
-            ByteArrayInputStream(svg.toByteArray()).use {
+            ByteArrayInputStream(svg.toUtf8Bytes()).use {
                 runCatching {
                     rasterizer.rasterize(
                         it,
@@ -158,7 +162,7 @@ class BatikSvgRasterizerSecurityTest: AbstractImageTest() {
         """.trimIndent()
 
         try {
-            ByteArrayInputStream(svg.toByteArray()).use {
+            ByteArrayInputStream(svg.toUtf8Bytes()).use {
                 runCatching {
                     rasterizer.rasterize(
                         it,
@@ -184,9 +188,10 @@ class BatikSvgRasterizerSecurityTest: AbstractImageTest() {
 
         input.use {
             val image = rasterizer.rasterize(it, opts)
+
             // 정상 래스터화 검증
-            (image.width > 0).shouldBeTrue()
-            (image.height > 0).shouldBeTrue()
+            image.width shouldBeGreaterThan 0
+            image.height shouldBeGreaterThan 0
             log.debug { "일반 SVG 래스터화: ${image.width}x${image.height}" }
         }
     }
@@ -198,7 +203,7 @@ class BatikSvgRasterizerSecurityTest: AbstractImageTest() {
 
         input.use {
             val image = rasterizer.rasterize(it)
-            (image.width > 0).shouldBeTrue()
+            image.width shouldBeGreaterThan 0
             log.debug { "DOCTYPE 없는 SVG: ${image.width}x${image.height} 정상 처리됨" }
         }
     }

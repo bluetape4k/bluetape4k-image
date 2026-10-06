@@ -50,7 +50,7 @@ fun fontOf(
  * @param size 폰트 크기 (기본값: [DEFAULT_FONT_SIZE])
  * @return [Font] 인스턴스
  */
-fun createTrueTypeFont(
+internal fun createTrueTypeFont(
     fontName: String = "Roboto-Regular.ttf",
     size: Int = DEFAULT_FONT_SIZE,
 ): Font {

@@ -8,6 +8,7 @@ import io.bluetape4k.assertions.shouldNotBeEmpty
 import io.bluetape4k.junit5.tempfolder.TempFolder
 import io.bluetape4k.junit5.tempfolder.TempFolderTest
 import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.logging.debug
 import org.junit.jupiter.api.Test
 import java.awt.Color
 import java.io.ByteArrayOutputStream
@@ -56,6 +57,7 @@ class BufferedImageSupportTest: AbstractImageTest() {
         }
 
         val image = bufferedImageOf(file)
+        log.debug { "image=$image" }
         image.width shouldBeGreaterThan 0
         image.height shouldBeGreaterThan 0
     }
@@ -72,6 +74,7 @@ class BufferedImageSupportTest: AbstractImageTest() {
         image.write(ImageFormat.JPG, file).shouldBeTrue()
 
         val loaded = bufferedImageOf(file)
+        log.debug { "loaded image=$loaded" }
         loaded.width shouldBeEqualTo 100
         loaded.height shouldBeEqualTo 100
     }
@@ -102,6 +105,7 @@ class BufferedImageSupportTest: AbstractImageTest() {
         bytes.shouldNotBeEmpty()
 
         val loaded = bufferedImageOf(bytes)
+        log.debug { "loaded image=$loaded" }
         loaded.width shouldBeEqualTo 50
         loaded.height shouldBeEqualTo 50
     }
@@ -136,6 +140,7 @@ class BufferedImageSupportTest: AbstractImageTest() {
         }
 
         base.drawImage(overlay, 10, 10)
+        log.debug { "base=$base" }
         base.toByteArray("png").shouldNotBeEmpty()
     }
 
@@ -159,7 +164,9 @@ class BufferedImageSupportTest: AbstractImageTest() {
         val image = bufferedImageOf(10, 10)
 
         assertFailsWith<RuntimeException> {
-            image.useGraphics { throw RuntimeException("test error") }
+            image.useGraphics {
+                throw RuntimeException("test error")
+            }
         }
 
         // 예외 발생 후에도 이미지가 정상 인코딩 가능 (Graphics2D dispose됨)

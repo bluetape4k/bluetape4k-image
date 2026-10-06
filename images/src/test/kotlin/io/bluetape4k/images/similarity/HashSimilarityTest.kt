@@ -8,13 +8,14 @@ import io.bluetape4k.assertions.shouldBeGreaterThan
 import io.bluetape4k.assertions.shouldBeLessOrEqualTo
 import io.bluetape4k.images.AbstractImageTest
 import io.bluetape4k.images.immutableImageOf
-import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.utils.Resourcex
 import org.junit.jupiter.api.Test
 
 class HashSimilarityTest: AbstractImageTest() {
 
-    companion object: KLoggingChannel() {
+    companion object: KLogging() {
         private const val HOMER_JPG = "images/homer.jpg"
         private const val LANDSCAPE_JPG = "images/landscape.jpg"
     }
@@ -51,7 +52,7 @@ class HashSimilarityTest: AbstractImageTest() {
         val wDist = HashDistance.hamming(original.whash(), recompressed.whash())
         val pDist = HashDistance.hamming(original.phash(), recompressed.phash())
 
-        log.debug("jpeg-90 hash distances: aHash=$aDist, dHash=$dDist, wHash=$wDist, pHash=$pDist")
+        log.debug { "jpeg-90 hash distances: aHash=$aDist, dHash=$dDist, wHash=$wDist, pHash=$pDist" }
 
         aDist shouldBeLessOrEqualTo 4
         dDist shouldBeLessOrEqualTo 4
@@ -69,7 +70,7 @@ class HashSimilarityTest: AbstractImageTest() {
         val wDist = HashDistance.hamming(homer.whash(), landscape.whash())
         val pDist = HashDistance.hamming(homer.phash(), landscape.phash())
 
-        log.debug("different images hash distances: aHash=$aDist, dHash=$dDist, wHash=$wDist, pHash=$pDist")
+        log.debug { "different images hash distances: aHash=$aDist, dHash=$dDist, wHash=$wDist, pHash=$pDist" }
 
         aDist shouldBeGreaterThan 15
         dDist shouldBeGreaterThan 15

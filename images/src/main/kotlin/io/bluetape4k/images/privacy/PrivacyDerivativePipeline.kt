@@ -1,6 +1,7 @@
 package io.bluetape4k.images.privacy
 
 import com.sksamuel.scrimage.ImmutableImage
+import io.bluetape4k.ToStringBuilder
 import io.bluetape4k.coroutines.flow.extensions.mapParallel
 import io.bluetape4k.images.ImageDimensions
 import io.bluetape4k.images.analysis.ExifData
@@ -27,6 +28,9 @@ import io.bluetape4k.images.transforms.flipVertical
 import io.bluetape4k.images.transforms.rotateDegrees
 import io.bluetape4k.images.transforms.smartCropToWithBounds
 import io.bluetape4k.images.withGraphics
+import io.bluetape4k.support.hashOf
+import io.bluetape4k.support.requireFinite
+import io.bluetape4k.support.requireInRange
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.requirePositiveNumber
 import kotlinx.coroutines.CancellationException
@@ -34,6 +38,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
 import java.awt.AlphaComposite
 import java.awt.Color
+import java.io.Serializable
 import java.nio.file.Path
 import kotlin.math.ceil
 import kotlin.math.floor
@@ -100,7 +105,7 @@ enum class PrivacyRedactionMode {
 data class PrivacyDerivativeFormat(
     val writer: SuspendImageWriter,
     val extension: String,
-) {
+): Serializable {
 
     val normalizedExtension: String = extension.trim().removePrefix(".").lowercase()
 
@@ -111,6 +116,7 @@ data class PrivacyDerivativeFormat(
     }
 
     companion object {
+        private const val serialVersionUID = 1L
         private const val PATH_SEPARATOR = '/'
         private const val WINDOWS_PATH_SEPARATOR = '\\'
 
@@ -136,11 +142,15 @@ data class PrivacyRedaction(
     val mode: PrivacyRedactionMode = PrivacyRedactionMode.SOLID_MASK,
     val maskColorArgb: Int = Color.BLACK.rgb,
     val maskOpacity: Double = 1.0,
-) {
+): Serializable {
 
     init {
-        require(maskOpacity.isFinite()) { "maskOpacity must be finite, but was $maskOpacity" }
-        require(maskOpacity in OPACITY_MIN..OPACITY_MAX) { "maskOpacity must be in 0.0..1.0, but was $maskOpacity" }
+        maskOpacity.requireFinite("maskOpacity")
+        maskOpacity.requireInRange(OPACITY_MIN, OPACITY_MAX, "maskOpacity")
+    }
+
+    companion object {
+        private const val serialVersionUID = 1L
     }
 }
 
@@ -164,11 +174,15 @@ data class PrivacyDerivativeOptions(
     val thumbnailCrop: ThumbnailCrop = ThumbnailCrop.Fit,
     val outputFormat: PrivacyDerivativeFormat = PrivacyDerivativeFormat.Jpeg,
     val redactions: List<PrivacyRedaction> = emptyList(),
-) {
+): Serializable {
 
     init {
         maxPixels.requirePositiveNumber("maxPixels")
         maxSide?.requirePositiveNumber("maxSide")
+    }
+
+    companion object {
+        private const val serialVersionUID = 1L
     }
 }
 
@@ -178,10 +192,14 @@ data class PrivacyDerivativeOptions(
 data class PrivacyDerivativeFailure(
     val stage: PrivacyDerivativeFailureStage,
     val message: String,
-) {
+): Serializable {
 
     init {
         message.requireNotBlank("message")
+    }
+
+    companion object {
+        private const val serialVersionUID = 1L
     }
 }
 
@@ -195,13 +213,17 @@ data class AppliedPrivacyRedaction(
     val y: Int,
     val width: Int,
     val height: Int,
-) {
+): Serializable {
 
     init {
         x.requireNonNegative("x")
         y.requireNonNegative("y")
         width.requirePositiveNumber("width")
         height.requirePositiveNumber("height")
+    }
+
+    companion object {
+        private const val serialVersionUID = 1L
     }
 }
 
@@ -218,11 +240,15 @@ data class PrivacyDerivativeReport(
     val failures: List<PrivacyDerivativeFailure>,
     val elapsedMillis: Long,
     val metadataVerification: PrivacyMetadataVerification = PrivacyMetadataVerification(),
-) {
+): Serializable {
 
     init {
         source.requireNotBlankIfPresent("source")
         elapsedMillis.requireNonNegative("elapsedMillis")
+    }
+
+    companion object {
+        private const val serialVersionUID = 1L
     }
 }
 
@@ -237,7 +263,11 @@ data class PrivacyMetadataVerification(
     val sourcePresent: Set<PrivacyMetadataCategory> = emptySet(),
     val remaining: Set<PrivacyMetadataCategory> = emptySet(),
     val verified: Boolean = true,
-)
+): Serializable {
+    companion object {
+        private const val serialVersionUID = 1L
+    }
+}
 
 /**
  * derivative output metadata를 strict하게 검증할 수 없거나, 요청된 category가 남은 경우의
@@ -258,12 +288,36 @@ data class PrivacyDerivativeResult(
     val image: ImmutableImage,
     val bytes: ByteArray,
     val report: PrivacyDerivativeReport,
-)
+): Serializable {
+    companion object {
+        private const val serialVersionUID = 1L
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (other == null) return false
+        if (other === this) return true
+
+        return other is PrivacyDerivativeResult &&
+                image == other.image &&
+                bytes.contentEquals(other.bytes) &&
+                report == other.report
+    }
+
+    override fun hashCode(): Int = hashOf(image, bytes.contentHashCode(), report)
+
+    override fun toString(): String {
+        return ToStringBuilder(this)
+            .add("image", image)
+            .add("bytes", bytes.contentToString())
+            .add("report", report)
+            .toString()
+    }
+}
 
 /**
  * [processPrivacyDerivatives]의 batch result입니다.
  */
-sealed interface PrivacyDerivativeBatchResult {
+sealed interface PrivacyDerivativeBatchResult: Serializable {
     /** 이 result를 생성한 source path입니다. */
     val source: Path
 
@@ -640,7 +694,7 @@ private fun SensitiveRegionGeometry.Rectangle.toAppliedRedaction(
     }
     val orientedBounds = sourceBounds.transformOrientation(orientation, sourceDimensions)
     val croppedBounds = orientedBounds.intersect(crop) ?: return null
-    val bounds = croppedBounds.toPixelBounds(crop, outputDimensions) ?: return null
+    val bounds = croppedBounds.toPixelBounds(crop, outputDimensions)
 
     return AppliedPrivacyRedaction(
         regionId = redaction.region.id,
@@ -652,32 +706,44 @@ private fun SensitiveRegionGeometry.Rectangle.toAppliedRedaction(
     )
 }
 
-private class PrivacyDerivativeTransformResult(
+private data class PrivacyDerivativeTransformResult(
     val image: ImmutableImage,
     val redactions: List<AppliedPrivacyRedaction>,
-)
+): Serializable {
+    companion object {
+        private const val serialVersionUID = 1L
+    }
+}
 
 /** derivative image와 orientation 이후 crop window를 함께 보관합니다. */
-private class PrivacyDerivativeImageTransform(
+private data class PrivacyDerivativeImageTransform(
     val image: ImmutableImage,
     val crop: CropWindow,
-)
+): Serializable {
+    companion object {
+        private const val serialVersionUID = 1L
+    }
+}
 
 /** orientation이 적용된 이미지 좌표계의 crop window입니다. */
-private class CropWindow(
+private data class CropWindow(
     val x: Double,
     val y: Double,
     val width: Double,
     val height: Double,
-)
+): Serializable {
+    companion object {
+        private const val serialVersionUID = 1L
+    }
+}
 
 /** source rectangle을 변환하는 동안 유지하는 연속 좌표 bounds입니다. */
-private class RectangleBounds(
+private data class RectangleBounds(
     val left: Double,
     val top: Double,
     val right: Double,
     val bottom: Double,
-) {
+): Serializable {
     fun transformOrientation(
         orientation: Int?,
         sourceDimensions: PrivacyImageDimensions,
@@ -744,7 +810,7 @@ private class RectangleBounds(
         return intersection.takeIf { it.right > it.left && it.bottom > it.top }
     }
 
-    fun toPixelBounds(crop: CropWindow, outputDimensions: PrivacyImageDimensions): PixelBounds? {
+    fun toPixelBounds(crop: CropWindow, outputDimensions: PrivacyImageDimensions): PixelBounds {
         val rawLeft = (left - crop.x) * outputDimensions.width / crop.width
         val rawTop = (top - crop.y) * outputDimensions.height / crop.height
         val rawRight = (right - crop.x) * outputDimensions.width / crop.width
@@ -753,6 +819,7 @@ private class RectangleBounds(
         val y = floor(rawTop).toInt().coerceIn(0, outputDimensions.height - 1)
         val right = ceil(rawRight).toInt().coerceIn(x + 1, outputDimensions.width)
         val bottom = ceil(rawBottom).toInt().coerceIn(y + 1, outputDimensions.height)
+
         return PixelBounds(
             x = x,
             y = y,
@@ -760,19 +827,31 @@ private class RectangleBounds(
             height = bottom - y,
         )
     }
+
+    companion object {
+        private const val serialVersionUID = 1L
+    }
 }
 
-private class RenderablePrivacyRedaction(
+private data class RenderablePrivacyRedaction(
     val request: PrivacyRedaction,
     val applied: AppliedPrivacyRedaction,
-)
+): Serializable {
+    companion object {
+        private const val serialVersionUID = 1L
+    }
+}
 
 private data class PixelBounds(
     val x: Int,
     val y: Int,
     val width: Int,
     val height: Int,
-)
+): Serializable {
+    companion object {
+        private const val serialVersionUID = 1L
+    }
+}
 
 private fun PrivacyImageDimensions.requireWithin(
     options: PrivacyDerivativeOptions,
@@ -867,9 +946,7 @@ private fun Long.requireNonNegative(name: String) {
 }
 
 private fun String?.requireNotBlankIfPresent(name: String) {
-    if (this != null) {
-        requireNotBlank(name)
-    }
+    this?.requireNotBlank(name)
 }
 
 private const val OPACITY_MIN = 0.0

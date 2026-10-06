@@ -5,16 +5,17 @@ import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeGreaterThan
 import io.bluetape4k.assertions.shouldBeInRange
 import io.bluetape4k.assertions.shouldBeLessThan
+import io.bluetape4k.assertions.shouldNotBeNear
 import io.bluetape4k.images.AbstractImageTest
 import io.bluetape4k.images.immutableImageOf
-import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.utils.Resourcex
 import org.junit.jupiter.api.Test
 
 class HistogramSimilarityTest: AbstractImageTest() {
 
-    companion object: KLoggingChannel() {
+    companion object: KLogging() {
         private const val HOMER_JPG = "images/homer.jpg"
         private const val LANDSCAPE_JPG = "images/landscape.jpg"
     }
@@ -114,7 +115,8 @@ class HistogramSimilarityTest: AbstractImageTest() {
         log.debug { "RGB=$rgb, HSV=$hsv" }
 
         // 부동소수 비교는 절대값 차이가 충분히 큰지 확인 (정확한 일치 비교는 부서지기 쉬움).
-        kotlin.math.abs(rgb - hsv) shouldBeGreaterThan 1e-6
+        // abs(rgb - hsv) shouldBeGreaterThan 1e-6
+        rgb.shouldNotBeNear(hsv, 1e-6)
     }
 
     @Test

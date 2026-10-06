@@ -53,7 +53,8 @@ fun ImmutableImage.pixelAvgDeltaTo(other: ImmutableImage): Double {
     val a = pixels()
     val b = other.pixels()
     var total = 0L
-    for (i in a.indices) {
+
+    a.indices.forEach { i ->
         total += abs(a[i].red() - b[i].red()) +
                 abs(a[i].green() - b[i].green()) +
                 abs(a[i].blue() - b[i].blue())
@@ -76,7 +77,8 @@ fun ImmutableImage.pixelMaxDeltaTo(other: ImmutableImage): Int {
     val a = pixels()
     val b = other.pixels()
     var max = 0
-    for (i in a.indices) {
+
+    a.indices.forEach { i ->
         val dr = abs(a[i].red() - b[i].red())
         val dg = abs(a[i].green() - b[i].green())
         val db = abs(a[i].blue() - b[i].blue())
@@ -101,7 +103,7 @@ fun ImmutableImage.mseTo(other: ImmutableImage): Double {
     val a = pixels()
     val b = other.pixels()
     var sum = 0.0
-    for (i in a.indices) {
+    a.indices.forEach { i ->
         val dr = (a[i].red() - b[i].red()).toDouble()
         val dg = (a[i].green() - b[i].green()).toDouble()
         val db = (a[i].blue() - b[i].blue()).toDouble()
@@ -145,6 +147,7 @@ fun ImmutableImage.psnrTo(other: ImmutableImage): Double {
  */
 fun ImmutableImage.ssimTo(other: ImmutableImage): Double {
     requireSameSize(other)
+
     val a = pixels()
     val b = other.pixels()
     val n = a.size
@@ -203,7 +206,9 @@ fun ImmutableImage.phash(): Long {
         }
     }
     var avg = 0.0
-    for (i in 1 until PHASH_BITS) avg += low[i]
+    for (i in 1 until PHASH_BITS) {
+        avg += low[i]
+    }
     avg /= (PHASH_BITS - 1)
 
     var hash = 0L

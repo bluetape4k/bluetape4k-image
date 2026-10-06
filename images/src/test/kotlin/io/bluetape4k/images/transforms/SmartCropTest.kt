@@ -7,7 +7,7 @@ import io.bluetape4k.assertions.shouldBeGreaterThan
 import io.bluetape4k.assertions.shouldBeInRange
 import io.bluetape4k.images.AbstractImageTest
 import io.bluetape4k.images.immutableImageOf
-import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.utils.Resourcex
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
@@ -16,7 +16,7 @@ import java.awt.image.BufferedImage
 
 class SmartCropTest: AbstractImageTest() {
 
-    companion object: KLoggingChannel()
+    companion object: KLogging()
 
     /**
      * 왼쪽 절반은 체커보드(흑백 10px 격자), 오른쪽 절반은 단색 라이트그레이인 이미지를 생성합니다.

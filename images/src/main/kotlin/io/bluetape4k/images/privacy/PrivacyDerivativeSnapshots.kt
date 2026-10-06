@@ -2,13 +2,21 @@ package io.bluetape4k.images.privacy
 
 import com.fasterxml.jackson.annotation.JsonAlias
 import com.fasterxml.jackson.annotation.JsonProperty
+import io.bluetape4k.ToStringBuilder
 import io.bluetape4k.images.moderation.SensitiveCoordinateSpace
 import io.bluetape4k.images.moderation.SensitiveRegion
 import io.bluetape4k.images.moderation.SensitiveRegionGeometry
 import io.bluetape4k.images.thumbnail.ThumbnailCrop
 import io.bluetape4k.images.thumbnail.ThumbnailSize
 import io.bluetape4k.images.transforms.SaliencyStrategy
+import io.bluetape4k.support.hashOf
+import io.bluetape4k.support.requireGe
+import io.bluetape4k.support.requireGt
+import io.bluetape4k.support.requireLe
 import io.bluetape4k.support.requireNotBlank
+import io.bluetape4k.support.requireNotEmpty
+import io.bluetape4k.support.requireNotNull
+import io.bluetape4k.support.requirePositiveNumber
 import java.io.Serializable
 import java.util.*
 
@@ -82,19 +90,13 @@ data class PrivacyThumbnailSizeSnapshot(
     val suffix: String,
 ): Serializable {
     init {
-        require(width > 0) { "thumbnail width must be positive" }
-        require(height > 0) { "thumbnail height must be positive" }
+        width.requirePositiveNumber { "thumbnail width must be positive" }
+        height.requirePositiveNumber { "thumbnail height must be positive" }
         suffix.requireNotBlank("suffix")
     }
 
-    private fun readObject(input: java.io.ObjectInputStream) {
-        input.defaultReadObject()
-        require(width > 0 && height > 0 && suffix.isNotBlank()) { "Invalid thumbnail snapshot" }
-    }
-
-    private companion object {
-        @JvmField
-        val serialVersionUID: Long = 1L
+    companion object {
+        private const val serialVersionUID: Long = 1L
     }
 }
 
@@ -128,27 +130,8 @@ data class PrivacyRedactionSnapshot(
         }
     }
 
-    private fun readObject(input: java.io.ObjectInputStream) {
-        input.defaultReadObject()
-        regionId.requireSafePrivacySourceId("regionId")
-        require(coordinateSpace != null && mode != null) { "Invalid redaction snapshot" }
-        require(x.isFinite() && y.isFinite() && width.isFinite() && height.isFinite()) {
-            "Invalid redaction coordinates"
-        }
-        require(width > 0.0 && height > 0.0) { "Invalid redaction dimensions" }
-        require(maskOpacity.isFinite() && maskOpacity in 0.0..1.0) { "Invalid redaction snapshot" }
-        if (coordinateSpace == PrivacyWireCoordinateSpaceId.NORMALIZED) {
-            require(x >= 0.0 && y >= 0.0 && x + width <= 1.0 && y + height <= 1.0) {
-                "Invalid normalized redaction"
-            }
-        } else {
-            require(x >= 0.0 && y >= 0.0) { "Invalid pixel redaction" }
-        }
-    }
-
-    private companion object {
-        @JvmField
-        val serialVersionUID: Long = 1L
+    companion object {
+        private const val serialVersionUID: Long = 1L
     }
 }
 
@@ -170,40 +153,29 @@ class PrivacyDerivativeOptionsSnapshot(
         get() = storedRedactions
 
     init {
-        require(maxPixels > 0) { "maxPixels must be positive" }
-        require(maxSide == null || maxSide > 0) { "maxSide must be positive" }
-    }
-
-    private fun readObject(input: java.io.ObjectInputStream) {
-        input.defaultReadObject()
-        require(thumbnailSize == null || (thumbnailSize.width > 0 && thumbnailSize.height > 0)) {
-            "Invalid thumbnail size"
-        }
-        require(thumbnailCrop != null && outputFormat != null) { "Invalid options snapshot" }
-        require(maxPixels > 0 && (maxSide == null || maxSide > 0)) { "Invalid options snapshot" }
-        requireNotNull(storedRedactions) { "Invalid options redactions" }
-        require(storedRedactions.size <= PRIVACY_DERIVATIVE_DEFAULT_MAX_REDACTIONS) {
-            "Too many redactions"
-        }
-        storedRedactions = immutableList(storedRedactions)
+        maxPixels.requireGt(0, "maxPixels")
+        maxSide?.requireGt(0, "maxSide")
     }
 
     override fun equals(other: Any?): Boolean =
         other is PrivacyDerivativeOptionsSnapshot &&
-                stripMetadata == other.stripMetadata && removeGps == other.removeGps &&
-                normalizeOrientation == other.normalizeOrientation && maxPixels == other.maxPixels &&
-                maxSide == other.maxSide && thumbnailSize == other.thumbnailSize &&
-                thumbnailCrop == other.thumbnailCrop && outputFormat == other.outputFormat &&
+                stripMetadata == other.stripMetadata &&
+                removeGps == other.removeGps &&
+                normalizeOrientation == other.normalizeOrientation &&
+                maxPixels == other.maxPixels &&
+                maxSide == other.maxSide &&
+                thumbnailSize == other.thumbnailSize &&
+                thumbnailCrop == other.thumbnailCrop &&
+                outputFormat == other.outputFormat &&
                 redactions == other.redactions
 
-    override fun hashCode(): Int = listOf(
+    override fun hashCode(): Int = hashOf(
         stripMetadata, removeGps, normalizeOrientation, maxPixels, maxSide, thumbnailSize,
         thumbnailCrop, outputFormat, redactions,
-    ).hashCode()
+    )
 
-    private companion object {
-        @JvmField
-        val serialVersionUID: Long = 1L
+    companion object {
+        private const val serialVersionUID: Long = 1L
     }
 }
 
@@ -216,14 +188,8 @@ data class PrivacyImageDimensionsSnapshot(
         require(width > 0 && height > 0) { "image dimensions must be positive" }
     }
 
-    private fun readObject(input: java.io.ObjectInputStream) {
-        input.defaultReadObject()
-        require(width > 0 && height > 0) { "Invalid image dimensions snapshot" }
-    }
-
-    private companion object {
-        @JvmField
-        val serialVersionUID: Long = 1L
+    companion object {
+        private const val serialVersionUID: Long = 1L
     }
 }
 
@@ -245,20 +211,8 @@ data class PrivacyAppliedRedactionSnapshot(
         }
     }
 
-    private fun readObject(input: java.io.ObjectInputStream) {
-        input.defaultReadObject()
-        regionId.requireSafePrivacySourceId("regionId")
-        require(x.isFinite() && y.isFinite() && width.isFinite() && height.isFinite()) {
-            "Invalid applied redaction coordinates"
-        }
-        require(x >= 0.0 && y >= 0.0 && width > 0.0 && height > 0.0) {
-            "Invalid applied redaction bounds"
-        }
-    }
-
     private companion object {
-        @JvmField
-        val serialVersionUID: Long = 1L
+        private const val serialVersionUID: Long = 1L
     }
 }
 
@@ -273,35 +227,41 @@ class PrivacyMetadataVerificationSnapshot(
     private var storedSourcePresent: Set<PrivacyWireMetadataCategoryId> = immutableEnumSet(sourcePresent)
     private var storedRemaining: Set<PrivacyWireMetadataCategoryId> = immutableEnumSet(remaining)
 
+    init {
+        storedRequested.requireNotNull("storedRequested")
+        storedSourcePresent.requireNotNull("storedSourcePresent")
+        storedRemaining.requireNotNull("storedRemaining")
+
+        storedRequested.size.requireLe(PRIVACY_DERIVATIVE_DEFAULT_MAX_METADATA_ENTRIES, "storedRequested size")
+        storedSourcePresent.size.requireLe(PRIVACY_DERIVATIVE_DEFAULT_MAX_METADATA_ENTRIES, "storedSourcePresent size")
+        storedRemaining.size.requireLe(PRIVACY_DERIVATIVE_DEFAULT_MAX_METADATA_ENTRIES, "storedRemaining size")
+    }
+
     val requested: Set<PrivacyWireMetadataCategoryId>
         get() = storedRequested
+
     val sourcePresent: Set<PrivacyWireMetadataCategoryId>
         get() = storedSourcePresent
+
     val remaining: Set<PrivacyWireMetadataCategoryId>
         get() = storedRemaining
 
     private fun readObject(input: java.io.ObjectInputStream) {
         input.defaultReadObject()
-        requireNotNull(storedRequested) { "Invalid requested metadata" }
-        requireNotNull(storedSourcePresent) { "Invalid source metadata" }
-        requireNotNull(storedRemaining) { "Invalid remaining metadata" }
-        require(storedRequested.size <= PRIVACY_DERIVATIVE_DEFAULT_MAX_METADATA_ENTRIES)
-        require(storedSourcePresent.size <= PRIVACY_DERIVATIVE_DEFAULT_MAX_METADATA_ENTRIES)
-        require(storedRemaining.size <= PRIVACY_DERIVATIVE_DEFAULT_MAX_METADATA_ENTRIES)
-        storedRequested = immutableEnumSet(storedRequested)
-        storedSourcePresent = immutableEnumSet(storedSourcePresent)
-        storedRemaining = immutableEnumSet(storedRemaining)
+
     }
 
     override fun equals(other: Any?): Boolean =
-        other is PrivacyMetadataVerificationSnapshot && requested == other.requested &&
-                sourcePresent == other.sourcePresent && remaining == other.remaining && verified == other.verified
+        other is PrivacyMetadataVerificationSnapshot &&
+                requested == other.requested &&
+                sourcePresent == other.sourcePresent &&
+                remaining == other.remaining &&
+                verified == other.verified
 
-    override fun hashCode(): Int = listOf(requested, sourcePresent, remaining, verified).hashCode()
+    override fun hashCode(): Int = hashOf(requested, sourcePresent, remaining, verified)
 
     private companion object {
-        @JvmField
-        val serialVersionUID: Long = 1L
+        private const val serialVersionUID: Long = 1L
     }
 }
 
@@ -310,14 +270,8 @@ data class PrivacyDerivativeFailureSnapshot(
     val stage: PrivacyWireFailureStageId,
     val code: PrivacyDerivativeFailureCode,
 ): Serializable {
-    private fun readObject(input: java.io.ObjectInputStream) {
-        input.defaultReadObject()
-        require(stage != null && code != null) { "Invalid derivative failure snapshot" }
-    }
-
-    private companion object {
-        @JvmField
-        val serialVersionUID: Long = 1L
+    companion object {
+        private const val serialVersionUID: Long = 1L
     }
 }
 
@@ -341,33 +295,41 @@ class PrivacyDerivativeReportSnapshot(
 
     val strippedMetadataCategories: Set<PrivacyWireMetadataCategoryId>
         get() = storedStrippedMetadataCategories
+
     val appliedActions: List<PrivacyWireDerivativeActionId>
         get() = storedAppliedActions
+
     val redactions: List<PrivacyAppliedRedactionSnapshot>
         get() = storedRedactions
+
     val failures: List<PrivacyDerivativeFailureSnapshot>
         get() = storedFailures
 
     init {
         sourceId.requireSafePrivacySourceId("sourceId")
-        require(elapsedMillis >= 0L) { "elapsedMillis must be non-negative" }
+        elapsedMillis.requireGe(0L, "elapsedMillis")
     }
 
     private fun readObject(input: java.io.ObjectInputStream) {
         input.defaultReadObject()
         sourceId.requireSafePrivacySourceId("sourceId")
-        requireNotNull(sourceDimensions) { "Invalid source dimensions" }
-        requireNotNull(outputDimensions) { "Invalid output dimensions" }
-        requireNotNull(metadataVerification) { "Invalid metadata verification" }
-        requireNotNull(storedStrippedMetadataCategories) { "Invalid stripped metadata" }
-        requireNotNull(storedAppliedActions) { "Invalid applied actions" }
-        requireNotNull(storedRedactions) { "Invalid applied redactions" }
-        requireNotNull(storedFailures) { "Invalid failures" }
-        require(elapsedMillis >= 0L) { "Invalid report snapshot" }
-        require(storedStrippedMetadataCategories.size <= PRIVACY_DERIVATIVE_DEFAULT_MAX_METADATA_ENTRIES)
-        require(storedAppliedActions.size <= PRIVACY_DERIVATIVE_DEFAULT_MAX_ACTIONS)
-        require(storedRedactions.size <= PRIVACY_DERIVATIVE_DEFAULT_MAX_REDACTIONS)
-        require(storedFailures.size <= PRIVACY_DERIVATIVE_DEFAULT_MAX_FAILURES)
+        sourceDimensions.requireNotNull("sourceDimentions")
+        outputDimensions.requireNotNull("outputDimensions")
+        metadataVerification.requireNotNull("metadataVerification")
+        storedStrippedMetadataCategories.requireNotNull("storedStrippedMetadataCategories")
+        storedAppliedActions.requireNotNull("storedAppliedActions")
+        storedRedactions.requireNotNull("storedRedactions")
+        storedFailures.requireNotNull("storedFailures")
+        elapsedMillis.requireGe(0L, "elapsedMillis")
+
+        storedStrippedMetadataCategories.size.requireLe(
+            PRIVACY_DERIVATIVE_DEFAULT_MAX_METADATA_ENTRIES,
+            "storedStrippedMetadataCategories.size"
+        )
+        storedAppliedActions.size.requireLe(PRIVACY_DERIVATIVE_DEFAULT_MAX_ACTIONS, "storedAppliedActions.size")
+        storedRedactions.size.requireLe(PRIVACY_DERIVATIVE_DEFAULT_MAX_REDACTIONS, "storedRedactions.size")
+        storedFailures.size.requireLe(PRIVACY_DERIVATIVE_DEFAULT_MAX_FAILURES, "storedFailures.size")
+
         storedStrippedMetadataCategories = immutableEnumSet(storedStrippedMetadataCategories)
         storedAppliedActions = immutableList(storedAppliedActions)
         storedRedactions = immutableList(storedRedactions)
@@ -375,37 +337,58 @@ class PrivacyDerivativeReportSnapshot(
     }
 
     override fun equals(other: Any?): Boolean =
-        other is PrivacyDerivativeReportSnapshot && sourceId == other.sourceId &&
-                sourceDimensions == other.sourceDimensions && outputDimensions == other.outputDimensions &&
-                strippedMetadataCategories == other.strippedMetadataCategories && appliedActions == other.appliedActions &&
-                redactions == other.redactions && failures == other.failures && elapsedMillis == other.elapsedMillis &&
+        other is PrivacyDerivativeReportSnapshot &&
+                sourceId == other.sourceId &&
+                sourceDimensions == other.sourceDimensions &&
+                outputDimensions == other.outputDimensions &&
+                strippedMetadataCategories == other.strippedMetadataCategories &&
+                appliedActions == other.appliedActions &&
+                redactions == other.redactions &&
+                failures == other.failures &&
+                elapsedMillis == other.elapsedMillis &&
                 metadataVerification == other.metadataVerification
 
-    override fun hashCode(): Int = listOf(
+    override fun hashCode(): Int = hashOf(
         sourceId, sourceDimensions, outputDimensions, strippedMetadataCategories, appliedActions,
         redactions, failures, elapsedMillis, metadataVerification,
-    ).hashCode()
+    )
 
     override fun toString(): String =
-        "PrivacyDerivativeReportSnapshot(sourceId=$sourceId, sourceDimensions=$sourceDimensions, " +
-                "outputDimensions=$outputDimensions, strippedMetadataCategories=$strippedMetadataCategories, " +
-                "appliedActions=$appliedActions, redactions=$redactions, failures=$failures, " +
-                "elapsedMillis=$elapsedMillis, metadataVerification=$metadataVerification)"
+        ToStringBuilder(this)
+            .add("sourceId", sourceId)
+            .add("sourceDimensions", sourceDimensions)
+            .add("outputDimensions", outputDimensions)
+            .add("strippedMetadataCategories", strippedMetadataCategories)
+            .add("appliedActions", appliedActions)
+            .add("redactions", redactions)
+            .add("failures", failures)
+            .add("elapsedMillis", elapsedMillis)
+            .add("metadataVerification", metadataVerification)
+            .toString()
 
     private companion object {
-        @JvmField
-        val serialVersionUID: Long = 1L
+        private const val serialVersionUID: Long = 1L
     }
 }
 
 /** 성공 payload의 Java/JSON value snapshot입니다. */
 class PrivacyDerivativePayload(
-    @param:JsonProperty("encodedBytes")
-    @param:JsonAlias("bytes")
+    @JsonProperty("encodedBytes")
+    @JsonAlias("bytes")
     encodedBytes: ByteArray,
     val report: PrivacyDerivativeReportSnapshot,
 ): Serializable {
+
     private val storedBytes: ByteArray = encodedBytes.copyOf()
+
+    init {
+        storedBytes.requireNotNull("storedBytes")
+        report.requireNotNull("report")
+        storedBytes.size.requireLe(PRIVACY_DERIVATIVE_DEFAULT_MAX_PAYLOAD_BYTES) {
+            "encoded payload exceeds the supported Java serialization limit"
+        }
+    }
+
 
     /** 저장된 payload를 caller가 변경할 수 없도록 새 배열로 반환합니다. */
     @get:JsonProperty("encodedBytes")
@@ -417,23 +400,16 @@ class PrivacyDerivativePayload(
                 storedBytes.contentEquals(other.storedBytes) &&
                 report == other.report
 
-    override fun hashCode(): Int = 31 * storedBytes.contentHashCode() + report.hashCode()
+    override fun hashCode(): Int = hashOf(storedBytes.contentHashCode(), report)
 
     override fun toString(): String =
-        "PrivacyDerivativePayload(bytes=${storedBytes.size}, report=$report)"
-
-    private fun readObject(input: java.io.ObjectInputStream) {
-        input.defaultReadObject()
-        requireNotNull(storedBytes) { "Invalid encoded payload" }
-        requireNotNull(report) { "Invalid payload report" }
-        require(storedBytes.size <= PRIVACY_DERIVATIVE_DEFAULT_MAX_PAYLOAD_BYTES) {
-            "encoded payload exceeds the supported Java serialization limit"
-        }
-    }
+        ToStringBuilder(this)
+            .add("bytes", storedBytes.size)
+            .add("report", report)
+            .toString()
 
     private companion object {
-        @JvmField
-        val serialVersionUID: Long = 1L
+        private const val serialVersionUID: Long = 1L
     }
 }
 
@@ -452,16 +428,13 @@ data class PrivacyDerivativeBatchSnapshot(
 
     private fun readObject(input: java.io.ObjectInputStream) {
         input.defaultReadObject()
-        require(!sourceId.isNullOrBlank()) { "Invalid batch source id" }
+        sourceId.requireNotBlank("sourceId")
         sourceId.requireSafePrivacySourceId("sourceId")
-        require((payload == null) xor (failure == null)) {
-            "Invalid batch snapshot"
-        }
+        require((payload == null) xor (failure == null)) { "Invalid batch snapshot" }
     }
 
     private companion object {
-        @JvmField
-        val serialVersionUID: Long = 1L
+        private const val serialVersionUID: Long = 1L
     }
 }
 
@@ -664,8 +637,9 @@ private fun <T: Enum<T>> immutableEnumSet(values: Iterable<T>): Set<T> =
 
 private fun String?.requireSafePrivacySourceId(name: String) {
     if (this == null) return
-    require(isNotEmpty()) { "$name must not be empty" }
-    require(length <= PRIVACY_DERIVATIVE_MAX_SOURCE_ID_LENGTH) { "$name is too long" }
+
+    requireNotEmpty(name)
+    this.length.requireLe(PRIVACY_DERIVATIVE_MAX_SOURCE_ID_LENGTH) { "$name is too long" }
     require(indexOf('/') < 0 && indexOf('\\') < 0) { "$name must be an opaque identifier" }
     require(none(Char::isISOControl)) { "$name must not contain control characters" }
     require(!startsWith("/") && !startsWith("\\") && !matches(Regex("^[A-Za-z]:.*"))) {

@@ -650,11 +650,8 @@ inline fun ImmutableImage.withGraphics(
     action: (graphics: Graphics2D) -> Unit,
 ): ImmutableImage {
     val copy = this.copy()
-    val graphics: Graphics2D = copy.awt().createGraphics()
-    try {
-        action(graphics)
-    } finally {
-        graphics.dispose()
+    copy.awt().useGraphics { g ->
+        action(g)
     }
     return copy
 }

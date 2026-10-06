@@ -1,5 +1,6 @@
 package io.bluetape4k.images
 
+import io.bluetape4k.assertions.shouldBeEmpty
 import io.bluetape4k.assertions.shouldBeGreaterThan
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.junit5.tempfolder.TempFolder
@@ -42,9 +43,10 @@ class ImageFileExamples: AbstractImageTest() {
             val scaledImage = ImageIO.read(input).getScaledInstance(100, 100, Image.SCALE_SMOOTH)
 
             scaled.drawImage(scaledImage, 0, 0)
-            scaled.propertyNames?.forEach {
-                log.debug { "property name=$it, value=${scaled.getProperty(it)}" }
-            }
+            scaled.propertyNames.shouldBeEmpty()
+//            scaled.propertyNames?.forEach {
+//                log.debug { "property name=$it, value=${scaled.getProperty(it)}" }
+//            }
 
             val file = tempFolder.createFile()
             ImageIO.write(scaled, "jpg", file).shouldBeTrue()

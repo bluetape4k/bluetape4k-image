@@ -4,10 +4,13 @@ import com.sksamuel.scrimage.ImmutableImage
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.images.AbstractImageTest
+import io.bluetape4k.logging.KLogging
 import org.junit.jupiter.api.Test
 import java.awt.image.BufferedImage
 
 class TileModelsTest: AbstractImageTest() {
+
+    companion object: KLogging()
 
     private fun sampleImage(w: Int = 64, h: Int = 64): ImmutableImage {
         val buf = BufferedImage(w, h, BufferedImage.TYPE_INT_RGB)

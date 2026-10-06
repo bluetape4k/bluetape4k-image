@@ -2,15 +2,21 @@ package io.bluetape4k.images.transforms
 
 import com.sksamuel.scrimage.ImmutableImage
 import com.sksamuel.scrimage.angles.Radians
-import io.bluetape4k.logging.KotlinLogging
+import io.bluetape4k.images.useGraphics
+import io.bluetape4k.logging.KLogging
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.awt.Color
 import java.awt.RenderingHints
 import java.awt.geom.AffineTransform
 import java.awt.image.BufferedImage
+import kotlin.math.abs
+import kotlin.math.ceil
+import kotlin.math.cos
+import kotlin.math.round
+import kotlin.math.sin
 
-private val log = KotlinLogging.logger {}
+private object RatationLogger: KLogging()
 
 /**
  * 이미지를 지정한 각도(도 단위)만큼 회전합니다.
@@ -35,8 +41,8 @@ private val log = KotlinLogging.logger {}
 fun ImmutableImage.rotateDegrees(angle: Double, background: Color = Color(0, 0, 0, 0)): ImmutableImage {
     val normalized = ((angle % 360) + 360) % 360
 
-    if (Math.abs(normalized % 90) < 1e-9) {
-        return when (Math.round(normalized).toInt()) {
+    if (abs(normalized % 90) < 1e-9) {
+        return when (round(normalized).toInt()) {
             0 -> this
             90 -> rotateRight()
             180 -> rotate(Radians(Math.PI))
@@ -46,14 +52,14 @@ fun ImmutableImage.rotateDegrees(angle: Double, background: Color = Color(0, 0, 
     }
 
     val radians = Math.toRadians(angle)
-    val cos = Math.abs(Math.cos(radians))
-    val sin = Math.abs(Math.sin(radians))
-    val newW = Math.ceil(width * cos + height * sin).toInt()
-    val newH = Math.ceil(width * sin + height * cos).toInt()
+    val cos = abs(cos(radians))
+    val sin = abs(sin(radians))
+    val newW = ceil(width * cos + height * sin).toInt()
+    val newH = ceil(width * sin + height * cos).toInt()
 
     val buf = BufferedImage(newW, newH, BufferedImage.TYPE_INT_ARGB)
-    val g = buf.createGraphics()
-    try {
+
+    buf.useGraphics { g ->
         g.color = background
         g.fillRect(0, 0, newW, newH)
         g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC)
@@ -63,8 +69,6 @@ fun ImmutableImage.rotateDegrees(angle: Double, background: Color = Color(0, 0, 
         transform.rotate(radians)
         transform.translate(-width / 2.0, -height / 2.0)
         g.drawImage(this.awt(), transform, null)
-    } finally {
-        g.dispose()
     }
 
     return ImmutableImage.wrapAwt(buf)

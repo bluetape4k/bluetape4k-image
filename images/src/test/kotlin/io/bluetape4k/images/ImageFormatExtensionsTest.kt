@@ -1,10 +1,10 @@
 package io.bluetape4k.images
 
+import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeNull
 import io.bluetape4k.assertions.shouldBeTrue
-import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.logging.KLogging
 import org.junit.jupiter.api.Test
 
@@ -36,49 +36,39 @@ class ImageFormatExtensionsTest {
 
     @Test
     fun `requireWritable - SVG 포맷은 예외 발생`() {
-        try {
+        assertFailsWith<IllegalArgumentException> {
             ImageFormat.SVG.requireWritable()
-            throw AssertionError("예외가 발생해야 합니다")
-        } catch (e: IllegalArgumentException) {
-            e.message.shouldNotBeNull()
         }
     }
 
     @Test
     fun `requireWritable - AVIF 포맷은 예외 발생`() {
-        try {
+        assertFailsWith<IllegalArgumentException> {
             ImageFormat.AVIF.requireWritable()
-            throw AssertionError("예외가 발생해야 합니다")
-        } catch (e: IllegalArgumentException) {
-            e.message.shouldNotBeNull()
         }
     }
 
     @Test
     fun `parse - TIFF 파싱`() {
         val result = ImageFormat.parse("TIFF")
-        result.shouldNotBeNull()
         result shouldBeEqualTo ImageFormat.TIFF
     }
 
     @Test
     fun `parse - SVG 파싱`() {
         val result = ImageFormat.parse("svg")
-        result.shouldNotBeNull()
         result shouldBeEqualTo ImageFormat.SVG
     }
 
     @Test
     fun `parse - AVIF 파싱`() {
         val result = ImageFormat.parse("avif")
-        result.shouldNotBeNull()
         result shouldBeEqualTo ImageFormat.AVIF
     }
 
     @Test
     fun `parse - HEIC 파싱`() {
         val result = ImageFormat.parse("heic")
-        result.shouldNotBeNull()
         result shouldBeEqualTo ImageFormat.HEIC
     }
 
