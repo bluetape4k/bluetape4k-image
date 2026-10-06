@@ -2,7 +2,9 @@ package io.bluetape4k.images.heic
 
 import com.sksamuel.scrimage.ImmutableImage
 import io.bluetape4k.images.IncubatingImageApi
+import io.bluetape4k.support.requireGe
 import java.io.InputStream
+import java.io.Serializable
 
 /**
  * HEIC/HEIF 읽기 옵션입니다.
@@ -21,14 +23,16 @@ import java.io.InputStream
 data class HeicReadOptions(
     val pageIndex: Int = 0,
     val applyOrientation: Boolean = true,
-) {
+): Serializable {
     init {
-        require(pageIndex >= 0) { "pageIndex must be non-negative: $pageIndex" }
+        pageIndex.requireGe(0, "pageIndex")
     }
 
     companion object {
         @JvmStatic
         val Default = HeicReadOptions()
+
+        private const val serialVersionUID: Long = 1L
     }
 }
 

@@ -5,30 +5,30 @@ import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeGreaterThan
 import io.bluetape4k.assertions.shouldBeLessThan
+import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.images.AbstractImageTest
 import io.bluetape4k.images.immutableImageOf
-import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.images.useGraphics
+import io.bluetape4k.junit5.coroutines.runSuspendIO
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.utils.Resourcex
-import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import java.awt.Color
 import java.awt.image.BufferedImage
 
 class PerspectiveTransformTest: AbstractImageTest() {
 
-    companion object: KLoggingChannel()
+    companion object: KLogging()
 
     /**
      * 단색으로 채워진 테스트용 [ImmutableImage]를 생성합니다.
      */
     private fun createSolidImage(w: Int, h: Int, color: Color): ImmutableImage {
         val buf = BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB)
-        val g = buf.createGraphics()
-        try {
+        buf.useGraphics { g ->
             g.color = color
             g.fillRect(0, 0, w, h)
-        } finally {
-            g.dispose()
         }
         return ImmutableImage.wrapAwt(buf)
     }
@@ -41,7 +41,7 @@ class PerspectiveTransformTest: AbstractImageTest() {
 
     @Test
     fun `identity mapping returns same dimensions`() {
-        val image = immutableImageOf(Resourcex.getInputStream(CAFE_JPG)!!)
+        val image = immutableImageOf(Resourcex.getInputStream(CAFE_JPG).shouldNotBeNull())
         val w = image.width
         val h = image.height
 
@@ -58,8 +58,14 @@ class PerspectiveTransformTest: AbstractImageTest() {
             ImagePoint(0.0, h.toDouble()),
         )
 
-        val result = image.perspectiveTransform(srcCorners, dstCorners, w, h)
+        val result = image.perspectiveTransform(
+            srcCorners,
+            dstCorners,
+            w,
+            h
+        )
 
+        log.debug { "result=$result" }
         result.width shouldBeEqualTo w
         result.height shouldBeEqualTo h
     }
@@ -83,13 +89,20 @@ class PerspectiveTransformTest: AbstractImageTest() {
             ImagePoint(0.0, 100.0),
         )
 
-        val result = image.perspectiveTransform(srcCorners, dstCorners, 100, 100, outsideColor = Color.RED)
+        val result = image.perspectiveTransform(
+            srcCorners,
+            dstCorners,
+            100,
+            100,
+            outsideColor = Color.RED
+        )
 
         // 출력(0,0)의 역매핑은 소스(-10,-10) → 소스 범위 밖 → outsideColor(빨간색)
         val packed = result.awt().getRGB(0, 0)
         val red = packed.redBits()
         val green = packed.greenBits()
 
+        log.debug { "red=$red, green=$green" }
         red shouldBeGreaterThan 200
         green shouldBeLessThan 50
     }
@@ -105,7 +118,14 @@ class PerspectiveTransformTest: AbstractImageTest() {
         )
         val tooFew = listOf(ImagePoint(0.0, 0.0))
 
-        assertFailsWith<IllegalArgumentException> { image.perspectiveTransform(tooFew, dst4, 100, 100) }
+        assertFailsWith<IllegalArgumentException> {
+            image.perspectiveTransform(
+                tooFew,
+                dst4,
+                100,
+                100
+            )
+        }
     }
 
     @Test
@@ -124,7 +144,14 @@ class PerspectiveTransformTest: AbstractImageTest() {
             ImagePoint(0.0, 100.0),
         )
 
-        assertFailsWith<IllegalArgumentException> { image.perspectiveTransform(src4, dst4, 0, 100) }
+        assertFailsWith<IllegalArgumentException> {
+            image.perspectiveTransform(
+                src4,
+                dst4,
+                0,
+                100
+            )
+        }
     }
 
     @Test
@@ -144,7 +171,14 @@ class PerspectiveTransformTest: AbstractImageTest() {
         )
 
         // 10000×10000 = 100M > 64M 한계
-        assertFailsWith<IllegalArgumentException> { image.perspectiveTransform(src4, dst4, 10000, 10000) }
+        assertFailsWith<IllegalArgumentException> {
+            image.perspectiveTransform(
+                src4,
+                dst4,
+                10000,
+                10000
+            )
+        }
     }
 
     @Test
@@ -165,12 +199,19 @@ class PerspectiveTransformTest: AbstractImageTest() {
             ImagePoint(0.0, 100.0),
         )
 
-        assertFailsWith<IllegalArgumentException> { image.perspectiveTransform(collinearSrc, dst4, 100, 100) }
+        assertFailsWith<IllegalArgumentException> {
+            image.perspectiveTransform(
+                collinearSrc,
+                dst4,
+                100,
+                100
+            )
+        }
     }
 
     @Test
-    fun `suspendPerspectiveTransform matches perspectiveTransform dimensions`() = runTest {
-        val image = immutableImageOf(Resourcex.getInputStream(CAFE_JPG)!!)
+    fun `suspendPerspectiveTransform matches perspectiveTransform dimensions`() = runSuspendIO {
+        val image = immutableImageOf(Resourcex.getInputStream(CAFE_JPG).shouldNotBeNull())
         val w = image.width
         val h = image.height
 

@@ -4,9 +4,13 @@ import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldHaveSize
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import org.junit.jupiter.api.Test
 
 class SensitiveContentPolicyTest {
+
+    companion object: KLogging()
 
     @Test
     fun `level based policy maps high severity to blur parameters`() {
@@ -28,6 +32,7 @@ class SensitiveContentPolicyTest {
                 ),
             ),
         )
+        log.debug { "policy=$policy" }
 
         val report = policy.evaluate(
             listOf(
@@ -38,7 +43,7 @@ class SensitiveContentPolicyTest {
                 ),
             ),
         )
-
+        log.debug { "report=$report" }
         report.decisions shouldHaveSize 1
         report.selectedAction shouldBeEqualTo SensitiveTreatmentAction.BLUR
         report.selectedLevel shouldBeEqualTo SensitiveTreatmentLevel.HIGH
@@ -74,6 +79,7 @@ class SensitiveContentPolicyTest {
             ),
         )
 
+        log.debug { "report=$report" }
         report.selectedAction shouldBeEqualTo SensitiveTreatmentAction.MOSAIC
         report.selectedParameters.mosaicBlockSize shouldBeEqualTo 16
     }
@@ -93,6 +99,7 @@ class SensitiveContentPolicyTest {
                 ),
             ),
         )
+        log.debug { "policy=$policy" }
 
         val report = policy.evaluate(
             listOf(
@@ -104,6 +111,7 @@ class SensitiveContentPolicyTest {
                 ),
             ),
         )
+        log.debug { "report=$report" }
 
         report.selectedAction shouldBeEqualTo SensitiveTreatmentAction.QUARANTINE
         report.selectedLevel shouldBeEqualTo SensitiveTreatmentLevel.CRITICAL
@@ -113,16 +121,19 @@ class SensitiveContentPolicyTest {
 
     @Test
     fun `empty rule policy quarantines every detection through fallback`() {
-        val report = SensitiveModerationPolicy.failClosed(rules = emptyList()).evaluate(
-            listOf(
-                detection(
-                    category = SensitiveContentCategory.SENSITIVE_TEXT,
-                    severity = SensitiveContentSeverity.LOW,
-                    confidence = 0.10,
+        val report = SensitiveModerationPolicy
+            .failClosed(rules = emptyList())
+            .evaluate(
+                listOf(
+                    detection(
+                        category = SensitiveContentCategory.SENSITIVE_TEXT,
+                        severity = SensitiveContentSeverity.LOW,
+                        confidence = 0.10,
+                    ),
                 ),
-            ),
-        )
+            )
 
+        log.debug { "report=$report" }
         report.selectedAction shouldBeEqualTo SensitiveTreatmentAction.QUARANTINE
         report.decisions.single().reason shouldBeEqualTo "No sensitive-content policy rule matched"
     }
@@ -153,6 +164,7 @@ class SensitiveContentPolicyTest {
                 ),
             ),
         )
+        log.debug { "policy=$policy" }
 
         val report = policy.evaluate(
             listOf(
@@ -171,6 +183,7 @@ class SensitiveContentPolicyTest {
             ),
         )
 
+        log.debug { "report=$report" }
         report.decisions shouldHaveSize 2
         report.selectedAction shouldBeEqualTo SensitiveTreatmentAction.REJECT
         report.selectedParameters.rejectReason shouldBeEqualTo "minor-safety-critical"
@@ -180,20 +193,23 @@ class SensitiveContentPolicyTest {
 
     @Test
     fun `empty detection list is allowed without rendering`() {
-        val report = SensitiveModerationPolicy.failClosed(
-            rules = listOf(
-                SensitiveModerationRule(
-                    id = "solid-mask-high",
-                    categories = setOf(SensitiveContentCategory.SENSITIVE_TEXT),
-                    minimumSeverity = SensitiveContentSeverity.HIGH,
-                    action = SensitiveTreatmentAction.SOLID_MASK,
-                    level = SensitiveTreatmentLevel.HIGH,
-                    parameters = SensitiveTreatmentParameters(maskOpacity = 0.85, maskStyle = "solid-black"),
-                    reason = "High-risk text must be masked",
+        val report = SensitiveModerationPolicy
+            .failClosed(
+                rules = listOf(
+                    SensitiveModerationRule(
+                        id = "solid-mask-high",
+                        categories = setOf(SensitiveContentCategory.SENSITIVE_TEXT),
+                        minimumSeverity = SensitiveContentSeverity.HIGH,
+                        action = SensitiveTreatmentAction.SOLID_MASK,
+                        level = SensitiveTreatmentLevel.HIGH,
+                        parameters = SensitiveTreatmentParameters(maskOpacity = 0.85, maskStyle = "solid-black"),
+                        reason = "High-risk text must be masked",
+                    ),
                 ),
-            ),
-        ).evaluate(emptyList())
+            )
+            .evaluate(emptyList())
 
+        log.debug { "report=$report" }
         report.decisions shouldHaveSize 0
         report.selectedAction shouldBeEqualTo SensitiveTreatmentAction.ALLOW
         report.workflowStates shouldBeEqualTo listOf(SensitiveModerationWorkflowState.POLICY_EVALUATED)

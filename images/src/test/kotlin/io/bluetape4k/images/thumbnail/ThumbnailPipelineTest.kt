@@ -7,35 +7,36 @@ import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeInstanceOf
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldContentEqual
 import io.bluetape4k.images.AbstractImageTest
 import io.bluetape4k.images.batch.ImageBatchFailureStage
 import io.bluetape4k.images.batch.ImageProcessingOptions
 import io.bluetape4k.images.coroutines.SuspendImageWriter
 import io.bluetape4k.images.coroutines.SuspendJpegWriter
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.junit5.tempfolder.TempFolder
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.utils.Resourcex
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import java.io.IOException
 import java.io.OutputStream
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 import javax.imageio.ImageIO
-import kotlin.time.Duration.Companion.seconds
 
 class ThumbnailPipelineTest: AbstractImageTest() {
 
     @Test
-    fun `thumbnail pipeline writes configured size`(
-        tempFolder: TempFolder,
-    ) = runTest(timeout = 30.seconds) {
+    fun `thumbnail pipeline writes configured size`(tempFolder: TempFolder) = runSuspendIO {
         val source = tempFolder.copyResource(LANDSCAPE_JPG, SOURCE_IMAGE_NAME)
         val outputDir = tempFolder.createDirectory(OUTPUT_DIRECTORY_NAME).toPath()
         Files.write(outputDir.resolve("source-$TEST_THUMB_SUFFIX.jpg"), byteArrayOf(9, 8, 7))
+
         val pipeline = ThumbnailPipeline.builder()
             .outputDirectory(outputDir)
             .size(TEST_THUMB_WIDTH, TEST_THUMB_HEIGHT, TEST_THUMB_SUFFIX)
@@ -44,19 +45,20 @@ class ThumbnailPipelineTest: AbstractImageTest() {
 
         val result = pipeline.process(flowOf(source)).single()
 
-        result.status shouldBeInstanceOf ThumbnailStatus.Success::class
+        log.debug { "result=$result" }
+        result.status.shouldBeInstanceOf<ThumbnailStatus.Success>()
         Files.exists(result.output).shouldBeTrue()
+
         ImageIO.read(result.output.toFile()).width shouldBeEqualTo TEST_THUMB_WIDTH
         ImageIO.read(result.output.toFile()).height shouldBeEqualTo TEST_THUMB_HEIGHT
     }
 
     @Test
-    fun `thumbnail pipeline rejects output path traversal`(
-        tempFolder: TempFolder,
-    ) = runTest(timeout = 30.seconds) {
+    fun `thumbnail pipeline rejects output path traversal`(tempFolder: TempFolder) = runSuspendIO {
         val source = tempFolder.copyResource(LANDSCAPE_JPG, SOURCE_IMAGE_NAME)
         val outputDir = tempFolder.createDirectory(OUTPUT_DIRECTORY_NAME).toPath()
         val failures = mutableListOf<ThumbnailResult>()
+
         val pipeline = ThumbnailPipeline.builder()
             .outputDirectory(outputDir)
             .size(TEST_THUMB_WIDTH, TEST_THUMB_HEIGHT, TEST_THUMB_SUFFIX)
@@ -66,20 +68,22 @@ class ThumbnailPipelineTest: AbstractImageTest() {
             .build()
 
         val results = pipeline.process(flowOf(source)).toList()
+        log.debug { "results=$results" }
+        results.single().status.shouldBeInstanceOf<ThumbnailStatus.Failure>()
 
-        results.single().status shouldBeInstanceOf ThumbnailStatus.Failure::class
         failures.single().stage shouldBeEqualTo ImageBatchFailureStage.VALIDATION
-        Files.exists(outputDir.parent.resolve(ESCAPED_OUTPUT_NAME)) shouldBeEqualTo false
+        Files.exists(outputDir.parent.resolve(ESCAPED_OUTPUT_NAME)).shouldBeFalse()
     }
 
     @Test
     fun `thumbnail pipeline fails closed when dimension probe is unavailable`(
         tempFolder: TempFolder,
-    ) = runTest(timeout = 30.seconds) {
+    ) = runSuspendIO {
         val source = tempFolder.createFile(SOURCE_IMAGE_NAME).toPath()
         Files.writeString(source, BROKEN_IMAGE_TEXT)
         val outputDir = tempFolder.createDirectory(OUTPUT_DIRECTORY_NAME).toPath()
         val failures = mutableListOf<ThumbnailResult>()
+
         val pipeline = ThumbnailPipeline.builder()
             .outputDirectory(outputDir)
             .size(TEST_THUMB_WIDTH, TEST_THUMB_HEIGHT, TEST_THUMB_SUFFIX)
@@ -89,8 +93,10 @@ class ThumbnailPipelineTest: AbstractImageTest() {
 
         val result = pipeline.process(flowOf(source)).single()
 
-        result.status shouldBeInstanceOf ThumbnailStatus.Failure::class
+        log.debug { "result=$result" }
+        result.status.shouldBeInstanceOf<ThumbnailStatus.Failure>()
         result.stage shouldBeEqualTo ImageBatchFailureStage.VALIDATION
+
         failures.single().stage shouldBeEqualTo ImageBatchFailureStage.VALIDATION
         Files.exists(outputDir.resolve("source-$TEST_THUMB_SUFFIX.jpg")).shouldBeFalse()
     }
@@ -98,13 +104,14 @@ class ThumbnailPipelineTest: AbstractImageTest() {
     @Test
     fun `thumbnail pipeline preserves existing output when writer fails`(
         tempFolder: TempFolder,
-    ) = runTest(timeout = 30.seconds) {
+    ) = runSuspendIO {
         val source = tempFolder.copyResource(LANDSCAPE_JPG, SOURCE_IMAGE_NAME)
         val outputDir = tempFolder.createDirectory(OUTPUT_DIRECTORY_NAME).toPath()
         val output = outputDir.resolve("source-$TEST_THUMB_SUFFIX.jpg")
         val existing = byteArrayOf(9, 8, 7)
         Files.write(output, existing)
         val failures = mutableListOf<ThumbnailResult>()
+
         val pipeline = ThumbnailPipeline.builder()
             .outputDirectory(outputDir)
             .size(TEST_THUMB_WIDTH, TEST_THUMB_HEIGHT, TEST_THUMB_SUFFIX)
@@ -115,22 +122,26 @@ class ThumbnailPipelineTest: AbstractImageTest() {
 
         val result = pipeline.process(flowOf(source)).single()
 
-        result.status shouldBeInstanceOf ThumbnailStatus.Failure::class
+        log.debug { "result=$result" }
+        result.status.shouldBeInstanceOf<ThumbnailStatus.Failure>()
         result.stage shouldBeEqualTo ImageBatchFailureStage.WRITE
+
         failures.single().stage shouldBeEqualTo ImageBatchFailureStage.WRITE
-        Files.readAllBytes(output).contentEquals(existing).shouldBeTrue()
-        Files.list(outputDir).use { stream -> stream.count() shouldBeEqualTo 1L }
+        Files.readAllBytes(output) shouldContentEqual existing
+
+        Files.list(outputDir).use { stream ->
+            stream.count() shouldBeEqualTo 1L
+        }
     }
 
     @Test
-    fun `thumbnail pipeline preserves existing output when writer is cancelled`(
-        tempFolder: TempFolder,
-    ) = runTest(timeout = 30.seconds) {
+    fun `thumbnail pipeline preserves existing output when writer is cancelled`(tempFolder: TempFolder) = runSuspendIO {
         val source = tempFolder.copyResource(LANDSCAPE_JPG, SOURCE_IMAGE_NAME)
         val outputDir = tempFolder.createDirectory(OUTPUT_DIRECTORY_NAME).toPath()
         val output = outputDir.resolve("source-$TEST_THUMB_SUFFIX.jpg")
         val existing = byteArrayOf(9, 8, 7)
         Files.write(output, existing)
+
         val pipeline = ThumbnailPipeline.builder()
             .outputDirectory(outputDir)
             .size(TEST_THUMB_WIDTH, TEST_THUMB_HEIGHT, TEST_THUMB_SUFFIX)
@@ -142,24 +153,33 @@ class ThumbnailPipelineTest: AbstractImageTest() {
             pipeline.process(flowOf(source)).toList()
         }
 
-        Files.readAllBytes(output).contentEquals(existing).shouldBeTrue()
-        Files.list(outputDir).use { stream -> stream.count() shouldBeEqualTo 1L }
+        Files.readAllBytes(output) shouldContentEqual existing
+
+        Files.list(outputDir).use { stream ->
+            stream.count() shouldBeEqualTo 1L
+        }
     }
 
     @Test
     fun `thumbnail format rejects blank and path separator extension`() {
-        assertFailsWith<IllegalArgumentException> { ThumbnailFormat(SuspendJpegWriter.Default, BLANK_EXTENSION) }
-        assertFailsWith<IllegalArgumentException> { ThumbnailFormat(SuspendJpegWriter.Default, PATH_EXTENSION) }
+        assertFailsWith<IllegalArgumentException> {
+            ThumbnailFormat(SuspendJpegWriter.Default, BLANK_EXTENSION)
+        }
+        assertFailsWith<IllegalArgumentException> {
+            ThumbnailFormat(SuspendJpegWriter.Default, PATH_EXTENSION)
+        }
     }
 
     private fun TempFolder.copyResource(resourcePath: String, fileName: String) =
         createFile(fileName).toPath().also { target ->
             val input = Resourcex.getInputStream(resourcePath)
                 ?: error("테스트 리소스를 찾을 수 없습니다: $resourcePath")
-            input.use { Files.copy(it, target, StandardCopyOption.REPLACE_EXISTING) }
+            input.use {
+                Files.copy(it, target, StandardCopyOption.REPLACE_EXISTING)
+            }
         }
 
-    private companion object {
+    private companion object: KLogging() {
         private const val SOURCE_IMAGE_NAME = "source.jpg"
         private const val OUTPUT_DIRECTORY_NAME = "thumbs"
         private const val ESCAPED_OUTPUT_NAME = "escape.jpg"

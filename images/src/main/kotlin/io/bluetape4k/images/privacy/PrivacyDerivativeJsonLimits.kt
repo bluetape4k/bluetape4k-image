@@ -1,5 +1,8 @@
 package io.bluetape4k.images.privacy
 
+import io.bluetape4k.support.requireInRange
+import java.io.Serializable
+
 /**
  * privacy snapshot JSON decode에 적용하는 caller-side 제한입니다.
  *
@@ -19,20 +22,21 @@ data class PrivacyDerivativeJsonLimits(
     val maxPixels: Long = DEFAULT_MAX_PIXELS,
     val maxSide: Int = DEFAULT_MAX_SIDE,
     val maxThumbnailSide: Int = DEFAULT_MAX_THUMBNAIL_SIDE,
-) {
+): Serializable {
     init {
-        require(maxJsonBytes in 1..DEFAULT_MAX_JSON_BYTES)
-        require(maxPayloadBytes in 1..DEFAULT_MAX_PAYLOAD_BYTES)
-        require(maxRedactions in 1..DEFAULT_MAX_REDACTIONS)
-        require(maxActions in 1..DEFAULT_MAX_ACTIONS)
-        require(maxFailures in 1..DEFAULT_MAX_FAILURES)
-        require(maxMetadataEntries in 1..DEFAULT_MAX_METADATA_ENTRIES)
-        require(maxSourceIdLength in 1..DEFAULT_MAX_SOURCE_ID_LENGTH)
-        require(maxCodeLength in 1..DEFAULT_MAX_CODE_LENGTH)
-        require(maxDepth in 1..DEFAULT_MAX_DEPTH)
-        require(maxPixels in 1..DEFAULT_MAX_PIXELS)
-        require(maxSide in 1..DEFAULT_MAX_SIDE)
-        require(maxThumbnailSide in 1..DEFAULT_MAX_THUMBNAIL_SIDE)
+
+        maxJsonBytes.requireInRange(1, DEFAULT_MAX_JSON_BYTES, "maxJsonBytes")
+        maxPayloadBytes.requireInRange(1, DEFAULT_MAX_PAYLOAD_BYTES, "maxPayloadBytes")
+        maxRedactions.requireInRange(1, DEFAULT_MAX_REDACTIONS, "maxRedactions")
+        maxActions.requireInRange(1, DEFAULT_MAX_ACTIONS, "maxActions")
+        maxFailures.requireInRange(1, DEFAULT_MAX_FAILURES, "maxFailures")
+        maxMetadataEntries.requireInRange(1, DEFAULT_MAX_METADATA_ENTRIES, "maxMetadataEntries")
+        maxSourceIdLength.requireInRange(1, DEFAULT_MAX_SOURCE_ID_LENGTH, "maxSourceIdLength")
+        maxCodeLength.requireInRange(1, DEFAULT_MAX_CODE_LENGTH, "maxCodeLength")
+        maxDepth.requireInRange(1, DEFAULT_MAX_DEPTH, "maxDepth")
+        maxPixels.requireInRange(1, DEFAULT_MAX_PIXELS, "maxPixels")
+        maxSide.requireInRange(1, DEFAULT_MAX_SIDE, "maxSide")
+        maxThumbnailSide.requireInRange(1, DEFAULT_MAX_THUMBNAIL_SIDE, "maxThumbnailSide")
     }
 
     companion object {
@@ -48,5 +52,7 @@ data class PrivacyDerivativeJsonLimits(
         const val DEFAULT_MAX_PIXELS: Long = 100_000_000L
         const val DEFAULT_MAX_SIDE: Int = 65_536
         const val DEFAULT_MAX_THUMBNAIL_SIDE: Int = 16_384
+
+        private const val serialVersionUID = 1L
     }
 }

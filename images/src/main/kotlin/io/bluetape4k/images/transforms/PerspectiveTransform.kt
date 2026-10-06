@@ -11,7 +11,7 @@ import io.bluetape4k.images.transforms.internal.greenComponent
 import io.bluetape4k.images.transforms.internal.redComponent
 import io.bluetape4k.images.transforms.internal.setArgbPixels
 import io.bluetape4k.images.transforms.internal.toIntArgb
-import io.bluetape4k.logging.KotlinLogging
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -21,7 +21,7 @@ import kotlin.math.abs
 import kotlin.math.floor
 import kotlin.math.roundToInt
 
-private val log = KotlinLogging.logger {}
+private object PerspectiveTransformLogger: KLogging()
 
 /**
  * 이미지 평면상의 한 점을 표현합니다.
@@ -91,7 +91,7 @@ fun ImmutableImage.perspectiveTransform(
         "destinationCorners must have finite coordinates"
     }
 
-    log.debug {
+    PerspectiveTransformLogger.log.debug {
         "perspectiveTransform: src=${width}x${height}, out=${outputWidth}x${outputHeight}"
     }
 

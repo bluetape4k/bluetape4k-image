@@ -32,9 +32,8 @@ internal const val DEFAULT_IMAGE_BUFFER_SIZE: Int = 128 * 1024
  * // written == true
  * ```
  */
-fun BufferedImage.write(format: ImageFormat, path: String): Boolean {
-    return ImageIO.write(this, format.ioName, File(path))
-}
+fun BufferedImage.write(format: ImageFormat, path: String): Boolean =
+    ImageIO.write(this, format.ioName, File(path))
 
 /**
  * [BufferedImage]를 [format] 형식으로 [file]에 저장합니다.
@@ -44,9 +43,8 @@ fun BufferedImage.write(format: ImageFormat, path: String): Boolean {
  * // written == true
  * ```
  */
-fun BufferedImage.write(format: ImageFormat, file: File): Boolean {
-    return ImageIO.write(this, format.ioName, file)
-}
+fun BufferedImage.write(format: ImageFormat, file: File): Boolean =
+    ImageIO.write(this, format.ioName, file)
 
 /**
  * [BufferedImage]를 [format] 형식으로 [outputStream]에 저장합니다.
@@ -61,9 +59,8 @@ fun BufferedImage.write(format: ImageFormat, file: File): Boolean {
  * // bos.toByteArray().isNotEmpty() == true
  * ```
  */
-fun BufferedImage.write(format: ImageFormat, outputStream: OutputStream): Boolean {
-    return ImageIO.write(this, format.ioName, outputStream)
-}
+fun BufferedImage.write(format: ImageFormat, outputStream: OutputStream): Boolean =
+    ImageIO.write(this, format.ioName, outputStream)
 
 /**
  * [BufferedImage]를 [format] 형식으로 [outputStream]에 저장합니다.
@@ -74,9 +71,8 @@ fun BufferedImage.write(format: ImageFormat, outputStream: OutputStream): Boolea
  * // written == true
  * ```
  */
-fun BufferedImage.write(format: ImageFormat, outputStream: ImageOutputStream): Boolean {
-    return ImageIO.write(this, format.ioName, outputStream)
-}
+fun BufferedImage.write(format: ImageFormat, outputStream: ImageOutputStream): Boolean =
+    ImageIO.write(this, format.ioName, outputStream)
 
 /**
  * [BufferedImage]에 [source] 이미지를 [transform] 변환 정보를 적용하여 그립니다.
@@ -90,8 +86,8 @@ fun BufferedImage.write(format: ImageFormat, outputStream: ImageOutputStream): B
  * ```
  */
 fun BufferedImage.drawRenderedImage(source: BufferedImage, transform: AffineTransform) {
-    useGraphics { graphics ->
-        graphics.drawRenderedImage(source, transform)
+    useGraphics { g ->
+        g.drawRenderedImage(source, transform)
     }
 }
 
@@ -115,8 +111,8 @@ fun BufferedImage.drawImage(
     transform: AffineTransform,
     observer: ImageObserver? = null,
 ) {
-    useGraphics { graphics ->
-        graphics.drawImage(image, transform, observer)
+    useGraphics { g ->
+        g.drawImage(image, transform, observer)
     }
 }
 
@@ -141,8 +137,8 @@ fun BufferedImage.drawImage(
     y: Int = 0,
     observer: ImageObserver? = null,
 ) {
-    useGraphics { graphics ->
-        graphics.drawImage(image, x, y, observer)
+    useGraphics { g ->
+        g.drawImage(image, x, y, observer)
     }
 }
 
@@ -171,8 +167,8 @@ fun BufferedImage.drawImage(
     height: Int = this@drawImage.height,
     observer: ImageObserver? = null,
 ) {
-    useGraphics { graphics ->
-        graphics.drawImage(image, x, y, width, height, observer)
+    useGraphics { g ->
+        g.drawImage(image, x, y, width, height, observer)
     }
 }
 
@@ -196,9 +192,7 @@ fun BufferedImage.drawImage(
  *
  * @param action 그래픽 작업
  */
-inline fun BufferedImage.useGraphics(
-    action: (graphics: Graphics2D) -> Unit,
-) {
+inline fun BufferedImage.useGraphics(action: (graphics: Graphics2D) -> Unit) {
     val graphics = this.createGraphics()
     try {
         action(graphics)
@@ -235,6 +229,7 @@ fun bufferedImageOf(w: Int, h: Int): BufferedImage {
     val ge = GraphicsEnvironment.getLocalGraphicsEnvironment()
     val gd = ge.defaultScreenDevice
     val gc = gd.defaultConfiguration
+
     return gc.createCompatibleImage(w, h)
 }
 

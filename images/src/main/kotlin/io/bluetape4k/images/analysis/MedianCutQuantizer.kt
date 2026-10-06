@@ -222,7 +222,7 @@ internal object MedianCutQuantizer {
         var gSum = 0L
         var bSum = 0L
         var total = 0
-        
+
         for (r in box.rMin..box.rMax) {
             for (g in box.gMin..box.gMax) {
                 for (b in box.bMin..box.bMax) {

@@ -12,11 +12,11 @@ import io.bluetape4k.images.transforms.flipVertical
 import io.bluetape4k.images.transforms.perspectiveTransform
 import io.bluetape4k.images.transforms.rotateDegrees
 import io.bluetape4k.images.transforms.smartCrop
-import io.bluetape4k.logging.KotlinLogging
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.warn
 import java.awt.Color
 
-private val log = KotlinLogging.logger {}
+private object ImageFilterChainLogger: KLogging()
 
 private inline fun ImageFilterChain.transformOp(
     name: String,
@@ -26,7 +26,7 @@ private inline fun ImageFilterChain.transformOp(
         try {
             block(image)
         } catch (e: Exception) {
-            log.warn(e) { "[$name] failed: ${image.width}×${image.height}" }
+            ImageFilterChainLogger.log.warn(e) { "[$name] failed: ${image.width}×${image.height}" }
             throw e
         }
     }

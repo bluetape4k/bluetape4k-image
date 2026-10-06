@@ -48,7 +48,7 @@ class GoldenImageGeneratorTest: AbstractFilterTest() {
                     g.fillRect(col * 64, row * 64, 64, 64)
                 }
             }
-        } 
+        }
         return ImmutableImage.fromAwt(buffered)
     }
 

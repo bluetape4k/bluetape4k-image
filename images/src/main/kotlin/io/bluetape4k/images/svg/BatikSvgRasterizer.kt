@@ -50,28 +50,27 @@ class BatikSvgRasterizer: SuspendSvgRasterizer {
     override suspend fun rasterize(
         input: InputStream,
         options: SvgRasterizeOptions,
-    ): ImmutableImage = withTimeout(options.timeoutMillis) {
-        runInterruptible(Dispatchers.IO) {
-            rasterizeBlocking(input, options)
+    ): ImmutableImage =
+        withTimeout(timeMillis = options.timeoutMillis) {
+            runInterruptible(Dispatchers.IO) {
+                rasterizeBlocking(input, options)
+            }
         }
-    }
 
     private fun rasterizeBlocking(input: InputStream, options: SvgRasterizeOptions): ImmutableImage {
         val transcoder = buildTranscoder(options)
-        val bos = ByteArrayOutputStream()
         val xmlReader = buildSecureXmlReader()
-
         val transcoderInput = TranscoderInput().apply {
             setXMLReader(xmlReader)
-            setInputStream(input)
+            inputStream = input
         }
-        val transcoderOutput = TranscoderOutput(bos)
+        ByteArrayOutputStream().use { bos ->
+            val transcoderOutput = TranscoderOutput(bos)
+            transcoder.transcode(transcoderInput, transcoderOutput)
 
-        transcoder.transcode(transcoderInput, transcoderOutput)
-
-        log.debug { "SVG 래스터화 완료: ${bos.size()} bytes" }
-
-        return ImmutableImage.loader().fromBytes(bos.toByteArray())
+            log.debug { "SVG 래스터화 완료: ${bos.size()} bytes" }
+            return ImmutableImage.loader().fromBytes(bos.toByteArray())
+        }
     }
 
     private fun buildTranscoder(options: SvgRasterizeOptions): PNGTranscoder {
@@ -93,6 +92,7 @@ class BatikSvgRasterizer: SuspendSvgRasterizer {
             }
             transcoder.addTranscodingHint(SVGAbstractTranscoder.KEY_HEIGHT, h.toFloat())
         }
+
         transcoder.addTranscodingHint(SVGAbstractTranscoder.KEY_PIXEL_UNIT_TO_MILLIMETER, 25.4f / options.dpi)
 
         // XXE/SSRF 방어: 외부 리소스 접근 금지 (기본값)

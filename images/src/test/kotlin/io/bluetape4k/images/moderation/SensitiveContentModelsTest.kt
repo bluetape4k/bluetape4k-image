@@ -5,9 +5,13 @@ import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.images.ImageDimensions
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import org.junit.jupiter.api.Test
 
 class SensitiveContentModelsTest {
+
+    companion object: KLogging()
 
     @Test
     fun `detection preserves stable category and raw backend label`() {
@@ -29,11 +33,13 @@ class SensitiveContentModelsTest {
                 ),
             ),
         )
-
+        log.debug { "detection=$detection" }
         detection.label shouldBeEqualTo "explicit-nudity"
         detection.rawBackendLabel shouldBeEqualTo "nsfw_explicit"
         detection.category shouldBeEqualTo SensitiveContentCategory.EXPLICIT_NUDITY
+
         val region = detection.region.shouldNotBeNull()
+        log.debug { "region=$region" }
         region.geometry.requireWithin(ImageDimensions(width = 200, height = 120)) shouldBeEqualTo region.geometry
     }
 
@@ -102,6 +108,7 @@ class SensitiveContentModelsTest {
             height = 60.0,
             coordinateSpace = SensitiveCoordinateSpace.PIXEL,
         )
+        log.debug { "rectangle=$rectangle" }
 
         val error = assertFailsWith<IllegalArgumentException> {
             rectangle.requireWithin(ImageDimensions(width = 160, height = 120))
@@ -158,9 +165,10 @@ class SensitiveContentModelsTest {
             reference = "s3://redacted/mask.png",
             mediaType = "image/png",
         )
+        log.debug { "mask=$mask" }
 
         val geometry = SensitiveRegionGeometry.RasterMask(mask = mask)
-
+        log.debug { "geometry=$geometry" }
         geometry.mask.width shouldBeEqualTo 64
         geometry.mask.reference shouldBeEqualTo "s3://redacted/mask.png"
     }

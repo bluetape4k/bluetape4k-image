@@ -95,6 +95,7 @@ fun ImmutableImage.ahashOf(size: HashSize = HashSize.BITS_64): LongArray {
     val scaled = scaleTo(side, side, HASH_SCALE_METHOD)
     val lum = Array(side) { y -> DoubleArray(side) { x -> luminance(scaled.pixel(x, y)) } }
     val avg = lum.sumOf { row -> row.sum() } / (side * side)
+
     return bitsToLongArray(
         bits = size.bits,
         longCount = size.longCount,
@@ -126,7 +127,10 @@ fun ImmutableImage.dhashOf(size: HashSize = HashSize.BITS_64): LongArray {
     val cols = size.gridSide
     val rows = size.gridSide
     val scaled = scaleTo(cols + 1, rows, HASH_SCALE_METHOD)
-    val lum = Array(rows) { y -> DoubleArray(cols + 1) { x -> luminance(scaled.pixel(x, y)) } }
+    val lum = Array(rows) { y ->
+        DoubleArray(cols + 1) { x -> luminance(scaled.pixel(x, y)) }
+    }
+
     return bitsToLongArray(
         bits = size.bits,
         longCount = size.longCount,
@@ -260,7 +264,7 @@ object HashDistance {
     fun hamming(a: LongArray, b: LongArray): Int {
         require(a.size == b.size) { "해시 배열 길이가 동일해야 합니다: ${a.size} vs ${b.size}" }
         var sum = 0
-        for (i in a.indices) {
+        a.indices.forEach { i ->
             sum += (a[i] xor b[i]).countOneBits()
         }
         return sum
@@ -280,7 +284,7 @@ private inline fun bitsToLongArray(
     isSet: (Int) -> Boolean,
 ): LongArray {
     val result = LongArray(longCount)
-    for (i in 0 until bits) {
+    repeat(bits) { i ->
         if (isSet(i)) {
             result[i / 64] = result[i / 64] or (1L shl (i % 64))
         }

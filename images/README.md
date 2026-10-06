@@ -266,8 +266,8 @@ import java.nio.file.Path
 val pipeline = ThumbnailPipeline.builder()
     .outputDirectory(Path.of("output/thumbs"))
     .size(width = 1280, height = 720, suffix = "hd")
-    .size(width = 640,  height = 360, suffix = "md")
-    .size(width = 320,  height = 180, suffix = "sm")
+    .size(width = 640, height = 360, suffix = "md")
+    .size(width = 320, height = 180, suffix = "sm")
     .format(ThumbnailFormat(SuspendJpegWriter.Default.withCompression(85), "jpg"))
     .crop(ThumbnailCrop.Smart())                // saliency-based crop
     .options(ImageProcessingOptions(parallelism = 4, skipFailures = true))
@@ -821,7 +821,7 @@ val rotated = image.rotateDegrees(45.0)
 val rotatedRed = image.rotateDegrees(30.0, background = Color.RED)
 
 // 90-degree multiples (native scrimage, lossless)
-val cw90  = image.rotateRight()
+val cw90 = image.rotateRight()
 val ccw90 = image.rotateLeft()
 
 // Flip

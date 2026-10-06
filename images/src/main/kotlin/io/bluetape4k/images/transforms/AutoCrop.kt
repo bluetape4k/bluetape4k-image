@@ -5,6 +5,8 @@ import io.bluetape4k.images.transforms.internal.getArgbPixels
 import io.bluetape4k.images.transforms.internal.toIntArgb
 import io.bluetape4k.logging.KotlinLogging
 import io.bluetape4k.logging.debug
+import io.bluetape4k.support.requireGe
+import io.bluetape4k.support.requireInRange
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.awt.Color
@@ -36,8 +38,8 @@ fun ImmutableImage.autoCrop(
     padding: Int = 0,
     backgroundColor: Color? = null,
 ): ImmutableImage {
-    require(tolerance in 0..255) { "tolerance must be in 0..255, but was $tolerance" }
-    require(padding >= 0) { "padding must be >= 0, but was $padding" }
+    tolerance.requireInRange(0, 255, "tolerance")
+    padding.requireGe(0, "padding")
 
     val w = width
     val h = height
@@ -125,9 +127,7 @@ fun ImmutableImage.autoCrop(
 
     // 콘텐츠 없음 → 원본 반환 (silent fallback)
     if (right - left < 1 || bottom - top < 1) {
-        log.debug {
-            "autoCrop silent fallback: no content found (w=$w, h=$h, bg=($bgR,$bgG,$bgB))"
-        }
+        log.debug { "autoCrop silent fallback: no content found (w=$w, h=$h, bg=($bgR,$bgG,$bgB))" }
         return this
     }
 
@@ -156,4 +156,7 @@ suspend fun ImmutableImage.suspendAutoCrop(
     tolerance: Int = 10,
     padding: Int = 0,
     backgroundColor: Color? = null,
-): ImmutableImage = withContext(Dispatchers.Default) { autoCrop(tolerance, padding, backgroundColor) }
+): ImmutableImage =
+    withContext(Dispatchers.Default) {
+        autoCrop(tolerance, padding, backgroundColor)
+    }

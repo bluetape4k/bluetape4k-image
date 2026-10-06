@@ -1,6 +1,7 @@
 package io.bluetape4k.images.similarity
 
 import com.sksamuel.scrimage.ImmutableImage
+import io.bluetape4k.support.requireGe
 import kotlin.math.sqrt
 
 private const val BLOCK_MEAN_DEFAULT_GRID = 8
@@ -21,14 +22,17 @@ fun ImmutableImage.blockMeanDescriptor(
     gridRows: Int = BLOCK_MEAN_DEFAULT_GRID,
     gridCols: Int = BLOCK_MEAN_DEFAULT_GRID,
 ): DoubleArray {
-    require(gridRows >= 1) { "gridRows는 1 이상: $gridRows" }
-    require(gridCols >= 1) { "gridCols는 1 이상: $gridCols" }
+    gridRows.requireGe(1) { "gridRows는 1 이상: $gridRows" }
+    gridCols.requireGe(1) { "gridCols는 1 이상: $gridCols" }
+
     val cellH = height.toDouble() / gridRows
     val cellW = width.toDouble() / gridCols
     val descriptor = DoubleArray(gridRows * gridCols)
+
     for (r in 0 until gridRows) {
         val yStart = (r * cellH).toInt()
         val yEnd = ((r + 1) * cellH).toInt().coerceAtMost(height)
+
         for (c in 0 until gridCols) {
             val xStart = (c * cellW).toInt()
             val xEnd = ((c + 1) * cellW).toInt().coerceAtMost(width)
@@ -63,6 +67,7 @@ fun ImmutableImage.blockMeanSimilarityTo(
     val da = blockMeanDescriptor(gridRows, gridCols)
     val db = other.blockMeanDescriptor(gridRows, gridCols)
     val l2 = sqrt(da.indices.sumOf { val d = da[it] - db[it]; d * d })
+
     return 1.0 / (1.0 + l2)
 }
 

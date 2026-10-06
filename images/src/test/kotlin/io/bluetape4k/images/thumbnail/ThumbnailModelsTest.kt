@@ -1,22 +1,28 @@
 package io.bluetape4k.images.thumbnail
 
 import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.shouldBe
 import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldBeNull
 import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.images.AbstractImageTest
 import io.bluetape4k.images.batch.ImageBatchFailureStage
 import io.bluetape4k.images.coroutines.SuspendJpegWriter
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import org.junit.jupiter.api.Test
 import java.nio.file.Path
 
 class ThumbnailModelsTest: AbstractImageTest() {
+
+    companion object: KLogging()
 
     // ── ThumbnailSize 검증 ─────────────────────────────────────────────────
 
     @Test
     fun `ThumbnailSize stores width and height`() {
         val size = ThumbnailSize(800, 600)
+        log.debug { "size=$size" }
         size.width shouldBeEqualTo 800
         size.height shouldBeEqualTo 600
     }
@@ -24,12 +30,14 @@ class ThumbnailModelsTest: AbstractImageTest() {
     @Test
     fun `ThumbnailSize generates default suffix from dimensions`() {
         val size = ThumbnailSize(1024, 768)
+        log.debug { "size=$size" }
         size.suffix shouldBeEqualTo "1024x768"
     }
 
     @Test
     fun `ThumbnailSize allows custom suffix`() {
         val size = ThumbnailSize(200, 200, "thumbnail")
+        log.debug { "size=$size" }
         size.suffix shouldBeEqualTo "thumbnail"
     }
 
@@ -58,7 +66,7 @@ class ThumbnailModelsTest: AbstractImageTest() {
 
     @Test
     fun `ThumbnailCrop Fit is a singleton`() {
-        (ThumbnailCrop.Fit === ThumbnailCrop.Fit).shouldBeTrue()
+        ThumbnailCrop.Fit shouldBe ThumbnailCrop.Fit
     }
 
     @Test
@@ -134,8 +142,9 @@ class ThumbnailModelsTest: AbstractImageTest() {
             size = ThumbnailSize(100, 100),
             status = ThumbnailStatus.Success(bytes = 1024L),
         )
-        result.stage shouldBeEqualTo null
-        result.cause shouldBeEqualTo null
+        log.debug { "result=$result" }
+        result.stage.shouldBeNull()
+        result.cause.shouldBeNull()
     }
 
     @Test
@@ -150,6 +159,7 @@ class ThumbnailModelsTest: AbstractImageTest() {
                 cause = cause,
             ),
         )
+        log.debug { "result=$result" }
         result.stage shouldBeEqualTo ImageBatchFailureStage.LOAD
         result.cause shouldBeEqualTo cause
     }

@@ -1,6 +1,7 @@
 package io.bluetape4k.images.tiles
 
 import com.sksamuel.scrimage.ImmutableImage
+import io.bluetape4k.ToStringBuilder
 import io.bluetape4k.coroutines.flow.extensions.mapParallel
 import io.bluetape4k.images.batch.DEFAULT_MAX_TILE_COUNT
 import io.bluetape4k.images.batch.defaultImageBatchParallelism
@@ -208,10 +209,19 @@ class TileProcessor(
         tiles: Flow<ImageTile>,
         transform: suspend (ImageTile) -> R,
     ): Flow<R> =
-        tiles.mapParallel(parallelism) { tile -> transform(tile) }
+        tiles.mapParallel(parallelism) { tile ->
+            transform(tile)
+        }
 
     private fun Int.ceilDiv(divisor: Int): Int =
         (this - CEIL_DIV_OFFSET) / divisor + CEIL_DIV_OFFSET
+
+    override fun toString(): String {
+        return ToStringBuilder(this)
+            .add("maxTileCount", maxTileCount)
+            .add("parallelism", parallelism)
+            .toString()
+    }
 
     private companion object {
         private const val CEIL_DIV_OFFSET = 1

@@ -3,11 +3,12 @@
 package io.bluetape4k.images.transforms.internal
 
 import com.sksamuel.scrimage.ImmutableImage
-import io.bluetape4k.logging.KotlinLogging
+import io.bluetape4k.images.useGraphics
+import io.bluetape4k.logging.KLogging
 import java.awt.Color
 import java.awt.image.BufferedImage
 
-private val log = KotlinLogging.logger {}
+private object RasterLogger: KLogging()
 
 /**
  * 변환 결과 이미지의 최대 픽셀 수.
@@ -31,11 +32,8 @@ internal fun ImmutableImage.toIntArgb(): BufferedImage {
         return src
     }
     val dst = BufferedImage(src.width, src.height, BufferedImage.TYPE_INT_ARGB)
-    val g = dst.createGraphics()
-    try {
+    dst.useGraphics { g ->
         g.drawImage(src, 0, 0, null)
-    } finally {
-        g.dispose()
     }
     return dst
 }
@@ -49,11 +47,8 @@ internal fun ImmutableImage.toIntArgb(): BufferedImage {
  */
 internal fun BufferedImage.copyArgb(): BufferedImage {
     val dst = BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB)
-    val g = dst.createGraphics()
-    try {
+    dst.useGraphics { g ->
         g.drawImage(this, 0, 0, null)
-    } finally {
-        g.dispose()
     }
     return dst
 }
@@ -67,15 +62,11 @@ internal fun BufferedImage.copyArgb(): BufferedImage {
  * @param color 채울 색상.
  * @return 같은 [BufferedImage] 인스턴스 (체이닝 용도).
  */
-internal fun BufferedImage.fillColor(color: Color): BufferedImage {
-    val g = createGraphics()
-    try {
+internal fun BufferedImage.fillColor(color: Color): BufferedImage = apply {
+    useGraphics { g ->
         g.background = color
         g.clearRect(0, 0, width, height)
-    } finally {
-        g.dispose()
     }
-    return this
 }
 
 /**
@@ -96,9 +87,8 @@ internal fun BufferedImage.getArgbPixels(): IntArray =
  * @param pixels 기록할 ARGB 픽셀 배열.
  * @return 같은 [BufferedImage] 인스턴스 (체이닝 용도).
  */
-internal fun BufferedImage.setArgbPixels(pixels: IntArray): BufferedImage {
+internal fun BufferedImage.setArgbPixels(pixels: IntArray): BufferedImage = apply {
     setRGB(0, 0, width, height, pixels, 0, width)
-    return this
 }
 
 /**

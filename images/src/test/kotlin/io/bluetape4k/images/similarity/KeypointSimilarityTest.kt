@@ -8,7 +8,8 @@ import io.bluetape4k.assertions.shouldBeGreaterThan
 import io.bluetape4k.assertions.shouldBeLessThan
 import io.bluetape4k.images.AbstractImageTest
 import io.bluetape4k.images.immutableImageOf
-import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.utils.Resourcex
 import org.junit.jupiter.api.Test
 
@@ -17,7 +18,7 @@ import org.junit.jupiter.api.Test
  */
 class KeypointSimilarityTest: AbstractImageTest() {
 
-    companion object: KLoggingChannel() {
+    companion object: KLogging() {
         private const val HOMER_JPG = "images/homer.jpg"
         private const val LANDSCAPE_JPG = "images/landscape.jpg"
     }
@@ -33,7 +34,7 @@ class KeypointSimilarityTest: AbstractImageTest() {
         val homer = loadImage(HOMER_JPG)
         val score = homer.blockMeanSimilarityTo(homer)
 
-        log.debug("identical similarity: $score")
+        log.debug { "identical similarity: $score" }
         score shouldBeGreaterThan 0.99
     }
 
@@ -43,7 +44,7 @@ class KeypointSimilarityTest: AbstractImageTest() {
         val reencoded = original.toJpeg90()
         val score = original.blockMeanSimilarityTo(reencoded)
 
-        log.debug("jpeg90 similarity: $score")
+        log.debug { "jpeg90 similarity: $score" }
         score shouldBeGreaterThan 0.9
     }
 
@@ -53,7 +54,7 @@ class KeypointSimilarityTest: AbstractImageTest() {
         val landscape = loadImage(LANDSCAPE_JPG)
         val score = homer.blockMeanSimilarityTo(landscape)
 
-        log.debug("different images similarity: $score")
+        log.debug { "different images similarity: $score" }
         score shouldBeLessThan 0.5
     }
 
@@ -65,7 +66,7 @@ class KeypointSimilarityTest: AbstractImageTest() {
         val straightScore = homer.blockMeanSimilarityTo(rotated)
         val bestScore = homer.bestRotationSimilarityTo(rotated)
 
-        log.debug("90 rotated: straightScore=$straightScore, bestScore=$bestScore")
+        log.debug { "90 rotated: straightScore=$straightScore, bestScore=$bestScore" }
         straightScore shouldBeLessThan 0.9
         bestScore shouldBeGreaterThan 0.9
     }
@@ -82,13 +83,17 @@ class KeypointSimilarityTest: AbstractImageTest() {
     fun `gridRows less than 1 throws IllegalArgumentException`() {
         val homer = loadImage(HOMER_JPG)
 
-        assertFailsWith<IllegalArgumentException> { homer.blockMeanDescriptor(gridRows = 0, gridCols = 8) }
+        assertFailsWith<IllegalArgumentException> {
+            homer.blockMeanDescriptor(gridRows = 0, gridCols = 8)
+        }
     }
 
     @Test
     fun `gridCols less than 1 throws IllegalArgumentException`() {
         val homer = loadImage(HOMER_JPG)
 
-        assertFailsWith<IllegalArgumentException> { homer.blockMeanDescriptor(gridRows = 8, gridCols = 0) }
+        assertFailsWith<IllegalArgumentException> {
+            homer.blockMeanDescriptor(gridRows = 8, gridCols = 0)
+        }
     }
 }

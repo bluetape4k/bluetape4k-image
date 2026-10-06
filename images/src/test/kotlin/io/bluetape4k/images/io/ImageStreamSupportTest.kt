@@ -2,6 +2,7 @@ package io.bluetape4k.images.io
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import java.io.ByteArrayInputStream
@@ -13,6 +14,8 @@ import javax.imageio.stream.MemoryCacheImageInputStream
 import javax.imageio.stream.MemoryCacheImageOutputStream
 
 class ImageStreamSupportTest {
+
+    companion object: KLoggingChannel()
 
     @Test
     fun `image input stream useSuspending should close`() = runTest {
