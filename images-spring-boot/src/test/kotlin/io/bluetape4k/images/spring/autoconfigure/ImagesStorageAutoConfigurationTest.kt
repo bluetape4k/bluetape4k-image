@@ -1,12 +1,14 @@
 package io.bluetape4k.images.spring.autoconfigure
 
+import io.bluetape4k.assertions.shouldBeEmpty
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeInstanceOf
+import io.bluetape4k.assertions.shouldBeNull
 import io.bluetape4k.assertions.shouldBeSameInstanceAs
 import io.bluetape4k.assertions.shouldBeTrue
-import io.bluetape4k.assertions.shouldBeNull
 import io.bluetape4k.assertions.shouldContain
+import io.bluetape4k.assertions.shouldHaveSize
 import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.aws.spring.s3.S3Operations
 import io.bluetape4k.aws.spring.s3.S3TransferOperations
@@ -15,19 +17,24 @@ import io.bluetape4k.images.spring.storage.LocalImageStorage
 import io.bluetape4k.images.spring.storage.s3.S3ImageStorage
 import io.bluetape4k.images.spring.storage.s3.S3PathTransferOperations
 import io.bluetape4k.images.spring.storage.s3.S3TransferOperationsAdapter
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.mockk.clearMocks
 import io.mockk.mockk
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.springframework.beans.factory.getBean
+import org.springframework.beans.factory.getBeanNamesForType
 import org.springframework.boot.autoconfigure.AutoConfigurations
 import org.springframework.boot.test.context.FilteredClassLoader
 import org.springframework.boot.test.context.runner.ApplicationContextRunner
 import java.net.URLClassLoader
 import java.nio.file.Files
 import java.nio.file.Path
-import java.util.Comparator
 
 class ImagesStorageAutoConfigurationTest {
+
+    companion object: KLogging()
 
     private val customStorage = mockk<ImageStorage>(relaxed = true)
     private val operations = mockk<S3Operations>(relaxed = true)
@@ -49,16 +56,18 @@ class ImagesStorageAutoConfigurationTest {
     @Test
     fun `registers LocalImageStorage by default`() {
         contextRunner.run { ctx ->
-            ctx.getBeanNamesForType(ImageStorage::class.java).size shouldBeEqualTo 1
-            ctx.getBean(ImageStorage::class.java) shouldBeInstanceOf LocalImageStorage::class
+            ctx.getBeanNamesForType<ImageStorage>() shouldHaveSize 1
+            ctx.getBean<ImageStorage>().shouldBeInstanceOf<LocalImageStorage>()
         }
     }
 
     @Test
     fun `registers ImageStorageProperties with defaults`() {
         contextRunner.run { ctx ->
-            ctx.getBeanNamesForType(ImageStorageProperties::class.java).size shouldBeEqualTo 1
-            val props = ctx.getBean(ImageStorageProperties::class.java)
+            ctx.getBeanNamesForType<ImageStorageProperties>() shouldHaveSize 1
+
+            val props = ctx.getBean<ImageStorageProperties>()
+            log.debug { "props=$props" }
             props.enabled.shouldBeTrue()
             props.backend shouldBeEqualTo ImageStorageProperties.Backend.LOCAL
             props.maxSizeBytes shouldBeEqualTo 50 * 1024 * 1024L
@@ -70,8 +79,8 @@ class ImagesStorageAutoConfigurationTest {
         contextRunner
             .withPropertyValues("bluetape4k.images.storage.enabled=false")
             .run { ctx ->
-                ctx.getBeanNamesForType(ImageStorage::class.java).isEmpty().shouldBeTrue()
-                ctx.getBeanNamesForType(ImageStorageProperties::class.java).isEmpty().shouldBeTrue()
+                ctx.getBeanNamesForType<ImageStorage>().shouldBeEmpty()
+                ctx.getBeanNamesForType<ImageStorageProperties>().shouldBeEmpty()
             }
     }
 
@@ -80,8 +89,8 @@ class ImagesStorageAutoConfigurationTest {
         contextRunner
             .withBean(ImageStorage::class.java, { customStorage })
             .run { ctx ->
-                ctx.getBeanNamesForType(ImageStorage::class.java).size shouldBeEqualTo 1
-                ctx.getBean(ImageStorage::class.java) shouldBeSameInstanceAs customStorage
+                ctx.getBeanNamesForType<ImageStorage>() shouldHaveSize 1
+                ctx.getBean<ImageStorage>() shouldBeSameInstanceAs customStorage
             }
     }
 
@@ -108,8 +117,8 @@ class ImagesStorageAutoConfigurationTest {
                 "bluetape4k.images.storage.bucket=images",
             )
             .run { ctx ->
-                ctx.getBeanNamesForType(ImageStorage::class.java).size shouldBeEqualTo 1
-                ctx.getBean(ImageStorage::class.java) shouldBeInstanceOf S3ImageStorage::class
+                ctx.getBeanNamesForType<ImageStorage>() shouldHaveSize 1
+                ctx.getBean<ImageStorage>().shouldBeInstanceOf<S3ImageStorage>()
             }
     }
 
@@ -124,9 +133,9 @@ class ImagesStorageAutoConfigurationTest {
             )
             .run { ctx ->
                 ctx.startupFailure.shouldBeNull()
-                ctx.getBeanNamesForType(ImageStorage::class.java).size shouldBeEqualTo 1
-                ctx.getBean(ImageStorage::class.java) shouldBeInstanceOf S3ImageStorage::class
-                ctx.getBeanNamesForType(S3PathTransferOperations::class.java).isEmpty().shouldBeTrue()
+                ctx.getBeanNamesForType<ImageStorage>() shouldHaveSize 1
+                ctx.getBean<ImageStorage>().shouldBeInstanceOf<S3ImageStorage>()
+                ctx.getBeanNamesForType<S3PathTransferOperations>().shouldBeEmpty()
             }
     }
 
@@ -140,8 +149,8 @@ class ImagesStorageAutoConfigurationTest {
             )
             .run { ctx ->
                 ctx.startupFailure.shouldBeNull()
-                ctx.getBean(ImageStorage::class.java) shouldBeInstanceOf S3ImageStorage::class
-                ctx.getBeanNamesForType(S3PathTransferOperations::class.java).isEmpty().shouldBeTrue()
+                ctx.getBean<ImageStorage>().shouldBeInstanceOf<S3ImageStorage>()
+                ctx.getBeanNamesForType<S3PathTransferOperations>().shouldBeEmpty()
             }
     }
 
@@ -156,8 +165,8 @@ class ImagesStorageAutoConfigurationTest {
             )
             .run { ctx ->
                 ctx.startupFailure.shouldBeNull()
-                ctx.getBean(S3PathTransferOperations::class.java) shouldBeInstanceOf S3TransferOperationsAdapter::class
-                ctx.getBean(ImageStorage::class.java) shouldBeInstanceOf S3ImageStorage::class
+                ctx.getBean<S3PathTransferOperations>().shouldBeInstanceOf<S3TransferOperationsAdapter>()
+                ctx.getBean<ImageStorage>().shouldBeInstanceOf<S3ImageStorage>()
             }
     }
 
@@ -197,8 +206,8 @@ class ImagesStorageAutoConfigurationTest {
             .withBean(ImageStorage::class.java, { customStorage })
             .withPropertyValues("bluetape4k.images.storage.backend=s3")
             .run { ctx ->
-                ctx.getBeanNamesForType(ImageStorage::class.java).size shouldBeEqualTo 1
-                ctx.getBean(ImageStorage::class.java) shouldBeSameInstanceAs customStorage
+                ctx.getBeanNamesForType<ImageStorage>() shouldHaveSize 1
+                ctx.getBean<ImageStorage>() shouldBeSameInstanceAs customStorage
             }
     }
 
@@ -207,7 +216,8 @@ class ImagesStorageAutoConfigurationTest {
         contextRunner
             .withPropertyValues("bluetape4k.images.storage.local.root-dir=/tmp/custom-images")
             .run { ctx ->
-                val props = ctx.getBean(ImageStorageProperties::class.java)
+                val props = ctx.getBean<ImageStorageProperties>()
+                log.debug { "props=$props" }
                 props.local.rootDir shouldBeEqualTo "/tmp/custom-images"
             }
     }
@@ -238,7 +248,8 @@ class ImagesStorageAutoConfigurationTest {
         contextRunner
             .withPropertyValues("bluetape4k.images.storage.max-size-bytes=1048576")
             .run { ctx ->
-                val props = ctx.getBean(ImageStorageProperties::class.java)
+                val props = ctx.getBean<ImageStorageProperties>()
+                log.debug { "props=$props" }
                 props.maxSizeBytes shouldBeEqualTo 1_048_576L
             }
     }
@@ -259,5 +270,4 @@ class ImagesStorageAutoConfigurationTest {
             .getDeclaredConstructor()
             .newInstance() as S3Operations
     }
-
 }

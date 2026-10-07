@@ -16,7 +16,7 @@ data class UploadOptions(
     val contentType: String = "image/jpeg",
     val cacheControl: String = "public, max-age=31536000",
     val metadata: Map<String, String> = emptyMap(),
-) : Serializable {
+): Serializable {
 
     companion object {
         private const val serialVersionUID: Long = 1L

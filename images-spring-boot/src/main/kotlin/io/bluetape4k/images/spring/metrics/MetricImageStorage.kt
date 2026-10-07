@@ -32,9 +32,9 @@ import java.nio.file.Path
 open class MetricImageStorage(
     private val delegate: ImageStorage,
     private val registry: MeterRegistry,
-) : ImageStorage by delegate {
+): ImageStorage by delegate {
 
-    companion object : KLogging() {
+    companion object: KLogging() {
 
         private const val UPLOAD_TIMER: String = "images.storage.upload.duration"
         private const val UPLOAD_ERRORS: String = "images.storage.upload.errors"

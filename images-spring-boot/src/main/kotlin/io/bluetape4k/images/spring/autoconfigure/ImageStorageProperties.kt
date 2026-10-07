@@ -27,14 +27,17 @@ data class ImageStorageProperties(
     val healthProbeKey: String = ".health-probe",
     val local: Local = Local(),
     val s3: S3 = S3(),
-) : Serializable {
+): Serializable {
 
     companion object {
         private const val serialVersionUID: Long = 1L
     }
 
     /** storage backend 선택 값입니다. */
-    enum class Backend { LOCAL, S3 }
+    enum class Backend {
+        LOCAL,
+        S3
+    }
 
     /**
      * local filesystem backend configuration입니다.
@@ -47,7 +50,7 @@ data class ImageStorageProperties(
     data class Local(
         val rootDir: String = System.getProperty("java.io.tmpdir") + "/bluetape4k-images",
         val bootstrapPrefixes: Set<String> = emptySet(),
-    ) : Serializable {
+    ): Serializable {
         companion object {
             private const val serialVersionUID: Long = 1L
         }
@@ -67,7 +70,7 @@ data class ImageStorageProperties(
         val attemptTimeout: Duration = Duration.ofSeconds(10),
         val maxRetries: Int = 3,
         val maxInFlight: Int = 64,
-    ) : Serializable {
+    ): Serializable {
         companion object {
             private const val serialVersionUID: Long = 1L
         }
