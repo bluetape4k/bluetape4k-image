@@ -4,11 +4,15 @@ import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeGreaterThan
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.junit5.coroutines.runSuspendIO
+import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.logging.debug
 import org.junit.jupiter.api.Test
 import java.nio.file.Files
 import javax.imageio.ImageIO
 
 class BasicImageProcessingQuickstartTest {
+
+    companion object: KLoggingChannel()
 
     @Test
     fun `generates deterministic basic processing outputs`() = runSuspendIO {
@@ -16,6 +20,7 @@ class BasicImageProcessingQuickstartTest {
 
         val outputs = BasicImageProcessingQuickstart.generate(outputDirectory)
 
+        outputs.forEach { log.debug { "generated image=$it" } }
         outputs.size shouldBeEqualTo 5
         outputs.forEach { output ->
             Files.exists(output.path).shouldBeTrue()
@@ -23,6 +28,7 @@ class BasicImageProcessingQuickstartTest {
         }
 
         val byName = outputs.associateBy { it.fileName }
+        log.debug { "byName=$byName" }
         byName.getValue("01-cafe-thumbnail.jpg").assertImage(width = 320, height = 240)
         byName.getValue("02-landscape-smart-crop.jpg").assertImage(width = 640, height = 360)
         byName.getValue("03-cafe-converted.png").assertImage(width = 800, height = 600)
@@ -33,7 +39,9 @@ class BasicImageProcessingQuickstartTest {
     private fun GeneratedImage.assertImage(width: Int, height: Int) {
         this.width shouldBeEqualTo width
         this.height shouldBeEqualTo height
+
         val decoded = ImageIO.read(path.toFile())
+        log.debug { "decoded: $decoded" }
         decoded.width shouldBeEqualTo width
         decoded.height shouldBeEqualTo height
     }
