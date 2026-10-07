@@ -20,7 +20,7 @@ import java.nio.file.Path
  *
  * **thread safety**: 구현체는 single-threaded이며 coroutine 간에 공유하면 안 됩니다.
  */
-interface VipsImage : AutoCloseable {
+interface VipsImage: AutoCloseable {
 
     /** 이미지 너비 (픽셀) */
     val width: Int

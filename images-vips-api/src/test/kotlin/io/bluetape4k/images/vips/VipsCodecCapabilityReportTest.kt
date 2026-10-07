@@ -2,11 +2,16 @@ package io.bluetape4k.images.vips
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import org.junit.jupiter.api.Test
 
 @OptIn(VipsIncubatingApi::class)
 class VipsCodecCapabilityReportTest {
+
+    companion object: KLogging()
 
     @Test
     fun `report keeps stable formats available unconditionally`() {
@@ -29,6 +34,8 @@ class VipsCodecCapabilityReportTest {
             inspectedOperations = setOf("heifload_buffer", "heifsave_buffer"),
         )
 
+        log.debug { "report=$report" }
+
         report.stableFormats shouldBeEqualTo setOf(
             VipsImageFormat.JPEG,
             VipsImageFormat.PNG,
@@ -46,10 +53,10 @@ class VipsCodecCapabilityReportTest {
             reason = "Backend cannot inspect libvips operations; run smokeTestCodec with caller samples.",
         )
 
+        log.debug { "capability=$capability" }
         capability.support shouldBeEqualTo VipsCodecSupport.UNKNOWN
         capability.operationName shouldBeEqualTo "heifload_buffer"
-        capability.reason shouldBeEqualTo
-            "Backend cannot inspect libvips operations; run smokeTestCodec with caller samples."
+        capability.reason shouldBeEqualTo "Backend cannot inspect libvips operations; run smokeTestCodec with caller samples."
     }
 
     @Test
@@ -61,7 +68,8 @@ class VipsCodecCapabilityReportTest {
             reason = "HEIC encode failed on test-backend; verify native codec support.",
         )
 
-        result.succeeded shouldBeEqualTo false
+        log.debug { "result=$result" }
+        result.succeeded.shouldBeFalse()
         result.failureStage shouldBeEqualTo VipsCodecDirection.ENCODE
         result.failureReason shouldBeEqualTo "HEIC encode failed on test-backend; verify native codec support."
     }

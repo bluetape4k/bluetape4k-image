@@ -16,7 +16,7 @@ import java.lang.foreign.Arena
  * fixture는 trusted input이므로 test마다 shared `Arena.ofShared()`로 `VImage` instance를 직접 생성해
  * `ffmVipsImageOf` safety guard를 우회합니다.
  */
-class FfmVipsWriterTest : AbstractFfmVipsTest() {
+class FfmVipsWriterTest: AbstractFfmVipsTest() {
 
     companion object {
         private val JPEG_MAGIC = byteArrayOf(0xFF.toByte(), 0xD8.toByte(), 0xFF.toByte())

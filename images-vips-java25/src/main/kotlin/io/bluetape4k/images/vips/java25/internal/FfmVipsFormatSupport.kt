@@ -1,9 +1,9 @@
 package io.bluetape4k.images.vips.java25.internal
 
-import io.bluetape4k.images.vips.VipsIncubatingApi
 import io.bluetape4k.images.vips.VipsDecodeException
 import io.bluetape4k.images.vips.VipsEncodeException
 import io.bluetape4k.images.vips.VipsImageFormat
+import io.bluetape4k.images.vips.VipsIncubatingApi
 import io.bluetape4k.images.vips.java25.FfmVipsRuntime
 
 @OptIn(VipsIncubatingApi::class)
@@ -13,7 +13,7 @@ internal object FfmVipsFormatSupport {
         if (!supportsDecoding(format)) {
             throw VipsDecodeException(
                 "$format decoding is not supported by this libvips build. " +
-                    "Install libvips with libheif/libaom support."
+                        "Install libvips with libheif/libaom support."
             )
         }
     }
@@ -22,7 +22,7 @@ internal object FfmVipsFormatSupport {
         if (!supportsEncoding(format)) {
             throw VipsEncodeException(
                 "$format encoding is not supported by this libvips build. " +
-                    "Install libvips with libheif/libaom support."
+                        "Install libvips with libheif/libaom support."
             )
         }
     }
@@ -31,18 +31,22 @@ internal object FfmVipsFormatSupport {
         when (format) {
             VipsImageFormat.JPEG,
             VipsImageFormat.PNG,
-            VipsImageFormat.WEBP -> true
+            VipsImageFormat.WEBP,
+                -> true
             VipsImageFormat.AVIF,
-            VipsImageFormat.HEIC -> supportsOperation("heifload_buffer")
+            VipsImageFormat.HEIC,
+                -> supportsOperation("heifload_buffer")
         }
 
     fun supportsEncoding(format: VipsImageFormat): Boolean =
         when (format) {
             VipsImageFormat.JPEG,
             VipsImageFormat.PNG,
-            VipsImageFormat.WEBP -> true
+            VipsImageFormat.WEBP,
+                -> true
             VipsImageFormat.AVIF,
-            VipsImageFormat.HEIC -> supportsOperation("heifsave_buffer")
+            VipsImageFormat.HEIC,
+                -> supportsOperation("heifsave_buffer")
         }
 
     private fun supportsOperation(name: String): Boolean =

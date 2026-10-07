@@ -1,11 +1,18 @@
 package io.bluetape4k.images.vips.java25
 
 import app.photofox.vipsffm.VImage
-import io.bluetape4k.images.vips.VipsIncubatingApi
+import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeGreaterThan
+import io.bluetape4k.assertions.shouldBeLessOrEqualTo
+import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldContain
+import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.images.vips.VipsDecodeException
 import io.bluetape4k.images.vips.VipsEncodeException
 import io.bluetape4k.images.vips.VipsEncodeOptions
 import io.bluetape4k.images.vips.VipsImageFormat
+import io.bluetape4k.images.vips.VipsIncubatingApi
 import io.bluetape4k.images.vips.coroutines.suspendToBytes
 import io.bluetape4k.images.vips.testfixtures.VipsTestFixtures
 import io.bluetape4k.images.vips.testfixtures.assertWebpLosslessContract
@@ -13,14 +20,6 @@ import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.okio.asSource
 import io.bluetape4k.okio.buffered
 import io.bluetape4k.okio.coroutines.asSuspendedSource
-import io.bluetape4k.okio.coroutines.buffered as bufferedSuspended
-import io.bluetape4k.assertions.assertFailsWith
-import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldBeGreaterThan
-import io.bluetape4k.assertions.shouldBeLessOrEqualTo
-import io.bluetape4k.assertions.shouldContain
-import io.bluetape4k.assertions.shouldBeTrue
-import io.bluetape4k.assertions.shouldNotBeNull
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
@@ -30,9 +29,10 @@ import java.nio.channels.AsynchronousFileChannel
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardOpenOption.READ
+import io.bluetape4k.okio.coroutines.buffered as bufferedSuspended
 
 @OptIn(VipsIncubatingApi::class)
-class FfmVipsImageTest : AbstractFfmVipsTest() {
+class FfmVipsImageTest: AbstractFfmVipsTest() {
 
     @Test
     fun `public WebP lossless encoding preserves RGBA and default stays lossy`() {

@@ -2,7 +2,7 @@
 
 [English](./README.md) | 한국어
 
-libvips 기반 이미지 처리를 위한 바인딩 중립(binding-neutral) API입니다. JDK 25 백엔드 구현체인 JVips JNI(legacy `java21` artifact)와 vips-ffm에서 공유하는 인터페이스와 값 타입을 정의합니다. 기본 libvips 바인딩에 관계없이 통일된 인터페이스가 필요할 때 이 모듈을 사용하세요.
+libvips 기반 이미지 처리를 위한 바인딩 중립 (binding-neutral) API입니다. JDK 25 백엔드 구현체인 JVips JNI (legacy `java21` artifact)와 vips-ffm에서 공유하는 인터페이스와 값 타입을 정의합니다. 기본 libvips 바인딩에 관계없이 통일된 인터페이스가 필요할 때 이 모듈을 사용하세요.
 
 ## 아키텍처
 
@@ -18,21 +18,21 @@ libvips 기반 이미지 처리를 위한 바인딩 중립(binding-neutral) API�
 
 ### 핵심 인터페이스
 
-| 타입 | 용도 |
-|------|------|
-| `VipsImage` | libvips 이미지 추상화: 리사이즈, 크롭, 썸네일, 인코딩/디코딩 |
-| `VipsRuntime` | 런타임 라이프사이클: 초기화 및 종료 |
-| `VipsEncodeOptions` | 인코딩 옵션: 품질, 노력도, 메타데이터 제거 여부 |
-| `VipsImageFormat` | 지원 포맷: JPEG, PNG, WebP 및 incubating AVIF/HEIC |
+| 타입                | 용도                                                         |
+|---------------------|--------------------------------------------------------------|
+| `VipsImage`         | libvips 이미지 추상화: 리사이즈, 크롭, 썸네일, 인코딩/디코딩 |
+| `VipsRuntime`       | 런타임 라이프사이클: 초기화 및 종료                          |
+| `VipsEncodeOptions` | 인코딩 옵션: 품질, 노력도, 메타데이터 제거 여부              |
+| `VipsImageFormat`   | 지원 포맷: JPEG, PNG, WebP 및 incubating AVIF/HEIC           |
 
 ### 예외 계층
 
-| 예외 | 원인 | 복구 가능? |
-|------|------|----------|
-| `VipsException` | 모든 libvips 에러의 기반 클래스 | 아니오 |
-| `VipsDecodeException` | 디코딩 실패: 미지원 포맷, 손상된 입력, 크기 초과 | 아니오 |
-| `VipsEncodeException` | 인코딩 실패: I/O 에러, 잘못된 옵션 | 아니오 |
-| `VipsInitializationException` | 런타임 초기화 실패 또는 종료 후 재초기화 시도 (프로세스 재시작 필요) | 아니오 |
+| 예외                          | 원인                                                                 | 복구 가능? |
+|-------------------------------|----------------------------------------------------------------------|------------|
+| `VipsException`               | 모든 libvips 에러의 기반 클래스                                      | 아니오     |
+| `VipsDecodeException`         | 디코딩 실패: 미지원 포맷, 손상된 입력, 크기 초과                     | 아니오     |
+| `VipsEncodeException`         | 인코딩 실패: I/O 에러, 잘못된 옵션                                   | 아니오     |
+| `VipsInitializationException` | 런타임 초기화 실패 또는 종료 후 재초기화 시도 (프로세스 재시작 필요) | 아니오     |
 
 ### 인코딩 옵션
 
@@ -52,38 +52,29 @@ VipsEncodeOptions(quality = 80, effort = 5, lossless = false, stripMetadata = tr
 
 ### 지원 포맷
 
-| 포맷 | 상태 | 특징 |
-|------|------|------|
-| JPEG | 안정화 | 손실 압축, 실시간 처리에 빠름 |
-| PNG | 안정화 | 무손실, 투명도 보존 |
-| WebP | 안정화 | 최신 포맷, 최고 압축률 |
+| 포맷 | 상태       | 특징                                    |
+|------|------------|-----------------------------------------|
+| JPEG | 안정화     | 손실 압축, 실시간 처리에 빠름           |
+| PNG  | 안정화     | 무손실, 투명도 보존                     |
+| WebP | 안정화     | 최신 포맷, 최고 압축률                  |
 | AVIF | Incubating | 백엔드와 native libvips capability 필요 |
 | HEIC | Incubating | 백엔드와 native libvips capability 필요 |
 
 #### AVIF / HEIC Capability Matrix
 
-`VipsImageFormat.AVIF`와 `VipsImageFormat.HEIC`는 공유 API 상수이며, 모든 백엔드가 모든
-호스트에서 해당 포맷을 decode/encode할 수 있다는 보장은 아닙니다.
+`VipsImageFormat.AVIF`와 `VipsImageFormat.HEIC`는 공유 API 상수이며, 모든 백엔드가 모든 호스트에서 해당 포맷을 decode/encode할 수 있다는 보장은 아닙니다.
 
-| 백엔드 | AVIF decode | AVIF encode | HEIC decode | HEIC encode | 비고 |
-|--------|-------------|-------------|-------------|-------------|------|
-| JDK 25 JVips/JNI (legacy `java21` artifact) | Capability-gated | Capability-gated | Capability-gated | N/A | JVips는 HEIC 인코딩을 노출하지 않음. HEIC 출력은 FFM 백엔드 사용 |
-| Java 25 FFM | Capability-gated | Capability-gated | Capability-gated | Capability-gated | AVIF는 HEIF AV1 compression, HEIC는 HEIF HEVC compression 사용 |
+| 백엔드                                      | AVIF decode      | AVIF encode      | HEIC decode      | HEIC encode      | 비고                                                             |
+|---------------------------------------------|------------------|------------------|------------------|------------------|------------------------------------------------------------------|
+| JDK 25 JVips/JNI (legacy `java21` artifact) | Capability-gated | Capability-gated | Capability-gated | N/A              | JVips는 HEIC 인코딩을 노출하지 않음. HEIC 출력은 FFM 백엔드 사용 |
+| Java 25 FFM                                 | Capability-gated | Capability-gated | Capability-gated | Capability-gated | AVIF는 HEIF AV1 compression, HEIC는 HEIF HEVC compression 사용   |
 
-Native AVIF/HEIC 지원은 libheif가 포함된 libvips 빌드가 필요합니다. AVIF 출력은 libaom
-같은 AV1 인코더가 추가로 필요하고, HEIC 출력은 HEVC-capable libheif 빌드가 필요합니다.
-지원하지 않는 입력 signature는 `VipsDecodeException`을 발생시킵니다. Native HEIF 계열
-loader 또는 saver가 없으면 sanitized `VipsDecodeException` 또는 `VipsEncodeException`으로
-실패합니다.
+Native AVIF/HEIC 지원은 libheif가 포함된 libvips 빌드가 필요합니다. AVIF 출력은 libaom 같은 AV1 인코더가 추가로 필요하고, HEIC 출력은 HEVC-capable libheif 빌드가 필요합니다. 지원하지 않는 입력 signature는 `VipsDecodeException`을 발생시킵니다. Native HEIF 계열 loader 또는 saver가 없으면 sanitized `VipsDecodeException` 또는 `VipsEncodeException`으로 실패합니다.
 
 서비스 endpoint에서 AVIF/HEIC 지원 여부를 노출하기 전에는
-`VipsRuntime.codecCapabilityReport()`를 사용하십시오. Report는 JPEG, PNG, WebP를 항상
-stable format으로 표시하고, AVIF/HEIC decode/encode는 `AVAILABLE`, `UNAVAILABLE`,
+`VipsRuntime.codecCapabilityReport()`를 사용하십시오. Report는 JPEG, PNG, WebP를 항상 stable format으로 표시하고, AVIF/HEIC decode/encode는 `AVAILABLE`, `UNAVAILABLE`,
 `UNKNOWN` 중 하나로 보고합니다. 백엔드가 확인할 수 있는 경우 `heifload_buffer`,
-`heifsave_buffer` 같은 native operation 단서도 함께 제공합니다. `UNKNOWN`은 operation
-탐색 자체가 실패했다는 뜻이며, 원인은 native 경로·환경 값·raw exception text를 노출하지
-않도록 정제해야 합니다. 백엔드는 해당 operation을 fail-closed로 처리하되 fatal JVM
-error는 호출자에게 보존해야 합니다.
+`heifsave_buffer` 같은 native operation 단서도 함께 제공합니다. `UNKNOWN`은 operation 탐색 자체가 실패했다는 뜻이며, 원인은 native 경로·환경 값·raw exception text를 노출하지 않도록 정제해야 합니다. 백엔드는 해당 operation을 fail-closed로 처리하되 fatal JVM error는 호출자에게 보존해야 합니다.
 
 배포 환경 검증에는 같은 호스트 이미지 파이프라인에서 준비한 작은 AVIF/HEIC 샘플로
 `VipsRuntime.smokeTestCodec(...)`을 실행하십시오. 이 binding 전용 capability API는
@@ -218,9 +209,7 @@ suspend fun writeWithSuspendedSink(image: VipsImage) {
 }
 ```
 
-Local large file은 backend `Path` 진입점을 먼저 선택하세요. 이미지 바이트가 이미
-streaming boundary를 지나고 있고 중간 `ByteArray` 없이 ownership을 명시하고 싶을 때
-Okio sink를 사용합니다.
+Local large file은 backend `Path` 진입점을 먼저 선택하세요. 이미지 바이트가 이미 streaming boundary를 지나고 있고 중간 `ByteArray` 없이 ownership을 명시하고 싶을 때 Okio sink를 사용합니다.
 
 ### 크롭 및 다중 연산 체인
 
@@ -285,7 +274,8 @@ val resized = image.resize(640, 480)  // 정리하지 않으면 둘 다 누수
 
 - **스레드 안전 초기화**: atomic CAS 사용, `@Synchronized` 미사용
 - **Virtual Thread 친화적**: 모니터 잠금 없음, Virtual Thread 호환
-- **동시 대기 제한**: 경쟁 `init()` 또는 `shutdown()` 호출은 최대 60초만 기다리며, 인터럽트나 시간 초과 시 `VipsInitializationException`을 반환합니다. 이때 owner와 native 자원은 변경하지 않습니다
+- **동시 대기
+  제한**: 경쟁 `init()` 또는 `shutdown()` 호출은 최대 60초만 기다리며, 인터럽트나 시간 초과 시 `VipsInitializationException`을 반환합니다. 이때 owner와 native 자원은 변경하지 않습니다
 - **owner 실패 후 재시도**: 초기화 owner가 실패하면 런타임은 재시도 가능한 상태로 복구되고, 대기자는 실패 예외를 받습니다. 원인을 확인한 뒤 다시 시도할 수 있습니다
 - **터미널 종료**: `shutdown()` 은 불가역적이며, 종료 후 `init()` 호출 시 `VipsInitializationException` 발생
 
@@ -300,7 +290,7 @@ runtime.init()  // VipsInitializationException: 프로세스 재시작 필요
 
 ### Spring Boot 주의사항
 
-VipsRuntime.shutdown()을 `@PreDestroy` 빈 메서드로 등록하지 마세요. Spring DevTools가 ApplicationContext를 다시 로드하면 `@PreDestroy` 훅을 호출하여 shutdown → init 순서로 실행되어 `VipsInitializationException`이 발생합니다. 대신 JVM 종료 훅만 사용하세요:
+VipsRuntime.shutdown ()을 `@PreDestroy` 빈 메서드로 등록하지 마세요. Spring DevTools가 ApplicationContext를 다시 로드하면 `@PreDestroy` 훅을 호출하여 shutdown → init 순서로 실행되어 `VipsInitializationException`이 발생합니다. 대신 JVM 종료 훅만 사용하세요:
 
 ```kotlin
 // 좋은 예: JVM 종료 훅
@@ -324,7 +314,7 @@ fun shutdownVips() {  // 하지 마세요
 
 ### 메시지 보안
 
-예외 메시지는 내부 정보(파일 경로, 메모리 주소)를 누출하지 않도록 정제됩니다. 상세한 에러 컨텍스트는 `cause` 필드에 서버 로그용으로만 보존됩니다:
+예외 메시지는 내부 정보 (파일 경로, 메모리 주소)를 누출하지 않도록 정제됩니다. 상세한 에러 컨텍스트는 `cause` 필드에 서버 로그용으로만 보존됩니다:
 
 ```kotlin
 try {
@@ -338,7 +328,7 @@ try {
 }
 ```
 
-### 경로 탐색(Path Traversal)
+### 경로 탐색 (Path Traversal)
 
 `writeTo(Path, ...)` 메서드는 경로를 검증하지 않습니다. 호출자는 경로가 허용된 디렉토리 내에 있는지 확인해야 합니다:
 
@@ -368,9 +358,7 @@ dependencies {
 }
 ```
 
-기존에 이 모듈의 transitive dependency를 통해 `bluetape4k-images` 타입을 사용하던
-소비자는 해당 의존성을 직접 선언해야 합니다. Rollback이 필요하면 소비 애플리케이션의
-dependency block에 다음 의존성을 다시 추가하세요.
+기존에 이 모듈의 transitive dependency를 통해 `bluetape4k-images` 타입을 사용하던 소비자는 해당 의존성을 직접 선언해야 합니다. Rollback이 필요하면 소비 애플리케이션의 dependency block에 다음 의존성을 다시 추가하세요.
 
 ```kotlin
 dependencies {
@@ -380,8 +368,7 @@ dependencies {
 
 ## testFixtures
 
-Repository 테스트는 모듈의 main API에 이미지 구현 의존성을 추가하지 않고, pixel helper를
-위해 local test-fixtures variant를 사용할 수 있습니다.
+Repository 테스트는 모듈의 main API에 이미지 구현 의존성을 추가하지 않고, pixel helper를 위해 local test-fixtures variant를 사용할 수 있습니다.
 
 ```kotlin
 dependencies {

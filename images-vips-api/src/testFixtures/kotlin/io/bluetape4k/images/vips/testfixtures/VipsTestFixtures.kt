@@ -1,5 +1,7 @@
 package io.bluetape4k.images.vips.testfixtures
 
+import io.bluetape4k.utils.Resourcex
+
 /** test fixture의 알려진 dimension입니다. */
 object VipsTestFixtures {
 
@@ -26,7 +28,7 @@ object VipsTestFixtures {
      * @throws IllegalArgumentException resource를 찾을 수 없으면 던집니다.
      */
     fun loadFixture(resourcePath: String): ByteArray {
-        val stream = VipsTestFixtures::class.java.classLoader.getResourceAsStream(resourcePath)
+        val stream = Resourcex.getInputStream(resourcePath)
             ?: error("Test fixture not found on classpath: $resourcePath")
         return stream.use { it.readBytes() }
     }

@@ -4,10 +4,10 @@ import app.photofox.vipsffm.VImage
 import app.photofox.vipsffm.VipsError
 import app.photofox.vipsffm.VipsOption
 import app.photofox.vipsffm.enums.VipsForeignHeifCompression
-import io.bluetape4k.images.vips.VipsIncubatingApi
 import io.bluetape4k.images.vips.VipsEncodeException
 import io.bluetape4k.images.vips.VipsEncodeOptions
 import io.bluetape4k.images.vips.VipsImageFormat
+import io.bluetape4k.images.vips.VipsIncubatingApi
 
 /**
  * AVIF와 HEIC용 vips-ffm HEIF-family encoder입니다.

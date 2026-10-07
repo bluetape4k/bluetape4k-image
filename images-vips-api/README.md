@@ -18,21 +18,21 @@ Binding-neutral API for libvips-backed image processing. Defines shared interfac
 
 ### Core Interfaces
 
-| Type | Purpose |
-|------|---------|
-| `VipsImage` | libvips image abstraction: resize, crop, thumbnail, encode/decode operations |
-| `VipsRuntime` | Runtime lifecycle: initialization and graceful shutdown |
-| `VipsEncodeOptions` | Encoding parameters: quality, effort, metadata stripping |
-| `VipsImageFormat` | Supported output formats: JPEG, PNG, WebP, and incubating AVIF/HEIC |
+| Type                | Purpose                                                                      |
+|---------------------|------------------------------------------------------------------------------|
+| `VipsImage`         | libvips image abstraction: resize, crop, thumbnail, encode/decode operations |
+| `VipsRuntime`       | Runtime lifecycle: initialization and graceful shutdown                      |
+| `VipsEncodeOptions` | Encoding parameters: quality, effort, metadata stripping                     |
+| `VipsImageFormat`   | Supported output formats: JPEG, PNG, WebP, and incubating AVIF/HEIC          |
 
 ### Exception Hierarchy
 
-| Exception | Cause | Recover? |
-|-----------|-------|----------|
-| `VipsException` | Base class for all libvips errors | No |
-| `VipsDecodeException` | Image decode failed: unsupported format, corrupted input, size exceeded | No |
-| `VipsEncodeException` | Image encode failed: I/O error, invalid options | No |
-| `VipsInitializationException` | Runtime init failed or re-init after shutdown (process restart required) | No |
+| Exception                     | Cause                                                                    | Recover? |
+|-------------------------------|--------------------------------------------------------------------------|----------|
+| `VipsException`               | Base class for all libvips errors                                        | No       |
+| `VipsDecodeException`         | Image decode failed: unsupported format, corrupted input, size exceeded  | No       |
+| `VipsEncodeException`         | Image encode failed: I/O error, invalid options                          | No       |
+| `VipsInitializationException` | Runtime init failed or re-init after shutdown (process restart required) | No       |
 
 ### Encoding Options
 
@@ -52,42 +52,30 @@ VipsEncodeOptions(quality = 80, effort = 5, lossless = false, stripMetadata = tr
 
 ### Supported Formats
 
-| Format | Status | Notes |
-|--------|--------|-------|
-| JPEG | Stable | Lossy, fast for real-time processing |
-| PNG | Stable | Lossless, preserves transparency |
-| WebP | Stable | Modern format, best compression |
-| AVIF | Incubating | Backend and native libvips capability required |
-| HEIC | Incubating | Backend and native libvips capability required |
+| Format | Status     | Notes                                          |
+|--------|------------|------------------------------------------------|
+| JPEG   | Stable     | Lossy, fast for real-time processing           |
+| PNG    | Stable     | Lossless, preserves transparency               |
+| WebP   | Stable     | Modern format, best compression                |
+| AVIF   | Incubating | Backend and native libvips capability required |
+| HEIC   | Incubating | Backend and native libvips capability required |
 
 #### AVIF / HEIC Capability Matrix
 
-`VipsImageFormat.AVIF` and `VipsImageFormat.HEIC` are shared API constants, not a
-guarantee that every backend can decode or encode those formats on every host.
+`VipsImageFormat.AVIF` and `VipsImageFormat.HEIC` are shared API constants, not a guarantee that every backend can decode or encode those formats on every host.
 
-| Backend | AVIF decode | AVIF encode | HEIC decode | HEIC encode | Notes |
-|---------|-------------|-------------|-------------|-------------|-------|
-| JDK 25 JVips/JNI (legacy `java21` artifact) | Capability-gated | Capability-gated | Capability-gated | N/A | JVips does not expose HEIC encoding; use the FFM backend when HEIC output is required |
-| Java 25 FFM | Capability-gated | Capability-gated | Capability-gated | Capability-gated | AVIF uses HEIF AV1 compression; HEIC uses HEIF HEVC compression |
+| Backend                                     | AVIF decode      | AVIF encode      | HEIC decode      | HEIC encode      | Notes                                                                                 |
+|---------------------------------------------|------------------|------------------|------------------|------------------|---------------------------------------------------------------------------------------|
+| JDK 25 JVips/JNI (legacy `java21` artifact) | Capability-gated | Capability-gated | Capability-gated | N/A              | JVips does not expose HEIC encoding; use the FFM backend when HEIC output is required |
+| Java 25 FFM                                 | Capability-gated | Capability-gated | Capability-gated | Capability-gated | AVIF uses HEIF AV1 compression; HEIC uses HEIF HEVC compression                       |
 
-Native AVIF/HEIC support requires libvips built with libheif. AVIF output also
-requires an AV1 encoder such as libaom; HEIC output requires an HEVC-capable
-libheif build. Unsupported input signatures raise `VipsDecodeException`. Missing
-native HEIF-family loader or saver support raises sanitized `VipsDecodeException`
+Native AVIF/HEIC support requires libvips built with libheif. AVIF output also requires an AV1 encoder such as libaom; HEIC output requires an HEVC-capable libheif build. Unsupported input signatures raise `VipsDecodeException`. Missing native HEIF-family loader or saver support raises sanitized `VipsDecodeException`
 or `VipsEncodeException`.
 
-Use `VipsRuntime.codecCapabilityReport()` before advertising AVIF/HEIC support
-from a service endpoint. The report always lists JPEG, PNG, and WebP as stable
-formats, then marks AVIF/HEIC decode and encode as `AVAILABLE`, `UNAVAILABLE`,
-or `UNKNOWN` with backend-specific native operation clues such as
-`heifload_buffer` and `heifsave_buffer`. `UNKNOWN` means the operation probe
-itself failed; its reason is sanitized and must not expose native paths,
-environment values, or raw exception text. A backend should fail closed for
-the operation while preserving fatal JVM errors for the caller.
+Use `VipsRuntime.codecCapabilityReport()` before advertising AVIF/HEIC support from a service endpoint. The report always lists JPEG, PNG, and WebP as stable formats, then marks AVIF/HEIC decode and encode as `AVAILABLE`, `UNAVAILABLE`, or `UNKNOWN` with backend-specific native operation clues such as
+`heifload_buffer` and `heifsave_buffer`. `UNKNOWN` means the operation probe itself failed; its reason is sanitized and must not expose native paths, environment values, or raw exception text. A backend should fail closed for the operation while preserving fatal JVM errors for the caller.
 
-For deployment checks, run `VipsRuntime.smokeTestCodec(...)` with small
-caller-provided AVIF or HEIC samples from the same host image pipeline. This
-binding-specific capability API is marked with `VipsIncubatingApi`:
+For deployment checks, run `VipsRuntime.smokeTestCodec(...)` with small caller-provided AVIF or HEIC samples from the same host image pipeline. This binding-specific capability API is marked with `VipsIncubatingApi`:
 
 ```kotlin
 import io.bluetape4k.images.vips.VipsImageFormat
@@ -218,9 +206,7 @@ suspend fun writeWithSuspendedSink(image: VipsImage) {
 }
 ```
 
-For local large files, prefer backend `Path` entry points first. Use Okio sinks
-when bytes already move through a streaming boundary and you want explicit
-ownership control without an intermediate `ByteArray`.
+For local large files, prefer backend `Path` entry points first. Use Okio sinks when bytes already move through a streaming boundary and you want explicit ownership control without an intermediate `ByteArray`.
 
 ### Crop and Multi-Operation Chain
 
@@ -285,8 +271,10 @@ val resized = image.resize(640, 480)  // Both leak if not closed
 
 - **Thread-safe initialization**: Using atomic CAS, not `@Synchronized`
 - **Virtual Thread friendly**: No monitor locking, compatible with Virtual Threads
-- **Bounded concurrent waits**: A competing `init()` or `shutdown()` caller waits at most 60 seconds; interruption or timeout raises `VipsInitializationException` without changing the owner or native resources
-- **Retry after owner failure**: If the initialization owner fails, the runtime returns to a retryable state; a waiter receives the failure exception and may retry after checking the cause
+- **Bounded concurrent
+  waits**: A competing `init()` or `shutdown()` caller waits at most 60 seconds; interruption or timeout raises `VipsInitializationException` without changing the owner or native resources
+- **Retry after owner
+  failure**: If the initialization owner fails, the runtime returns to a retryable state; a waiter receives the failure exception and may retry after checking the cause
 - **Terminal shutdown**: `shutdown()` is irreversible; `init()` after shutdown throws `VipsInitializationException`
 
 ```kotlin
@@ -340,7 +328,8 @@ try {
 
 ### Path Traversal
 
-The `writeTo(Path, ...)` method does **not** validate paths. Callers must ensure the path is within an allowed directory:
+The `writeTo(Path, ...)` method does
+**not** validate paths. Callers must ensure the path is within an allowed directory:
 
 ```kotlin
 // GOOD: Validate before calling
@@ -368,9 +357,7 @@ dependencies {
 }
 ```
 
-Existing consumers that used `bluetape4k-images` types through this module's
-former transitive dependency must declare that dependency directly. Add it back
-to the consuming application's dependency block if a rollback is required:
+Existing consumers that used `bluetape4k-images` types through this module's former transitive dependency must declare that dependency directly. Add it back to the consuming application's dependency block if a rollback is required:
 
 ```kotlin
 dependencies {
@@ -380,8 +367,7 @@ dependencies {
 
 ## testFixtures
 
-Repository tests can use the local test-fixtures variant for pixel helpers
-without adding an image implementation dependency to the module's main API:
+Repository tests can use the local test-fixtures variant for pixel helpers without adding an image implementation dependency to the module's main API:
 
 ```kotlin
 dependencies {
@@ -394,7 +380,8 @@ dependencies {
 
 `testFixtures` provides `VipsGoldenAssert` for pixel-level golden image comparison of vips operations.
 
-- **Update mode**: guarded by Java 25+ (`@EnabledForJreRange(min = JRE.JAVA_25)`) — only the java25 module generates authoritative golden images
+- **Update
+  mode**: guarded by Java 25+ (`@EnabledForJreRange(min = JRE.JAVA_25)`) — only the java25 module generates authoritative golden images
 - **CI guard**: update mode is blocked in CI environments to prevent accidental golden regeneration
 - **Comparison tolerance**: configurable per-channel pixel delta tolerance (default: 2.0)
 
