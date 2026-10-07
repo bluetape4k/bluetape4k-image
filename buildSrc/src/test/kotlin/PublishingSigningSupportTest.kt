@@ -55,7 +55,7 @@ class PublishingSigningSupportTest {
             managedDependency("org.jetbrains.kotlin", "kotlin-stdlib", "2.2.20"),
         )
 
-        normalizeMavenDependencyManagement(pom)
+        normalizeMavenDependencies(pom)
 
         assertEquals(1, managedDependencies(pom).size)
     }
@@ -68,10 +68,36 @@ class PublishingSigningSupportTest {
         )
 
         val failure = assertFailsWith<GradleException> {
-            normalizeMavenDependencyManagement(pom)
+            normalizeMavenDependencies(pom)
         }
 
         assertEquals(true, failure.message.orEmpty().contains("org.jetbrains.kotlin:kotlin-stdlib:jar:"))
+    }
+
+    @Test
+    fun `removes fully identical direct dependencies`() {
+        val pom = pomWithDirectDependencies(
+            managedDependency("org.jetbrains.kotlinx", "atomicfu-jvm", "0.33.0"),
+            managedDependency("org.jetbrains.kotlinx", "atomicfu-jvm", "0.33.0"),
+        )
+
+        normalizeMavenDependencies(pom)
+
+        assertEquals(1, directDependencies(pom).size)
+    }
+
+    @Test
+    fun `fails when direct dependencies share a key but differ`() {
+        val pom = pomWithDirectDependencies(
+            managedDependency("org.jetbrains.kotlinx", "atomicfu-jvm", "0.33.0"),
+            managedDependency("org.jetbrains.kotlinx", "atomicfu-jvm", "0.34.0"),
+        )
+
+        val failure = assertFailsWith<GradleException> {
+            normalizeMavenDependencies(pom)
+        }
+
+        assertEquals(true, failure.message.orEmpty().contains("org.jetbrains.kotlinx:atomicfu-jvm:jar:"))
     }
 
     @Test
@@ -125,6 +151,13 @@ class PublishingSigningSupportTest {
         return pom
     }
 
+    private fun pomWithDirectDependencies(vararg dependencies: Node): Node {
+        val pom = Node(null, "project")
+        val directDependencies = pom.appendNode("dependencies")
+        dependencies.forEach(directDependencies::append)
+        return pom
+    }
+
     private fun managedDependency(groupId: String, artifactId: String, version: String): Node =
         Node(null, "dependency").apply {
             appendNode("groupId", groupId)
@@ -137,6 +170,14 @@ class PublishingSigningSupportTest {
             .filterIsInstance<Node>()
             .first { it.name().toString() == "dependencyManagement" }
             .children()
+            .filterIsInstance<Node>()
+            .first { it.name().toString() == "dependencies" }
+            .children()
+            .filterIsInstance<Node>()
+            .filter { it.name().toString() == "dependency" }
+
+    private fun directDependencies(pom: Node): List<Node> =
+        pom.children()
             .filterIsInstance<Node>()
             .first { it.name().toString() == "dependencies" }
             .children()

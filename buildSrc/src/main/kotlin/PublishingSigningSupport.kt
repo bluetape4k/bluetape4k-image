@@ -76,7 +76,7 @@ fun Project.configurePublishingSigning(publicationName: String) {
             val pomFile = destination
             if (pomFile.isFile) {
                 val pom = XmlParser(false, false).parse(pomFile)
-                normalizeMavenDependencyManagement(pom)
+                normalizeMavenDependencies(pom)
                 pomFile.writeText(XmlUtil.serialize(pom))
             }
         }
@@ -148,39 +148,45 @@ private fun Node.fingerprint(): String {
 }
 
 /**
- * Removes fully identical dependencyManagement entries from a generated Maven POM.
+ * Removes fully identical dependencies from a generated Maven POM.
  *
  * Gradle's dependency-management and platform publication paths can contribute the
- * same managed dependency more than once. Maven rejects duplicate keys, so identical
- * nodes are collapsed while entries with different content fail loudly instead of
- * silently changing the published dependency contract.
+ * same direct or managed dependency more than once. Maven rejects duplicate keys, so
+ * identical nodes are collapsed while entries with different content fail loudly
+ * instead of silently changing the published dependency contract.
  */
-fun normalizeMavenDependencyManagement(pom: Node) {
+fun normalizeMavenDependencies(pom: Node) {
+    val dependencyContainers = mutableListOf<Node>()
     pom.children()
         .filterIsInstance<Node>()
-        .filter { it.name().toString() == "dependencyManagement" }
-        .flatMap { dependencyManagement ->
-            dependencyManagement.children()
-                .filterIsInstance<Node>()
-                .filter { it.name().toString() == "dependencies" }
-        }
-        .forEach { dependencies ->
-            val firstByKey = linkedMapOf<ManagedDependencyKey, Node>()
-            val duplicates = mutableListOf<Node>()
-            dependencies.children()
-                .filterIsInstance<Node>()
-                .filter { it.name().toString() == "dependency" }
-                .forEach { dependency ->
-                    val key = dependency.managedDependencyKey()
-                    val first = firstByKey.putIfAbsent(key, dependency)
-                    when {
-                        first == null -> Unit
-                        first.fingerprint() == dependency.fingerprint() -> duplicates += dependency
-                        else -> throw GradleException(
-                            "Conflicting dependencyManagement entries for $key in published Maven POM",
-                        )
-                    }
+        .forEach { projectChild ->
+            when (projectChild.name().toString()) {
+                "dependencies" -> dependencyContainers += projectChild
+                "dependencyManagement" -> {
+                    projectChild.children()
+                        .filterIsInstance<Node>()
+                        .filter { it.name().toString() == "dependencies" }
+                        .forEach(dependencyContainers::add)
                 }
-            duplicates.forEach { dependencies.children().remove(it) }
+            }
         }
+    dependencyContainers.forEach { dependencies ->
+        val firstByKey = linkedMapOf<ManagedDependencyKey, Node>()
+        val duplicates = mutableListOf<Node>()
+        dependencies.children()
+            .filterIsInstance<Node>()
+            .filter { it.name().toString() == "dependency" }
+            .forEach { dependency ->
+                val key = dependency.managedDependencyKey()
+                val first = firstByKey.putIfAbsent(key, dependency)
+                when {
+                    first == null -> Unit
+                    first.fingerprint() == dependency.fingerprint() -> duplicates += dependency
+                    else -> throw GradleException(
+                        "Conflicting Maven dependencies for $key",
+                    )
+                }
+            }
+        duplicates.forEach { dependencies.children().remove(it) }
+    }
 }
