@@ -1,17 +1,27 @@
 package io.bluetape4k.images.captcha
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeInstanceOf
+import io.bluetape4k.assertions.shouldBeNull
+import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.javatimes.seconds
 import io.bluetape4k.junit5.concurrency.MultithreadingTester
+import io.bluetape4k.junit5.concurrency.StructuredTaskScopeTester
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
+import io.bluetape4k.utils.Runtimex
+import org.junit.jupiter.api.Test
 import java.time.Clock
 import java.time.Instant
 import java.time.ZoneId
 import java.time.ZoneOffset
 import java.util.concurrent.atomic.AtomicInteger
-import org.junit.jupiter.api.Test
 import kotlin.time.Duration.Companion.minutes
 
 class CaptchaVerificationServiceTest {
+
+    companion object: KLogging()
 
     @Test
     fun `verify succeeds and consumes issued challenge`() {
@@ -23,9 +33,13 @@ class CaptchaVerificationServiceTest {
         val result = service.verify(issued.id, issued.answer)
         val replay = service.verify(issued.id, issued.answer)
 
-        result shouldBeInstanceOf CaptchaVerificationResult.Success::class
-        result.verified shouldBeEqualTo true
-        replay shouldBeInstanceOf CaptchaVerificationResult.NotFound::class
+        log.debug { "result=$result" }
+        log.debug { "replay=$replay" }
+
+        result.shouldBeInstanceOf<CaptchaVerificationResult.Success>()
+        result.verified.shouldBeTrue()
+
+        replay.shouldBeInstanceOf<CaptchaVerificationResult.NotFound>()
         store.size shouldBeEqualTo 0
     }
 
@@ -39,9 +53,13 @@ class CaptchaVerificationServiceTest {
         val result = service.verify(issued.id, "WRONG")
         val retry = service.verify(issued.id, issued.answer)
 
-        result shouldBeInstanceOf CaptchaVerificationResult.WrongAnswer::class
-        result.verified shouldBeEqualTo false
-        retry shouldBeInstanceOf CaptchaVerificationResult.NotFound::class
+        log.debug { "result=$result" }
+        log.debug { "retry=$retry" }
+
+        result.shouldBeInstanceOf<CaptchaVerificationResult.WrongAnswer>()
+        result.verified.shouldBeFalse()
+
+        retry.shouldBeInstanceOf<CaptchaVerificationResult.NotFound>()
         store.size shouldBeEqualTo 0
     }
 
@@ -57,10 +75,14 @@ class CaptchaVerificationServiceTest {
         val result = service.verify(issued.id, issued.answer)
         val replay = service.verify(issued.id, issued.answer)
 
-        result shouldBeInstanceOf CaptchaVerificationResult.Expired::class
-        (result as CaptchaVerificationResult.Expired).expiredAt shouldBeEqualTo Instant.parse("2026-05-24T00:01:00Z")
+        log.debug { "result=$result" }
+        log.debug { "replay=$replay" }
+
+        result.shouldBeInstanceOf<CaptchaVerificationResult.Expired>()
+        result.expiredAt shouldBeEqualTo Instant.parse("2026-05-24T00:01:00Z")
         result.checkedAt shouldBeEqualTo Instant.parse("2026-05-24T00:02:00Z")
-        replay shouldBeInstanceOf CaptchaVerificationResult.NotFound::class
+
+        replay.shouldBeInstanceOf<CaptchaVerificationResult.NotFound>()
         store.size shouldBeEqualTo 0
     }
 
@@ -72,10 +94,11 @@ class CaptchaVerificationServiceTest {
             answerMatcher = CaptchaAnswerMatcher.caseInsensitive(),
         )
         val issued = service.issue(CaptchaChallengeId("challenge-4"), newChallenge(clock))
+        log.debug { "issued=$issued" }
 
         val result = service.verify(issued.id, " ${issued.answer.lowercase()} ")
-
-        result shouldBeInstanceOf CaptchaVerificationResult.Success::class
+        log.debug { "result=$result" }
+        result.shouldBeInstanceOf<CaptchaVerificationResult.Success>()
     }
 
     @Test
@@ -90,7 +113,7 @@ class CaptchaVerificationServiceTest {
         store.save(active)
 
         store.size shouldBeEqualTo 1
-        store.consume(expired.id) shouldBeEqualTo null
+        store.consume(expired.id).shouldBeNull()
         store.consume(active.id) shouldBeEqualTo active
     }
 
@@ -107,7 +130,7 @@ class CaptchaVerificationServiceTest {
         store.save(third)
 
         store.size shouldBeEqualTo 2
-        store.consume(first.id) shouldBeEqualTo null
+        store.consume(first.id).shouldBeNull()
         store.consume(second.id) shouldBeEqualTo second
         store.consume(third.id) shouldBeEqualTo third
     }
@@ -120,11 +143,11 @@ class CaptchaVerificationServiceTest {
         val maximumObserved = AtomicInteger()
 
         MultithreadingTester()
-            .workers(8)
+            .workers(Runtimex.availableProcessors)
             .rounds(20)
             .add {
                 val number = sequence.incrementAndGet()
-                store.save(issued("concurrent-$number", "ANSWER", clock.instant().plusSeconds(60)))
+                store.save(issued("concurrent-$number", "ANSWER", clock.instant() + 60.seconds()))
                 val currentSize = store.size
                 maximumObserved.updateAndGet { previous -> maxOf(previous, currentSize) }
             }
@@ -132,6 +155,29 @@ class CaptchaVerificationServiceTest {
 
         maximumObserved.get() shouldBeEqualTo 3
         store.size shouldBeEqualTo 3
+        sequence.get() shouldBeEqualTo Runtimex.availableProcessors * 20
+    }
+
+    @Test
+    fun `in-memory store keeps hard max under virtual threads saves`() {
+        val clock = MutableClock(Instant.parse("2026-05-24T00:00:00Z"))
+        val store = InMemoryCaptchaChallengeStore(clock = clock, maxEntries = 3)
+        val sequence = AtomicInteger()
+        val maximumObserved = AtomicInteger()
+
+        StructuredTaskScopeTester()
+            .rounds(Runtimex.availableProcessors * 20)
+            .add {
+                val number = sequence.incrementAndGet()
+                store.save(issued("concurrent-$number", "ANSWER", clock.instant() + 60.seconds()))
+                val currentSize = store.size
+                maximumObserved.updateAndGet { previous -> maxOf(previous, currentSize) }
+            }
+            .run()
+
+        maximumObserved.get() shouldBeEqualTo 3
+        store.size shouldBeEqualTo 3
+        sequence.get() shouldBeEqualTo Runtimex.availableProcessors * 20
     }
 
     private fun newChallenge(clock: Clock): CaptchaChallenge {

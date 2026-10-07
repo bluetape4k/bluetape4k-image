@@ -2,26 +2,34 @@ package io.bluetape4k.images.captcha
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeSameInstanceAs
+import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.assertions.shouldNotContain
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
+import org.junit.jupiter.api.Test
 import java.awt.Color
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
-import org.junit.jupiter.api.Test
 import kotlin.time.Duration.Companion.minutes
 
 class CaptchaOptionsTest {
+
+    companion object: KLogging()
 
     @Test
     fun `default options use readable bounded values`() {
         val options = CaptchaOptions()
 
+        log.debug { "default options=$options" }
         options.length shouldBeEqualTo 6
-        options.charSet.contains('I') shouldBeEqualTo false
-        options.charSet.contains('O') shouldBeEqualTo false
-        options.charSet.contains('0') shouldBeEqualTo false
-        options.charSet.contains('1') shouldBeEqualTo false
+        options.charSet shouldNotContain "I"
+        options.charSet shouldNotContain "O"
+        options.charSet shouldNotContain "0"
+        options.charSet shouldNotContain "1"
         options.imageSize shouldBeEqualTo CaptchaImageSize(200, 80)
         options.expiresAfter shouldBeEqualTo 5.minutes
     }
@@ -93,6 +101,8 @@ class CaptchaOptionsTest {
             .fonts(CaptchaFont())
             .build()
 
+        log.debug { "options=$options" }
+
         options.length shouldBeEqualTo 4
         options.charSet shouldBeEqualTo "ABCD"
         options.imageSize shouldBeEqualTo CaptchaImageSize(120, 48)
@@ -126,6 +136,8 @@ class CaptchaOptionsTest {
     @Test
     fun `manual value contract keeps source compatibility while changing data reflection`() {
         val options = CaptchaOptions()
+
+        log.debug { "options=$options" }
         options.component1() shouldBeEqualTo options.length
         options.component2() shouldBeEqualTo options.charSet
         options.component3() shouldBeEqualTo options.imageSize
@@ -136,18 +148,19 @@ class CaptchaOptionsTest {
         options.component8() shouldBeEqualTo options.textColors
         options.component9() shouldBeEqualTo options.expiresAfter
         options.component10() shouldBeEqualTo options.fonts
-        CaptchaOptions::class.isData shouldBeEqualTo false
+
+        CaptchaOptions::class.isData.shouldBeFalse()
     }
 
     @Test
-    fun `serializable options round trip keeps duration and singleton options`() {
+    fun `jdk serializable options round trip keeps duration and singleton options`() {
         val options = CaptchaOptions(
             expiresAfter = 3.minutes,
             noise = CaptchaNoise.Low,
             distortion = CaptchaDistortion.None,
         )
 
-        val restored = roundTrip(options)
+        val restored = roundTrip(options).shouldNotBeNull()
 
         restored shouldBeEqualTo options
         restored.expiresAfter shouldBeEqualTo 3.minutes
@@ -156,13 +169,13 @@ class CaptchaOptionsTest {
     }
 
     @Suppress("UNCHECKED_CAST")
-    private fun <T> roundTrip(value: T): T {
+    private fun <T: Any> roundTrip(value: T): T? {
         val bytes = ByteArrayOutputStream().use { output ->
             ObjectOutputStream(output).use { it.writeObject(value) }
             output.toByteArray()
         }
         return ObjectInputStream(ByteArrayInputStream(bytes)).use { input ->
-            input.readObject() as T
+            input.readObject() as? T
         }
     }
 }

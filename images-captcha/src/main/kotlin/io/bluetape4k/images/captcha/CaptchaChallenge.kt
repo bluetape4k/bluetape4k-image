@@ -1,6 +1,7 @@
 package io.bluetape4k.images.captcha
 
 import com.sksamuel.scrimage.ImmutableImage
+import java.io.Serializable
 import java.time.Instant
 
 /**
@@ -14,8 +15,12 @@ import java.time.Instant
  * @property image rendering된 challenge image입니다.
  * @property expiresAt application storage가 참고할 만료 시각입니다.
  */
-class CaptchaChallenge(
+data class CaptchaChallenge(
     val text: String,
     val image: ImmutableImage,
     val expiresAt: Instant,
-)
+): Serializable {
+    companion object {
+        private const val serialVersionUID: Long = 1L
+    }
+}

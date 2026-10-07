@@ -2,6 +2,10 @@ package io.bluetape4k.images.captcha
 
 import com.sksamuel.scrimage.ImmutableImage
 import io.bluetape4k.images.withGraphics
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.withContext
 import java.awt.AlphaComposite
 import java.awt.Color
 import java.awt.Graphics2D
@@ -14,10 +18,6 @@ import kotlin.math.roundToInt
 import kotlin.math.sin
 import kotlin.random.asKotlinRandom
 import kotlin.time.toJavaDuration
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.currentCoroutineContext
-import kotlinx.coroutines.ensureActive
-import kotlinx.coroutines.withContext
 
 /**
  * Java2D 기반 [CaptchaGenerator] 구현체입니다.
@@ -25,6 +25,7 @@ import kotlinx.coroutines.withContext
  * rendering은 native library나 font asset을 bundle하지 않고 JVM logical font, bounded
  * noise, optional wave distortion을 사용합니다.
  */
+@PublishedApi
 internal class Java2dCaptchaGenerator(
     override val options: CaptchaOptions = CaptchaOptions(),
     private val clock: Clock = Clock.systemUTC(),
@@ -107,7 +108,8 @@ internal class Java2dCaptchaGenerator(
 
         text.forEachIndexed { index, char ->
             val fontJitter = kotlinRandom.nextInt(-3, 4)
-            graphics.font = options.fonts.random(kotlinRandom).toAwtFont((options.fontSize + fontJitter).coerceAtLeast(1))
+            graphics.font =
+                options.fonts.random(kotlinRandom).toAwtFont((options.fontSize + fontJitter).coerceAtLeast(1))
             graphics.color = options.textColors.random(kotlinRandom)
 
             val centerX = slotWidth * index + slotWidth / 2.0
