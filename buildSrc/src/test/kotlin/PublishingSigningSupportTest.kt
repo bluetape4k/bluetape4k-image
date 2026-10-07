@@ -61,6 +61,30 @@ class PublishingSigningSupportTest {
     }
 
     @Test
+    fun `removes equivalent managed dependencies when child elements are reordered`() {
+        val pom = pomWithManagedDependencies(
+            dependencyWithFields(
+                "groupId" to "org.jetbrains.kotlinx",
+                "artifactId" to "kotlinx-coroutines-bom",
+                "version" to "1.10.2",
+                "type" to "pom",
+                "scope" to "import",
+            ),
+            dependencyWithFields(
+                "groupId" to "org.jetbrains.kotlinx",
+                "artifactId" to "kotlinx-coroutines-bom",
+                "version" to "1.10.2",
+                "scope" to "import",
+                "type" to "pom",
+            ),
+        )
+
+        normalizeMavenDependencies(pom)
+
+        assertEquals(1, managedDependencies(pom).size)
+    }
+
+    @Test
     fun `fails when managed dependencies share a key but differ`() {
         val pom = pomWithManagedDependencies(
             managedDependency("org.jetbrains.kotlin", "kotlin-stdlib", "2.2.20"),
@@ -163,6 +187,11 @@ class PublishingSigningSupportTest {
             appendNode("groupId", groupId)
             appendNode("artifactId", artifactId)
             appendNode("version", version)
+        }
+
+    private fun dependencyWithFields(vararg fields: Pair<String, String>): Node =
+        Node(null, "dependency").apply {
+            fields.forEach { (name, value) -> appendNode(name, value) }
         }
 
     private fun managedDependencies(pom: Node): List<Node> =
