@@ -3,14 +3,17 @@ package io.bluetape4k.images.barcode
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldContain
+import io.bluetape4k.assertions.shouldContentEqual
+import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.assertions.shouldNotContain
-import java.io.ByteArrayInputStream
-import java.io.ByteArrayOutputStream
-import java.io.ObjectInputStream
-import java.io.ObjectOutputStream
+import io.bluetape4k.io.serializer.BinarySerializers
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import org.junit.jupiter.api.Test
 
 class BarcodeModelsTest {
+
+    companion object: KLogging()
 
     @Test
     fun `provider identity validates metadata`() {
@@ -180,15 +183,16 @@ class BarcodeModelsTest {
         )
 
         val rendered = result.toString()
+        log.debug { "rendered=$rendered" }
 
-        rendered.shouldNotContain("secret-token-123")
-        rendered.shouldNotContain("provider-secret")
-        rendered.shouldNotContain("header-secret")
-        rendered.shouldNotContain("[1, 2, 3, 4]")
-        rendered.shouldContain("textLength=16")
-        rendered.shouldContain("rawBytes=length=4")
-        rendered.shouldContain("metadataEntries=1")
-        rendered.shouldContain("provider=fake")
+        rendered shouldNotContain "secret-token-123"
+        rendered shouldNotContain "provider-secret"
+        rendered shouldNotContain "header-secret"
+        rendered shouldNotContain "[1, 2, 3, 4]"
+        rendered shouldContain "textLength=16"
+        rendered shouldContain "rawBytes=length=4"
+        rendered shouldContain "metadataEntries=1"
+        rendered shouldContain "provider=BarcodeProviderIdentity(name=fake"
     }
 
     @Test
@@ -203,6 +207,8 @@ class BarcodeModelsTest {
             rawBytes = source,
             metadata = metadata,
         )
+        log.debug { "result=$result" }
+        
         val expected = source.copyOf()
         val initialHash = result.hashCode()
         val results = hashSetOf(result)
@@ -214,9 +220,9 @@ class BarcodeModelsTest {
 
         val exposed = result.rawBytes ?: error("rawBytes should be present")
         exposed[1] = 8
-        result.rawBytes?.contentEquals(expected) shouldBeEqualTo true
+        result.rawBytes shouldContentEqual expected
         result.hashCode() shouldBeEqualTo initialHash
-        results.contains(result) shouldBeEqualTo true
+        results shouldContain result
     }
 
     @Test
@@ -245,28 +251,21 @@ class BarcodeModelsTest {
         )
 
         @Suppress("UNCHECKED_CAST")
-        val restored = roundTrip(result) as BarcodeResult
+        val restored = roundTrip<BarcodeResult>(result).shouldNotBeNull()
 
         restored.text shouldBeEqualTo result.text
         restored.format shouldBeEqualTo result.format
         restored.region?.points shouldBeEqualTo result.region?.points
-        restored.rawBytes?.contentEquals(byteArrayOf(7, 8, 9)) shouldBeEqualTo true
+        restored.rawBytes shouldContentEqual byteArrayOf(7, 8, 9)
 
-        val exposed = restored.rawBytes ?: error("rawBytes should be present")
+        val exposed = restored.rawBytes.shouldNotBeNull()
         exposed[0] = 0
-        restored.rawBytes?.contentEquals(byteArrayOf(7, 8, 9)) shouldBeEqualTo true
+        restored.rawBytes shouldContentEqual byteArrayOf(7, 8, 9)
     }
 
-    private fun roundTrip(value: Any): Any {
-        val bytes = ByteArrayOutputStream().use { buffer ->
-            ObjectOutputStream(buffer).use { output ->
-                output.writeObject(value)
-            }
-            buffer.toByteArray()
-        }
-
-        return ObjectInputStream(ByteArrayInputStream(bytes)).use { input ->
-            input.readObject()
-        }
+    @Suppress("DEPRECATION")
+    private fun <T: Any> roundTrip(value: Any): T? {
+        val bytes = BinarySerializers.Jdk.serialize(value)
+        return BinarySerializers.Jdk.deserialize(bytes)
     }
 }
