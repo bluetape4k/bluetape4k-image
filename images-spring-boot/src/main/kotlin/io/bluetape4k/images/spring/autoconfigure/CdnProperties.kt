@@ -1,6 +1,9 @@
 package io.bluetape4k.images.spring.autoconfigure
 
 import com.fasterxml.jackson.annotation.JsonIgnore
+import io.bluetape4k.ToStringBuilder
+import io.bluetape4k.javatimes.hours
+import io.bluetape4k.javatimes.minutes
 import org.springframework.boot.context.properties.ConfigurationProperties
 import java.time.Duration
 
@@ -37,8 +40,8 @@ data class CdnProperties(
         val keyPairId: String? = null,
         @get:JsonIgnore val privateKeyPem: String? = null,
         @get:JsonIgnore val privateKeyPath: String? = null,
-        val defaultExpiry: Duration = Duration.ofMinutes(10),
-        val maxExpiry: Duration = Duration.ofHours(1),
+        val defaultExpiry: Duration = 10.minutes(),
+        val maxExpiry: Duration = 1.hours(),
     ) {
 
         /**
@@ -47,8 +50,13 @@ data class CdnProperties(
          * `SanitizingFunction` bean(T7.7)은 Actuator level에서 더 깊은 보호를 제공합니다.
          */
         override fun toString(): String =
-            "CloudFront(domain=$distributionDomain, keyPairId=$keyPairId, " +
-                "privateKeyPem=[REDACTED], privateKeyPath=[REDACTED], " +
-                "defaultExpiry=$defaultExpiry, maxExpiry=$maxExpiry)"
+            ToStringBuilder(this)
+                .add("domain", distributionDomain)
+                .add("keyPairId", keyPairId)
+                .add("privateKeyPem", "[REDACTED]")
+                .add("privateKeyPath", "[REDACTED]")
+                .add("defaultExpiry", defaultExpiry)
+                .add("maxExpiry", maxExpiry)
+                .toString()
     }
 }

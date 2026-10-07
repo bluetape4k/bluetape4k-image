@@ -2,6 +2,7 @@ package io.bluetape4k.images.spring.metrics
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeInstanceOf
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.images.spring.ImageObjectKey
@@ -11,20 +12,26 @@ import io.bluetape4k.images.spring.ImageUploadResult
 import io.bluetape4k.images.spring.UploadOptions
 import io.bluetape4k.images.spring.storage.ImageObjectMetadataReader
 import io.bluetape4k.images.spring.storage.ImageStorage
+import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.logging.debug
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry
+import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.Instant
 
 class MetricImageStorageTest {
 
+    companion object: KLoggingChannel()
+
+    private val delegate: ImageStorage = mockk(relaxed = true)
     private lateinit var registry: SimpleMeterRegistry
-    private lateinit var delegate: ImageStorage
     private lateinit var storage: MetricImageStorage
 
     private val key = ImageObjectKey.of("test", "file.jpg")
@@ -32,10 +39,17 @@ class MetricImageStorageTest {
     private val result = ImageUploadResult(key, "etag-1", 100L, "image/jpeg", Instant.now())
 
     @BeforeEach
-    fun setUp() {
+    fun beforeEach() {
         registry = SimpleMeterRegistry()
-        delegate = mockk(relaxed = true)
+        clearMocks(delegate)
         storage = MetricImageStorage(delegate, registry)
+    }
+
+    @AfterEach
+    fun afterEach() {
+        if (::registry.isInitialized) {
+            registry.close()
+        }
     }
 
     @Test
@@ -44,7 +58,7 @@ class MetricImageStorageTest {
 
         storage.upload(key, ByteArray(10), options)
 
-        registry.find("images.storage.upload.duration").timer().shouldNotBeNull().count() shouldBeEqualTo 1L
+        registry.find("images.storage.upload.duration").timer()?.count() shouldBeEqualTo 1L
     }
 
     @Test
@@ -56,19 +70,22 @@ class MetricImageStorageTest {
             storage.upload(key, ByteArray(10), options)
         }
 
-        registry.find("images.storage.upload.duration").timer().shouldNotBeNull().count() shouldBeEqualTo 1L
-        registry.find("images.storage.upload.errors").counter().shouldNotBeNull().count() shouldBeEqualTo 1.0
+        registry.find("images.storage.upload.duration").timer()?.count() shouldBeEqualTo 1L
+        registry.find("images.storage.upload.errors").counter()?.count() shouldBeEqualTo 1.0
     }
 
     @Test
     fun `CancellationException on upload records timer but does not increment error counter`() = runTest {
-        coEvery { delegate.upload(any(), any<ByteArray>(), any()) } throws CancellationException()
+        coEvery {
+            delegate.upload(any(), any<ByteArray>(), any())
+        } throws CancellationException()
 
         assertFailsWith<CancellationException> {
             storage.upload(key, ByteArray(10), options)
         }
 
         registry.find("images.storage.upload.duration").timer().shouldNotBeNull().count() shouldBeEqualTo 1L
+
         val counter = registry.find("images.storage.upload.errors").counter()
         // CancellationException에서는 counter를 증가시키면 안 됩니다.
         (counter == null || counter.count() == 0.0).shouldBeTrue()
@@ -80,7 +97,7 @@ class MetricImageStorageTest {
 
         storage.download(key)
 
-        registry.find("images.storage.download.duration").timer().shouldNotBeNull().count() shouldBeEqualTo 1L
+        registry.find("images.storage.download.duration").timer()?.count() shouldBeEqualTo 1L
     }
 
     @Test
@@ -91,8 +108,8 @@ class MetricImageStorageTest {
             storage.download(key)
         }
 
-        registry.find("images.storage.download.duration").timer().shouldNotBeNull().count() shouldBeEqualTo 1L
-        registry.find("images.storage.download.errors").counter().shouldNotBeNull().count() shouldBeEqualTo 1.0
+        registry.find("images.storage.download.duration").timer()?.count() shouldBeEqualTo 1L
+        registry.find("images.storage.download.errors").counter()?.count() shouldBeEqualTo 1.0
     }
 
     @Test
@@ -106,10 +123,13 @@ class MetricImageStorageTest {
     fun `metadata preserving wrapper delegates optional capability`() = runTest {
         val metadataReader = mockk<ImageObjectMetadataReader>()
         val metadata = ImageObjectMetadata(key = key, sizeBytes = 100L, etag = "opaque")
+
         coEvery { metadataReader.readMetadata(key) } returns metadata
         val wrapped = MetricImageStorageWithMetadata(delegate, registry, metadataReader)
 
-        (wrapped as ImageObjectMetadataReader).readMetadata(key) shouldBeEqualTo metadata
+        log.debug { "wrapped=$wrapped" }
+        wrapped.shouldBeInstanceOf<ImageObjectMetadataReader>()
+        wrapped.readMetadata(key) shouldBeEqualTo metadata
 
         coVerify(exactly = 1) { metadataReader.readMetadata(key) }
     }

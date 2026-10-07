@@ -1,11 +1,16 @@
 package io.bluetape4k.images.spring.cdn
 
+import io.bluetape4k.codec.decodeBase64ByteArray
 import io.bluetape4k.images.spring.ImageObjectKey
 import io.bluetape4k.images.spring.ImageStorageException
 import io.bluetape4k.images.spring.autoconfigure.CdnProperties
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.warn
+import io.bluetape4k.support.requireGt
+import io.bluetape4k.support.requireInOpenRange
+import io.bluetape4k.support.requireLe
 import io.bluetape4k.support.requireNotBlank
+import io.bluetape4k.support.requireNotNull
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -20,8 +25,7 @@ import java.security.PrivateKey
 import java.security.spec.PKCS8EncodedKeySpec
 import java.time.Duration
 import java.time.Instant
-import java.util.Arrays
-import java.util.Base64
+import java.util.*
 
 /**
  * [CdnReadSigner]만 구현하는 CloudFront signed-URL generator입니다.
@@ -41,9 +45,9 @@ import java.util.Base64
  *
  * 의도적으로 read-only입니다. CloudFront는 PUT URL에 서명할 수 없으므로 이 class는 [CdnWriteSigner]를 구현하지 않습니다.
  */
-class CloudFrontUrlSigner(properties: CdnProperties.CloudFront) : CdnReadSigner {
+class CloudFrontUrlSigner(properties: CdnProperties.CloudFront): CdnReadSigner {
 
-    companion object : KLogging() {
+    companion object: KLogging() {
         private const val PEM_BEGIN = "-----BEGIN"
         private const val PEM_END = "-----END"
 
@@ -66,7 +70,7 @@ class CloudFrontUrlSigner(properties: CdnProperties.CloudFront) : CdnReadSigner 
         }
         distributionDomain = rawDomain
 
-        val rawKeyPairId = requireNotNull(properties.keyPairId) { "keyPairId is required" }
+        val rawKeyPairId = properties.keyPairId.requireNotNull("keyPairId")
         rawKeyPairId.requireNotBlank("keyPairId")
         keyPairId = rawKeyPairId
 
@@ -88,10 +92,10 @@ class CloudFrontUrlSigner(properties: CdnProperties.CloudFront) : CdnReadSigner 
             loadPrivateKeyFromPath(pemPath)
         } else {
             // 위 검증으로 pemInline이 non-null임이 보장됩니다.
-            val pem = requireNotNull(pemInline) { "private-key-pem is required" }
+            val pem = pemInline.requireNotNull { "private-key-pem is required" }
             log.warn {
                 "Loading CloudFront private key from inline 'private-key-pem'. " +
-                    "Prefer 'private-key-path' so the key bytes can be zeroed out after parsing."
+                        "Prefer 'private-key-path' so the key bytes can be zeroed out after parsing."
             }
             try {
                 parsePkcs8PrivateKey(pem)
@@ -106,12 +110,8 @@ class CloudFrontUrlSigner(properties: CdnProperties.CloudFront) : CdnReadSigner 
     }
 
     override suspend fun signGet(key: ImageObjectKey, expiresIn: Duration): URI {
-        require(expiresIn.isPositive() && !expiresIn.isZero) {
-            "expiresIn must be positive: $expiresIn"
-        }
-        require(expiresIn <= maxExpiry) {
-            "expiresIn ($expiresIn) must be <= maxExpiry ($maxExpiry)"
-        }
+        expiresIn.requireGt(Duration.ZERO, "expiresIn")
+        expiresIn.requireLe(maxExpiry, "expiresIn")
 
         return withContext(Dispatchers.IO) {
             try {
@@ -187,17 +187,21 @@ class CloudFrontUrlSigner(properties: CdnProperties.CloudFront) : CdnReadSigner 
     private fun parsePkcs8PrivateKey(pem: String): PrivateKey {
         val beginIdx = pem.indexOf(PEM_BEGIN)
         val endIdx = pem.indexOf(PEM_END)
-        require(beginIdx >= 0 && endIdx > beginIdx) {
+        beginIdx.requireInOpenRange(0, endIdx) {
             "PEM content does not contain BEGIN/END markers"
         }
+
         // BEGIN marker line 다음으로 이동합니다.
         val afterBegin = pem.indexOf('\n', beginIdx)
-        require(afterBegin in 0 until endIdx) { "Malformed PEM header" }
+        afterBegin.requireInOpenRange(0, endIdx) { "Malformed PEM header" }
+
         val base64Body = pem.substring(afterBegin + 1, endIdx)
             .replace("\r", "")
             .replace("\n", "")
             .replace(" ", "")
-        val der = Base64.getDecoder().decode(base64Body)
+
+        // val der = Base64.getDecoder().decode(base64Body)
+        val der = base64Body.decodeBase64ByteArray()
         try {
             val spec = PKCS8EncodedKeySpec(der)
             return KeyFactory.getInstance("RSA").generatePrivate(spec)

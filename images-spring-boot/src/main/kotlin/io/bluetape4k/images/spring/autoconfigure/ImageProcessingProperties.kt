@@ -1,5 +1,6 @@
 package io.bluetape4k.images.spring.autoconfigure
 
+import io.bluetape4k.support.requireInRange
 import org.springframework.boot.context.properties.ConfigurationProperties
 import java.io.Serializable
 
@@ -15,12 +16,12 @@ data class ImageProcessingProperties(
     val enabled: Boolean = true,
     val defaultFormat: String = "jpeg",
     val defaultQuality: Int = 85,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
 
     init {
-        require(defaultQuality in 1..100) { "defaultQuality must be in 1..100, but was $defaultQuality" }
+        defaultQuality.requireInRange(1, 100, "defaultQuality")
     }
 }

@@ -18,7 +18,7 @@ import java.io.Serializable
  * `spring-boot-actuator`가 classpath에 있을 때 `ImagesCdnAutoConfiguration`이 `@Bean`으로 등록합니다.
  * 이 bean은 [CdnProperties.CloudFront] 자체 `toString()` redaction 위에 추가 방어층으로 동작합니다.
  */
-class CdnPropertySanitizingFunction : SanitizingFunction, Serializable {
+class CdnPropertySanitizingFunction: SanitizingFunction, Serializable {
 
     companion object {
         private const val serialVersionUID: Long = 1L

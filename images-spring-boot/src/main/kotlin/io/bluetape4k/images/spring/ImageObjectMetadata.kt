@@ -16,7 +16,7 @@ data class ImageObjectMetadata(
     val etag: String? = null,
     val contentType: String? = null,
     val lastModified: Instant? = null,
-) : Serializable {
+): Serializable {
 
     init {
         require(sizeBytes >= 0) { "sizeBytes must be greater than or equal to 0." }

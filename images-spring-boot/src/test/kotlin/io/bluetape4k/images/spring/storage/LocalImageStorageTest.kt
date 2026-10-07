@@ -1,16 +1,25 @@
 package io.bluetape4k.images.spring.storage
 
 import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.shouldBeEmpty
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeInstanceOf
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldContain
+import io.bluetape4k.assertions.shouldContentEqual
+import io.bluetape4k.assertions.shouldHaveSize
+import io.bluetape4k.assertions.shouldNotBeBlank
+import io.bluetape4k.assertions.shouldNotBeEqualTo
 import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.coroutines.flow.extensions.log
 import io.bluetape4k.images.spring.ImageObjectKey
 import io.bluetape4k.images.spring.ImageStorageException
 import io.bluetape4k.images.spring.UploadOptions
+import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.logging.debug
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
@@ -23,6 +32,8 @@ import java.nio.file.Files
 import java.nio.file.Path
 
 class LocalImageStorageTest {
+
+    companion object: KLoggingChannel()
 
     private val tempDir: Path = Files.createTempDirectory("local-image-storage-test")
     private val storage = LocalImageStorage(tempDir, maxSizeBytes = 1024 * 1024L) // 1 MB
@@ -40,8 +51,9 @@ class LocalImageStorageTest {
         provisionParent(key)
         val result = storage.upload(key, sampleBytes, options)
 
+        log.debug { "result=$result" }
         result.key shouldBeEqualTo key
-        result.etag.isNotBlank().shouldBeTrue()
+        result.etag.shouldNotBeBlank()
         result.sizeBytes shouldBeEqualTo sampleBytes.size.toLong()
         result.contentType shouldBeEqualTo options.contentType
         result.uploadedAt.shouldNotBeNull()
@@ -64,10 +76,12 @@ class LocalImageStorageTest {
 
         val pathKey = ImageObjectKey.of("originals", "source.jpg")
         provisionParent(pathKey)
+
         val result = storage.upload(pathKey, sourceFile, options)
 
+        log.debug { "result=$result" }
         result.key shouldBeEqualTo pathKey
-        result.etag.isNotBlank().shouldBeTrue()
+        result.etag.shouldNotBeBlank()
         result.sizeBytes shouldBeEqualTo sampleBytes.size.toLong()
         result.contentType shouldBeEqualTo options.contentType
         result.uploadedAt.shouldNotBeNull()
@@ -77,6 +91,7 @@ class LocalImageStorageTest {
     fun `same content has the same SHA-256 etag for byte and Path uploads`() = runTest {
         val sourceFile = Files.createTempFile(tempDir, "equivalent-source-", ".jpg")
         Files.write(sourceFile, sampleBytes)
+
         val byteKey = ImageObjectKey.of("etag", "bytes.jpg")
         val pathKey = ImageObjectKey.of("etag", "path.jpg")
         provisionParent(byteKey)
@@ -84,6 +99,9 @@ class LocalImageStorageTest {
 
         val byteResult = storage.upload(byteKey, sampleBytes, options)
         val pathResult = storage.upload(pathKey, sourceFile, options)
+
+        log.debug { "byteResult=$byteResult" }
+        log.debug { "pathResult=$pathResult" }
 
         byteResult.etag shouldBeEqualTo pathResult.etag
         byteResult.etag shouldBeEqualTo "43044b9f977ef333aa328b242d0e9ff0f9fed13e1c77abdd5ff12dd8edac5dd5"
@@ -95,19 +113,24 @@ class LocalImageStorageTest {
         val secondKey = ImageObjectKey.of("etag", "second.jpg")
         val firstBytes = byteArrayOf(0, 1, 2, 3)
         val secondBytes = byteArrayOf(9, 8, 7, 6)
+
         provisionParent(firstKey)
         provisionParent(secondKey)
 
         val firstResult = storage.upload(firstKey, firstBytes, options)
         val secondResult = storage.upload(secondKey, secondBytes, options)
 
-        (firstResult.etag != secondResult.etag).shouldBeTrue()
+        log.debug { "firstResult=$firstResult" }
+        log.debug { "secondResult=$secondResult" }
+
+        firstResult.etag shouldNotBeEqualTo secondResult.etag
     }
 
     @Test
     fun `upload path throws ValidationException when file exceeds maxSizeBytes`() = runTest {
         val smallStorage = LocalImageStorage(tempDir, maxSizeBytes = 4L)
         val sourceFile = Files.createTempFile(tempDir, "big-", ".jpg")
+
         Files.write(sourceFile, ByteArray(10) { it.toByte() })
 
         assertFailsWith<ImageStorageException.ValidationException> {
@@ -129,19 +152,20 @@ class LocalImageStorageTest {
         val pathKey = ImageObjectKey.of("originals", "preserved.jpg")
         provisionParent(pathKey)
         storage.upload(pathKey, sampleBytes, options)
-        val invalidSource = Files.createTempDirectory(tempDir, "invalid-source-")
 
+        val invalidSource = Files.createTempDirectory(tempDir, "invalid-source-")
         assertFailsWith<ImageStorageException.TransientException> {
             storage.upload(pathKey, invalidSource, options)
         }
 
-        storage.download(pathKey).contentEquals(sampleBytes).shouldBeTrue()
+        storage.download(pathKey) shouldContentEqual sampleBytes
     }
 
     @Test
     fun `upload rejects a key path that traverses a symbolic link`() = runTest {
         val outsideDir = Files.createTempDirectory("local-image-storage-outside")
         val link = tempDir.resolve("linked-root")
+
         Files.createSymbolicLink(link, outsideDir)
         val linkedKey = ImageObjectKey.of("linked-root", "escaped.jpg")
 
@@ -159,11 +183,13 @@ class LocalImageStorageTest {
         val movedRoot = originalRoot.resolveSibling("${originalRoot.fileName}-moved")
         val anchoredStorage = LocalImageStorage(originalRoot, maxSizeBytes = 1024 * 1024L)
         val existingKey = ImageObjectKey.of("uploads", "existing.jpg")
+
         Files.createDirectories(originalRoot.resolve(existingKey.fullKey).parent)
         anchoredStorage.upload(existingKey, sampleBytes, options)
 
         Files.move(originalRoot, movedRoot)
         Files.createSymbolicLink(originalRoot, outsideDir)
+
         try {
             val escapedKey = ImageObjectKey.of("uploads", "escaped.jpg")
             assertFailsWith<ImageStorageException.ValidationException> {
@@ -184,7 +210,7 @@ class LocalImageStorageTest {
             storage.upload(missingKey, sampleBytes, options)
         }
 
-        error.message.orEmpty().contains("must be provisioned").shouldBeTrue()
+        error.message shouldContain "must be provisioned"
         Files.exists(tempDir.resolve(missingKey.fullKey)).shouldBeFalse()
     }
 
@@ -193,6 +219,7 @@ class LocalImageStorageTest {
         val root = Files.createTempDirectory("local-image-storage-bootstrap-root")
         val outside = Files.createTempDirectory("local-image-storage-bootstrap-outside")
         val link = root.resolve("linked")
+
         Files.createSymbolicLink(link, outside)
 
         try {
@@ -223,7 +250,7 @@ class LocalImageStorageTest {
 
         val downloaded = storage.download(key)
 
-        downloaded.contentEquals(sampleBytes).shouldBeTrue()
+        downloaded shouldContentEqual sampleBytes
     }
 
     @Test
@@ -241,6 +268,7 @@ class LocalImageStorageTest {
         val permissiveStorage = LocalImageStorage(tempDir, maxSizeBytes = 1024 * 1024L * 10)
         val bigBytes = ByteArray(10) { it.toByte() }
         val bigKey = ImageObjectKey.of("big", "file.jpg")
+
         provisionParent(bigKey)
         permissiveStorage.upload(bigKey, bigBytes, options)
 
@@ -260,7 +288,7 @@ class LocalImageStorageTest {
         val destination = Files.createTempFile(tempDir, "dest-", ".jpg")
         storage.download(key, destination)
 
-        Files.readAllBytes(destination).contentEquals(sampleBytes).shouldBeTrue()
+        Files.readAllBytes(destination) shouldContentEqual sampleBytes
     }
 
     @Test
@@ -278,6 +306,7 @@ class LocalImageStorageTest {
         val permissiveStorage = LocalImageStorage(tempDir, maxSizeBytes = 1024 * 1024L * 10)
         val bigBytes = ByteArray(10) { it.toByte() }
         val bigKey = ImageObjectKey.of("big", "dest-file.jpg")
+
         provisionParent(bigKey)
         permissiveStorage.upload(bigKey, bigBytes, options)
 
@@ -303,6 +332,7 @@ class LocalImageStorageTest {
     @Test
     fun `delete is idempotent for missing key`() = runTest {
         val missingKey = ImageObjectKey.of("nonexistent", "ghost.jpg")
+
         // 없는 key 삭제는 예외를 던지면 안 됩니다.
         storage.delete(missingKey)
         storage.exists(missingKey).shouldBeFalse()
@@ -312,14 +342,12 @@ class LocalImageStorageTest {
     fun `exists returns true for existing key`() = runTest {
         provisionParent(key)
         storage.upload(key, sampleBytes, options)
-
         storage.exists(key).shouldBeTrue()
     }
 
     @Test
     fun `exists returns false for non-existing key`() = runTest {
         val missingKey = ImageObjectKey.of("ghost", "image.jpg")
-
         storage.exists(missingKey).shouldBeFalse()
     }
 
@@ -329,7 +357,7 @@ class LocalImageStorageTest {
         provisionParent(createdKey)
 
         storage.upload(createdKey, sampleBytes, options)
-        storage.download(createdKey).contentEquals(sampleBytes).shouldBeTrue()
+        storage.download(createdKey) shouldContentEqual sampleBytes
     }
 
     @Test
@@ -345,7 +373,7 @@ class LocalImageStorageTest {
 
         // fullKey = "photos/gallery"인 prefix key는 img1/img2를 담은 directory로 해석됩니다.
         val listPrefix = ImageObjectKey.of("photos", "gallery")
-        val listed = storage.list(listPrefix).toList()
+        val listed = storage.list(listPrefix).log("keys").toList()
 
         listed.any { it.fullKey == key1.fullKey }.shouldBeTrue()
         listed.any { it.fullKey == key2.fullKey }.shouldBeTrue()
@@ -359,7 +387,10 @@ class LocalImageStorageTest {
         Files.createDirectories(gallery)
         Files.createSymbolicLink(gallery.resolve("external"), outsideDir)
 
-        val listed = storage.list(ImageObjectKey.of("photos", "gallery")).toList()
+        val listed = storage
+            .list(ImageObjectKey.of("photos", "gallery"))
+            .log("photos")
+            .toList()
 
         listed.none { it.fullKey.contains("escaped.jpg") }.shouldBeTrue()
     }
@@ -368,19 +399,26 @@ class LocalImageStorageTest {
     fun `list는 collector cancellation 뒤에 전체 결과를 materialize하지 않는다`() = runTest {
         val listPrefix = ImageObjectKey.of("photos", "gallery")
         val gallery = tempDir.resolve(listPrefix.fullKey)
-        Files.createDirectories(gallery)
+        Files.createDirectories(gallery).also {
+            log.debug { "gallery: $it" }
+        }
         Files.write(gallery.resolve("first.jpg"), sampleBytes)
+
         repeat(50_000) { index ->
             Files.write(gallery.resolve("late-$index.jpg"), sampleBytes)
         }
 
         val listed = withContext(Dispatchers.Default.limitedParallelism(1)) {
-            withTimeout(500) {
-                storage.list(listPrefix).take(1).toList()
+            withTimeout(timeMillis = 500) {
+                storage.list(listPrefix)
+                    .log("list")
+                    .take(1)
+                    .toList()
             }
         }
 
-        listed.size shouldBeEqualTo 1
+        listed shouldHaveSize 1
+        log.debug { "listed=${listed.single()}" }
     }
 
     @Test
@@ -392,20 +430,22 @@ class LocalImageStorageTest {
         val cancellation = CancellationException("collector stopped")
 
         val thrown = assertFailsWith<CancellationException> {
-            storage.list(listPrefix).collect { throw cancellation }
+            storage
+                .list(listPrefix)
+                .log("list")
+                .collect { throw cancellation }
         }
 
+        thrown shouldBeInstanceOf cancellation::class
         thrown.message shouldBeEqualTo cancellation.message
-        thrown::class shouldBeEqualTo cancellation::class
     }
 
     @Test
     fun `list returns empty flow when prefix directory does not exist`() = runTest {
         val missingPrefix = ImageObjectKey.of("nonexistent", "prefix")
 
-        val listed = storage.list(missingPrefix).toList()
-
-        listed.isEmpty().shouldBeTrue()
+        val listed = storage.list(missingPrefix).log("empty").toList()
+        listed.shouldBeEmpty()
     }
 
     @Test

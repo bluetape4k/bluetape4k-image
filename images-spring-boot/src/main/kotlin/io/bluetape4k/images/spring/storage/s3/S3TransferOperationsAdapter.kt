@@ -13,7 +13,7 @@ import java.nio.file.Path
  */
 class S3TransferOperationsAdapter(
     private val delegate: S3TransferOperations,
-) : S3PathTransferOperations {
+): S3PathTransferOperations {
 
     override suspend fun uploadFile(
         bucket: String,

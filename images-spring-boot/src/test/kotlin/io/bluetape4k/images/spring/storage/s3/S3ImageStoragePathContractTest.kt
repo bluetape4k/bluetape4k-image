@@ -1,18 +1,23 @@
 package io.bluetape4k.images.spring.storage.s3
 
 import io.bluetape4k.assertions.assertFailsWith
-import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldBeEmpty
+import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldContentEqual
 import io.bluetape4k.images.spring.ImageObjectKey
 import io.bluetape4k.images.spring.ImageStorageException
 import io.bluetape4k.images.spring.autoconfigure.ImageStorageProperties
 import io.bluetape4k.images.spring.storage.AbstractImageStoragePathContractTest
 import io.bluetape4k.images.spring.storage.ImageStorage
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import java.nio.file.Files
 import java.nio.file.Path
 
-class S3ImageStoragePathContractTest : AbstractImageStoragePathContractTest() {
+class S3ImageStoragePathContractTest: AbstractImageStoragePathContractTest() {
+
+    companion object: KLoggingChannel()
 
     private val operations = StatefulS3Operations()
     private val transferOperations = StatefulS3TransferOperations(operations)
@@ -34,7 +39,7 @@ class S3ImageStoragePathContractTest : AbstractImageStoragePathContractTest() {
     }
 
     override fun assertNoOpenResources() {
-        operations.hasOpenInputStreams().not().shouldBeTrue()
+        operations.hasOpenInputStreams().shouldBeFalse()
     }
 
     override fun stagedArtifacts(): List<Path> =
@@ -42,8 +47,8 @@ class S3ImageStoragePathContractTest : AbstractImageStoragePathContractTest() {
             paths.filter { path ->
                 val fileName = path.fileName.toString()
                 fileName.contains(".s3-upload") ||
-                    fileName.contains(".download") ||
-                    fileName.endsWith(".tmp")
+                        fileName.contains(".download") ||
+                        fileName.endsWith(".tmp")
             }.toList()
         }
 
@@ -52,7 +57,9 @@ class S3ImageStoragePathContractTest : AbstractImageStoragePathContractTest() {
         val key = ImageObjectKey.of("contract/path", "streaming-overflow.jpg")
         val destination = contractDir.resolve("streaming-overflow-destination.jpg")
         val existing = "existing-destination".toByteArray()
+
         Files.write(destination, existing)
+
         operations.store(key.fullKey, ByteArray(MAX_SIZE_BYTES.toInt() + 1), "image/jpeg")
         operations.overrideReportedSize(key.fullKey, MAX_SIZE_BYTES)
 
@@ -60,8 +67,8 @@ class S3ImageStoragePathContractTest : AbstractImageStoragePathContractTest() {
             storage.download(key, destination)
         }
 
-        Files.readAllBytes(destination).contentEquals(existing).shouldBeTrue()
-        stagedArtifacts().isEmpty().shouldBeTrue()
+        Files.readAllBytes(destination) shouldContentEqual existing
+        stagedArtifacts().shouldBeEmpty()
         assertNoOpenResources()
     }
 }

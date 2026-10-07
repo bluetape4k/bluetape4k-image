@@ -3,9 +3,12 @@ package io.bluetape4k.images.spring.storage
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldContentEqual
 import io.bluetape4k.images.spring.ImageObjectKey
 import io.bluetape4k.images.spring.ImageStorageException
 import io.bluetape4k.images.spring.UploadOptions
+import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.logging.debug
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -17,7 +20,11 @@ import java.nio.file.Path
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
 abstract class AbstractImageStoragePathContractTest {
 
-    @field:TempDir
+    protected companion object: KLoggingChannel() {
+        const val MAX_SIZE_BYTES = 32L
+    }
+
+    @TempDir
     protected lateinit var contractDir: Path
 
     protected abstract val storage: ImageStorage
@@ -38,16 +45,19 @@ abstract class AbstractImageStoragePathContractTest {
         val bytes = "path-round-trip".toByteArray()
         val source = contractDir.resolve("source.jpg")
         val destination = contractDir.resolve("destination.jpg")
+
         Files.write(source, bytes)
         prepareUpload(key)
 
         val uploaded = storage.upload(key, source, options)
-        storage.download(key, destination)
-
+        log.debug { "uploaded=$uploaded" }
         uploaded.key shouldBeEqualTo key
         uploaded.sizeBytes shouldBeEqualTo bytes.size.toLong()
-        Files.readAllBytes(source).contentEquals(bytes).shouldBeTrue()
-        Files.readAllBytes(destination).contentEquals(bytes).shouldBeTrue()
+
+        storage.download(key, destination)
+
+        Files.readAllBytes(source) shouldContentEqual bytes
+        Files.readAllBytes(destination) shouldContentEqual bytes
         assertCleanResources()
     }
 
@@ -56,15 +66,17 @@ abstract class AbstractImageStoragePathContractTest {
         val key = contractKey("oversized-upload.jpg")
         val existing = "existing".toByteArray()
         val source = contractDir.resolve("oversized-source.jpg")
+
         Files.write(source, ByteArray(MAX_SIZE_BYTES.toInt() + 1) { 1 })
         prepareUpload(key)
+
         storage.upload(key, existing, options)
 
         assertFailsWith<ImageStorageException.ValidationException> {
             storage.upload(key, source, options)
         }
 
-        storage.download(key).contentEquals(existing).shouldBeTrue()
+        storage.download(key) shouldContentEqual existing
         assertCleanResources()
     }
 
@@ -83,7 +95,7 @@ abstract class AbstractImageStoragePathContractTest {
             storage.upload(key, sourceLink, options)
         }
 
-        storage.download(key).contentEquals(existing).shouldBeTrue()
+        storage.download(key) shouldContentEqual existing
         assertCleanResources()
     }
 
@@ -99,7 +111,7 @@ abstract class AbstractImageStoragePathContractTest {
             storage.download(key, destination)
         }
 
-        Files.readAllBytes(destination).contentEquals(existing).shouldBeTrue()
+        Files.readAllBytes(destination) shouldContentEqual existing
         assertCleanResources()
     }
 
@@ -115,7 +127,7 @@ abstract class AbstractImageStoragePathContractTest {
             storage.download(key, destination)
         }
 
-        Files.readAllBytes(destination).contentEquals(existing).shouldBeTrue()
+        Files.readAllBytes(destination) shouldContentEqual existing
         assertCleanResources()
     }
 
@@ -127,7 +139,4 @@ abstract class AbstractImageStoragePathContractTest {
     private fun contractKey(name: String): ImageObjectKey =
         ImageObjectKey.of("contract/path", name)
 
-    protected companion object {
-        const val MAX_SIZE_BYTES = 32L
-    }
 }

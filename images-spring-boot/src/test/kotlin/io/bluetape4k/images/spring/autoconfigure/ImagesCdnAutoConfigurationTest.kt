@@ -1,18 +1,25 @@
 package io.bluetape4k.images.spring.autoconfigure
 
+import io.bluetape4k.assertions.shouldBeEmpty
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeNull
 import io.bluetape4k.assertions.shouldBeSameInstanceAs
-import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldHaveSize
 import io.bluetape4k.aws.spring.s3.S3Operations
 import io.bluetape4k.images.spring.cdn.CdnReadSigner
 import io.bluetape4k.images.spring.cdn.CdnWriteSigner
+import io.bluetape4k.images.spring.storage.ImageStorage
+import io.bluetape4k.logging.KLogging
 import io.mockk.mockk
 import org.junit.jupiter.api.Test
+import org.springframework.beans.factory.getBean
+import org.springframework.beans.factory.getBeanNamesForType
 import org.springframework.boot.autoconfigure.AutoConfigurations
 import org.springframework.boot.test.context.runner.ApplicationContextRunner
 
 class ImagesCdnAutoConfigurationTest {
+
+    companion object: KLogging()
 
     private val contextRunner = ApplicationContextRunner()
         .withConfiguration(
@@ -26,7 +33,7 @@ class ImagesCdnAutoConfigurationTest {
     @Test
     fun `no CDN signer registered by default (cdn disabled by default)`() {
         contextRunner.run { ctx ->
-            ctx.getBeanNamesForType(CdnReadSigner::class.java).isEmpty().shouldBeTrue()
+            ctx.getBeanNamesForType<CdnReadSigner>().shouldBeEmpty()
         }
     }
 
@@ -35,7 +42,7 @@ class ImagesCdnAutoConfigurationTest {
         contextRunner
             .withPropertyValues("bluetape4k.images.cdn.enabled=false")
             .run { ctx ->
-                ctx.getBeanNamesForType(CdnReadSigner::class.java).isEmpty().shouldBeTrue()
+                ctx.getBeanNamesForType<CdnReadSigner>().shouldBeEmpty()
             }
     }
 
@@ -44,7 +51,7 @@ class ImagesCdnAutoConfigurationTest {
         contextRunner
             .withPropertyValues("bluetape4k.images.cdn.enabled=false")
             .run { ctx ->
-                ctx.getBeanNamesForType(CdnProperties::class.java).isEmpty().shouldBeTrue()
+                ctx.getBeanNamesForType<CdnProperties>().shouldBeEmpty()
             }
     }
 
@@ -56,9 +63,9 @@ class ImagesCdnAutoConfigurationTest {
                 "bluetape4k.images.storage.bucket=images",
             )
             .run { ctx ->
-                ctx.getBeanNamesForType(CdnReadSigner::class.java).isEmpty().shouldBeTrue()
-                ctx.getBeanNamesForType(CdnWriteSigner::class.java).isEmpty().shouldBeTrue()
-                ctx.getBeanNamesForType(CdnProperties::class.java).size shouldBeEqualTo 1
+                ctx.getBeanNamesForType<CdnReadSigner>().shouldBeEmpty()
+                ctx.getBeanNamesForType<CdnWriteSigner>().shouldBeEmpty()
+                ctx.getBeanNamesForType<CdnProperties>() shouldHaveSize 1
             }
     }
 
@@ -77,13 +84,14 @@ class ImagesCdnAutoConfigurationTest {
             )
             .run { ctx ->
                 ctx.startupFailure.shouldBeNull()
-                ctx.getBeanNamesForType(CdnReadSigner::class.java).size shouldBeEqualTo 1
-                ctx.getBeanNamesForType(CdnWriteSigner::class.java).size shouldBeEqualTo 1
-                ctx.getBean(ImageStorageProperties::class.java).bucket shouldBeEqualTo "images"
-                ctx.getBean(ImageStorageProperties::class.java).keyPrefix shouldBeEqualTo "cdn"
-                ctx.getBeanNamesForType(io.bluetape4k.images.spring.storage.ImageStorage::class.java)
-                    .isEmpty()
-                    .shouldBeTrue()
+
+                ctx.getBeanNamesForType<CdnReadSigner>() shouldHaveSize 1
+                ctx.getBeanNamesForType<CdnWriteSigner>() shouldHaveSize 1
+
+                ctx.getBean<ImageStorageProperties>().bucket shouldBeEqualTo "images"
+                ctx.getBean<ImageStorageProperties>().keyPrefix shouldBeEqualTo "cdn"
+
+                ctx.getBeanNamesForType<ImageStorage>().shouldBeEmpty()
             }
     }
 
@@ -100,9 +108,9 @@ class ImagesCdnAutoConfigurationTest {
                 "bluetape4k.images.storage.bucket=images",
             )
             .run { ctx ->
-                ctx.getBeanNamesForType(CdnReadSigner::class.java).size shouldBeEqualTo 1
-                ctx.getBean(CdnReadSigner::class.java) shouldBeSameInstanceAs signer
-                ctx.getBeanNamesForType(CdnWriteSigner::class.java).isEmpty().shouldBeTrue()
+                ctx.getBeanNamesForType<CdnReadSigner>() shouldHaveSize 1
+                ctx.getBean<CdnReadSigner>() shouldBeSameInstanceAs signer
+                ctx.getBeanNamesForType<CdnWriteSigner>().shouldBeEmpty()
             }
     }
 
@@ -117,8 +125,8 @@ class ImagesCdnAutoConfigurationTest {
                 "bluetape4k.images.cdn.provider=cloudfront",
             )
             .run { ctx ->
-                ctx.getBeanNamesForType(CdnReadSigner::class.java).size shouldBeEqualTo 1
-                ctx.getBean(CdnReadSigner::class.java) shouldBeSameInstanceAs signer
+                ctx.getBeanNamesForType<CdnReadSigner>() shouldHaveSize 1
+                ctx.getBean<CdnReadSigner>() shouldBeSameInstanceAs signer
             }
     }
 }

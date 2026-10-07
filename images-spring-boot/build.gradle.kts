@@ -2,6 +2,7 @@ plugins {
     alias(bt4k.plugins.kotlin.jvm)
     alias(bt4k.plugins.kotlin.spring)
     alias(bt4k.plugins.dependency.management)
+    kotlin("kapt")
 }
 
 configurations {
@@ -64,23 +65,25 @@ dependencies {
     // Annotation processor for @ConfigurationProperties metadata
     annotationProcessor(libs.spring.boot.configuration.processor)
 
-    // Logging
-    implementation(bt4k.bluetape4k.logging)
+    // Bluetape4k
+    implementation(bt4k.bluetape4k.core)
+
+    // Coroutines
+    implementation(bt4k.bluetape4k.coroutines)
     implementation(libs.kotlinx.coroutines.core)
+    testImplementation(libs.kotlinx.coroutines.test)
 
     // Test
     testImplementation(libs.spring.boot.starter.test)
     testImplementation("org.springframework.boot:spring-boot-micrometer-metrics")
+
     testImplementation(bt4k.bluetape4k.junit5)
-    testImplementation(bt4k.bluetape4k.aws.spring.boot)
-    testImplementation(libs.aws2.s3)
-    testImplementation(libs.aws2.s3.transfer.manager)
-    testImplementation(libs.aws2.cloudfront)
-    testImplementation(libs.micrometer.core)
-    testImplementation(libs.spring.boot.actuator)
-    testImplementation(libs.spring.boot.health)
-    testImplementation(libs.kotlinx.coroutines.reactor)
     testImplementation(bt4k.bluetape4k.testcontainers)
-    testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(bt4k.mockk)
+
+    // Binary Serialization
+    testImplementation(bt4k.fory.kotlin)
+}
+repositories {
+    mavenCentral()
 }

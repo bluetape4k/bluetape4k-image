@@ -1,13 +1,18 @@
 package io.bluetape4k.images.spring
 
 import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldBeFalse
-import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldNotBeEqualTo
 import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.javatimes.seconds
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import org.junit.jupiter.api.Test
 import java.time.Instant
+import kotlin.test.assertTrue
 
 class ImageUploadResultTest {
+
+    companion object: KLogging()
 
     private val key = ImageObjectKey.of("uploads", "photo.jpg")
 
@@ -22,6 +27,7 @@ class ImageUploadResultTest {
             uploadedAt = uploadedAt,
         )
 
+        log.debug { "result=$result" }
         result.key shouldBeEqualTo key
         result.etag shouldBeEqualTo "abc123"
         result.sizeBytes shouldBeEqualTo 1024L
@@ -41,10 +47,10 @@ class ImageUploadResultTest {
         val after = Instant.now()
 
         result.uploadedAt.shouldNotBeNull()
-        (
-            !result.uploadedAt.isBefore(before.minusSeconds(5)) &&
-                !result.uploadedAt.isAfter(after.plusSeconds(5))
-            ).shouldBeTrue()
+        assertTrue {
+            !result.uploadedAt.isBefore(before - 5.seconds()) &&
+                    !result.uploadedAt.isAfter(after + 5.seconds())
+        }
     }
 
     @Test
@@ -87,7 +93,7 @@ class ImageUploadResultTest {
             uploadedAt = uploadedAt,
         )
 
-        (a == b).shouldBeFalse()
+        a shouldNotBeEqualTo b
     }
 
     @Test
@@ -100,14 +106,17 @@ class ImageUploadResultTest {
             contentType = "image/jpeg",
             uploadedAt = uploadedAt,
         )
+        log.debug { "original=$original" }
 
         val updated = original.copy(sizeBytes = 2048L, etag = "def456")
 
+        log.debug { "updated=$updated" }
         updated.key shouldBeEqualTo key
         updated.etag shouldBeEqualTo "def456"
         updated.sizeBytes shouldBeEqualTo 2048L
         updated.contentType shouldBeEqualTo "image/jpeg"
         updated.uploadedAt shouldBeEqualTo uploadedAt
-        (original == updated).shouldBeFalse()
+
+        original shouldNotBeEqualTo updated
     }
 }

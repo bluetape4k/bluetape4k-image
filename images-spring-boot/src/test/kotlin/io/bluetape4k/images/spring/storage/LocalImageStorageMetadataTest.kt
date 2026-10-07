@@ -2,16 +2,21 @@ package io.bluetape4k.images.spring.storage
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldBeNull
+import io.bluetape4k.assertions.shouldContentEqual
 import io.bluetape4k.images.spring.ImageObjectKey
 import io.bluetape4k.images.spring.ImageStorageException
-import io.bluetape4k.images.spring.UploadOptions
+import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.logging.debug
+import io.bluetape4k.support.toUtf8Bytes
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import java.nio.file.Files
 import java.nio.file.Path
 
 class LocalImageStorageMetadataTest {
+
+    companion object: KLoggingChannel()
 
     private val root: Path = Files.createTempDirectory("local-image-storage-metadata")
     private val key = ImageObjectKey.of("uploads", "photo.jpg")
@@ -21,18 +26,21 @@ class LocalImageStorageMetadataTest {
     fun `reads attributes without materializing the body`() = runTest {
         val path = root.resolve(key.fullKey)
         Files.createDirectories(path.parent)
-        val bytes = "image bytes".toByteArray()
+
+        val bytes = "image bytes".toUtf8Bytes()
         Files.write(path, bytes)
         val expectedLastModified = Files.getLastModifiedTime(path).toInstant()
 
         val metadata = (storage as ImageObjectMetadataReader).readMetadata(key)
 
+        log.debug { "metadat=$metadata" }
         metadata.key shouldBeEqualTo key
         metadata.sizeBytes shouldBeEqualTo bytes.size.toLong()
-        metadata.etag shouldBeEqualTo null
-        metadata.contentType shouldBeEqualTo null
+        metadata.etag.shouldBeNull()
+        metadata.contentType.shouldBeNull()
         metadata.lastModified shouldBeEqualTo expectedLastModified
-        Files.readAllBytes(path).contentEquals(bytes).shouldBeTrue()
+
+        Files.readAllBytes(path) shouldContentEqual bytes
     }
 
     @Test
@@ -61,6 +69,7 @@ class LocalImageStorageMetadataTest {
         val linkKey = ImageObjectKey.of("uploads", "linked.jpg")
         val link = root.resolve(linkKey.fullKey)
         Files.createDirectories(link.parent)
+
         val target = outside.resolve("target.jpg")
         Files.write(target, byteArrayOf(1, 2, 3))
         Files.createSymbolicLink(link, target)

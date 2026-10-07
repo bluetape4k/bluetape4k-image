@@ -22,9 +22,9 @@ import org.springframework.beans.factory.config.BeanPostProcessor
  */
 class ImageStorageMetricsBeanPostProcessor(
     private val registry: MeterRegistry,
-) : BeanPostProcessor {
+): BeanPostProcessor {
 
-    companion object : KLogging()
+    companion object: KLogging()
 
     override fun postProcessAfterInitialization(bean: Any, beanName: String): Any {
         if (bean !is ImageStorage || bean is MetricImageStorage) {

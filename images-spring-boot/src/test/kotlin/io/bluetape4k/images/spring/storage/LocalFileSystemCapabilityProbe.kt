@@ -1,9 +1,10 @@
 package io.bluetape4k.images.spring.storage
 
+import io.bluetape4k.support.toUtf8Bytes
+import io.bluetape4k.support.toUtf8String
 import java.io.IOException
 import java.io.Serializable
 import java.nio.ByteBuffer
-import java.nio.charset.StandardCharsets
 import java.nio.file.DirectoryStream
 import java.nio.file.Files
 import java.nio.file.NoSuchFileException
@@ -11,7 +12,7 @@ import java.nio.file.Path
 import java.nio.file.SecureDirectoryStream
 import java.nio.file.StandardOpenOption
 import java.nio.file.attribute.PosixFileAttributeView
-import java.util.UUID
+import java.util.*
 
 /**
  * Local storage가 의존하는 provider capability를 테스트에서만 확인합니다.
@@ -31,6 +32,7 @@ internal object LocalFileSystemCapabilityProbe {
         var streamType = DirectoryStream::class.java.name
         var supportsSecure = false
         var supportsAtomicReplace = false
+
         Files.newDirectoryStream(root).use { stream ->
             streamType = stream::class.java.name
             supportsSecure = stream is SecureDirectoryStream<*>
@@ -53,12 +55,11 @@ internal object LocalFileSystemCapabilityProbe {
         val suffix = UUID.randomUUID().toString()
         val sourceName = Path.of(".capability-source-$suffix")
         val targetName = Path.of(".capability-target-$suffix")
+
         return try {
             write(directory, sourceName, NEW_CONTENT)
             write(directory, targetName, OLD_CONTENT)
-
             directory.move(sourceName, directory, targetName)
-
             read(directory, targetName) == NEW_CONTENT && !exists(directory, sourceName)
         } catch (_: IOException) {
             false
@@ -72,16 +73,16 @@ internal object LocalFileSystemCapabilityProbe {
 
     private fun read(directory: SecureDirectoryStream<Path>, name: Path): String =
         directory.newByteChannel(name, setOf(StandardOpenOption.READ)).use { channel ->
-            val buffer = ByteBuffer.allocate(NEW_CONTENT.toByteArray(StandardCharsets.UTF_8).size)
+            val buffer = ByteBuffer.allocate(NEW_CONTENT.toUtf8Bytes().size)
             while (buffer.hasRemaining()) {
                 if (channel.read(buffer) < 0) break
                 // Continue until the bounded probe payload is consumed.
             }
-            String(buffer.array(), StandardCharsets.UTF_8)
+            buffer.array().toUtf8String()
         }
 
     private fun write(directory: SecureDirectoryStream<Path>, name: Path, value: String) {
-        val buffer = ByteBuffer.wrap(value.toByteArray(StandardCharsets.UTF_8))
+        val buffer = ByteBuffer.wrap(value.toUtf8Bytes())
         directory.newByteChannel(
             name,
             setOf(StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE),
@@ -110,7 +111,7 @@ internal data class LocalFileSystemCapabilities(
     val supportsSecureDirectoryStream: Boolean,
     val supportsAtomicExistingTargetReplace: Boolean,
     val supportsPosixAttributes: Boolean,
-) : Serializable {
+): Serializable {
 
     val unsupportedReason: String
         get() = when {

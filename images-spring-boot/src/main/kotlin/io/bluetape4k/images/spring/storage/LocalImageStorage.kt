@@ -22,7 +22,6 @@ import java.nio.ByteBuffer
 import java.nio.channels.Channels
 import java.nio.channels.FileChannel
 import java.nio.channels.SeekableByteChannel
-import java.nio.file.AccessDeniedException as NioAccessDeniedException
 import java.nio.file.DirectoryStream
 import java.nio.file.FileAlreadyExistsException
 import java.nio.file.Files
@@ -36,8 +35,8 @@ import java.nio.file.attribute.BasicFileAttributeView
 import java.nio.file.attribute.BasicFileAttributes
 import java.security.MessageDigest
 import java.time.Instant
-import java.util.HexFormat
-import java.util.UUID
+import java.util.*
+import java.nio.file.AccessDeniedException as NioAccessDeniedException
 
 /**
  * local filesystem 기반 [ImageStorage]입니다.
@@ -69,9 +68,9 @@ import java.util.UUID
 class LocalImageStorage(
     rootDir: Path,
     private val maxSizeBytes: Long,
-) : ImageStorage, ImageObjectMetadataReader, AutoCloseable {
+): ImageStorage, ImageObjectMetadataReader, AutoCloseable {
 
-    companion object : KLogging() {
+    companion object: KLogging() {
         private const val SHA_256_ALGORITHM = "SHA-256"
 
         /**

@@ -15,7 +15,7 @@ import java.io.Serializable
 sealed class ImageStorageException(
     message: String,
     cause: Throwable? = null,
-) : RuntimeException(message, cause), Serializable {
+): RuntimeException(message, cause), Serializable {
 
     /** failure와 관련된 image key입니다. list operation에서는 null일 수 있습니다. */
     abstract val key: ImageObjectKey?
@@ -29,7 +29,7 @@ sealed class ImageStorageException(
         override val key: ImageObjectKey,
         message: String = "Image not found: ${key.fullKey}",
         cause: Throwable? = null,
-    ) : ImageStorageException(message, cause) {
+    ): ImageStorageException(message, cause) {
         companion object {
             private const val serialVersionUID: Long = 1L
         }
@@ -40,7 +40,7 @@ sealed class ImageStorageException(
         override val key: ImageObjectKey,
         message: String = "Access denied: ${key.fullKey}",
         cause: Throwable? = null,
-    ) : ImageStorageException(message, cause) {
+    ): ImageStorageException(message, cause) {
         companion object {
             private const val serialVersionUID: Long = 1L
         }
@@ -51,7 +51,7 @@ sealed class ImageStorageException(
         override val key: ImageObjectKey,
         message: String = "Conflict: ${key.fullKey}",
         cause: Throwable? = null,
-    ) : ImageStorageException(message, cause) {
+    ): ImageStorageException(message, cause) {
         companion object {
             private const val serialVersionUID: Long = 1L
         }
@@ -62,7 +62,7 @@ sealed class ImageStorageException(
         override val key: ImageObjectKey? = null,
         message: String = "Transient storage error${key?.let { ": ${it.fullKey}" } ?: ""}",
         cause: Throwable? = null,
-    ) : ImageStorageException(message, cause) {
+    ): ImageStorageException(message, cause) {
         companion object {
             private const val serialVersionUID: Long = 1L
         }
@@ -73,7 +73,7 @@ sealed class ImageStorageException(
         override val key: ImageObjectKey? = null,
         message: String,
         cause: Throwable? = null,
-    ) : ImageStorageException(message, cause) {
+    ): ImageStorageException(message, cause) {
         companion object {
             private const val serialVersionUID: Long = 1L
         }

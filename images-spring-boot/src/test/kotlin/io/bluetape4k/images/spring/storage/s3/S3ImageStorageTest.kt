@@ -2,16 +2,23 @@ package io.bluetape4k.images.spring.storage.s3
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldContain
-import io.bluetape4k.aws.spring.s3.S3Operations
+import io.bluetape4k.assertions.shouldContentEqual
+import io.bluetape4k.assertions.shouldNotBeEqualTo
 import io.bluetape4k.aws.spring.s3.S3ObjectMetadata
+import io.bluetape4k.aws.spring.s3.S3Operations
 import io.bluetape4k.aws.spring.s3.S3Resource
+import io.bluetape4k.coroutines.support.log
 import io.bluetape4k.images.spring.ImageObjectKey
 import io.bluetape4k.images.spring.ImageObjectMetadata
 import io.bluetape4k.images.spring.ImageStorageException
 import io.bluetape4k.images.spring.UploadOptions
 import io.bluetape4k.images.spring.autoconfigure.ImageStorageProperties
 import io.bluetape4k.images.spring.storage.ImageObjectMetadataReader
+import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.support.emptyByteArray
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -29,14 +36,20 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
+import software.amazon.awssdk.services.s3.model.NoSuchKeyException
+import software.amazon.awssdk.services.s3.model.PutObjectResponse
+import software.amazon.awssdk.services.s3.model.S3Exception
 import java.io.ByteArrayInputStream
 import java.nio.file.Files
 import java.nio.file.Path
-import software.amazon.awssdk.services.s3.model.S3Exception
+import java.time.Instant
 
 class S3ImageStorageTest {
 
-    private val operations = mockk<S3Operations>()
+    companion object: KLoggingChannel()
+
+    private val operations = mockk<S3Operations>(relaxed = true)
+    private val resource = mockk<S3Resource>(relaxed = true)
     private lateinit var storage: S3ImageStorage
 
     private val bucket = "images"
@@ -45,7 +58,7 @@ class S3ImageStorageTest {
 
     @BeforeEach
     fun setUp() {
-        clearMocks(operations)
+        clearMocks(operations, resource)
         storage = S3ImageStorage(
             operations = operations,
             properties = ImageStorageProperties(
@@ -61,7 +74,10 @@ class S3ImageStorageTest {
         coEvery {
             operations.headObject(bucket = bucket, key = objectKey)
         } throws RuntimeException("HEAD unavailable")
-        coEvery { operations.downloadBytes(bucket = bucket, key = objectKey) } returns ByteArray(8)
+
+        coEvery {
+            operations.downloadBytes(bucket = bucket, key = objectKey)
+        } returns emptyByteArray
 
         val error = assertFailsWith<ImageStorageException.TransientException> {
             storage.download(key)
@@ -70,6 +86,7 @@ class S3ImageStorageTest {
         error.key shouldBeEqualTo key
         verifyHeadPrecheck()
         verifyDownloadNotStarted()
+
         confirmVerified(operations)
     }
 
@@ -90,9 +107,9 @@ class S3ImageStorageTest {
     fun `exists maps missing HEAD object to false`() = runTest {
         coEvery {
             operations.headObject(bucket = bucket, key = objectKey)
-        } throws software.amazon.awssdk.services.s3.model.NoSuchKeyException.builder().build()
+        } throws NoSuchKeyException.builder().build()
 
-        storage.exists(key) shouldBeEqualTo false
+        storage.exists(key).shouldBeFalse()
 
         coVerify(exactly = 1) { operations.headObject(bucket = bucket, key = objectKey) }
         coVerify(exactly = 0) { operations.listPage(any(), any(), any(), any()) }
@@ -105,7 +122,7 @@ class S3ImageStorageTest {
             operations.headObject(bucket = bucket, key = objectKey)
         } throws S3Exception.builder().statusCode(404).build()
 
-        storage.exists(key) shouldBeEqualTo false
+        storage.exists(key).shouldBeFalse()
 
         coVerify(exactly = 1) { operations.headObject(bucket = bucket, key = objectKey) }
         coVerify(exactly = 0) { operations.listPage(any(), any(), any(), any()) }
@@ -161,8 +178,9 @@ class S3ImageStorageTest {
     fun `download maps a missing object from HEAD without reading the body`() = runTest {
         coEvery {
             operations.headObject(bucket = bucket, key = objectKey)
-        } throws software.amazon.awssdk.services.s3.model.NoSuchKeyException.builder().build()
-        coEvery { operations.downloadBytes(bucket = bucket, key = objectKey) } returns ByteArray(8)
+        } throws NoSuchKeyException.builder().build()
+
+        coEvery { operations.downloadBytes(bucket = bucket, key = objectKey) } returns emptyByteArray
 
         val error = assertFailsWith<ImageStorageException.NotFoundException> {
             storage.download(key)
@@ -210,7 +228,7 @@ class S3ImageStorageTest {
     @Test
     fun `download to destination rejects oversized bytes before writing`(@TempDir tempDir: Path) = runTest {
         val destination = tempDir.resolve("oversized.jpg")
-        val resource = mockk<S3Resource>()
+
         coEvery {
             operations.headObject(bucket = bucket, key = objectKey)
         } returns S3ObjectMetadata(sizeBytes = 8L)
@@ -220,7 +238,8 @@ class S3ImageStorageTest {
             storage.download(key, destination)
         }
 
-        Files.exists(destination) shouldBeEqualTo false
+        Files.exists(destination).shouldBeFalse()
+
         coVerify(exactly = 1) { operations.headObject(bucket = bucket, key = objectKey) }
         verify(exactly = 0) { operations.resource(any(), any()) }
         confirmVerified(operations, resource)
@@ -243,7 +262,7 @@ class S3ImageStorageTest {
 
     @Test
     fun `reads metadata with one HEAD and no body read`() = runTest {
-        val lastModified = java.time.Instant.parse("2026-08-15T00:00:01.123Z")
+        val lastModified = Instant.parse("2026-08-15T00:00:01.123Z")
         coEvery {
             operations.headObject(bucket = bucket, key = objectKey)
         } returns S3ObjectMetadata(
@@ -262,6 +281,7 @@ class S3ImageStorageTest {
             contentType = "image/jpeg",
             lastModified = lastModified,
         )
+
         coVerify(exactly = 1) { operations.headObject(bucket = bucket, key = objectKey) }
         coVerify(exactly = 0) { operations.downloadBytes(any(), any()) }
         verify(exactly = 0) { operations.resource(any(), any()) }
@@ -274,6 +294,7 @@ class S3ImageStorageTest {
         coEvery {
             operations.headObject(bucket = bucket, key = objectKey)
         } returns S3ObjectMetadata(sizeBytes = 4)
+
         stubDownloadBody(ByteArray(4) { it.toByte() })
 
         storage.download(key).size shouldBeEqualTo 4
@@ -289,9 +310,7 @@ class S3ImageStorageTest {
 
     @Test
     fun `byte download rejects a smaller body than the HEAD snapshot`() = runTest {
-        coEvery {
-            operations.headObject(bucket = bucket, key = objectKey)
-        } returns S3ObjectMetadata(sizeBytes = 4)
+        coEvery { operations.headObject(bucket = bucket, key = objectKey) } returns S3ObjectMetadata(sizeBytes = 4)
         stubDownloadBody(ByteArray(3))
 
         assertFailsWith<ImageStorageException.ValidationException> {
@@ -326,7 +345,7 @@ class S3ImageStorageTest {
         val destination = tempDir.resolve("photo.jpg")
         val original = "existing".toByteArray()
         Files.write(destination, original)
-        val resource = mockk<S3Resource>()
+
         coEvery {
             operations.headObject(bucket = bucket, key = objectKey)
         } returns S3ObjectMetadata(sizeBytes = 4)
@@ -337,8 +356,9 @@ class S3ImageStorageTest {
             storage.download(key, destination)
         }
 
-        Files.readAllBytes(destination).contentEquals(original).shouldBeEqualTo(true)
+        Files.readAllBytes(destination) shouldContentEqual original
         assertNoAtomicWriteStagedFiles(destination)
+
         coVerify(exactly = 1) { operations.headObject(bucket = bucket, key = objectKey) }
         verify(exactly = 1) { operations.resource(bucket, objectKey) }
         verify(exactly = 1) { resource.getInputStream() }
@@ -366,7 +386,8 @@ class S3ImageStorageTest {
     fun `path upload fails closed instead of loading source into byte array`() = runTest {
         val source = Files.createTempFile("s3-image-storage-source", ".jpg")
         Files.write(source, ByteArray(4) { it.toByte() })
-        val response = mockk<software.amazon.awssdk.services.s3.model.PutObjectResponse>()
+
+        val response = mockk<PutObjectResponse>()
         coEvery {
             operations.upload(
                 bucket = bucket,
@@ -377,10 +398,10 @@ class S3ImageStorageTest {
         } returns response
 
         val error = assertFailsWith<ImageStorageException.TransientException> {
-            storage.upload(key, source, io.bluetape4k.images.spring.UploadOptions())
+            storage.upload(key, source, UploadOptions())
         }
 
-        error.message.orEmpty() shouldContain "S3TransferOperations"
+        error.message shouldContain "S3TransferOperations"
 
         coVerify(exactly = 0) {
             operations.upload(bucket = bucket, key = objectKey, bytes = any(), contentType = any())
@@ -392,9 +413,12 @@ class S3ImageStorageTest {
     fun `path upload uses S3 transfer operations`() = runTest {
         val source = Files.createTempFile("s3-image-storage-source", ".jpg")
         Files.write(source, ByteArray(4) { it.toByte() })
+
         val transfer = mockk<S3PathTransferOperations>()
         val stagedSource = slot<Path>()
+
         coEvery { transfer.uploadFile(bucket, objectKey, capture(stagedSource), any()) } returns "etag"
+
         val transferStorage = S3ImageStorage(
             operations = operations,
             properties = ImageStorageProperties(
@@ -410,8 +434,10 @@ class S3ImageStorageTest {
         result.etag shouldBeEqualTo "etag"
         result.sizeBytes shouldBeEqualTo 4L
         coVerify(exactly = 1) { transfer.uploadFile(bucket, objectKey, stagedSource.captured, any()) }
-        (stagedSource.captured != source).shouldBeEqualTo(true)
-        Files.exists(stagedSource.captured).shouldBeEqualTo(false)
+
+        stagedSource.captured shouldNotBeEqualTo source
+        Files.exists(stagedSource.captured).shouldBeFalse()
+
         coVerify(exactly = 0) {
             operations.upload(bucket = bucket, key = objectKey, bytes = any(), contentType = any())
         }
@@ -421,7 +447,7 @@ class S3ImageStorageTest {
     @Test
     fun `path download streams through resource instead of byte array`() = runTest {
         val destination = Files.createTempFile("s3-image-storage-destination", ".jpg")
-        val resource = mockk<S3Resource>()
+
         coEvery {
             operations.headObject(bucket = bucket, key = objectKey)
         } returns S3ObjectMetadata(sizeBytes = 4L)
@@ -431,6 +457,7 @@ class S3ImageStorageTest {
         storage.download(key, destination)
 
         Files.size(destination) shouldBeEqualTo 4L
+
         coVerify(exactly = 1) { operations.headObject(bucket = bucket, key = objectKey) }
         verify(exactly = 1) { operations.resource(bucket, objectKey) }
         verify(exactly = 1) { resource.getInputStream() }
@@ -445,11 +472,12 @@ class S3ImageStorageTest {
         val destination = Files.createTempFile("s3-image-storage-cancelled", ".jpg")
         val original = "existing".toByteArray()
         Files.write(destination, original)
-        val resource = mockk<S3Resource>()
-        val cancelledInput = object : ByteArrayInputStream(ByteArray(4)) {
+
+        val cancelledInput = object: ByteArrayInputStream(ByteArray(4)) {
             override fun read(buffer: ByteArray, offset: Int, length: Int): Int =
                 throw CancellationException("cancelled")
         }
+
         every { operations.resource(bucket, objectKey) } returns resource
         coEvery {
             operations.headObject(bucket = bucket, key = objectKey)
@@ -460,7 +488,8 @@ class S3ImageStorageTest {
             storage.download(key, destination)
         }
 
-        Files.readAllBytes(destination).contentEquals(original).shouldBeEqualTo(true)
+        Files.readAllBytes(destination) shouldContentEqual original
+
         assertNoAtomicWriteStagedFiles(destination)
         coVerify(exactly = 1) { operations.headObject(bucket = bucket, key = objectKey) }
         verify(exactly = 1) { operations.resource(bucket, objectKey) }
@@ -473,10 +502,10 @@ class S3ImageStorageTest {
         val destination = Files.createTempFile("s3-image-storage-cancel-before-commit", ".jpg")
         val original = "existing".toByteArray()
         Files.write(destination, original)
-        val resource = mockk<S3Resource>()
+
         lateinit var download: Deferred<Unit>
         var cancelled = false
-        val cancellingInput = object : ByteArrayInputStream(ByteArray(4)) {
+        val cancellingInput = object: ByteArrayInputStream(ByteArray(4)) {
             override fun read(buffer: ByteArray, offset: Int, length: Int): Int =
                 super.read(buffer, offset, length).also { count ->
                     if (count < 0 && !cancelled) {
@@ -485,6 +514,7 @@ class S3ImageStorageTest {
                     }
                 }
         }
+
         coEvery {
             operations.headObject(bucket = bucket, key = objectKey)
         } returns S3ObjectMetadata(sizeBytes = 4L)
@@ -493,14 +523,16 @@ class S3ImageStorageTest {
 
         download = async(start = CoroutineStart.LAZY) {
             storage.download(key, destination)
-        }
+        }.log("Download")
+
         download.start()
 
         assertFailsWith<CancellationException> {
             download.await()
         }
 
-        Files.readAllBytes(destination).contentEquals(original).shouldBeEqualTo(true)
+        Files.readAllBytes(destination) shouldContentEqual original
+
         assertNoAtomicWriteStagedFiles(destination)
         coVerify(exactly = 1) { operations.headObject(bucket = bucket, key = objectKey) }
         verify(exactly = 1) { operations.resource(bucket, objectKey) }
@@ -514,7 +546,7 @@ class S3ImageStorageTest {
             paths.noneMatch { path ->
                 val fileName = path.fileName.toString()
                 fileName.startsWith(stagedPrefix) && fileName.endsWith(".tmp")
-            }.shouldBeEqualTo(true)
+            }.shouldBeTrue()
         }
     }
 
@@ -526,9 +558,7 @@ class S3ImageStorageTest {
 
     private fun verifyDownloadNotStarted() {
         verify(exactly = 0) { operations.resource(any(), any()) }
-        coVerify(exactly = 0) {
-            operations.downloadBytes(any(), any())
-        }
+        coVerify(exactly = 0) { operations.downloadBytes(any(), any()) }
     }
 
     private fun verifyDownloadedOnce() {
@@ -537,9 +567,7 @@ class S3ImageStorageTest {
     }
 
     private fun stubDownloadBody(bytes: ByteArray) {
-        val resource = mockk<S3Resource>()
         every { operations.resource(bucket, objectKey) } returns resource
         every { resource.getInputStream() } answers { ByteArrayInputStream(bytes) }
     }
-
 }

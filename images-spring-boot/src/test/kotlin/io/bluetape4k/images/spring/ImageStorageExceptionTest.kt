@@ -3,11 +3,14 @@ package io.bluetape4k.images.spring
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeInstanceOf
 import io.bluetape4k.assertions.shouldBeNull
-import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.logging.KLogging
 import org.junit.jupiter.api.Test
 
 class ImageStorageExceptionTest {
+
+    companion object: KLogging()
 
     private val key = ImageObjectKey.of("uploads", "photo.jpg")
 
@@ -20,7 +23,7 @@ class ImageStorageExceptionTest {
     @Test
     fun `NotFoundException default message contains fullKey`() {
         val ex = ImageStorageException.NotFoundException(key)
-        ex.message.orEmpty().contains(key.fullKey).shouldBeTrue()
+        ex.message shouldContain key.fullKey
     }
 
     @Test
@@ -44,7 +47,7 @@ class ImageStorageExceptionTest {
     @Test
     fun `AccessDeniedException default message contains fullKey`() {
         val ex = ImageStorageException.AccessDeniedException(key)
-        ex.message.orEmpty().contains(key.fullKey).shouldBeTrue()
+        ex.message shouldContain key.fullKey
     }
 
     @Test
@@ -62,7 +65,7 @@ class ImageStorageExceptionTest {
     @Test
     fun `ConflictException default message contains fullKey`() {
         val ex = ImageStorageException.ConflictException(key)
-        ex.message.orEmpty().contains(key.fullKey).shouldBeTrue()
+        ex.message shouldContain key.fullKey
     }
 
     @Test
@@ -82,7 +85,7 @@ class ImageStorageExceptionTest {
     fun `TransientException with key works`() {
         val ex = ImageStorageException.TransientException(key = key)
         ex.key shouldBeEqualTo key
-        ex.message.orEmpty().contains(key.fullKey).shouldBeTrue()
+        ex.message shouldContain key.fullKey
     }
 
     @Test
@@ -123,11 +126,11 @@ class ImageStorageExceptionTest {
 
         exceptions.forEach { ex ->
             val label = when (ex) {
-                is ImageStorageException.NotFoundException     -> "not-found"
+                is ImageStorageException.NotFoundException -> "not-found"
                 is ImageStorageException.AccessDeniedException -> "access-denied"
-                is ImageStorageException.ConflictException     -> "conflict"
-                is ImageStorageException.TransientException    -> "transient"
-                is ImageStorageException.ValidationException   -> "validation"
+                is ImageStorageException.ConflictException -> "conflict"
+                is ImageStorageException.TransientException -> "transient"
+                is ImageStorageException.ValidationException -> "validation"
             }
             label.shouldNotBeNull()
         }

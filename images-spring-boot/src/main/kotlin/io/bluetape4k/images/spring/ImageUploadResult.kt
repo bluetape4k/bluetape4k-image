@@ -20,7 +20,7 @@ data class ImageUploadResult(
     val sizeBytes: Long,
     val contentType: String,
     val uploadedAt: Instant = Instant.now(),
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }

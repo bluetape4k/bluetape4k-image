@@ -16,7 +16,7 @@ import java.io.Serializable
 data class ImageObjectKey private constructor(
     val prefix: String,
     val name: String,
-) : Serializable {
+): Serializable {
 
     companion object {
         private const val serialVersionUID: Long = 1L

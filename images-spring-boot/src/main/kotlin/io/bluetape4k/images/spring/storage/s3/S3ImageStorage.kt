@@ -1,10 +1,6 @@
 package io.bluetape4k.images.spring.storage.s3
 
 import io.bluetape4k.aws.spring.s3.S3Operations
-import io.bluetape4k.aws.spring.s3.S3ObjectMetadata as AwsS3ObjectMetadata
-import io.bluetape4k.io.writeAtomically
-import io.bluetape4k.io.ByteLimitExceededException
-import io.bluetape4k.io.readAllBytes
 import io.bluetape4k.images.spring.ImageObjectKey
 import io.bluetape4k.images.spring.ImageObjectMetadata
 import io.bluetape4k.images.spring.ImageStorageException
@@ -13,6 +9,9 @@ import io.bluetape4k.images.spring.UploadOptions
 import io.bluetape4k.images.spring.autoconfigure.ImageStorageProperties
 import io.bluetape4k.images.spring.storage.ImageObjectMetadataReader
 import io.bluetape4k.images.spring.storage.ImageStorage
+import io.bluetape4k.io.ByteLimitExceededException
+import io.bluetape4k.io.readAllBytes
+import io.bluetape4k.io.writeAtomically
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.support.requireNotBlank
@@ -29,16 +28,15 @@ import software.amazon.awssdk.services.s3.model.NoSuchBucketException
 import software.amazon.awssdk.services.s3.model.NoSuchKeyException
 import software.amazon.awssdk.services.s3.model.S3Exception
 import java.io.IOException
-import java.nio.ByteBuffer
 import java.nio.channels.FileChannel
-import java.nio.file.AccessDeniedException as NioAccessDeniedException
 import java.nio.file.Files
 import java.nio.file.LinkOption
 import java.nio.file.NoSuchFileException
 import java.nio.file.Path
 import java.nio.file.StandardOpenOption
 import java.time.Instant
-import kotlin.jvm.JvmOverloads
+import io.bluetape4k.aws.spring.s3.S3ObjectMetadata as AwsS3ObjectMetadata
+import java.nio.file.AccessDeniedException as NioAccessDeniedException
 
 /**
  * S3를 backend로 사용하는 [ImageStorage] 구현체입니다.
@@ -74,9 +72,9 @@ class S3ImageStorage @JvmOverloads constructor(
     private val operations: S3Operations,
     private val properties: ImageStorageProperties,
     private val transferOperations: S3PathTransferOperations? = null,
-) : ImageStorage, ImageObjectMetadataReader {
+): ImageStorage, ImageObjectMetadataReader {
 
-    companion object : KLogging() {
+    companion object: KLogging() {
         private const val STATUS_UNAUTHORIZED: Int = 401
         private const val STATUS_FORBIDDEN: Int = 403
         private const val STATUS_NOT_FOUND: Int = 404
@@ -383,18 +381,18 @@ class S3ImageStorage @JvmOverloads constructor(
         when (this) {
             is ImageStorageException -> this
             is NioAccessDeniedException -> ImageStorageException.AccessDeniedException(key, cause = this)
-            is NoSuchKeyException    -> ImageStorageException.NotFoundException(key, cause = this)
+            is NoSuchKeyException -> ImageStorageException.NotFoundException(key, cause = this)
             is NoSuchBucketException -> ImageStorageException.AccessDeniedException(key, cause = this)
-            is S3Exception           -> when (statusCode()) {
+            is S3Exception -> when (statusCode()) {
                 STATUS_UNAUTHORIZED, STATUS_FORBIDDEN ->
                     ImageStorageException.AccessDeniedException(key, cause = this)
-                STATUS_NOT_FOUND                      ->
+                STATUS_NOT_FOUND ->
                     ImageStorageException.NotFoundException(key, cause = this)
-                STATUS_CONFLICT                       ->
+                STATUS_CONFLICT ->
                     ImageStorageException.ConflictException(key, cause = this)
-                else                                  ->
+                else ->
                     ImageStorageException.TransientException(key = key, cause = this)
             }
-            else                     -> ImageStorageException.TransientException(key = key, cause = this)
+            else -> ImageStorageException.TransientException(key = key, cause = this)
         }
 }
