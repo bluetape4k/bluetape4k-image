@@ -2,6 +2,7 @@ package io.bluetape4k.images.vips.java25
 
 import app.photofox.vipsffm.VImage
 import app.photofox.vipsffm.VipsError
+import io.bluetape4k.ToStringBuilder
 import io.bluetape4k.images.vips.VipsDecodeException
 import io.bluetape4k.images.vips.VipsEncodeException
 import io.bluetape4k.images.vips.VipsEncodeOptions
@@ -200,4 +201,12 @@ internal class FfmVipsImage(
             failure.addSuppressed(closeFailure)
         }
     }
+
+    override fun toString(): String =
+        ToStringBuilder(this)
+            .add("width", width)
+            .add("height", height)
+            .add("bands", bands)
+            .toString()
+
 }

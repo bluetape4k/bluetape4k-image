@@ -2,7 +2,7 @@
 
 [English](./README.md) | 한국어
 
-JVips(JNI) 백엔드로 libvips 이미지 처리 구현. JDK 25+ 환경에서 네이티브 바인딩을 통한 고속, 메모리 효율적 이미지 조작을 제공합니다. `java21` 모듈 및 package 이름은 artifact 호환성을 위해 유지합니다. Linux에서는 JVips가 네이티브 `.so` 라이브러리를 번들로 제공하며, macOS에서는 시스템 libvips가 필요합니다.
+JVips (JNI) 백엔드로 libvips 이미지 처리 구현. JDK 25+ 환경에서 네이티브 바인딩을 통한 고속, 메모리 효율적 이미지 조작을 제공합니다. `java21` 모듈 및 package 이름은 artifact 호환성을 위해 유지합니다. Linux에서는 JVips가 네이티브 `.so` 라이브러리를 번들로 제공하며, macOS에서는 시스템 libvips가 필요합니다.
 
 ## 아키텍처
 
@@ -45,10 +45,7 @@ sudo yum install vips-tools
 apk add vips
 ```
 
-JVips는 직접 로드하는 네이티브 `.so` 파일을 번들로 제공하며 Linux용 `libtiff.so` 호환
-라이브러리도 포함합니다. 런타임이 libvips보다 먼저 번들 라이브러리를 로드하므로 Ubuntu
-24.04에서는 별도의 `libtiff5` 패키지가 필요하지 않습니다. 번들 libvips가 사용하는
-나머지 공유 라이브러리를 위해 시스템 패키지는 계속 필요합니다.
+JVips는 직접 로드하는 네이티브 `.so` 파일을 번들로 제공하며 Linux용 `libtiff.so` 호환 라이브러리도 포함합니다. 런타임이 libvips보다 먼저 번들 라이브러리를 로드하므로 Ubuntu 24.04에서는 별도의 `libtiff5` 패키지가 필요하지 않습니다. 번들 libvips가 사용하는 나머지 공유 라이브러리를 위해 시스템 패키지는 계속 필요합니다.
 
 ### Gradle 의존성
 
@@ -73,10 +70,11 @@ dependencies {
 
 - **JNI 네이티브 바인딩**: JVips JNI를 통한 libvips C 라이브러리 직접 접근
 - **고속 & 메모리 효율**: 4000x3000 이미지를 100ms 이내로 처리
-- **기본 보안**: 포맷 허용 목록(JPEG/PNG/WebP/AVIF/HEIC), 50 MB 입력 제한, maxPixels 검증
+- **기본 보안**: 포맷 허용 목록 (JPEG/PNG/WebP/AVIF/HEIC), 50 MB 입력 제한, maxPixels 검증
 - **불변 연산**: 모든 이미지 연산은 새 인스턴스 반환 (제자리 변이 없음)
 - **코루틴 지원**: 비동기 변형은 `Dispatchers.IO`로 블로킹 JNI 호출을 래핑
-- **다양한 출력 포맷**: JPEG(손실), PNG(무손실), WebP(기본값은 손실 압축, `VipsEncodeOptions(lossless = true)`로 무손실 압축), 지원 여부를 확인한 뒤 사용하는 AVIF
+- **다양한 출력
+  포맷**: JPEG (손실), PNG (무손실), WebP (기본값은 손실 압축, `VipsEncodeOptions(lossless = true)`로 무손실 압축), 지원 여부를 확인한 뒤 사용하는 AVIF
 - **Virtual Thread 안전**: `@Synchronized` 블록 대신 `AtomicReference<State>` CAS 사용
 
 ## 사용 예제
@@ -235,8 +233,7 @@ suspend fun loadFromSuspendedSource() {
 ```
 
 Local large file은 `Path` 진입점을 우선 사용하세요. 서비스가 이미 stream, pipe,
-`bluetape4k-okio` suspended boundary로 이미지 바이트를 받는 경우에 Okio source를
-사용합니다. Non-Path load에는 여전히 50 MB compressed input guard가 적용됩니다.
+`bluetape4k-okio` suspended boundary로 이미지 바이트를 받는 경우에 Okio source를 사용합니다. Non-Path load에는 여전히 50 MB compressed input guard가 적용됩니다.
 
 ### 이미지 자르기 및 출력
 
@@ -262,30 +259,27 @@ fun cropAndExportBytes(imagePath: String): ByteArray {
 모든 공개 `vipsImageOf*` 함수는 순서대로 보안 검사를 적용합니다:
 
 1. **포맷 허용 목록**: JPEG, PNG, WebP, AVIF, HEIC 헤더 수락
-   - JPEG: 매직 바이트 `FF D8 FF`
-   - PNG: 매직 바이트 `89 50 4E 47`
-   - WebP: RIFF 헤더 + 오프셋 8의 `WEBP` 마커
-   - AVIF/HEIC: ISO BMFF `ftyp` 브랜드(`avif`, `avis`, `heic`, `heix`, `hevc`, `hevx`, `mif1`, `msf1`)
+    - JPEG: 매직 바이트 `FF D8 FF`
+    - PNG: 매직 바이트 `89 50 4E 47`
+    - WebP: RIFF 헤더 + 오프셋 8의 `WEBP` 마커
+    - AVIF/HEIC: ISO BMFF `ftyp` 브랜드 (`avif`, `avis`, `heic`, `heix`, `hevc`, `hevx`, `mif1`, `msf1`)
 
 2. **입력 크기 제한**: 입력 스트림당 최대 50 MB
 
-3. **최대 픽셀 검증**: `너비 × 높이 × 채널`이 설정된 임계값(기본값: 1억 5천만 픽셀)을 초과하지 않아야 함
+3. **최대 픽셀 검증**: `너비 × 높이 × 채널`이 설정된 임계값 (기본값: 1억 5천만 픽셀)을 초과하지 않아야 함
 
 지원되지 않는 포맷이나 위반은 설명적인 오류 메시지와 함께 `VipsDecodeException`을 발생시킵니다.
 
-AVIF 인코딩은 libheif와 libaom 같은 AV1 인코더가 포함된 libvips/JVips 빌드가 필요합니다.
-HEIC 인코딩은 JVips 바인딩에서 노출되지 않으므로 HEIC 출력이 필요하면 Java 25 FFM 백엔드를 사용하세요.
+AVIF 인코딩은 libheif와 libaom 같은 AV1 인코더가 포함된 libvips/JVips 빌드가 필요합니다. HEIC 인코딩은 JVips 바인딩에서 노출되지 않으므로 HEIC 출력이 필요하면 Java 25 FFM 백엔드를 사용하세요.
 
 ### AVIF / HEIC Capability Matrix
 
-| 포맷 | Decode | Encode | Native dependency |
-|------|--------|--------|-------------------|
-| AVIF | Capability-gated | Capability-gated | libheif와 libaom 같은 AV1 인코더가 포함된 libvips |
-| HEIC | Capability-gated | N/A | Decode는 libheif 포함 libvips 필요. JVips는 HEIC encode 미노출 |
+| 포맷 | Decode           | Encode           | Native dependency                                              |
+|------|------------------|------------------|----------------------------------------------------------------|
+| AVIF | Capability-gated | Capability-gated | libheif와 libaom 같은 AV1 인코더가 포함된 libvips              |
+| HEIC | Capability-gated | N/A              | Decode는 libheif 포함 libvips 필요. JVips는 HEIC encode 미노출 |
 
-JVips 백엔드는 decode 전에 AVIF/HEIC ISO BMFF brand를 allowlist로 검사합니다.
-지원하지 않는 바이트는 libvips 호출 전에 실패합니다. 유효한 AVIF/HEIC 컨테이너라도 실제
-처리는 호스트 libvips codec set에 의존하며, native 지원이 없으면 sanitized
+JVips 백엔드는 decode 전에 AVIF/HEIC ISO BMFF brand를 allowlist로 검사합니다. 지원하지 않는 바이트는 libvips 호출 전에 실패합니다. 유효한 AVIF/HEIC 컨테이너라도 실제 처리는 호스트 libvips codec set에 의존하며, native 지원이 없으면 sanitized
 `VipsDecodeException` 또는 `VipsEncodeException`으로 보고됩니다.
 
 AVIF/HEIC route를 활성화하기 전에 codec status를 확인하세요.
@@ -303,10 +297,8 @@ val heic = report.codec(VipsImageFormat.HEIC)
 }
 ```
 
-JVips는 native libvips operation을 직접 검사할 수 없으므로 AVIF/HEIC decode와 AVIF
-encode는 `UNKNOWN`으로 보고합니다. 배포 호스트에서는 caller-provided sample로
-`JVipsRuntime.smokeTestCodec(...)`을 실행하세요. HEIC encode는 JVips binding이 노출하지
-않기 때문에 `UNAVAILABLE`입니다.
+JVips는 native libvips operation을 직접 검사할 수 없으므로 AVIF/HEIC decode와 AVIF encode는 `UNKNOWN`으로 보고합니다. 배포 호스트에서는 caller-provided sample로
+`JVipsRuntime.smokeTestCodec(...)`을 실행하세요. HEIC encode는 JVips binding이 노출하지 않기 때문에 `UNAVAILABLE`입니다.
 
 ## 동시성 & 스레드 안전성
 
@@ -334,7 +326,7 @@ encode는 `UNKNOWN`으로 보고합니다. 배포 호스트에서는 caller-prov
 
 ### 골든 이미지 테스트
 
-`images-vips-api` testFixtures(`src/testFixtures/resources/golden/vips/`)에 저장된 골든 이미지와 vips 연산 결과를 비교합니다.
+`images-vips-api` testFixtures (`src/testFixtures/resources/golden/vips/`)에 저장된 골든 이미지와 vips 연산 결과를 비교합니다.
 
 - libvips가 설치된 Linux에서 `-Dvips.enabled=true`로 실행
 - 골든 이미지는 java25 모듈에서만 생성됩니다 (`@EnabledForJreRange(min = JRE.JAVA_25)` 가드로 이 모듈에서의 재생성 방지)
@@ -342,33 +334,36 @@ encode는 `UNKNOWN`으로 보고합니다. 배포 호스트에서는 caller-prov
 
 ### 속성 기반 테스트
 
-5가지 불변식 × 3가지 포맷(JPEG/PNG/WebP)을 `@ParameterizedTest`로 검증합니다.
+5가지 불변식 × 3가지 포맷 (JPEG/PNG/WebP)을 `@ParameterizedTest`로 검증합니다.
 
-| 불변식 | 설명 |
-|--------|------|
-| 치수 보존 | 리사이즈 출력이 요청한 너비/높이와 일치 |
-| 출력 비어있지 않음 | 인코딩된 바이트가 항상 생성됨 |
-| 포맷 왕복 | 디코드 → 인코드 → 디코드 시 동일한 치수 반환 |
-| 자르기 경계 | 자른 영역이 원본 경계를 초과하지 않음 |
-| 썸네일 비율 | 썸네일 긴 변이 요청한 최대 치수에 맞음 |
+| 불변식             | 설명                                         |
+|--------------------|----------------------------------------------|
+| 치수 보존          | 리사이즈 출력이 요청한 너비/높이와 일치      |
+| 출력 비어있지 않음 | 인코딩된 바이트가 항상 생성됨                |
+| 포맷 왕복          | 디코드 → 인코드 → 디코드 시 동일한 치수 반환 |
+| 자르기 경계        | 자른 영역이 원본 경계를 초과하지 않음        |
+| 썸네일 비율        | 썸네일 긴 변이 요청한 최대 치수에 맞음       |
 
 ## 문제 해결
 
 ### "UnsatisfiedLinkError: Can't load library: libvips"
 
 **macOS**: 시스템 libvips 설치
+
 ```bash
 brew install vips
 ```
 
 **Linux**: 나머지 공유 라이브러리를 위해 libvips-tools 패키지 설치 (JVips가 네이티브 라이브러리를 번들로 제공)
+
 ```bash
 sudo apt-get install libvips-tools
 ```
 
 ### "Image exceeds maximum pixel count"
 
-`maxPixels` 임계값(기본값 1억 5천만)을 초과했습니다. 다음 중 하나 수행:
+`maxPixels` 임계값 (기본값 1억 5천만)을 초과했습니다. 다음 중 하나 수행:
+
 - 처리 전에 입력 리사이즈
 - `JVipsRuntime.init()`에서 `maxPixels` 증가
 

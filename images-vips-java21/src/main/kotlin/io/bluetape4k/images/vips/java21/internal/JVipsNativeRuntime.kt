@@ -19,7 +19,7 @@ internal interface JVipsNativeRuntime {
  * `VipsContext`를 최초로 참조하는 순간 `Vips` 클래스 로더가 `Vips.init()`을 정적 초기화에서 호출합니다.
  * 따라서 별도로 `Vips.init()`을 호출할 필요가 없습니다.
  */
-internal object DefaultJVipsNativeRuntime : JVipsNativeRuntime {
+internal object DefaultJVipsNativeRuntime: JVipsNativeRuntime {
     override fun nativeInit(concurrency: Int) {
         // VipsContext 참조가 Vips 정적 초기화를 트리거하여 libvips를 로드합니다.
         VipsContext.setConcurrency(concurrency)

@@ -1,10 +1,11 @@
 package io.bluetape4k.images.vips.java21
 
 import io.bluetape4k.assertions.assertFailsWith
-import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.images.vips.VipsDecodeException
 import io.bluetape4k.images.vips.VipsLimits
+import io.bluetape4k.logging.KLogging
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import java.nio.ByteBuffer
@@ -13,6 +14,8 @@ import java.nio.file.Path
 import java.nio.file.StandardOpenOption.WRITE
 
 class JVipsImageSupportBoundaryTest {
+
+    private companion object: KLogging()
 
     @Test
     fun `path loader rejects oversized file before native decode`(@TempDir tmpDir: Path) {
@@ -54,9 +57,5 @@ class JVipsImageSupportBoundaryTest {
             channel.position(VipsLimits.MAX_INPUT_BYTES)
             channel.write(ByteBuffer.wrap(byteArrayOf(0)))
         }
-    }
-
-    private companion object {
-        val JPEG_MAGIC: ByteArray = byteArrayOf(0xFF.toByte(), 0xD8.toByte(), 0xFF.toByte())
     }
 }

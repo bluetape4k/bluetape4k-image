@@ -1,6 +1,5 @@
 package io.bluetape4k.images.vips.java21
 
-import io.bluetape4k.images.vips.VipsIncubatingApi
 import io.bluetape4k.images.vips.VipsCodecCapability
 import io.bluetape4k.images.vips.VipsCodecCapabilityReport
 import io.bluetape4k.images.vips.VipsCodecDirection
@@ -8,17 +7,23 @@ import io.bluetape4k.images.vips.VipsCodecOperationCapability
 import io.bluetape4k.images.vips.VipsCodecSmokeResult
 import io.bluetape4k.images.vips.VipsConcurrencyCapability
 import io.bluetape4k.images.vips.VipsDecodeException
-import io.bluetape4k.images.vips.VipsInitializationException
 import io.bluetape4k.images.vips.VipsEncodeException
 import io.bluetape4k.images.vips.VipsEncodeOptions
 import io.bluetape4k.images.vips.VipsImage
 import io.bluetape4k.images.vips.VipsImageFormat
+import io.bluetape4k.images.vips.VipsIncubatingApi
+import io.bluetape4k.images.vips.VipsInitializationException
 import io.bluetape4k.images.vips.VipsLimits
 import io.bluetape4k.images.vips.VipsRuntime
+import io.bluetape4k.images.vips.java21.JVipsRuntime.RuntimeState.INITIALIZED
+import io.bluetape4k.images.vips.java21.JVipsRuntime.RuntimeState.INITIALIZING
+import io.bluetape4k.images.vips.java21.JVipsRuntime.RuntimeState.SHUTDOWN
+import io.bluetape4k.images.vips.java21.JVipsRuntime.RuntimeState.UNINITIALIZED
 import io.bluetape4k.images.vips.java21.internal.DefaultJVipsNativeRuntime
 import io.bluetape4k.images.vips.java21.internal.JVipsNativeLibrarySupport
 import io.bluetape4k.images.vips.java21.internal.JVipsNativeRuntime
 import io.bluetape4k.logging.KLogging
+import io.bluetape4k.support.requirePositiveNumber
 import kotlinx.coroutines.CancellationException
 import org.jetbrains.annotations.VisibleForTesting
 import java.util.concurrent.atomic.AtomicReference
@@ -38,16 +43,21 @@ import java.util.concurrent.locks.LockSupport
  * `VipsInitializationException`이 발생합니다. `Runtime.addShutdownHook`만 사용하십시오.
  */
 @OptIn(VipsIncubatingApi::class)
-object JVipsRuntime : VipsRuntime, KLogging() {
+object JVipsRuntime: VipsRuntime, KLogging() {
 
-    private enum class RuntimeState { UNINITIALIZED, INITIALIZING, INITIALIZED, SHUTDOWN }
+    private enum class RuntimeState {
+        UNINITIALIZED,
+        INITIALIZING,
+        INITIALIZED,
+        SHUTDOWN
+    }
 
     private data class InitConfiguration(
         val concurrency: Int,
         val maxPixels: Long,
     )
 
-    private val state = AtomicReference(RuntimeState.UNINITIALIZED)
+    private val state = AtomicReference(UNINITIALIZED)
     private val effectiveConfiguration = AtomicReference<InitConfiguration?>()
 
     @VisibleForTesting
@@ -79,38 +89,38 @@ object JVipsRuntime : VipsRuntime, KLogging() {
 
     override fun init(concurrency: Int, maxPixels: Long) {
         when (state.get()) {
-            RuntimeState.SHUTDOWN -> throw VipsInitializationException(
+            SHUTDOWN -> throw VipsInitializationException(
                 "libvips has been shut down — restart the process to re-initialize"
             )
             else -> {}
         }
 
-        require(concurrency > 0) { "concurrency must be positive: $concurrency" }
-        require(maxPixels > 0) { "maxPixels must be positive: $maxPixels" }
+        concurrency.requirePositiveNumber("concurrency")
+        maxPixels.requirePositiveNumber("maxPixels")
         val requestedConfiguration = InitConfiguration(concurrency, maxPixels)
 
         when (state.get()) {
-            RuntimeState.INITIALIZED -> return verifyEffectiveConfiguration(requestedConfiguration)
-            RuntimeState.SHUTDOWN -> throw VipsInitializationException(
+            INITIALIZED -> return verifyEffectiveConfiguration(requestedConfiguration)
+            SHUTDOWN -> throw VipsInitializationException(
                 "libvips has been shut down — restart the process to re-initialize"
             )
             else -> {}
         }
 
-        if (!state.compareAndSet(RuntimeState.UNINITIALIZED, RuntimeState.INITIALIZING)) {
+        if (!state.compareAndSet(UNINITIALIZED, INITIALIZING)) {
             // 다른 스레드가 CAS에서 이겼습니다. 완료까지 bounded wait 하되 owner는 건드리지 않습니다.
             val deadline = initializationWaitClock() + initializationWaitTimeoutNanos
             while (true) {
                 awaitInitializationCompletion("libvips init", deadline)
                 when (state.get()) {
-                    RuntimeState.INITIALIZED -> return verifyEffectiveConfiguration(requestedConfiguration)
-                    RuntimeState.SHUTDOWN -> throw VipsInitializationException(
+                    INITIALIZED -> return verifyEffectiveConfiguration(requestedConfiguration)
+                    SHUTDOWN -> throw VipsInitializationException(
                         "libvips was shut down during concurrent initialization"
                     )
-                    RuntimeState.UNINITIALIZED -> throw VipsInitializationException(
+                    UNINITIALIZED -> throw VipsInitializationException(
                         "Concurrent initialization attempt failed — retry"
                     )
-                    RuntimeState.INITIALIZING -> continue
+                    INITIALIZING -> continue
                 }
             }
         }
@@ -121,14 +131,14 @@ object JVipsRuntime : VipsRuntime, KLogging() {
             nativeRuntime.nativeInit(concurrency)
             _concurrencyCapability = VipsConcurrencyCapability.configurable(concurrency)
             effectiveConfiguration.set(requestedConfiguration)
-            state.set(RuntimeState.INITIALIZED)
+            state.set(INITIALIZED)
             log.debug("JVipsRuntime initialized: concurrency=$concurrency, maxPixels=$maxPixels")
         } catch (e: Error) {
             // UnsatisfiedLinkError, NoClassDefFoundError 등 — 상태 복구 후 원본 Error 재던짐
-            state.set(RuntimeState.UNINITIALIZED)
+            state.set(UNINITIALIZED)
             throw e
         } catch (e: Exception) {
-            state.set(RuntimeState.UNINITIALIZED)  // 재시도 허용
+            state.set(UNINITIALIZED)  // 재시도 허용
             throw VipsInitializationException("libvips initialization failed", e)
         }
     }
@@ -140,24 +150,24 @@ object JVipsRuntime : VipsRuntime, KLogging() {
         val deadline = initializationWaitClock() + initializationWaitTimeoutNanos
         while (true) {
             when (state.get()) {
-                RuntimeState.SHUTDOWN, RuntimeState.UNINITIALIZED -> return
-                RuntimeState.INITIALIZED -> {
-                    if (state.compareAndSet(RuntimeState.INITIALIZED, RuntimeState.SHUTDOWN)) {
+                SHUTDOWN, UNINITIALIZED -> return
+                INITIALIZING -> awaitInitializationCompletion("libvips shutdown", deadline)
+                INITIALIZED -> {
+                    if (state.compareAndSet(INITIALIZED, SHUTDOWN)) {
                         nativeRuntime.nativeShutdown()
                         log.debug("JVipsRuntime shut down")
                         return
                     }
                 }
-                RuntimeState.INITIALIZING -> awaitInitializationCompletion("libvips shutdown", deadline)
             }
         }
     }
 
     override val isInitialized: Boolean
-        get() = state.get() == RuntimeState.INITIALIZED
+        get() = state.get() == INITIALIZED
 
     override val isShutdown: Boolean
-        get() = state.get() == RuntimeState.SHUTDOWN
+        get() = state.get() == SHUTDOWN
 
     override fun codecCapabilityReport(): VipsCodecCapabilityReport =
         VipsCodecCapabilityReport(
@@ -251,7 +261,7 @@ object JVipsRuntime : VipsRuntime, KLogging() {
      */
     @VisibleForTesting
     internal fun resetForTest() {
-        state.set(RuntimeState.UNINITIALIZED)
+        state.set(UNINITIALIZED)
         nativeRuntime = DefaultJVipsNativeRuntime
         initializationWaitTimeoutNanos = INITIALIZATION_WAIT_TIMEOUT_NANOS
         initializationWaitClock = System::nanoTime
@@ -270,7 +280,7 @@ object JVipsRuntime : VipsRuntime, KLogging() {
     private fun awaitInitializationCompletion(operation: String, deadline: Long) {
         initializationWaitStartedHook?.invoke()
         var spinCount = 0
-        while (state.get() == RuntimeState.INITIALIZING) {
+        while (state.get() == INITIALIZING) {
             if (Thread.currentThread().isInterrupted) {
                 throw VipsInitializationException(
                     "$operation interrupted while waiting for libvips initialization"
@@ -281,7 +291,7 @@ object JVipsRuntime : VipsRuntime, KLogging() {
             if (remainingNanos <= 0L) {
                 throw VipsInitializationException(
                     "$operation timed out waiting for libvips initialization " +
-                        "after $INITIALIZATION_WAIT_TIMEOUT_SECONDS seconds"
+                            "after $INITIALIZATION_WAIT_TIMEOUT_SECONDS seconds"
                 )
             }
 
@@ -303,8 +313,8 @@ object JVipsRuntime : VipsRuntime, KLogging() {
         if (effective != requested) {
             throw VipsInitializationException(
                 "libvips runtime configuration mismatch: " +
-                    "requested=(concurrency=${requested.concurrency}, maxPixels=${requested.maxPixels}), " +
-                    "effective=(concurrency=${effective.concurrency}, maxPixels=${effective.maxPixels})",
+                        "requested=(concurrency=${requested.concurrency}, maxPixels=${requested.maxPixels}), " +
+                        "effective=(concurrency=${effective.concurrency}, maxPixels=${effective.maxPixels})",
             )
         }
     }

@@ -1,7 +1,7 @@
 package io.bluetape4k.images.vips.java21.internal
 
-import io.bluetape4k.logging.KLogging
 import com.criteo.vips.VipsImage
+import io.bluetape4k.logging.KLogging
 import java.lang.ref.Cleaner
 
 /**
@@ -14,9 +14,9 @@ import java.lang.ref.Cleaner
  * 강한 참조가 람다에 포함되면 GC가 객체를 수집할 수 없어 클리너가 영영 실행되지 않습니다.
  * 이 구현은 `vipsImage` 참조만 캡처하므로 안전합니다.
  */
-internal class NativeHandle(val vipsImage: VipsImage) : AutoCloseable {
+internal class NativeHandle(val vipsImage: VipsImage): AutoCloseable {
 
-    companion object : KLogging() {
+    companion object: KLogging() {
         // Cleaner는 반드시 companion object(정적)에 있어야 합니다.
         // per-instance Cleaner.create()는 매번 새 데몬 스레드를 생성합니다.
         private val CLEANER: Cleaner = Cleaner.create()

@@ -1,13 +1,13 @@
 package io.bluetape4k.images.vips.java21.property
 
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeGreaterThan
+import io.bluetape4k.assertions.shouldBeLessOrEqualTo
 import io.bluetape4k.images.vips.VipsImageFormat
 import io.bluetape4k.images.vips.java21.AbstractJVipsTest
 import io.bluetape4k.images.vips.java21.vipsImageOf
 import io.bluetape4k.images.vips.testfixtures.VipsTestFixtures
 import io.bluetape4k.logging.KLogging
-import io.bluetape4k.assertions.shouldBeGreaterThan
-import io.bluetape4k.assertions.shouldBeLessOrEqualTo
-import io.bluetape4k.assertions.shouldBeEqualTo
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.util.stream.Stream
@@ -22,9 +22,9 @@ import java.util.stream.Stream
  * 4. toBytes(JPEG) 결과 바이트 길이 > 0
  * 5. resize 원본 width/height 불변 — 별도 인스턴스에서 원본 치수 재확인
  */
-class VipsPropertyTest : AbstractJVipsTest() {
+class VipsPropertyTest: AbstractJVipsTest() {
 
-    companion object : KLogging() {
+    companion object: KLogging() {
 
         @JvmStatic
         fun allFixtures(): Stream<String> = Stream.of(

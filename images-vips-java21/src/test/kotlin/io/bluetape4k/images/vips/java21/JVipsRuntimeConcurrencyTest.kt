@@ -3,10 +3,12 @@ package io.bluetape4k.images.vips.java21
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
-import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldBeInstanceOf
 import io.bluetape4k.assertions.shouldBeNull
+import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.concurrent.await
 import io.bluetape4k.images.vips.VipsConcurrencySupport
 import io.bluetape4k.images.vips.VipsInitializationException
 import io.bluetape4k.images.vips.java21.internal.DefaultJVipsNativeRuntime
@@ -15,6 +17,7 @@ import io.bluetape4k.images.vips.testfixtures.VipsInitializationWaitContract
 import io.bluetape4k.junit5.concurrency.MultithreadingTester
 import io.bluetape4k.junit5.concurrency.StructuredTaskScopeTester
 import io.bluetape4k.logging.KLogging
+import io.bluetape4k.utils.Runtimex
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -24,6 +27,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.atomic.AtomicReference
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * [JVipsRuntime.init] concurrent call이 native init을 정확히 한 번만 실행하고,
@@ -33,16 +37,17 @@ import java.util.concurrent.atomic.AtomicReference
  */
 class JVipsRuntimeConcurrencyTest {
 
-    companion object : KLogging()
+    companion object: KLogging()
 
     private val initCount = AtomicInteger(0)
     private val shutdownCount = AtomicInteger(0)
 
-    private val testAdapter = object : JVipsNativeRuntime {
+    private val testAdapter = object: JVipsNativeRuntime {
         override fun nativeInit(concurrency: Int) {
             Thread.sleep(20) // keep the INITIALIZING window open so contenders overlap
             initCount.incrementAndGet()
         }
+
         override fun nativeShutdown() {
             shutdownCount.incrementAndGet()
         }
@@ -65,8 +70,8 @@ class JVipsRuntimeConcurrencyTest {
     @Test
     fun `concurrent init calls native init exactly once with platform threads`() {
         MultithreadingTester()
-            .workers(10)
-            .rounds(1)
+            .workers(Runtimex.availableProcessors)
+            .rounds(2)
             .add { JVipsRuntime.init() }
             .run()
 
@@ -77,7 +82,7 @@ class JVipsRuntimeConcurrencyTest {
     @Test
     fun `concurrent init calls native init exactly once with virtual threads`() {
         StructuredTaskScopeTester()
-            .rounds(10)
+            .rounds(Runtimex.availableProcessors * 2)
             .add { JVipsRuntime.init() }
             .run()
 
@@ -98,13 +103,13 @@ class JVipsRuntimeConcurrencyTest {
     @Test
     fun `default wait cap matches the shared api contract`() {
         JVipsRuntime.initializationWaitTimeoutNanos shouldBeEqualTo
-            TimeUnit.SECONDS.toNanos(VipsInitializationWaitContract.DEFAULT_TIMEOUT_SECONDS)
+                TimeUnit.SECONDS.toNanos(VipsInitializationWaitContract.DEFAULT_TIMEOUT_SECONDS)
     }
 
     @Test
     fun `failed owner returns to retryable state`() {
         val attempts = AtomicInteger(0)
-        JVipsRuntime.nativeRuntime = object : JVipsNativeRuntime {
+        JVipsRuntime.nativeRuntime = object: JVipsNativeRuntime {
             override fun nativeInit(concurrency: Int) {
                 if (attempts.getAndIncrement() == 0) {
                     throw IllegalStateException("synthetic initialization failure")
@@ -172,10 +177,10 @@ class JVipsRuntimeConcurrencyTest {
         // owner를 INITIALIZING에 고정해 loser의 대기 후 설정 비교 경로를 결정적으로 검증합니다.
         val nativeInitStarted = CountDownLatch(1)
         val releaseNativeInit = CountDownLatch(1)
-        JVipsRuntime.nativeRuntime = object : JVipsNativeRuntime {
+        JVipsRuntime.nativeRuntime = object: JVipsNativeRuntime {
             override fun nativeInit(concurrency: Int) {
                 nativeInitStarted.countDown()
-                releaseNativeInit.await(5, TimeUnit.SECONDS).shouldBeTrue()
+                releaseNativeInit.await(5.seconds).shouldBeTrue()
                 initCount.incrementAndGet()
             }
 
@@ -190,7 +195,7 @@ class JVipsRuntimeConcurrencyTest {
                 ownerFailure.set(t)
             }
         }
-        nativeInitStarted.await(5, TimeUnit.SECONDS).shouldBeTrue()
+        nativeInitStarted.await(5.seconds).shouldBeTrue()
 
         val loserFailure = AtomicReference<Throwable?>()
         val loser = Thread.ofPlatform().daemon(true).start {
@@ -208,7 +213,7 @@ class JVipsRuntimeConcurrencyTest {
         loser.isAlive.shouldBeFalse()
         ownerFailure.get().shouldBeNull()
 
-        val error = loserFailure.get().shouldNotBeNull() as VipsInitializationException
+        val error = loserFailure.get().shouldBeInstanceOf<VipsInitializationException>()
         error.message shouldContain "requested=(concurrency=3, maxPixels=2000)"
         error.message shouldContain "effective=(concurrency=3, maxPixels=1000)"
         initCount.get() shouldBeEqualTo 1
@@ -218,10 +223,10 @@ class JVipsRuntimeConcurrencyTest {
     fun `interrupted competing init waiter exits without changing owner state`() {
         val nativeInitStarted = CountDownLatch(1)
         val releaseNativeInit = CountDownLatch(1)
-        JVipsRuntime.nativeRuntime = object : JVipsNativeRuntime {
+        JVipsRuntime.nativeRuntime = object: JVipsNativeRuntime {
             override fun nativeInit(concurrency: Int) {
                 nativeInitStarted.countDown()
-                releaseNativeInit.await(5, TimeUnit.SECONDS).shouldBeTrue()
+                releaseNativeInit.await(5.seconds).shouldBeTrue()
                 initCount.incrementAndGet()
             }
 
@@ -238,7 +243,7 @@ class JVipsRuntimeConcurrencyTest {
                 ownerFailure.set(t)
             }
         }
-        nativeInitStarted.await(5, TimeUnit.SECONDS).shouldBeTrue()
+        nativeInitStarted.await(5.seconds).shouldBeTrue()
 
         val waiterStarted = CountDownLatch(1)
         val waiterFailure = AtomicReference<Throwable?>()
@@ -250,13 +255,13 @@ class JVipsRuntimeConcurrencyTest {
                 waiterFailure.set(t)
             }
         }
-        waiterStarted.await(5, TimeUnit.SECONDS).shouldBeTrue()
+        waiterStarted.await(5.seconds).shouldBeTrue()
         waiter.interrupt()
         waiter.join(5_000)
 
         try {
             waiter.isAlive.shouldBeFalse()
-            val error = waiterFailure.get().shouldNotBeNull() as VipsInitializationException
+            val error = waiterFailure.get().shouldBeInstanceOf<VipsInitializationException>()
             VipsInitializationWaitContract.assertInterrupted(error)
             waiter.isInterrupted.shouldBeTrue()
             JVipsRuntime.isInitialized.shouldBeFalse()
@@ -278,10 +283,10 @@ class JVipsRuntimeConcurrencyTest {
         JVipsRuntime.initializationWaitTimeoutNanos = TimeUnit.MILLISECONDS.toNanos(25)
         val nativeInitStarted = CountDownLatch(1)
         val releaseNativeInit = CountDownLatch(1)
-        JVipsRuntime.nativeRuntime = object : JVipsNativeRuntime {
+        JVipsRuntime.nativeRuntime = object: JVipsNativeRuntime {
             override fun nativeInit(concurrency: Int) {
                 nativeInitStarted.countDown()
-                releaseNativeInit.await(5, TimeUnit.SECONDS).shouldBeTrue()
+                releaseNativeInit.await(5.seconds).shouldBeTrue()
                 initCount.incrementAndGet()
             }
 
@@ -298,7 +303,7 @@ class JVipsRuntimeConcurrencyTest {
                 ownerFailure.set(t)
             }
         }
-        nativeInitStarted.await(5, TimeUnit.SECONDS).shouldBeTrue()
+        nativeInitStarted.await(5.seconds).shouldBeTrue()
 
         val waiterFailure = AtomicReference<Throwable?>()
         val waiter = Thread.ofPlatform().daemon(true).start {
@@ -312,7 +317,7 @@ class JVipsRuntimeConcurrencyTest {
 
         try {
             waiter.isAlive.shouldBeFalse()
-            val error = waiterFailure.get().shouldNotBeNull() as VipsInitializationException
+            val error = waiterFailure.get().shouldBeInstanceOf<VipsInitializationException>()
             VipsInitializationWaitContract.assertTimedOut(error)
             waiter.isInterrupted.shouldBeFalse()
             JVipsRuntime.isInitialized.shouldBeFalse()
@@ -345,18 +350,18 @@ class JVipsRuntimeConcurrencyTest {
         val waiterFailure = AtomicReference<Throwable?>()
         val retryOwnerReference = AtomicReference<Thread?>()
 
-        JVipsRuntime.nativeRuntime = object : JVipsNativeRuntime {
+        JVipsRuntime.nativeRuntime = object: JVipsNativeRuntime {
             override fun nativeInit(concurrency: Int) {
                 when (attempts.incrementAndGet()) {
                     1 -> {
                         firstOwnerEntered.countDown()
-                        releaseFirstOwner.await(5, TimeUnit.SECONDS).shouldBeTrue()
+                        releaseFirstOwner.await(5.seconds).shouldBeTrue()
                         throw IllegalStateException("synthetic owner failure")
                     }
 
                     else -> {
                         retryOwnerEntered.countDown()
-                        releaseRetryOwner.await(5, TimeUnit.SECONDS).shouldBeTrue()
+                        releaseRetryOwner.await(5.seconds).shouldBeTrue()
                         initCount.incrementAndGet()
                     }
                 }
@@ -382,7 +387,7 @@ class JVipsRuntimeConcurrencyTest {
                     }
                 }
                 retryOwnerReference.set(retryOwner)
-                retryOwnerEntered.await(5, TimeUnit.SECONDS).shouldBeTrue()
+                retryOwnerEntered.await(5.seconds).shouldBeTrue()
             }
         }
 
@@ -393,7 +398,7 @@ class JVipsRuntimeConcurrencyTest {
                 ownerFailure.set(t)
             }
         }
-        firstOwnerEntered.await(5, TimeUnit.SECONDS).shouldBeTrue()
+        firstOwnerEntered.await(5.seconds).shouldBeTrue()
 
         val waiter = Thread.ofPlatform().daemon(true).start {
             try {
@@ -402,9 +407,9 @@ class JVipsRuntimeConcurrencyTest {
                 waiterFailure.set(t)
             }
         }
-        waiterWaitStarted.await(5, TimeUnit.SECONDS).shouldBeTrue()
+        waiterWaitStarted.await(5.seconds).shouldBeTrue()
         releaseFirstOwner.countDown()
-        waiterSecondWaitStarted.await(5, TimeUnit.SECONDS).shouldBeTrue()
+        waiterSecondWaitStarted.await(5.seconds).shouldBeTrue()
 
         try {
             waiter.isAlive.shouldBeTrue()
@@ -452,18 +457,18 @@ class JVipsRuntimeConcurrencyTest {
         val waiterFailure = AtomicReference<Throwable?>()
         val retryOwnerReference = AtomicReference<Thread?>()
 
-        JVipsRuntime.nativeRuntime = object : JVipsNativeRuntime {
+        JVipsRuntime.nativeRuntime = object: JVipsNativeRuntime {
             override fun nativeInit(concurrency: Int) {
                 when (attempts.incrementAndGet()) {
                     1 -> {
                         firstOwnerEntered.countDown()
-                        releaseFirstOwner.await(5, TimeUnit.SECONDS).shouldBeTrue()
+                        releaseFirstOwner.await(5.seconds).shouldBeTrue()
                         throw IllegalStateException("synthetic owner failure")
                     }
 
                     else -> {
                         retryOwnerEntered.countDown()
-                        releaseRetryOwner.await(5, TimeUnit.SECONDS).shouldBeTrue()
+                        releaseRetryOwner.await(5.seconds).shouldBeTrue()
                         initCount.incrementAndGet()
                     }
                 }
@@ -489,7 +494,7 @@ class JVipsRuntimeConcurrencyTest {
                     }
                 }
                 retryOwnerReference.set(retryOwner)
-                retryOwnerEntered.await(5, TimeUnit.SECONDS).shouldBeTrue()
+                retryOwnerEntered.await(5.seconds).shouldBeTrue()
                 clock.set(timeoutNanos)
                 firstWaitCompleted.countDown()
             }
@@ -503,7 +508,7 @@ class JVipsRuntimeConcurrencyTest {
                 ownerFailureReady.countDown()
             }
         }
-        firstOwnerEntered.await(5, TimeUnit.SECONDS).shouldBeTrue()
+        firstOwnerEntered.await(5.seconds).shouldBeTrue()
 
         val waiter = Thread.ofPlatform().daemon(true).start {
             try {
@@ -512,16 +517,16 @@ class JVipsRuntimeConcurrencyTest {
                 waiterFailure.set(t)
             }
         }
-        waiterFirstWaitStarted.await(5, TimeUnit.SECONDS).shouldBeTrue()
+        waiterFirstWaitStarted.await(5.seconds).shouldBeTrue()
         releaseFirstOwner.countDown()
-        ownerFailureReady.await(5, TimeUnit.SECONDS).shouldBeTrue()
-        firstWaitCompleted.await(5, TimeUnit.SECONDS).shouldBeTrue()
-        waiterSecondWaitStarted.await(5, TimeUnit.SECONDS).shouldBeTrue()
+        ownerFailureReady.await(5.seconds).shouldBeTrue()
+        firstWaitCompleted.await(5.seconds).shouldBeTrue()
+        waiterSecondWaitStarted.await(5.seconds).shouldBeTrue()
 
         try {
             waiter.join(2_000)
             waiter.isAlive.shouldBeFalse()
-            val error = waiterFailure.get().shouldNotBeNull() as VipsInitializationException
+            val error = waiterFailure.get().shouldBeInstanceOf<VipsInitializationException>()
             VipsInitializationWaitContract.assertTimedOut(error)
             JVipsRuntime.isInitialized.shouldBeFalse()
             JVipsRuntime.isShutdown.shouldBeFalse()
@@ -547,10 +552,10 @@ class JVipsRuntimeConcurrencyTest {
     fun `interrupted shutdown waiter does not release owner native state`() {
         val nativeInitStarted = CountDownLatch(1)
         val releaseNativeInit = CountDownLatch(1)
-        JVipsRuntime.nativeRuntime = object : JVipsNativeRuntime {
+        JVipsRuntime.nativeRuntime = object: JVipsNativeRuntime {
             override fun nativeInit(concurrency: Int) {
                 nativeInitStarted.countDown()
-                releaseNativeInit.await(5, TimeUnit.SECONDS).shouldBeTrue()
+                releaseNativeInit.await(5.seconds).shouldBeTrue()
                 initCount.incrementAndGet()
             }
 
@@ -567,7 +572,7 @@ class JVipsRuntimeConcurrencyTest {
                 ownerFailure.set(t)
             }
         }
-        nativeInitStarted.await(5, TimeUnit.SECONDS).shouldBeTrue()
+        nativeInitStarted.await(5.seconds).shouldBeTrue()
 
         val waiterFailure = AtomicReference<Throwable?>()
         val waiter = Thread.ofPlatform().daemon(true).start {
@@ -582,7 +587,7 @@ class JVipsRuntimeConcurrencyTest {
 
         try {
             waiter.isAlive.shouldBeFalse()
-            val error = waiterFailure.get().shouldNotBeNull() as VipsInitializationException
+            val error = waiterFailure.get().shouldBeInstanceOf<VipsInitializationException>()
             VipsInitializationWaitContract.assertInterrupted(error)
             waiter.isInterrupted.shouldBeTrue()
             JVipsRuntime.isInitialized.shouldBeFalse()
@@ -606,10 +611,10 @@ class JVipsRuntimeConcurrencyTest {
         JVipsRuntime.initializationWaitTimeoutNanos = TimeUnit.MILLISECONDS.toNanos(25)
         val nativeInitStarted = CountDownLatch(1)
         val releaseNativeInit = CountDownLatch(1)
-        JVipsRuntime.nativeRuntime = object : JVipsNativeRuntime {
+        JVipsRuntime.nativeRuntime = object: JVipsNativeRuntime {
             override fun nativeInit(concurrency: Int) {
                 nativeInitStarted.countDown()
-                releaseNativeInit.await(5, TimeUnit.SECONDS).shouldBeTrue()
+                releaseNativeInit.await(5.seconds).shouldBeTrue()
                 initCount.incrementAndGet()
             }
 
@@ -626,7 +631,7 @@ class JVipsRuntimeConcurrencyTest {
                 ownerFailure.set(t)
             }
         }
-        nativeInitStarted.await(5, TimeUnit.SECONDS).shouldBeTrue()
+        nativeInitStarted.await(5.seconds).shouldBeTrue()
 
         val waiterFailure = AtomicReference<Throwable?>()
         val waiter = Thread.ofPlatform().daemon(true).start {
@@ -640,7 +645,7 @@ class JVipsRuntimeConcurrencyTest {
 
         try {
             waiter.isAlive.shouldBeFalse()
-            val error = waiterFailure.get().shouldNotBeNull() as VipsInitializationException
+            val error = waiterFailure.get().shouldBeInstanceOf<VipsInitializationException>()
             VipsInitializationWaitContract.assertTimedOut(error)
             waiter.isInterrupted.shouldBeFalse()
             JVipsRuntime.isInitialized.shouldBeFalse()
@@ -681,18 +686,18 @@ class JVipsRuntimeConcurrencyTest {
         val waiterFailure = AtomicReference<Throwable?>()
         val retryOwnerReference = AtomicReference<Thread?>()
 
-        JVipsRuntime.nativeRuntime = object : JVipsNativeRuntime {
+        JVipsRuntime.nativeRuntime = object: JVipsNativeRuntime {
             override fun nativeInit(concurrency: Int) {
                 when (attempts.incrementAndGet()) {
                     1 -> {
                         firstOwnerEntered.countDown()
-                        releaseFirstOwner.await(5, TimeUnit.SECONDS).shouldBeTrue()
+                        releaseFirstOwner.await(5.seconds).shouldBeTrue()
                         throw IllegalStateException("synthetic owner failure")
                     }
 
                     else -> {
                         retryOwnerEntered.countDown()
-                        releaseRetryOwner.await(5, TimeUnit.SECONDS).shouldBeTrue()
+                        releaseRetryOwner.await(5.seconds).shouldBeTrue()
                         initCount.incrementAndGet()
                     }
                 }
@@ -718,7 +723,7 @@ class JVipsRuntimeConcurrencyTest {
                     }
                 }
                 retryOwnerReference.set(retryOwner)
-                retryOwnerEntered.await(5, TimeUnit.SECONDS).shouldBeTrue()
+                retryOwnerEntered.await(5.seconds).shouldBeTrue()
                 clock.set(timeoutNanos)
                 firstWaitCompleted.countDown()
             }
@@ -732,7 +737,7 @@ class JVipsRuntimeConcurrencyTest {
                 ownerFailureReady.countDown()
             }
         }
-        firstOwnerEntered.await(5, TimeUnit.SECONDS).shouldBeTrue()
+        firstOwnerEntered.await(5.seconds).shouldBeTrue()
 
         val waiter = Thread.ofPlatform().daemon(true).start {
             try {
@@ -741,16 +746,16 @@ class JVipsRuntimeConcurrencyTest {
                 waiterFailure.set(t)
             }
         }
-        waiterFirstWaitStarted.await(5, TimeUnit.SECONDS).shouldBeTrue()
+        waiterFirstWaitStarted.await(5.seconds).shouldBeTrue()
         releaseFirstOwner.countDown()
-        ownerFailureReady.await(5, TimeUnit.SECONDS).shouldBeTrue()
-        firstWaitCompleted.await(5, TimeUnit.SECONDS).shouldBeTrue()
-        waiterSecondWaitStarted.await(5, TimeUnit.SECONDS).shouldBeTrue()
+        ownerFailureReady.await(5.seconds).shouldBeTrue()
+        firstWaitCompleted.await(5.seconds).shouldBeTrue()
+        waiterSecondWaitStarted.await(5.seconds).shouldBeTrue()
 
         try {
             waiter.join(2_000)
             waiter.isAlive.shouldBeFalse()
-            val error = waiterFailure.get().shouldNotBeNull() as VipsInitializationException
+            val error = waiterFailure.get().shouldBeInstanceOf<VipsInitializationException>()
             VipsInitializationWaitContract.assertTimedOut(error)
             JVipsRuntime.isInitialized.shouldBeFalse()
             JVipsRuntime.isShutdown.shouldBeFalse()
