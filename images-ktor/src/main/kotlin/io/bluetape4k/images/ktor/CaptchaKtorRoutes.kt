@@ -12,6 +12,7 @@ import io.bluetape4k.ktor.core.intQueryParameter
 import io.bluetape4k.ktor.core.requiredPathParameter
 import io.bluetape4k.ktor.core.respondApiError
 import io.bluetape4k.support.requireNotBlank
+import io.bluetape4k.support.requirePositiveNumber
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.request.receive
@@ -24,7 +25,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import java.time.Instant
-import java.util.Base64
+import java.util.*
 
 private const val DEFAULT_CAPTCHA_ROUTE = "/captcha"
 private const val DEFAULT_CONTENT_TYPE = "image/png"
@@ -156,14 +157,11 @@ private suspend fun ApplicationCall.respondOrBadRequest(block: suspend () -> Uni
 
 private fun ApplicationCall.optionalLengthQueryParameter(): Int? {
     val length = intQueryParameter("length") ?: return null
-    length.requirePositiveCaptchaLength()
-    return length
+    return length.requirePositiveCaptchaLength()
 }
 
 private fun Int.requirePositiveCaptchaLength(): Int =
-    apply {
-        require(this > 0) { "Query parameter 'length' must be positive." }
-    }
+    requirePositiveNumber { "Query parameter 'length' must be positive." }
 
 private fun CaptchaVerificationResult.toHttpResponse(): Pair<HttpStatusCode, CaptchaVerifyResponse> =
     when (this) {

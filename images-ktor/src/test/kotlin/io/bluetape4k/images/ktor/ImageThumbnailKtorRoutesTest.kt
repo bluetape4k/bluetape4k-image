@@ -14,6 +14,8 @@ import io.bluetape4k.ktor.core.Bluetape4kKtorCoreConfig
 import io.bluetape4k.ktor.testing.bluetape4kJsonClient
 import io.bluetape4k.ktor.testing.installBluetape4kKtorCoreForTest
 import io.bluetape4k.ktor.testing.shouldHaveStatus
+import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.logging.debug
 import io.ktor.client.call.body
 import io.ktor.client.request.forms.MultiPartFormDataContent
 import io.ktor.client.request.forms.append
@@ -36,6 +38,20 @@ import javax.imageio.ImageIO
 
 class ImageThumbnailKtorRoutesTest {
 
+    private companion object: KLoggingChannel() {
+        val testCoreConfig = Bluetape4kKtorCoreConfig(installHealthRoutes = false)
+        val PNG_SIGNATURE = byteArrayOf(
+            0x89.toByte(),
+            0x50,
+            0x4E,
+            0x47,
+            0x0D,
+            0x0A,
+            0x1A,
+            0x0A,
+        )
+    }
+
     @Test
     fun `rejects non-positive input limit`() {
         assertFailsWith<IllegalArgumentException> {
@@ -54,11 +70,12 @@ class ImageThumbnailKtorRoutesTest {
         val response = client.post("/images/thumbnail?maxSide=32") {
             setBody(imageMultipart(sourceBytes))
         }
-
+        log.debug { "response=$response" }
         response shouldHaveStatus HttpStatusCode.OK
         response.headers[HttpHeaders.ContentType] shouldBeEqualTo ContentType.Image.PNG.toString()
 
         val thumbnail = immutableImageOf(response.bodyAsBytes())
+        log.debug { "thumbnail=$thumbnail" }
         thumbnail.width shouldBeLessOrEqualTo 32
         thumbnail.height shouldBeLessOrEqualTo 32
     }
@@ -75,7 +92,7 @@ class ImageThumbnailKtorRoutesTest {
         val response = client.post("/images/thumbnail") {
             setBody(imageMultipart(pngBytes(width = 16, height = 16)))
         }
-
+        log.debug { "response=$response" }
         response shouldHaveStatus HttpStatusCode.OK
     }
 
@@ -91,11 +108,13 @@ class ImageThumbnailKtorRoutesTest {
         val response = client.post("/images/thumbnail") {
             setBody(imageMultipart(pngBytes(width = 16, height = 16)))
         }
-
+        log.debug { "response=$response" }
         response shouldHaveStatus HttpStatusCode.BadRequest
+
         val body = response.body<ApiErrorResponse>()
+        log.debug { "body=$body" }
         body.message shouldBeEqualTo "Invalid image payload."
-        body.message.shouldNotContain("/srv/private/native-codec")
+        body.message shouldNotContain "/srv/private/native-codec"
     }
 
     @Test
@@ -114,9 +133,11 @@ class ImageThumbnailKtorRoutesTest {
                 )
             )
         }
-
+        log.debug { "response=$response" }
         response shouldHaveStatus HttpStatusCode.BadRequest
+
         val body = response.body<ApiErrorResponse>()
+        log.debug { "body=$body" }
         body.error shouldBeEqualTo "bad_request"
         body.status shouldBeEqualTo HttpStatusCode.BadRequest.value
     }
@@ -133,9 +154,11 @@ class ImageThumbnailKtorRoutesTest {
         val response = client.post("/images/thumbnail?maxSide=128") {
             setBody(imageMultipart(pngBytes(width = 120, height = 80)))
         }
-
+        log.debug { "response=$response" }
         response shouldHaveStatus HttpStatusCode.BadRequest
+
         val body = response.body<ApiErrorResponse>()
+        log.debug { "response=$body" }
         body.error shouldBeEqualTo "bad_request"
     }
 
@@ -149,9 +172,11 @@ class ImageThumbnailKtorRoutesTest {
         val response = client.post("/images/thumbnail") {
             setBody(imageMultipart(pngHeaderBytes(width = 10_000, height = 10_000)))
         }
-
+        log.debug { "response=$response" }
         response shouldHaveStatus HttpStatusCode.BadRequest
+
         val body = response.body<ApiErrorResponse>()
+        log.debug { "body=$body" }
         body.error shouldBeEqualTo "bad_request"
         body.message shouldContain "decodedPixels"
     }
@@ -166,12 +191,14 @@ class ImageThumbnailKtorRoutesTest {
         val response = client.post("/images/thumbnail") {
             setBody(imageMultipart("not an image".toByteArray()))
         }
-
+        log.debug { "response=$response" }
         response shouldHaveStatus HttpStatusCode.BadRequest
+
         val body = response.body<ApiErrorResponse>()
+        log.debug { "body=$body" }
         body.error shouldBeEqualTo "bad_request"
         body.message shouldBeEqualTo "Invalid image payload."
-        body.message.shouldNotContain("Image parsing failed")
+        body.message shouldNotContain "Image parsing failed"
     }
 
     private fun imageMultipart(bytes: ByteArray): MultiPartFormDataContent =
@@ -197,19 +224,20 @@ class ImageThumbnailKtorRoutesTest {
     }
 
     private fun pngHeaderBytes(width: Int, height: Int): ByteArray {
-        val output = ByteArrayOutputStream()
-        output.write(PNG_SIGNATURE)
-        output.writePngChunk(
-            type = "IHDR",
-            data = ByteArray(13).also { data ->
-                data.writeInt(0, width)
-                data.writeInt(4, height)
-                data[8] = 8
-                data[9] = 2
-            }
-        )
-        output.writePngChunk(type = "IEND", data = ByteArray(0))
-        return output.toByteArray()
+        ByteArrayOutputStream().use { output ->
+            output.write(PNG_SIGNATURE)
+            output.writePngChunk(
+                type = "IHDR",
+                data = ByteArray(13).also { data ->
+                    data.writeInt(0, width)
+                    data.writeInt(4, height)
+                    data[8] = 8
+                    data[9] = 2
+                }
+            )
+            output.writePngChunk(type = "IEND", data = ByteArray(0))
+            return output.toByteArray()
+        }
     }
 
     private fun ByteArray.writeInt(offset: Int, value: Int) {
@@ -238,23 +266,9 @@ class ImageThumbnailKtorRoutesTest {
         write(value and 0xFF)
     }
 
-    private object FailingImageWriter : ImageWriter {
+    private object FailingImageWriter: ImageWriter {
         override fun write(image: AwtImage, metadata: ImageMetadata, out: OutputStream) {
             throw IOException("native codec failed at /srv/private/native-codec")
         }
-    }
-
-    private companion object {
-        val testCoreConfig = Bluetape4kKtorCoreConfig(installHealthRoutes = false)
-        val PNG_SIGNATURE = byteArrayOf(
-            0x89.toByte(),
-            0x50,
-            0x4E,
-            0x47,
-            0x0D,
-            0x0A,
-            0x1A,
-            0x0A,
-        )
     }
 }

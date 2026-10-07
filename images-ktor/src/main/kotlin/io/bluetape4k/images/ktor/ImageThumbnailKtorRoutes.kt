@@ -8,9 +8,11 @@ import io.bluetape4k.images.toByteArray
 import io.bluetape4k.ktor.core.ApiErrorResponse
 import io.bluetape4k.ktor.core.intQueryParameter
 import io.bluetape4k.ktor.core.respondApiError
-import io.bluetape4k.logging.KotlinLogging
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.warn
+import io.bluetape4k.support.requireLe
 import io.bluetape4k.support.requireNotBlank
+import io.bluetape4k.support.requireNotNull
 import io.bluetape4k.support.requirePositiveNumber
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
@@ -28,6 +30,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.io.readByteArray
 import java.io.IOException
+import java.io.Serializable
 
 private const val DEFAULT_IMAGE_ROUTE = "/images"
 private const val DEFAULT_IMAGE_FIELD = "file"
@@ -39,7 +42,7 @@ private const val DEFAULT_MAX_THUMBNAIL_SIDE = 2_048
 private const val INVALID_IMAGE_PAYLOAD_MESSAGE = "Invalid image payload."
 private const val UNKNOWN_IMAGE_DIMENSIONS_MESSAGE = "Image input dimensions could not be determined."
 
-private val log = KotlinLogging.logger {}
+private object ImageThumbnailKtorRoutes: KLogging()
 
 /**
  * compact image thumbnail endpoint를 위한 Ktor route configuration입니다.
@@ -49,7 +52,7 @@ private val log = KotlinLogging.logger {}
  * persistence, S3, CDN URL, native libvips가 필요한 application은 이 route 밖에서
  * 해당 concern을 조합해야 합니다.
  */
-class ImageThumbnailKtorRoutesConfig(
+data class ImageThumbnailKtorRoutesConfig(
     val routePath: String = DEFAULT_IMAGE_ROUTE,
     val multipartFieldName: String = DEFAULT_IMAGE_FIELD,
     val maxInputBytes: Long = DEFAULT_MAX_INPUT_BYTES.toLong(),
@@ -59,8 +62,7 @@ class ImageThumbnailKtorRoutesConfig(
     val maxAllowedSide: Int = DEFAULT_MAX_THUMBNAIL_SIDE,
     val writer: ImageWriter = PngWriter.MaxCompression,
     val responseContentType: ContentType = ContentType.Image.PNG,
-) {
-
+): Serializable {
     init {
         routePath.requireNotBlank("routePath")
         multipartFieldName.requireNotBlank("multipartFieldName")
@@ -69,9 +71,13 @@ class ImageThumbnailKtorRoutesConfig(
         maxInputSide.requirePositiveNumber("maxInputSide")
         defaultMaxSide.requirePositiveNumber("defaultMaxSide")
         maxAllowedSide.requirePositiveNumber("maxAllowedSide")
-        require(defaultMaxSide <= maxAllowedSide) {
-            "defaultMaxSide must be less than or equal to maxAllowedSide."
+        defaultMaxSide.requireLe(maxAllowedSide) {
+            "defaultMaxSide[$this] must be less than or equal to maxAllowedSide[$maxAllowedSide]."
         }
+    }
+
+    companion object {
+        private const val serialVersionUID = 1L
     }
 }
 
@@ -183,7 +189,7 @@ private fun ApplicationCall.thumbnailMaxSide(config: ImageThumbnailKtorRoutesCon
         defaultValue = config.defaultMaxSide,
         range = 1..config.maxAllowedSide
     )
-    return requireNotNull(maxSide) { "maxSide must be resolved from the default or query parameter." }
+    return maxSide.requireNotNull { "maxSide must be resolved from the default or query parameter." }
 }
 
 private suspend fun ApplicationCall.respondImageRoute(block: suspend () -> Unit) {
@@ -196,7 +202,7 @@ private suspend fun ApplicationCall.respondImageRoute(block: suspend () -> Unit)
             message = e.message ?: "Invalid image request."
         )
     } catch (e: IOException) {
-        log.warn(e) {
+        ImageThumbnailKtorRoutes.log.warn(e) {
             "Image thumbnail request failed. reason=io_failure path=${request.local.uri}"
         }
         respondApiError(

@@ -26,8 +26,7 @@ dependencies {
 }
 ```
 
-Install the shared bluetape4k Ktor core baseline, or install compatible Ktor
-JSON support yourself:
+Install the shared bluetape4k Ktor core baseline, or install compatible Ktor JSON support yourself:
 
 ```kotlin
 dependencies {
@@ -60,11 +59,11 @@ fun Application.module() {
 
 Routes:
 
-| Method | Path | Description |
-| --- | --- | --- |
+| Method | Path                            | Description                                                  |
+|--------|---------------------------------|--------------------------------------------------------------|
 | `POST` | `/images/thumbnail?maxSide=320` | Reads multipart field `file` and returns PNG thumbnail bytes |
-| `GET` | `/captcha?length=6` | Issues a challenge and returns base64 PNG bytes |
-| `POST` | `/captcha/{id}/verify` | Consumes the challenge and verifies the submitted answer |
+| `GET`  | `/captcha?length=6`             | Issues a challenge and returns base64 PNG bytes              |
+| `POST` | `/captcha/{id}/verify`          | Consumes the challenge and verifies the submitted answer     |
 
 Thumbnail upload example:
 
@@ -76,8 +75,7 @@ curl -F "file=@photo.jpg;type=image/jpeg" \
 
 Verification returns `SUCCESS`, `WRONG_ANSWER`, `EXPIRED`, or `NOT_FOUND`.
 `CaptchaVerificationService` remains the storage boundary. Use a distributed
-`CaptchaChallengeStore` when multiple application instances must share issued
-challenges.
+`CaptchaChallengeStore` when multiple application instances must share issued challenges.
 
 ## Custom Configuration
 
@@ -118,11 +116,7 @@ routing {
 ```
 
 `maxInputBytes` limits compressed upload size, while `maxInputPixels` and
-`maxInputSide` limit decoded image area and width/height from the image header
-before thumbnail generation starts.
+`maxInputSide` limit decoded image area and width/height from the image header before thumbnail generation starts.
 
-The thumbnail helper is pure JVM and local-only. Compose persistence, S3/CDN
-URLs, authorization, and native libvips acceleration outside this route when an
-application needs them. Generic JSON defaults, error payloads, path/query
-parameter parsing, and test-client helpers come from the shared
+The thumbnail helper is pure JVM and local-only. Compose persistence, S3/CDN URLs, authorization, and native libvips acceleration outside this route when an application needs them. Generic JSON defaults, error payloads, path/query parameter parsing, and test-client helpers come from the shared
 `bluetape4k-ktor-*` modules.

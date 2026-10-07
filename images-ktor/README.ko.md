@@ -26,8 +26,7 @@ dependencies {
 }
 ```
 
-공용 bluetape4k Ktor core baseline을 설치하거나, 호환되는 Ktor JSON 지원을 직접
-설치하세요.
+공용 bluetape4k Ktor core baseline을 설치하거나, 호환되는 Ktor JSON 지원을 직접 설치하세요.
 
 ```kotlin
 dependencies {
@@ -60,11 +59,11 @@ fun Application.module() {
 
 라우트:
 
-| Method | Path | 설명 |
-| --- | --- | --- |
+| Method | Path                            | 설명                                                |
+|--------|---------------------------------|-----------------------------------------------------|
 | `POST` | `/images/thumbnail?maxSide=320` | multipart field `file`을 읽어 PNG 썸네일 bytes 반환 |
-| `GET` | `/captcha?length=6` | 챌린지를 발급하고 base64 PNG bytes를 반환 |
-| `POST` | `/captcha/{id}/verify` | 챌린지를 소비하고 제출된 답변을 검증 |
+| `GET`  | `/captcha?length=6`             | 챌린지를 발급하고 base64 PNG bytes를 반환           |
+| `POST` | `/captcha/{id}/verify`          | 챌린지를 소비하고 제출된 답변을 검증                |
 
 썸네일 업로드 예시:
 
@@ -75,8 +74,7 @@ curl -F "file=@photo.jpg;type=image/jpeg" \
 ```
 
 검증 결과는 `SUCCESS`, `WRONG_ANSWER`, `EXPIRED`, `NOT_FOUND` 중 하나입니다.
-`CaptchaVerificationService`는 storage boundary로 유지됩니다. 여러 애플리케이션
-인스턴스가 발급된 챌린지를 공유해야 한다면 분산 `CaptchaChallengeStore`를 제공하세요.
+`CaptchaVerificationService`는 storage boundary로 유지됩니다. 여러 애플리케이션 인스턴스가 발급된 챌린지를 공유해야 한다면 분산 `CaptchaChallengeStore`를 제공하세요.
 
 ## 사용자 정의 설정
 
@@ -117,10 +115,6 @@ routing {
 ```
 
 `maxInputBytes`는 압축된 upload 크기를 제한하고, `maxInputPixels`와
-`maxInputSide`는 thumbnail 생성을 시작하기 전에 image header에서 읽은 decoded
-image 면적과 width/height를 제한합니다.
+`maxInputSide`는 thumbnail 생성을 시작하기 전에 image header에서 읽은 decoded image 면적과 width/height를 제한합니다.
 
-썸네일 helper는 순수 JVM 기반의 로컬 처리 경계만 제공합니다. persistence, S3/CDN URL,
-authorization, native libvips 가속이 필요하면 애플리케이션 레이어에서 조합하세요.
-일반 JSON 기본값, error payload, path/query parameter parsing, test-client helper는
-공용 `bluetape4k-ktor-*` 모듈을 사용합니다.
+썸네일 helper는 순수 JVM 기반의 로컬 처리 경계만 제공합니다. persistence, S3/CDN URL, authorization, native libvips 가속이 필요하면 애플리케이션 레이어에서 조합하세요. 일반 JSON 기본값, error payload, path/query parameter parsing, test-client helper는 공용 `bluetape4k-ktor-*` 모듈을 사용합니다.
