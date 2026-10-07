@@ -5,6 +5,10 @@ import io.bluetape4k.assertions.shouldBeGreaterThan
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.images.vips.VipsEncodeOptions
 import io.bluetape4k.images.vips.java25.AbstractFfmVipsTest
+import io.bluetape4k.images.vips.java25.JPEG_MAGIC
+import io.bluetape4k.images.vips.java25.PNG_MAGIC
+import io.bluetape4k.images.vips.java25.WEBP_MARKER
+import io.bluetape4k.images.vips.java25.WEBP_RIFF
 import io.bluetape4k.images.vips.testfixtures.VipsTestFixtures
 import io.bluetape4k.logging.KLogging
 import org.junit.jupiter.api.Test
@@ -19,12 +23,7 @@ import java.lang.foreign.Arena
  */
 class FfmVipsWriterTest: AbstractFfmVipsTest() {
 
-    companion object: KLogging() {
-        private val JPEG_MAGIC = byteArrayOf(0xFF.toByte(), 0xD8.toByte(), 0xFF.toByte())
-        private val PNG_MAGIC = byteArrayOf(0x89.toByte(), 0x50.toByte(), 0x4E.toByte(), 0x47.toByte())
-        private val WEBP_RIFF = byteArrayOf(0x52.toByte(), 0x49.toByte(), 0x46.toByte(), 0x46.toByte())
-        private val WEBP_MARKER = byteArrayOf(0x57.toByte(), 0x45.toByte(), 0x42.toByte(), 0x50.toByte())
-    }
+    companion object: KLogging()
 
     // ─── FfmVipsJpegWriter 검증 ───────────────────────────────────────────────
 

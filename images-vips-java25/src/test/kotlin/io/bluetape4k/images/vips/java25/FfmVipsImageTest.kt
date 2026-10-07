@@ -42,13 +42,7 @@ import io.bluetape4k.okio.coroutines.buffered as bufferedSuspended
 @OptIn(VipsIncubatingApi::class)
 class FfmVipsImageTest: AbstractFfmVipsTest() {
 
-    companion object: KLogging() {
-        private val JPEG_MAGIC = byteArrayOf(0xFF.toByte(), 0xD8.toByte(), 0xFF.toByte())
-        private val PNG_MAGIC = byteArrayOf(0x89.toByte(), 0x50.toByte(), 0x4E.toByte(), 0x47.toByte())
-        private val WEBP_RIFF = byteArrayOf(0x52.toByte(), 0x49.toByte(), 0x46.toByte(), 0x46.toByte())
-        private val WEBP_MARKER = byteArrayOf(0x57.toByte(), 0x45.toByte(), 0x42.toByte(), 0x50.toByte())
-        private val FTYP_MARKER = byteArrayOf(0x66, 0x74, 0x79, 0x70)
-    }
+    companion object: KLogging() 
 
     @Test
     fun `public WebP lossless encoding preserves RGBA and default stays lossy`() {
