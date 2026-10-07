@@ -1,20 +1,23 @@
 package io.bluetape4k.images.ocr
 
 import com.sksamuel.scrimage.ImmutableImage
+import io.bluetape4k.assertions.should
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldNotBeEmpty
-import io.bluetape4k.assertions.should
 import io.bluetape4k.images.coroutines.SuspendTiffMultiPageWriter
-import java.io.ByteArrayOutputStream
-import java.nio.file.Files
+import io.bluetape4k.logging.KLogging
+import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty
 import org.testcontainers.utility.MountableFile
-import kotlinx.coroutines.runBlocking
+import java.io.ByteArrayOutputStream
+import java.nio.file.Files
 
 /** 실제 container Tesseract CLI에 3-page TIFF를 전달하는 orchestration smoke입니다. */
 @EnabledIfSystemProperty(named = "ocr.container.enabled", matches = "true")
 class TiffMultiPageTesseractContainerOcrTest {
+
+    companion object: KLogging()
 
     @Test
     fun `container Tesseract recognizes TIFF pages in order`() {
@@ -35,7 +38,7 @@ class TiffMultiPageTesseractContainerOcrTest {
         output.toByteArray()
     }
 
-    private class ContainerStructuredOcrEngine : StructuredOcrEngine {
+    private class ContainerStructuredOcrEngine: StructuredOcrEngine {
         private var pageNumber = 0
 
         override fun recognize(image: ImmutableImage, options: OcrOptions): OcrResult =

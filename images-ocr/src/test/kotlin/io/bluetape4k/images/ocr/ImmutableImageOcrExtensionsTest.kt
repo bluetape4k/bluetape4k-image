@@ -2,16 +2,20 @@ package io.bluetape4k.images.ocr
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
-import java.util.concurrent.atomic.AtomicInteger
-import kotlinx.coroutines.async
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withContext
 import org.junit.jupiter.api.Test
+import java.util.concurrent.atomic.AtomicInteger
 
 class ImmutableImageOcrExtensionsTest {
+
+    companion object: KLogging()
 
     @Test
     fun `extractText delegates to supplied engine`() {
@@ -46,6 +50,7 @@ class ImmutableImageOcrExtensionsTest {
 
         val result = textImage().extractOcr(options, engine)
 
+        log.debug { "result: $result" }
         result.text shouldBeEqualTo "structured ocr"
         result.lines.size shouldBeEqualTo 1
         calls.get() shouldBeEqualTo 1
