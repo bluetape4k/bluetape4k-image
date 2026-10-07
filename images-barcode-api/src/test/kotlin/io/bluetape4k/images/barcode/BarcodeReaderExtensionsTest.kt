@@ -4,8 +4,8 @@ import com.sksamuel.scrimage.ImmutableImage
 import com.sksamuel.scrimage.nio.PngWriter
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
-import java.nio.file.Files
-import java.util.concurrent.atomic.AtomicInteger
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
@@ -16,8 +16,12 @@ import okio.buffer
 import okio.source
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import java.nio.file.Files
+import java.util.concurrent.atomic.AtomicInteger
 
 class BarcodeReaderExtensionsTest {
+
+    companion object: KLogging()
 
     private lateinit var calls: AtomicInteger
     private lateinit var recordedOptions: MutableList<BarcodeOptions>
@@ -81,6 +85,7 @@ class BarcodeReaderExtensionsTest {
         assertFailsWith<CancellationException> {
             sampleImage().suspendExtractBarcodes(reader = reader)
         }
+
         calls.get() shouldBeEqualTo 1
     }
 
@@ -94,6 +99,7 @@ class BarcodeReaderExtensionsTest {
         try {
             reader.readBarcodes(bytes).single().text shouldBeEqualTo "from input"
             reader.readBarcodes(path).single().text shouldBeEqualTo "from input"
+
             bytes.inputStream().use { input ->
                 reader.readBarcodes(input).single().text shouldBeEqualTo "from input"
             }
@@ -103,6 +109,8 @@ class BarcodeReaderExtensionsTest {
         } finally {
             Files.deleteIfExists(path)
         }
+
+        log.debug { "recordedSizes=$recordedSizes" }
 
         calls.get() shouldBeEqualTo 4
         recordedSizes shouldBeEqualTo listOf(64 to 32, 64 to 32, 64 to 32, 64 to 32)
