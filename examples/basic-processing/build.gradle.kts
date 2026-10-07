@@ -4,7 +4,10 @@ plugins {
 
 dependencies {
     implementation(project(":bluetape4k-images"))
+
+    implementation(bt4k.bluetape4k.coroutines)
     implementation(libs.kotlinx.coroutines.core)
+    testImplementation(libs.kotlinx.coroutines.test)
 
     testImplementation(bt4k.bluetape4k.junit5)
 }

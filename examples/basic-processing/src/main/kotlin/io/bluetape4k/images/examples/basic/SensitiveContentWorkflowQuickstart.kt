@@ -22,13 +22,15 @@ import io.bluetape4k.images.privacy.suspendPrivacyDerivative
 import io.bluetape4k.images.suspendLoadImage
 import io.bluetape4k.images.thumbnail.ThumbnailSize
 import io.bluetape4k.support.requireNotBlank
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import java.awt.Color
 import java.io.Serializable
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
-import java.util.Locale
-import kotlinx.coroutines.runBlocking
+import java.util.*
 import kotlin.io.path.Path
 
 fun main(args: Array<String>) = runBlocking {
@@ -46,7 +48,9 @@ object SensitiveContentWorkflowQuickstart {
     suspend fun generate(
         outputDirectory: Path = Path("build/tmp/sensitive-content-workflow"),
     ): SensitiveWorkflowExampleResult {
-        Files.createDirectories(outputDirectory)
+        withContext(Dispatchers.IO) {
+            Files.createDirectories(outputDirectory)
+        }
 
         val source = resourcePath(CAFE_IMAGE)
         val image = suspendLoadImage(source)
@@ -62,13 +66,17 @@ object SensitiveContentWorkflowQuickstart {
             source = source,
         )
         val previewOutput = outputDirectory.resolve(PREVIEW_FILE)
-        Files.write(previewOutput, preview.bytes)
+        withContext(Dispatchers.IO) {
+            Files.write(previewOutput, preview.bytes)
+        }
 
         val reportOutput = outputDirectory.resolve(REPORT_FILE)
-        Files.writeString(
-            reportOutput,
-            buildModerationSummary(detections, actionPlans, preview),
-        )
+        withContext(Dispatchers.IO) {
+            Files.writeString(
+                reportOutput,
+                buildModerationSummary(detections, actionPlans, preview),
+            )
+        }
 
         return SensitiveWorkflowExampleResult(
             source = source,
@@ -169,7 +177,7 @@ object SensitiveContentWorkflowQuickstart {
             intensity = parameters.intensitySummary(action),
             reason = reason,
             renderableInCoreDerivative = region?.geometry is SensitiveRegionGeometry.Rectangle &&
-                action in CORE_DERIVATIVE_REDACTION_ACTIONS,
+                    action in CORE_DERIVATIVE_REDACTION_ACTIONS,
             region = region,
         )
     }
@@ -181,7 +189,8 @@ object SensitiveContentWorkflowQuickstart {
             SensitiveTreatmentAction.SOLID_MASK -> "maskOpacity=${maskOpacity ?: "adapter-default"}"
             SensitiveTreatmentAction.MANUAL_REVIEW -> "reviewPriority=${reviewPriority ?: "normal"}"
             SensitiveTreatmentAction.DROP,
-            SensitiveTreatmentAction.REJECT -> "rejectReason=${rejectReason ?: "policy"}"
+            SensitiveTreatmentAction.REJECT,
+                -> "rejectReason=${rejectReason ?: "policy"}"
             SensitiveTreatmentAction.QUARANTINE -> "hold=manual-triage"
             SensitiveTreatmentAction.ALLOW -> "none"
         }
@@ -236,9 +245,15 @@ object SensitiveContentWorkflowQuickstart {
             actionPlans.forEachIndexed { index, plan ->
                 appendLine(
                     "${index + 1}. ${plan.detectionLabel}: ${plan.category}/${plan.severity} " +
-                        "confidence=${String.format(Locale.ROOT, "%.2f", plan.confidence)} region=${plan.regionKind} " +
-                        "action=${plan.action} level=${plan.level} intensity=${plan.intensity} " +
-                        "coreDerivative=${plan.renderableInCoreDerivative} reason=${plan.reason}"
+                            "confidence=${
+                                String.format(
+                                    Locale.ROOT,
+                                    "%.2f",
+                                    plan.confidence
+                                )
+                            } region=${plan.regionKind} " +
+                            "action=${plan.action} level=${plan.level} intensity=${plan.intensity} " +
+                            "coreDerivative=${plan.renderableInCoreDerivative} reason=${plan.reason}"
                 )
             }
             appendLine()
@@ -426,7 +441,7 @@ data class SensitiveWorkflowExampleResult(
     val detections: List<SensitiveContentDetection>,
     val actionPlans: List<SensitiveWorkflowActionPlan>,
     val preview: PrivacyDerivativeResult,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID: Long = -2512653319463079765L
     }
@@ -444,7 +459,7 @@ data class SensitiveWorkflowActionPlan(
     val reason: String,
     val renderableInCoreDerivative: Boolean,
     val region: SensitiveRegion?,
-) : Serializable {
+): Serializable {
 
     init {
         detectionLabel.requireNotBlank("detectionLabel")
