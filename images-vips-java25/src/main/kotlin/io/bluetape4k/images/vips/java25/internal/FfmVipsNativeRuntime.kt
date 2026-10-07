@@ -23,6 +23,7 @@ internal interface FfmVipsNativeRuntime {
  * native 초기화 전에 명시적으로 거부합니다.
  */
 internal object DefaultFfmVipsNativeRuntime: FfmVipsNativeRuntime {
+
     override fun nativeInit(concurrency: Int) {
         Vips.init()
     }

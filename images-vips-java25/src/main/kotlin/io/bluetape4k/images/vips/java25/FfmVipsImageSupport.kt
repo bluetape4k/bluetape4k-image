@@ -5,6 +5,11 @@ import app.photofox.vipsffm.VipsError
 import io.bluetape4k.images.vips.VipsDecodeException
 import io.bluetape4k.images.vips.VipsImage
 import io.bluetape4k.images.vips.VipsImageFormat
+import io.bluetape4k.images.vips.VipsImageFormat.AVIF
+import io.bluetape4k.images.vips.VipsImageFormat.HEIC
+import io.bluetape4k.images.vips.VipsImageFormat.JPEG
+import io.bluetape4k.images.vips.VipsImageFormat.PNG
+import io.bluetape4k.images.vips.VipsImageFormat.WEBP
 import io.bluetape4k.images.vips.VipsIncubatingApi
 import io.bluetape4k.images.vips.VipsLimits
 import io.bluetape4k.images.vips.java25.internal.FfmVipsFormatSupport
@@ -24,7 +29,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 import io.bluetape4k.okio.coroutines.buffered as bufferedSuspended
 
-private val MAX_INPUT_BYTES = VipsLimits.MAX_INPUT_BYTES
+private const val MAX_INPUT_BYTES = VipsLimits.MAX_INPUT_BYTES
 
 private val JPEG_MAGIC = byteArrayOf(0xFF.toByte(), 0xD8.toByte(), 0xFF.toByte())
 private val PNG_MAGIC = byteArrayOf(0x89.toByte(), 0x50.toByte(), 0x4E.toByte(), 0x47.toByte())
@@ -146,7 +151,7 @@ suspend fun suspendFfmVipsImageOf(source: BufferedSuspendedSource): VipsImage =
  * 이 overload는 [source]를 buffer하고 close합니다.
  */
 suspend fun suspendFfmVipsImageOf(source: SuspendedSource): VipsImage {
-    val bufferedSource = source.bufferedSuspended()
+    val bufferedSource: BufferedSuspendedSource = source.bufferedSuspended()
     return try {
         suspendFfmVipsImageOf(bufferedSource)
     } finally {
@@ -171,22 +176,23 @@ private fun readBounded(stream: InputStream): ByteArray {
 private fun readPathBytesBounded(path: Path): ByteArray =
     Files.newInputStream(path).use(::readBounded)
 
-@OptIn(VipsIncubatingApi::class)
 private fun checkFormatAllowlist(bytes: ByteArray) {
     val format = bytes.detectAllowedFormat()
         ?: throw VipsDecodeException("Unsupported image format — only JPEG, PNG, WebP, AVIF, and HEIC are allowed")
+
     FfmVipsFormatSupport.requireDecoding(format)
 }
 
 @OptIn(VipsIncubatingApi::class)
 private fun ByteArray.detectAllowedFormat(): VipsImageFormat? {
-    if (startsWith(JPEG_MAGIC)) return VipsImageFormat.JPEG
-    if (startsWith(PNG_MAGIC)) return VipsImageFormat.PNG
-    if (startsWith(WEBP_RIFF) && size >= 12 && regionMatches(8, WEBP_MARKER)) return VipsImageFormat.WEBP
+    if (startsWith(JPEG_MAGIC)) return JPEG
+    if (startsWith(PNG_MAGIC)) return PNG
+    if (startsWith(WEBP_RIFF) && size >= 12 && regionMatches(8, WEBP_MARKER)) return WEBP
+
     if (size >= 12 && regionMatches(4, FTYP_MARKER)) {
         return when (String(this, 8, 4, Charsets.US_ASCII)) {
-            in AVIF_BRANDS -> VipsImageFormat.AVIF
-            in HEIF_BRANDS -> VipsImageFormat.HEIC
+            in AVIF_BRANDS -> AVIF
+            in HEIF_BRANDS -> HEIC
             else -> null
         }
     }
@@ -229,7 +235,7 @@ private fun checkPixelCount(vImage: VImage) {
         ?: throw VipsDecodeException("Failed to read bands count from decoded image")
     val pixelCount = vImage.width.toLong() * vImage.height.toLong() * bands.toLong()
     val maxPixels = FfmVipsRuntime.maxPixels
-    if (pixelCount < 0 || pixelCount > maxPixels) {
+    if (pixelCount !in 0..maxPixels) {
         throw VipsDecodeException(
             "Image exceeds maximum pixel count: $pixelCount > $maxPixels " +
                     "(width=${vImage.width}, height=${vImage.height}, bands=$bands)"

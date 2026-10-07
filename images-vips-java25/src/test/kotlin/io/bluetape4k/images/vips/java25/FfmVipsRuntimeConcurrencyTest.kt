@@ -3,10 +3,12 @@ package io.bluetape4k.images.vips.java25
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeInstanceOf
 import io.bluetape4k.assertions.shouldBeNull
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.concurrent.await
 import io.bluetape4k.images.vips.VipsConcurrencySupport
 import io.bluetape4k.images.vips.VipsInitializationException
 import io.bluetape4k.images.vips.java25.internal.DefaultFfmVipsNativeRuntime
@@ -15,6 +17,8 @@ import io.bluetape4k.images.vips.testfixtures.VipsInitializationWaitContract
 import io.bluetape4k.junit5.concurrency.MultithreadingTester
 import io.bluetape4k.junit5.concurrency.StructuredTaskScopeTester
 import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
+import io.bluetape4k.utils.Runtimex
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -24,6 +28,8 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.atomic.AtomicReference
+import kotlin.concurrent.thread
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * [FfmVipsRuntime.init] concurrent call이 native init을 정확히 한 번만 실행하고,
@@ -66,8 +72,8 @@ class FfmVipsRuntimeConcurrencyTest {
     @Test
     fun `concurrent init calls native init exactly once with platform threads`() {
         MultithreadingTester()
-            .workers(10)
-            .rounds(1)
+            .workers(Runtimex.availableProcessors)
+            .rounds(2)
             .add { FfmVipsRuntime.init() }
             .run()
 
@@ -78,7 +84,7 @@ class FfmVipsRuntimeConcurrencyTest {
     @Test
     fun `concurrent init calls native init exactly once with virtual threads`() {
         StructuredTaskScopeTester()
-            .rounds(10)
+            .rounds(Runtimex.availableProcessors * 2)
             .add { FfmVipsRuntime.init() }
             .run()
 
@@ -176,7 +182,7 @@ class FfmVipsRuntimeConcurrencyTest {
         FfmVipsRuntime.nativeRuntime = object: FfmVipsNativeRuntime {
             override fun nativeInit(concurrency: Int) {
                 nativeInitStarted.countDown()
-                releaseNativeInit.await(5, TimeUnit.SECONDS).shouldBeTrue()
+                releaseNativeInit.await(5.seconds).shouldBeTrue()
                 initCount.incrementAndGet()
             }
 
@@ -184,17 +190,17 @@ class FfmVipsRuntimeConcurrencyTest {
         }
 
         val ownerFailure = AtomicReference<Throwable?>()
-        val owner = Thread.ofPlatform().daemon(true).start {
+        val owner = thread(isDaemon = true) {
             try {
                 FfmVipsRuntime.init(maxPixels = 1_000L)
             } catch (t: Throwable) {
                 ownerFailure.set(t)
             }
         }
-        nativeInitStarted.await(5, TimeUnit.SECONDS).shouldBeTrue()
+        nativeInitStarted.await(5.seconds).shouldBeTrue()
 
         val loserFailure = AtomicReference<Throwable?>()
-        val loser = Thread.ofPlatform().daemon(true).start {
+        val loser = thread(isDaemon = true) {
             try {
                 FfmVipsRuntime.init(maxPixels = 2_000L)
             } catch (t: Throwable) {
@@ -209,7 +215,8 @@ class FfmVipsRuntimeConcurrencyTest {
         loser.isAlive.shouldBeFalse()
         ownerFailure.get().shouldBeNull()
 
-        val error = loserFailure.get().shouldNotBeNull() as VipsInitializationException
+        val error = loserFailure.get().shouldBeInstanceOf<VipsInitializationException>()
+        log.debug { "error=${error.message}" }
         error.message shouldContain "requested=(concurrency=4, maxPixels=2000)"
         error.message shouldContain "effective=(concurrency=4, maxPixels=1000)"
         initCount.get() shouldBeEqualTo 1
@@ -222,7 +229,7 @@ class FfmVipsRuntimeConcurrencyTest {
         FfmVipsRuntime.nativeRuntime = object: FfmVipsNativeRuntime {
             override fun nativeInit(concurrency: Int) {
                 nativeInitStarted.countDown()
-                releaseNativeInit.await(5, TimeUnit.SECONDS).shouldBeTrue()
+                releaseNativeInit.await(5.seconds).shouldBeTrue()
                 initCount.incrementAndGet()
             }
 
@@ -232,18 +239,18 @@ class FfmVipsRuntimeConcurrencyTest {
         }
 
         val ownerFailure = AtomicReference<Throwable?>()
-        val owner = Thread.ofPlatform().daemon(true).start {
+        val owner = thread(isDaemon = true) {
             try {
                 FfmVipsRuntime.init()
             } catch (t: Throwable) {
                 ownerFailure.set(t)
             }
         }
-        nativeInitStarted.await(5, TimeUnit.SECONDS).shouldBeTrue()
+        nativeInitStarted.await(5.seconds).shouldBeTrue()
 
         val waiterStarted = CountDownLatch(1)
         val waiterFailure = AtomicReference<Throwable?>()
-        val waiter = Thread.ofPlatform().daemon(true).start {
+        val waiter = thread(isDaemon = true) {
             waiterStarted.countDown()
             try {
                 FfmVipsRuntime.init()
@@ -251,13 +258,13 @@ class FfmVipsRuntimeConcurrencyTest {
                 waiterFailure.set(t)
             }
         }
-        waiterStarted.await(5, TimeUnit.SECONDS).shouldBeTrue()
+        waiterStarted.await(5.seconds).shouldBeTrue()
         waiter.interrupt()
         waiter.join(5_000)
 
         try {
             waiter.isAlive.shouldBeFalse()
-            val error = waiterFailure.get().shouldNotBeNull() as VipsInitializationException
+            val error = waiterFailure.get().shouldBeInstanceOf<VipsInitializationException>()
             VipsInitializationWaitContract.assertInterrupted(error)
             waiter.isInterrupted.shouldBeTrue()
             FfmVipsRuntime.isInitialized.shouldBeFalse()
@@ -279,10 +286,11 @@ class FfmVipsRuntimeConcurrencyTest {
         FfmVipsRuntime.initializationWaitTimeoutNanos = TimeUnit.MILLISECONDS.toNanos(25)
         val nativeInitStarted = CountDownLatch(1)
         val releaseNativeInit = CountDownLatch(1)
+
         FfmVipsRuntime.nativeRuntime = object: FfmVipsNativeRuntime {
             override fun nativeInit(concurrency: Int) {
                 nativeInitStarted.countDown()
-                releaseNativeInit.await(5, TimeUnit.SECONDS).shouldBeTrue()
+                releaseNativeInit.await(5.seconds).shouldBeTrue()
                 initCount.incrementAndGet()
             }
 
@@ -292,17 +300,17 @@ class FfmVipsRuntimeConcurrencyTest {
         }
 
         val ownerFailure = AtomicReference<Throwable?>()
-        val owner = Thread.ofPlatform().daemon(true).start {
+        val owner = thread(isDaemon = true) {
             try {
                 FfmVipsRuntime.init()
             } catch (t: Throwable) {
                 ownerFailure.set(t)
             }
         }
-        nativeInitStarted.await(5, TimeUnit.SECONDS).shouldBeTrue()
+        nativeInitStarted.await(5.seconds).shouldBeTrue()
 
         val waiterFailure = AtomicReference<Throwable?>()
-        val waiter = Thread.ofPlatform().daemon(true).start {
+        val waiter = thread(isDaemon = true) {
             try {
                 FfmVipsRuntime.init()
             } catch (t: Throwable) {
@@ -313,7 +321,7 @@ class FfmVipsRuntimeConcurrencyTest {
 
         try {
             waiter.isAlive.shouldBeFalse()
-            val error = waiterFailure.get().shouldNotBeNull() as VipsInitializationException
+            val error = waiterFailure.get().shouldBeInstanceOf<VipsInitializationException>()
             VipsInitializationWaitContract.assertTimedOut(error)
             waiter.isInterrupted.shouldBeFalse()
             FfmVipsRuntime.isInitialized.shouldBeFalse()
@@ -351,13 +359,13 @@ class FfmVipsRuntimeConcurrencyTest {
                 when (attempts.incrementAndGet()) {
                     1 -> {
                         firstOwnerEntered.countDown()
-                        releaseFirstOwner.await(5, TimeUnit.SECONDS).shouldBeTrue()
+                        releaseFirstOwner.await(5.seconds).shouldBeTrue()
                         throw IllegalStateException("synthetic owner failure")
                     }
 
                     else -> {
                         retryOwnerEntered.countDown()
-                        releaseRetryOwner.await(5, TimeUnit.SECONDS).shouldBeTrue()
+                        releaseRetryOwner.await(5.seconds).shouldBeTrue()
                         initCount.incrementAndGet()
                     }
                 }
@@ -375,7 +383,7 @@ class FfmVipsRuntimeConcurrencyTest {
         }
         FfmVipsRuntime.initializationWaitCompletedHook = {
             if (completionHookUsed.compareAndSet(false, true)) {
-                val retryOwner = Thread.ofPlatform().daemon(true).start {
+                val retryOwner = thread(isDaemon = true) {
                     try {
                         FfmVipsRuntime.init()
                     } catch (t: Throwable) {
@@ -383,29 +391,29 @@ class FfmVipsRuntimeConcurrencyTest {
                     }
                 }
                 retryOwnerReference.set(retryOwner)
-                retryOwnerEntered.await(5, TimeUnit.SECONDS).shouldBeTrue()
+                retryOwnerEntered.await(5.seconds).shouldBeTrue()
             }
         }
 
-        val owner = Thread.ofPlatform().daemon(true).start {
+        val owner = thread(isDaemon = true) {
             try {
                 FfmVipsRuntime.init()
             } catch (t: Throwable) {
                 ownerFailure.set(t)
             }
         }
-        firstOwnerEntered.await(5, TimeUnit.SECONDS).shouldBeTrue()
+        firstOwnerEntered.await(5.seconds).shouldBeTrue()
 
-        val waiter = Thread.ofPlatform().daemon(true).start {
+        val waiter = thread(isDaemon = true) {
             try {
                 FfmVipsRuntime.init()
             } catch (t: Throwable) {
                 waiterFailure.set(t)
             }
         }
-        waiterWaitStarted.await(5, TimeUnit.SECONDS).shouldBeTrue()
+        waiterWaitStarted.await(5.seconds).shouldBeTrue()
         releaseFirstOwner.countDown()
-        waiterSecondWaitStarted.await(5, TimeUnit.SECONDS).shouldBeTrue()
+        waiterSecondWaitStarted.await(5.seconds).shouldBeTrue()
 
         try {
             waiter.isAlive.shouldBeTrue()
@@ -458,13 +466,13 @@ class FfmVipsRuntimeConcurrencyTest {
                 when (attempts.incrementAndGet()) {
                     1 -> {
                         firstOwnerEntered.countDown()
-                        releaseFirstOwner.await(5, TimeUnit.SECONDS).shouldBeTrue()
+                        releaseFirstOwner.await(5.seconds).shouldBeTrue()
                         throw IllegalStateException("synthetic owner failure")
                     }
 
                     else -> {
                         retryOwnerEntered.countDown()
-                        releaseRetryOwner.await(5, TimeUnit.SECONDS).shouldBeTrue()
+                        releaseRetryOwner.await(5.seconds).shouldBeTrue()
                         initCount.incrementAndGet()
                     }
                 }
@@ -482,7 +490,7 @@ class FfmVipsRuntimeConcurrencyTest {
         }
         FfmVipsRuntime.initializationWaitCompletedHook = {
             if (completionHookUsed.compareAndSet(false, true)) {
-                val retryOwner = Thread.ofPlatform().daemon(true).start {
+                val retryOwner = thread(isDaemon = true) {
                     try {
                         FfmVipsRuntime.init()
                     } catch (t: Throwable) {
@@ -490,13 +498,13 @@ class FfmVipsRuntimeConcurrencyTest {
                     }
                 }
                 retryOwnerReference.set(retryOwner)
-                retryOwnerEntered.await(5, TimeUnit.SECONDS).shouldBeTrue()
+                retryOwnerEntered.await(5.seconds).shouldBeTrue()
                 clock.set(timeoutNanos)
                 firstWaitCompleted.countDown()
             }
         }
 
-        val owner = Thread.ofPlatform().daemon(true).start {
+        val owner = thread(isDaemon = true) {
             try {
                 FfmVipsRuntime.init()
             } catch (t: Throwable) {
@@ -504,25 +512,25 @@ class FfmVipsRuntimeConcurrencyTest {
                 ownerFailureReady.countDown()
             }
         }
-        firstOwnerEntered.await(5, TimeUnit.SECONDS).shouldBeTrue()
+        firstOwnerEntered.await(5.seconds).shouldBeTrue()
 
-        val waiter = Thread.ofPlatform().daemon(true).start {
+        val waiter = thread(isDaemon = true) {
             try {
                 FfmVipsRuntime.init()
             } catch (t: Throwable) {
                 waiterFailure.set(t)
             }
         }
-        waiterFirstWaitStarted.await(5, TimeUnit.SECONDS).shouldBeTrue()
+        waiterFirstWaitStarted.await(5.seconds).shouldBeTrue()
         releaseFirstOwner.countDown()
-        ownerFailureReady.await(5, TimeUnit.SECONDS).shouldBeTrue()
-        firstWaitCompleted.await(5, TimeUnit.SECONDS).shouldBeTrue()
-        waiterSecondWaitStarted.await(5, TimeUnit.SECONDS).shouldBeTrue()
+        ownerFailureReady.await(5.seconds).shouldBeTrue()
+        firstWaitCompleted.await(5.seconds).shouldBeTrue()
+        waiterSecondWaitStarted.await(5.seconds).shouldBeTrue()
 
         try {
             waiter.join(2_000)
             waiter.isAlive.shouldBeFalse()
-            val error = waiterFailure.get().shouldNotBeNull() as VipsInitializationException
+            val error = waiterFailure.get().shouldBeInstanceOf<VipsInitializationException>()
             VipsInitializationWaitContract.assertTimedOut(error)
             FfmVipsRuntime.isInitialized.shouldBeFalse()
             FfmVipsRuntime.isShutdown.shouldBeFalse()
@@ -551,7 +559,7 @@ class FfmVipsRuntimeConcurrencyTest {
         FfmVipsRuntime.nativeRuntime = object: FfmVipsNativeRuntime {
             override fun nativeInit(concurrency: Int) {
                 nativeInitStarted.countDown()
-                releaseNativeInit.await(5, TimeUnit.SECONDS).shouldBeTrue()
+                releaseNativeInit.await(5.seconds).shouldBeTrue()
                 initCount.incrementAndGet()
             }
 
@@ -561,17 +569,17 @@ class FfmVipsRuntimeConcurrencyTest {
         }
 
         val ownerFailure = AtomicReference<Throwable?>()
-        val owner = Thread.ofPlatform().daemon(true).start {
+        val owner = thread(isDaemon = true) {
             try {
                 FfmVipsRuntime.init()
             } catch (t: Throwable) {
                 ownerFailure.set(t)
             }
         }
-        nativeInitStarted.await(5, TimeUnit.SECONDS).shouldBeTrue()
+        nativeInitStarted.await(5.seconds).shouldBeTrue()
 
         val waiterFailure = AtomicReference<Throwable?>()
-        val waiter = Thread.ofPlatform().daemon(true).start {
+        val waiter = thread(isDaemon = true) {
             try {
                 FfmVipsRuntime.shutdown()
             } catch (t: Throwable) {
@@ -583,7 +591,7 @@ class FfmVipsRuntimeConcurrencyTest {
 
         try {
             waiter.isAlive.shouldBeFalse()
-            val error = waiterFailure.get().shouldNotBeNull() as VipsInitializationException
+            val error = waiterFailure.get().shouldBeInstanceOf<VipsInitializationException>()
             VipsInitializationWaitContract.assertInterrupted(error)
             waiter.isInterrupted.shouldBeTrue()
             FfmVipsRuntime.isInitialized.shouldBeFalse()
@@ -610,7 +618,7 @@ class FfmVipsRuntimeConcurrencyTest {
         FfmVipsRuntime.nativeRuntime = object: FfmVipsNativeRuntime {
             override fun nativeInit(concurrency: Int) {
                 nativeInitStarted.countDown()
-                releaseNativeInit.await(5, TimeUnit.SECONDS).shouldBeTrue()
+                releaseNativeInit.await(5.seconds).shouldBeTrue()
                 initCount.incrementAndGet()
             }
 
@@ -620,17 +628,17 @@ class FfmVipsRuntimeConcurrencyTest {
         }
 
         val ownerFailure = AtomicReference<Throwable?>()
-        val owner = Thread.ofPlatform().daemon(true).start {
+        val owner = thread(isDaemon = true) {
             try {
                 FfmVipsRuntime.init()
             } catch (t: Throwable) {
                 ownerFailure.set(t)
             }
         }
-        nativeInitStarted.await(5, TimeUnit.SECONDS).shouldBeTrue()
+        nativeInitStarted.await(5.seconds).shouldBeTrue()
 
         val waiterFailure = AtomicReference<Throwable?>()
-        val waiter = Thread.ofPlatform().daemon(true).start {
+        val waiter = thread(isDaemon = true) {
             try {
                 FfmVipsRuntime.shutdown()
             } catch (t: Throwable) {
@@ -641,7 +649,7 @@ class FfmVipsRuntimeConcurrencyTest {
 
         try {
             waiter.isAlive.shouldBeFalse()
-            val error = waiterFailure.get().shouldNotBeNull() as VipsInitializationException
+            val error = waiterFailure.get().shouldBeInstanceOf<VipsInitializationException>()
             VipsInitializationWaitContract.assertTimedOut(error)
             waiter.isInterrupted.shouldBeFalse()
             FfmVipsRuntime.isInitialized.shouldBeFalse()
@@ -687,13 +695,13 @@ class FfmVipsRuntimeConcurrencyTest {
                 when (attempts.incrementAndGet()) {
                     1 -> {
                         firstOwnerEntered.countDown()
-                        releaseFirstOwner.await(5, TimeUnit.SECONDS).shouldBeTrue()
+                        releaseFirstOwner.await(5.seconds).shouldBeTrue()
                         throw IllegalStateException("synthetic owner failure")
                     }
 
                     else -> {
                         retryOwnerEntered.countDown()
-                        releaseRetryOwner.await(5, TimeUnit.SECONDS).shouldBeTrue()
+                        releaseRetryOwner.await(5.seconds).shouldBeTrue()
                         initCount.incrementAndGet()
                     }
                 }
@@ -711,7 +719,7 @@ class FfmVipsRuntimeConcurrencyTest {
         }
         FfmVipsRuntime.initializationWaitCompletedHook = {
             if (completionHookUsed.compareAndSet(false, true)) {
-                val retryOwner = Thread.ofPlatform().daemon(true).start {
+                val retryOwner = thread(isDaemon = true) {
                     try {
                         FfmVipsRuntime.init()
                     } catch (t: Throwable) {
@@ -719,13 +727,13 @@ class FfmVipsRuntimeConcurrencyTest {
                     }
                 }
                 retryOwnerReference.set(retryOwner)
-                retryOwnerEntered.await(5, TimeUnit.SECONDS).shouldBeTrue()
+                retryOwnerEntered.await(5.seconds).shouldBeTrue()
                 clock.set(timeoutNanos)
                 firstWaitCompleted.countDown()
             }
         }
 
-        val owner = Thread.ofPlatform().daemon(true).start {
+        val owner = thread(isDaemon = true) {
             try {
                 FfmVipsRuntime.init()
             } catch (t: Throwable) {
@@ -733,25 +741,25 @@ class FfmVipsRuntimeConcurrencyTest {
                 ownerFailureReady.countDown()
             }
         }
-        firstOwnerEntered.await(5, TimeUnit.SECONDS).shouldBeTrue()
+        firstOwnerEntered.await(5.seconds).shouldBeTrue()
 
-        val waiter = Thread.ofPlatform().daemon(true).start {
+        val waiter = thread(isDaemon = true) {
             try {
                 FfmVipsRuntime.shutdown()
             } catch (t: Throwable) {
                 waiterFailure.set(t)
             }
         }
-        waiterFirstWaitStarted.await(5, TimeUnit.SECONDS).shouldBeTrue()
+        waiterFirstWaitStarted.await(5.seconds).shouldBeTrue()
         releaseFirstOwner.countDown()
-        ownerFailureReady.await(5, TimeUnit.SECONDS).shouldBeTrue()
-        firstWaitCompleted.await(5, TimeUnit.SECONDS).shouldBeTrue()
-        waiterSecondWaitStarted.await(5, TimeUnit.SECONDS).shouldBeTrue()
+        ownerFailureReady.await(5.seconds).shouldBeTrue()
+        firstWaitCompleted.await(5.seconds).shouldBeTrue()
+        waiterSecondWaitStarted.await(5.seconds).shouldBeTrue()
 
         try {
             waiter.join(2_000)
             waiter.isAlive.shouldBeFalse()
-            val error = waiterFailure.get().shouldNotBeNull() as VipsInitializationException
+            val error = waiterFailure.get().shouldBeInstanceOf<VipsInitializationException>()
             VipsInitializationWaitContract.assertTimedOut(error)
             FfmVipsRuntime.isInitialized.shouldBeFalse()
             FfmVipsRuntime.isShutdown.shouldBeFalse()
@@ -783,7 +791,7 @@ class FfmVipsRuntimeConcurrencyTest {
 
         FfmVipsRuntime.concurrencyCapability.support shouldBeEqualTo VipsConcurrencySupport.UNSUPPORTED
         FfmVipsRuntime.concurrencyCapability.requested shouldBeEqualTo 4
-        FfmVipsRuntime.concurrencyCapability.effective shouldBeEqualTo null
+        FfmVipsRuntime.concurrencyCapability.effective.shouldBeNull()
         FfmVipsRuntime.concurrencyCapability.reason shouldContain "does not expose"
     }
 
@@ -795,6 +803,7 @@ class FfmVipsRuntimeConcurrencyTest {
             FfmVipsRuntime.init(concurrency = 2, maxPixels = 2_000L)
         }
 
+        log.debug { "error=${error.message}" }
         error.message shouldContain "requested=2"
         error.message shouldContain "effective=unknown"
         error.message shouldContain "support=UNSUPPORTED"
@@ -825,6 +834,7 @@ class FfmVipsRuntimeConcurrencyTest {
             FfmVipsRuntime.init(concurrency = 2)
         }
 
+        log.debug { "error=${error.message}" }
         error.message shouldContain "requested=2"
         error.message shouldContain "effective=unknown"
         error.message shouldContain "support=UNSUPPORTED"

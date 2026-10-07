@@ -63,7 +63,7 @@ internal class FfmVipsImage(
     }
 
     private fun checkOpen() {
-        if (closed.get()) throw IllegalStateException("VipsImage has been closed")
+        if (closed.get()) error("VipsImage has been closed")
     }
 
     override fun resize(width: Int, height: Int): VipsImage {
@@ -168,11 +168,15 @@ internal class FfmVipsImage(
             val derived = operation()
             val rawMemory = derived.writeToMemory()
             val ownedMemory = derivedArena.allocate(rawMemory.byteSize())
+
             MemorySegment.copy(rawMemory, 0, ownedMemory, 0, rawMemory.byteSize())
+
             val bands = derived.getInt("bands")
                 ?: throw VipsDecodeException("Failed to read derived bands count")
+
             val format = derived.getInt("format")
                 ?: throw VipsDecodeException("Failed to read derived pixel format")
+
             val ownedImage = VImage.newFromMemory(
                 derivedArena,
                 ownedMemory,
@@ -181,6 +185,7 @@ internal class FfmVipsImage(
                 bands,
                 format,
             )
+
             FfmVipsImage(derivedArena, ownedImage)
         } catch (failure: Throwable) {
             closeArenaAfterFailure(derivedArena, failure)
