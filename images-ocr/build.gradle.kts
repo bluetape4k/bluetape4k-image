@@ -1,5 +1,3 @@
-import org.gradle.api.tasks.compile.JavaCompile
-
 configurations {
     testImplementation.get().extendsFrom(compileOnly.get(), runtimeOnly.get())
 }
@@ -20,13 +18,17 @@ tasks.named<Test>("test") {
 }
 
 dependencies {
+    // OCR 라이브리러
+    api(bt4k.tess4j)
+
     api(project(":bluetape4k-images"))
 
+    // Coroutines
+    implementation(bt4k.bluetape4k.coroutines)
     implementation(libs.kotlinx.coroutines.core)
-    implementation(bt4k.tess4j)
-
-    testImplementation(bt4k.bluetape4k.junit5)
     testImplementation(libs.kotlinx.coroutines.test)
+
+    // Test & Testcontainers
+    testImplementation(bt4k.bluetape4k.junit5)
     testImplementation(libs.testcontainers)
-    testImplementation(libs.testcontainers.junit.jupiter)
 }

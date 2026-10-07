@@ -64,7 +64,7 @@ class OcrConfigurationException(
     message: String,
     cause: Throwable? = null,
 ): OcrException(message, cause) {
-    constructor(message: String) : this(message, null)
+    constructor(message: String): this(message, null)
 
     companion object {
         private const val serialVersionUID: Long = 7589750812884482785L

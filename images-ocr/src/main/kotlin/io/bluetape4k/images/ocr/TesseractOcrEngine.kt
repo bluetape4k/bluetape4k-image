@@ -1,15 +1,15 @@
 package io.bluetape4k.images.ocr
 
 import com.sksamuel.scrimage.ImmutableImage
-import java.awt.Rectangle
-import java.awt.image.BufferedImage
-import java.io.Serializable
 import kotlinx.coroutines.CancellationException
 import net.sourceforge.tess4j.ITessAPI
 import net.sourceforge.tess4j.ITesseract
 import net.sourceforge.tess4j.Tesseract
 import net.sourceforge.tess4j.TesseractException
 import net.sourceforge.tess4j.Word
+import java.awt.Rectangle
+import java.awt.image.BufferedImage
+import java.io.Serializable
 
 /**
  * Tess4J 기반 OCR engine입니다.
@@ -50,12 +50,8 @@ class TesseractOcrEngine private constructor(
 
         val bufferedImage = image.awt()
         val text = recognizeText(tesseract, bufferedImage, options)
-        val pages = listOf(
-            OcrPage(
-                pageIndex = DEFAULT_PAGE_INDEX,
-                text = text,
-            ),
-        )
+        val pages = listOf(OcrPage(pageIndex = DEFAULT_PAGE_INDEX, text = text))
+        
         val blocks = if (options.structuredDetail.includesBlocks) {
             recognizeWords(tesseract, bufferedImage, options, ITessAPI.TessPageIteratorLevel.RIL_BLOCK)
                 .map { it.toTextBlock(options) }
@@ -74,6 +70,7 @@ class TesseractOcrEngine private constructor(
         } else {
             emptyList()
         }
+
         return OcrStructuredResult(
             text = text,
             options = options,

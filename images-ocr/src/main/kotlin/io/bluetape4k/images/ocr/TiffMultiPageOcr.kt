@@ -1,11 +1,21 @@
 package io.bluetape4k.images.ocr
 
 import com.sksamuel.scrimage.ImmutableImage
+import io.bluetape4k.ToStringBuilder
 import io.bluetape4k.images.IIORegistryUtils
 import io.bluetape4k.images.ImageDecodeLimits
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
+import io.bluetape4k.support.closeSafe
 import io.bluetape4k.support.requirePositiveNumber
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.runInterruptible
+import kotlinx.coroutines.withContext
 import java.awt.image.BufferedImage
 import java.io.ByteArrayInputStream
 import java.io.EOFException
@@ -16,15 +26,6 @@ import java.io.Serializable
 import javax.imageio.ImageIO
 import javax.imageio.ImageReader
 import javax.imageio.stream.ImageInputStream
-import kotlin.jvm.JvmSynthetic
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.NonCancellable
-import kotlinx.coroutines.currentCoroutineContext
-import kotlinx.coroutines.ensureActive
-import kotlinx.coroutines.runInterruptible
-import kotlinx.coroutines.withContext
 
 /**
  * 다중 페이지 TIFF OCR에 적용하는 입력·metadata·결과 resource budget입니다.
@@ -41,7 +42,7 @@ data class TiffMultiPageOcrLimits @JvmOverloads constructor(
     val maxMetadataBytes: Long = 2L * 1024L * 1024L,
     val maxResultTextChars: Int = 1_000_000,
     val maxResultEntries: Int = 100_000,
-) : Serializable {
+): Serializable {
 
     init {
         maxEncodedBytes.requirePositiveNumber("maxEncodedBytes")
@@ -83,13 +84,13 @@ class TiffMultiPageOcrValidationException(
     val pageIndex: Int?,
     message: String,
     cause: Throwable? = null,
-) : IllegalArgumentException(message, cause), Serializable {
+): IllegalArgumentException(message, cause), Serializable {
 
     constructor(
         reason: TiffMultiPageOcrFailureReason,
         pageIndex: Int?,
         message: String,
-    ) : this(reason, pageIndex, message, null)
+    ): this(reason, pageIndex, message, null)
 
     companion object {
         private const val serialVersionUID: Long = 1L
@@ -102,13 +103,13 @@ class TiffMultiPageOcrException(
     val pageIndex: Int?,
     message: String,
     cause: Throwable? = null,
-) : OcrException(message, cause), Serializable {
+): OcrException(message, cause), Serializable {
 
     constructor(
         reason: TiffMultiPageOcrFailureReason,
         pageIndex: Int?,
         message: String,
-    ) : this(reason, pageIndex, message, null)
+    ): this(reason, pageIndex, message, null)
 
     companion object {
         private const val serialVersionUID: Long = 1L
@@ -130,8 +131,9 @@ class TiffMultiPageOcr private constructor(
 
     /** 기본 reader와 engine을 사용하는 public Java/Kotlin 진입점입니다. */
     @JvmOverloads
-    constructor(engine: StructuredOcrEngine = TesseractOcrEngine()) :
-        this(engine, DefaultTiffImageInputFactory, DefaultTiffImageReaderFactory)
+    constructor(
+        engine: StructuredOcrEngine = TesseractOcrEngine(),
+    ): this(engine, DefaultTiffImageInputFactory, DefaultTiffImageReaderFactory)
 
     /**
      * TIFF 전체를 preflight한 뒤 page 순서대로 OCR합니다.
@@ -333,7 +335,7 @@ class TiffMultiPageOcr private constructor(
 
         val pages = ArrayList<PageMetadata>(pageCount)
         var totalPixels = 0L
-        for (index in 0 until pageCount) {
+        repeat(pageCount) { index ->
             val width: Int
             val height: Int
             try {
@@ -464,6 +466,7 @@ class TiffMultiPageOcr private constructor(
 
     private fun closeSession(session: TiffImageSession?, primary: Throwable?) {
         if (session == null) return
+
         try {
             session.close()
         } catch (cleanup: Throwable) {
@@ -487,13 +490,12 @@ class TiffMultiPageOcr private constructor(
         reason: TiffMultiPageOcrFailureReason,
         pageIndex: Int?,
         cause: Throwable? = null,
-    ): TiffMultiPageOcrValidationException =
-        TiffMultiPageOcrValidationException(
-            reason,
-            pageIndex,
-            "TIFF OCR input was rejected (reason=$reason, phase=${reason.phase()}, pageIndex=${pageIndex ?: "none"}).",
-            cause,
-        )
+    ): TiffMultiPageOcrValidationException = TiffMultiPageOcrValidationException(
+        reason,
+        pageIndex,
+        "TIFF OCR input was rejected (reason=$reason, phase=${reason.phase()}, pageIndex=${pageIndex ?: "none"}).",
+        cause,
+    )
 
     private fun TiffMultiPageOcrFailureReason.phase(): String = when (this) {
         TiffMultiPageOcrFailureReason.INPUT_TOO_LARGE -> "input"
@@ -505,14 +507,15 @@ class TiffMultiPageOcr private constructor(
         TiffMultiPageOcrFailureReason.SIDE_LIMIT_EXCEEDED,
         TiffMultiPageOcrFailureReason.PIXELS_PER_PAGE_LIMIT_EXCEEDED,
         TiffMultiPageOcrFailureReason.TOTAL_PIXELS_LIMIT_EXCEEDED,
-        TiffMultiPageOcrFailureReason.METADATA_LIMIT_EXCEEDED -> "metadata"
+        TiffMultiPageOcrFailureReason.METADATA_LIMIT_EXCEEDED,
+            -> "metadata"
         TiffMultiPageOcrFailureReason.DECODE_FAILED -> "decode"
         TiffMultiPageOcrFailureReason.ENGINE_FAILED -> "engine"
         TiffMultiPageOcrFailureReason.RESULT_LIMIT_EXCEEDED -> "result"
         TiffMultiPageOcrFailureReason.UNKNOWN -> "unknown"
     }
 
-    private inline fun <reified T : Throwable> findCause(error: Throwable): T? {
+    private inline fun <reified T: Throwable> findCause(error: Throwable): T? {
         var current: Throwable? = error
         while (current != null) {
             if (current is T) return current
@@ -521,7 +524,7 @@ class TiffMultiPageOcr private constructor(
         return null
     }
 
-    internal companion object : KLoggingChannel() {
+    internal companion object: KLoggingChannel() {
         @JvmSynthetic
         fun withFactories(
             engine: StructuredOcrEngine,
@@ -531,7 +534,7 @@ class TiffMultiPageOcr private constructor(
 
         private const val TIFF_HEADER_BYTES: Long = 8L
         private fun logCleanup(error: Throwable) {
-            log.debug { "TIFF OCR resource cleanup failed: ${error::class.java.name}" }
+            log.debug(error) { "TIFF OCR resource cleanup failed." }
         }
     }
 }
@@ -564,9 +567,9 @@ private class AggregateResult(
             )
         }
         val accumulatedEntries = pages.size.toLong() + blocks.size.toLong() +
-            lines.size.toLong() + words.size.toLong()
+                lines.size.toLong() + words.size.toLong()
         val pageEntries = result.pages.size.toLong() + result.blocks.size.toLong() +
-            result.lines.size.toLong() + result.words.size.toLong()
+                result.lines.size.toLong() + result.words.size.toLong()
         if (pageEntries > limits.maxResultEntries.toLong() - accumulatedEntries) {
             throw TiffMultiPageOcrValidationException(
                 TiffMultiPageOcrFailureReason.RESULT_LIMIT_EXCEEDED,
@@ -591,13 +594,19 @@ private class AggregateResult(
         lines = lines.toList(),
         words = words.toList(),
     )
+
+    override fun toString(): String =
+        ToStringBuilder(this)
+            .add("options", options)
+            .add("limits", limits)
+            .toString()
 }
 
 internal interface TiffImageInputFactory {
     fun open(bytes: ByteArray, maxMetadataBytes: Long): TiffImageInput
 }
 
-internal interface TiffImageInput : AutoCloseable {
+internal interface TiffImageInput: AutoCloseable {
     val stream: ImageInputStream
 
     val metadataLimitExceeded: Boolean
@@ -610,12 +619,12 @@ internal interface TiffImageReaderFactory {
     fun open(stream: ImageInputStream): ImageReader
 }
 
-private class MetadataLimitExceededException : IOException("metadata budget exceeded")
+private class MetadataLimitExceededException: IOException("metadata budget exceeded")
 
 private class MetadataBudgetInputStream(
     input: InputStream,
     private val maxMetadataBytes: Long,
-) : FilterInputStream(input) {
+): FilterInputStream(input) {
     private var metadataPhase = true
     private var consumedMetadataBytes = 0L
 
@@ -671,7 +680,7 @@ private class MetadataBudgetInputStream(
 private class DefaultTiffImageInput(
     private val source: MetadataBudgetInputStream,
     override val stream: ImageInputStream,
-) : TiffImageInput {
+): TiffImageInput {
     override val metadataLimitExceeded: Boolean
         get() = source.metadataLimitExceeded
 
@@ -695,16 +704,14 @@ private class DefaultTiffImageInput(
     }
 }
 
-private object DefaultTiffImageInputFactory : TiffImageInputFactory {
+private object DefaultTiffImageInputFactory: TiffImageInputFactory {
     override fun open(bytes: ByteArray, maxMetadataBytes: Long): TiffImageInput {
         val source = MetadataBudgetInputStream(ByteArrayInputStream(bytes), maxMetadataBytes)
         val stream = try {
             ImageIO.createImageInputStream(source)
                 ?: throw IOException("ImageInputStream unavailable")
         } catch (error: Throwable) {
-            try {
-                source.close()
-            } catch (_: Throwable) {
+            source.closeSafe { _ ->
                 // The caller has no session yet; keep the primary reader failure sanitized.
             }
             throw error
@@ -713,7 +720,7 @@ private object DefaultTiffImageInputFactory : TiffImageInputFactory {
     }
 }
 
-private object DefaultTiffImageReaderFactory : TiffImageReaderFactory {
+private object DefaultTiffImageReaderFactory: TiffImageReaderFactory {
     override fun open(stream: ImageInputStream): ImageReader {
         IIORegistryUtils.registerApplicationClasspathSpis()
         stream.seek(0)
@@ -728,25 +735,27 @@ private object DefaultTiffImageReaderFactory : TiffImageReaderFactory {
 
         val tiffReaders = readers.filter { reader ->
             reader.formatName.equals("tiff", ignoreCase = true) ||
-                reader.formatName.equals("tif", ignoreCase = true)
+                    reader.formatName.equals("tif", ignoreCase = true)
         }
         val selected = tiffReaders.firstOrNull { reader ->
             reader.javaClass.name.startsWith("com.twelvemonkeys.imageio.plugins.tiff.")
         } ?: tiffReaders.firstOrNull()
         readers.filter { it !== selected }.forEach(ImageReader::dispose)
         stream.seek(0)
-        return selected ?: throw TiffMultiPageOcrValidationException(
-            TiffMultiPageOcrFailureReason.UNSUPPORTED_FORMAT,
-            null,
-            "TIFF OCR input format is unsupported (phase=metadata).",
-        )
+
+        return selected
+            ?: throw TiffMultiPageOcrValidationException(
+                TiffMultiPageOcrFailureReason.UNSUPPORTED_FORMAT,
+                null,
+                "TIFF OCR input format is unsupported (phase=metadata).",
+            )
     }
 }
 
 private class TiffImageSession(
     val input: TiffImageInput,
     val reader: ImageReader,
-) : AutoCloseable {
+): AutoCloseable {
     override fun close() {
         var failure: Throwable? = null
         try {
@@ -763,4 +772,4 @@ private class TiffImageSession(
     }
 }
 
-private class SanitizedCleanupMarker : RuntimeException("TIFF OCR resource cleanup failed")
+private class SanitizedCleanupMarker: RuntimeException("TIFF OCR resource cleanup failed")

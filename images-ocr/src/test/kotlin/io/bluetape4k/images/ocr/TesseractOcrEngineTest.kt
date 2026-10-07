@@ -4,14 +4,21 @@ import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeNull
 import io.bluetape4k.assertions.shouldContain
-import java.awt.Rectangle
-import java.awt.image.BufferedImage
+import io.bluetape4k.assertions.shouldHaveSize
+import io.bluetape4k.assertions.shouldNotBe
+import io.bluetape4k.assertions.shouldNotContain
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import kotlinx.coroutines.CancellationException
 import net.sourceforge.tess4j.ITessAPI
 import net.sourceforge.tess4j.TesseractException
 import org.junit.jupiter.api.Test
+import java.awt.Rectangle
+import java.awt.image.BufferedImage
 
 class TesseractOcrEngineTest {
+
+    companion object: KLogging()
 
     @Test
     fun `recognize configures a fresh Tess4J instance per call`() {
@@ -33,8 +40,12 @@ class TesseractOcrEngineTest {
 
         first.text shouldBeEqualTo "configured text"
         second.text shouldBeEqualTo "  configured text  "
-        instances.size shouldBeEqualTo 2
-        (instances[0] === instances[1]) shouldBeEqualTo false
+
+        instances shouldHaveSize 2
+        log.debug { "instance[0]=${instances[0]}" }
+        log.debug { "instance[1]=${instances[1]}" }
+        
+        instances[0] shouldNotBe instances[1]
         instances[0].recordedLanguage shouldBeEqualTo "eng+kor"
         instances[0].recordedDatapath shouldBeEqualTo "/opt/tessdata"
         instances[0].recordedEngineMode shouldBeEqualTo TesseractEngineMode.LSTM_ONLY.value
@@ -54,8 +65,8 @@ class TesseractOcrEngineTest {
             engine.recognize(textImage(), OcrOptions(languages = listOf("eng")))
         }
 
-        error.message.orEmpty() shouldContain "Tesseract OCR failed for languages=eng"
-        error.message.orEmpty().contains("/secret") shouldBeEqualTo false
+        error.message shouldContain "Tesseract OCR failed for languages=eng"
+        error.message shouldNotContain  "/secret"
     }
 
     @Test
@@ -67,7 +78,7 @@ class TesseractOcrEngineTest {
         }
 
         error.cause shouldBeEqualTo cause
-        error.message.orEmpty().contains("/secret") shouldBeEqualTo false
+        error.message shouldNotContain  "/secret"
     }
 
     @Test
@@ -82,7 +93,7 @@ class TesseractOcrEngineTest {
             )
         }
         configurationError.cause shouldBeEqualTo cause
-        configurationError.message.orEmpty().contains("/secret") shouldBeEqualTo false
+        configurationError.message shouldNotContain "/secret"
 
         val cancellation = CancellationException("caller cancelled")
         assertFailsWith<CancellationException> {
@@ -140,6 +151,7 @@ class TesseractOcrEngineTest {
 
         val result = engine.recognizeStructured(textImage(), options)
 
+        log.debug { "result=$result" }
         result.text shouldBeEqualTo "page text"
         result.pages.single().text shouldBeEqualTo "page text"
         result.blocks.single().sourceRegion shouldBeEqualTo region
@@ -148,6 +160,7 @@ class TesseractOcrEngineTest {
         result.words.single().text shouldBeEqualTo "word"
         result.words.single().sourceRegion shouldBeEqualTo region
         result.words.single().confidence shouldBeEqualTo 91.0
+
         client.requestedRegions shouldBeEqualTo listOf(Rectangle(0, 0, 200, 100))
         client.requestedLevels shouldBeEqualTo listOf(
             ITessAPI.TessPageIteratorLevel.RIL_BLOCK,
@@ -177,6 +190,7 @@ class TesseractOcrEngineTest {
             OcrOptions(structuredDetail = OcrStructuredDetail.LINE),
         )
 
+        log.debug { "result=$result" }
         result.blocks.size shouldBeEqualTo 0
         result.lines.single().text shouldBeEqualTo "line without metadata"
         result.lines.single().confidence.shouldBeNull()

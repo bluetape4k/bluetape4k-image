@@ -1,36 +1,48 @@
 package io.bluetape4k.images.ocr
 
 import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.shouldBeEmpty
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeNull
+import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.io.serializer.JdkBinarySerializer
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
+import net.sourceforge.tess4j.ITessAPI
+import org.junit.jupiter.api.Test
+import java.awt.Rectangle
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
-import java.awt.Rectangle
-import net.sourceforge.tess4j.ITessAPI
-import org.junit.jupiter.api.Test
 
 class OcrOptionsTest {
+
+    companion object: KLogging()
 
     @Test
     fun `default options use English Tesseract baseline`() {
         val options = OcrOptions()
-
+        
+        log.debug { "options=$options" }
         options.languages shouldBeEqualTo listOf("eng")
         options.languageExpression shouldBeEqualTo "eng"
         options.engineMode shouldBeEqualTo TesseractEngineMode.DEFAULT
         options.pageSegmentationMode shouldBeEqualTo TesseractPageSegmentationMode.AUTO
-        options.trimText shouldBeEqualTo true
+        options.trimText.shouldBeTrue()
         options.structuredDetail shouldBeEqualTo OcrStructuredDetail.PLAIN_TEXT
-        options.regions shouldBeEqualTo emptyList()
+        options.regions.shouldBeEmpty()
     }
 
     @Test
     fun `languages are validated and joined for Tess4J`() {
         val options = OcrOptions(languages = listOf("eng", "kor", "jpn"))
 
+        log.debug { "options=$options" }
         options.languageExpression shouldBeEqualTo "eng+kor+jpn"
+
         assertFailsWith<IllegalArgumentException> {
             OcrOptions(languages = emptyList())
         }
@@ -70,6 +82,7 @@ class OcrOptionsTest {
         configs.clear()
         regions.clear()
 
+        log.debug { "options=$options" }
         options.languages shouldBeEqualTo listOf("eng", "kor")
         options.variables shouldBeEqualTo mapOf("tessedit_char_whitelist" to "ABC")
         options.configs shouldBeEqualTo listOf("quiet")
@@ -94,6 +107,7 @@ class OcrOptionsTest {
         copiedConfigs.clear()
         copiedRegions.clear()
 
+        log.debug { "copied=$copied" }
         copied.languages shouldBeEqualTo listOf("jpn")
         copied.variables shouldBeEqualTo mapOf("preserve_interword_spaces" to "1")
         copied.configs shouldBeEqualTo listOf("digits")
@@ -117,6 +131,7 @@ class OcrOptionsTest {
             regions = listOf(OcrRegion(OcrBoundingBox(x = 0, y = 0, width = 100, height = 40))),
         )
 
+        log.debug { "options=$options" }
         options.component1() shouldBeEqualTo options.languages
         options.component2() shouldBeEqualTo options.tessdataPath
         options.component3() shouldBeEqualTo options.engineMode
@@ -126,7 +141,8 @@ class OcrOptionsTest {
         options.component7() shouldBeEqualTo options.trimText
         options.component8() shouldBeEqualTo options.structuredDetail
         options.component9() shouldBeEqualTo options.regions
-        OcrOptions::class.isData shouldBeEqualTo false
+
+        OcrOptions::class.isData.shouldBeFalse()
     }
 
     @Test
@@ -138,6 +154,7 @@ class OcrOptionsTest {
         box.intersects(region) shouldBeEqualTo true
         OcrBoundingBox.from(Rectangle(0, 0, 0, 10)).shouldBeNull()
         OcrBoundingBox.from(Rectangle(-1, 0, 10, 10)).shouldBeNull()
+
         assertFailsWith<IllegalArgumentException> {
             OcrBoundingBox(x = 0, y = 0, width = 0, height = 10)
         }
@@ -157,12 +174,12 @@ class OcrOptionsTest {
     @Test
     fun `serializable models round trip`() {
         val options = OcrOptions(
-                languages = listOf("eng", "kor"),
-                tessdataPath = "/opt/tessdata",
-                variables = mapOf("tessedit_char_whitelist" to "ABC"),
-                configs = listOf("quiet"),
-                structuredDetail = OcrStructuredDetail.WORD,
-                regions = listOf(OcrRegion(OcrBoundingBox(x = 0, y = 0, width = 100, height = 40), id = "header")),
+            languages = listOf("eng", "kor"),
+            tessdataPath = "/opt/tessdata",
+            variables = mapOf("tessedit_char_whitelist" to "ABC"),
+            configs = listOf("quiet"),
+            structuredDetail = OcrStructuredDetail.WORD,
+            regions = listOf(OcrRegion(OcrBoundingBox(x = 0, y = 0, width = 100, height = 40), id = "header")),
         )
         val result = OcrStructuredResult(
             text = "recognized",
@@ -179,20 +196,17 @@ class OcrOptionsTest {
             ),
         )
 
-        val restored = roundTrip(result)
+        val restored = roundTrip(result).shouldNotBeNull()
 
+        log.debug { "restored=$restored" }
         restored shouldBeEqualTo result
         restored.options.languageExpression shouldBeEqualTo "eng+kor"
     }
 
     @Suppress("UNCHECKED_CAST")
-    private fun <T> roundTrip(value: T): T {
-        val bytes = ByteArrayOutputStream().use { output ->
-            ObjectOutputStream(output).use { it.writeObject(value) }
-            output.toByteArray()
-        }
-        return ObjectInputStream(ByteArrayInputStream(bytes)).use { input ->
-            input.readObject() as T
-        }
+    private fun <T:Any> roundTrip(value: T): T? {
+        val serializer = JdkBinarySerializer(objectInputFilter = null)
+        val bytes = serializer.serialize(value)
+        return serializer.deserialize(bytes)
     }
 }

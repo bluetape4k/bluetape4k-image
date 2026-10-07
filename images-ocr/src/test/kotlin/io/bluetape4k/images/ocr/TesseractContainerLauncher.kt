@@ -9,8 +9,8 @@ internal fun tesseractContainerReuseEnabled(
     reuseRequested: String? = System.getProperty(REUSE_PROPERTY),
     environment: Map<String, String> = System.getenv(),
 ): Boolean = reuseRequested.equals("true", ignoreCase = true) &&
-    "CI" !in environment &&
-    "GITHUB_ACTIONS" !in environment
+        "CI" !in environment &&
+        "GITHUB_ACTIONS" !in environment
 
 internal object TesseractContainerLauncher {
 
@@ -21,9 +21,9 @@ internal object TesseractContainerLauncher {
                     .from("ubuntu:24.04")
                     .run(
                         "apt-get update && " +
-                            "DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends " +
-                            "tesseract-ocr tesseract-ocr-eng tesseract-ocr-kor tesseract-ocr-jpn fonts-noto-cjk && " +
-                            "rm -rf /var/lib/apt/lists/*",
+                                "DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends " +
+                                "tesseract-ocr tesseract-ocr-eng tesseract-ocr-kor tesseract-ocr-jpn fonts-noto-cjk && " +
+                                "rm -rf /var/lib/apt/lists/*",
                     )
                     .cmd("sleep", "60")
                     .build()
