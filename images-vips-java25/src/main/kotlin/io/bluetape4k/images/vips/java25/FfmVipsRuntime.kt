@@ -1,6 +1,5 @@
 package io.bluetape4k.images.vips.java25
 
-import io.bluetape4k.images.vips.VipsIncubatingApi
 import io.bluetape4k.images.vips.VipsCodecCapability
 import io.bluetape4k.images.vips.VipsCodecCapabilityReport
 import io.bluetape4k.images.vips.VipsCodecDirection
@@ -12,6 +11,7 @@ import io.bluetape4k.images.vips.VipsEncodeException
 import io.bluetape4k.images.vips.VipsEncodeOptions
 import io.bluetape4k.images.vips.VipsImage
 import io.bluetape4k.images.vips.VipsImageFormat
+import io.bluetape4k.images.vips.VipsIncubatingApi
 import io.bluetape4k.images.vips.VipsInitializationException
 import io.bluetape4k.images.vips.VipsLimits
 import io.bluetape4k.images.vips.VipsRuntime
@@ -41,9 +41,14 @@ import java.util.concurrent.locks.LockSupport
  * **Spring devtools 경고**: [shutdown]을 `@PreDestroy` 빈 메서드로 등록하지 마십시오.
  */
 @OptIn(VipsIncubatingApi::class)
-object FfmVipsRuntime : VipsRuntime, KLogging() {
+object FfmVipsRuntime: VipsRuntime, KLogging() {
 
-    private enum class RuntimeState { UNINITIALIZED, INITIALIZING, INITIALIZED, SHUTDOWN }
+    private enum class RuntimeState {
+        UNINITIALIZED,
+        INITIALIZING,
+        INITIALIZED,
+        SHUTDOWN
+    }
 
     private data class InitConfiguration(
         val concurrency: Int,
@@ -95,7 +100,7 @@ object FfmVipsRuntime : VipsRuntime, KLogging() {
         if (concurrency != VipsLimits.DEFAULT_CONCURRENCY) {
             throw VipsInitializationException(
                 "vips-ffm does not support concurrency tuning; " +
-                    "requested=$concurrency, effective=unknown, support=UNSUPPORTED",
+                        "requested=$concurrency, effective=unknown, support=UNSUPPORTED",
             )
         }
         val requestedConfiguration = InitConfiguration(concurrency, maxPixels)
@@ -276,7 +281,7 @@ object FfmVipsRuntime : VipsRuntime, KLogging() {
             if (remainingNanos <= 0L) {
                 throw VipsInitializationException(
                     "$operation timed out waiting for libvips initialization " +
-                        "after $INITIALIZATION_WAIT_TIMEOUT_SECONDS seconds"
+                            "after $INITIALIZATION_WAIT_TIMEOUT_SECONDS seconds"
                 )
             }
 
@@ -298,8 +303,8 @@ object FfmVipsRuntime : VipsRuntime, KLogging() {
         if (effective != requested) {
             throw VipsInitializationException(
                 "libvips runtime configuration mismatch: " +
-                    "requested=(concurrency=${requested.concurrency}, maxPixels=${requested.maxPixels}), " +
-                    "effective=(concurrency=${effective.concurrency}, maxPixels=${effective.maxPixels})",
+                        "requested=(concurrency=${requested.concurrency}, maxPixels=${requested.maxPixels}), " +
+                        "effective=(concurrency=${effective.concurrency}, maxPixels=${effective.maxPixels})",
             )
         }
     }
@@ -349,7 +354,7 @@ object FfmVipsRuntime : VipsRuntime, KLogging() {
                 operationName,
                 FfmVipsCodecProbeResult.SAFE_FAILURE_REASON,
             )
-        }
+    }
 
     private fun checkNativeAccessEnabled() {
         // ManagementFactory.inputArguments가 canonical입니다. -javaagent, JDK_JAVA_OPTIONS, _JAVA_OPTIONS를 모두 포괄합니다.
@@ -362,8 +367,8 @@ object FfmVipsRuntime : VipsRuntime, KLogging() {
         if (!hasNativeAccess) {
             log.warn(
                 "JVM was started without --enable-native-access=ALL-UNNAMED. " +
-                "vips-ffm uses FFM API which may fail without this flag. " +
-                "Add --enable-native-access=ALL-UNNAMED to JVM arguments."
+                        "vips-ffm uses FFM API which may fail without this flag. " +
+                        "Add --enable-native-access=ALL-UNNAMED to JVM arguments."
             )
         }
     }

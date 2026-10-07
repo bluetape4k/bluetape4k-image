@@ -8,11 +8,11 @@ import io.bluetape4k.okio.buffered
 import io.bluetape4k.okio.coroutines.BufferedSuspendedSink
 import io.bluetape4k.okio.coroutines.SuspendedSink
 import io.bluetape4k.okio.coroutines.asBlocking
-import io.bluetape4k.okio.coroutines.buffered as bufferedSuspended
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okio.BufferedSink
 import okio.Sink
+import io.bluetape4k.okio.coroutines.buffered as bufferedSuspended
 
 /**
  * 이 [VipsImage]를 [Dispatchers.IO]에서 caller-owned [BufferedSink]에 씁니다.
@@ -23,8 +23,10 @@ suspend fun VipsImage.suspendWriteTo(
     sink: BufferedSink,
     format: VipsImageFormat,
     options: VipsEncodeOptions = VipsEncodeOptions.Default,
-): Unit = withContext(Dispatchers.IO) {
-    writeTo(sink, format, options)
+) {
+    withContext(Dispatchers.IO) {
+        writeTo(sink, format, options)
+    }
 }
 
 /**
@@ -36,9 +38,11 @@ suspend fun VipsImage.suspendWriteTo(
     sink: Sink,
     format: VipsImageFormat,
     options: VipsEncodeOptions = VipsEncodeOptions.Default,
-): Unit = withContext(Dispatchers.IO) {
-    sink.buffered().use { bufferedSink ->
-        writeTo(bufferedSink, format, options)
+) {
+    withContext(Dispatchers.IO) {
+        sink.buffered().use { bufferedSink ->
+            writeTo(bufferedSink, format, options)
+        }
     }
 }
 
@@ -52,9 +56,11 @@ suspend fun VipsImage.suspendWriteTo(
     sink: BufferedSuspendedSink,
     format: VipsImageFormat,
     options: VipsEncodeOptions = VipsEncodeOptions.Default,
-): Unit = withContext(Dispatchers.IO) {
-    val blockingSink = sink.asBlocking().buffered()
-    writeTo(blockingSink, format, options)
+) {
+    withContext(Dispatchers.IO) {
+        val blockingSink = sink.asBlocking().buffered()
+        writeTo(blockingSink, format, options)
+    }
 }
 
 /**

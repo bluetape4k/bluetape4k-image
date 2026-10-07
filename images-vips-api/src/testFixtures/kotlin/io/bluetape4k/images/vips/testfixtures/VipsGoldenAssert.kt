@@ -6,12 +6,13 @@ import com.sksamuel.scrimage.nio.PngWriter
 import io.bluetape4k.assertions.fail
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
-import io.bluetape4k.logging.warn
+import io.bluetape4k.logging.info
+import io.bluetape4k.utils.Resourcex
+import org.opentest4j.TestAbortedException
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import kotlin.math.abs
-import org.opentest4j.TestAbortedException
 
 /**
  * vips 연산 결과를 골든 이미지와 비교하는 테스트 유틸리티.
@@ -47,7 +48,7 @@ import org.opentest4j.TestAbortedException
  * }
  * ```
  */
-object VipsGoldenAssert : KLogging() {
+object VipsGoldenAssert: KLogging() {
 
     private val UPDATE_MODE =
         System.getProperty("bluetape4k.images.golden.update", "false").toBoolean()
@@ -85,7 +86,7 @@ object VipsGoldenAssert : KLogging() {
         val golden = loadGolden(key)
             ?: fail(
                 "골든 이미지 없음: $key (canonical resource: $GOLDEN_BASE/$key.png). " +
-                    "갱신 모드(-Dbluetape4k.images.golden.update=true)로 실행하여 먼저 생성하세요."
+                        "갱신 모드(-Dbluetape4k.images.golden.update=true)로 실행하여 먼저 생성하세요."
             )
 
         val actual = ImmutableImageLoader.create().fromBytes(actualBytes)
@@ -103,8 +104,7 @@ object VipsGoldenAssert : KLogging() {
      * @return 골든 [ImmutableImage], 리소스가 없으면 `null`
      */
     private fun loadGolden(key: String): ImmutableImage? {
-        val stream = VipsGoldenAssert::class.java.getResourceAsStream("$GOLDEN_BASE/$key.png")
-            ?: return null
+        val stream = Resourcex.getInputStream("$GOLDEN_BASE/$key.png") ?: return null
         return ImmutableImageLoader.create().fromStream(stream)
     }
 
@@ -119,6 +119,7 @@ object VipsGoldenAssert : KLogging() {
     private fun saveGolden(bytes: ByteArray, key: String) {
         val targetPath = resolveGoldenWritePath(key)
         Files.createDirectories(targetPath.parent)
+
         val image = ImmutableImageLoader.create().fromBytes(bytes)
         image.forWriter(PngWriter.MaxCompression).write(targetPath)
         log.debug { "골든 이미지 저장 완료: $targetPath" }
@@ -160,7 +161,7 @@ object VipsGoldenAssert : KLogging() {
             saveDiff(key, actual, expected)
             fail(
                 "골든 이미지와 크기 불일치: actual=(${actual.width}x${actual.height}) " +
-                    "expected=(${expected.width}x${expected.height}) key=$key"
+                        "expected=(${expected.width}x${expected.height}) key=$key"
             )
         }
 
@@ -179,9 +180,9 @@ object VipsGoldenAssert : KLogging() {
                 saveDiff(key, actual, expected)
                 fail(
                     "픽셀 ($x, $y) 에서 허용 오차($tolerance) 초과: " +
-                        "actual=(${a.red()},${a.green()},${a.blue()}) " +
-                        "expected=(${e.red()},${e.green()},${e.blue()}) " +
-                        "delta=(dr=$dr, dg=$dg, db=$db) key=$key"
+                            "actual=(${a.red()},${a.green()},${a.blue()}) " +
+                            "expected=(${e.red()},${e.green()},${e.blue()}) " +
+                            "delta=(dr=$dr, dg=$dg, db=$db) key=$key"
                 )
             }
         }
@@ -202,6 +203,6 @@ object VipsGoldenAssert : KLogging() {
         Files.createDirectories(diffDir)
         val diffPath = diffDir.resolve("$key-diff.png")
         actual.forWriter(PngWriter.MaxCompression).write(diffPath)
-        log.warn { "골든 diff 저장: $diffPath" }
+        log.info { "골든 diff 저장: $diffPath" }
     }
 }

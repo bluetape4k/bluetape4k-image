@@ -1,6 +1,8 @@
 package io.bluetape4k.images.vips.testfixtures
 
 import io.bluetape4k.images.vips.VipsInitializationException
+import io.bluetape4k.support.checkContains
+import io.bluetape4k.support.requireNotNull
 
 /**
  * JVips와 vips-ffm 런타임이 공유하는 초기화 대기 실패 계약입니다.
@@ -21,18 +23,15 @@ object VipsInitializationWaitContract {
 
     /** timeout 정책의 공통 메시지 계약을 검증합니다. */
     fun assertTimedOut(error: VipsInitializationException) {
-        val message = requireNotNull(error.message) { "timeout error must have a message" }
-        check(TIMEOUT_MARKER in message) { "timeout error must contain '$TIMEOUT_MARKER': $message" }
-        check("$DEFAULT_TIMEOUT_SECONDS seconds" in message) {
-            "timeout error must document the ${DEFAULT_TIMEOUT_SECONDS}s cap: $message"
-        }
+        val message = error.message.requireNotNull { "timeout error must have a message" }
+
+        message.checkContains(TIMEOUT_MARKER, "message")
+        message.checkContains("$DEFAULT_TIMEOUT_SECONDS seconds", "message")
     }
 
     /** interrupt 정책의 공통 메시지 계약을 검증합니다. */
     fun assertInterrupted(error: VipsInitializationException) {
-        val message = requireNotNull(error.message) { "interrupt error must have a message" }
-        check(INTERRUPTED_MARKER in message) {
-            "interrupt error must contain '$INTERRUPTED_MARKER': $message"
-        }
+        val message = error.message.requireNotNull { "interrupt error must have a message" }
+        message.checkContains(INTERRUPTED_MARKER, "message")
     }
 }

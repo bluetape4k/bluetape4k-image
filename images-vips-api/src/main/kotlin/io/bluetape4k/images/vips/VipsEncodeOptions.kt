@@ -18,14 +18,14 @@ data class VipsEncodeOptions(
     val effort: Int = 4,
     val lossless: Boolean = false,
     val stripMetadata: Boolean = true,
-) : Serializable {
+): Serializable {
 
     init {
         quality.requireInRange(0, 100, "quality")
         effort.requireInRange(1, 9, "effort")
     }
 
-    companion object : KLogging() {
+    companion object: KLogging() {
         @JvmStatic
         private val serialVersionUID: Long = 1L
 

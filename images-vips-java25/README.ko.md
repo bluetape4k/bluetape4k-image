@@ -2,9 +2,10 @@
 
 [한국어](./README.ko.md) | English
 
-JDK 25+ 환경에서 libvips 이미지 처리를 위한 FFM(Foreign Function & Memory) API 백엔드. JNI 없이 `vips-ffm` FFM 바인딩을 사용하며 시스템 libvips 라이브러리가 필요합니다.
+JDK 25+ 환경에서 libvips 이미지 처리를 위한 FFM (Foreign Function & Memory) API 백엔드. JNI 없이 `vips-ffm` FFM 바인딩을 사용하며 시스템 libvips 라이브러리가 필요합니다.
 
-> **중요:** 이 모듈은 JVM 시작 시 `--enable-native-access=ALL-UNNAMED` 플래그가 필수입니다. 이 플래그 없이는 FFM API가 작동하지 않습니다. [JVM 설정](#jvm-설정) 섹션을 참고하세요.
+>
+**중요:** 이 모듈은 JVM 시작 시 `--enable-native-access=ALL-UNNAMED` 플래그가 필수입니다. 이 플래그 없이는 FFM API가 작동하지 않습니다. [JVM 설정](#jvm-설정) 섹션을 참고하세요.
 
 ## 아키텍처
 
@@ -15,10 +16,12 @@ JDK 25+ 환경에서 libvips 이미지 처리를 위한 FFM(Foreign Function & M
 ## 사전요구사항
 
 ### Java 버전
+
 - **최소:** JDK 25
 - **권장:** JDK 25
 
 ### 시스템 요구사항
+
 - **macOS:** `brew install vips`
 - **Ubuntu/Debian:** `apt-get install libvips-tools libvips-dev`
 - **RHEL/CentOS:** `yum install vips-devel vips-tools`
@@ -150,7 +153,7 @@ import java.nio.file.Paths
 runBlocking {
     // IO 디스패처를 통해 비동기 로드
     val image = suspendFfmVipsImageOf(Paths.get("large.jpg"))
-    
+
     image.use { img ->
         // 긴 변을 300px으로 맞추기
         val thumbnail = img.thumbnail(300)
@@ -242,10 +245,7 @@ suspend fun loadFromSuspendedSource() {
 }
 ```
 
-Local large file은 `Path` 진입점을 우선 사용하세요. FFM backend에서는 이 경로가
-JVM allocation 기준으로 가장 좋은 benchmark 결과를 보였습니다. 호출자가 이미 stream,
-pipe, `bluetape4k-okio` suspended boundary를 소유하고 있을 때 Okio source를 사용합니다.
-Non-Path load에는 여전히 50 MB compressed input guard가 적용됩니다.
+Local large file은 `Path` 진입점을 우선 사용하세요. FFM backend에서는 이 경로가 JVM allocation 기준으로 가장 좋은 benchmark 결과를 보였습니다. 호출자가 이미 stream, pipe, `bluetape4k-okio` suspended boundary를 소유하고 있을 때 Okio source를 사용합니다. Non-Path load에는 여전히 50 MB compressed input guard가 적용됩니다.
 
 ### 영역 자르기
 
@@ -277,19 +277,17 @@ try {
 }
 ```
 
-AVIF 출력은 HEIF compression `AV1`을 사용하고, HEIC 출력은 HEIF compression `HEVC`를 사용합니다.
-네이티브 libvips 빌드에 `heifload_buffer` 또는 `heifsave_buffer`가 없으면 sanitized `VipsDecodeException` 또는 `VipsEncodeException`으로 조기에 실패합니다.
+AVIF 출력은 HEIF compression `AV1`을 사용하고, HEIC 출력은 HEIF compression `HEVC`를 사용합니다. 네이티브 libvips 빌드에 `heifload_buffer` 또는 `heifsave_buffer`가 없으면 sanitized `VipsDecodeException` 또는 `VipsEncodeException`으로 조기에 실패합니다.
 
 #### AVIF / HEIC Capability Matrix
 
-| 포맷 | Decode | Encode | Native dependency |
-|------|--------|--------|-------------------|
+| 포맷 | Decode           | Encode           | Native dependency                                 |
+|------|------------------|------------------|---------------------------------------------------|
 | AVIF | Capability-gated | Capability-gated | libheif와 libaom 같은 AV1 인코더가 포함된 libvips |
-| HEIC | Capability-gated | Capability-gated | libheif와 HEVC encoder 지원이 포함된 libvips |
+| HEIC | Capability-gated | Capability-gated | libheif와 HEVC encoder 지원이 포함된 libvips      |
 
 Java 25 백엔드는 AVIF 출력을 HEIF `AV1` compression으로, HEIC 출력을 HEIF `HEVC`
-compression으로 매핑합니다. 두 경로 모두 배포 호스트의 native libvips loader/saver 지원이
-필요합니다.
+compression으로 매핑합니다. 두 경로 모두 배포 호스트의 native libvips loader/saver 지원이 필요합니다.
 
 AVIF/HEIC route를 활성화하기 전에 codec status를 확인하세요.
 
@@ -306,12 +304,8 @@ val heic = report.codec(VipsImageFormat.HEIC)
 }
 ```
 
-Report는 decode용 `heifload_buffer`와 encode용 `heifsave_buffer`를 확인합니다.
-정상적으로 operation이 없음을 확인한 경우에는 `UNAVAILABLE`로, native
-탐색 자체가 실패한 경우에는 민감한 경로·환경 값을 제외한 안전한 원인과 함께
-`UNKNOWN`으로 보고합니다. 실제 operation 경로는 계속 fail-closed로 동작하며
-fatal JVM error를 codec 부재로 바꾸지 않습니다. 정확한 배포 호스트 검증에는
-caller-provided AVIF/HEIC sample로 `FfmVipsRuntime.smokeTestCodec(...)`을 실행하세요.
+Report는 decode용 `heifload_buffer`와 encode용 `heifsave_buffer`를 확인합니다. 정상적으로 operation이 없음을 확인한 경우에는 `UNAVAILABLE`로, native 탐색 자체가 실패한 경우에는 민감한 경로·환경 값을 제외한 안전한 원인과 함께
+`UNKNOWN`으로 보고합니다. 실제 operation 경로는 계속 fail-closed로 동작하며 fatal JVM error를 codec 부재로 바꾸지 않습니다. 정확한 배포 호스트 검증에는 caller-provided AVIF/HEIC sample로 `FfmVipsRuntime.smokeTestCodec(...)`을 실행하세요.
 
 ### 최대 픽셀 수
 
@@ -448,13 +442,13 @@ class VipsImageService(
         FfmVipsRuntime.init(maxPixels = maxPixels)
         log.info("FfmVipsRuntime 초기화: ${FfmVipsRuntime.concurrencyCapability}")
     }
-    
+
     @PreDestroy
     fun shutdown() {
         FfmVipsRuntime.shutdown()
         log.info("FfmVipsRuntime 종료")
     }
-    
+
     suspend fun resizeImage(bytes: ByteArray, width: Int, height: Int): ByteArray {
         val image = suspendFfmVipsImageOf(bytes)
         return image.use { img ->
@@ -492,14 +486,14 @@ class ImageController(
 
 ## JDK 25 JVips JNI 백엔드와의 비교 (`java21` legacy 모듈 이름)
 
-| 기능 | java25 (FFM) | java21 (JNI, legacy 이름) |
-|------|------|------|
-| **바인딩** | vips-ffm (FFM API) | libjvips (JNI) |
-| **Java 버전** | 25+ | 25+ |
-| **JVM 플래그** | `--enable-native-access=ALL-UNNAMED` | 없음 |
-| **메모리 모델** | Arena 기반 자동 정리 | JNI 참조 계수 |
-| **플랫폼** | macOS + Linux | Linux 전용 (macOS native binary 없음) |
-| **API** | 동일 VipsImage 인터페이스 | 동일 VipsImage 인터페이스 |
+| 기능            | java25 (FFM)                         | java21 (JNI, legacy 이름)             |
+|-----------------|--------------------------------------|---------------------------------------|
+| **바인딩**      | vips-ffm (FFM API)                   | libjvips (JNI)                        |
+| **Java 버전**   | 25+                                  | 25+                                   |
+| **JVM 플래그**  | `--enable-native-access=ALL-UNNAMED` | 없음                                  |
+| **메모리 모델** | Arena 기반 자동 정리                 | JNI 참조 계수                         |
+| **플랫폼**      | macOS + Linux                        | Linux 전용 (macOS native binary 없음) |
+| **API**         | 동일 VipsImage 인터페이스            | 동일 VipsImage 인터페이스             |
 
 두 모듈 모두 동일한 `VipsImage` 인터페이스를 구현하며 API 수준에서 상호교환 가능합니다.
 
@@ -509,20 +503,20 @@ class ImageController(
 
 **CI Linux (Ubuntu 24.04, GraalVM 25, libvips 8.15.1)**
 
-| 연산 | scrimage (ms/op) | vips-ffm (ms/op) | 속도 향상 |
-|------|-----------------|------------------|----------|
-| resize 4K→1920×1080 | 187.29 | **0.591** | **317배** |
-| resize 4K→1280×720  | 119.45 | **0.626** | **191배** |
-| encode JPEG         | 171.16 | **37.20** | **4.6배** |
-| encode PNG          | 249.01 | **137.95** | **1.8배** |
+| 연산                | scrimage (ms/op) | vips-ffm (ms/op) | 속도 향상 |
+|---------------------|------------------|------------------|-----------|
+| resize 4K→1920×1080 | 187.29           | **0.591**        | **317배** |
+| resize 4K→1280×720  | 119.45           | **0.626**        | **191배** |
+| encode JPEG         | 171.16           | **37.20**        | **4.6배** |
+| encode PNG          | 249.01           | **137.95**       | **1.8배** |
 
 **macOS (Apple Silicon, GraalVM 25.0.3, libvips 8.18.2)**
 
-| 연산 | scrimage (ms/op) | vips-ffm (ms/op) | 속도 향상 |
-|------|-----------------|------------------|----------|
-| resize 4K→1920×1080 | 71.16 | **0.202** | **352배** |
-| encode JPEG         | 52.49 | **15.67** | **3.3배** |
-| encode PNG          | 94.87 | **49.88** | **1.9배** |
+| 연산                | scrimage (ms/op) | vips-ffm (ms/op) | 속도 향상 |
+|---------------------|------------------|------------------|-----------|
+| resize 4K→1920×1080 | 71.16            | **0.202**        | **352배** |
+| encode JPEG         | 52.49            | **15.67**        | **3.3배** |
+| encode PNG          | 94.87            | **49.88**        | **1.9배** |
 
 전체 상세 결과: [`benchmark/images-benchmark/docs/benchmark-results-2026-04-29.md`](../benchmark/images-benchmark/docs/benchmark-results-2026-04-29.md)
 
@@ -545,8 +539,7 @@ java25 모듈은 `images-vips-api/src/testFixtures/resources/golden/vips/`에 �
 - 갱신 모드는 Java 25+ 환경에서만 활성화 — `@EnabledForJreRange(min = JRE.JAVA_25)` 가드 적용
 - 골든 이미지 재생성: `-Dbluetape4k.images.golden.update=true -Dvips.enabled=true`
 - CI 가드: CI 환경에서 골든 이미지 재생성을 방지합니다
-- thumbnail→JPEG 골든은 CI와 macOS에서 확인된 libvips/native codec 버전별 손실 출력 편차를
-  제한하기 위해 채널별 최대 오차 6을 사용합니다. PNG와 WebP 검사는 공통 기본 오차를 유지합니다.
+- thumbnail→JPEG 골든은 CI와 macOS에서 확인된 libvips/native codec 버전별 손실 출력 편차를 제한하기 위해 채널별 최대 오차 6을 사용합니다. PNG와 WebP 검사는 공통 기본 오차를 유지합니다.
 
 ```bash
 # 골든 이미지 재생성 (Java 25+에서 실행해야 함)
@@ -557,15 +550,15 @@ java25 모듈은 `images-vips-api/src/testFixtures/resources/golden/vips/`에 �
 
 ### 속성 기반 테스트
 
-5가지 불변식 × 3가지 포맷(JPEG/PNG/WebP)을 `@ParameterizedTest`로 검증합니다.
+5가지 불변식 × 3가지 포맷 (JPEG/PNG/WebP)을 `@ParameterizedTest`로 검증합니다.
 
-| 불변식 | 설명 |
-|--------|------|
-| 치수 보존 | 리사이즈 출력이 요청한 너비/높이와 일치 |
-| 출력 비어있지 않음 | 인코딩된 바이트가 항상 생성됨 |
-| 포맷 왕복 | 디코드 → 인코드 → 디코드 시 동일한 치수 반환 |
-| 자르기 경계 | 자른 영역이 원본 경계를 초과하지 않음 |
-| 썸네일 비율 | 썸네일 긴 변이 요청한 최대 치수에 맞음 |
+| 불변식             | 설명                                         |
+|--------------------|----------------------------------------------|
+| 치수 보존          | 리사이즈 출력이 요청한 너비/높이와 일치      |
+| 출력 비어있지 않음 | 인코딩된 바이트가 항상 생성됨                |
+| 포맷 왕복          | 디코드 → 인코드 → 디코드 시 동일한 치수 반환 |
+| 자르기 경계        | 자른 영역이 원본 경계를 초과하지 않음        |
+| 썸네일 비율        | 썸네일 긴 변이 요청한 최대 치수에 맞음       |
 
 ## 문제 해결
 
@@ -580,6 +573,7 @@ java25 모듈은 `images-vips-api/src/testFixtures/resources/golden/vips/`에 �
 **증상:** UnsatisfiedLinkError 등 발생.
 
 **해결법:** 시스템 libvips 설치:
+
 ```bash
 # macOS
 brew install vips
@@ -599,6 +593,7 @@ Homebrew macOS에서 JVM이 `libvips`를 찾지 못하면 소비자 애플리케
 **증상:** VipsDecodeException with "only JPEG, PNG, WebP, AVIF, and HEIC are allowed".
 
 **해결법:** 이미지를 지원하는 포맷으로 변환하거나, AVIF/HEIC 사용 시 libheif/libaom이 포함된 libvips를 설치:
+
 ```bash
 # ImageMagick 사용
 convert input.gif output.jpg
@@ -611,6 +606,7 @@ convert input.gif output.jpg
 **증상:** VipsDecodeException with dimensions.
 
 **해결법:** 다음 중 하나:
+
 1. 초기화 시 `maxPixels` 증가 (안전한 경우)
 2. 입력 이미지를 먼저 리사이즈
 3. 서비스 계층에서 큰 이미지 거부

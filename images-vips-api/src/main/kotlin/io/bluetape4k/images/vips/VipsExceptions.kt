@@ -15,28 +15,28 @@ package io.bluetape4k.images.vips
  * throw VipsDecodeException("Image decode failed: unsupported format or corrupted input", jvipsException)
  * ```
  */
-open class VipsException(message: String, cause: Throwable? = null) : RuntimeException(message, cause)
+open class VipsException(message: String, cause: Throwable? = null): RuntimeException(message, cause)
 
 /**
  * 이미지 디코딩(읽기) 실패 시 발생하는 예외.
  *
  * 지원하지 않는 포맷, 손상된 입력, 크기 초과 등의 경우에 발생합니다.
  */
-class VipsDecodeException(message: String, cause: Throwable? = null) : VipsException(message, cause)
+class VipsDecodeException(message: String, cause: Throwable? = null): VipsException(message, cause)
 
 /**
  * 이미지 인코딩(쓰기) 실패 시 발생하는 예외.
  *
  * 출력 스트림 오류, 인코딩 옵션 범위 초과 등의 경우에 발생합니다.
  */
-class VipsEncodeException(message: String, cause: Throwable? = null) : VipsException(message, cause)
+class VipsEncodeException(message: String, cause: Throwable? = null): VipsException(message, cause)
 
 /**
  * 이미지 연산(resize/thumbnail/crop) 실패 시 발생하는 예외.
  *
  * 잘못된 연산 파라미터, 이미지 범위 초과, 연산 중 libvips 오류 등의 경우에 발생합니다.
  */
-class VipsOperationException(message: String, cause: Throwable? = null) : VipsException(message, cause)
+class VipsOperationException(message: String, cause: Throwable? = null): VipsException(message, cause)
 
 /**
  * libvips 런타임 초기화 실패 시 발생하는 예외.
@@ -46,4 +46,4 @@ class VipsOperationException(message: String, cause: Throwable? = null) : VipsEx
  * libvips는 `vips_shutdown()` 이후 `VIPS_INIT()`을 재호출하는 것을 지원하지 않으므로,
  * 이 예외가 발생하면 프로세스를 재시작해야 합니다.
  */
-class VipsInitializationException(message: String, cause: Throwable? = null) : VipsException(message, cause)
+class VipsInitializationException(message: String, cause: Throwable? = null): VipsException(message, cause)

@@ -33,16 +33,17 @@ import java.util.concurrent.atomic.AtomicReference
  */
 class FfmVipsRuntimeConcurrencyTest {
 
-    companion object : KLogging()
+    companion object: KLogging()
 
     private val initCount = AtomicInteger(0)
     private val shutdownCount = AtomicInteger(0)
 
-    private val testAdapter = object : FfmVipsNativeRuntime {
+    private val testAdapter = object: FfmVipsNativeRuntime {
         override fun nativeInit(concurrency: Int) {
             Thread.sleep(20) // keep the INITIALIZING window open so contenders overlap
             initCount.incrementAndGet()
         }
+
         override fun nativeShutdown() {
             shutdownCount.incrementAndGet()
         }
@@ -98,13 +99,13 @@ class FfmVipsRuntimeConcurrencyTest {
     @Test
     fun `default wait cap matches the shared api contract`() {
         FfmVipsRuntime.initializationWaitTimeoutNanos shouldBeEqualTo
-            TimeUnit.SECONDS.toNanos(VipsInitializationWaitContract.DEFAULT_TIMEOUT_SECONDS)
+                TimeUnit.SECONDS.toNanos(VipsInitializationWaitContract.DEFAULT_TIMEOUT_SECONDS)
     }
 
     @Test
     fun `failed owner returns to retryable state`() {
         val attempts = AtomicInteger(0)
-        FfmVipsRuntime.nativeRuntime = object : FfmVipsNativeRuntime {
+        FfmVipsRuntime.nativeRuntime = object: FfmVipsNativeRuntime {
             override fun nativeInit(concurrency: Int) {
                 if (attempts.getAndIncrement() == 0) {
                     throw IllegalStateException("synthetic initialization failure")
@@ -172,7 +173,7 @@ class FfmVipsRuntimeConcurrencyTest {
         // owner를 INITIALIZING에 고정해 loser의 대기 후 설정 비교 경로를 결정적으로 검증합니다.
         val nativeInitStarted = CountDownLatch(1)
         val releaseNativeInit = CountDownLatch(1)
-        FfmVipsRuntime.nativeRuntime = object : FfmVipsNativeRuntime {
+        FfmVipsRuntime.nativeRuntime = object: FfmVipsNativeRuntime {
             override fun nativeInit(concurrency: Int) {
                 nativeInitStarted.countDown()
                 releaseNativeInit.await(5, TimeUnit.SECONDS).shouldBeTrue()
@@ -218,7 +219,7 @@ class FfmVipsRuntimeConcurrencyTest {
     fun `interrupted competing init waiter exits without changing owner state`() {
         val nativeInitStarted = CountDownLatch(1)
         val releaseNativeInit = CountDownLatch(1)
-        FfmVipsRuntime.nativeRuntime = object : FfmVipsNativeRuntime {
+        FfmVipsRuntime.nativeRuntime = object: FfmVipsNativeRuntime {
             override fun nativeInit(concurrency: Int) {
                 nativeInitStarted.countDown()
                 releaseNativeInit.await(5, TimeUnit.SECONDS).shouldBeTrue()
@@ -278,7 +279,7 @@ class FfmVipsRuntimeConcurrencyTest {
         FfmVipsRuntime.initializationWaitTimeoutNanos = TimeUnit.MILLISECONDS.toNanos(25)
         val nativeInitStarted = CountDownLatch(1)
         val releaseNativeInit = CountDownLatch(1)
-        FfmVipsRuntime.nativeRuntime = object : FfmVipsNativeRuntime {
+        FfmVipsRuntime.nativeRuntime = object: FfmVipsNativeRuntime {
             override fun nativeInit(concurrency: Int) {
                 nativeInitStarted.countDown()
                 releaseNativeInit.await(5, TimeUnit.SECONDS).shouldBeTrue()
@@ -345,7 +346,7 @@ class FfmVipsRuntimeConcurrencyTest {
         val waiterFailure = AtomicReference<Throwable?>()
         val retryOwnerReference = AtomicReference<Thread?>()
 
-        FfmVipsRuntime.nativeRuntime = object : FfmVipsNativeRuntime {
+        FfmVipsRuntime.nativeRuntime = object: FfmVipsNativeRuntime {
             override fun nativeInit(concurrency: Int) {
                 when (attempts.incrementAndGet()) {
                     1 -> {
@@ -452,7 +453,7 @@ class FfmVipsRuntimeConcurrencyTest {
         val waiterFailure = AtomicReference<Throwable?>()
         val retryOwnerReference = AtomicReference<Thread?>()
 
-        FfmVipsRuntime.nativeRuntime = object : FfmVipsNativeRuntime {
+        FfmVipsRuntime.nativeRuntime = object: FfmVipsNativeRuntime {
             override fun nativeInit(concurrency: Int) {
                 when (attempts.incrementAndGet()) {
                     1 -> {
@@ -547,7 +548,7 @@ class FfmVipsRuntimeConcurrencyTest {
     fun `interrupted shutdown waiter does not release owner native state`() {
         val nativeInitStarted = CountDownLatch(1)
         val releaseNativeInit = CountDownLatch(1)
-        FfmVipsRuntime.nativeRuntime = object : FfmVipsNativeRuntime {
+        FfmVipsRuntime.nativeRuntime = object: FfmVipsNativeRuntime {
             override fun nativeInit(concurrency: Int) {
                 nativeInitStarted.countDown()
                 releaseNativeInit.await(5, TimeUnit.SECONDS).shouldBeTrue()
@@ -606,7 +607,7 @@ class FfmVipsRuntimeConcurrencyTest {
         FfmVipsRuntime.initializationWaitTimeoutNanos = TimeUnit.MILLISECONDS.toNanos(25)
         val nativeInitStarted = CountDownLatch(1)
         val releaseNativeInit = CountDownLatch(1)
-        FfmVipsRuntime.nativeRuntime = object : FfmVipsNativeRuntime {
+        FfmVipsRuntime.nativeRuntime = object: FfmVipsNativeRuntime {
             override fun nativeInit(concurrency: Int) {
                 nativeInitStarted.countDown()
                 releaseNativeInit.await(5, TimeUnit.SECONDS).shouldBeTrue()
@@ -681,7 +682,7 @@ class FfmVipsRuntimeConcurrencyTest {
         val waiterFailure = AtomicReference<Throwable?>()
         val retryOwnerReference = AtomicReference<Thread?>()
 
-        FfmVipsRuntime.nativeRuntime = object : FfmVipsNativeRuntime {
+        FfmVipsRuntime.nativeRuntime = object: FfmVipsNativeRuntime {
             override fun nativeInit(concurrency: Int) {
                 when (attempts.incrementAndGet()) {
                     1 -> {

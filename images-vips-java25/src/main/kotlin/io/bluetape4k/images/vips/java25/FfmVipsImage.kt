@@ -2,17 +2,17 @@ package io.bluetape4k.images.vips.java25
 
 import app.photofox.vipsffm.VImage
 import app.photofox.vipsffm.VipsError
-import io.bluetape4k.images.vips.VipsIncubatingApi
 import io.bluetape4k.images.vips.VipsDecodeException
 import io.bluetape4k.images.vips.VipsEncodeException
 import io.bluetape4k.images.vips.VipsEncodeOptions
 import io.bluetape4k.images.vips.VipsImage
 import io.bluetape4k.images.vips.VipsImageFormat
+import io.bluetape4k.images.vips.VipsIncubatingApi
 import io.bluetape4k.images.vips.VipsOperationException
 import io.bluetape4k.images.vips.java25.internal.FfmVipsFormatSupport
-import io.bluetape4k.images.vips.java25.writer.FfmVipsHeifWriter
 import io.bluetape4k.images.vips.java25.ops.resizeWithFfm
 import io.bluetape4k.images.vips.java25.ops.thumbnailWithFfm
+import io.bluetape4k.images.vips.java25.writer.FfmVipsHeifWriter
 import io.bluetape4k.images.vips.java25.writer.FfmVipsJpegWriter
 import io.bluetape4k.images.vips.java25.writer.FfmVipsPngWriter
 import io.bluetape4k.images.vips.java25.writer.FfmVipsWebpWriter
@@ -39,7 +39,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 internal class FfmVipsImage(
     private val arena: Arena,
     private val vipsImage: VImage,
-) : VipsImage {
+): VipsImage {
 
     private val closed = AtomicBoolean(false)
 
@@ -117,10 +117,11 @@ internal class FfmVipsImage(
             FfmVipsFormatSupport.requireEncoding(format)
             when (format) {
                 VipsImageFormat.JPEG -> FfmVipsJpegWriter.writeToBytes(vipsImage, options)
-                VipsImageFormat.PNG  -> FfmVipsPngWriter.writeToBytes(vipsImage, options)
+                VipsImageFormat.PNG -> FfmVipsPngWriter.writeToBytes(vipsImage, options)
                 VipsImageFormat.WEBP -> FfmVipsWebpWriter.writeToBytes(vipsImage, options)
                 VipsImageFormat.AVIF,
-                VipsImageFormat.HEIC -> FfmVipsHeifWriter.writeToBytes(vipsImage, format, options)
+                VipsImageFormat.HEIC,
+                    -> FfmVipsHeifWriter.writeToBytes(vipsImage, format, options)
             }
         } catch (e: VipsEncodeException) {
             throw e

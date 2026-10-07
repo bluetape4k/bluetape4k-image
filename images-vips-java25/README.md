@@ -4,7 +4,8 @@ English | [한국어](./README.ko.md)
 
 FFM (Foreign Function & Memory) API backend for libvips image processing on JDK 25+. Uses zero JNI, pure FFM bindings via `vips-ffm`. Requires a system-installed libvips library.
 
-> **CRITICAL:** This module requires the JVM flag `--enable-native-access=ALL-UNNAMED` to be set at startup. Without this flag, the FFM API will fail. See [JVM Configuration](#jvm-configuration) below.
+>
+**CRITICAL:** This module requires the JVM flag `--enable-native-access=ALL-UNNAMED` to be set at startup. Without this flag, the FFM API will fail. See [JVM Configuration](#jvm-configuration) below.
 
 ## Architecture
 
@@ -15,10 +16,12 @@ FFM (Foreign Function & Memory) API backend for libvips image processing on JDK 
 ## Prerequisites
 
 ### Java Version
+
 - **Minimum:** JDK 25
 - **Recommended:** JDK 25
 
 ### System Requirements
+
 - **macOS:** `brew install vips`
 - **Ubuntu/Debian:** `apt-get install libvips-tools libvips-dev`
 - **RHEL/CentOS:** `yum install vips-devel vips-tools`
@@ -38,8 +41,7 @@ tasks.withType<Test>().configureEach {
 
 #### In Spring Boot or Container Launchers
 
-Set the flag on the JVM command line or through your process manager. For
-containerized apps, `JAVA_TOOL_OPTIONS` is usually the simplest portable option:
+Set the flag on the JVM command line or through your process manager. For containerized apps, `JAVA_TOOL_OPTIONS` is usually the simplest portable option:
 
 ```bash
 export JAVA_TOOL_OPTIONS="--enable-native-access=ALL-UNNAMED"
@@ -150,7 +152,7 @@ import java.nio.file.Paths
 runBlocking {
     // Load asynchronously via IO dispatcher
     val image = suspendFfmVipsImageOf(Paths.get("large.jpg"))
-    
+
     image.use { img ->
         // Fit to 300px on longest side
         val thumbnail = img.thumbnail(300)
@@ -242,10 +244,7 @@ suspend fun loadFromSuspendedSource() {
 }
 ```
 
-For local large files, `Path` remains the preferred FFM entry point and has the
-best measured JVM allocation profile. Use Okio sources when the caller already
-owns a stream, pipe, or `bluetape4k-okio` suspended boundary. Non-Path loads are
-still subject to the 50 MB compressed input guard.
+For local large files, `Path` remains the preferred FFM entry point and has the best measured JVM allocation profile. Use Okio sources when the caller already owns a stream, pipe, or `bluetape4k-okio` suspended boundary. Non-Path loads are still subject to the 50 MB compressed input guard.
 
 ### Crop Region
 
@@ -277,19 +276,16 @@ try {
 }
 ```
 
-AVIF output uses HEIF compression `AV1`; HEIC output uses HEIF compression `HEVC`.
-If the native libvips build lacks `heifload_buffer` or `heifsave_buffer`, the API fails early with a sanitized `VipsDecodeException` or `VipsEncodeException`.
+AVIF output uses HEIF compression `AV1`; HEIC output uses HEIF compression `HEVC`. If the native libvips build lacks `heifload_buffer` or `heifsave_buffer`, the API fails early with a sanitized `VipsDecodeException` or `VipsEncodeException`.
 
 #### AVIF / HEIC Capability Matrix
 
-| Format | Decode | Encode | Native dependency |
-|--------|--------|--------|-------------------|
-| AVIF | Capability-gated | Capability-gated | libvips with libheif and an AV1 encoder such as libaom |
-| HEIC | Capability-gated | Capability-gated | libvips with libheif and HEVC encoder support |
+| Format | Decode           | Encode           | Native dependency                                      |
+|--------|------------------|------------------|--------------------------------------------------------|
+| AVIF   | Capability-gated | Capability-gated | libvips with libheif and an AV1 encoder such as libaom |
+| HEIC   | Capability-gated | Capability-gated | libvips with libheif and HEVC encoder support          |
 
-The Java 25 backend maps AVIF output to HEIF `AV1` compression and HEIC output
-to HEIF `HEVC` compression. Both paths require the matching native libvips
-loader/saver support on the deployment host.
+The Java 25 backend maps AVIF output to HEIF `AV1` compression and HEIC output to HEIF `HEVC` compression. Both paths require the matching native libvips loader/saver support on the deployment host.
 
 Inspect codec status before enabling AVIF/HEIC routes:
 
@@ -306,12 +302,7 @@ val heic = report.codec(VipsImageFormat.HEIC)
 }
 ```
 
-The report checks `heifload_buffer` for decode and `heifsave_buffer` for encode.
-It keeps a confirmed missing operation as `UNAVAILABLE`, while a native probe
-failure is reported as `UNKNOWN` with a sanitized reason. The operation path
-still fails closed, and fatal JVM errors are not converted into codec absence.
-Use `FfmVipsRuntime.smokeTestCodec(...)` with caller-provided AVIF/HEIC samples
-to verify the exact deployment host.
+The report checks `heifload_buffer` for decode and `heifsave_buffer` for encode. It keeps a confirmed missing operation as `UNAVAILABLE`, while a native probe failure is reported as `UNKNOWN` with a sanitized reason. The operation path still fails closed, and fatal JVM errors are not converted into codec absence. Use `FfmVipsRuntime.smokeTestCodec(...)` with caller-provided AVIF/HEIC samples to verify the exact deployment host.
 
 ### Maximum Pixel Count
 
@@ -449,13 +440,13 @@ class VipsImageService(
         FfmVipsRuntime.init(maxPixels = maxPixels)
         log.info("FfmVipsRuntime initialized: ${FfmVipsRuntime.concurrencyCapability}")
     }
-    
+
     @PreDestroy
     fun shutdown() {
         FfmVipsRuntime.shutdown()
         log.info("FfmVipsRuntime shut down")
     }
-    
+
     suspend fun resizeImage(bytes: ByteArray, width: Int, height: Int): ByteArray {
         val image = suspendFfmVipsImageOf(bytes)
         return image.use { img ->
@@ -493,14 +484,14 @@ class ImageController(
 
 ## Comparison with the JDK 25 JVips JNI backend (legacy `java21` module name)
 
-| Feature | java25 (FFM) | java21 (JNI, legacy name) |
-|---------|------|------|
-| **Binding** | vips-ffm (FFM API) | libjvips (JNI) |
-| **Java Version** | 25+ | 25+ |
-| **JVM Flag** | `--enable-native-access=ALL-UNNAMED` | None |
-| **Memory Model** | Arena-based auto-cleanup | JNI reference counting |
-| **Platform** | macOS + Linux | Linux only (no macOS native binary) |
-| **API** | Same VipsImage interface | Same VipsImage interface |
+| Feature          | java25 (FFM)                         | java21 (JNI, legacy name)           |
+|------------------|--------------------------------------|-------------------------------------|
+| **Binding**      | vips-ffm (FFM API)                   | libjvips (JNI)                      |
+| **Java Version** | 25+                                  | 25+                                 |
+| **JVM Flag**     | `--enable-native-access=ALL-UNNAMED` | None                                |
+| **Memory Model** | Arena-based auto-cleanup             | JNI reference counting              |
+| **Platform**     | macOS + Linux                        | Linux only (no macOS native binary) |
+| **API**          | Same VipsImage interface             | Same VipsImage interface            |
 
 Both modules implement the same `VipsImage` interface and are interchangeable at the API level.
 
@@ -510,20 +501,20 @@ Both modules implement the same `VipsImage` interface and are interchangeable at
 
 **CI Linux (Ubuntu 24.04, GraalVM 25, libvips 8.15.1)**
 
-| Operation | scrimage (ms/op) | vips-ffm (ms/op) | Speedup |
-|-----------|-----------------|------------------|---------|
-| resize 4K→1920×1080 | 187.29 | **0.591** | **317×** |
-| resize 4K→1280×720  | 119.45 | **0.626** | **191×** |
-| encode JPEG         | 171.16 | **37.20** | **4.6×** |
-| encode PNG          | 249.01 | **137.95** | **1.8×** |
+| Operation           | scrimage (ms/op) | vips-ffm (ms/op) | Speedup  |
+|---------------------|------------------|------------------|----------|
+| resize 4K→1920×1080 | 187.29           | **0.591**        | **317×** |
+| resize 4K→1280×720  | 119.45           | **0.626**        | **191×** |
+| encode JPEG         | 171.16           | **37.20**        | **4.6×** |
+| encode PNG          | 249.01           | **137.95**       | **1.8×** |
 
 **macOS (Apple Silicon, GraalVM 25.0.3, libvips 8.18.2)**
 
-| Operation | scrimage (ms/op) | vips-ffm (ms/op) | Speedup |
-|-----------|-----------------|------------------|---------|
-| resize 4K→1920×1080 | 71.16 | **0.202** | **352×** |
-| encode JPEG         | 52.49 | **15.67** | **3.3×** |
-| encode PNG          | 94.87 | **49.88** | **1.9×** |
+| Operation           | scrimage (ms/op) | vips-ffm (ms/op) | Speedup  |
+|---------------------|------------------|------------------|----------|
+| resize 4K→1920×1080 | 71.16            | **0.202**        | **352×** |
+| encode JPEG         | 52.49            | **15.67**        | **3.3×** |
+| encode PNG          | 94.87            | **49.88**        | **1.9×** |
 
 Full details: [`benchmark/images-benchmark/docs/benchmark-results-2026-04-29.md`](../benchmark/images-benchmark/docs/benchmark-results-2026-04-29.md)
 
@@ -541,14 +532,13 @@ Tests are skipped automatically if libvips is unavailable:
 
 ### Golden Image Tests (Master Source)
 
-java25 is the **authoritative source** for vips golden images stored in `images-vips-api/src/testFixtures/resources/golden/vips/`.
+java25 is the **authoritative
+source** for vips golden images stored in `images-vips-api/src/testFixtures/resources/golden/vips/`.
 
 - Update mode enabled only on Java 25+ — guarded by `@EnabledForJreRange(min = JRE.JAVA_25)`
 - Regenerate goldens: `-Dbluetape4k.images.golden.update=true -Dvips.enabled=true`
 - CI guard prevents accidental regeneration in CI environments
-- The thumbnail-to-JPEG golden uses a bounded per-channel tolerance of 6 for the
-  lossy output variation observed across libvips/native codec versions in CI and
-  macOS; PNG and WebP checks keep the shared default tolerance.
+- The thumbnail-to-JPEG golden uses a bounded per-channel tolerance of 6 for the lossy output variation observed across libvips/native codec versions in CI and macOS; PNG and WebP checks keep the shared default tolerance.
 
 ```bash
 # Regenerate golden images (must run on Java 25+)
@@ -561,12 +551,12 @@ java25 is the **authoritative source** for vips golden images stored in `images-
 
 5 invariants × 3 formats (JPEG/PNG/WebP) verified via `@ParameterizedTest`.
 
-| Invariant | Description |
-|-----------|-------------|
-| Dimensions preserved | Resize output matches requested width/height |
-| Output is non-empty | Encoded bytes are always produced |
-| Format round-trip | Decode → encode → decode yields same dimensions |
-| Crop bounds | Cropped region never exceeds original bounds |
+| Invariant                 | Description                                             |
+|---------------------------|---------------------------------------------------------|
+| Dimensions preserved      | Resize output matches requested width/height            |
+| Output is non-empty       | Encoded bytes are always produced                       |
+| Format round-trip         | Decode → encode → decode yields same dimensions         |
+| Crop bounds               | Cropped region never exceeds original bounds            |
 | Thumbnail proportionality | Thumbnail longest side fits the requested max dimension |
 
 ## Troubleshooting
@@ -582,6 +572,7 @@ java25 is the **authoritative source** for vips golden images stored in `images-
 **Error:** UnsatisfiedLinkError or similar.
 
 **Solution:** Install system libvips:
+
 ```bash
 # macOS
 brew install vips
@@ -593,14 +584,14 @@ apt-get install libvips-tools libvips-dev
 vips --version
 ```
 
-On Homebrew macOS, export `DYLD_LIBRARY_PATH=/opt/homebrew/lib` before starting
-consumer applications if the JVM cannot find `libvips`.
+On Homebrew macOS, export `DYLD_LIBRARY_PATH=/opt/homebrew/lib` before starting consumer applications if the JVM cannot find `libvips`.
 
 ### "Unsupported image format"
 
 **Error:** VipsDecodeException with "only JPEG, PNG, WebP, AVIF, and HEIC are allowed".
 
 **Solution:** Convert your image to a supported format, or install libvips with libheif/libaom when using AVIF/HEIC:
+
 ```bash
 # Using ImageMagick
 convert input.gif output.jpg
@@ -613,6 +604,7 @@ convert input.gif output.jpg
 **Error:** VipsDecodeException with dimensions.
 
 **Solution:** Either:
+
 1. Increase `maxPixels` during init (if safe)
 2. Resize the input image first
 3. Reject oversized uploads in your service layer

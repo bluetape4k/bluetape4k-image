@@ -2,17 +2,16 @@ package io.bluetape4k.images.vips.java25
 
 import app.photofox.vipsffm.VImage
 import app.photofox.vipsffm.VipsError
-import io.bluetape4k.images.vips.VipsIncubatingApi
 import io.bluetape4k.images.vips.VipsDecodeException
 import io.bluetape4k.images.vips.VipsImage
 import io.bluetape4k.images.vips.VipsImageFormat
+import io.bluetape4k.images.vips.VipsIncubatingApi
 import io.bluetape4k.images.vips.VipsLimits
 import io.bluetape4k.images.vips.java25.internal.FfmVipsFormatSupport
 import io.bluetape4k.okio.buffered
 import io.bluetape4k.okio.coroutines.BufferedSuspendedSource
 import io.bluetape4k.okio.coroutines.SuspendedSource
 import io.bluetape4k.okio.coroutines.asBlocking
-import io.bluetape4k.okio.coroutines.buffered as bufferedSuspended
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okio.BufferedSource
@@ -23,6 +22,7 @@ import java.io.InputStream
 import java.lang.foreign.Arena
 import java.nio.file.Files
 import java.nio.file.Path
+import io.bluetape4k.okio.coroutines.buffered as bufferedSuspended
 
 private val MAX_INPUT_BYTES = VipsLimits.MAX_INPUT_BYTES
 
@@ -232,7 +232,7 @@ private fun checkPixelCount(vImage: VImage) {
     if (pixelCount < 0 || pixelCount > maxPixels) {
         throw VipsDecodeException(
             "Image exceeds maximum pixel count: $pixelCount > $maxPixels " +
-                "(width=${vImage.width}, height=${vImage.height}, bands=$bands)"
+                    "(width=${vImage.width}, height=${vImage.height}, bands=$bands)"
         )
     }
 }

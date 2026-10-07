@@ -18,9 +18,9 @@ import org.junit.jupiter.api.condition.JRE
  * 갱신 모드 실행은 `-Dbluetape4k.images.golden.update=true`로 활성화하며,
  * java25가 골든 이미지의 마스터 소스이므로 갱신 메서드는 항상 @EnabledForJreRange(min = JRE.JAVA_25)로 보호합니다.
  */
-class VipsGoldenFilterTest : AbstractFfmVipsTest() {
+class VipsGoldenFilterTest: AbstractFfmVipsTest() {
 
-    companion object : KLogging() {
+    companion object: KLogging() {
         /** CI와 macOS에서 확인된 libvips/native codec 버전별 손실 thumbnail 출력 편차를 제한하는 경계입니다. */
         private const val THUMBNAIL_JPEG_TOLERANCE = 6
     }

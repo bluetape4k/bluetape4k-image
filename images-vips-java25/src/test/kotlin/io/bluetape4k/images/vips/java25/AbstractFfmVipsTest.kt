@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Tag
 @Tag("vips-required")
 abstract class AbstractFfmVipsTest {
 
-    companion object : KLogging() {
+    companion object: KLogging() {
         @JvmStatic
         @BeforeAll
         fun initRuntime() {

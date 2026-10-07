@@ -5,10 +5,10 @@ import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.assertions.shouldNotContain
-import io.bluetape4k.images.vips.VipsIncubatingApi
 import io.bluetape4k.images.vips.VipsCodecDirection
 import io.bluetape4k.images.vips.VipsCodecSupport
 import io.bluetape4k.images.vips.VipsImageFormat
+import io.bluetape4k.images.vips.VipsIncubatingApi
 import io.bluetape4k.images.vips.java25.internal.DefaultFfmVipsCodecProbe
 import io.bluetape4k.images.vips.java25.internal.FfmVipsCodecProbe
 import io.bluetape4k.images.vips.java25.internal.FfmVipsCodecProbeResult
@@ -20,7 +20,7 @@ import org.junit.jupiter.api.Test
 @OptIn(VipsIncubatingApi::class)
 class FfmVipsCodecCapabilityTest {
 
-    private val testProbe = object : FfmVipsCodecProbe {
+    private val testProbe = object: FfmVipsCodecProbe {
         override fun inspectOperation(name: String): FfmVipsCodecProbeResult =
             if (name == "heifload_buffer") {
                 FfmVipsCodecProbeResult.Available
@@ -57,7 +57,7 @@ class FfmVipsCodecCapabilityTest {
 
     @Test
     fun `codec probe keeps unavailable and failed operation inspection distinct`() {
-        val probe = object : FfmVipsCodecProbe {
+        val probe = object: FfmVipsCodecProbe {
             override fun inspectOperation(name: String): FfmVipsCodecProbeResult =
                 when (name) {
                     "available" -> FfmVipsCodecProbeResult.Available
@@ -70,7 +70,7 @@ class FfmVipsCodecCapabilityTest {
         probe.supportsOperation("unavailable") shouldBeEqualTo false
         probe.supportsOperation("failed") shouldBeEqualTo false
 
-        FfmVipsRuntime.codecProbe = object : FfmVipsCodecProbe {
+        FfmVipsRuntime.codecProbe = object: FfmVipsCodecProbe {
             override fun inspectOperation(name: String): FfmVipsCodecProbeResult =
                 if (name == "heifload_buffer") {
                     FfmVipsCodecProbeResult.Failed("secret=/run/secrets/libvips-path")
@@ -92,7 +92,7 @@ class FfmVipsCodecCapabilityTest {
         classifyFfmVipsCodecProbe { true } shouldBeEqualTo FfmVipsCodecProbeResult.Available
         classifyFfmVipsCodecProbe { false } shouldBeEqualTo FfmVipsCodecProbeResult.Unavailable
         classifyFfmVipsCodecProbe { error("secret native path") } shouldBeEqualTo
-            FfmVipsCodecProbeResult.Failed(FfmVipsCodecProbeResult.SAFE_FAILURE_REASON)
+                FfmVipsCodecProbeResult.Failed(FfmVipsCodecProbeResult.SAFE_FAILURE_REASON)
 
         assertFailsWith<AssertionError> {
             classifyFfmVipsCodecProbe { throw AssertionError("fatal native linkage") }
@@ -101,7 +101,7 @@ class FfmVipsCodecCapabilityTest {
 
     @Test
     fun `fatal probe errors are not converted to codec absence`() {
-        FfmVipsRuntime.codecProbe = object : FfmVipsCodecProbe {
+        FfmVipsRuntime.codecProbe = object: FfmVipsCodecProbe {
             override fun inspectOperation(name: String): FfmVipsCodecProbeResult =
                 throw AssertionError("fatal native linkage")
         }

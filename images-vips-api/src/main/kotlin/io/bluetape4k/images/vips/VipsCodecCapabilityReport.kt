@@ -1,6 +1,8 @@
 package io.bluetape4k.images.vips
 
 import io.bluetape4k.support.requireNotBlank
+import io.bluetape4k.support.requireNotNull
+import io.bluetape4k.support.requireNull
 import java.io.Serializable
 
 /**
@@ -41,7 +43,7 @@ data class VipsCodecOperationCapability(
     val support: VipsCodecSupport,
     val operationName: String? = null,
     val reason: String? = null,
-) : Serializable {
+): Serializable {
 
     init {
         operationName?.requireNotBlank("operationName")
@@ -95,7 +97,7 @@ data class VipsCodecCapability(
     val decode: VipsCodecOperationCapability,
     val encode: VipsCodecOperationCapability,
     val nativeDependencies: List<String> = emptyList(),
-) : Serializable {
+): Serializable {
 
     init {
         nativeDependencies.forEachIndexed { index, dependency ->
@@ -132,14 +134,13 @@ data class VipsCodecCapability(
  * @property codecs HEIF-family codec capability 목록입니다.
  * @property inspectedOperations 이 report를 위해 inspect한 native libvips operation name입니다.
  */
-@OptIn(VipsIncubatingApi::class)
 data class VipsCodecCapabilityReport(
     val backendName: String,
     val libvipsVersion: String? = null,
     val stableFormats: Set<VipsImageFormat> = DEFAULT_STABLE_FORMATS,
     val codecs: List<VipsCodecCapability>,
     val inspectedOperations: Set<String> = emptySet(),
-) : Serializable {
+): Serializable {
 
     init {
         backendName.requireNotBlank("backendName")
@@ -188,16 +189,16 @@ data class VipsCodecSmokeResult(
     val encoded: Boolean,
     val failureStage: VipsCodecDirection? = null,
     val failureReason: String? = null,
-) : Serializable {
+): Serializable {
 
     init {
         backendName.requireNotBlank("backendName")
         failureReason?.requireNotBlank("failureReason")
         if (failureStage == null) {
-            require(failureReason == null) { "failureReason requires failureStage" }
+            failureReason.requireNull { "failureReason requires failureStage" }
             require(decoded && encoded) { "successful smoke result must decode and encode" }
         } else {
-            require(failureReason != null) { "failureStage requires failureReason" }
+            failureReason.requireNotNull { "failureStage requires failureReason" }
         }
     }
 

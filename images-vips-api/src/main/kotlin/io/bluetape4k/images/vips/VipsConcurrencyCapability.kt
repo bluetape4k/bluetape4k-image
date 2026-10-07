@@ -1,5 +1,7 @@
 package io.bluetape4k.images.vips
 
+import io.bluetape4k.support.requireEquals
+import io.bluetape4k.support.requireGt
 import io.bluetape4k.support.requireNotBlank
 import java.io.Serializable
 
@@ -30,14 +32,15 @@ data class VipsConcurrencyCapability(
     val requested: Int? = null,
     val effective: Int? = null,
     val reason: String? = null,
-) : Serializable {
+): Serializable {
 
     init {
-        requested?.let { require(it > 0) { "requested concurrency must be positive: $it" } }
-        effective?.let { require(it > 0) { "effective concurrency must be positive: $it" } }
+        requested?.requireGt(0) { "requested concurrency must be positive: $requested" }
+        effective?.requireGt(0) { "effective concurrency must be positive: $effective" }
         reason?.requireNotBlank("reason")
+
         if (support == VipsConcurrencySupport.CONFIGURABLE && requested != null && effective != null) {
-            require(requested == effective) {
+            requested.requireEquals(effective) {
                 "configurable backend must report the requested value as effective"
             }
         }
