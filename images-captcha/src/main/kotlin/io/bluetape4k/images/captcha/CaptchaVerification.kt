@@ -2,10 +2,12 @@ package io.bluetape4k.images.captcha
 
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.requirePositiveNumber
+import okio.withLock
 import java.io.Serializable
 import java.time.Clock
 import java.time.Instant
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.locks.ReentrantLock
 
 /**
  * 발급된 CAPTCHA challenge의 application-visible identifier입니다.
@@ -95,10 +97,10 @@ class InMemoryCaptchaChallengeStore @JvmOverloads constructor(
     }
 
     private val challenges = ConcurrentHashMap<CaptchaChallengeId, IssuedCaptchaChallenge>()
-    private val lock = Any()
+    private val lock = ReentrantLock()
 
     override fun save(challenge: IssuedCaptchaChallenge): IssuedCaptchaChallenge =
-        synchronized(lock) {
+        lock.withLock {
             removeExpiredLocked(clock.instant())
             challenges[challenge.id] = challenge
             trimToMaxEntriesLocked()
@@ -106,27 +108,28 @@ class InMemoryCaptchaChallengeStore @JvmOverloads constructor(
         }
 
     override fun consume(id: CaptchaChallengeId): IssuedCaptchaChallenge? =
-        synchronized(lock) { challenges.remove(id) }
+        lock.withLock { challenges.remove(id) }
 
     /**
      * 현재 저장된 challenge 수입니다. test와 diagnostic을 위해 노출합니다.
      */
     val size: Int
-        get() = synchronized(lock) { challenges.size }
+        get() = lock.withLock { challenges.size }
 
     /**
      * 만료된 challenge를 제거하고 제거된 entry 수를 반환합니다.
      */
     fun removeExpired(now: Instant = clock.instant()): Int =
-        synchronized(lock) { removeExpiredLocked(now) }
+        lock.withLock { removeExpiredLocked(now) }
 
     private fun removeExpiredLocked(now: Instant): Int {
         var removed = 0
-        challenges.forEach { (id, challenge) ->
-            if (!challenge.expiresAt.isAfter(now) && challenges.remove(id, challenge)) {
-                removed++
+        challenges
+            .forEach { (id, challenge) ->
+                if (!challenge.expiresAt.isAfter(now) && challenges.remove(id, challenge)) {
+                    removed++
+                }
             }
-        }
         return removed
     }
 
@@ -134,9 +137,12 @@ class InMemoryCaptchaChallengeStore @JvmOverloads constructor(
         val overflow = challenges.size - maxEntries
         if (overflow <= 0) return
 
+        val comparator =
+            compareBy<Map.Entry<CaptchaChallengeId, IssuedCaptchaChallenge>> { it.value.expiresAt }
+                .thenBy { it.key.value }
+
         challenges.entries
-            .sortedWith(compareBy<Map.Entry<CaptchaChallengeId, IssuedCaptchaChallenge>> { it.value.expiresAt }
-                .thenBy { it.key.value })
+            .sortedWith(comparator)
             .take(overflow)
             .forEach { (id, challenge) ->
                 challenges.remove(id, challenge)

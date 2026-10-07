@@ -9,8 +9,12 @@ tasks.withType<Test>().configureEach {
 dependencies {
     api(project(":bluetape4k-images"))
 
+    // Coroutines
+    implementation(bt4k.bluetape4k.coroutines)
     implementation(libs.kotlinx.coroutines.core)
-
-    testImplementation(bt4k.bluetape4k.junit5)
     testImplementation(libs.kotlinx.coroutines.test)
+
+    // Test
+    testImplementation(bt4k.bluetape4k.junit5)
+    testImplementation(bt4k.fory.kotlin)
 }

@@ -3,22 +3,25 @@ package io.bluetape4k.images.captcha
 import com.sksamuel.scrimage.nio.PngWriter
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldBeGreaterThan
+import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldNotBeEmpty
+import io.bluetape4k.logging.KLogging
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.withContext
+import org.junit.jupiter.api.Test
 import java.awt.Color
 import java.security.SecureRandom
 import java.time.Clock
 import java.time.Instant
 import java.time.ZoneOffset
 import java.util.concurrent.atomic.AtomicInteger
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.withContext
-import org.junit.jupiter.api.Test
 import kotlin.time.Duration.Companion.minutes
 
 class Java2dCaptchaGeneratorTest {
+
+    companion object: KLogging()
 
     @Test
     fun `generate returns text image and advisory expiration`() {
@@ -36,12 +39,12 @@ class Java2dCaptchaGeneratorTest {
         val bytes = challenge.image.forWriter(PngWriter.MaxCompression).bytes()
 
         challenge.text.length shouldBeEqualTo 5
-        challenge.text.all { it in "ABCDEF" } shouldBeEqualTo true
+        challenge.text.all { it in "ABCDEF" }.shouldBeTrue()
         challenge.image.width shouldBeEqualTo 160
         challenge.image.height shouldBeEqualTo 64
         challenge.expiresAt shouldBeEqualTo Instant.parse("2026-05-24T00:02:00Z")
+
         bytes.shouldNotBeEmpty()
-        bytes.size shouldBeGreaterThan 0
     }
 
     @Test
