@@ -15,9 +15,7 @@ import java.nio.file.StandardOpenOption.WRITE
 
 class FfmVipsImageSupportBoundaryTest {
 
-    private companion object: KLogging() {
-        val JPEG_MAGIC: ByteArray = byteArrayOf(0xFF.toByte(), 0xD8.toByte(), 0xFF.toByte())
-    }
+    private companion object: KLogging()
 
     @TempDir
     private lateinit var tmpDir: Path

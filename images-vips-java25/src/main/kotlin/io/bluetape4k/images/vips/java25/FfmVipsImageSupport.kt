@@ -29,15 +29,15 @@ import java.nio.file.Files
 import java.nio.file.Path
 import io.bluetape4k.okio.coroutines.buffered as bufferedSuspended
 
-private const val MAX_INPUT_BYTES = VipsLimits.MAX_INPUT_BYTES
+const val MAX_INPUT_BYTES = VipsLimits.MAX_INPUT_BYTES
 
-private val JPEG_MAGIC = byteArrayOf(0xFF.toByte(), 0xD8.toByte(), 0xFF.toByte())
-private val PNG_MAGIC = byteArrayOf(0x89.toByte(), 0x50.toByte(), 0x4E.toByte(), 0x47.toByte())
-private val WEBP_RIFF = byteArrayOf(0x52.toByte(), 0x49.toByte(), 0x46.toByte(), 0x46.toByte())
-private val WEBP_MARKER = byteArrayOf(0x57.toByte(), 0x45.toByte(), 0x42.toByte(), 0x50.toByte())
-private val FTYP_MARKER = byteArrayOf(0x66, 0x74, 0x79, 0x70)
-private val AVIF_BRANDS = setOf("avif", "avis")
-private val HEIF_BRANDS = setOf("heic", "heix", "hevc", "hevx", "mif1", "msf1")
+val JPEG_MAGIC = byteArrayOf(0xFF.toByte(), 0xD8.toByte(), 0xFF.toByte())
+val PNG_MAGIC = byteArrayOf(0x89.toByte(), 0x50.toByte(), 0x4E.toByte(), 0x47.toByte())
+val WEBP_RIFF = byteArrayOf(0x52.toByte(), 0x49.toByte(), 0x46.toByte(), 0x46.toByte())
+val WEBP_MARKER = byteArrayOf(0x57.toByte(), 0x45.toByte(), 0x42.toByte(), 0x50.toByte())
+val FTYP_MARKER = byteArrayOf(0x66, 0x74, 0x79, 0x70)
+val AVIF_BRANDS = setOf("avif", "avis")
+val HEIF_BRANDS = setOf("heic", "heix", "hevc", "hevx", "mif1", "msf1")
 
 /**
  * 바이트 배열에서 [VipsImage]를 생성합니다.
