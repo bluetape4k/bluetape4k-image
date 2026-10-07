@@ -100,9 +100,9 @@ tasks.register<Test>("consumerTest") {
         val forbiddenOutputs = classpath.files.filter { file ->
             val path = file.invariantSeparatorsPath
             path.contains("/testFixtures") ||
-                path.contains("/classes/kotlin/test") ||
-                path.contains("/classes/java/test") ||
-                path.contains("/test-classes")
+                    path.contains("/classes/kotlin/test") ||
+                    path.contains("/classes/java/test") ||
+                    path.contains("/test-classes")
         }
         require(forbiddenOutputs.isEmpty()) {
             "consumerTest must not include test or testFixtures output: $forbiddenOutputs"
@@ -127,11 +127,12 @@ tasks.register<Test>("consumerTest") {
 val maxProductionClassFileMajor = 69
 
 private fun classFileMajor(bytes: ByteArray): Int {
-    require(bytes.size >= 8 &&
-        bytes[0] == 0xCA.toByte() &&
-        bytes[1] == 0xFE.toByte() &&
-        bytes[2] == 0xBA.toByte() &&
-        bytes[3] == 0xBE.toByte()
+    require(
+        bytes.size >= 8 &&
+                bytes[0] == 0xCA.toByte() &&
+                bytes[1] == 0xFE.toByte() &&
+                bytes[2] == 0xBA.toByte() &&
+                bytes[3] == 0xBE.toByte()
     ) { "invalid class file header" }
     return ((bytes[6].toInt() and 0xFF) shl 8) or (bytes[7].toInt() and 0xFF)
 }
@@ -147,13 +148,13 @@ tasks.register("verifyVipsJava25Bytecode") {
     doLast {
         val productionDirectories = listOf(
             "bluetape4k-images-vips-api/classes-kotlin" to
-                vipsApiProject.layout.buildDirectory.dir("classes/kotlin/main").get().asFile,
+                    vipsApiProject.layout.buildDirectory.dir("classes/kotlin/main").get().asFile,
             "bluetape4k-images-vips-api/classes-java" to
-                vipsApiProject.layout.buildDirectory.dir("classes/java/main").get().asFile,
+                    vipsApiProject.layout.buildDirectory.dir("classes/java/main").get().asFile,
             "bluetape4k-images-vips-java25/classes-kotlin" to
-                layout.buildDirectory.dir("classes/kotlin/main").get().asFile,
+                    layout.buildDirectory.dir("classes/kotlin/main").get().asFile,
             "bluetape4k-images-vips-java25/classes-java" to
-                layout.buildDirectory.dir("classes/java/main").get().asFile,
+                    layout.buildDirectory.dir("classes/java/main").get().asFile,
         )
         val productionJars = listOf(
             "bluetape4k-images-vips-api/jar" to vipsApiJar.get().archiveFile.get().asFile,
@@ -211,8 +212,8 @@ dependencies {
     implementation(bt4k.jvips.build69bf715)
 
     // BoundedInputStream for input size limits
-    implementation(bt4k.bluetape4k.io)
     implementation(bt4k.commons.io)
+    implementation(bt4k.bluetape4k.io)
     implementation(bt4k.fory.kotlin)
 
     // Coroutines
