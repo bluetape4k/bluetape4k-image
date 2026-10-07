@@ -1,6 +1,7 @@
 package io.bluetape4k.images.vips.java25.golden
 
-import io.bluetape4k.images.vips.VipsImageFormat
+import io.bluetape4k.assertions.shouldNotBeEmpty
+import io.bluetape4k.images.vips.VipsImageFormat.PNG
 import io.bluetape4k.images.vips.java25.AbstractFfmVipsTest
 import io.bluetape4k.images.vips.java25.ffmVipsImageOf
 import io.bluetape4k.images.vips.testfixtures.VipsGoldenAssert
@@ -28,7 +29,9 @@ class VipsGoldenResizeTest: AbstractFfmVipsTest() {
         val bytes = VipsTestFixtures.loadFixture(VipsTestFixtures.SAMPLE_JPEG)
         ffmVipsImageOf(bytes).use { img ->
             img.resize(320, 240).use { resized ->
-                val resultBytes = resized.toBytes(VipsImageFormat.PNG)
+                val resultBytes = resized.toBytes(PNG)
+                resultBytes.shouldNotBeEmpty()
+
                 VipsGoldenAssert.assertSimilarToGolden(resultBytes, "vips-resize-320x240")
             }
         }
@@ -39,7 +42,9 @@ class VipsGoldenResizeTest: AbstractFfmVipsTest() {
         val bytes = VipsTestFixtures.loadFixture(VipsTestFixtures.SAMPLE_JPEG)
         ffmVipsImageOf(bytes).use { img ->
             img.thumbnail(128).use { thumb ->
-                val resultBytes = thumb.toBytes(VipsImageFormat.PNG)
+                val resultBytes = thumb.toBytes(PNG)
+                resultBytes.shouldNotBeEmpty()
+                
                 VipsGoldenAssert.assertSimilarToGolden(resultBytes, "vips-thumbnail-128")
             }
         }
@@ -50,7 +55,9 @@ class VipsGoldenResizeTest: AbstractFfmVipsTest() {
         val bytes = VipsTestFixtures.loadFixture(VipsTestFixtures.SAMPLE_JPEG)
         ffmVipsImageOf(bytes).use { img ->
             img.resize(400, 300).use { resized ->
-                val resultBytes = resized.toBytes(VipsImageFormat.PNG)
+                val resultBytes = resized.toBytes(PNG)
+                resultBytes.shouldNotBeEmpty()
+
                 VipsGoldenAssert.assertSimilarToGolden(resultBytes, "vips-resize-fit-400x300")
             }
         }
@@ -69,7 +76,9 @@ class VipsGoldenResizeTest: AbstractFfmVipsTest() {
         val bytes = VipsTestFixtures.loadFixture(VipsTestFixtures.SAMPLE_JPEG)
         ffmVipsImageOf(bytes).use { img ->
             img.resize(320, 240).use { resized ->
-                val resultBytes = resized.toBytes(VipsImageFormat.PNG)
+                val resultBytes = resized.toBytes(PNG)
+                resultBytes.shouldNotBeEmpty()
+                
                 VipsGoldenAssert.assertSimilarToGolden(resultBytes, "vips-resize-320x240")
             }
         }
@@ -81,7 +90,9 @@ class VipsGoldenResizeTest: AbstractFfmVipsTest() {
         val bytes = VipsTestFixtures.loadFixture(VipsTestFixtures.SAMPLE_JPEG)
         ffmVipsImageOf(bytes).use { img ->
             img.thumbnail(128).use { thumb ->
-                val resultBytes = thumb.toBytes(VipsImageFormat.PNG)
+                val resultBytes = thumb.toBytes(PNG)
+                resultBytes.shouldNotBeEmpty()
+
                 VipsGoldenAssert.assertSimilarToGolden(resultBytes, "vips-thumbnail-128")
             }
         }
@@ -93,7 +104,9 @@ class VipsGoldenResizeTest: AbstractFfmVipsTest() {
         val bytes = VipsTestFixtures.loadFixture(VipsTestFixtures.SAMPLE_JPEG)
         ffmVipsImageOf(bytes).use { img ->
             img.resize(400, 300).use { resized ->
-                val resultBytes = resized.toBytes(VipsImageFormat.PNG)
+                val resultBytes = resized.toBytes(PNG)
+                resultBytes.shouldNotBeEmpty()
+                
                 VipsGoldenAssert.assertSimilarToGolden(resultBytes, "vips-resize-fit-400x300")
             }
         }

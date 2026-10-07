@@ -1,6 +1,7 @@
 package io.bluetape4k.images.vips.java25
 
 import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.warn
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Tag
@@ -17,8 +18,10 @@ abstract class AbstractFfmVipsTest {
                 assumeTrue(false, "vips tests disabled via -Dvips.enabled=false")
             }
             // libvips 자동 감지: init() 실패 시 skip
-            runCatching { FfmVipsRuntime.init() }.onFailure { e ->
-                log.warn("FfmVipsRuntime.init() failed — skipping vips tests: ${e.message}")
+            runCatching {
+                FfmVipsRuntime.init()
+            }.onFailure { e ->
+                log.warn(e) { "FfmVipsRuntime.init() failed — skipping vips tests" }
                 assumeTrue(false, "libvips not available: ${e.message}")
             }
         }

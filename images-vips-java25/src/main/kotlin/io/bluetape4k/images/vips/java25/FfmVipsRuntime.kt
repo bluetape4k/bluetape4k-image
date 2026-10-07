@@ -15,14 +15,21 @@ import io.bluetape4k.images.vips.VipsIncubatingApi
 import io.bluetape4k.images.vips.VipsInitializationException
 import io.bluetape4k.images.vips.VipsLimits
 import io.bluetape4k.images.vips.VipsRuntime
+import io.bluetape4k.images.vips.java25.FfmVipsRuntime.RuntimeState.INITIALIZED
+import io.bluetape4k.images.vips.java25.FfmVipsRuntime.RuntimeState.INITIALIZING
+import io.bluetape4k.images.vips.java25.FfmVipsRuntime.RuntimeState.SHUTDOWN
+import io.bluetape4k.images.vips.java25.FfmVipsRuntime.RuntimeState.UNINITIALIZED
 import io.bluetape4k.images.vips.java25.internal.DefaultFfmVipsCodecProbe
 import io.bluetape4k.images.vips.java25.internal.DefaultFfmVipsNativeRuntime
 import io.bluetape4k.images.vips.java25.internal.FfmVipsCodecProbe
 import io.bluetape4k.images.vips.java25.internal.FfmVipsCodecProbeResult
 import io.bluetape4k.images.vips.java25.internal.FfmVipsNativeRuntime
 import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
+import io.bluetape4k.logging.warn
 import kotlinx.coroutines.CancellationException
 import org.jetbrains.annotations.VisibleForTesting
+import java.lang.management.ManagementFactory
 import java.util.concurrent.atomic.AtomicReference
 import java.util.concurrent.locks.LockSupport
 
@@ -55,7 +62,7 @@ object FfmVipsRuntime: VipsRuntime, KLogging() {
         val maxPixels: Long,
     )
 
-    private val state = AtomicReference(RuntimeState.UNINITIALIZED)
+    private val state = AtomicReference(UNINITIALIZED)
     private val effectiveConfiguration = AtomicReference<InitConfiguration?>()
 
     @VisibleForTesting
@@ -89,7 +96,7 @@ object FfmVipsRuntime: VipsRuntime, KLogging() {
 
     override fun init(concurrency: Int, maxPixels: Long) {
         when (state.get()) {
-            RuntimeState.SHUTDOWN -> throw VipsInitializationException(
+            SHUTDOWN -> throw VipsInitializationException(
                 "libvips has been shut down — restart the process to re-initialize"
             )
             else -> {}
@@ -106,27 +113,27 @@ object FfmVipsRuntime: VipsRuntime, KLogging() {
         val requestedConfiguration = InitConfiguration(concurrency, maxPixels)
 
         when (state.get()) {
-            RuntimeState.INITIALIZED -> return verifyEffectiveConfiguration(requestedConfiguration)
-            RuntimeState.SHUTDOWN -> throw VipsInitializationException(
+            INITIALIZED -> return verifyEffectiveConfiguration(requestedConfiguration)
+            SHUTDOWN -> throw VipsInitializationException(
                 "libvips has been shut down — restart the process to re-initialize"
             )
             else -> {}
         }
 
-        if (!state.compareAndSet(RuntimeState.UNINITIALIZED, RuntimeState.INITIALIZING)) {
+        if (!state.compareAndSet(UNINITIALIZED, INITIALIZING)) {
             // 다른 스레드가 CAS에서 이겼습니다. 완료까지 bounded wait 하되 owner는 건드리지 않습니다.
             val deadline = initializationWaitClock() + initializationWaitTimeoutNanos
             while (true) {
                 awaitInitializationCompletion("libvips init", deadline)
                 when (state.get()) {
-                    RuntimeState.INITIALIZED -> return verifyEffectiveConfiguration(requestedConfiguration)
-                    RuntimeState.SHUTDOWN -> throw VipsInitializationException(
+                    INITIALIZED -> return verifyEffectiveConfiguration(requestedConfiguration)
+                    SHUTDOWN -> throw VipsInitializationException(
                         "libvips was shut down during concurrent initialization"
                     )
-                    RuntimeState.UNINITIALIZED -> throw VipsInitializationException(
+                    UNINITIALIZED -> throw VipsInitializationException(
                         "Concurrent initialization attempt failed — retry"
                     )
-                    RuntimeState.INITIALIZING -> continue
+                    INITIALIZING -> continue
                 }
             }
         }
@@ -136,14 +143,14 @@ object FfmVipsRuntime: VipsRuntime, KLogging() {
             nativeRuntime.nativeInit(concurrency)
             _concurrencyCapability = unsupportedConcurrencyCapability(concurrency)
             effectiveConfiguration.set(requestedConfiguration)
-            state.set(RuntimeState.INITIALIZED)
-            log.debug("FfmVipsRuntime initialized: concurrency=$concurrency, maxPixels=$maxPixels")
+            state.set(INITIALIZED)
+            log.debug { "FfmVipsRuntime initialized: concurrency=$concurrency, maxPixels=$maxPixels" }
         } catch (e: Error) {
             // UnsatisfiedLinkError, NoClassDefFoundError 등 — 상태 복구 후 원본 Error 재던짐
-            state.set(RuntimeState.UNINITIALIZED)
+            state.set(UNINITIALIZED)
             throw e
         } catch (e: Exception) {
-            state.set(RuntimeState.UNINITIALIZED)
+            state.set(UNINITIALIZED)
             throw VipsInitializationException("libvips (vips-ffm) initialization failed", e)
         }
     }
@@ -155,24 +162,24 @@ object FfmVipsRuntime: VipsRuntime, KLogging() {
         val deadline = initializationWaitClock() + initializationWaitTimeoutNanos
         while (true) {
             when (state.get()) {
-                RuntimeState.SHUTDOWN, RuntimeState.UNINITIALIZED -> return
-                RuntimeState.INITIALIZED -> {
-                    if (state.compareAndSet(RuntimeState.INITIALIZED, RuntimeState.SHUTDOWN)) {
+                SHUTDOWN, UNINITIALIZED -> return
+                INITIALIZING -> awaitInitializationCompletion("libvips shutdown", deadline)
+                INITIALIZED -> {
+                    if (state.compareAndSet(INITIALIZED, SHUTDOWN)) {
                         nativeRuntime.nativeShutdown()
-                        log.debug("FfmVipsRuntime shut down")
+                        log.debug { "FfmVipsRuntime shut down" }
                         return
                     }
                 }
-                RuntimeState.INITIALIZING -> awaitInitializationCompletion("libvips shutdown", deadline)
             }
         }
     }
 
     override val isInitialized: Boolean
-        get() = state.get() == RuntimeState.INITIALIZED
+        get() = state.get() == INITIALIZED
 
     override val isShutdown: Boolean
-        get() = state.get() == RuntimeState.SHUTDOWN
+        get() = state.get() == SHUTDOWN
 
     override fun codecCapabilityReport(): VipsCodecCapabilityReport {
         val loadProbe = codecProbe.inspectOperation(HEIF_LOAD_OPERATION)
@@ -250,7 +257,7 @@ object FfmVipsRuntime: VipsRuntime, KLogging() {
 
     @VisibleForTesting
     internal fun resetForTest() {
-        state.set(RuntimeState.UNINITIALIZED)
+        state.set(UNINITIALIZED)
         nativeRuntime = DefaultFfmVipsNativeRuntime
         codecProbe = DefaultFfmVipsCodecProbe
         initializationWaitTimeoutNanos = INITIALIZATION_WAIT_TIMEOUT_NANOS
@@ -270,19 +277,14 @@ object FfmVipsRuntime: VipsRuntime, KLogging() {
     private fun awaitInitializationCompletion(operation: String, deadline: Long) {
         initializationWaitStartedHook?.invoke()
         var spinCount = 0
-        while (state.get() == RuntimeState.INITIALIZING) {
+        while (state.get() == INITIALIZING) {
             if (Thread.currentThread().isInterrupted) {
-                throw VipsInitializationException(
-                    "$operation interrupted while waiting for libvips initialization"
-                )
+                throw VipsInitializationException("$operation interrupted while waiting for libvips initialization")
             }
 
             val remainingNanos = deadline - initializationWaitClock()
             if (remainingNanos <= 0L) {
-                throw VipsInitializationException(
-                    "$operation timed out waiting for libvips initialization " +
-                            "after $INITIALIZATION_WAIT_TIMEOUT_SECONDS seconds"
-                )
+                throw VipsInitializationException("$operation timed out waiting for libvips initialization after $INITIALIZATION_WAIT_TIMEOUT_SECONDS seconds")
             }
 
             if (++spinCount <= WAIT_SPIN_LIMIT) {
@@ -297,9 +299,8 @@ object FfmVipsRuntime: VipsRuntime, KLogging() {
 
     private fun verifyEffectiveConfiguration(requested: InitConfiguration) {
         val effective = effectiveConfiguration.get()
-            ?: throw VipsInitializationException(
-                "libvips is initialized without an effective configuration"
-            )
+            ?: throw VipsInitializationException("libvips is initialized without an effective configuration")
+
         if (effective != requested) {
             throw VipsInitializationException(
                 "libvips runtime configuration mismatch: " +
@@ -359,17 +360,18 @@ object FfmVipsRuntime: VipsRuntime, KLogging() {
     private fun checkNativeAccessEnabled() {
         // ManagementFactory.inputArguments가 canonical입니다. -javaagent, JDK_JAVA_OPTIONS, _JAVA_OPTIONS를 모두 포괄합니다.
         // ProcessHandle.commandLine()은 truncation과 env var args 비가시성 때문에 fragile합니다.
-        val jvmArgs = java.lang.management.ManagementFactory.getRuntimeMXBean().inputArguments
+        val jvmArgs = ManagementFactory.getRuntimeMXBean().inputArguments
+
         // 두 조건 모두 같은 arg에서 확인: --add-opens=...=ALL-UNNAMED 같은 arg가 두 번째 절만 일치하는 오탐 방지
         val hasNativeAccess = jvmArgs.any { arg ->
             arg.startsWith("--enable-native-access=") && arg.contains("ALL-UNNAMED")
         }
         if (!hasNativeAccess) {
-            log.warn(
+            log.warn {
                 "JVM was started without --enable-native-access=ALL-UNNAMED. " +
                         "vips-ffm uses FFM API which may fail without this flag. " +
                         "Add --enable-native-access=ALL-UNNAMED to JVM arguments."
-            )
+            }
         }
     }
 

@@ -21,7 +21,9 @@ internal fun resizeWithFfm(
 ): VImage {
     targetWidth.requirePositiveNumber("targetWidth")
     targetHeight.requirePositiveNumber("targetHeight")
+
     val hscale = targetWidth.toDouble() / currentWidth
     val vscale = targetHeight.toDouble() / currentHeight
+
     return image.resize(hscale, VipsOption.Double("vscale", vscale))
 }
