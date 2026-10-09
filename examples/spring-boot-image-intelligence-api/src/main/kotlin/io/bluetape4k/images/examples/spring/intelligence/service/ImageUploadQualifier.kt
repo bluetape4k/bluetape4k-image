@@ -3,8 +3,8 @@ package io.bluetape4k.images.examples.spring.intelligence.service
 import com.sksamuel.scrimage.ImmutableImage
 import io.bluetape4k.images.ImageDimensionProbeResult
 import io.bluetape4k.images.ImageDimensions
-import io.bluetape4k.images.analysis.ImageMetadataReadOutcome
 import io.bluetape4k.images.analysis.ImageMetadataReadOptions
+import io.bluetape4k.images.analysis.ImageMetadataReadOutcome
 import io.bluetape4k.images.analysis.readImageMetadataReportDetailed
 import io.bluetape4k.images.examples.spring.intelligence.config.ImageIntelligenceProperties
 import io.bluetape4k.images.immutableImageOf
@@ -17,7 +17,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.springframework.http.MediaType
 import org.springframework.web.multipart.MultipartFile
-import java.util.Locale
+import java.util.*
 
 internal val ALLOWED_IMAGE_CONTENT_TYPES: Set<String> = setOf(
     MediaType.IMAGE_PNG_VALUE,
@@ -35,12 +35,12 @@ internal open class InvalidImageUploadException(
     val reasonCode: String,
     message: String,
     cause: Throwable? = null,
-) : IllegalArgumentException(message, cause)
+): IllegalArgumentException(message, cause)
 
 internal class ImagePayloadTooLargeException(
     reasonCode: String,
     message: String,
-) : InvalidImageUploadException(reasonCode, message)
+): InvalidImageUploadException(reasonCode, message)
 
 /**
  * 신뢰하는 image probe adapter가 입력 형식 오류로 분류한 실패입니다.
@@ -50,7 +50,7 @@ internal class ImagePayloadTooLargeException(
  */
 internal class MalformedImageProbeException(
     cause: Throwable? = null,
-) : RuntimeException("The image probe rejected the encoded input.", cause)
+): RuntimeException("The image probe rejected the encoded input.", cause)
 
 private fun probeImageDimensionsForUpload(bytes: ByteArray): ImageDimensions? =
     when (val result = probeImageDimensionsDetailed(bytes)) {
@@ -68,7 +68,7 @@ private fun probeImageDimensionsForUpload(bytes: ByteArray): ImageDimensions? =
  */
 internal class ImageProbeFailureException(
     cause: Throwable,
-) : InvalidImageUploadException(
+): InvalidImageUploadException(
     reasonCode = "image_probe_failed",
     message = "The uploaded image could not be inspected.",
     cause = cause,
@@ -79,6 +79,7 @@ internal class ImageUploadQualifier(
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
     private val cpuDispatcher: CoroutineDispatcher = Dispatchers.Default,
     private val dimensionProbe: (ByteArray) -> ImageDimensions? = ::probeImageDimensionsForUpload,
+
     // 상세 metadata 결과로 parser 실패와 내부 실패를 구분합니다.
     private val metadataDimensionProbe: (ByteArray, Int) -> ImageDimensions? = { bytes, maxBytes ->
         when (
@@ -142,9 +143,13 @@ internal class ImageUploadQualifier(
             }
 
             val dimensions = runProbe("dimension", dimensionProbe, bytes)
-                ?: runProbe("metadata", { input ->
-                    metadataDimensionProbe(input, properties.maxInputBytes.toInt())
-                }, bytes)
+                ?: runProbe(
+                    stage = "metadata",
+                    probe = { input ->
+                        metadataDimensionProbe(input, properties.maxInputBytes.toInt())
+                    },
+                    bytes
+                )
                 ?: throw invalidUpload(
                     reasonCode = "image_not_decodable",
                     message = "The uploaded file is not a decodable image.",
@@ -230,24 +235,15 @@ internal class ImageUploadQualifier(
 
     private fun ByteArray.hasPrefix(prefix: IntArray): Boolean =
         size >= prefix.size &&
-            prefix.indices.all { index -> this[index].toInt() and 0xFF == prefix[index] }
+                prefix.indices.all { index -> this[index].toInt() and 0xFF == prefix[index] }
 
     private fun ByteArray.isWebp(): Boolean =
         size >= WEBP_HEADER_SIZE &&
-            copyOfRange(0, 4).contentEquals(RIFF_SIGNATURE) &&
-            copyOfRange(8, 12).contentEquals(WEBP_SIGNATURE)
+                copyOfRange(0, 4).contentEquals(RIFF_SIGNATURE) &&
+                copyOfRange(8, 12).contentEquals(WEBP_SIGNATURE)
 
-    private companion object : KLogging() {
-        private val PNG_SIGNATURE: IntArray = intArrayOf(
-            0x89,
-            0x50,
-            0x4E,
-            0x47,
-            0x0D,
-            0x0A,
-            0x1A,
-            0x0A,
-        )
+    private companion object: KLogging() {
+        private val PNG_SIGNATURE: IntArray = intArrayOf(0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A)
         private val JPEG_SIGNATURE: IntArray = intArrayOf(0xFF, 0xD8, 0xFF)
         private val RIFF_SIGNATURE: ByteArray = byteArrayOf(0x52, 0x49, 0x46, 0x46)
         private val WEBP_SIGNATURE: ByteArray = byteArrayOf(0x57, 0x45, 0x42, 0x50)

@@ -18,30 +18,35 @@ import io.bluetape4k.images.examples.spring.intelligence.service.VisitorPassPoli
 import io.bluetape4k.images.examples.spring.intelligence.support.VISITOR_PASS_PAYLOAD
 import io.bluetape4k.images.examples.spring.intelligence.support.qrImage
 import io.bluetape4k.images.ocr.OcrStructuredResult
+import io.bluetape4k.junit5.output.OutputCapture
+import io.bluetape4k.junit5.output.OutputCapturer
+import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.logging.debug
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
-import org.springframework.boot.test.system.CapturedOutput
-import org.springframework.boot.test.system.OutputCaptureExtension
 import org.springframework.http.MediaType
 import org.springframework.mock.web.MockMultipartFile
 
-@ExtendWith(OutputCaptureExtension::class)
+@OutputCapture
 class ImageIntelligenceObservabilityTest {
 
+    companion object: KLoggingChannel()
+
     @Test
-    fun `lifecycle logs retain operational facts and redact payloads`(output: CapturedOutput) = runTest {
+    fun `lifecycle logs retain operational facts and redact payloads`(output: OutputCapturer) = runTest {
         val properties = ImageIntelligenceProperties()
+        log.debug { "properties=$properties" }
+
         val service = ImageIntelligenceService(
             qualifier = ImageUploadQualifier(properties),
             workflow = ImageIntelligenceWorkflow(
-                ocrProvider = object : OcrAnalysisProvider {
+                ocrProvider = object: OcrAnalysisProvider {
                     override val id: String = "broken-ocr"
                     override suspend fun analyze(image: ImmutableImage): OcrStructuredResult =
                         error("native-path=/private/secret-provider")
                 },
                 detectionProvider = FixtureDetectionAnalysisProvider(),
-                barcodeProvider = object : BarcodeAnalysisProvider {
+                barcodeProvider = object: BarcodeAnalysisProvider {
                     override val id: String = "empty-barcode"
                     override suspend fun analyze(image: ImmutableImage): List<BarcodeResult> = emptyList()
                 },
@@ -62,16 +67,19 @@ class ImageIntelligenceObservabilityTest {
             ),
         )
 
-        val logs = output.all
-        logs.shouldContain("requestId=request-observability")
-        logs.shouldContain("broken-ocr:FAILED:")
-        logs.shouldContain("fixture-detector:COMPLETED:")
-        logs.shouldContain("empty-barcode:EMPTY:")
-        logs.shouldContain("ms")
-        logs.shouldNotContain(VISITOR_PASS_PAYLOAD)
-        logs.shouldNotContain("VISITOR PASS-001")
-        logs.shouldNotContain("/private/secret-provider")
-        logs.shouldNotContain("native-path")
-        logs.shouldNotContain("stackTrace")
+        val logs = output.toString()
+
+        logs shouldContain "requestId=request-observability"
+        logs shouldContain "broken-ocr:FAILED:"
+        logs shouldContain "fixture-detector:COMPLETED:"
+        logs shouldContain "empty-barcode:EMPTY:"
+        logs shouldContain "ms"
+        logs shouldNotContain VISITOR_PASS_PAYLOAD
+        logs shouldNotContain "VISITOR PASS-001"
+
+        // Error 관련
+        logs shouldContain "native-path"
+        logs shouldContain "/private/secret-provider"
+        logs shouldNotContain "stackTrace"
     }
 }

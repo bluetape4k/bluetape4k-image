@@ -9,6 +9,8 @@ import io.bluetape4k.images.examples.spring.intelligence.config.ImageIntelligenc
 import io.bluetape4k.images.examples.spring.intelligence.model.AnalysisStatus
 import io.bluetape4k.images.examples.spring.intelligence.support.qrImage
 import io.bluetape4k.images.ocr.OcrStructuredResult
+import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.logging.debug
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
@@ -17,10 +19,12 @@ import org.springframework.mock.web.MockMultipartFile
 
 class ImageIntelligenceServiceTest {
 
+    companion object: KLoggingChannel()
+
     @Test
     fun `one failed lane returns a partial envelope and preserves siblings`() = runTest {
         val service = service(
-            ocr = object : OcrAnalysisProvider {
+            ocr = object: OcrAnalysisProvider {
                 override val id: String = "broken-ocr"
                 override suspend fun analyze(image: ImmutableImage): OcrStructuredResult =
                     error("native-path=/private/secret")
@@ -31,6 +35,7 @@ class ImageIntelligenceServiceTest {
 
         val response = service.analyze(visitorUpload())
 
+        log.debug { "response=$response" }
         response.requestId shouldBeEqualTo "request-test"
         response.status shouldBeEqualTo AggregateStatus.PARTIAL
         response.decision shouldBeEqualTo VisitorPassAction.MANUAL_REVIEW
@@ -44,7 +49,7 @@ class ImageIntelligenceServiceTest {
         val service = service(
             ocr = DisabledOcrAnalysisProvider(),
             detection = DisabledDetectionAnalysisProvider(),
-            barcode = object : BarcodeAnalysisProvider {
+            barcode = object: BarcodeAnalysisProvider {
                 override val id: String = "broken-barcode"
                 override suspend fun analyze(image: ImmutableImage): List<BarcodeResult> =
                     error("decoder-secret")
@@ -53,6 +58,7 @@ class ImageIntelligenceServiceTest {
 
         val response = service.analyze(visitorUpload())
 
+        log.debug { "response=$response" }
         response.status shouldBeEqualTo AggregateStatus.FAILED
         response.decision shouldBeEqualTo VisitorPassAction.MANUAL_REVIEW
         response.ocr.status shouldBeEqualTo AnalysisStatus.UNAVAILABLE

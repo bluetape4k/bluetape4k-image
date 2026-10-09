@@ -1,9 +1,9 @@
 package io.bluetape4k.images.examples.spring.intelligence.support
 
-import com.sksamuel.scrimage.ImmutableImage
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.client.j2se.MatrixToImageWriter
 import com.google.zxing.qrcode.QRCodeWriter
+import com.sksamuel.scrimage.ImmutableImage
 import com.sksamuel.scrimage.nio.JpegWriter
 import com.sksamuel.scrimage.nio.PngWriter
 import com.sksamuel.scrimage.webp.WebpWriter

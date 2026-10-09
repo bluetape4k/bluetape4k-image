@@ -39,14 +39,14 @@ internal interface BarcodeAnalysisProvider {
     suspend fun analyze(image: ImmutableImage): List<BarcodeResult>
 }
 
-internal class DisabledOcrAnalysisProvider : OcrAnalysisProvider {
+internal class DisabledOcrAnalysisProvider: OcrAnalysisProvider {
     override val id: String = "disabled-ocr"
 
     override suspend fun analyze(image: ImmutableImage): OcrStructuredResult =
         throw ProviderUnavailableException("provider_not_configured")
 }
 
-internal class FixtureOcrAnalysisProvider : OcrAnalysisProvider {
+internal class FixtureOcrAnalysisProvider: OcrAnalysisProvider {
     override val id: String = "fixture-ocr"
 
     override suspend fun analyze(image: ImmutableImage): OcrStructuredResult {
@@ -64,7 +64,7 @@ internal class TesseractOcrAnalysisProvider(
     private val engine: StructuredOcrEngine,
     private val options: OcrOptions,
     private val dispatcher: CoroutineDispatcher,
-) : OcrAnalysisProvider {
+): OcrAnalysisProvider {
     override val id: String = "tesseract"
 
     override suspend fun analyze(image: ImmutableImage): OcrStructuredResult =
@@ -75,14 +75,14 @@ internal class TesseractOcrAnalysisProvider(
         )
 }
 
-internal class DisabledDetectionAnalysisProvider : DetectionAnalysisProvider {
+internal class DisabledDetectionAnalysisProvider: DetectionAnalysisProvider {
     override val id: String = "disabled-detector"
 
     override suspend fun analyze(image: ImmutableImage): List<DetectionResult> =
         throw ProviderUnavailableException("provider_not_configured")
 }
 
-internal class FixtureDetectionAnalysisProvider : DetectionAnalysisProvider {
+internal class FixtureDetectionAnalysisProvider: DetectionAnalysisProvider {
     override val id: String = "fixture-detector"
 
     override suspend fun analyze(image: ImmutableImage): List<DetectionResult> =
@@ -106,7 +106,7 @@ internal class LocalDetectionAnalysisProvider(
     private val detector: ImageDetector,
     private val options: DetectionOptions,
     private val dispatcher: CoroutineDispatcher,
-) : DetectionAnalysisProvider {
+): DetectionAnalysisProvider {
     override suspend fun analyze(image: ImmutableImage): List<DetectionResult> =
         image.suspendDetectRegions(
             detector = detector,
@@ -119,7 +119,7 @@ internal class ZxingBarcodeAnalysisProvider(
     private val reader: BarcodeReader,
     private val options: BarcodeOptions = BarcodeOptions(),
     private val dispatcher: CoroutineDispatcher,
-) : BarcodeAnalysisProvider {
+): BarcodeAnalysisProvider {
     override val id: String = "zxing"
 
     override suspend fun analyze(image: ImmutableImage): List<BarcodeResult> =
@@ -132,7 +132,7 @@ internal class ZxingBarcodeAnalysisProvider(
 
 internal class ImageIntelligenceProfileGuard(
     private val environment: Environment,
-) : SmartInitializingSingleton {
+): SmartInitializingSingleton {
     override fun afterSingletonsInstantiated() {
         val activeProfiles = environment.activeProfiles.toSet()
         require(!activeProfiles.containsAll(setOf("demo", "native-ocr"))) {

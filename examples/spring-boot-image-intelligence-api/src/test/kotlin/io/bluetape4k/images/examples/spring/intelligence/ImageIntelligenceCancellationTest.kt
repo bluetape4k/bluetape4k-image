@@ -14,6 +14,9 @@ import io.bluetape4k.images.examples.spring.intelligence.service.GuardedAnalysis
 import io.bluetape4k.images.examples.spring.intelligence.service.ImageIntelligenceWorkflow
 import io.bluetape4k.images.examples.spring.intelligence.service.OcrAnalysisProvider
 import io.bluetape4k.images.ocr.OcrStructuredResult
+import io.bluetape4k.javatimes.millis
+import io.bluetape4k.javatimes.seconds
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.cancelAndJoin
@@ -23,6 +26,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import java.time.Duration
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.time.Duration.Companion.milliseconds
 
 class ImageIntelligenceCancellationTest {
 
@@ -45,44 +49,45 @@ class ImageIntelligenceCancellationTest {
 
         val recovered = workflow.analyze(image)
         first.isCancelled.shouldBeTrue()
-        recovered.ocr shouldBeInstanceOf AnalysisResult.Completed::class
-        recovered.detection shouldBeInstanceOf AnalysisResult.Empty::class
-        recovered.barcode shouldBeInstanceOf AnalysisResult.Empty::class
+
+        recovered.ocr.shouldBeInstanceOf<AnalysisResult.Completed<*>>()
+        recovered.detection.shouldBeInstanceOf<AnalysisResult.Empty>()
+        recovered.barcode.shouldBeInstanceOf<AnalysisResult.Empty>()
     }
 
     @Test
     fun `lane timeout remains data and does not cancel siblings`() = runTest {
         val workflow = workflow(
-            ocr = object : OcrAnalysisProvider {
+            ocr = object: OcrAnalysisProvider {
                 override val id: String = "slow-ocr"
                 override suspend fun analyze(image: ImmutableImage): OcrStructuredResult {
-                    delay(200)
+                    delay(200.milliseconds)
                     return FixtureOcrAnalysisProvider().analyze(image)
                 }
             },
-            detection = object : DetectionAnalysisProvider {
+            detection = object: DetectionAnalysisProvider {
                 override val id: String = "empty-detection"
                 override suspend fun analyze(image: ImmutableImage): List<DetectionResult> = emptyList()
             },
-            barcode = object : BarcodeAnalysisProvider {
+            barcode = object: BarcodeAnalysisProvider {
                 override val id: String = "empty-barcode"
                 override suspend fun analyze(image: ImmutableImage): List<BarcodeResult> = emptyList()
             },
-            timeout = Duration.ofMillis(100),
+            timeout = 100.millis(),
         )
 
         val results = workflow.analyze(image)
 
-        results.ocr shouldBeInstanceOf AnalysisResult.Failed::class
-        results.detection shouldBeInstanceOf AnalysisResult.Empty::class
-        results.barcode shouldBeInstanceOf AnalysisResult.Empty::class
+        results.ocr.shouldBeInstanceOf<AnalysisResult.Failed>()
+        results.detection.shouldBeInstanceOf<AnalysisResult.Empty>()
+        results.barcode.shouldBeInstanceOf<AnalysisResult.Empty>()
     }
 
     private fun workflow(
         ocr: OcrAnalysisProvider,
         detection: DetectionAnalysisProvider,
         barcode: BarcodeAnalysisProvider,
-        timeout: Duration = Duration.ofSeconds(5),
+        timeout: Duration = 5.seconds(),
     ): ImageIntelligenceWorkflow =
         ImageIntelligenceWorkflow(
             ocrProvider = ocr,
@@ -102,7 +107,7 @@ class ImageIntelligenceCancellationTest {
     private class RecoveringOcrProvider(
         private val started: CompletableDeferred<Unit>,
         private val cancelled: CompletableDeferred<Unit>,
-    ) : OcrAnalysisProvider {
+    ): OcrAnalysisProvider {
         private val attempts = AtomicInteger()
         override val id: String = "recovering-ocr"
 
@@ -117,7 +122,7 @@ class ImageIntelligenceCancellationTest {
     private class RecoveringDetectionProvider(
         private val started: CompletableDeferred<Unit>,
         private val cancelled: CompletableDeferred<Unit>,
-    ) : DetectionAnalysisProvider {
+    ): DetectionAnalysisProvider {
         private val attempts = AtomicInteger()
         override val id: String = "recovering-detection"
 
@@ -132,7 +137,7 @@ class ImageIntelligenceCancellationTest {
     private class RecoveringBarcodeProvider(
         private val started: CompletableDeferred<Unit>,
         private val cancelled: CompletableDeferred<Unit>,
-    ) : BarcodeAnalysisProvider {
+    ): BarcodeAnalysisProvider {
         private val attempts = AtomicInteger()
         override val id: String = "recovering-barcode"
 
@@ -144,7 +149,7 @@ class ImageIntelligenceCancellationTest {
         }
     }
 
-    private companion object {
+    private companion object: KLoggingChannel() {
         suspend fun suspendFirstAttempt(
             started: CompletableDeferred<Unit>,
             cancelled: CompletableDeferred<Unit>,

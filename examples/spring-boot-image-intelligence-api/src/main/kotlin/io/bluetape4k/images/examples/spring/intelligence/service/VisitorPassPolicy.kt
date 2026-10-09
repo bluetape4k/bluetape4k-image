@@ -3,7 +3,6 @@ package io.bluetape4k.images.examples.spring.intelligence.service
 import io.bluetape4k.images.barcode.BarcodeFormat
 import io.bluetape4k.images.barcode.BarcodeResult
 import io.bluetape4k.images.detection.DetectionCategory
-import io.bluetape4k.images.detection.DetectionResult
 import io.bluetape4k.images.examples.spring.intelligence.model.AnalysisResult
 import java.io.Serializable
 
@@ -17,7 +16,7 @@ internal enum class VisitorPassAction {
 internal data class VisitorPassDecision(
     val action: VisitorPassAction,
     val reasons: List<String>,
-) : Serializable {
+): Serializable {
     private companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -74,7 +73,7 @@ internal class VisitorPassPolicy {
     private fun BarcodeResult.isVisitorQr(): Boolean =
         format == BarcodeFormat.QR_CODE && text.startsWith(VISITOR_QR_PREFIX)
 
-    private fun <T : Any> AnalysisResult<T>.completedValue(): T? =
+    private fun <T: Any> AnalysisResult<T>.completedValue(): T? =
         (this as? AnalysisResult.Completed<T>)?.value
 
     private fun decision(action: VisitorPassAction, reason: String): VisitorPassDecision =

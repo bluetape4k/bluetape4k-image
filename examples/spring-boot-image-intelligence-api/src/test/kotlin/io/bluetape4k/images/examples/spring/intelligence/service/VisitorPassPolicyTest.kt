@@ -1,5 +1,6 @@
 package io.bluetape4k.images.examples.spring.intelligence.service
 
+import io.bluetape4k.assertions.shouldBeEmpty
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.images.barcode.BarcodeFormat
 import io.bluetape4k.images.barcode.BarcodeProviderIdentity
@@ -11,9 +12,13 @@ import io.bluetape4k.images.examples.spring.intelligence.model.AnalysisResult
 import io.bluetape4k.images.ocr.OcrOptions
 import io.bluetape4k.images.ocr.OcrPage
 import io.bluetape4k.images.ocr.OcrStructuredResult
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import org.junit.jupiter.api.Test
 
 class VisitorPassPolicyTest {
+
+    companion object: KLogging()
 
     private val aggregator = ImageIntelligenceAggregator()
     private val policy = VisitorPassPolicy()
@@ -21,9 +26,8 @@ class VisitorPassPolicyTest {
     @Test
     fun `aggregate distinguishes completed partial and failed`() {
         aggregator.status(results()) shouldBeEqualTo AggregateStatus.COMPLETED
-        aggregator.status(
-            results(ocr = unavailable("ocr")),
-        ) shouldBeEqualTo AggregateStatus.PARTIAL
+        aggregator.status(results(ocr = unavailable("ocr"))) shouldBeEqualTo AggregateStatus.PARTIAL
+
         aggregator.status(
             results(
                 ocr = unavailable("ocr"),
@@ -35,24 +39,27 @@ class VisitorPassPolicyTest {
 
     @Test
     fun `sensitive fact takes precedence and invalid visitor QR is rejected`() {
-        policy.decide(
-            results(detection = completed("detector", listOf(detection(DetectionCategory.SENSITIVE_REGION)))),
-        ).action shouldBeEqualTo VisitorPassAction.QUARANTINE
+        val detection = results(
+            detection = completed("detector", listOf(detection(DetectionCategory.SENSITIVE_REGION)))
+        )
+        policy.decide(detection).action shouldBeEqualTo VisitorPassAction.QUARANTINE
 
-        policy.decide(
-            results(barcode = completed("barcode", listOf(barcode("product:ABC")))),
-        ).action shouldBeEqualTo VisitorPassAction.REJECT
+        val barcode = results(
+            barcode = completed("barcode", listOf(barcode("product:ABC")))
+        )
+        policy.decide(barcode).action shouldBeEqualTo VisitorPassAction.REJECT
     }
 
     @Test
     fun `failed and unavailable lanes require manual review with stable reasons`() {
-        val decision = policy.decide(
-            results(
-                ocr = unavailable("ocr"),
-                detection = failed("detector"),
-            ),
+        val results = results(
+            ocr = unavailable("ocr"),
+            detection = failed("detector"),
         )
 
+        val decision = policy.decide(results)
+
+        log.debug { "decision=$decision" }
         decision.action shouldBeEqualTo VisitorPassAction.MANUAL_REVIEW
         decision.reasons shouldBeEqualTo listOf("OCR_UNAVAILABLE", "DETECTION_FAILED")
     }
@@ -62,6 +69,9 @@ class VisitorPassPolicyTest {
         val empty = policy.decide(results(detection = empty("detector")))
         val failed = policy.decide(results(detection = failed("detector")))
 
+        log.debug { "empty=$empty" }
+        log.debug { "failed=$failed" }
+        
         empty.reasons shouldBeEqualTo listOf("FACE_COUNT_REQUIRES_REVIEW")
         failed.reasons shouldBeEqualTo listOf("DETECTION_FAILED")
     }
@@ -70,8 +80,9 @@ class VisitorPassPolicyTest {
     fun `exactly one face and visitor QR with OCR is allowed`() {
         val decision = policy.decide(results())
 
+        log.debug { "decision=$decision" }
         decision.action shouldBeEqualTo VisitorPassAction.ALLOW
-        decision.reasons shouldBeEqualTo emptyList()
+        decision.reasons.shouldBeEmpty()
     }
 
     private fun results(
@@ -104,7 +115,7 @@ class VisitorPassPolicyTest {
             provider = BarcodeProviderIdentity("fixture"),
         )
 
-    private fun <T : Any> completed(provider: String, value: T): AnalysisResult<T> =
+    private fun <T: Any> completed(provider: String, value: T): AnalysisResult<T> =
         AnalysisResult.Completed(provider, 1, value)
 
     private fun empty(provider: String): AnalysisResult<Nothing> =

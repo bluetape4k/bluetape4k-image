@@ -11,7 +11,10 @@ import io.bluetape4k.images.detection.DetectionCategory
 import io.bluetape4k.images.examples.spring.intelligence.model.AnalysisResult
 import io.bluetape4k.images.examples.spring.intelligence.support.VISITOR_PASS_PAYLOAD
 import io.bluetape4k.images.examples.spring.intelligence.support.qrImage
+import io.bluetape4k.javatimes.seconds
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -19,9 +22,10 @@ import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
-import java.time.Duration
 
 class ImageAnalysisProvidersTest {
+
+    companion object: KLoggingChannel()
 
     private val runner = GuardedAnalysisRunner()
     private val image = ImmutableImage.create(120, 80)
@@ -31,23 +35,23 @@ class ImageAnalysisProvidersTest {
         val ocr = DisabledOcrAnalysisProvider()
         val detector = DisabledDetectionAnalysisProvider()
 
-        val ocrResult = runner.run<io.bluetape4k.images.ocr.OcrStructuredResult>(
+        val ocrResult = runner.run(
             provider = ocr.id,
-            timeout = Duration.ofSeconds(1),
+            timeout = 1.seconds(),
             semaphore = Semaphore(1),
         ) {
             ocr.analyze(image)
         }
-        val detectorResult = runner.run<List<io.bluetape4k.images.detection.DetectionResult>>(
+        val detectorResult = runner.run(
             provider = detector.id,
-            timeout = Duration.ofSeconds(1),
+            timeout = 1.seconds(),
             semaphore = Semaphore(1),
         ) {
             detector.analyze(image)
         }
 
-        (ocrResult as AnalysisResult.Unavailable).reasonCode shouldBeEqualTo "provider_not_configured"
-        (detectorResult as AnalysisResult.Unavailable).reasonCode shouldBeEqualTo "provider_not_configured"
+        ocrResult.shouldBeInstanceOf<AnalysisResult.Unavailable>().reasonCode shouldBeEqualTo "provider_not_configured"
+        detectorResult.shouldBeInstanceOf<AnalysisResult.Unavailable>().reasonCode shouldBeEqualTo "provider_not_configured"
     }
 
     @Test
@@ -73,14 +77,14 @@ class ImageAnalysisProvidersTest {
 
         val result = runner.run(
             provider = provider.id,
-            timeout = Duration.ofSeconds(1),
+            timeout = 1.seconds(),
             semaphore = Semaphore(1),
             isEmpty = List<*>::isEmpty,
         ) {
             provider.analyze(image)
         }
 
-        result shouldBeInstanceOf AnalysisResult.Empty::class
+        result.shouldBeInstanceOf<AnalysisResult.Empty>()
     }
 
     @Test
@@ -98,7 +102,7 @@ class ImageAnalysisProvidersTest {
 
     @Test
     fun `provider exception is sanitized while cancellation propagates`() = runTest {
-        val failing = object : BarcodeAnalysisProvider {
+        val failing = object: BarcodeAnalysisProvider {
             override val id: String = "failing"
 
             override suspend fun analyze(image: ImmutableImage) =
@@ -106,28 +110,28 @@ class ImageAnalysisProvidersTest {
         }
         val failed = runner.run(
             provider = failing.id,
-            timeout = Duration.ofSeconds(1),
+            timeout = 1.seconds(),
             semaphore = Semaphore(1),
         ) {
             failing.analyze(image)
         }
 
-        (failed as AnalysisResult.Failed).reasonCode shouldBeEqualTo "provider_failure"
+        failed.shouldBeInstanceOf<AnalysisResult.Failed>().reasonCode shouldBeEqualTo "provider_failure"
 
-        val started = kotlinx.coroutines.CompletableDeferred<Unit>()
-        val cancelling = object : BarcodeAnalysisProvider {
+        val started = CompletableDeferred<Unit>()
+        val cancelling = object: BarcodeAnalysisProvider {
             override val id: String = "cancelling"
 
             override suspend fun analyze(image: ImmutableImage): List<BarcodeResult> {
                 started.complete(Unit)
-                delay(Long.MAX_VALUE)
+                delay(timeMillis = Long.MAX_VALUE)
                 return emptyList()
             }
         }
         val job = launch {
             runner.run(
                 provider = cancelling.id,
-                timeout = Duration.ofSeconds(10),
+                timeout = 10.seconds(),
                 semaphore = Semaphore(1),
             ) {
                 cancelling.analyze(image)

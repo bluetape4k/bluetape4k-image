@@ -1,7 +1,7 @@
 package io.bluetape4k.images.examples.spring.intelligence.config
 
-import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeInstanceOf
+import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.images.examples.spring.intelligence.service.DetectionAnalysisProvider
 import io.bluetape4k.images.examples.spring.intelligence.service.DisabledDetectionAnalysisProvider
@@ -11,6 +11,7 @@ import io.bluetape4k.images.examples.spring.intelligence.service.FixtureOcrAnaly
 import io.bluetape4k.images.examples.spring.intelligence.service.OcrAnalysisProvider
 import io.bluetape4k.images.examples.spring.intelligence.service.TesseractOcrAnalysisProvider
 import org.junit.jupiter.api.Test
+import org.springframework.beans.factory.getBean
 import org.springframework.boot.test.context.runner.ApplicationContextRunner
 
 class ImageIntelligenceConfigurationTest {
@@ -21,10 +22,8 @@ class ImageIntelligenceConfigurationTest {
     @Test
     fun `default profile owns disabled OCR and detector`() {
         contextRunner.run { context ->
-            context.getBean(OcrAnalysisProvider::class.java)
-                .shouldBeInstanceOf<DisabledOcrAnalysisProvider>()
-            context.getBean(DetectionAnalysisProvider::class.java)
-                .shouldBeInstanceOf<DisabledDetectionAnalysisProvider>()
+            context.getBean<OcrAnalysisProvider>().shouldBeInstanceOf<DisabledOcrAnalysisProvider>()
+            context.getBean<DetectionAnalysisProvider>().shouldBeInstanceOf<DisabledDetectionAnalysisProvider>()
         }
     }
 
@@ -33,10 +32,8 @@ class ImageIntelligenceConfigurationTest {
         contextRunner
             .withInitializer { it.environment.setActiveProfiles("demo") }
             .run { context ->
-                context.getBean(OcrAnalysisProvider::class.java)
-                    .shouldBeInstanceOf<FixtureOcrAnalysisProvider>()
-                context.getBean(DetectionAnalysisProvider::class.java)
-                    .shouldBeInstanceOf<FixtureDetectionAnalysisProvider>()
+                context.getBean<OcrAnalysisProvider>().shouldBeInstanceOf<FixtureOcrAnalysisProvider>()
+                context.getBean<DetectionAnalysisProvider>().shouldBeInstanceOf<FixtureDetectionAnalysisProvider>()
             }
     }
 
@@ -45,10 +42,8 @@ class ImageIntelligenceConfigurationTest {
         contextRunner
             .withInitializer { it.environment.setActiveProfiles("native-ocr") }
             .run { context ->
-                context.getBean(OcrAnalysisProvider::class.java)
-                    .shouldBeInstanceOf<TesseractOcrAnalysisProvider>()
-                context.getBean(DetectionAnalysisProvider::class.java)
-                    .shouldBeInstanceOf<DisabledDetectionAnalysisProvider>()
+                context.getBean<OcrAnalysisProvider>().shouldBeInstanceOf<TesseractOcrAnalysisProvider>()
+                context.getBean<DetectionAnalysisProvider>().shouldBeInstanceOf<DisabledDetectionAnalysisProvider>()
             }
     }
 
@@ -58,10 +53,11 @@ class ImageIntelligenceConfigurationTest {
             .withInitializer { it.environment.setActiveProfiles("demo", "native-ocr") }
             .run { context ->
                 val failure = context.startupFailure.shouldNotBeNull()
+
                 generateSequence(failure) { it.cause }
                     .mapNotNull(Throwable::message)
                     .any { it.contains("Profiles 'demo' and 'native-ocr' cannot be active together.") }
-                    .shouldBeEqualTo(true)
+                    .shouldBeTrue()
             }
     }
 }

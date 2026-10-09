@@ -1,6 +1,7 @@
 package io.bluetape4k.images.examples.spring.intelligence
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeGreaterThan
 import io.bluetape4k.assertions.shouldBeInstanceOf
 import io.bluetape4k.images.examples.spring.intelligence.model.AnalysisStatus
 import io.bluetape4k.images.examples.spring.intelligence.service.AggregateStatus
@@ -11,16 +12,20 @@ import io.bluetape4k.images.examples.spring.intelligence.service.ImageIntelligen
 import io.bluetape4k.images.examples.spring.intelligence.service.OcrAnalysisProvider
 import io.bluetape4k.images.examples.spring.intelligence.service.VisitorPassAction
 import io.bluetape4k.images.examples.spring.intelligence.support.pngBytes
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.servlet.autoconfigure.MultipartProperties
+import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.MediaType
 import org.springframework.mock.web.MockMultipartFile
 
 @SpringBootTest
 class ImageIntelligenceApplicationTest {
+
+    companion object: KLogging()
 
     @Autowired
     private lateinit var operations: ImageIntelligenceOperations
@@ -48,6 +53,7 @@ class ImageIntelligenceApplicationTest {
             ),
         )
 
+        log.debug { "response=$response" }
         response.status shouldBeEqualTo AggregateStatus.PARTIAL
         response.decision shouldBeEqualTo VisitorPassAction.MANUAL_REVIEW
         response.ocr.status shouldBeEqualTo AnalysisStatus.UNAVAILABLE
@@ -57,7 +63,6 @@ class ImageIntelligenceApplicationTest {
 
     @Test
     fun `multipart request limit leaves room for envelope overhead`() {
-        (multipartProperties.maxRequestSize.toBytes() > multipartProperties.maxFileSize.toBytes())
-            .shouldBeEqualTo(true)
+        multipartProperties.maxRequestSize.toBytes() shouldBeGreaterThan multipartProperties.maxFileSize.toBytes()
     }
 }

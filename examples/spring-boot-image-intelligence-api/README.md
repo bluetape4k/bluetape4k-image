@@ -2,11 +2,9 @@
 
 English | [한국어](./README.ko.md)
 
-This Spring Boot 4 example qualifies and decodes one uploaded image once, then
-runs OCR, object detection, and barcode/QR analysis in parallel.
+This Spring Boot 4 example qualifies and decodes one uploaded image once, then runs OCR, object detection, and barcode/QR analysis in parallel.
 
-Its primary lesson is not a particular recognition model. It demonstrates four
-reusable boundaries:
+Its primary lesson is not a particular recognition model. It demonstrates four reusable boundaries:
 
 - shared qualification before any analysis starts;
 - isolated parallel provider execution;
@@ -15,23 +13,17 @@ reusable boundaries:
 
 ## Practical scenario
 
-Assume an event visitor pass contains a visitor name and organization, a face
-photo, and an entry QR code.
+Assume an event visitor pass contains a visitor name and organization, a face photo, and an entry QR code.
 
-| Analysis lane | Fact extracted from the image | Visitor-pass policy question |
-| --- | --- | --- |
-| OCR | Pass text and page metadata | Is readable text present? |
-| Detection | Face and sensitive regions | Is there exactly one face and no forbidden region? |
-| Barcode/QR | A value beginning with `visitor:` | Is there exactly one valid visitor QR? |
+| Analysis lane | Fact extracted from the image     | Visitor-pass policy question                       |
+|---------------|-----------------------------------|----------------------------------------------------|
+| OCR           | Pass text and page metadata       | Is readable text present?                          |
+| Detection     | Face and sensitive regions        | Is there exactly one face and no forbidden region? |
+| Barcode/QR    | A value beginning with `visitor:` | Is there exactly one valid visitor QR?             |
 
-The `demo` profile uses deterministic OCR and detection fixtures while keeping
-the real `ZxingBarcodeReader` path. It therefore reproduces the integrated
-workflow without native OCR or an external ML model, while still proving real
-barcode decoding.
+The `demo` profile uses deterministic OCR and detection fixtures while keeping the real `ZxingBarcodeReader` path. It therefore reproduces the integrated workflow without native OCR or an external ML model, while still proving real barcode decoding.
 
-This is not a universal visitor-pass service. It is a reusable foundation for
-qualification, parallel processing, partial failure, and policy separation in
-workloads such as shipping labels or product labels.
+This is not a universal visitor-pass service. It is a reusable foundation for qualification, parallel processing, partial failure, and policy separation in workloads such as shipping labels or product labels.
 
 ## Architecture
 
@@ -54,34 +46,28 @@ The request follows these boundaries:
 
 ![Normal completion, partial failure, and external cancellation](./docs/images/readme-diagrams/image-intelligence-interactions.png)
 
-`bluetape4k-workflow` runs the three lanes through `suspendParallelFlow` and
-writes each result to a unique `WorkContext` key. Two kinds of success must not
-be confused:
+`bluetape4k-workflow` runs the three lanes through `suspendParallelFlow` and writes each result to a unique `WorkContext` key. Two kinds of success must not be confused:
 
-| Expression | Meaning |
-| --- | --- |
-| `WorkReport.Success` | Every workflow task honored its contract and all result keys were collected |
-| `AnalysisResult.Completed` | This provider produced an analysis value |
-| `AnalysisResult.Empty` | The provider ran successfully but found nothing |
-| `AnalysisResult.Unavailable` | The provider is not configured or cannot run |
-| `AnalysisResult.Failed` | The provider ran but failed, for example by timeout |
+| Expression                   | Meaning                                                                     |
+|------------------------------|-----------------------------------------------------------------------------|
+| `WorkReport.Success`         | Every workflow task honored its contract and all result keys were collected |
+| `AnalysisResult.Completed`   | This provider produced an analysis value                                    |
+| `AnalysisResult.Empty`       | The provider ran successfully but found nothing                             |
+| `AnalysisResult.Unavailable` | The provider is not configured or cannot run                                |
+| `AnalysisResult.Failed`      | The provider ran but failed, for example by timeout                         |
 
 Provider failure is expected domain data. The lane records `Failed` and returns
-`WorkReport.Success`, allowing OCR failure to coexist with useful detection and
-QR results. A missing result key or an unexpected programming error is a
-workflow failure instead.
+`WorkReport.Success`, allowing OCR failure to coexist with useful detection and QR results. A missing result key or an unexpected programming error is a workflow failure instead.
 
 Aggregate status uses these rules:
 
-| Result combination | Response status |
-| --- | --- |
-| Every lane is `Completed` or `Empty` | `COMPLETED` |
-| Available results coexist with `Unavailable` or `Failed` | `PARTIAL` |
-| No lane has an available result | `FAILED` |
+| Result combination                                       | Response status |
+|----------------------------------------------------------|-----------------|
+| Every lane is `Completed` or `Empty`                     | `COMPLETED`     |
+| Available results coexist with `Unavailable` or `Failed` | `PARTIAL`       |
+| No lane has an available result                          | `FAILED`        |
 
-External request cancellation is propagated to every child lane rather than
-being normalized into a business failure. Semaphore permits are released after
-cancellation, timeout, or failure so a later request can proceed.
+External request cancellation is propagated to every child lane rather than being normalized into a business failure. Semaphore permits are released after cancellation, timeout, or failure so a later request can proceed.
 
 > Coroutine cancellation cannot forcibly stop an already-running native
 > function. `withContext` prevents new native work from starting after
@@ -93,9 +79,7 @@ cancellation, timeout, or failure so a later request can proceed.
 
 ### Default profile
 
-The default profile starts without external dependencies. OCR and detection
-return `UNAVAILABLE(provider_not_configured)`, while ZXing runs normally, so a
-valid image usually returns `PARTIAL`.
+The default profile starts without external dependencies. OCR and detection return `UNAVAILABLE(provider_not_configured)`, while ZXing runs normally, so a valid image usually returns `PARTIAL`.
 
 ```bash
 ./gradlew :spring-boot-image-intelligence-api:bootRun
@@ -112,9 +96,7 @@ Use `demo` for the integrated happy path:
 
 ### Native OCR profile
 
-After installing Tesseract and the required traineddata on the host, run the
-optional native path. Detection remains disabled, OCR uses Tesseract, and
-barcode analysis uses ZXing.
+After installing Tesseract and the required traineddata on the host, run the optional native path. Detection remains disabled, OCR uses Tesseract, and barcode analysis uses ZXing.
 
 ```bash
 ./gradlew :spring-boot-image-intelligence-api:bootRun \
@@ -122,8 +104,7 @@ barcode analysis uses ZXing.
   --example.image-intelligence.tessdata-path=/usr/local/share/tessdata'
 ```
 
-Activating `demo` and `native-ocr` together is rejected with a stable
-configuration error because provider ownership would be ambiguous.
+Activating `demo` and `native-ocr` together is rejected with a stable configuration error because provider ownership would be ambiguous.
 
 ## Request
 
@@ -133,9 +114,7 @@ curl -X POST \
   http://localhost:8080/api/images/intelligence
 ```
 
-Only PNG, JPEG, and WebP are accepted. Defaults limit compressed input to
-5 MiB, either side to 8,192 pixels, and decoded area to 16,777,216 pixels.
-A declared/actual media-type mismatch or undecodable image returns a sanitized
+Only PNG, JPEG, and WebP are accepted. Defaults limit compressed input to 5 MiB, either side to 8,192 pixels, and decoded area to 16,777,216 pixels. A declared/actual media-type mismatch or undecodable image returns a sanitized
 `400`; size-limit violations return `413` with a stable `reasonCode`.
 
 ## Response examples
@@ -145,8 +124,7 @@ The following abbreviated examples teach response shape and status meaning.
 
 ### `COMPLETED`
 
-With the `demo` profile, an image containing a visitor QR completes all three
-lanes and the visitor policy chooses `ALLOW`.
+With the `demo` profile, an image containing a visitor QR completes all three lanes and the visitor policy chooses `ALLOW`.
 
 ```json
 {
@@ -182,8 +160,7 @@ lanes and the visitor policy chooses `ALLOW`.
 
 ### `PARTIAL`
 
-If only OCR times out, successful siblings remain available and policy chooses
-manual review instead of automatic approval.
+If only OCR times out, successful siblings remain available and policy chooses manual review instead of automatic approval.
 
 ```json
 {
@@ -263,9 +240,7 @@ example:
     tessdata-path: null
 ```
 
-Timeouts keep one slow provider from holding the whole response indefinitely.
-Per-provider semaphores protect native resources and CPU capacity. Tune them
-independently for provider cost and workload behavior.
+Timeouts keep one slow provider from holding the whole response indefinitely. Per-provider semaphores protect native resources and CPU capacity. Tune them independently for provider cost and workload behavior.
 
 ## Reusing the structure
 
@@ -276,9 +251,7 @@ OCR, detection, and barcode results are business-neutral facts. Replace
 - product labels: compare product text, warning marks, and SKU barcodes;
 - intake documents: compare document numbers, stamp regions, and asset QR codes.
 
-A replacement policy should not treat `AnalysisResult.Empty` and `Failed` as
-equivalent. “Ran and found nothing” and “could not verify” lead to different
-automation decisions.
+A replacement policy should not treat `AnalysisResult.Empty` and `Failed` as equivalent. “Ran and found nothing” and “could not verify” lead to different automation decisions.
 
 ## Production gaps
 
@@ -297,10 +270,7 @@ This example intentionally omits:
 ./gradlew :spring-boot-image-intelligence-api:test
 ```
 
-Tests cover real ZXing extraction from a generated QR, qualification boundaries,
-profile ownership, parallel overlap, partial failures, workflow keys, the policy
-decision table, external cancellation, permit recovery, payload-free logs, and
-the HTTP error contract.
+Tests cover real ZXing extraction from a generated QR, qualification boundaries, profile ownership, parallel overlap, partial failures, workflow keys, the policy decision table, external cancellation, permit recovery, payload-free logs, and the HTTP error contract.
 
 ## Resources
 

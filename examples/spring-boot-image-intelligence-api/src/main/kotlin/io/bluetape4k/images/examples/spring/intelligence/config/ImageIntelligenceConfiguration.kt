@@ -20,6 +20,11 @@ import io.bluetape4k.images.examples.spring.intelligence.service.ZxingBarcodeAna
 import io.bluetape4k.images.ocr.OcrOptions
 import io.bluetape4k.images.ocr.OcrStructuredDetail
 import io.bluetape4k.images.ocr.TesseractOcrEngine
+import io.bluetape4k.javatimes.inMillis
+import io.bluetape4k.javatimes.seconds
+import io.bluetape4k.support.requireGt
+import io.bluetape4k.support.requireInRange
+import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.requirePositiveNumber
 import kotlinx.coroutines.Dispatchers
 import org.springframework.beans.factory.SmartInitializingSingleton
@@ -41,29 +46,26 @@ data class ImageIntelligenceProperties(
     val maxInputBytes: Long = 5L * 1024L * 1024L,
     val maxInputPixels: Long = 16_777_216L,
     val maxInputSide: Int = 8_192,
-    val ocrTimeout: Duration = Duration.ofSeconds(3),
-    val detectionTimeout: Duration = Duration.ofSeconds(2),
-    val barcodeTimeout: Duration = Duration.ofSeconds(2),
+    val ocrTimeout: Duration = 3.seconds(),
+    val detectionTimeout: Duration = 2.seconds(),
+    val barcodeTimeout: Duration = 2.seconds(),
     val ocrConcurrency: Int = 1,
     val detectionConcurrency: Int = 2,
     val barcodeConcurrency: Int = 4,
     val tessdataPath: String? = null,
-) : Serializable {
+): Serializable {
 
     init {
-        maxInputBytes.requirePositiveNumber("maxInputBytes")
-        require(maxInputBytes <= Int.MAX_VALUE) { "maxInputBytes must fit Int" }
+        maxInputBytes.requireInRange(1, Int.MAX_VALUE.toLong(), "maxInputBytes")
         maxInputPixels.requirePositiveNumber("maxInputPixels")
         maxInputSide.requirePositiveNumber("maxInputSide")
-        require(ocrTimeout.toMillis() > 0L) { "ocrTimeout must be at least 1 ms" }
-        require(detectionTimeout.toMillis() > 0L) { "detectionTimeout must be at least 1 ms" }
-        require(barcodeTimeout.toMillis() > 0L) { "barcodeTimeout must be at least 1 ms" }
+        ocrTimeout.inMillis().requireGt(0) { "ocrTimeout must be at least 1 ms" }
+        detectionTimeout.inMillis().requireGt(0) { "detectionTimeout must be at least 1 ms" }
+        barcodeTimeout.inMillis().requireGt(0) { "barcodeTimeout must be at least 1 ms" }
         ocrConcurrency.requirePositiveNumber("ocrConcurrency")
         detectionConcurrency.requirePositiveNumber("detectionConcurrency")
         barcodeConcurrency.requirePositiveNumber("barcodeConcurrency")
-        require(tessdataPath == null || tessdataPath.isNotBlank()) {
-            "tessdataPath must be null or non-blank"
-        }
+        tessdataPath?.requireNotBlank { "tessdataPath must be null or non-blank" }
     }
 
     private companion object {
