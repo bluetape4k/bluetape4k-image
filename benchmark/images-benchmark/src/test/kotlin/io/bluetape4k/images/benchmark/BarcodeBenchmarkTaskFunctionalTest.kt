@@ -1,13 +1,17 @@
 package io.bluetape4k.images.benchmark
 
-import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldContain
-import java.nio.file.Files
-import java.nio.file.Path
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import org.gradle.testkit.runner.GradleRunner
 import org.junit.jupiter.api.Test
+import java.nio.file.Files
+import java.nio.file.Path
 
 class BarcodeBenchmarkTaskFunctionalTest {
+
+    companion object: KLogging()
 
     @Test
     fun `task listing exposes barcode benchmark and finalizer tasks`() {
@@ -28,7 +32,8 @@ class BarcodeBenchmarkTaskFunctionalTest {
             "-Pbarcode.benchmark.cpu=Functional Test CPU",
         ).buildAndFail()
 
-        result.output.shouldContain("invalid barcode benchmark run ID: invalid")
+        log.debug { "output is ${result.output}" }
+        result.output shouldContain "invalid barcode benchmark run ID: invalid"
     }
 
     @Test
@@ -36,13 +41,14 @@ class BarcodeBenchmarkTaskFunctionalTest {
         val runId = "issue-272-20990101-functional-missing"
         val staging = stagingDirectory(runId)
         val accepted = acceptedDirectory(runId)
+
         staging.toFile().deleteRecursively()
         accepted.toFile().deleteRecursively()
+
         try {
             val result = finalizeRunner(runId).buildAndFail()
-
-            result.output.shouldContain("staged barcode latency report is missing")
-            Files.exists(accepted).shouldBeEqualTo(false)
+            result.output shouldContain "staged barcode latency report is missing"
+            Files.exists(accepted).shouldBeFalse()
         } finally {
             staging.toFile().deleteRecursively()
             accepted.toFile().deleteRecursively()
@@ -80,7 +86,7 @@ class BarcodeBenchmarkTaskFunctionalTest {
             val result = finalizeRunner(runId).buildAndFail()
 
             result.output.shouldContain(expectedMessage)
-            Files.exists(accepted).shouldBeEqualTo(false)
+            Files.exists(accepted).shouldBeFalse()
         } finally {
             staging.toFile().deleteRecursively()
             accepted.toFile().deleteRecursively()

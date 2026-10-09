@@ -2,8 +2,8 @@ package io.bluetape4k.images.benchmark
 
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.requirePositiveNumber
-import java.io.Serializable
 import kotlinx.serialization.SerialName
+import java.io.Serializable
 import kotlinx.serialization.Serializable as KotlinSerializable
 
 internal const val CODEC_MATRIX_SCHEMA_VERSION: Int = 1

@@ -3,6 +3,7 @@ package io.bluetape4k.images.benchmark
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldContain
+import io.bluetape4k.assertions.shouldHaveSize
 import io.bluetape4k.assertions.shouldNotBeEmpty
 import org.junit.jupiter.api.Test
 
@@ -13,8 +14,8 @@ class VipsTransformReceiptTest {
         val receipt = contractReceipt()
 
         VipsTransformReceiptValidator.validate(receipt)
-        receipt.rows.size shouldBeEqualTo 12
-        receipt.rows.map(VipsTransformReceiptRow::identity).distinct().size shouldBeEqualTo 12
+        receipt.rows shouldHaveSize 12
+        receipt.rows.map(VipsTransformReceiptRow::identity).distinct() shouldHaveSize 12
         receipt.rows.forEach { row ->
             row.outputSha256.shouldNotBeEmpty()
             row.resource.status shouldBeEqualTo "N/A"
@@ -30,7 +31,7 @@ class VipsTransformReceiptTest {
             VipsTransformReceiptValidator.validate(duplicate)
         }
 
-        failure.message.shouldContain("scenario rows")
+        failure.message shouldContain "scenario rows"
     }
 
     @Test
@@ -38,6 +39,7 @@ class VipsTransformReceiptTest {
         val encoded = VipsTransformReceipt.encode(contractReceipt())
 
         VipsTransformReceiptValidator.validateJson(encoded)
+
         assertFailsWith<IllegalArgumentException> {
             VipsTransformReceiptValidator.validateJson(encoded + '\n'.code.toByte())
         }

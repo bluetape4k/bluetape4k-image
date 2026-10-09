@@ -1,7 +1,6 @@
 package io.bluetape4k.images.benchmark
 
 import com.sksamuel.scrimage.nio.JpegWriter
-import io.bluetape4k.images.vips.VipsImage
 import kotlinx.benchmark.Benchmark
 import kotlinx.benchmark.BenchmarkMode
 import kotlinx.benchmark.Blackhole

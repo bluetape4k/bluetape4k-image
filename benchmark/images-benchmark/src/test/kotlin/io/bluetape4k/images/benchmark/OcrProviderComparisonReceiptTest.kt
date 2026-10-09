@@ -2,7 +2,9 @@ package io.bluetape4k.images.benchmark
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeNull
 import io.bluetape4k.assertions.shouldContain
+import io.bluetape4k.assertions.shouldHaveSize
 import org.junit.jupiter.api.Test
 
 class OcrProviderComparisonReceiptTest {
@@ -14,12 +16,13 @@ class OcrProviderComparisonReceiptTest {
 
         OcrProviderComparisonReceiptValidator.validate(receipt, manifest)
         val encoded = OcrProviderComparisonReceipt.encode(receipt).decodeToString()
-        encoded.shouldContain("\"scenario\":\"clean\"")
+        encoded shouldContain "\"scenario\":\"clean\""
+
         val decoded = OcrProviderComparisonReceipt.decode(encoded.encodeToByteArray())
 
-        decoded.status.shouldBeEqualTo(OcrProviderComparisonStatus.BASELINE_ONLY)
-        decoded.providers.single().fixtures.size.shouldBeEqualTo(manifest.fixtures.size + manifest.negatives.size)
-        decoded.comparison.shouldBeEqualTo(null)
+        decoded.status shouldBeEqualTo OcrProviderComparisonStatus.BASELINE_ONLY
+        decoded.providers.single().fixtures shouldHaveSize (manifest.fixtures.size + manifest.negatives.size)
+        decoded.comparison.shouldBeNull()
     }
 
     @Test
@@ -28,7 +31,8 @@ class OcrProviderComparisonReceiptTest {
         val receipt = receipt(manifest, OcrProviderComparisonStatus.COMPARABLE)
 
         OcrProviderComparisonReceiptValidator.validate(receipt, manifest)
-        receipt.providers.map { it.identity.provider }.shouldBeEqualTo(listOf("tesseract", "paddleocr"))
+        receipt.providers
+            .map { it.identity.provider } shouldBeEqualTo listOf("tesseract", "paddleocr")
     }
 
     @Test
@@ -44,7 +48,7 @@ class OcrProviderComparisonReceiptTest {
                 manifest,
             )
         }
-        manifestError.message.orEmpty().shouldContain("manifest SHA-256")
+        manifestError.message shouldContain "manifest SHA-256"
 
         val providerCountError = assertFailsWith<IllegalArgumentException> {
             OcrProviderComparisonReceiptValidator.validate(
@@ -52,7 +56,7 @@ class OcrProviderComparisonReceiptTest {
                 manifest,
             )
         }
-        providerCountError.message.orEmpty().shouldContain("exactly two providers")
+        providerCountError.message shouldContain "exactly two providers"
     }
 
     @Test
@@ -68,7 +72,7 @@ class OcrProviderComparisonReceiptTest {
                 manifest,
             )
         }
-        identityError.message.orEmpty().shouldContain("image digest")
+        identityError.message shouldContain "image digest"
 
         val json = OcrProviderComparisonReceipt.encode(valid).decodeToString()
         val unknownFieldError = assertFailsWith<IllegalArgumentException> {
@@ -76,14 +80,15 @@ class OcrProviderComparisonReceiptTest {
                 (json.removeSuffix("}") + ",\"unexpected\":true}").encodeToByteArray(),
             )
         }
-        unknownFieldError.message.orEmpty().shouldContain("JSON")
+        unknownFieldError.message shouldContain "JSON"
 
         val oversizedError = assertFailsWith<IllegalArgumentException> {
             OcrProviderComparisonReceipt.decode(ByteArray(512_001) { 'x'.code.toByte() })
         }
-        oversizedError.message.orEmpty().shouldContain("byte size")
+        oversizedError.message shouldContain "byte size"
 
         val textFixtureId = manifest.fixtures.first { it.expectedOutcome == OcrBenchmarkExpectedOutcome.TEXT }.fixtureId
+
         val inconsistentError = assertFailsWith<IllegalArgumentException> {
             OcrProviderComparisonReceiptValidator.validate(
                 valid.copy(providers = valid.providers.map { provider ->
@@ -103,7 +108,7 @@ class OcrProviderComparisonReceiptTest {
                 manifest,
             )
         }
-        inconsistentError.message.orEmpty().shouldContain("TEXT result")
+        inconsistentError.message shouldContain "TEXT result"
 
         val warmIterationsError = assertFailsWith<IllegalArgumentException> {
             OcrProviderComparisonReceiptValidator.validate(
@@ -115,20 +120,21 @@ class OcrProviderComparisonReceiptTest {
                 manifest,
             )
         }
-        warmIterationsError.message.orEmpty().shouldContain("at least 3")
+        warmIterationsError.message shouldContain "at least 3"
     }
 
     @Test
     fun `validator rejects non-finite provider quality summary`() {
         val manifest = OcrBenchmarkCorpusV2.loadManifest()
         val valid = receipt(manifest, OcrProviderComparisonStatus.COMPARABLE)
+
         val error = assertFailsWith<IllegalArgumentException> {
             OcrProviderComparisonReceiptValidator.validate(
                 valid.copy(comparison = requireNotNull(valid.comparison).copy(baselineCer = Double.NaN)),
                 manifest,
             )
         }
-        error.message.orEmpty().shouldContain("provider CER/WER")
+        error.message shouldContain "provider CER/WER"
     }
 
     private fun receipt(

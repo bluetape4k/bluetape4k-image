@@ -17,8 +17,8 @@ class OcrBenchmarkFixturesTest {
     fun `canonical OCR fixtures match pinned bytes and dimensions`() {
         OcrBenchmarkScenario.entries.forEach { scenario ->
             val fixture = OcrBenchmarkFixtures.load(scenario)
-            fixture.image.width.shouldBeEqualTo(fixture.entry.width)
-            fixture.image.height.shouldBeEqualTo(fixture.entry.height)
+            fixture.image.width shouldBeEqualTo fixture.entry.width
+            fixture.image.height shouldBeEqualTo fixture.entry.height
         }
     }
 
@@ -32,7 +32,7 @@ class OcrBenchmarkFixturesTest {
                 mapOf("../secret.png" to byteArrayOf(1)),
             )
         }
-        traversalError.message.orEmpty().shouldContain("normalized and relative")
+        traversalError.message shouldContain "normalized and relative"
 
         assertFailsWith<IllegalArgumentException> {
             OcrBenchmarkFixtures.loadForTest(
@@ -50,9 +50,21 @@ class OcrBenchmarkFixturesTest {
           "hashAlgorithm":"SHA-256",
           "fixtures":[
             {"scenario":"clean-text","resource":"$resource","width":1,"height":1,"sha256":"${"0".repeat(64)}","languages":["eng"],"expectedTokens":["OCR"],"provenance":"test"},
-            {"scenario":"noisy-scan","resource":"bench/ocr/noisy-scan.png","width":1,"height":1,"sha256":"${"1".repeat(64)}","languages":["eng"],"expectedTokens":["OCR"],"provenance":"test"},
-            {"scenario":"rotated-document","resource":"bench/ocr/rotated-document.png","width":1,"height":1,"sha256":"${"2".repeat(64)}","languages":["eng"],"expectedTokens":["OCR"],"provenance":"test"},
-            {"scenario":"multilingual-text","resource":"bench/ocr/multilingual-text.png","width":1,"height":1,"sha256":"${"3".repeat(64)}","languages":["eng","kor","jpn"],"expectedTokens":["OCR"],"provenance":"test"}
+            {"scenario":"noisy-scan","resource":"bench/ocr/noisy-scan.png","width":1,"height":1,"sha256":"${
+            "1".repeat(
+                64
+            )
+        }","languages":["eng"],"expectedTokens":["OCR"],"provenance":"test"},
+            {"scenario":"rotated-document","resource":"bench/ocr/rotated-document.png","width":1,"height":1,"sha256":"${
+            "2".repeat(
+                64
+            )
+        }","languages":["eng"],"expectedTokens":["OCR"],"provenance":"test"},
+            {"scenario":"multilingual-text","resource":"bench/ocr/multilingual-text.png","width":1,"height":1,"sha256":"${
+            "3".repeat(
+                64
+            )
+        }","languages":["eng","kor","jpn"],"expectedTokens":["OCR"],"provenance":"test"}
           ]
         }
         """.trimIndent()

@@ -1,12 +1,14 @@
 package io.bluetape4k.images.benchmark
 
-import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeGreaterOrEqualTo
+import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldContain
-import java.nio.file.Files
-import java.nio.file.Path
+import io.bluetape4k.assertions.shouldNotContain
 import org.gradle.testkit.runner.GradleRunner
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
+import java.nio.file.Files
+import java.nio.file.Path
 
 class CodecMatrixBenchmarkTaskFunctionalTest {
 
@@ -64,7 +66,7 @@ class CodecMatrixBenchmarkTaskFunctionalTest {
             "prepareExperimentalCodecMatrixFixtures",
             "finalizeCodecMatrixEvidence",
         )
-        forbidden.none(result.output::contains).shouldBeEqualTo(true)
+        forbidden.none(result.output::contains).shouldBeTrue()
     }
 
     @Test
@@ -86,7 +88,7 @@ class CodecMatrixBenchmarkTaskFunctionalTest {
         listOf(
             "codecMatrixCapabilityReport",
             "prepareExperimentalCodecMatrixFixtures",
-        ).none(result.output::contains).shouldBeEqualTo(true)
+        ).none(result.output::contains).shouldBeTrue()
     }
 
     @Test
@@ -129,7 +131,7 @@ class CodecMatrixBenchmarkTaskFunctionalTest {
             "codecMatrixCapabilityReport",
             "prepareExperimentalCodecMatrixFixtures",
             "finalizeCodecMatrixEvidence",
-        ).none(result.output::contains).shouldBeEqualTo(true)
+        ).none(result.output::contains).shouldBeTrue()
     }
 
     @Test
@@ -141,7 +143,7 @@ class CodecMatrixBenchmarkTaskFunctionalTest {
 
             val result = experimentalRunner(runId).build()
 
-            result.output.shouldContain(":bluetape4k-images-benchmark:benchmarkCodecMatrixAvifBenchmark SKIPPED")
+            result.output shouldContain ":bluetape4k-images-benchmark:benchmarkCodecMatrixAvifBenchmark SKIPPED"
         } finally {
             runDirectory.toFile().deleteRecursively()
         }
@@ -158,6 +160,7 @@ class CodecMatrixBenchmarkTaskFunctionalTest {
         )
         writeEligibility(runId, "ELIGIBLE")
         val initScript = tempDir.resolve("probe-codec-matrix.gradle")
+
         Files.writeString(
             initScript,
             """
@@ -185,7 +188,7 @@ class CodecMatrixBenchmarkTaskFunctionalTest {
 
             result.output.shouldContain("CODEC_MATRIX_PROBE_ARGS=${parameterFile.toAbsolutePath()}")
             result.output.shouldContain("include:.*VipsExperimentalCodecMatrixBenchmark.encodeAvifFromJpeg.*")
-            result.output.contains("decodeAvifToJpeg").shouldBeEqualTo(false)
+            result.output shouldNotContain "decodeAvifToJpeg"
             listOf(
                 "codec.matrix.backend:$testBackend",
                 "codec.matrix.runId:$runId",
@@ -225,10 +228,10 @@ class CodecMatrixBenchmarkTaskFunctionalTest {
     private fun assertOrdered(output: String, vararg taskNames: String) {
         val positions = taskNames.map { taskName ->
             output.indexOf(":bluetape4k-images-benchmark:$taskName").also { position ->
-                (position >= 0).shouldBeEqualTo(true)
+                position shouldBeGreaterOrEqualTo 0
             }
         }
-        positions.zipWithNext().all { (left, right) -> left < right }.shouldBeEqualTo(true)
+        positions.zipWithNext().all { (left, right) -> left < right }.shouldBeTrue()
     }
 
     private fun experimentalRunner(runId: String, vararg extraArguments: String): GradleRunner = runner(
@@ -247,9 +250,11 @@ class CodecMatrixBenchmarkTaskFunctionalTest {
             parameterFile,
             buildString {
                 appendLine(
-                    "reportFile:${codecMatrixRunDirectory(runId).resolve(
-                        "staging/latency-$testBackend-codecMatrixAvif.json",
-                    )}",
+                    "reportFile:${
+                        codecMatrixRunDirectory(runId).resolve(
+                            "staging/latency-$testBackend-codecMatrixAvif.json",
+                        )
+                    }",
                 )
                 includes.forEach { include -> appendLine("include:$include") }
             },

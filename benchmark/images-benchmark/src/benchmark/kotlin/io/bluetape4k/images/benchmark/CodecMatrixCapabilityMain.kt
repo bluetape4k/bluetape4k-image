@@ -58,11 +58,12 @@ internal object CodecMatrixCapabilityMain {
             EXPERIMENTAL_FORMATS.forEach { format ->
                 val capabilities = adapter?.capabilities(format) ?: defaultCapabilities(format)
                 val encodeCapability = capabilities.single { it.direction == CodecMatrixDirection.ENCODE }
-                val generatedTarget = if (adapter != null && encodeCapability.support == CodecMatrixCapabilitySupport.AVAILABLE) {
-                    adapter.open(jpegBytes).use { it.toBytes(format) }
-                } else {
-                    null
-                }
+                val generatedTarget =
+                    if (adapter != null && encodeCapability.support == CodecMatrixCapabilitySupport.AVAILABLE) {
+                        adapter.open(jpegBytes).use { it.toBytes(format) }
+                    } else {
+                        null
+                    }
                 val smokeFixture = fixture.smokeFixture(
                     parsed.backend.id,
                     jpeg,
@@ -149,7 +150,8 @@ private fun measureSize(
     } else {
         requireNotNull(fixture.targetBytes)
     }
-    val outputFormat = if (capability.direction == CodecMatrixDirection.ENCODE) capability.format else CodecMatrixFormat.JPEG
+    val outputFormat =
+        if (capability.direction == CodecMatrixDirection.ENCODE) capability.format else CodecMatrixFormat.JPEG
     val output = ops.open(input).use { it.toBytes(outputFormat) }
     return CodecMatrixSizeObservation(key, input.size.toLong(), output.size.toLong(), CodecMatrixJson.sha256(output))
 }
@@ -159,7 +161,7 @@ private fun defaultCapabilities(format: CodecMatrixFormat): List<CodecMatrixDire
         CodecMatrixDirectionalCapability(format, direction, CodecMatrixCapabilitySupport.AVAILABLE)
     }
 
-private val NO_NATIVE_OPS = object : CodecMatrixCodecOps {
+private val NO_NATIVE_OPS = object: CodecMatrixCodecOps {
     override fun open(bytes: ByteArray): CodecMatrixCodecHandle = error("native operations are forbidden by preflight")
 }
 
