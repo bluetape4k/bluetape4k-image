@@ -218,6 +218,8 @@ data class BarcodeOptions private constructor(
     companion object {
         private const val serialVersionUID: Long = 5859961292253423227L
 
+        val Default = invoke()
+
         operator fun invoke(
             formats: Set<BarcodeFormat> = emptySet(),
             tryHarder: Boolean = false,

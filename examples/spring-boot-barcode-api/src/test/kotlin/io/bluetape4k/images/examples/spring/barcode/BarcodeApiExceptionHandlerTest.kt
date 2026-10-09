@@ -4,6 +4,8 @@ import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldNotContain
 import io.bluetape4k.images.barcode.BarcodeException
 import io.bluetape4k.images.barcode.BarcodeFailureReason
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
@@ -14,6 +16,8 @@ import org.springframework.web.multipart.support.MissingServletRequestPartExcept
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class BarcodeApiExceptionHandlerTest {
+
+    companion object: KLogging()
 
     private val handler = BarcodeApiExceptionHandler()
 
@@ -33,10 +37,12 @@ class BarcodeApiExceptionHandlerTest {
         )
 
         val oversized = handler.handleMaxUploadSize(MaxUploadSizeExceededException(5L * 1024L * 1024L))
+        log.debug { "oversized: $oversized" }
         oversized.statusCode shouldBeEqualTo HttpStatus.CONTENT_TOO_LARGE
         oversized.body?.error shouldBeEqualTo "payload_too_large"
 
         val missing = handler.handleMissingPart(MissingServletRequestPartException("file"))
+        log.debug { "missing: $missing" }
         missing.statusCode shouldBeEqualTo HttpStatus.BAD_REQUEST
         missing.body?.error shouldBeEqualTo "empty_input"
     }
@@ -44,12 +50,10 @@ class BarcodeApiExceptionHandlerTest {
     @ParameterizedTest
     @EnumSource(BarcodeFailureReason::class)
     fun `maps barcode failures without echoing provider detail`(reason: BarcodeFailureReason) {
-        val response = handler.handleBarcode(
-            BarcodeException(reason, "provider secret /private/image.png")
-        )
         val expectedStatus = when (reason) {
             BarcodeFailureReason.MALFORMED_INPUT,
-            BarcodeFailureReason.UNSUPPORTED_FORMAT -> HttpStatus.BAD_REQUEST
+            BarcodeFailureReason.UNSUPPORTED_FORMAT,
+                -> HttpStatus.BAD_REQUEST
 
             BarcodeFailureReason.PROVIDER_UNAVAILABLE -> HttpStatus.SERVICE_UNAVAILABLE
             else -> HttpStatus.INTERNAL_SERVER_ERROR
@@ -61,11 +65,16 @@ class BarcodeApiExceptionHandlerTest {
             else -> "Barcode extraction failed."
         }
 
+        val response = handler.handleBarcode(
+            BarcodeException(reason, "provider secret /private/image.png")
+        )
+
+        log.debug { "response=$response" }
         response.statusCode shouldBeEqualTo expectedStatus
         response.body?.error shouldBeEqualTo reason.name.lowercase()
         response.body?.reason shouldBeEqualTo reason.name
         response.body?.message shouldBeEqualTo expectedMessage
-        response.body?.message.orEmpty().shouldNotContain("provider secret")
-        response.body?.message.orEmpty().shouldNotContain("/private")
+        response.body?.message shouldNotContain "provider secret"
+        response.body?.message shouldNotContain "/private"
     }
 }

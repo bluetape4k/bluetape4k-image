@@ -1,7 +1,7 @@
 package io.bluetape4k.images.examples.spring.barcode
 
-import io.bluetape4k.images.ImageDimensions
 import io.bluetape4k.images.ImageDecodeLimits
+import io.bluetape4k.images.ImageDimensions
 import io.bluetape4k.images.analysis.ImageMetadataReadOptions
 import io.bluetape4k.images.analysis.readImageMetadataReport
 import io.bluetape4k.images.barcode.BarcodeException
@@ -16,7 +16,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.springframework.http.HttpStatus
 import org.springframework.web.multipart.MultipartFile
-import java.util.Locale
+import java.util.*
 
 internal class BarcodeExtractionService(
     private val reader: BarcodeReader,
@@ -45,6 +45,7 @@ internal class BarcodeExtractionService(
             ?.substringBefore(';')
             ?.trim()
             ?.lowercase(Locale.ROOT)
+
         if (contentType !in ALLOWED_BARCODE_CONTENT_TYPES) {
             throw requestError(
                 status = HttpStatus.UNSUPPORTED_MEDIA_TYPE,
@@ -66,56 +67,57 @@ internal class BarcodeExtractionService(
             )
         }
         requireEncodedSize(bytes.size.toLong())
+
         return extract(bytes)
     }
 
-    suspend fun extract(bytes: ByteArray): BarcodeExtractionResponse =
-        withContext(cpuDispatcher) {
-            try {
-                if (bytes.isEmpty()) {
-                    throw requestError(
-                        status = HttpStatus.BAD_REQUEST,
-                        error = "empty_input",
-                        message = "The uploaded file is empty.",
-                    )
-                }
-                requireEncodedSize(bytes.size.toLong())
-
-                val dimensions = dimensionProbe(bytes)
-                    ?: metadataDimensionProbe(bytes, properties.maxInputBytes.toInt())
-                    ?: throw BarcodeException(
-                        reason = BarcodeFailureReason.MALFORMED_INPUT,
-                        message = "The uploaded file is not a decodable image.",
-                    )
-                requireDecodedSize(dimensions)
-
-                val results = immutableExternalImageOf(bytes, properties.toDecodeLimits()).extractBarcodes(reader)
-                    .map { result ->
-                        BarcodeResultResponse(
-                            text = result.text,
-                            format = result.format,
-                            provider = result.provider.name,
-                        )
-                    }
-
-                BarcodeExtractionResponse(
-                    count = results.size,
-                    results = results,
-                )
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: BarcodeRequestException) {
-                throw e
-            } catch (e: BarcodeException) {
-                throw e
-            } catch (e: Exception) {
-                throw BarcodeException(
-                    reason = BarcodeFailureReason.MALFORMED_INPUT,
-                    message = "The uploaded file is not a decodable image.",
-                    cause = e,
+    suspend fun extract(bytes: ByteArray): BarcodeExtractionResponse = withContext(cpuDispatcher) {
+        try {
+            if (bytes.isEmpty()) {
+                throw requestError(
+                    status = HttpStatus.BAD_REQUEST,
+                    error = "empty_input",
+                    message = "The uploaded file is empty.",
                 )
             }
+            requireEncodedSize(bytes.size.toLong())
+
+            val dimensions = dimensionProbe(bytes)
+                ?: metadataDimensionProbe(bytes, properties.maxInputBytes.toInt())
+                ?: throw BarcodeException(
+                    reason = BarcodeFailureReason.MALFORMED_INPUT,
+                    message = "The uploaded file is not a decodable image.",
+                )
+            requireDecodedSize(dimensions)
+
+            val results = immutableExternalImageOf(bytes, properties.toDecodeLimits())
+                .extractBarcodes(reader)
+                .map { result ->
+                    BarcodeResultResponse(
+                        text = result.text,
+                        format = result.format,
+                        provider = result.provider.name,
+                    )
+                }
+
+            BarcodeExtractionResponse(
+                count = results.size,
+                results = results,
+            )
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: BarcodeRequestException) {
+            throw e
+        } catch (e: BarcodeException) {
+            throw e
+        } catch (e: Exception) {
+            throw BarcodeException(
+                reason = BarcodeFailureReason.MALFORMED_INPUT,
+                message = "The uploaded file is not a decodable image.",
+                cause = e,
+            )
         }
+    }
 
     private fun requireEncodedSize(size: Long) {
         if (size > properties.maxInputBytes) {

@@ -2,15 +2,21 @@ package io.bluetape4k.images.examples.spring.barcode
 
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeInstanceOf
+import io.bluetape4k.assertions.shouldNotBeEmpty
 import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.images.barcode.BarcodeReader
 import io.bluetape4k.images.barcode.zxing.ZxingBarcodeReader
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.springframework.beans.factory.getBean
 import org.springframework.boot.test.context.runner.ApplicationContextRunner
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class BarcodeApiConfigurationTest {
+
+    companion object: KLogging()
 
     private val contextRunner = ApplicationContextRunner()
         .withUserConfiguration(BarcodeApiConfiguration::class.java)
@@ -18,15 +24,15 @@ class BarcodeApiConfigurationTest {
     @Test
     fun `registers default limits fixtures and ZXing reader`() {
         contextRunner.run { context ->
-            val properties = context.getBean(BarcodeExampleProperties::class.java)
+            val properties = context.getBean<BarcodeExampleProperties>()
+            log.debug { "properties=$properties" }
             properties.maxInputBytes shouldBeEqualTo 5L * 1024L * 1024L
             properties.maxInputPixels shouldBeEqualTo 16_777_216L
             properties.maxInputSide shouldBeEqualTo 8_192
 
-            context.getBean(BarcodeReader::class.java) shouldBeInstanceOf ZxingBarcodeReader::class
-            context.getBean(BarcodeExampleFixtures::class.java)
-                .bytes(BarcodeExampleFixture.SAMPLE)
-                .isNotEmpty() shouldBeEqualTo true
+            context.getBean<BarcodeReader>().shouldBeInstanceOf<ZxingBarcodeReader>()
+            context.getBean<BarcodeExampleFixtures>()
+                .bytes(BarcodeExampleFixture.SAMPLE).shouldNotBeEmpty()
         }
     }
 
@@ -48,7 +54,8 @@ class BarcodeApiConfigurationTest {
                 "example.barcode.max-input-side=1024",
             )
             .run { context ->
-                val properties = context.getBean(BarcodeExampleProperties::class.java)
+                val properties = context.getBean<BarcodeExampleProperties>()
+                log.debug { "properties=$properties" }
                 properties.maxInputBytes shouldBeEqualTo 1_048_576L
                 properties.maxInputPixels shouldBeEqualTo 1_000_000L
                 properties.maxInputSide shouldBeEqualTo 1_024

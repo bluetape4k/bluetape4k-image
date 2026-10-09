@@ -1,6 +1,7 @@
 package io.bluetape4k.images.examples.spring.barcode
 
 import io.bluetape4k.images.barcode.BarcodeFormat
+import io.bluetape4k.support.requireEquals
 import io.bluetape4k.support.requireNotBlank
 import org.springframework.http.HttpStatus
 import java.io.Serializable
@@ -8,10 +9,10 @@ import java.io.Serializable
 internal data class BarcodeExtractionResponse(
     val count: Int,
     val results: List<BarcodeResultResponse>,
-) : Serializable {
+): Serializable {
 
     init {
-        require(count == results.size) { "count must match results.size" }
+        count.requireEquals(results.size) { "count must match results.size" }
     }
 
     private companion object {
@@ -23,7 +24,7 @@ internal data class BarcodeResultResponse(
     val text: String,
     val format: BarcodeFormat,
     val provider: String,
-) : Serializable {
+): Serializable {
 
     init {
         text.requireNotBlank("text")
@@ -39,7 +40,7 @@ internal data class BarcodeErrorResponse(
     val error: String,
     val reason: String? = null,
     val message: String,
-) : Serializable {
+): Serializable {
 
     init {
         error.requireNotBlank("error")
@@ -56,4 +57,4 @@ internal class BarcodeRequestException(
     val status: HttpStatus,
     val error: String,
     message: String,
-) : RuntimeException(message)
+): RuntimeException(message)
