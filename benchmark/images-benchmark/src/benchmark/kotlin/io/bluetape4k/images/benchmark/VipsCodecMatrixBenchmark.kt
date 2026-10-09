@@ -3,9 +3,6 @@ package io.bluetape4k.images.benchmark
 import io.bluetape4k.images.vips.VipsEncodeOptions
 import io.bluetape4k.images.vips.VipsImage
 import io.bluetape4k.images.vips.VipsImageFormat
-import java.nio.file.Files
-import java.nio.file.Path
-import java.util.concurrent.TimeUnit
 import kotlinx.benchmark.Benchmark
 import kotlinx.benchmark.BenchmarkMode
 import kotlinx.benchmark.Blackhole
@@ -21,6 +18,9 @@ import org.openjdk.jmh.annotations.Fork
 import org.openjdk.jmh.annotations.Level
 import org.openjdk.jmh.annotations.Param
 import org.openjdk.jmh.annotations.Threads
+import java.nio.file.Files
+import java.nio.file.Path
+import java.util.concurrent.TimeUnit
 
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
@@ -109,7 +109,9 @@ class VipsCodecMatrixState {
             "fixture transform recipe differs"
         }
         require(manifest.options == EXPECTED_FIXTURE_OPTIONS) { "fixture codec options differ" }
-        require(manifest.fixtures.map(CodecMatrixFixtureEntry::scenario).toSet() == CodecMatrixScenario.entries.toSet()) {
+        require(
+            manifest.fixtures.map(CodecMatrixFixtureEntry::scenario).toSet() == CodecMatrixScenario.entries.toSet()
+        ) {
             "fixture scenarios differ"
         }
 

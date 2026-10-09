@@ -2,12 +2,12 @@ package io.bluetape4k.images.benchmark
 
 import com.sksamuel.scrimage.ImmutableImage
 import io.bluetape4k.images.immutableImageOf
-import java.nio.file.Files
-import java.nio.file.Path
-import java.security.MessageDigest
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import java.nio.file.Files
+import java.nio.file.Path
+import java.security.MessageDigest
 
 internal object OcrBenchmarkFixtures {
     private const val MANIFEST_RESOURCE = "bench/ocr/manifest.json"

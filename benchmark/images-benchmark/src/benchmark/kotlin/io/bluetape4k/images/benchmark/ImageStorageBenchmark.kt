@@ -156,17 +156,28 @@ class ImageStorageBenchmark {
     }
 }
 
-private class InMemoryS3Operations : S3Operations {
+private class InMemoryS3Operations: S3Operations {
     private val objects = ConcurrentHashMap<String, ByteArray>()
 
     override suspend fun existsBucket(bucket: String): Boolean = true
 
-    override suspend fun upload(bucket: String, key: String, bytes: ByteArray, contentType: String?): PutObjectResponse {
+    override suspend fun upload(
+        bucket: String,
+        key: String,
+        bytes: ByteArray,
+        contentType: String?,
+    ): PutObjectResponse {
         objects["$bucket/$key"] = bytes.copyOf()
         return PutObjectResponse.builder().eTag(bytes.size.toString()).build()
     }
 
-    override suspend fun upload(bucket: String, key: String, contents: String, charset: java.nio.charset.Charset, contentType: String?): PutObjectResponse =
+    override suspend fun upload(
+        bucket: String,
+        key: String,
+        contents: String,
+        charset: java.nio.charset.Charset,
+        contentType: String?,
+    ): PutObjectResponse =
         upload(bucket, key, contents.toByteArray(charset), contentType)
 
     override suspend fun downloadBytes(bucket: String, key: String): ByteArray =
@@ -180,22 +191,33 @@ private class InMemoryS3Operations : S3Operations {
         return DeleteObjectResponse.builder().build()
     }
 
-    override suspend fun listPage(bucket: String, prefix: String?, maxKeys: Int, continuationToken: String?): S3ListPage {
-        val keys = objects.keys.filter { key -> key.startsWith("$bucket/${prefix.orEmpty()}") }.map { it.substringAfter("$bucket/") }
-        val values = keys.take(maxKeys).map { key -> S3Object.builder().key(key).size(objects["$bucket/$key"]!!.size.toLong()).build() }
+    override suspend fun listPage(
+        bucket: String,
+        prefix: String?,
+        maxKeys: Int,
+        continuationToken: String?,
+    ): S3ListPage {
+        val keys = objects.keys.filter { key -> key.startsWith("$bucket/${prefix.orEmpty()}") }
+            .map { it.substringAfter("$bucket/") }
+        val values = keys.take(maxKeys)
+            .map { key -> S3Object.builder().key(key).size(objects["$bucket/$key"]!!.size.toLong()).build() }
         return S3ListPage(values, keys.size > maxKeys, null, values.size)
     }
 
-    override fun listFlow(bucket: String, prefix: String?, pageSize: Int): kotlinx.coroutines.flow.Flow<S3Object> = kotlinx.coroutines.flow.flow {
-        objects.keys.filter { it.startsWith("$bucket/${prefix.orEmpty()}") }.forEach { full ->
-            val key = full.substringAfter("$bucket/")
-            emit(S3Object.builder().key(key).size(objects[full]!!.size.toLong()).build())
+    override fun listFlow(bucket: String, prefix: String?, pageSize: Int): kotlinx.coroutines.flow.Flow<S3Object> =
+        kotlinx.coroutines.flow.flow {
+            objects.keys.filter { it.startsWith("$bucket/${prefix.orEmpty()}") }.forEach { full ->
+                val key = full.substringAfter("$bucket/")
+                emit(S3Object.builder().key(key).size(objects[full]!!.size.toLong()).build())
+            }
         }
-    }
 
-    override fun resource(bucket: String, key: String): S3Resource = throw UnsupportedOperationException("benchmark resource")
+    override fun resource(bucket: String, key: String): S3Resource =
+        throw UnsupportedOperationException("benchmark resource")
 
-    override fun presignGet(bucket: String, key: String, duration: Duration?): URL = URI("https://example.test/$bucket/$key").toURL()
+    override fun presignGet(bucket: String, key: String, duration: Duration?): URL =
+        URI("https://example.test/$bucket/$key").toURL()
 
-    override fun presignPut(bucket: String, key: String, duration: Duration?, contentType: String?): URL = URI("https://example.test/$bucket/$key").toURL()
+    override fun presignPut(bucket: String, key: String, duration: Duration?, contentType: String?): URL =
+        URI("https://example.test/$bucket/$key").toURL()
 }

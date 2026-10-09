@@ -107,7 +107,8 @@ internal fun codecMatrixBinaryArchitecture(header: ByteArray): CodecMatrixArchit
         if (peOffset >= 0 && header.size >= peOffset + 6 &&
             header.copyOfRange(peOffset, peOffset + 4).contentEquals("PE\u0000\u0000".toByteArray())
         ) {
-            return when (ByteBuffer.wrap(header, peOffset + 4, 2).order(ByteOrder.LITTLE_ENDIAN).short.toInt() and 0xFFFF) {
+            return when (ByteBuffer.wrap(header, peOffset + 4, 2)
+                .order(ByteOrder.LITTLE_ENDIAN).short.toInt() and 0xFFFF) {
                 0x8664 -> CodecMatrixArchitecture.X86_64
                 0xAA64 -> CodecMatrixArchitecture.ARM64
                 else -> CodecMatrixArchitecture.UNKNOWN

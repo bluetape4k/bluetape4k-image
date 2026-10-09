@@ -1,14 +1,12 @@
 package io.bluetape4k.images.benchmark
 
 import io.bluetape4k.io.writeAtomically
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Path
 import java.security.MessageDigest
-import kotlinx.serialization.decodeFromString
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonElement
 
 internal object CodecMatrixJson {
 

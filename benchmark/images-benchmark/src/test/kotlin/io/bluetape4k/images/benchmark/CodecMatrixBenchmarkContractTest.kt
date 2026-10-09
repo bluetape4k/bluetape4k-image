@@ -2,11 +2,14 @@ package io.bluetape4k.images.benchmark
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldContain
-import java.nio.file.Files
-import java.nio.file.Path
+import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.assertions.shouldNotContain
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
+import java.nio.file.Files
+import java.nio.file.Path
 
 class CodecMatrixBenchmarkContractTest {
 
@@ -31,7 +34,7 @@ class CodecMatrixBenchmarkContractTest {
         val runDirectory = tempDir.resolve("run")
 
         codecMatrixParameterFile(runDirectory, CodecMatrixFormat.AVIF) shouldBeEqualTo
-            runDirectory.resolve("parameters/parameters-codecMatrixAvif.txt")
+                runDirectory.resolve("parameters/parameters-codecMatrixAvif.txt")
     }
 
     @Test
@@ -95,14 +98,14 @@ class CodecMatrixBenchmarkContractTest {
         buildScript.shouldContain(
             "tasks.withType<JavaExec>().matching { task -> task.name in codecMatrixNativeTaskNames }.configureEach",
         )
-        buildScript.contains("tasks.withType<JavaExec>().configureEach").shouldBeEqualTo(false)
+        buildScript shouldNotContain "tasks.withType<JavaExec>().configureEach"
         buildScript.shouldContain("environment(\"DYLD_LIBRARY_PATH\", homebrewVipsLibraryDirectory.absolutePath)")
         buildScript.shouldContain("codecMatrixSupersedes.orNull?.let")
         buildScript.shouldContain("listOf(\"--supersedes\", it)")
         buildScript.shouldContain("codecMatrixReplacesFailedAttempt.orNull?.let")
         buildScript.shouldContain("listOf(\"--replaces-failed-attempt\", it)")
         buildScript.shouldContain("outputs.upToDateWhen { false }")
-        buildScript.contains("outputs.dirs(codecMatrixRunId.map").shouldBeEqualTo(false)
+        buildScript shouldNotContain "outputs.dirs(codecMatrixRunId.map"
     }
 
     @Test
@@ -147,12 +150,14 @@ class CodecMatrixBenchmarkContractTest {
             "VipsImageFormat.JPEG",
             "bh.consume(image.toBytes",
         ).forEach(stableBenchmarkSource::shouldContain)
-        stableBenchmarkSource.windowed("@Benchmark\n".length).count { it == "@Benchmark\n" }
-            .shouldBeEqualTo(4)
-        stableBenchmarkSource.contains("vipsAvailable").shouldBeEqualTo(false)
-        stableBenchmarkSource.contains("bh.consume(null)").shouldBeEqualTo(false)
-        stableBenchmarkSource.contains("shutdown(").shouldBeEqualTo(false)
-        stableBenchmarkSource.contains("catch (").shouldBeEqualTo(false)
+
+        stableBenchmarkSource.windowed("@Benchmark\n".length)
+            .count { it == "@Benchmark\n" } shouldBeEqualTo 4
+
+        stableBenchmarkSource shouldNotContain "vipsAvailable"
+        stableBenchmarkSource shouldNotContain "bh.consume(null)"
+        stableBenchmarkSource shouldNotContain "shutdown("
+        stableBenchmarkSource shouldNotContain "catch ("
     }
 
     @Test
@@ -185,12 +190,14 @@ class CodecMatrixBenchmarkContractTest {
             "@Warmup(iterations = 1, time = 1, timeUnit = TimeUnit.SECONDS)",
             "@Measurement(iterations = 3, time = 1, timeUnit = TimeUnit.SECONDS)",
         ).forEach(experimentalBenchmarkSource::shouldContain)
-        experimentalBenchmarkSource.windowed("@Benchmark\n".length).count { it == "@Benchmark\n" }
-            .shouldBeEqualTo(4)
-        experimentalBenchmarkSource.contains("vipsAvailable").shouldBeEqualTo(false)
-        experimentalBenchmarkSource.contains("bh.consume(null)").shouldBeEqualTo(false)
-        experimentalBenchmarkSource.contains("catch (").shouldBeEqualTo(false)
-        experimentalBenchmarkSource.contains("?: return").shouldBeEqualTo(false)
+        experimentalBenchmarkSource
+            .windowed("@Benchmark\n".length)
+            .count { it == "@Benchmark\n" } shouldBeEqualTo 4
+
+        experimentalBenchmarkSource shouldNotContain "vipsAvailable"
+        experimentalBenchmarkSource shouldNotContain "bh.consume(null)"
+        experimentalBenchmarkSource shouldNotContain "catch ("
+        experimentalBenchmarkSource shouldNotContain "?: return"
     }
 
     @Test
@@ -222,7 +229,7 @@ class CodecMatrixBenchmarkContractTest {
 
         rendered.shouldContain("configurationName:codecMatrixAvif")
         rendered.shouldContain("include:.*VipsExperimentalCodecMatrixBenchmark.encodeAvifFromJpeg.*")
-        rendered.contains("decodeAvifToJpeg").shouldBeEqualTo(false)
+        rendered shouldNotContain "decodeAvifToJpeg"
         rendered.shouldContain("warmups:1")
         rendered.shouldContain("iterations:3")
         rendered.shouldContain("advanced:jvmForks=1")
@@ -240,7 +247,7 @@ class CodecMatrixBenchmarkContractTest {
             reportFile = tempDir.resolve("heic.json"),
         )
 
-        rendered.lineSequence().none { it.startsWith("include:") }.shouldBeEqualTo(true)
+        rendered.lineSequence().none { it.startsWith("include:") }.shouldBeTrue()
     }
 
     @Test
@@ -248,7 +255,11 @@ class CodecMatrixBenchmarkContractTest {
         assertFailsWith<IllegalArgumentException> {
             renderCodecMatrixBenchmarkParameters(
                 CodecMatrixFormat.AVIF,
-                eligibility(CodecMatrixFormat.AVIF, CodecMatrixCellStatus.FAILED_SMOKE, CodecMatrixCellStatus.UNSUPPORTED),
+                eligibility(
+                    CodecMatrixFormat.AVIF,
+                    CodecMatrixCellStatus.FAILED_SMOKE,
+                    CodecMatrixCellStatus.UNSUPPORTED
+                ),
                 tempDir.resolve("blocking.json"),
             )
         }
@@ -333,7 +344,7 @@ class CodecMatrixBenchmarkContractTest {
 internal fun repositoryRoot(): Path {
     var current = Path.of("").toAbsolutePath().normalize()
     while (!Files.isRegularFile(current.resolve("settings.gradle.kts"))) {
-        current = requireNotNull(current.parent) { "repository root not found" }
+        current = current.parent.shouldNotBeNull() // requireNotNull(current.parent) { "repository root not found" }
     }
     return current
 }

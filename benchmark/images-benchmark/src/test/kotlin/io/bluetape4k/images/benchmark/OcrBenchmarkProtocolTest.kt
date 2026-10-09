@@ -3,6 +3,7 @@ package io.bluetape4k.images.benchmark
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldContain
+import io.bluetape4k.assertions.shouldHaveSize
 import org.junit.jupiter.api.Test
 
 class OcrBenchmarkProtocolTest {
@@ -10,15 +11,15 @@ class OcrBenchmarkProtocolTest {
     @Test
     fun `protocol receipt covers every positive fixture and embeds metric receipt`() {
         val manifest = OcrBenchmarkCorpusV2.loadManifest()
-        val predictions =
-            manifest.fixtures
-                .filter { it.expectedOutcome == OcrBenchmarkExpectedOutcome.TEXT }
-                .associate { fixture ->
-                    fixture.fixtureId to OcrBenchmarkCorpusV2.loadFixture(fixture.fixtureId).normalizedText
-                }
+        val predictions = manifest.fixtures
+            .filter { it.expectedOutcome == OcrBenchmarkExpectedOutcome.TEXT }
+            .associate { fixture ->
+                fixture.fixtureId to OcrBenchmarkCorpusV2.loadFixture(fixture.fixtureId).normalizedText
+            }
         val manifestSha256 = "d".repeat(64)
         val metricReceipt = OcrBenchmarkMetricReceipt.create(manifest, predictions, manifestSha256)
         val metricRows = metricReceipt.rows.associateBy(OcrBenchmarkMetricRow::fixtureId)
+
         val receipt = OcrBenchmarkProtocolReceipt(
             schemaVersion = 1,
             issue = 565,
@@ -58,19 +59,19 @@ class OcrBenchmarkProtocolTest {
         )
 
         OcrBenchmarkProtocolReceiptValidator.validate(receipt, manifest)
-        receipt.rows.size.shouldBeEqualTo(24)
-        receipt.protocol.rssUnit.shouldBeEqualTo("bytes")
+
+        receipt.rows shouldHaveSize 24
+        receipt.protocol.rssUnit shouldBeEqualTo "bytes"
     }
 
     @Test
     fun `protocol validator rejects non positive rss and manifest drift`() {
         val manifest = OcrBenchmarkCorpusV2.loadManifest()
-        val predictions =
-            manifest.fixtures
-                .filter { it.expectedOutcome == OcrBenchmarkExpectedOutcome.TEXT }
-                .associate { fixture ->
-                    fixture.fixtureId to OcrBenchmarkCorpusV2.loadFixture(fixture.fixtureId).normalizedText
-                }
+        val predictions = manifest.fixtures
+            .filter { it.expectedOutcome == OcrBenchmarkExpectedOutcome.TEXT }
+            .associate { fixture ->
+                fixture.fixtureId to OcrBenchmarkCorpusV2.loadFixture(fixture.fixtureId).normalizedText
+            }
         val manifestSha256 = "f".repeat(64)
         val metricReceipt = OcrBenchmarkMetricReceipt.create(manifest, predictions, manifestSha256)
         val metricRows = metricReceipt.rows.associateBy(OcrBenchmarkMetricRow::fixtureId)
@@ -105,7 +106,7 @@ class OcrBenchmarkProtocolTest {
                 manifest,
             )
         }
-        rssError.message.orEmpty().shouldContain("RSS")
+        rssError.message shouldContain "RSS"
 
         val outputHashError = assertFailsWith<IllegalArgumentException> {
             OcrBenchmarkProtocolReceiptValidator.validate(
@@ -113,7 +114,7 @@ class OcrBenchmarkProtocolTest {
                 manifest,
             )
         }
-        outputHashError.message.orEmpty().shouldContain("output SHA-256")
+        outputHashError.message shouldContain "output SHA-256"
 
         val warmIterationError = assertFailsWith<IllegalArgumentException> {
             OcrBenchmarkProtocolReceiptValidator.validate(
@@ -121,7 +122,7 @@ class OcrBenchmarkProtocolTest {
                 manifest,
             )
         }
-        warmIterationError.message.orEmpty().shouldContain("warm iteration")
+        warmIterationError.message shouldContain "warm iteration"
 
         val driftError = assertFailsWith<IllegalArgumentException> {
             OcrBenchmarkProtocolReceiptValidator.validate(
@@ -129,6 +130,6 @@ class OcrBenchmarkProtocolTest {
                 manifest,
             )
         }
-        driftError.message.orEmpty().shouldContain("manifest SHA-256")
+        driftError.message shouldContain "manifest SHA-256"
     }
 }

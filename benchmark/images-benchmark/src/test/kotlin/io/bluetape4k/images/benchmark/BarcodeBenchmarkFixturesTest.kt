@@ -3,10 +3,17 @@ package io.bluetape4k.images.benchmark
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldContain
+import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.images.barcode.zxing.ZxingBarcodeReader
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.support.toUtf8Bytes
+import io.bluetape4k.support.toUtf8String
+import io.bluetape4k.utils.Resourcex
 import org.junit.jupiter.api.Test
 
 class BarcodeBenchmarkFixturesTest {
+
+    companion object: KLogging()
 
     @Test
     fun `canonical manifest contains QR Code 128 and no result fixtures`() {
@@ -117,12 +124,13 @@ class BarcodeBenchmarkFixturesTest {
 
     @Test
     fun `fixture loading rejects dimensions that differ from decoded image`() {
-        val manifest = requireNotNull(javaClass.getResourceAsStream("/bench/barcode/manifest.json"))
+        val manifest = Resourcex.getInputStream("/bench/barcode/manifest.json").shouldNotBeNull()
             .use { it.readBytes() }
-            .toString(Charsets.UTF_8)
+            .toUtf8String()
             .replaceFirst("\"width\": 220", "\"width\": 219")
-            .toByteArray()
-        val qrBytes = requireNotNull(javaClass.getResourceAsStream("/bench/barcode/qr.png"))
+            .toUtf8Bytes()
+
+        val qrBytes = Resourcex.getInputStream("/bench/barcode/qr.png").shouldNotBeNull()
             .use { it.readBytes() }
 
         val error = assertFailsWith<IllegalArgumentException> {
@@ -133,7 +141,7 @@ class BarcodeBenchmarkFixturesTest {
             )
         }
 
-        error.message.orEmpty().shouldContain("dimensions differ")
+        error.message shouldContain "dimensions differ"
     }
 
     private fun manifestJson(qrResource: String): String =

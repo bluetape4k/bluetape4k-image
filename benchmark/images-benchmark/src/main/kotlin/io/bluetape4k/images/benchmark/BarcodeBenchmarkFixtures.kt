@@ -5,8 +5,8 @@ import io.bluetape4k.images.barcode.BarcodeFormat
 import io.bluetape4k.images.barcode.BarcodeOptions
 import io.bluetape4k.images.barcode.BarcodeResult
 import io.bluetape4k.images.immutableImageOf
-import java.security.MessageDigest
 import kotlinx.serialization.json.Json
+import java.security.MessageDigest
 
 internal object BarcodeBenchmarkFixtures {
     private const val MANIFEST_RESOURCE = "bench/barcode/manifest.json"

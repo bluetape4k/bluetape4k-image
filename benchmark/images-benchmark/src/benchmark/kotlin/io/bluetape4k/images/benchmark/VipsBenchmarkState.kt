@@ -34,7 +34,7 @@ import java.nio.file.Paths
 @State(Scope.Thread)
 class VipsBenchmarkState {
 
-    companion object : KLogging() {
+    companion object: KLogging() {
         private const val FFM_RUNTIME_CLASS = "io.bluetape4k.images.vips.java25.FfmVipsRuntime"
         private const val JNI_RUNTIME_CLASS = "io.bluetape4k.images.vips.java21.JVipsRuntime"
         private const val FFM_IMAGE_SUPPORT_CLASS = "io.bluetape4k.images.vips.java25.FfmVipsImageSupportKt"
@@ -98,7 +98,7 @@ class VipsBenchmarkState {
 
     /**
      * encoded image bytes에서 vips image를 생성합니다.
- *
+     *
      * @param bytes encoded image bytes입니다.
      * @return [VipsImage] instance입니다. caller가 반드시 close해야 합니다.
      * @throws IllegalStateException [vipsAvailable]이 false이면 던집니다.
@@ -110,7 +110,7 @@ class VipsBenchmarkState {
 
     /**
      * macOS에서 vips-ffm이 libvips를 찾을 수 있도록 Homebrew library path를 등록합니다.
- *
+     *
      * macOS SIP는 signed JVM에서 DYLD_LIBRARY_PATH를 제거합니다. 따라서 SymbolLookup.libraryLookup에는
      * `vipsffm.libpath.*.override` property를 통해 absolute path를 주입해야 합니다.
      */
@@ -133,7 +133,7 @@ class VipsBenchmarkState {
     private fun tryInitVipsRuntime(): Boolean {
         // Java 25 FFM을 선호하고, 가능하면 Java 21 JNI로 fallback합니다.
         return tryInitWithClass(FFM_RUNTIME_CLASS, FFM_IMAGE_SUPPORT_CLASS, "ffmVipsImageOf")
-            || tryInitWithClass(JNI_RUNTIME_CLASS, JNI_IMAGE_SUPPORT_CLASS, "vipsImageOf")
+                || tryInitWithClass(JNI_RUNTIME_CLASS, JNI_IMAGE_SUPPORT_CLASS, "vipsImageOf")
     }
 
     private fun tryInitWithClass(

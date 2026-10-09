@@ -2,6 +2,7 @@ package io.bluetape4k.images.benchmark
 
 import com.sksamuel.scrimage.ImmutableImage
 import com.sksamuel.scrimage.nio.ImmutableImageLoader
+import io.bluetape4k.images.useGraphics
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.logging.warn
@@ -17,7 +18,7 @@ import java.nio.file.Path
  * checked-in image fixture를 선호합니다. classpath resource는 fallback으로 남기며, optional fixture를 사용할 수 없을 때만
  * synthetic image를 사용합니다.
  */
-object BenchmarkImageSets : KLogging() {
+object BenchmarkImageSets: KLogging() {
 
     private val loader: ImmutableImageLoader = ImmutableImageLoader.create()
 
@@ -42,10 +43,10 @@ object BenchmarkImageSets : KLogging() {
                     "Benchmark image not found: $fixtureName, $resourcePath; using synthetic image (${width}x$height)"
                 }
                 val buffered = BufferedImage(width, height, BufferedImage.TYPE_INT_RGB)
-                val graphics = buffered.createGraphics()
-                graphics.color = Color(100, 150, 200)
-                graphics.fillRect(0, 0, width, height)
-                graphics.dispose()
+                buffered.useGraphics { graphics ->
+                    graphics.color = Color(100, 150, 200)
+                    graphics.fillRect(0, 0, width, height)
+                }
                 ImmutableImage.fromAwt(buffered)
             }
         }
@@ -59,9 +60,9 @@ object BenchmarkImageSets : KLogging() {
 
     /** resize, encode, vips benchmark에 사용하는 natural photo image입니다. */
     fun naturalPhoto(name: String): ImmutableImage = when (name) {
-        "cafe"      -> cafe
+        "cafe" -> cafe
         "landscape" -> landscape
-        else        -> error("Unknown natural photo benchmark image: $name")
+        else -> error("Unknown natural photo benchmark image: $name")
     }
 
     /** natural cafe photo fixture입니다(4032x3024). */

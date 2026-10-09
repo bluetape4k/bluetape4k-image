@@ -68,7 +68,7 @@ class KtorThumbnailRouteBenchmark {
         payload = fixtureData.bytes
         println(
             "Ktor route fixture: name=$fixture dimensions=" +
-                "${fixtureData.width}x${fixtureData.height} encodedBytes=${payload.size}"
+                    "${fixtureData.width}x${fixtureData.height} encodedBytes=${payload.size}"
         )
         application = thumbnailTestApplication(maxInputBytes = MAX_INPUT_BYTES)
         runBlocking { application.start() }
@@ -186,7 +186,7 @@ class KtorThumbnailConcurrentRouteBenchmark {
         payload = fixtureData.bytes
         println(
             "Ktor concurrent fixture: name=$fixture concurrency=$concurrency dimensions=" +
-                "${fixtureData.width}x${fixtureData.height} encodedBytes=${payload.size}"
+                    "${fixtureData.width}x${fixtureData.height} encodedBytes=${payload.size}"
         )
         application = thumbnailTestApplication(maxInputBytes = MAX_INPUT_BYTES)
         runBlocking { application.start() }
@@ -291,8 +291,8 @@ class KtorThumbnailMixedConcurrencyBenchmark {
         rejectedPayload = ByteArray(MIXED_MAX_INPUT_BYTES + 1)
         println(
             "Ktor mixed fixture: name=$fixture concurrency=$concurrency accepted=${concurrency * 9 / 10} " +
-                "rejected=${concurrency / 10} dimensions=${fixtureData.width}x${fixtureData.height} " +
-                "encodedBytes=${acceptedPayload.size}"
+                    "rejected=${concurrency / 10} dimensions=${fixtureData.width}x${fixtureData.height} " +
+                    "encodedBytes=${acceptedPayload.size}"
         )
         application = thumbnailTestApplication(maxInputBytes = MIXED_MAX_INPUT_BYTES.toLong())
         runBlocking { application.start() }

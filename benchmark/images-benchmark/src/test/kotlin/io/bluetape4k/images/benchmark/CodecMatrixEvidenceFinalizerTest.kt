@@ -2,14 +2,18 @@ package io.bluetape4k.images.benchmark
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldContentEqual
+import io.bluetape4k.assertions.shouldNotContain
 import io.bluetape4k.junit5.concurrency.MultithreadingTester
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.io.TempDir
 import java.nio.file.AtomicMoveNotSupportedException
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.concurrent.atomic.AtomicInteger
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.io.TempDir
 
 class CodecMatrixEvidenceFinalizerTest {
 
@@ -31,10 +35,12 @@ class CodecMatrixEvidenceFinalizerTest {
     @Test
     fun `CLI accepts only run lineage arguments`() {
         parseCodecMatrixFinalizeArguments(arrayOf("--run-id", "finalize-run-0001"))
-            .runId.shouldBeEqualTo(CodecMatrixRunId("finalize-run-0001"))
+            .runId shouldBeEqualTo CodecMatrixRunId("finalize-run-0001")
+
         parseCodecMatrixFinalizeArguments(
             arrayOf("--run-id", "finalize-run-0002", "--supersedes", "finalize-run-0001"),
-        ).supersedes.shouldBeEqualTo(CodecMatrixRunId("finalize-run-0001"))
+        ).supersedes shouldBeEqualTo CodecMatrixRunId("finalize-run-0001")
+
         parseCodecMatrixFinalizeArguments(
             arrayOf(
                 "--run-id",
@@ -42,10 +48,12 @@ class CodecMatrixEvidenceFinalizerTest {
                 "--replaces-failed-attempt",
                 "finalize-run-0001",
             ),
-        ).replacesFailedAttempt.shouldBeEqualTo(CodecMatrixRunId("finalize-run-0001"))
+        ).replacesFailedAttempt shouldBeEqualTo CodecMatrixRunId("finalize-run-0001")
+
         assertFailsWith<IllegalArgumentException> {
             parseCodecMatrixFinalizeArguments(arrayOf("--run-id", "finalize-run-0001", "--output", "/tmp/out"))
         }
+
         assertFailsWith<IllegalArgumentException> {
             parseCodecMatrixFinalizeArguments(
                 arrayOf("--run-id", "finalize-run-0001", "--run-id", "finalize-run-0002"),
@@ -57,10 +65,14 @@ class CodecMatrixEvidenceFinalizerTest {
     fun `pre benchmark measured and incomplete numeric cells are rejected`() {
         val request = request("finalize-bad-0001")
         writeEligibility(request, CodecMatrixCellStatus.MEASURED)
-        assertFailsWith<IllegalArgumentException> { finalizeCodecMatrixEvidence(request) }
+        assertFailsWith<IllegalArgumentException> {
+            finalizeCodecMatrixEvidence(request)
+        }
 
         writeEligibility(request, CodecMatrixCellStatus.ELIGIBLE)
-        assertFailsWith<IllegalArgumentException> { finalizeCodecMatrixEvidence(request) }
+        assertFailsWith<IllegalArgumentException> {
+            finalizeCodecMatrixEvidence(request)
+        }
     }
 
     @Test
@@ -68,8 +80,10 @@ class CodecMatrixEvidenceFinalizerTest {
         val request = request("finalize-good-0001")
         val artifactBytes = "pinned protocol".toByteArray()
         val artifactPath = request.stagingDirectory.resolve("protocol.txt")
+
         Files.createDirectories(request.stagingDirectory)
         Files.write(artifactPath, artifactBytes)
+
         writeEligibility(
             request,
             CodecMatrixCellStatus.ELIGIBLE,
@@ -85,11 +99,14 @@ class CodecMatrixEvidenceFinalizerTest {
 
         val manifest = finalizeCodecMatrixEvidence(request)
 
-        manifest.runId.shouldBeEqualTo(request.runId)
-        Files.isRegularFile(acceptedRoot.resolve("${request.runId.value}/run-manifest.json")).shouldBeEqualTo(true)
-        Files.readAllBytes(acceptedRoot.resolve("${request.runId.value}/protocol.txt"))
-            .contentEquals(artifactBytes).shouldBeEqualTo(true)
-        assertFailsWith<IllegalArgumentException> { finalizeCodecMatrixEvidence(request) }
+        manifest.runId shouldBeEqualTo request.runId
+
+        Files.isRegularFile(acceptedRoot.resolve("${request.runId.value}/run-manifest.json")).shouldBeTrue()
+        Files.readAllBytes(acceptedRoot.resolve("${request.runId.value}/protocol.txt")) shouldContentEqual artifactBytes
+
+        assertFailsWith<IllegalArgumentException> {
+            finalizeCodecMatrixEvidence(request)
+        }
     }
 
     @Test
@@ -100,10 +117,14 @@ class CodecMatrixEvidenceFinalizerTest {
         assertFailsWith<CodecMatrixBlockingEvidenceException> {
             finalizeCodecMatrixEvidence(request)
         }
-        Files.isRegularFile(failedRoot.resolve("${request.runId.value}/attempt-manifest.json"))
-            .shouldBeEqualTo(true)
-        Files.exists(acceptedRoot.resolve(request.runId.value)).shouldBeEqualTo(false)
-        assertFailsWith<IllegalArgumentException> { finalizeCodecMatrixEvidence(request) }
+
+        Files.isRegularFile(failedRoot.resolve("${request.runId.value}/attempt-manifest.json")).shouldBeTrue()
+
+        Files.exists(acceptedRoot.resolve(request.runId.value)).shouldBeFalse()
+
+        assertFailsWith<IllegalArgumentException> {
+            finalizeCodecMatrixEvidence(request)
+        }
     }
 
     @Test
@@ -111,6 +132,7 @@ class CodecMatrixEvidenceFinalizerTest {
         val hashRequest = request("finalize-hash-0001")
         Files.createDirectories(hashRequest.stagingDirectory)
         Files.writeString(hashRequest.stagingDirectory.resolve("artifact.bin"), "actual")
+
         writeEligibility(
             hashRequest,
             CodecMatrixCellStatus.UNSUPPORTED,
@@ -122,7 +144,10 @@ class CodecMatrixEvidenceFinalizerTest {
                 ),
             ),
         )
-        assertFailsWith<IllegalArgumentException> { finalizeCodecMatrixEvidence(hashRequest) }
+
+        assertFailsWith<IllegalArgumentException> {
+            finalizeCodecMatrixEvidence(hashRequest)
+        }
 
         val leakageRequest = request("finalize-leak-0001")
         writeEligibility(
@@ -130,7 +155,10 @@ class CodecMatrixEvidenceFinalizerTest {
             CodecMatrixCellStatus.UNSUPPORTED,
             reason = "failed at /Users/example/private/image.png",
         )
-        assertFailsWith<IllegalArgumentException> { finalizeCodecMatrixEvidence(leakageRequest) }
+
+        assertFailsWith<IllegalArgumentException> {
+            finalizeCodecMatrixEvidence(leakageRequest)
+        }
     }
 
     @Test
@@ -138,13 +166,19 @@ class CodecMatrixEvidenceFinalizerTest {
         val invalidRequest = request("finalize-json-0001")
         writeEligibility(invalidRequest, CodecMatrixCellStatus.UNSUPPORTED)
         Files.writeString(invalidRequest.stagingDirectory.resolve("eligibility.json"), "{} trailing")
-        assertFailsWith<IllegalArgumentException> { finalizeCodecMatrixEvidence(invalidRequest) }
+
+        assertFailsWith<IllegalArgumentException> {
+            finalizeCodecMatrixEvidence(invalidRequest)
+        }
 
         val linkRequest = request("finalize-link-0001")
         writeEligibility(linkRequest, CodecMatrixCellStatus.UNSUPPORTED)
         val outside = Files.writeString(tempDir.resolve("outside.txt"), "outside")
         Files.createSymbolicLink(linkRequest.stagingDirectory.resolve("linked.txt"), outside)
-        assertFailsWith<IllegalArgumentException> { finalizeCodecMatrixEvidence(linkRequest) }
+
+        assertFailsWith<IllegalArgumentException> {
+            finalizeCodecMatrixEvidence(linkRequest)
+        }
 
         val realStagingRoot = Files.createDirectories(tempDir.resolve("real-staging"))
         val linkedStagingRoot = tempDir.resolve("linked-staging")
@@ -156,7 +190,10 @@ class CodecMatrixEvidenceFinalizerTest {
             failedRoot = failedRoot,
         )
         writeEligibility(ancestorRequest, CodecMatrixCellStatus.UNSUPPORTED)
-        assertFailsWith<IllegalArgumentException> { finalizeCodecMatrixEvidence(ancestorRequest) }
+
+        assertFailsWith<IllegalArgumentException> {
+            finalizeCodecMatrixEvidence(ancestorRequest)
+        }
 
         val oversizedRequest = request("finalize-json-0002")
         Files.createDirectories(oversizedRequest.stagingDirectory)
@@ -164,7 +201,10 @@ class CodecMatrixEvidenceFinalizerTest {
             oversizedRequest.stagingDirectory.resolve("eligibility.json"),
             ByteArray(1_048_577) { 'x'.code.toByte() },
         )
-        assertFailsWith<IllegalArgumentException> { finalizeCodecMatrixEvidence(oversizedRequest) }
+
+        assertFailsWith<IllegalArgumentException> {
+            finalizeCodecMatrixEvidence(oversizedRequest)
+        }
     }
 
     @Test
@@ -179,9 +219,9 @@ class CodecMatrixEvidenceFinalizerTest {
             }
         }
 
-        Files.exists(acceptedRoot.resolve(request.runId.value)).shouldBeEqualTo(false)
+        Files.exists(acceptedRoot.resolve(request.runId.value)).shouldBeFalse()
         Files.list(acceptedRoot).use { paths ->
-            paths.noneMatch { it.fileName.toString().contains("promotion") }.shouldBeEqualTo(true)
+            paths.noneMatch { it.fileName.toString().contains("promotion") }.shouldBeTrue()
         }
     }
 
@@ -191,6 +231,7 @@ class CodecMatrixEvidenceFinalizerTest {
         writeEligibility(request, CodecMatrixCellStatus.ELIGIBLE)
         writeMeasurement(request)
         val acceptedCount = AtomicInteger()
+
         MultithreadingTester()
             .workers(2)
             .rounds(1)
@@ -201,9 +242,9 @@ class CodecMatrixEvidenceFinalizerTest {
             }
             .run()
 
-        acceptedCount.get().shouldBeEqualTo(1)
-        Files.isRegularFile(acceptedRoot.resolve("${request.runId.value}/run-manifest.json"))
-            .shouldBeEqualTo(true)
+        acceptedCount.get() shouldBeEqualTo 1
+
+        Files.isRegularFile(acceptedRoot.resolve("${request.runId.value}/run-manifest.json")).shouldBeTrue()
     }
 
     @Test
@@ -219,8 +260,8 @@ class CodecMatrixEvidenceFinalizerTest {
         val manifest = finalizeCodecMatrixEvidence(second)
 
         manifest.supersedes.shouldBeEqualTo(first.runId)
-        Files.isDirectory(acceptedRoot.resolve(first.runId.value)).shouldBeEqualTo(true)
-        Files.isDirectory(acceptedRoot.resolve(second.runId.value)).shouldBeEqualTo(true)
+        Files.isDirectory(acceptedRoot.resolve(first.runId.value)).shouldBeTrue()
+        Files.isDirectory(acceptedRoot.resolve(second.runId.value)).shouldBeTrue()
 
         val missing = request(
             "finalize-lineage-0003",
@@ -228,14 +269,21 @@ class CodecMatrixEvidenceFinalizerTest {
         )
         writeEligibility(missing, CodecMatrixCellStatus.ELIGIBLE)
         writeMeasurement(missing)
-        assertFailsWith<IllegalArgumentException> { finalizeCodecMatrixEvidence(missing) }
+
+        assertFailsWith<IllegalArgumentException> {
+            finalizeCodecMatrixEvidence(missing)
+        }
     }
 
     @Test
     fun `replacement points to immutable failed ledger by run ID and hash`() {
         val failed = request("finalize-replaced-0001")
         writeEligibility(failed, CodecMatrixCellStatus.FAILED_SMOKE)
-        assertFailsWith<CodecMatrixBlockingEvidenceException> { finalizeCodecMatrixEvidence(failed) }
+
+        assertFailsWith<CodecMatrixBlockingEvidenceException> {
+            finalizeCodecMatrixEvidence(failed)
+        }
+
         val failedManifest = failedRoot.resolve("${failed.runId.value}/attempt-manifest.json")
         val originalBytes = Files.readAllBytes(failedManifest)
 
@@ -247,7 +295,7 @@ class CodecMatrixEvidenceFinalizerTest {
         manifest.replacesFailedAttempt.shouldBeEqualTo(
             CodecMatrixFailedAttemptReference(failed.runId, CodecMatrixJson.sha256(originalBytes)),
         )
-        Files.readAllBytes(failedManifest).contentEquals(originalBytes).shouldBeEqualTo(true)
+        Files.readAllBytes(failedManifest).contentEquals(originalBytes).shouldBeTrue()
 
         val missing = request(
             "finalize-replaced-0003",
@@ -255,7 +303,10 @@ class CodecMatrixEvidenceFinalizerTest {
         )
         writeEligibility(missing, CodecMatrixCellStatus.ELIGIBLE)
         writeMeasurement(missing)
-        assertFailsWith<IllegalArgumentException> { finalizeCodecMatrixEvidence(missing) }
+
+        assertFailsWith<IllegalArgumentException> {
+            finalizeCodecMatrixEvidence(missing)
+        }
 
         val claimedFailedId = CodecMatrixRunId("claimed-failed-0001")
         CodecMatrixJson.write(
@@ -273,10 +324,14 @@ class CodecMatrixEvidenceFinalizerTest {
                 ),
             ),
         )
+
         val mismatched = request("finalize-replaced-0004", replacesFailedAttempt = claimedFailedId)
         writeEligibility(mismatched, CodecMatrixCellStatus.ELIGIBLE)
         writeMeasurement(mismatched)
-        assertFailsWith<IllegalArgumentException> { finalizeCodecMatrixEvidence(mismatched) }
+
+        assertFailsWith<IllegalArgumentException> {
+            finalizeCodecMatrixEvidence(mismatched)
+        }
     }
 
     @Test
@@ -284,16 +339,22 @@ class CodecMatrixEvidenceFinalizerTest {
         val accepted = request("finalize-na-run-0001")
         writeEligibility(accepted, nACells())
         finalizeCodecMatrixEvidence(accepted).cells.all { it.status == CodecMatrixCellStatus.N_A }
-            .shouldBeEqualTo(true)
+            .shouldBeTrue()
 
         val polluted = request("finalize-na-run-0002")
         writeEligibility(polluted, nACells())
         Files.writeString(polluted.stagingDirectory.resolve("allocation-java21.json"), "{}")
-        assertFailsWith<IllegalArgumentException> { finalizeCodecMatrixEvidence(polluted) }
+
+        assertFailsWith<IllegalArgumentException> {
+            finalizeCodecMatrixEvidence(polluted)
+        }
 
         val incomplete = request("finalize-na-run-0003")
         writeEligibility(incomplete, nACells().dropLast(1))
-        assertFailsWith<IllegalArgumentException> { finalizeCodecMatrixEvidence(incomplete) }
+
+        assertFailsWith<IllegalArgumentException> {
+            finalizeCodecMatrixEvidence(incomplete)
+        }
     }
 
     @Test
@@ -326,19 +387,19 @@ class CodecMatrixEvidenceFinalizerTest {
 
         val manifest = finalizeCodecMatrixEvidence(request)
 
-        manifest.expectedCellCount.shouldBeEqualTo(32)
-        manifest.cells.count { it.key.backend == CodecMatrixBackendId.JAVA21 }
-            .shouldBeEqualTo(16)
-        manifest.cells.filter { it.key.backend == CodecMatrixBackendId.JAVA21 }
-            .all { it.status == CodecMatrixCellStatus.N_A }
-            .shouldBeEqualTo(true)
-        manifest.artifacts.map { it.path.value }.toSet().shouldBeEqualTo(
-            setOf("preflight-java21.json", "preflight-java25.json"),
+        manifest.expectedCellCount shouldBeEqualTo 32
+        manifest.cells.count { it.key.backend == CodecMatrixBackendId.JAVA21 } shouldBeEqualTo 16
+        manifest.cells
+            .filter { it.key.backend == CodecMatrixBackendId.JAVA21 }
+            .all { it.status == CodecMatrixCellStatus.N_A }.shouldBeTrue()
+
+        manifest.artifacts.map { it.path.value }.toSet() shouldBeEqualTo setOf(
+            "preflight-java21.json",
+            "preflight-java25.json"
         )
-        Files.isRegularFile(acceptedRoot.resolve("${request.runId.value}/eligibility-java25.json"))
-            .shouldBeEqualTo(true)
-        Files.isRegularFile(acceptedRoot.resolve("${request.runId.value}/preflight-java21.json"))
-            .shouldBeEqualTo(true)
+
+        Files.isRegularFile(acceptedRoot.resolve("${request.runId.value}/eligibility-java25.json")).shouldBeTrue()
+        Files.isRegularFile(acceptedRoot.resolve("${request.runId.value}/preflight-java21.json")).shouldBeTrue()
     }
 
     @Test
@@ -378,9 +439,9 @@ class CodecMatrixEvidenceFinalizerTest {
         val sanitized = acceptedRoot.resolve(
             "${request.runId.value}/evidence/latency-java25-codecMatrix.json",
         )
-        Files.isRegularFile(sanitized).shouldBeEqualTo(true)
-        Files.readString(sanitized).contains("/Users/private").shouldBeEqualTo(false)
-        Files.readString(sanitized).contains("password=leaked").shouldBeEqualTo(false)
+        Files.isRegularFile(sanitized).shouldBeTrue()
+        Files.readString(sanitized) shouldNotContain "/Users/private"
+        Files.readString(sanitized) shouldNotContain "password=leaked"
     }
 
     private fun request(

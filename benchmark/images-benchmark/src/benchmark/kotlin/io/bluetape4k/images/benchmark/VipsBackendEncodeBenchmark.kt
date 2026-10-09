@@ -4,14 +4,14 @@ import io.bluetape4k.images.vips.VipsImageFormat
 import io.bluetape4k.logging.KLogging
 import kotlinx.benchmark.Benchmark
 import kotlinx.benchmark.BenchmarkMode
-import org.openjdk.jmh.annotations.Fork
+import kotlinx.benchmark.Blackhole
 import kotlinx.benchmark.Measurement
 import kotlinx.benchmark.Mode
 import kotlinx.benchmark.OutputTimeUnit
 import kotlinx.benchmark.Scope
 import kotlinx.benchmark.State
 import kotlinx.benchmark.Warmup
-import kotlinx.benchmark.Blackhole
+import org.openjdk.jmh.annotations.Fork
 import java.util.concurrent.TimeUnit
 
 /**
@@ -25,7 +25,7 @@ import java.util.concurrent.TimeUnit
 @State(Scope.Benchmark)
 class VipsBackendEncodeBenchmark {
 
-    companion object : KLogging()
+    companion object: KLogging()
 
     @Benchmark
     fun vips_encodeJpeg(state: VipsBenchmarkState, bh: Blackhole) {

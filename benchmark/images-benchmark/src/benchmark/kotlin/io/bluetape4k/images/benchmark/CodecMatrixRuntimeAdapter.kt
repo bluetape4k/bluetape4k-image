@@ -10,12 +10,11 @@ import io.bluetape4k.images.vips.VipsIncubatingApi
 import io.bluetape4k.images.vips.VipsRuntime
 import java.lang.reflect.InvocationTargetException
 
-@OptIn(VipsIncubatingApi::class)
 internal class CodecMatrixRuntimeAdapter private constructor(
     private val backend: CodecMatrixBackend,
     private val runtime: VipsRuntime,
     private val imageFactory: (ByteArray) -> VipsImage,
-) : CodecMatrixCodecOps {
+): CodecMatrixCodecOps {
 
     val backendName: String
     val libvipsVersion: String?
@@ -32,7 +31,7 @@ internal class CodecMatrixRuntimeAdapter private constructor(
 
     override fun open(bytes: ByteArray): CodecMatrixCodecHandle {
         val image = openImage(bytes)
-        return object : CodecMatrixCodecHandle {
+        return object: CodecMatrixCodecHandle {
             override val width: Int get() = image.width
             override val height: Int get() = image.height
 

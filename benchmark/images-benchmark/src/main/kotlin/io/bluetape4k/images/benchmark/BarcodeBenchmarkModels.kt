@@ -1,7 +1,7 @@
 package io.bluetape4k.images.benchmark
 
-import java.io.Serializable
 import kotlinx.serialization.SerialName
+import java.io.Serializable
 import kotlinx.serialization.Serializable as KotlinSerializable
 
 @KotlinSerializable

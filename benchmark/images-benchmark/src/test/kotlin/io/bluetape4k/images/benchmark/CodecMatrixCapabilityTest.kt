@@ -1,9 +1,10 @@
 package io.bluetape4k.images.benchmark
 
 import io.bluetape4k.assertions.shouldBeEqualTo
-import java.util.concurrent.atomic.AtomicInteger
+import io.bluetape4k.assertions.shouldNotContain
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import java.util.concurrent.atomic.AtomicInteger
 
 class CodecMatrixCapabilityTest {
 
@@ -18,10 +19,21 @@ class CodecMatrixCapabilityTest {
 
     @Test
     fun `encode and decode capability gates are independent`() {
-        evaluator.evaluate(available(CodecMatrixDirection.ENCODE), fixture(), CodecMatrixCellStatus.ELIGIBLE)
-            .status.shouldBeEqualTo(CodecMatrixCellStatus.ELIGIBLE)
-        evaluator.evaluate(unavailable(CodecMatrixDirection.DECODE), fixture(), CodecMatrixCellStatus.ELIGIBLE)
-            .status.shouldBeEqualTo(CodecMatrixCellStatus.UNSUPPORTED)
+        evaluator
+            .evaluate(
+                available(CodecMatrixDirection.ENCODE),
+                fixture(),
+                CodecMatrixCellStatus.ELIGIBLE
+            )
+            .status shouldBeEqualTo CodecMatrixCellStatus.ELIGIBLE
+
+        evaluator
+            .evaluate(
+                unavailable(CodecMatrixDirection.DECODE),
+                fixture(),
+                CodecMatrixCellStatus.ELIGIBLE
+            )
+            .status shouldBeEqualTo CodecMatrixCellStatus.UNSUPPORTED
     }
 
     @Test
@@ -38,11 +50,15 @@ class CodecMatrixCapabilityTest {
 
     @Test
     fun `unavailable and unknown map to terminal unmeasured states`() {
-        evaluator.evaluate(unavailable(CodecMatrixDirection.ENCODE), fixture(), CodecMatrixCellStatus.ELIGIBLE)
+        evaluator
+            .evaluate(unavailable(CodecMatrixDirection.ENCODE), fixture(), CodecMatrixCellStatus.ELIGIBLE)
             .status.shouldBeEqualTo(CodecMatrixCellStatus.UNSUPPORTED)
-        evaluator.evaluate(unknown(CodecMatrixDirection.ENCODE), fixture(), CodecMatrixCellStatus.ELIGIBLE)
+
+        evaluator
+            .evaluate(unknown(CodecMatrixDirection.ENCODE), fixture(), CodecMatrixCellStatus.ELIGIBLE)
             .status.shouldBeEqualTo(CodecMatrixCellStatus.SKIPPED)
-        ops.openCalls.get().shouldBeEqualTo(0)
+
+        ops.openCalls.get() shouldBeEqualTo 0
     }
 
     @Test
@@ -53,8 +69,8 @@ class CodecMatrixCapabilityTest {
             CodecMatrixCellStatus.N_A,
         )
 
-        result.status.shouldBeEqualTo(CodecMatrixCellStatus.N_A)
-        ops.openCalls.get().shouldBeEqualTo(0)
+        result.status shouldBeEqualTo CodecMatrixCellStatus.N_A
+        ops.openCalls.get() shouldBeEqualTo 0
     }
 
     @Test
@@ -67,30 +83,40 @@ class CodecMatrixCapabilityTest {
             CodecMatrixCellStatus.ELIGIBLE,
         )
 
-        cell.status.shouldBeEqualTo(CodecMatrixCellStatus.FAILED_SMOKE)
-        check("native details" !in requireNotNull(cell.reason))
-        cell.reasonCode.shouldBeEqualTo(CodecMatrixReasonCode.SMOKE_FAILED)
+        cell.status shouldBeEqualTo CodecMatrixCellStatus.FAILED_SMOKE
+        cell.reason shouldNotContain "native details"
+        cell.reasonCode shouldBeEqualTo CodecMatrixReasonCode.SMOKE_FAILED
     }
 
     @Test
     fun `malformed smoke output remains blocking`() {
         ops.output = "not-avif".toByteArray()
 
-        evaluator.evaluate(
-            available(CodecMatrixDirection.ENCODE),
-            fixture(),
-            CodecMatrixCellStatus.ELIGIBLE,
-        ).status.shouldBeEqualTo(CodecMatrixCellStatus.FAILED_SMOKE)
+        evaluator
+            .evaluate(
+                available(CodecMatrixDirection.ENCODE),
+                fixture(),
+                CodecMatrixCellStatus.ELIGIBLE,
+            )
+            .status shouldBeEqualTo CodecMatrixCellStatus.FAILED_SMOKE
     }
 
     @Test
     fun `operation handles close on success and exception`() {
-        evaluator.evaluate(available(CodecMatrixDirection.ENCODE), fixture(), CodecMatrixCellStatus.ELIGIBLE)
-        ops.closeCalls.get().shouldBeEqualTo(1)
+        evaluator.evaluate(
+            available(CodecMatrixDirection.ENCODE),
+            fixture(),
+            CodecMatrixCellStatus.ELIGIBLE
+        )
+        ops.closeCalls.get() shouldBeEqualTo 1
 
         ops.failure = IllegalStateException("native failure")
-        evaluator.evaluate(available(CodecMatrixDirection.ENCODE), fixture(), CodecMatrixCellStatus.ELIGIBLE)
-        ops.closeCalls.get().shouldBeEqualTo(2)
+        evaluator.evaluate(
+            available(CodecMatrixDirection.ENCODE),
+            fixture(),
+            CodecMatrixCellStatus.ELIGIBLE
+        )
+        ops.closeCalls.get() shouldBeEqualTo 2
     }
 
     private fun available(direction: CodecMatrixDirection) = CodecMatrixDirectionalCapability(
@@ -129,7 +155,7 @@ class CodecMatrixCapabilityTest {
         'a'.code.toByte(), 'v'.code.toByte(), 'i'.code.toByte(), 'f'.code.toByte(),
     )
 
-    private inner class FakeCodecOps : CodecMatrixCodecOps {
+    private inner class FakeCodecOps: CodecMatrixCodecOps {
         val openCalls = AtomicInteger()
         val closeCalls = AtomicInteger()
         var failure: Exception? = null
@@ -137,7 +163,7 @@ class CodecMatrixCapabilityTest {
 
         override fun open(bytes: ByteArray): CodecMatrixCodecHandle {
             openCalls.incrementAndGet()
-            return object : CodecMatrixCodecHandle {
+            return object: CodecMatrixCodecHandle {
                 override val width: Int = 512
                 override val height: Int = 512
 

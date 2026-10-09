@@ -1,11 +1,11 @@
 package io.bluetape4k.images.benchmark
 
 import com.sksamuel.scrimage.ImmutableImage
+import io.bluetape4k.images.coroutines.SuspendJpegWriter
 import io.bluetape4k.images.forSuspendWriter
 import io.bluetape4k.images.immutableImageOf
 import io.bluetape4k.images.suspendLoadImage
 import io.bluetape4k.images.suspendWrite
-import io.bluetape4k.images.coroutines.SuspendJpegWriter
 import io.bluetape4k.okio.asSink
 import io.bluetape4k.okio.asSource
 import io.bluetape4k.okio.buffered

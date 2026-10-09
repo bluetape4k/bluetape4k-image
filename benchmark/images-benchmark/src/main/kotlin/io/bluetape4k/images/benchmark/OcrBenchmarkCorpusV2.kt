@@ -21,8 +21,8 @@ private fun requireCorpusRelativePath(
     val segments = path.split('/')
     require(
         path.isNotBlank() && !path.startsWith('/') && '\\' !in path &&
-            segments.firstOrNull()?.contains(':') != true &&
-            segments.all { segment -> segment.isNotEmpty() && segment != "." && segment != ".." }
+                segments.firstOrNull()?.contains(':') != true &&
+                segments.all { segment -> segment.isNotEmpty() && segment != "." && segment != ".." }
     ) { "$field must be normalized and relative: $path" }
 }
 
@@ -272,7 +272,7 @@ internal object OcrBenchmarkCorpusV2 {
                 }
                 require(
                     boxes.entries.joinToString("\n", transform = OcrBenchmarkCorpusBox::text) ==
-                        normalizedText.trimEnd('\n')
+                            normalizedText.trimEnd('\n')
                 ) {
                     "OCR geometry text must match normalized ground truth in reading order"
                 }
@@ -495,7 +495,7 @@ internal data class OcrBenchmarkCorpusManifest(
     val generator: OcrBenchmarkGeneratorReceipt,
     val fixtures: List<OcrBenchmarkCorpusFixtureEntry>,
     val negatives: List<OcrBenchmarkNegativeFixtureReceipt> = emptyList(),
-) : Serializable {
+): Serializable {
     init {
         require(schemaVersion == 2) { "unsupported OCR corpus schemaVersion: $schemaVersion" }
         require(hashAlgorithm == "SHA-256") { "unsupported OCR corpus hashAlgorithm: $hashAlgorithm" }
@@ -547,7 +547,7 @@ internal data class OcrBenchmarkGeneratorReceipt(
     val replayStatus: OcrBenchmarkGeneratorReplayStatus,
     val seed: Long? = null,
     val config: OcrBenchmarkResourceReceipt,
-) : Serializable {
+): Serializable {
     init {
         require(name.isNotBlank() && version.isNotBlank() && command.isNotBlank()) {
             "OCR corpus generator receipt is incomplete"
@@ -572,7 +572,7 @@ internal data class OcrBenchmarkCorpusFixtureEntry(
     val licenses: List<OcrBenchmarkLicenseReceipt>,
     val provenance: OcrBenchmarkProvenanceReceipt,
     val expectedOutcome: OcrBenchmarkExpectedOutcome,
-) : Serializable {
+): Serializable {
     init {
         require(fixtureId.matches(Regex("[a-z0-9][a-z0-9-]{2,80}"))) {
             "OCR corpus fixtureId is invalid: $fixtureId"
@@ -600,7 +600,7 @@ internal data class OcrBenchmarkImageReceipt(
     val width: Int,
     val height: Int,
     val sha256: String,
-) : Serializable {
+): Serializable {
     init {
         requireCorpusRelativePath(path, "image path")
         require(bytes > 0 && isCorpusSha256(sha256)) { "OCR corpus image receipt is incomplete" }
@@ -621,7 +621,7 @@ internal data class OcrBenchmarkResourceReceipt(
     val normalization: OcrBenchmarkTextNormalization,
     val spdx: String,
     val noticePath: String,
-) : Serializable {
+): Serializable {
     init {
         requireCorpusRelativePath(path, "resource path")
         require(bytes >= 0 && isCorpusSha256(sha256) && spdx.isNotBlank()) {
@@ -639,7 +639,7 @@ internal data class OcrBenchmarkResourceReceipt(
 internal data class OcrBenchmarkGroundTruthReceipt(
     val text: OcrBenchmarkTextReceipt,
     val boxes: OcrBenchmarkBoxesReceipt,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID = 1L
     }
@@ -653,7 +653,7 @@ internal data class OcrBenchmarkTextReceipt(
     val encoding: OcrBenchmarkTextEncoding,
     val normalization: OcrBenchmarkTextNormalization,
     val whitespacePolicy: OcrBenchmarkWhitespacePolicy,
-) : Serializable {
+): Serializable {
     init {
         requireCorpusRelativePath(path, "ground truth text path")
         require(bytes >= 0 && isCorpusSha256(sha256)) {
@@ -675,7 +675,7 @@ internal data class OcrBenchmarkBoxesReceipt(
     val schemaResource: OcrBenchmarkSchemaReceipt,
     val coordinateSpace: String,
     val order: String,
-) : Serializable {
+): Serializable {
     init {
         requireCorpusRelativePath(path, "ground truth boxes path")
         require(bytes >= 0 && isCorpusSha256(sha256)) {
@@ -696,7 +696,7 @@ internal data class OcrBenchmarkSchemaReceipt(
     val path: String,
     val bytes: Long,
     val sha256: String,
-) : Serializable {
+): Serializable {
     init {
         requireCorpusRelativePath(path, "geometry schema path")
         require(bytes > 0 && isCorpusSha256(sha256)) {
@@ -715,7 +715,7 @@ internal data class OcrBenchmarkLicenseReceipt(
     val spdx: String,
     val sourceUrl: String,
     val noticePath: String,
-) : Serializable {
+): Serializable {
     init {
         require(component.isNotBlank() && spdx.isNotBlank() && sourceUrl.startsWith("https://")) {
             "OCR corpus license receipt is incomplete"
@@ -731,7 +731,7 @@ internal data class OcrBenchmarkLicenseReceipt(
 @KotlinxSerializable
 internal data class OcrBenchmarkProvenanceReceipt(
     val font: OcrBenchmarkFontReceipt,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID = 1L
     }
@@ -745,7 +745,7 @@ internal data class OcrBenchmarkFontReceipt(
     val sha256: String,
     val spdx: String,
     val noticePath: String,
-) : Serializable {
+): Serializable {
     init {
         require(name.isNotBlank() && sourceUrl.startsWith("https://")) {
             "OCR corpus font receipt is incomplete"
@@ -771,7 +771,7 @@ internal data class OcrBenchmarkNegativeFixtureReceipt(
     val sourceType: OcrBenchmarkCorpusSourceType,
     val scenario: OcrBenchmarkCorpusScenario = OcrBenchmarkCorpusScenario.MALFORMED,
     val expectedOutcome: OcrBenchmarkExpectedOutcome = OcrBenchmarkExpectedOutcome.ERROR,
-) : Serializable {
+): Serializable {
     init {
         require(fixtureId.matches(Regex("[a-z0-9][a-z0-9-]{2,80}"))) {
             "OCR corpus negative fixtureId is invalid: $fixtureId"
@@ -798,7 +798,7 @@ internal data class OcrBenchmarkBoxesDocument(
     val schema: String,
     val coordinateSpace: String,
     val entries: List<OcrBenchmarkCorpusBox>,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID = 1L
     }
@@ -814,7 +814,7 @@ internal data class OcrBenchmarkCorpusBox(
     val width: Int,
     val height: Int,
     val order: Int,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID = 1L
     }

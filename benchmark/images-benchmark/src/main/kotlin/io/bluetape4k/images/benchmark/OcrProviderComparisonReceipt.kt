@@ -1,7 +1,6 @@
 package io.bluetape4k.images.benchmark
 
 import tools.jackson.core.JacksonException
-import tools.jackson.core.JsonParser
 import tools.jackson.core.StreamReadConstraints
 import tools.jackson.core.json.JsonFactory
 import tools.jackson.databind.DeserializationFeature
@@ -22,7 +21,7 @@ internal data class OcrProviderIdentity(
     val runtime: String,
     val model: String,
     val imageDigest: String,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID = 1L
     }
@@ -39,7 +38,7 @@ internal data class OcrProviderGeometry(
     val height: Int,
     val order: Int,
     val confidence: Double?,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID = 1L
     }
@@ -62,7 +61,7 @@ internal data class OcrProviderFixtureResult(
     val rssBeforeBytes: Long,
     val rssPeakBytes: Long,
     val outputSha256: String,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID = 1L
     }
@@ -73,7 +72,7 @@ internal data class OcrProviderReceipt(
     val manifestSha256: String,
     val identity: OcrProviderIdentity,
     val fixtures: List<OcrProviderFixtureResult>,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID = 1L
     }
@@ -108,7 +107,7 @@ internal data class OcrProviderComparisonSummary(
     val coldLatencyDeltaPercent: Double = 0.0,
     /** warm latency의 candidate 대 baseline 변화율(%)입니다. */
     val warmLatencyDeltaPercent: Double = 0.0,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID = 1L
     }
@@ -128,7 +127,7 @@ internal data class OcrProviderComparisonReceipt(
     val manifestSha256: String,
     val providers: List<OcrProviderReceipt>,
     val comparison: OcrProviderComparisonSummary?,
-) : Serializable {
+): Serializable {
     companion object {
         private const val serialVersionUID = 1L
         private const val MAX_JSON_BYTES = 512_000
@@ -267,17 +266,17 @@ internal object OcrProviderComparisonReceiptValidator {
             }
             require(
                 summary.baselineCer.isFinite() && summary.baselineCer in 0.0..1.0 &&
-                    summary.candidateCer.isFinite() && summary.candidateCer in 0.0..1.0 &&
-                    summary.baselineWer.isFinite() && summary.baselineWer in 0.0..1.0 &&
-                    summary.candidateWer.isFinite() && summary.candidateWer in 0.0..1.0
+                        summary.candidateCer.isFinite() && summary.candidateCer in 0.0..1.0 &&
+                        summary.baselineWer.isFinite() && summary.baselineWer in 0.0..1.0 &&
+                        summary.candidateWer.isFinite() && summary.candidateWer in 0.0..1.0
             ) {
                 "OCR comparison provider CER/WER is invalid"
             }
             require(
                 summary.baselineGeometryAccuracy.isFinite() && summary.baselineGeometryAccuracy in 0.0..1.0 &&
-                    summary.candidateGeometryAccuracy.isFinite() && summary.candidateGeometryAccuracy in 0.0..1.0 &&
-                    summary.baselineOutcomeAccuracy.isFinite() && summary.baselineOutcomeAccuracy in 0.0..1.0 &&
-                    summary.candidateOutcomeAccuracy.isFinite() && summary.candidateOutcomeAccuracy in 0.0..1.0
+                        summary.candidateGeometryAccuracy.isFinite() && summary.candidateGeometryAccuracy in 0.0..1.0 &&
+                        summary.baselineOutcomeAccuracy.isFinite() && summary.baselineOutcomeAccuracy in 0.0..1.0 &&
+                        summary.candidateOutcomeAccuracy.isFinite() && summary.candidateOutcomeAccuracy in 0.0..1.0
             ) {
                 "OCR comparison provider quality accuracy is invalid"
             }
@@ -386,11 +385,11 @@ internal object OcrProviderComparisonReceiptValidator {
         result.geometry.forEach { box ->
             require(
                 box.boxId.isNotBlank() && box.pageIndex == 0 && box.text.isNotBlank() &&
-                    box.x >= 0 && box.y >= 0 && box.width > 0 && box.height > 0 &&
-                    (expected.width == null ||
-                        (box.x <= expected.width && box.width <= expected.width - box.x)) &&
-                    (expected.height == null ||
-                        (box.y <= expected.height && box.height <= expected.height - box.y))
+                        box.x >= 0 && box.y >= 0 && box.width > 0 && box.height > 0 &&
+                        (expected.width == null ||
+                                (box.x <= expected.width && box.width <= expected.width - box.x)) &&
+                        (expected.height == null ||
+                                (box.y <= expected.height && box.height <= expected.height - box.y))
             ) {
                 "OCR comparison geometry is invalid: ${result.fixtureId}"
             }

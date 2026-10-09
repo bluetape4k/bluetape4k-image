@@ -6,6 +6,8 @@ import com.sksamuel.scrimage.nio.ImmutableImageLoader
 import com.sksamuel.scrimage.nio.JpegWriter
 import com.sksamuel.scrimage.nio.PngWriter
 import com.sksamuel.scrimage.webp.WebpWriter
+import io.bluetape4k.support.requireEquals
+import io.bluetape4k.support.requireNotNull
 import java.nio.file.FileVisitResult
 import java.nio.file.Files
 import java.nio.file.LinkOption
@@ -14,6 +16,7 @@ import java.nio.file.SimpleFileVisitor
 import java.nio.file.StandardCopyOption
 import java.nio.file.attribute.BasicFileAttributes
 import java.util.UUID
+import kotlin.collections.ArrayDeque
 
 private const val CAFE_SOURCE = "cafe.jpg"
 private const val HOMER_SOURCE = "homer.jpg"
@@ -259,16 +262,18 @@ private fun CodecMatrixFormat.extension(): String = when (this) {
 }
 
 private fun ByteArray.startsWith(vararg expected: Int): Boolean =
-    size >= expected.size && expected.indices.all { index -> this[index].toInt() and 0xFF == expected[index] }
+    size >= expected.size &&
+            expected.indices.all { index -> this[index].toInt() and 0xFF == expected[index] }
 
 private fun ByteArray.startsWithAscii(expected: String): Boolean = hasAsciiAt(0, expected)
 
 private fun ByteArray.hasAsciiAt(offset: Int, expected: String): Boolean =
-    size >= offset + expected.length && expected.indices.all { index -> this[offset + index].toInt() == expected[index].code }
+    size >= offset + expected.length &&
+            expected.indices.all { index -> this[offset + index].toInt() == expected[index].code }
 
 private fun requireAbsoluteNormalized(path: Path, label: String): Path {
     require(path.isAbsolute) { "$label must be absolute" }
-    require(path == path.normalize()) { "$label must be normalized" }
+    path.requireEquals(path.normalize()) { "$label must be normalized" }
     return path
 }
 
@@ -292,7 +297,7 @@ private fun canonicalizePotentialPath(path: Path): Path {
         missingSegments.addFirst(existing.fileName)
         existing = existing.parent
     }
-    var canonical = requireNotNull(existing) { "path has no existing ancestor: $path" }.toRealPath()
+    var canonical = existing.requireNotNull("existing").toRealPath()
     missingSegments.forEach { canonical = canonical.resolve(it) }
     return canonical
 }
@@ -311,7 +316,7 @@ private fun deleteRecursively(root: Path) {
     if (!Files.exists(root, LinkOption.NOFOLLOW_LINKS)) return
     Files.walkFileTree(
         root,
-        object : SimpleFileVisitor<Path>() {
+        object: SimpleFileVisitor<Path>() {
             override fun visitFile(file: Path, attrs: BasicFileAttributes): FileVisitResult {
                 Files.deleteIfExists(file)
                 return FileVisitResult.CONTINUE

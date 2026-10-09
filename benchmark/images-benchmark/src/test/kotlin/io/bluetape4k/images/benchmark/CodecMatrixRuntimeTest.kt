@@ -2,11 +2,14 @@ package io.bluetape4k.images.benchmark
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeLessOrEqualTo
+import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldContain
-import java.nio.file.Files
-import java.nio.file.Path
+import io.bluetape4k.assertions.shouldNotContain
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
+import java.nio.file.Files
+import java.nio.file.Path
 
 class CodecMatrixRuntimeTest {
 
@@ -15,8 +18,8 @@ class CodecMatrixRuntimeTest {
 
     @Test
     fun `backend selector is an exact allowlist`() {
-        CodecMatrixBackend.parse("java21").shouldBeEqualTo(CodecMatrixBackend.JAVA21)
-        CodecMatrixBackend.parse("java25").shouldBeEqualTo(CodecMatrixBackend.JAVA25)
+        CodecMatrixBackend.parse("java21") shouldBeEqualTo CodecMatrixBackend.JAVA21
+        CodecMatrixBackend.parse("java25") shouldBeEqualTo CodecMatrixBackend.JAVA25
 
         listOf("jni", "JAVA21", " java21", "java21 ", "", "java26").forEach { selector ->
             assertFailsWith<IllegalArgumentException> {
@@ -47,9 +50,9 @@ class CodecMatrixRuntimeTest {
             this[0x85] = 0x86.toByte()
         }
 
-        codecMatrixBinaryArchitecture(elfX86).shouldBeEqualTo(CodecMatrixArchitecture.X86_64)
-        codecMatrixBinaryArchitecture(machoArm).shouldBeEqualTo(CodecMatrixArchitecture.ARM64)
-        codecMatrixBinaryArchitecture(peX86).shouldBeEqualTo(CodecMatrixArchitecture.X86_64)
+        codecMatrixBinaryArchitecture(elfX86) shouldBeEqualTo CodecMatrixArchitecture.X86_64
+        codecMatrixBinaryArchitecture(machoArm) shouldBeEqualTo CodecMatrixArchitecture.ARM64
+        codecMatrixBinaryArchitecture(peX86) shouldBeEqualTo CodecMatrixArchitecture.X86_64
     }
 
     @Test
@@ -64,7 +67,7 @@ class CodecMatrixRuntimeTest {
             ),
         )
 
-        result.status.shouldBeEqualTo(CodecMatrixCellStatus.N_A)
+        result.status shouldBeEqualTo CodecMatrixCellStatus.N_A
         result.reasonCode.shouldBeEqualTo(CodecMatrixReasonCode.HOST_BINARY_INCOMPATIBLE)
         result.facts.jniBinaryArchitecture.shouldBeEqualTo(CodecMatrixArchitecture.X86_64)
     }
@@ -96,7 +99,7 @@ class CodecMatrixRuntimeTest {
 
         result.status.shouldBeEqualTo(CodecMatrixCellStatus.ELIGIBLE)
         result.reasonCode.shouldBeEqualTo(CodecMatrixReasonCode.NONE)
-        result.facts.gitDirty.shouldBeEqualTo(true)
+        result.facts.gitDirty.shouldBeTrue()
         result.facts.architecture.shouldBeEqualTo(CodecMatrixArchitecture.ARM64)
         result.facts.diskAvailableBytes.shouldBeEqualTo(8L * 1024 * 1024 * 1024)
     }
@@ -114,7 +117,7 @@ class CodecMatrixRuntimeTest {
         result.status.shouldBeEqualTo(CodecMatrixCellStatus.ERROR)
         result.reasonCode.shouldBeEqualTo(CodecMatrixReasonCode.EVIDENCE_INVALID)
         result.reason.shouldBeEqualTo("git probe failed")
-        check("super-secret" !in requireNotNull(result.reason))
+        result.reason shouldNotContain "super-secret"
     }
 
     @Test
@@ -123,15 +126,16 @@ class CodecMatrixRuntimeTest {
                 "z".repeat(400)
         val sanitized = sanitizeCodecMatrixText(raw)
 
-        check("super-secret" !in sanitized)
-        check("/Users/" !in sanitized)
-        check("C:" !in sanitized)
-        check('\n' !in sanitized)
+        sanitized shouldNotContain "super-secret"
+        sanitized shouldNotContain "/Users/"
+        sanitized shouldNotContain "C:"
+        sanitized shouldNotContain "\n"
+        
         listOf("*", "[", "]", "(", ")", "<", ">").forEach { character ->
-            check(character !in sanitized)
+            sanitized shouldNotContain character
         }
-        check(sanitized.length <= CODEC_MATRIX_SANITIZED_TEXT_LIMIT)
-        sanitized.shouldContain("redacted")
+        sanitized.length shouldBeLessOrEqualTo CODEC_MATRIX_SANITIZED_TEXT_LIMIT
+        sanitized shouldContain "redacted"
     }
 
     @Test
@@ -167,7 +171,7 @@ class CodecMatrixRuntimeTest {
         val target = tempDir.resolve("preflight.json")
         val sha256 = CodecMatrixJson.write(target, manifest)
 
-        CodecMatrixJson.readPreflight(target, sha256).shouldBeEqualTo(manifest)
+        CodecMatrixJson.readPreflight(target, sha256) shouldBeEqualTo manifest
         Files.writeString(target, CodecMatrixJson.encode(manifest).replaceFirst("{", "{\n  \"unknown\": true,"))
         assertFailsWith<IllegalArgumentException> {
             CodecMatrixJson.readPreflight(target, CodecMatrixJson.sha256(Files.readAllBytes(target)))

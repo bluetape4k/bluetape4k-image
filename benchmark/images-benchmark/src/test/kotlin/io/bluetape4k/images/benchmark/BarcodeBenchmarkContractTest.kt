@@ -1,31 +1,36 @@
 package io.bluetape4k.images.benchmark
 
-import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldContain
-import java.nio.file.Files
+import io.bluetape4k.assertions.shouldNotContain
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import org.junit.jupiter.api.Test
+import java.nio.file.Files
 
 class BarcodeBenchmarkContractTest {
 
+    companion object: KLogging()
+
     private val benchmarkSourcePath = repositoryRoot().resolve(
         "benchmark/images-benchmark/src/benchmark/kotlin/io/bluetape4k/images/benchmark/" +
-            "ZxingBarcodeExtractionBenchmark.kt",
+                "ZxingBarcodeExtractionBenchmark.kt",
     )
     private val buildScriptPath = repositoryRoot().resolve("benchmark/images-benchmark/build.gradle.kts")
 
     @Test
     fun `barcode benchmark isolates setup and measures provider extraction only`() {
-        Files.isRegularFile(benchmarkSourcePath).shouldBeEqualTo(true)
+        Files.isRegularFile(benchmarkSourcePath).shouldBeTrue()
+
         val source = Files.readString(benchmarkSourcePath)
 
-        source.shouldContain("@Param(\"qr\", \"code-128\", \"no-result\")")
-        source.shouldContain("@Setup(Level.Trial)")
-        source.shouldContain("fun extractBarcodes()")
-        source.shouldContain("reader.readBarcodes(image, options)")
-        source.substringAfter("@Benchmark").substringBeforeLast('}')
-            .contains("immutableImageOf")
-            .shouldBeEqualTo(false)
-        source.contains("com.google.zxing").shouldBeEqualTo(false)
+        log.debug { "source=$source" }
+        source shouldContain "@Param(\"qr\", \"code-128\", \"no-result\")"
+        source shouldContain "@Setup(Level.Trial)"
+        source shouldContain "fun extractBarcodes()"
+        source shouldContain "reader.readBarcodes(image, options)"
+        source.substringAfter("@Benchmark").substringBeforeLast('}') shouldNotContain "immutableImageOf"
+        source shouldNotContain "com.google.zxing"
     }
 
     @Test
@@ -39,11 +44,8 @@ class BarcodeBenchmarkContractTest {
         build.shouldContain("warmups = BARCODE_BENCHMARK_WARMUPS")
         build.shouldContain("iterations = BARCODE_BENCHMARK_ITERATIONS")
         build.shouldContain("iterationTime = BARCODE_BENCHMARK_ITERATION_SECONDS")
-        build.shouldContain(
-            "add(\"benchmarkImplementation\", project(\":bluetape4k-images-barcode-zxing\"))",
-        )
-        build.contains("implementation(project(\":bluetape4k-images-barcode-zxing\"))")
-            .shouldBeEqualTo(false)
+        build.shouldContain("add(\"benchmarkImplementation\", project(\":bluetape4k-images-barcode-zxing\"))")
+        build.shouldNotContain("implementation(project(\":bluetape4k-images-barcode-zxing\"))")
 
         configuration(build, "barcodeLatency").also { configuration ->
             configuration.shouldContain("mode = \"avgt\"")

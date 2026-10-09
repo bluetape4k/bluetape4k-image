@@ -4,7 +4,7 @@ import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardCopyOption
-import java.util.UUID
+import java.util.*
 
 internal object CodecMatrixExperimentalFixtureMain {
     @JvmStatic
@@ -34,8 +34,8 @@ internal object CodecMatrixExperimentalFixtureMain {
             )
         }
         if (eligibility.cells.none { cell ->
-            cell.key.format in EXPERIMENTAL_OUTPUT_FORMATS && cell.status == CodecMatrixCellStatus.ELIGIBLE
-        }) {
+                cell.key.format in EXPERIMENTAL_OUTPUT_FORMATS && cell.status == CodecMatrixCellStatus.ELIGIBLE
+            }) {
             return
         }
         val fixturePath = runDirectory.resolve("fixtures/manifest.json")

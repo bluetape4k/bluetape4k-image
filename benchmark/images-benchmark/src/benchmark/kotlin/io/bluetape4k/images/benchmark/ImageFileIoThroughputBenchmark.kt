@@ -5,7 +5,6 @@ import io.bluetape4k.okio.asSource
 import io.bluetape4k.okio.buffered
 import io.bluetape4k.okio.coroutines.asSuspendedSink
 import io.bluetape4k.okio.coroutines.asSuspendedSource
-import io.bluetape4k.okio.coroutines.buffered as bufferedSuspended
 import kotlinx.benchmark.Benchmark
 import kotlinx.benchmark.BenchmarkMode
 import kotlinx.benchmark.Blackhole
@@ -34,6 +33,7 @@ import java.nio.file.StandardOpenOption.READ
 import java.nio.file.StandardOpenOption.TRUNCATE_EXISTING
 import java.nio.file.StandardOpenOption.WRITE
 import java.util.concurrent.TimeUnit
+import io.bluetape4k.okio.coroutines.buffered as bufferedSuspended
 
 private const val STREAM_BUFFER_SIZE = 128 * 1024L
 

@@ -1,8 +1,8 @@
 package io.bluetape4k.images.benchmark
 
 import io.bluetape4k.support.requireNotBlank
-import java.io.Serializable
 import kotlinx.serialization.SerialName
+import java.io.Serializable
 import kotlinx.serialization.Serializable as KotlinSerializable
 
 internal const val CODEC_MATRIX_SANITIZED_TEXT_LIMIT: Int = 160

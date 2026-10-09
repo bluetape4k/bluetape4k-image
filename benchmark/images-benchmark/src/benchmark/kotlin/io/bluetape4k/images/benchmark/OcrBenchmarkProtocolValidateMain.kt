@@ -38,7 +38,8 @@ object OcrBenchmarkProtocolValidateMain {
             "OCR protocol receipt manifest SHA-256 differs from the checked-in manifest"
         }
 
-        val runManifest = kotlinx.serialization.json.Json.parseToJsonElement(runManifestBytes.decodeToString()).jsonObject
+        val runManifest =
+            kotlinx.serialization.json.Json.parseToJsonElement(runManifestBytes.decodeToString()).jsonObject
         require(runManifest["schemaVersion"]?.jsonPrimitive?.content == "1") {
             "OCR protocol run manifest schema version differs"
         }
@@ -72,7 +73,7 @@ object OcrBenchmarkProtocolValidateMain {
         }
         println(
             "Validated OCR protocol receipt: ${receipt.rows.size} fixtures, " +
-                "CER=${receipt.metrics.summary.cer}, WER=${receipt.metrics.summary.wer}",
+                    "CER=${receipt.metrics.summary.cer}, WER=${receipt.metrics.summary.wer}",
         )
     }
 
@@ -81,10 +82,10 @@ object OcrBenchmarkProtocolValidateMain {
 
     private fun hasSingleTrailingLf(bytes: ByteArray): Boolean =
         bytes.isNotEmpty() && bytes.last() == '\n'.code.toByte() &&
-            (bytes.size == 1 || bytes[bytes.lastIndex - 1] !in setOf(
-                '\n'.code.toByte(),
-                '\r'.code.toByte(),
-                ' '.code.toByte(),
-                '\t'.code.toByte(),
-            ))
+                (bytes.size == 1 || bytes[bytes.lastIndex - 1] !in setOf(
+                    '\n'.code.toByte(),
+                    '\r'.code.toByte(),
+                    ' '.code.toByte(),
+                    '\t'.code.toByte(),
+                ))
 }

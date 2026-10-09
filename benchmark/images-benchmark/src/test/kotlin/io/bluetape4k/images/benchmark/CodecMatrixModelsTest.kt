@@ -3,10 +3,17 @@ package io.bluetape4k.images.benchmark
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldContain
-import java.nio.file.Files
-import java.nio.file.Path
+import io.bluetape4k.images.benchmark.CodecMatrixCellStatus.ELIGIBLE
+import io.bluetape4k.images.benchmark.CodecMatrixCellStatus.ERROR
+import io.bluetape4k.images.benchmark.CodecMatrixCellStatus.FAILED_SMOKE
+import io.bluetape4k.images.benchmark.CodecMatrixCellStatus.MEASURED
+import io.bluetape4k.images.benchmark.CodecMatrixCellStatus.N_A
+import io.bluetape4k.images.benchmark.CodecMatrixCellStatus.SKIPPED
+import io.bluetape4k.images.benchmark.CodecMatrixCellStatus.UNSUPPORTED
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
+import java.nio.file.Files
+import java.nio.file.Path
 
 class CodecMatrixModelsTest {
 
@@ -16,16 +23,16 @@ class CodecMatrixModelsTest {
     @Test
     fun `eligibility manifest cannot claim measured`() {
         assertFailsWith<IllegalArgumentException> {
-            eligibilityManifest(CodecMatrixCellStatus.MEASURED).validateEligibility()
+            eligibilityManifest(MEASURED).validateEligibility()
         }
     }
 
     @Test
     fun `accepted manifest rejects blocking states`() {
         listOf(
-            CodecMatrixCellStatus.ELIGIBLE,
-            CodecMatrixCellStatus.FAILED_SMOKE,
-            CodecMatrixCellStatus.ERROR,
+            ELIGIBLE,
+            FAILED_SMOKE,
+            ERROR,
         ).forEach { status ->
             assertFailsWith<IllegalArgumentException> {
                 finalizedManifest(status).validateAccepted()
@@ -44,7 +51,7 @@ class CodecMatrixModelsTest {
     fun `unmeasured cell requires fixed reason and rerun guidance`() {
         assertFailsWith<IllegalArgumentException> {
             matrixCell(
-                status = CodecMatrixCellStatus.UNSUPPORTED,
+                status = UNSUPPORTED,
                 reasonCode = CodecMatrixReasonCode.NONE,
                 rerunGuidance = "",
             ).validateFinalized()
@@ -54,7 +61,9 @@ class CodecMatrixModelsTest {
     @Test
     fun `run id and relative paths reject unsafe values`() {
         listOf("short", "Uppercase-id", "../escape-run").forEach { value ->
-            assertFailsWith<IllegalArgumentException> { CodecMatrixRunId(value) }
+            assertFailsWith<IllegalArgumentException> {
+                CodecMatrixRunId(value)
+            }
         }
         listOf(
             "/tmp/result.json",
@@ -64,20 +73,22 @@ class CodecMatrixModelsTest {
             "fixtures/result file.json",
             "file:///tmp/result.json",
         ).forEach { value ->
-            assertFailsWith<IllegalArgumentException> { CodecMatrixRelativePath(value) }
+            assertFailsWith<IllegalArgumentException> {
+                CodecMatrixRelativePath(value)
+            }
         }
     }
 
     @Test
     fun `N A status serializes as documented`() {
-        val encoded = CodecMatrixJson.encode(eligibilityManifest(CodecMatrixCellStatus.N_A))
+        val encoded = CodecMatrixJson.encode(eligibilityManifest(N_A))
 
-        encoded.shouldContain("\"status\": \"N/A\"")
+        encoded shouldContain "\"status\": \"N/A\""
     }
 
     @Test
     fun `strict JSON rejects hash mismatch and unknown or duplicate keys`() {
-        val manifest = eligibilityManifest(CodecMatrixCellStatus.ELIGIBLE)
+        val manifest = eligibilityManifest(ELIGIBLE)
         val target = tempDir.resolve("eligibility.json")
         CodecMatrixJson.write(target, manifest)
 
@@ -88,12 +99,14 @@ class CodecMatrixModelsTest {
         val encoded = CodecMatrixJson.encode(manifest)
         val unknown = encoded.replaceFirst("{", "{\n  \"unknown\": true,")
         Files.writeString(target, unknown)
+
         assertFailsWith<IllegalArgumentException> {
             CodecMatrixJson.readEligibility(target, CodecMatrixJson.sha256(unknown.toByteArray()))
         }
 
         val duplicate = encoded.replaceFirst("{", "{\n  \"schemaVersion\": 1,")
         Files.writeString(target, duplicate)
+
         assertFailsWith<IllegalArgumentException> {
             CodecMatrixJson.readEligibility(target, CodecMatrixJson.sha256(duplicate.toByteArray()))
         }
@@ -101,16 +114,16 @@ class CodecMatrixModelsTest {
 
     @Test
     fun `canonical JSON round trip preserves manifest`() {
-        val manifest = eligibilityManifest(CodecMatrixCellStatus.ELIGIBLE)
+        val manifest = eligibilityManifest(ELIGIBLE)
         val target = tempDir.resolve("eligibility.json")
         val hash = CodecMatrixJson.write(target, manifest)
 
-        CodecMatrixJson.readEligibility(target, hash).shouldBeEqualTo(manifest)
+        CodecMatrixJson.readEligibility(target, hash) shouldBeEqualTo manifest
     }
 
     @Test
     fun `manifest requires exact unique cell cardinality`() {
-        val cell = matrixCell(CodecMatrixCellStatus.ELIGIBLE)
+        val cell = matrixCell(ELIGIBLE)
 
         assertFailsWith<IllegalArgumentException> {
             CodecMatrixEligibilityManifest(
@@ -133,12 +146,14 @@ class CodecMatrixModelsTest {
         val target = tempDir.resolve("unsafe.json")
         val nested = "{\"value\":".repeat(40) + "0" + "}".repeat(40)
         Files.writeString(target, nested)
+
         assertFailsWith<IllegalArgumentException> {
             CodecMatrixJson.readEligibility(target, CodecMatrixJson.sha256(nested.toByteArray()))
         }
 
         val oversized = "{\"value\":\"${"x".repeat(5000)}\"}"
         Files.writeString(target, oversized)
+
         assertFailsWith<IllegalArgumentException> {
             CodecMatrixJson.readEligibility(target, CodecMatrixJson.sha256(oversized.toByteArray()))
         }
@@ -147,9 +162,10 @@ class CodecMatrixModelsTest {
     @Test
     fun `strict JSON rejects oversized bytes and collections before decoding`() {
         val target = tempDir.resolve("bounded.json")
-        val manifest = eligibilityManifest(CodecMatrixCellStatus.ELIGIBLE)
+        val manifest = eligibilityManifest(ELIGIBLE)
         val oversizedBytes = CodecMatrixJson.encode(manifest) + " ".repeat(1_048_576)
         Files.writeString(target, oversizedBytes)
+
         assertFailsWith<IllegalArgumentException> {
             CodecMatrixJson.readEligibility(target, CodecMatrixJson.sha256(oversizedBytes.toByteArray()))
         }
@@ -159,12 +175,14 @@ class CodecMatrixModelsTest {
         val error = assertFailsWith<IllegalArgumentException> {
             CodecMatrixJson.readEligibility(target, CodecMatrixJson.sha256(oversizedArray.toByteArray()))
         }
-        error.message.orEmpty().shouldContain("JSON array exceeds")
+        error.message shouldContain "JSON array exceeds"
     }
 
     @Test
     fun `hash and numeric values reject malformed evidence`() {
-        assertFailsWith<IllegalArgumentException> { CodecMatrixSha256("not-a-hash") }
+        assertFailsWith<IllegalArgumentException> {
+            CodecMatrixSha256("not-a-hash")
+        }
         assertFailsWith<IllegalArgumentException> {
             measuredCell(completeMetrics().copy(latencyMs = Double.NaN)).validateFinalized()
         }
@@ -183,13 +201,13 @@ class CodecMatrixModelsTest {
         CodecMatrixFinalizedManifest(
             runId = CodecMatrixRunId("issue-208-test-run"),
             cells = listOf(
-                if (status == CodecMatrixCellStatus.MEASURED) measuredCell() else matrixCell(status = status),
+                if (status == MEASURED) measuredCell() else matrixCell(status = status),
             ),
         )
 
     private fun measuredCell(metrics: CodecMatrixMetrics = completeMetrics()): CodecMatrixCell =
         matrixCell(
-            status = CodecMatrixCellStatus.MEASURED,
+            status = MEASURED,
             reasonCode = CodecMatrixReasonCode.NONE,
             rerunGuidance = null,
             metrics = metrics,
@@ -223,13 +241,11 @@ class CodecMatrixModelsTest {
     )
 
     private fun reasonCodeFor(status: CodecMatrixCellStatus): CodecMatrixReasonCode = when (status) {
-        CodecMatrixCellStatus.UNSUPPORTED -> CodecMatrixReasonCode.CAPABILITY_UNAVAILABLE
-        CodecMatrixCellStatus.SKIPPED -> CodecMatrixReasonCode.CAPABILITY_UNKNOWN
-        CodecMatrixCellStatus.N_A -> CodecMatrixReasonCode.HOST_BINARY_INCOMPATIBLE
-        CodecMatrixCellStatus.FAILED_SMOKE -> CodecMatrixReasonCode.SMOKE_FAILED
-        CodecMatrixCellStatus.ERROR -> CodecMatrixReasonCode.EVIDENCE_INVALID
-        CodecMatrixCellStatus.ELIGIBLE,
-        CodecMatrixCellStatus.MEASURED,
-        -> CodecMatrixReasonCode.NONE
+        UNSUPPORTED -> CodecMatrixReasonCode.CAPABILITY_UNAVAILABLE
+        SKIPPED -> CodecMatrixReasonCode.CAPABILITY_UNKNOWN
+        N_A -> CodecMatrixReasonCode.HOST_BINARY_INCOMPATIBLE
+        FAILED_SMOKE -> CodecMatrixReasonCode.SMOKE_FAILED
+        ERROR -> CodecMatrixReasonCode.EVIDENCE_INVALID
+        ELIGIBLE, MEASURED -> CodecMatrixReasonCode.NONE
     }
 }

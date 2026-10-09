@@ -14,7 +14,6 @@ import io.bluetape4k.okio.asSource
 import io.bluetape4k.okio.buffered
 import io.bluetape4k.okio.coroutines.asSuspendedSink
 import io.bluetape4k.okio.coroutines.asSuspendedSource
-import io.bluetape4k.okio.coroutines.buffered as bufferedSuspended
 import kotlinx.benchmark.Benchmark
 import kotlinx.benchmark.BenchmarkMode
 import kotlinx.benchmark.Blackhole
@@ -47,6 +46,7 @@ import java.util.concurrent.TimeUnit
 import javax.imageio.IIOImage
 import javax.imageio.ImageIO
 import javax.imageio.ImageWriteParam
+import io.bluetape4k.okio.coroutines.buffered as bufferedSuspended
 
 /**
  * large generated image file의 load-transform-write pipeline을 측정합니다.
@@ -266,7 +266,8 @@ private fun createLargePhoto(width: Int, height: Int): BufferedImage {
     val graphics = image.createGraphics()
     try {
         graphics.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY)
-        graphics.paint = GradientPaint(0f, 0f, Color(72, 128, 184), width.toFloat(), height.toFloat(), Color(236, 184, 112))
+        graphics.paint =
+            GradientPaint(0f, 0f, Color(72, 128, 184), width.toFloat(), height.toFloat(), Color(236, 184, 112))
         graphics.fillRect(0, 0, width, height)
         for (y in 0 until height step 96) {
             for (x in 0 until width step 96) {

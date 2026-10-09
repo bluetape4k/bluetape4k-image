@@ -6,14 +6,14 @@ import com.sksamuel.scrimage.filter.SepiaFilter
 import io.bluetape4k.logging.KLogging
 import kotlinx.benchmark.Benchmark
 import kotlinx.benchmark.BenchmarkMode
-import org.openjdk.jmh.annotations.Fork
+import kotlinx.benchmark.Blackhole
 import kotlinx.benchmark.Measurement
 import kotlinx.benchmark.Mode
 import kotlinx.benchmark.OutputTimeUnit
 import kotlinx.benchmark.Scope
 import kotlinx.benchmark.State
 import kotlinx.benchmark.Warmup
-import kotlinx.benchmark.Blackhole
+import org.openjdk.jmh.annotations.Fork
 import java.util.concurrent.TimeUnit
 
 /**
@@ -40,7 +40,7 @@ import java.util.concurrent.TimeUnit
 @State(Scope.Benchmark)
 class ImageFilterBenchmark {
 
-    companion object : KLogging() {
+    companion object: KLogging() {
         private val GRAYSCALE_FILTER = GrayscaleFilter()
         private val BLUR_FILTER = BlurFilter()
         private val SEPIA_FILTER = SepiaFilter()
