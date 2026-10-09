@@ -2,8 +2,7 @@
 
 [English](./README.md) | 한국어
 
-`bluetape4k-images-ocr`로 multipart image upload에서 OCR text를 추출하는
-작은 Ktor 3 예제입니다.
+`bluetape4k-images-ocr`로 multipart image upload에서 OCR text를 추출하는 작은 Ktor 3 예제입니다.
 
 ## 보여주는 것
 
@@ -15,9 +14,7 @@
 - request validation과 native OCR runtime unavailable 상황의 error mapping
 - normal CI가 Tesseract를 요구하지 않도록 fake `OcrEngine`을 쓰는 route test
 
-이 예제는 repo-owned quickstart입니다. 인증, rate limiting, request queue,
-file persistence, batch OCR 같은 production concern은 더 큰 애플리케이션이나
-follow-up issue에서 다룹니다.
+이 예제는 repo-owned quickstart입니다. 인증, rate limiting, request queue, file persistence, batch OCR 같은 production concern은 더 큰 애플리케이션이나 follow-up issue에서 다룹니다.
 
 ## Diagrams
 
@@ -35,8 +32,7 @@ follow-up issue에서 다룹니다.
 
 ## Native OCR 요구사항
 
-이 예제는 `bluetape4k-images-ocr`를 통해 Tess4J를 사용합니다. 실제 OCR 실행에는
-host Tesseract와 요청한 language code에 맞는 traineddata package가 필요합니다.
+이 예제는 `bluetape4k-images-ocr`를 통해 Tess4J를 사용합니다. 실제 OCR 실행에는 host Tesseract와 요청한 language code에 맞는 traineddata package가 필요합니다.
 
 ```bash
 # macOS
@@ -57,9 +53,7 @@ export EXAMPLE_OCR_TESSDATA_PATH=/opt/homebrew/share/tessdata
 
 Endpoint는 request-level tessdata path를 받지 않도록 의도적으로 제한되어 있습니다.
 
-이 quickstart는 10 MiB를 넘는 upload를 거부하고, `ImmutableImage` 생성이나 OCR
-호출 전에 image header 기준 16,777,216 pixel 또는 한 변 8,192 pixel을 넘는
-decoded image를 거부합니다.
+이 quickstart는 10 MiB를 넘는 upload를 거부하고, `ImmutableImage` 생성이나 OCR 호출 전에 image header 기준 16,777,216 pixel 또는 한 변 8,192 pixel을 넘는 decoded image를 거부합니다.
 
 ## 실행
 
@@ -103,7 +97,4 @@ curl -F "file=@sample-ko.png;type=image/png" \
 ./gradlew :ktor-ocr-api:test
 ```
 
-테스트는 Ktor `testApplication`과 fake `OcrEngine`을 사용합니다. Host Tesseract 없이
-multipart OCR success, language parsing, missing multipart field rejection,
-unsupported content type rejection, decoded-pixel rejection, native OCR failure
-mapping을 검증합니다.
+테스트는 Ktor `testApplication`과 fake `OcrEngine`을 사용합니다. Host Tesseract 없이 multipart OCR success, language parsing, missing multipart field rejection, unsupported content type rejection, decoded-pixel rejection, native OCR failure mapping을 검증합니다.

@@ -3,15 +3,19 @@ package io.bluetape4k.images.examples.ktor.ocr
 import com.sksamuel.scrimage.ImmutableImage
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldBeNull
 import io.bluetape4k.assertions.shouldBeGreaterThan
+import io.bluetape4k.assertions.shouldBeNull
 import io.bluetape4k.assertions.shouldContain
-import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.assertions.shouldNotContain
 import io.bluetape4k.images.ocr.OcrEngine
 import io.bluetape4k.images.ocr.OcrException
 import io.bluetape4k.images.ocr.OcrOptions
 import io.bluetape4k.images.ocr.OcrResult
+import io.bluetape4k.images.useGraphics
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
+import io.bluetape4k.support.toUtf8Bytes
 import io.ktor.client.call.body
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.forms.MultiPartFormDataContent
@@ -23,6 +27,8 @@ import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.kotlinx.json.json
+import io.ktor.server.application.Application
+import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
 import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.BeforeEach
@@ -32,9 +38,9 @@ import java.awt.Font
 import java.awt.image.BufferedImage
 import java.io.ByteArrayOutputStream
 import java.io.IOException
-import java.util.zip.CRC32
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
+import java.util.zip.CRC32
 import javax.imageio.ImageIO
 
 internal class KtorOcrApiApplicationTest {
@@ -54,6 +60,7 @@ internal class KtorOcrApiApplicationTest {
 
         val response = client.get("/ready")
 
+        log.debug { "response=$response" }
         response.status shouldBeEqualTo HttpStatusCode.OK
     }
 
@@ -75,13 +82,16 @@ internal class KtorOcrApiApplicationTest {
             setBody(imageMultipart("file", samplePngBytes(), ContentType.Image.PNG))
         }
 
+        log.debug { "response=$response" }
         response.status shouldBeEqualTo HttpStatusCode.OK
+
         val body = response.body<OcrTextResponse>()
         body.text shouldBeEqualTo "BLUETAPE OCR"
         body.languages shouldBeEqualTo listOf("eng", "kor")
         body.characterCount shouldBeEqualTo "BLUETAPE OCR".length
 
-        val options = requireNotNull(testOcrEngine.lastOptions.get())
+        val options = testOcrEngine.lastOptions.get().shouldNotBeNull()
+        log.debug { "options=$options" }
         options.languages shouldBeEqualTo listOf("eng", "kor")
         options.tessdataPath shouldBeEqualTo "/tmp/example-tessdata"
     }
@@ -102,7 +112,7 @@ internal class KtorOcrApiApplicationTest {
         val response = client.post("/api/ocr") {
             setBody(imageMultipart("file", samplePngBytes(), ContentType.Image.PNG))
         }
-
+        log.debug { "response=$response" }
         response.status shouldBeEqualTo HttpStatusCode.OK
     }
 
@@ -118,10 +128,12 @@ internal class KtorOcrApiApplicationTest {
         }
 
         response.status shouldBeEqualTo HttpStatusCode.BadRequest
+
         val body = response.body<OcrApiErrorResponse>()
+        log.debug { "body=$body" }
         body.error shouldBeEqualTo "bad_request"
         body.status shouldBeEqualTo HttpStatusCode.BadRequest.value
-        body.message.contains("Expected multipart file field").shouldBeTrue()
+        body.message shouldContain "Expected multipart file field"
     }
 
     @Test
@@ -135,20 +147,27 @@ internal class KtorOcrApiApplicationTest {
             setBody(
                 MultiPartFormDataContent(
                     formData {
-                        val bytes = "not an image".toByteArray()
-                        append("file", "note.txt", ContentType.Text.Plain, bytes.size.toLong()) {
+                        val bytes = "not an image".toUtf8Bytes()
+                        append(
+                            "file",
+                            "note.txt",
+                            ContentType.Text.Plain,
+                            bytes.size.toLong()
+                        ) {
                             write(bytes)
                         }
                     }
                 )
             )
         }
-
+        log.debug { "response=$response" }
         response.status shouldBeEqualTo HttpStatusCode.BadRequest
+
         val body = response.body<OcrApiErrorResponse>()
+        log.debug { "body=$body" }
         body.error shouldBeEqualTo "bad_request"
         body.status shouldBeEqualTo HttpStatusCode.BadRequest.value
-        body.message.contains("Unsupported image content type").shouldBeTrue()
+        body.message shouldContain "Unsupported image content type"
     }
 
     @Test
@@ -161,11 +180,14 @@ internal class KtorOcrApiApplicationTest {
         val response = client.post("/api/ocr") {
             setBody(imageMultipart("file", pngHeaderBytes(width = 10_000, height = 10_000), ContentType.Image.PNG))
         }
-
+        log.debug { "response=$response" }
         response.status shouldBeEqualTo HttpStatusCode.BadRequest
+
         val body = response.body<OcrApiErrorResponse>()
+        log.debug { "body=$body" }
         body.error shouldBeEqualTo "bad_request"
         body.message shouldContain "decodedPixels"
+
         testOcrEngine.lastOptions.get().shouldBeNull()
     }
 
@@ -179,11 +201,14 @@ internal class KtorOcrApiApplicationTest {
         val response = client.post("/api/ocr") {
             setBody(imageMultipart("file", "not an encoded image".toByteArray(), ContentType.Image.PNG))
         }
-
+        log.debug { "response=$response" }
         response.status shouldBeEqualTo HttpStatusCode.BadRequest
+
         val body = response.body<OcrApiErrorResponse>()
+        log.debug { "body=$body" }
         body.error shouldBeEqualTo "bad_request"
         body.message shouldContain "dimensions could not be determined"
+
         testOcrEngine.lastOptions.get().shouldBeNull()
     }
 
@@ -197,11 +222,14 @@ internal class KtorOcrApiApplicationTest {
         val response = client.post("/api/ocr") {
             setBody(imageMultipart("file", pngHeaderBytes(width = 10, height = 10), ContentType.Image.PNG))
         }
-
+        log.debug { "response=$response" }
         response.status shouldBeEqualTo HttpStatusCode.BadRequest
+
         val body = response.body<OcrApiErrorResponse>()
+        log.debug { "body=$body" }
         body.error shouldBeEqualTo "bad_request"
         body.message shouldContain "could not be decoded"
+
         testOcrEngine.lastOptions.get().shouldBeNull()
     }
 
@@ -216,13 +244,15 @@ internal class KtorOcrApiApplicationTest {
         val response = client.post("/api/ocr") {
             setBody(imageMultipart("file", samplePngBytes(), ContentType.Image.PNG))
         }
-
+        log.debug { "response=$response" }
         response.status shouldBeEqualTo HttpStatusCode.ServiceUnavailable
+
         val body = response.body<OcrApiErrorResponse>()
+        log.debug { "body=$body" }
         body.error shouldBeEqualTo "ocr_unavailable"
         body.status shouldBeEqualTo HttpStatusCode.ServiceUnavailable.value
         body.message shouldBeEqualTo "OCR runtime is unavailable."
-        body.message.shouldNotContain("/srv/private/tessdata")
+        body.message shouldNotContain "/srv/private/tessdata"
     }
 
     @Test
@@ -236,22 +266,24 @@ internal class KtorOcrApiApplicationTest {
         val response = client.post("/api/ocr") {
             setBody(imageMultipart("file", samplePngBytes(), ContentType.Image.PNG))
         }
-
+        log.debug { "response=$response" }
         response.status shouldBeEqualTo HttpStatusCode.BadRequest
+
         val body = response.body<OcrApiErrorResponse>()
+        log.debug { "body=$body" }
         body.error shouldBeEqualTo "bad_request"
         body.message shouldBeEqualTo "Invalid image payload."
-        body.message.shouldNotContain("/srv/private/native-codec")
+        body.message shouldNotContain "/srv/private/native-codec"
     }
 
-    private fun io.ktor.server.application.Application.configureTestKtorOcrApi() {
+    private fun Application.configureTestKtorOcrApi() {
         configureKtorOcrApi(
             config = KtorOcrApiConfig(tessdataPath = "/tmp/example-tessdata"),
             ocrEngine = testOcrEngine,
         )
     }
 
-    private fun io.ktor.server.testing.ApplicationTestBuilder.jsonClient() =
+    private fun ApplicationTestBuilder.jsonClient() =
         createClient {
             install(ContentNegotiation) {
                 json(
@@ -278,15 +310,12 @@ internal class KtorOcrApiApplicationTest {
 
     private fun samplePngBytes(): ByteArray {
         val image = BufferedImage(360, 140, BufferedImage.TYPE_INT_RGB)
-        val graphics = image.createGraphics()
-        try {
+        image.useGraphics { graphics ->
             graphics.color = Color.WHITE
             graphics.fillRect(0, 0, image.width, image.height)
             graphics.color = Color(35, 96, 146)
             graphics.font = Font(Font.SANS_SERIF, Font.BOLD, 36)
             graphics.drawString("BLUETAPE OCR", 38, 82)
-        } finally {
-            graphics.dispose()
         }
 
         return ByteArrayOutputStream().use { output ->
@@ -296,19 +325,20 @@ internal class KtorOcrApiApplicationTest {
     }
 
     private fun pngHeaderBytes(width: Int, height: Int): ByteArray {
-        val output = ByteArrayOutputStream()
-        output.write(PNG_SIGNATURE)
-        output.writePngChunk(
-            type = "IHDR",
-            data = ByteArray(13).also { data ->
-                data.writeInt(0, width)
-                data.writeInt(4, height)
-                data[8] = 8
-                data[9] = 2
-            }
-        )
-        output.writePngChunk(type = "IEND", data = ByteArray(0))
-        return output.toByteArray()
+        return ByteArrayOutputStream().use { output ->
+            output.write(PNG_SIGNATURE)
+            output.writePngChunk(
+                type = "IHDR",
+                data = ByteArray(13).also { data ->
+                    data.writeInt(0, width)
+                    data.writeInt(4, height)
+                    data[8] = 8
+                    data[9] = 2
+                }
+            )
+            output.writePngChunk(type = "IEND", data = ByteArray(0))
+            output.toByteArray()
+        }
     }
 
     private fun ByteArray.writeInt(offset: Int, value: Int) {
@@ -337,7 +367,7 @@ internal class KtorOcrApiApplicationTest {
         write(value and 0xFF)
     }
 
-    private class TestOcrEngine : OcrEngine {
+    private class TestOcrEngine: OcrEngine {
 
         val lastOptions: AtomicReference<OcrOptions?> = AtomicReference()
         val failNext: AtomicBoolean = AtomicBoolean(false)
@@ -365,7 +395,7 @@ internal class KtorOcrApiApplicationTest {
         }
     }
 
-    private companion object {
+    private companion object: KLogging() {
         val PNG_SIGNATURE = byteArrayOf(
             0x89.toByte(),
             0x50,

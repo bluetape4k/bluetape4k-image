@@ -2,8 +2,7 @@
 
 English | [한국어](./README.ko.md)
 
-Compact Ktor 3 example for extracting OCR text from multipart image uploads
-with `bluetape4k-images-ocr`.
+Compact Ktor 3 example for extracting OCR text from multipart image uploads with `bluetape4k-images-ocr`.
 
 ## What It Shows
 
@@ -15,9 +14,7 @@ with `bluetape4k-images-ocr`.
 - Error mapping for request validation and unavailable native OCR runtime
 - Route tests with a fake `OcrEngine`, so normal CI does not require Tesseract
 
-This is the small repo-owned quickstart. Production concerns such as
-authentication, rate limiting, request queues, file persistence, and batch OCR
-belong in a larger application or follow-up issue.
+This is the small repo-owned quickstart. Production concerns such as authentication, rate limiting, request queues, file persistence, and batch OCR belong in a larger application or follow-up issue.
 
 ## Diagrams
 
@@ -35,8 +32,7 @@ belong in a larger application or follow-up issue.
 
 ## Native OCR Requirements
 
-The example uses Tess4J through `bluetape4k-images-ocr`. Real OCR runs require
-host Tesseract plus the traineddata packages for the requested language codes.
+The example uses Tess4J through `bluetape4k-images-ocr`. Real OCR runs require host Tesseract plus the traineddata packages for the requested language codes.
 
 ```bash
 # macOS
@@ -48,8 +44,7 @@ sudo apt-get install tesseract-ocr tesseract-ocr-eng tesseract-ocr-kor tesseract
 tesseract --list-langs
 ```
 
-If Tesseract cannot find traineddata, either set `TESSDATA_PREFIX` in the shell
-that starts the application or configure:
+If Tesseract cannot find traineddata, either set `TESSDATA_PREFIX` in the shell that starts the application or configure:
 
 ```bash
 export EXAMPLE_OCR_TESSDATA_PATH=/opt/homebrew/share/tessdata
@@ -57,8 +52,7 @@ export EXAMPLE_OCR_TESSDATA_PATH=/opt/homebrew/share/tessdata
 
 The endpoint intentionally does not accept a request-level tessdata path.
 
-The quickstart rejects uploads above 10 MiB and rejects decoded image headers
-above 16,777,216 pixels or 8,192 pixels on either side before creating an
+The quickstart rejects uploads above 10 MiB and rejects decoded image headers above 16,777,216 pixels or 8,192 pixels on either side before creating an
 `ImmutableImage` or invoking OCR.
 
 ## Run
@@ -103,7 +97,4 @@ curl -F "file=@sample-ko.png;type=image/png" \
 ./gradlew :ktor-ocr-api:test
 ```
 
-The tests use Ktor `testApplication` and a fake `OcrEngine`. They verify
-multipart OCR success, language parsing, missing multipart field rejection,
-unsupported content type rejection, decoded-pixel rejection, and native OCR
-failure mapping without requiring host Tesseract.
+The tests use Ktor `testApplication` and a fake `OcrEngine`. They verify multipart OCR success, language parsing, missing multipart field rejection, unsupported content type rejection, decoded-pixel rejection, and native OCR failure mapping without requiring host Tesseract.
