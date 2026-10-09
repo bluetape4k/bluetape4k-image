@@ -2,8 +2,7 @@
 
 [English](./README.md) | 한국어
 
-`bluetape4k-images-spring-boot`로 local image upload, thumbnail 생성,
-filesystem-backed storage를 실행해 보는 작은 Spring Boot 4 예제입니다.
+`bluetape4k-images-spring-boot`로 local image upload, thumbnail 생성, filesystem-backed storage를 실행해 보는 작은 Spring Boot 4 예제입니다.
 
 ## 보여주는 내용
 
@@ -15,8 +14,7 @@ filesystem-backed storage를 실행해 보는 작은 Spring Boot 4 예제입니�
 - 저장된 원본과 thumbnail에 대한 local read URL 반환
 - S3, CDN, Docker, 외부 인프라 없는 controller test
 
-이 예제는 저장소 안에 포함된 작은 quickstart입니다. Public URL, S3/CDN,
-운영 정책까지 포함한 큰 서비스 흐름은
+이 예제는 저장소 안에 포함된 작은 quickstart입니다. Public URL, S3/CDN, 운영 정책까지 포함한 큰 서비스 흐름은
 `bluetape4k-workshop/image-processing/advanced-workflow`를 사용하세요.
 
 ## 다이어그램
@@ -90,12 +88,9 @@ bluetape4k:
 ```
 
 `example.image.max-input-bytes`는 storage 전 압축 request bytes를 제한합니다.
-`example.image.max-input-pixels`와 `example.image.max-input-side`는 thumbnail
-생성을 시작하기 전에 header 기준 decoded image 면적과 width/height를 제한합니다.
+`example.image.max-input-pixels`와 `example.image.max-input-side`는 thumbnail 생성을 시작하기 전에 header 기준 decoded image 면적과 width/height를 제한합니다.
 
-이 quickstart는 S3와 CDN 설정을 기본 흐름에서 제외합니다. S3 전환은 bucket,
-credential, public URL, 운영 정책 결정이 필요하므로 advanced workshop 범위가 더
-적합합니다.
+이 quickstart는 S3와 CDN 설정을 기본 흐름에서 제외합니다. S3 전환은 bucket, credential, public URL, 운영 정책 결정이 필요하므로 advanced workshop 범위가 더 적합합니다.
 
 ## 테스트
 
@@ -103,6 +98,4 @@ credential, public URL, 운영 정책 결정이 필요하므로 advanced worksho
 ./gradlew :spring-boot-image-api:test
 ```
 
-테스트는 in-memory JPEG를 업로드하고, 원본과 thumbnail storage key, local URL
-다운로드, PNG thumbnail bytes, unsupported content type rejection, decoded-pixel
-overflow rejection을 검증합니다.
+테스트는 in-memory JPEG를 업로드하고, 원본과 thumbnail storage key, local URL 다운로드, PNG thumbnail bytes, unsupported content type rejection, decoded-pixel overflow rejection을 검증합니다.

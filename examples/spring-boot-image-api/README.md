@@ -2,8 +2,7 @@
 
 English | [한국어](./README.ko.md)
 
-Compact Spring Boot 4 example for local image upload, thumbnail generation, and
-filesystem-backed storage with `bluetape4k-images-spring-boot`.
+Compact Spring Boot 4 example for local image upload, thumbnail generation, and filesystem-backed storage with `bluetape4k-images-spring-boot`.
 
 ## What It Shows
 
@@ -15,8 +14,7 @@ filesystem-backed storage with `bluetape4k-images-spring-boot`.
 - Local read URLs for stored original and thumbnail objects
 - Controller tests without S3, CDN, Docker, or external infrastructure
 
-This is the small repo-owned quickstart. For an advanced workflow with public
-URLs, S3/CDN concerns, and a larger service shape, use
+This is the small repo-owned quickstart. For an advanced workflow with public URLs, S3/CDN concerns, and a larger service shape, use
 `bluetape4k-workshop/image-processing/advanced-workflow`.
 
 ## Diagrams
@@ -90,13 +88,9 @@ bluetape4k:
 ```
 
 `example.image.max-input-bytes` limits compressed request bytes before storage.
-`example.image.max-input-pixels` and `example.image.max-input-side` limit
-decoded image area and width/height from the header before thumbnail generation
-starts.
+`example.image.max-input-pixels` and `example.image.max-input-side` limit decoded image area and width/height from the header before thumbnail generation starts.
 
-The quickstart intentionally keeps S3 and CDN setup out of the default path.
-Switching to S3 belongs in the advanced workshop because it requires bucket,
-credentials, public URL, and operational policy decisions.
+The quickstart intentionally keeps S3 and CDN setup out of the default path. Switching to S3 belongs in the advanced workshop because it requires bucket, credentials, public URL, and operational policy decisions.
 
 ## Test
 
@@ -104,6 +98,4 @@ credentials, public URL, and operational policy decisions.
 ./gradlew :spring-boot-image-api:test
 ```
 
-The tests upload an in-memory JPEG, verify original and thumbnail storage keys,
-download both local URLs, check PNG thumbnail bytes, and reject unsupported
-content types and decoded-pixel overflow.
+The tests upload an in-memory JPEG, verify original and thumbnail storage keys, download both local URLs, check PNG thumbnail bytes, and reject unsupported content types and decoded-pixel overflow.
