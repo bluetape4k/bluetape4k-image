@@ -2,6 +2,7 @@ package io.bluetape4k.images.examples.spring.intelligence.service
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeInstanceOf
 import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldNotContain
 import io.bluetape4k.images.ImageDimensions
@@ -13,13 +14,14 @@ import io.bluetape4k.images.examples.spring.intelligence.support.pngBytes
 import io.bluetape4k.images.examples.spring.intelligence.support.webpBytes
 import io.bluetape4k.images.immutableImageOf
 import io.bluetape4k.images.probeImageDimensions
+import io.bluetape4k.junit5.output.OutputCapture
+import io.bluetape4k.junit5.output.OutputCapturer
+import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.logging.debug
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
-import org.junit.jupiter.api.extension.ExtendWith
-import org.springframework.boot.test.system.CapturedOutput
-import org.springframework.boot.test.system.OutputCaptureExtension
 import org.springframework.mock.web.MockMultipartFile
 import org.springframework.web.multipart.MultipartFile
 import java.io.ByteArrayInputStream
@@ -30,8 +32,10 @@ import java.util.concurrent.atomic.AtomicInteger
 import javax.imageio.IIOException
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-@ExtendWith(OutputCaptureExtension::class)
+@OutputCapture
 class ImageUploadQualifierTest {
+
+    companion object: KLoggingChannel()
 
     @Test
     fun `qualifies PNG and decodes it exactly once`() = runTest {
@@ -46,10 +50,12 @@ class ImageUploadQualifierTest {
 
         val qualified = qualifier.qualify(multipart("image/png", pngBytes(40, 30)))
 
+        log.debug { "qualified=$qualified" }
         qualified.mediaType shouldBeEqualTo "image/png"
         qualified.dimensions shouldBeEqualTo ImageDimensions(40, 30)
         qualified.image.width shouldBeEqualTo 40
         qualified.image.height shouldBeEqualTo 30
+
         decodeCalls.get() shouldBeEqualTo 1
     }
 
@@ -143,6 +149,7 @@ class ImageUploadQualifierTest {
             ).qualify(multipart("image/png", pngBytes()))
         }
 
+        log.debug { "error=$error" }
         error.reasonCode shouldBeEqualTo "image_not_decodable"
         error.message shouldBeEqualTo "The uploaded file is not a decodable image."
     }
@@ -160,9 +167,11 @@ class ImageUploadQualifierTest {
             ).qualify(multipart("image/png", pngBytes()))
         }
 
+        log.debug { "error=$error" }
         error.reasonCode shouldBeEqualTo "image_probe_failed"
         error.message shouldBeEqualTo "The uploaded image could not be inspected."
         error.cause shouldBeEqualTo probeFailure
+
         decodeCalls.get() shouldBeEqualTo 0
     }
 
@@ -177,6 +186,7 @@ class ImageUploadQualifierTest {
             ).qualify(multipart("image/png", pngBytes()))
         }
 
+        log.debug { "error=$error" }
         error.reasonCode shouldBeEqualTo "image_probe_failed"
         error.cause shouldBeEqualTo probeFailure
     }
@@ -192,13 +202,14 @@ class ImageUploadQualifierTest {
             ).qualify(multipart("image/png", pngBytes()))
         }
 
+        log.debug { "error=$error" }
         error.reasonCode shouldBeEqualTo "image_probe_failed"
         error.message shouldBeEqualTo "The uploaded image could not be inspected."
         error.cause shouldBeEqualTo probeFailure
     }
 
     @Test
-    fun `logs unexpected probe failure stage and cause without exposing upload bytes`(output: CapturedOutput) =
+    fun `logs unexpected probe failure stage and cause without exposing upload bytes`(output: OutputCapturer) =
         runTest {
             val probeFailure = IllegalStateException("parser-secret")
 
@@ -208,11 +219,12 @@ class ImageUploadQualifierTest {
                     metadataDimensionProbe = { _, _ -> null },
                 ).qualify(multipart("image/png", pngBytes()))
             }
-
-            output.all.shouldContain("stage=dimension")
-            output.all.shouldContain("reason=image_probe_failed")
-            output.all.shouldContain("parser-secret")
-            output.all.shouldNotContain("The uploaded file is not a decodable image.")
+            output.toString().also {
+                it shouldContain "stage=dimension"
+                it shouldContain "reason=image_probe_failed"
+                it shouldContain "parser-secret"
+                it shouldNotContain "The uploaded file is not a decodable image."
+            }
         }
 
     @Test
@@ -226,22 +238,14 @@ class ImageUploadQualifierTest {
             ).qualify(multipart("image/png", pngBytes()))
         }
 
-        error::class shouldBeEqualTo InvalidImageUploadException::class
+        error.shouldBeInstanceOf<InvalidImageUploadException>()
         error.reasonCode shouldBeEqualTo "image_not_decodable"
     }
 
     @Test
     fun `default probe adapters classify truncated encoded input as undecodable`() = runTest {
-        val truncatedPng = byteArrayOf(
-            0x89.toByte(),
-            0x50,
-            0x4E,
-            0x47,
-            0x0D,
-            0x0A,
-            0x1A,
-            0x0A,
-        )
+        val truncatedPng = byteArrayOf(0x89.toByte(), 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A)
+
         val error = assertFailsWith<InvalidImageUploadException> {
             ImageUploadQualifier(
                 properties = ImageIntelligenceProperties(),
@@ -323,7 +327,7 @@ class ImageUploadQualifierTest {
         private val content: ByteArray,
         private val reportedSize: Long = content.size.toLong(),
         private val onRead: () -> Unit = {},
-    ) : MultipartFile {
+    ): MultipartFile {
         override fun getName(): String = "file"
         override fun getOriginalFilename(): String = "upload"
         override fun getContentType(): String? = contentType

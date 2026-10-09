@@ -6,6 +6,7 @@ import io.bluetape4k.images.detection.DetectionResult
 import io.bluetape4k.images.examples.spring.intelligence.config.ImageIntelligenceProperties
 import io.bluetape4k.images.examples.spring.intelligence.model.AnalysisResult
 import io.bluetape4k.images.ocr.OcrStructuredResult
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workflow.api.WorkContext
 import io.bluetape4k.workflow.api.WorkReport
 import io.bluetape4k.workflow.coroutines.suspendParallelFlow
@@ -16,7 +17,7 @@ internal data class ImageAnalysisResults(
     val ocr: AnalysisResult<OcrStructuredResult>,
     val detection: AnalysisResult<List<DetectionResult>>,
     val barcode: AnalysisResult<List<BarcodeResult>>,
-) : Serializable {
+): Serializable {
     private companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -25,7 +26,7 @@ internal data class ImageAnalysisResults(
 internal class ImageWorkflowException(
     val reasonCode: String,
     message: String,
-) : RuntimeException(message) {
+): RuntimeException(message) {
     private companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -41,12 +42,14 @@ internal class ImageIntelligenceWorkflow(
     private val ocrTimeout = properties.ocrTimeout
     private val detectionTimeout = properties.detectionTimeout
     private val barcodeTimeout = properties.barcodeTimeout
+
     private val ocrSemaphore = Semaphore(properties.ocrConcurrency)
     private val detectionSemaphore = Semaphore(properties.detectionConcurrency)
     private val barcodeSemaphore = Semaphore(properties.barcodeConcurrency)
 
     suspend fun analyze(image: ImmutableImage): ImageAnalysisResults {
         val context = WorkContext()
+
         val flow = suspendParallelFlow("image-intelligence-analysis") {
             execute("ocr") { workContext ->
                 workContext[OCR_RESULT] = runner.run(
@@ -93,7 +96,7 @@ internal class ImageIntelligenceWorkflow(
         return resultsFrom(report.context)
     }
 
-    companion object {
+    companion object: KLogging() {
         internal const val OCR_RESULT: String = "analysis.ocr"
         internal const val DETECTION_RESULT: String = "analysis.detection"
         internal const val BARCODE_RESULT: String = "analysis.barcode"
@@ -105,7 +108,7 @@ internal class ImageIntelligenceWorkflow(
                 barcode = context.requireResult(BARCODE_RESULT),
             )
 
-        private inline fun <reified T : Any> WorkContext.requireResult(key: String): T =
+        private inline fun <reified T: Any> WorkContext.requireResult(key: String): T =
             this[key]
                 ?: throw ImageWorkflowException(
                     reasonCode = "missing_workflow_result",

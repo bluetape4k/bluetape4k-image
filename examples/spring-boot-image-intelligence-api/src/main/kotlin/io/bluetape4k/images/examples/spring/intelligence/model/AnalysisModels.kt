@@ -2,7 +2,7 @@ package io.bluetape4k.images.examples.spring.intelligence.model
 
 import java.io.Serializable
 
-internal sealed interface AnalysisResult<out T> : Serializable {
+internal sealed interface AnalysisResult<out T>: Serializable {
     val provider: String
     val elapsedMillis: Long
 
@@ -10,7 +10,7 @@ internal sealed interface AnalysisResult<out T> : Serializable {
         override val provider: String,
         override val elapsedMillis: Long,
         val value: T,
-    ) : AnalysisResult<T> {
+    ): AnalysisResult<T> {
         private companion object {
             private const val serialVersionUID: Long = 1L
         }
@@ -19,7 +19,7 @@ internal sealed interface AnalysisResult<out T> : Serializable {
     data class Empty(
         override val provider: String,
         override val elapsedMillis: Long,
-    ) : AnalysisResult<Nothing> {
+    ): AnalysisResult<Nothing> {
         private companion object {
             private const val serialVersionUID: Long = 1L
         }
@@ -29,7 +29,7 @@ internal sealed interface AnalysisResult<out T> : Serializable {
         override val provider: String,
         override val elapsedMillis: Long,
         val reasonCode: String,
-    ) : AnalysisResult<Nothing> {
+    ): AnalysisResult<Nothing> {
         private companion object {
             private const val serialVersionUID: Long = 1L
         }
@@ -39,7 +39,7 @@ internal sealed interface AnalysisResult<out T> : Serializable {
         override val provider: String,
         override val elapsedMillis: Long,
         val reasonCode: String,
-    ) : AnalysisResult<Nothing> {
+    ): AnalysisResult<Nothing> {
         private companion object {
             private const val serialVersionUID: Long = 1L
         }

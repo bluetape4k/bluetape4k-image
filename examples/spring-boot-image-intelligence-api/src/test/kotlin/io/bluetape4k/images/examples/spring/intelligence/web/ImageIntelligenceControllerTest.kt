@@ -3,6 +3,8 @@ package io.bluetape4k.images.examples.spring.intelligence.web
 import com.sksamuel.scrimage.nio.PngWriter
 import io.bluetape4k.assertions.shouldNotContain
 import io.bluetape4k.images.examples.spring.intelligence.support.qrImage
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -27,12 +29,18 @@ class ImageIntelligenceControllerTest(
     @param:Autowired private val mockMvc: MockMvc,
 ) {
 
+    private companion object: KLogging() {
+        val PNG_SIGNATURE: ByteArray = byteArrayOf(0x89.toByte(), 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A)
+    }
+
     @Test
     fun `generated visitor QR returns a completed allow envelope`() {
-        val result = mockMvc.perform(
-            multipart("/api/images/intelligence")
-                .file(file("visitor.png", MediaType.IMAGE_PNG_VALUE, visitorQrBytes())),
-        ).dispatch()
+        val result = mockMvc
+            .perform(
+                multipart("/api/images/intelligence")
+                    .file(file("visitor.png", MediaType.IMAGE_PNG_VALUE, visitorQrBytes())),
+            )
+            .dispatch()
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.status").value("COMPLETED"))
             .andExpect(jsonPath("$.decision").value("ALLOW"))
@@ -44,6 +52,8 @@ class ImageIntelligenceControllerTest(
             .andReturn()
 
         val json = result.response.contentAsString
+        log.debug { "json=$json" }
+        
         listOf(
             "WorkContext",
             "WorkReport",
@@ -55,7 +65,8 @@ class ImageIntelligenceControllerTest(
 
     @Test
     fun `rejects missing empty unsupported mismatched and malformed uploads`() {
-        mockMvc.perform(multipart("/api/images/intelligence"))
+        mockMvc
+            .perform(multipart("/api/images/intelligence"))
             .andExpect(status().isBadRequest)
             .andExpect(jsonPath("$.reasonCode").value("missing_file"))
 
@@ -65,7 +76,8 @@ class ImageIntelligenceControllerTest(
             file("mismatch.jpg", MediaType.IMAGE_JPEG_VALUE, visitorQrBytes()),
             file("malformed.png", MediaType.IMAGE_PNG_VALUE, malformedPng()),
         ).forEach { upload ->
-            mockMvc.perform(multipart("/api/images/intelligence").file(upload))
+            mockMvc
+                .perform(multipart("/api/images/intelligence").file(upload))
                 .dispatch()
                 .andExpect(status().isBadRequest)
                 .andExpect(jsonPath("$.reasonCode").exists())
@@ -83,7 +95,8 @@ class ImageIntelligenceControllerTest(
             file("wide.png", MediaType.IMAGE_PNG_VALUE, pngHeaderBytes(10_000, 100)),
             file("pixels.png", MediaType.IMAGE_PNG_VALUE, pngHeaderBytes(5_000, 5_000)),
         ).forEach { upload ->
-            mockMvc.perform(multipart("/api/images/intelligence").file(upload))
+            mockMvc
+                .perform(multipart("/api/images/intelligence").file(upload))
                 .dispatch()
                 .andExpect(status().isContentTooLarge)
                 .andExpect(jsonPath("$.reasonCode").value("payload_too_large"))
@@ -92,6 +105,7 @@ class ImageIntelligenceControllerTest(
 
     private fun ResultActions.dispatch(): ResultActions {
         val result = andExpect(request().asyncStarted()).andReturn()
+        log.debug { "result=$result" }
         return mockMvc.perform(asyncDispatch(result))
     }
 
@@ -108,19 +122,20 @@ class ImageIntelligenceControllerTest(
         MockMultipartFile("file", filename, contentType, bytes)
 
     private fun pngHeaderBytes(width: Int, height: Int): ByteArray {
-        val output = ByteArrayOutputStream()
-        output.write(PNG_SIGNATURE)
-        output.writePngChunk(
-            type = "IHDR",
-            data = ByteArray(13).also { data ->
-                data.writeInt(0, width)
-                data.writeInt(4, height)
-                data[8] = 8
-                data[9] = 2
-            },
-        )
-        output.writePngChunk(type = "IEND", data = ByteArray(0))
-        return output.toByteArray()
+        return ByteArrayOutputStream().use { output ->
+            output.write(PNG_SIGNATURE)
+            output.writePngChunk(
+                type = "IHDR",
+                data = ByteArray(13).also { data ->
+                    data.writeInt(0, width)
+                    data.writeInt(4, height)
+                    data[8] = 8
+                    data[9] = 2
+                },
+            )
+            output.writePngChunk(type = "IEND", data = ByteArray(0))
+            output.toByteArray()
+        }
     }
 
     private fun ByteArray.writeInt(offset: Int, value: Int) {
@@ -146,11 +161,5 @@ class ImageIntelligenceControllerTest(
         write((value ushr 16) and 0xFF)
         write((value ushr 8) and 0xFF)
         write(value and 0xFF)
-    }
-
-    private companion object {
-        val PNG_SIGNATURE: ByteArray = byteArrayOf(
-            0x89.toByte(), 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A,
-        )
     }
 }
