@@ -10,6 +10,8 @@ import io.bluetape4k.images.barcode.extractBarcodes
 import io.bluetape4k.images.barcode.zxing.ZxingBarcodeReader
 import io.bluetape4k.images.immutableImageOf
 import io.bluetape4k.images.probeImageDimensions
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.security.MessageDigest
@@ -17,8 +19,19 @@ import java.security.MessageDigest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class BarcodeExampleFixturesTest {
 
+    private companion object: KLogging() {
+        const val SAMPLE_SHA256 = "5d048dd6769ede80f453ffb6c80fe6745092bf895c429b6104d5cc74d892c44d"
+        const val NO_RESULT_SHA256 = "86aad41769423ad85a979fefe109d00829044a1eba5d891547499413e3d9ff2b"
+        const val MALFORMED_SHA256 = "f2e2c6db1745cc40df646dc40c385487c36e4ceb3f1d5c8d6ad1f7620af1ebae"
+    }
+
     private val fixtures = BarcodeExampleFixtures()
     private val reader: BarcodeReader = ZxingBarcodeReader()
+
+    private fun sha256(bytes: ByteArray): String =
+        MessageDigest.getInstance("SHA-256")
+            .digest(bytes)
+            .joinToString(separator = "") { "%02x".format(it) }
 
     @Test
     fun `fixtures have pinned hashes dimensions and extraction behavior`() {
@@ -27,6 +40,7 @@ class BarcodeExampleFixturesTest {
         probeImageDimensions(sample) shouldBeEqualTo ImageDimensions(220, 220)
 
         val sampleResults = immutableImageOf(sample).extractBarcodes(reader)
+        log.debug { "sampleResults=$sampleResults" }
         sampleResults.single().text shouldBeEqualTo "bluetape4k-barcode-quickstart"
         sampleResults.single().format shouldBeEqualTo BarcodeFormat.QR_CODE
 
@@ -58,16 +72,5 @@ class BarcodeExampleFixturesTest {
         assertFailsWith<IllegalArgumentException> {
             BarcodeExampleFixtures(resourceLoader = { null })
         }
-    }
-
-    private fun sha256(bytes: ByteArray): String =
-        MessageDigest.getInstance("SHA-256")
-            .digest(bytes)
-            .joinToString(separator = "") { "%02x".format(it) }
-
-    private companion object {
-        const val SAMPLE_SHA256 = "5d048dd6769ede80f453ffb6c80fe6745092bf895c429b6104d5cc74d892c44d"
-        const val NO_RESULT_SHA256 = "86aad41769423ad85a979fefe109d00829044a1eba5d891547499413e3d9ff2b"
-        const val MALFORMED_SHA256 = "f2e2c6db1745cc40df646dc40c385487c36e4ceb3f1d5c8d6ad1f7620af1ebae"
     }
 }
