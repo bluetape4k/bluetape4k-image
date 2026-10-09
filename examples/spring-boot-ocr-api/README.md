@@ -2,8 +2,7 @@
 
 English | [한국어](./README.ko.md)
 
-Compact Spring Boot 4 example for extracting OCR text from multipart image
-uploads with `bluetape4k-images-ocr`.
+Compact Spring Boot 4 example for extracting OCR text from multipart image uploads with `bluetape4k-images-ocr`.
 
 ## What It Shows
 
@@ -13,12 +12,9 @@ uploads with `bluetape4k-images-ocr`.
 - Optional `example.ocr.tessdata-path` configuration for host traineddata
 - Separate compressed-byte and decoded-pixel upload limits before OCR work
 - Error mapping for request validation and unavailable native OCR runtime
-- Controller tests with a fake `OcrEngine`, so normal CI does not require
-  Tesseract
+- Controller tests with a fake `OcrEngine`, so normal CI does not require Tesseract
 
-This is the small repo-owned quickstart. Production concerns such as
-authentication, rate limiting, request queues, file persistence, and batch OCR
-belong in a larger application or follow-up issue.
+This is the small repo-owned quickstart. Production concerns such as authentication, rate limiting, request queues, file persistence, and batch OCR belong in a larger application or follow-up issue.
 
 ## Diagrams
 
@@ -36,8 +32,7 @@ belong in a larger application or follow-up issue.
 
 ## Native OCR Requirements
 
-The example uses Tess4J through `bluetape4k-images-ocr`. Real OCR runs require
-host Tesseract plus the traineddata packages for the requested language codes.
+The example uses Tess4J through `bluetape4k-images-ocr`. Real OCR runs require host Tesseract plus the traineddata packages for the requested language codes.
 
 ```bash
 # macOS
@@ -49,8 +44,7 @@ sudo apt-get install tesseract-ocr tesseract-ocr-eng tesseract-ocr-kor tesseract
 tesseract --list-langs
 ```
 
-If Tesseract cannot find traineddata, either set `TESSDATA_PREFIX` in the shell
-that starts the application or configure:
+If Tesseract cannot find traineddata, either set `TESSDATA_PREFIX` in the shell that starts the application or configure:
 
 ```yaml
 example:
@@ -61,10 +55,7 @@ example:
     tessdata-path: /opt/homebrew/share/tessdata
 ```
 
-The endpoint intentionally does not accept a request-level tessdata path.
-It rejects decoded image headers above `example.ocr.max-input-pixels` before
-or `example.ocr.max-input-side` before creating an `ImmutableImage` or invoking
-OCR.
+The endpoint intentionally does not accept a request-level tessdata path. It rejects decoded image headers above `example.ocr.max-input-pixels` before or `example.ocr.max-input-side` before creating an `ImmutableImage` or invoking OCR.
 
 ## Run
 
@@ -102,6 +93,4 @@ curl -F "file=@sample-ko.png;type=image/png" \
 ./gradlew :spring-boot-ocr-api:test
 ```
 
-The tests use MockMvc and a fake `OcrEngine`. They verify multipart OCR
-success, language parsing, unsupported content type rejection, decoded-pixel
-rejection, and native OCR failure mapping without requiring host Tesseract.
+The tests use MockMvc and a fake `OcrEngine`. They verify multipart OCR success, language parsing, unsupported content type rejection, decoded-pixel rejection, and native OCR failure mapping without requiring host Tesseract.

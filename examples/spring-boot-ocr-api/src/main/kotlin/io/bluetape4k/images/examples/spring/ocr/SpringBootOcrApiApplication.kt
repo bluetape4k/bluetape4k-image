@@ -10,6 +10,7 @@ import io.bluetape4k.images.ocr.suspendExtractText
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.warn
 import io.bluetape4k.support.requireNotBlank
+import io.bluetape4k.support.requireNotEmpty
 import io.bluetape4k.support.requirePositiveNumber
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -50,7 +51,7 @@ data class ExampleOcrProperties(
     val maxInputPixels: Long = 16_777_216L,
     val maxInputSide: Int = 8_192,
     val tessdataPath: String? = null,
-) : Serializable {
+): Serializable {
 
     init {
         maxInputBytes.requirePositiveNumber("maxInputBytes")
@@ -71,18 +72,14 @@ data class ExampleOcrProperties(
 class OcrApiConfiguration {
 
     @Bean
-    fun ocrEngine(): OcrEngine =
-        TesseractOcrEngine()
+    fun ocrEngine(): OcrEngine = TesseractOcrEngine()
 
     @Bean
     fun springBootOcrService(
         ocrEngine: OcrEngine,
         properties: ExampleOcrProperties,
     ): SpringBootOcrService =
-        SpringBootOcrService(
-            ocrEngine = ocrEngine,
-            properties = properties,
-        )
+        SpringBootOcrService(ocrEngine = ocrEngine, properties = properties)
 }
 
 /**
@@ -94,7 +91,7 @@ class OcrApiController(
     private val ocrService: SpringBootOcrService,
 ) {
 
-    companion object : KLogging()
+    companion object: KLogging()
 
     @PostMapping(consumes = [MediaType.MULTIPART_FORM_DATA_VALUE])
     suspend fun recognize(
@@ -105,33 +102,23 @@ class OcrApiController(
 
     @ExceptionHandler(IllegalArgumentException::class)
     fun badRequest(e: IllegalArgumentException): ResponseEntity<ApiErrorResponse> =
-        ResponseEntity.badRequest().body(
-            ApiErrorResponse(
-                error = "bad_request",
-                message = e.message ?: "Invalid OCR request.",
-            )
-        )
+        ResponseEntity.badRequest()
+            .body(ApiErrorResponse(error = "bad_request", message = e.message ?: "Invalid OCR request."))
 
     @ExceptionHandler(OcrException::class)
     fun ocrUnavailable(e: OcrException): ResponseEntity<ApiErrorResponse> {
         log.warn(e) { "Spring OCR request failed. reason=ocr_runtime_failure" }
-        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(
-            ApiErrorResponse(
-                error = "ocr_unavailable",
-                message = OCR_UNAVAILABLE_MESSAGE,
-            )
-        )
+        return ResponseEntity
+            .status(HttpStatus.SERVICE_UNAVAILABLE)
+            .body(ApiErrorResponse(error = "ocr_unavailable", message = OCR_UNAVAILABLE_MESSAGE))
     }
 
     @ExceptionHandler(IOException::class)
     fun invalidImagePayload(e: IOException): ResponseEntity<ApiErrorResponse> {
         log.warn(e) { "Spring OCR request failed. reason=io_failure" }
-        return ResponseEntity.badRequest().body(
-            ApiErrorResponse(
-                error = "bad_request",
-                message = INVALID_IMAGE_PAYLOAD_MESSAGE,
-            )
-        )
+        return ResponseEntity
+            .badRequest()
+            .body(ApiErrorResponse(error = "bad_request", message = INVALID_IMAGE_PAYLOAD_MESSAGE))
     }
 }
 
@@ -142,22 +129,19 @@ class SpringBootOcrService(
     private val ocrEngine: OcrEngine,
     private val properties: ExampleOcrProperties,
 ) {
-
     suspend fun recognize(file: MultipartFile, languages: String): OcrTextResponse {
         val contentType = file.contentType?.lowercase().orEmpty()
         contentType.requireNotBlank("contentType")
-        require(contentType in ALLOWED_CONTENT_TYPES) {
-            "Unsupported image content type: $contentType"
-        }
-        require(!file.isEmpty) {
-            "file must not be empty"
-        }
+        require(contentType in ALLOWED_CONTENT_TYPES) { "Unsupported image content type: $contentType" }
+        require(!file.isEmpty) { "file must not be empty" }
 
         val parsedLanguages = parseLanguages(languages)
         val uploadBytes = withContext(Dispatchers.IO) { file.bytes }
+
         require(uploadBytes.size <= properties.maxInputBytes) {
             "OCR upload exceeds maxInputBytes=${properties.maxInputBytes}."
         }
+
         val text = immutableExternalImageOf(
             uploadBytes,
             properties.toDecodeLimits(),
@@ -183,9 +167,8 @@ class SpringBootOcrService(
                 normalized.requireNotBlank("language")
                 normalized
             }
-        require(languages.isNotEmpty()) {
-            "languages must not be empty"
-        }
+
+        languages.requireNotEmpty("languages")
         return languages
     }
 
@@ -208,7 +191,7 @@ data class OcrTextResponse(
     val text: String,
     val languages: List<String>,
     val characterCount: Int,
-) : Serializable {
+): Serializable {
 
     private companion object {
         private const val serialVersionUID: Long = 1L
@@ -221,7 +204,7 @@ data class OcrTextResponse(
 data class ApiErrorResponse(
     val error: String,
     val message: String,
-) : Serializable {
+): Serializable {
 
     private companion object {
         private const val serialVersionUID: Long = 1L

@@ -2,8 +2,7 @@
 
 [English](./README.md) | 한국어
 
-`bluetape4k-images-ocr`로 multipart image upload에서 OCR text를 추출하는 작은
-Spring Boot 4 예제입니다.
+`bluetape4k-images-ocr`로 multipart image upload에서 OCR text를 추출하는 작은 Spring Boot 4 예제입니다.
 
 ## 보여주는 내용
 
@@ -15,9 +14,7 @@ Spring Boot 4 예제입니다.
 - request validation과 native OCR runtime unavailable 오류 매핑
 - 일반 CI에서 Tesseract 없이 실행되는 fake `OcrEngine` 기반 controller test
 
-이 예제는 저장소 안에 포함된 작은 quickstart입니다. 인증, rate limiting, request
-queue, file persistence, batch OCR 같은 production 관심사는 더 큰 application이나
-follow-up issue 범위가 더 적합합니다.
+이 예제는 저장소 안에 포함된 작은 quickstart입니다. 인증, rate limiting, request queue, file persistence, batch OCR 같은 production 관심사는 더 큰 application이나 follow-up issue 범위가 더 적합합니다.
 
 ## 다이어그램
 
@@ -35,8 +32,7 @@ follow-up issue 범위가 더 적합합니다.
 
 ## Native OCR 요구사항
 
-이 예제는 `bluetape4k-images-ocr`를 통해 Tess4J를 사용합니다. 실제 OCR 실행에는
-host Tesseract와 요청한 language code에 맞는 traineddata package가 필요합니다.
+이 예제는 `bluetape4k-images-ocr`를 통해 Tess4J를 사용합니다. 실제 OCR 실행에는 host Tesseract와 요청한 language code에 맞는 traineddata package가 필요합니다.
 
 ```bash
 # macOS
@@ -100,6 +96,4 @@ curl -F "file=@sample-ko.png;type=image/png" \
 ./gradlew :spring-boot-ocr-api:test
 ```
 
-테스트는 MockMvc와 fake `OcrEngine`을 사용합니다. Host Tesseract 없이 multipart
-OCR success, language parsing, unsupported content type rejection, decoded-pixel
-rejection, native OCR failure mapping을 검증합니다.
+테스트는 MockMvc와 fake `OcrEngine`을 사용합니다. Host Tesseract 없이 multipart OCR success, language parsing, unsupported content type rejection, decoded-pixel rejection, native OCR failure mapping을 검증합니다.

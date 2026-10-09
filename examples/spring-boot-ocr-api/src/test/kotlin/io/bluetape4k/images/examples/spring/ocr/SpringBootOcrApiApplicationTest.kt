@@ -6,12 +6,14 @@ import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeNull
 import io.bluetape4k.assertions.shouldContain
-import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.assertions.shouldNotContain
 import io.bluetape4k.images.ocr.OcrEngine
 import io.bluetape4k.images.ocr.OcrException
 import io.bluetape4k.images.ocr.OcrOptions
 import io.bluetape4k.images.ocr.OcrResult
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -34,9 +36,9 @@ import java.awt.Font
 import java.awt.image.BufferedImage
 import java.io.ByteArrayOutputStream
 import java.io.IOException
-import java.util.zip.CRC32
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
+import java.util.zip.CRC32
 import javax.imageio.ImageIO
 
 @SpringBootTest
@@ -58,11 +60,12 @@ internal class SpringBootOcrApiApplicationTest(
 
     @Test
     fun `recognizes uploaded image with parsed languages`() {
-        val result = mockMvc.perform(
-            multipart("/api/ocr")
-                .file(pngFile())
-                .param("languages", "eng+kor")
-        )
+        val result = mockMvc
+            .perform(
+                multipart("/api/ocr")
+                    .file(pngFile())
+                    .param("languages", "eng+kor")
+            )
             .andExpect(request().asyncStarted())
             .andReturn()
             .dispatch()
@@ -70,11 +73,14 @@ internal class SpringBootOcrApiApplicationTest(
             .andReturn()
 
         val response = result.response.contentAsString
+
+        log.debug { "response=$response" }
         response.readJsonPath<String>("$.text") shouldBeEqualTo "BLUETAPE OCR"
         response.readJsonPath<List<String>>("$.languages") shouldBeEqualTo listOf("eng", "kor")
         response.readJsonPath<Int>("$.characterCount") shouldBeEqualTo "BLUETAPE OCR".length
 
-        val options = requireNotNull(testOcrEngine.lastOptions.get())
+        val options = testOcrEngine.lastOptions.get().shouldNotBeNull()
+        log.debug { "options=$options" }
         options.languages shouldBeEqualTo listOf("eng", "kor")
         options.tessdataPath shouldBeEqualTo "/tmp/example-tessdata"
     }
@@ -100,7 +106,8 @@ internal class SpringBootOcrApiApplicationTest(
             "not an image".toByteArray(),
         )
 
-        val result = mockMvc.perform(multipart("/api/ocr").file(textFile))
+        val result = mockMvc
+            .perform(multipart("/api/ocr").file(textFile))
             .andExpect(request().asyncStarted())
             .andReturn()
             .dispatch()
@@ -108,15 +115,17 @@ internal class SpringBootOcrApiApplicationTest(
             .andReturn()
 
         val error = result.response.contentAsString
+        log.debug { "error=$error" }
         error.readJsonPath<String>("$.error") shouldBeEqualTo "bad_request"
-        error.readJsonPath<String>("$.message").contains("Unsupported image content type").shouldBeTrue()
+        error.readJsonPath<String>("$.message") shouldContain "Unsupported image content type"
     }
 
     @Test
     fun `maps OCR failures to service unavailable`() {
         testOcrEngine.failNext.set(true)
 
-        val result = mockMvc.perform(multipart("/api/ocr").file(pngFile()))
+        val result = mockMvc
+            .perform(multipart("/api/ocr").file(pngFile()))
             .andExpect(request().asyncStarted())
             .andReturn()
             .dispatch()
@@ -124,16 +133,18 @@ internal class SpringBootOcrApiApplicationTest(
             .andReturn()
 
         val error = result.response.contentAsString
+        log.debug { "error=$error" }
         error.readJsonPath<String>("$.error") shouldBeEqualTo "ocr_unavailable"
         error.readJsonPath<String>("$.message") shouldBeEqualTo "OCR runtime is unavailable."
-        error.shouldNotContain("/srv/private/tessdata")
+        error shouldNotContain "/srv/private/tessdata"
     }
 
     @Test
     fun `maps image IO failures to sanitized bad request`() {
         testOcrEngine.failWithIo.set(true)
 
-        val result = mockMvc.perform(multipart("/api/ocr").file(pngFile()))
+        val result = mockMvc
+            .perform(multipart("/api/ocr").file(pngFile()))
             .andExpect(request().asyncStarted())
             .andReturn()
             .dispatch()
@@ -141,9 +152,10 @@ internal class SpringBootOcrApiApplicationTest(
             .andReturn()
 
         val error = result.response.contentAsString
+        log.debug { "error=$error" }
         error.readJsonPath<String>("$.error") shouldBeEqualTo "bad_request"
         error.readJsonPath<String>("$.message") shouldBeEqualTo "Invalid image payload."
-        error.shouldNotContain("/srv/private/native-codec")
+        error shouldNotContain "/srv/private/native-codec"
     }
 
     @Test
@@ -155,7 +167,8 @@ internal class SpringBootOcrApiApplicationTest(
             pngHeaderBytes(width = 10_000, height = 10_000),
         )
 
-        val result = mockMvc.perform(multipart("/api/ocr").file(oversizedImage))
+        val result = mockMvc
+            .perform(multipart("/api/ocr").file(oversizedImage))
             .andExpect(request().asyncStarted())
             .andReturn()
             .dispatch()
@@ -163,6 +176,7 @@ internal class SpringBootOcrApiApplicationTest(
             .andReturn()
 
         val error = result.response.contentAsString
+        log.debug { "error=$error" }
         error.readJsonPath<String>("$.error") shouldBeEqualTo "bad_request"
         error.readJsonPath<String>("$.message") shouldContain "decodedPixels"
         testOcrEngine.lastOptions.get().shouldBeNull()
@@ -177,7 +191,8 @@ internal class SpringBootOcrApiApplicationTest(
             "not an encoded image".toByteArray(),
         )
 
-        val result = mockMvc.perform(multipart("/api/ocr").file(malformedImage))
+        val result = mockMvc
+            .perform(multipart("/api/ocr").file(malformedImage))
             .andExpect(request().asyncStarted())
             .andReturn()
             .dispatch()
@@ -185,6 +200,7 @@ internal class SpringBootOcrApiApplicationTest(
             .andReturn()
 
         val error = result.response.contentAsString
+        log.debug { "error=$error" }
         error.readJsonPath<String>("$.error") shouldBeEqualTo "bad_request"
         error.readJsonPath<String>("$.message") shouldContain "dimensions could not be determined"
         testOcrEngine.lastOptions.get().shouldBeNull()
@@ -199,7 +215,8 @@ internal class SpringBootOcrApiApplicationTest(
             pngHeaderBytes(width = 10, height = 10),
         )
 
-        val result = mockMvc.perform(multipart("/api/ocr").file(malformedImage))
+        val result = mockMvc
+            .perform(multipart("/api/ocr").file(malformedImage))
             .andExpect(request().asyncStarted())
             .andReturn()
             .dispatch()
@@ -207,6 +224,7 @@ internal class SpringBootOcrApiApplicationTest(
             .andReturn()
 
         val error = result.response.contentAsString
+        log.debug { "error=$error" }
         error.readJsonPath<String>("$.error") shouldBeEqualTo "bad_request"
         error.readJsonPath<String>("$.message") shouldContain "could not be decoded"
         testOcrEngine.lastOptions.get().shouldBeNull()
@@ -286,17 +304,8 @@ internal class SpringBootOcrApiApplicationTest(
         write(value and 0xFF)
     }
 
-    private companion object {
-        val PNG_SIGNATURE = byteArrayOf(
-            0x89.toByte(),
-            0x50,
-            0x4E,
-            0x47,
-            0x0D,
-            0x0A,
-            0x1A,
-            0x0A,
-        )
+    private companion object: KLogging() {
+        val PNG_SIGNATURE = byteArrayOf(0x89.toByte(), 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A)
     }
 
     @TestConfiguration(proxyBeanMethods = false)
@@ -304,12 +313,11 @@ internal class SpringBootOcrApiApplicationTest(
 
         @Bean
         @Primary
-        fun testOcrEngine(): TestOcrEngine =
-            TestOcrEngine()
+        fun testOcrEngine(): TestOcrEngine = TestOcrEngine()
     }
 }
 
-internal class TestOcrEngine : OcrEngine {
+internal class TestOcrEngine: OcrEngine {
 
     val lastOptions: AtomicReference<OcrOptions?> = AtomicReference()
     val failNext: AtomicBoolean = AtomicBoolean(false)
