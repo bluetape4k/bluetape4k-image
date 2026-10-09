@@ -1,13 +1,15 @@
 package io.bluetape4k.images.vips
 
-import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.ToStringBuilder
+import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeGreaterThan
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.images.vips.coroutines.suspendWriteTo
 import io.bluetape4k.junit5.coroutines.runSuspendIO
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.okio.buffered
 import io.bluetape4k.okio.coroutines.asSuspendedSink
-import io.bluetape4k.okio.coroutines.buffered as bufferedSuspended
 import okio.Buffer
 import okio.Sink
 import okio.Timeout
@@ -20,8 +22,11 @@ import java.nio.file.Path
 import java.nio.file.StandardOpenOption.CREATE
 import java.nio.file.StandardOpenOption.TRUNCATE_EXISTING
 import java.nio.file.StandardOpenOption.WRITE
+import io.bluetape4k.okio.coroutines.buffered as bufferedSuspended
 
 class VipsImageOkioSupportTest {
+
+    companion object: KLogging()
 
     @Test
     fun `writeTo BufferedSink flushes but does not close caller-owned sink`() {
@@ -30,8 +35,9 @@ class VipsImageOkioSupportTest {
 
         FakeVipsImage().writeTo(bufferedSink, VipsImageFormat.JPEG)
 
+        log.debug { "trackingSink=$trackingSink" }
         trackingSink.flushed.shouldBeTrue()
-        trackingSink.closed shouldBeEqualTo false
+        trackingSink.closed.shouldBeFalse()
         trackingSink.output.size shouldBeGreaterThan 0L
     }
 
@@ -41,6 +47,7 @@ class VipsImageOkioSupportTest {
 
         FakeVipsImage().writeTo(trackingSink, VipsImageFormat.JPEG)
 
+        log.debug { "trackingSink=$trackingSink" }
         trackingSink.flushed.shouldBeTrue()
         trackingSink.closed.shouldBeTrue()
         trackingSink.output.size shouldBeGreaterThan 0L
@@ -54,12 +61,12 @@ class VipsImageOkioSupportTest {
 
         try {
             FakeVipsImage().suspendWriteTo(sink, VipsImageFormat.JPEG)
-
             channel.isOpen.shouldBeTrue()
         } finally {
             sink.close()
             channel.close()
         }
+        channel.isOpen.shouldBeFalse()
         Files.size(output) shouldBeGreaterThan 0L
     }
 
@@ -70,7 +77,7 @@ class VipsImageOkioSupportTest {
 
         FakeVipsImage().suspendWriteTo(channel.asSuspendedSink(), VipsImageFormat.JPEG)
 
-        channel.isOpen shouldBeEqualTo false
+        channel.isOpen.shouldBeFalse()
         Files.size(output) shouldBeGreaterThan 0L
     }
 
@@ -97,6 +104,14 @@ class VipsImageOkioSupportTest {
         }
 
         override fun close() = Unit
+
+        override fun toString(): String {
+            return ToStringBuilder(this)
+                .add("width", width)
+                .add("height", height)
+                .add("bands", bands)
+                .toString()
+        }
     }
 
     private class TrackingSink: Sink {
@@ -116,6 +131,14 @@ class VipsImageOkioSupportTest {
 
         override fun close() {
             closed = true
+        }
+
+        override fun toString(): String {
+            return ToStringBuilder(this)
+                .add("output", output)
+                .add("flushed", flushed)
+                .add("closed", closed)
+                .toString()
         }
     }
 }

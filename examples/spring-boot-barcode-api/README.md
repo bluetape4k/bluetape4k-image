@@ -2,28 +2,20 @@
 
 English | [한국어](./README.ko.md)
 
-Compact Spring Boot 4 example for extracting QR and barcode data from bundled
-scenarios or multipart image uploads with `bluetape4k-images-barcode-zxing`.
+Compact Spring Boot 4 example for extracting QR and barcode data from bundled scenarios or multipart image uploads with `bluetape4k-images-barcode-zxing`.
 
 ## What It Shows
 
-- Deterministic `GET` endpoints for barcode-found, no-result, and malformed
-  input scenarios
+- Deterministic `GET` endpoints for barcode-found, no-result, and malformed input scenarios
 - `POST /api/barcodes/extract` for user-supplied PNG, JPEG, and WebP images
 - Provider-neutral response DTOs backed by the pure-JVM `ZxingBarcodeReader`
-- Separate compressed-byte, decoded-side, and decoded-pixel guards before
-  barcode extraction
+- Separate compressed-byte, decoded-side, and decoded-pixel guards before barcode extraction
 - Coroutine dispatching for blocking multipart reads and CPU-bound decoding
-- Stable, sanitized HTTP errors that do not expose filenames, raw bytes,
-  provider metadata, regions, or stack traces
+- Stable, sanitized HTTP errors that do not expose filenames, raw bytes, provider metadata, regions, or stack traces
 - MockMvc coverage without Docker, native libraries, or external services
 
-This is a local quickstart, not a production upload service. Authentication,
-rate limiting, request concurrency limits, a request-log policy, malware
-scanning, and observability must be added by the consuming application.
-"Local" describes the intended use; it is not a network isolation guarantee.
-Do not expose the example to an untrusted network without configuring an
-appropriate bind address and the production controls above.
+This is a local quickstart, not a production upload service. Authentication, rate limiting, request concurrency limits, a request-log policy, malware scanning, and observability must be added by the consuming application.
+"Local" describes the intended use; it is not a network isolation guarantee. Do not expose the example to an untrusted network without configuring an appropriate bind address and the production controls above.
 
 ## Diagrams
 
@@ -55,22 +47,19 @@ Override the port when `8080` is unavailable:
 ./gradlew :spring-boot-barcode-api:bootRun --args='--server.port=18080'
 ```
 
-Spring Boot also accepts `--server.address=127.0.0.1` when an explicit
-loopback-only bind is required.
+Spring Boot also accepts `--server.address=127.0.0.1` when an explicit loopback-only bind is required.
 
 ## Deterministic Scenario Endpoints
 
-The bundled resources make the three main outcomes reproducible without
-preparing an upload first.
+The bundled resources make the three main outcomes reproducible without preparing an upload first.
 
-These `GET` routes demonstrate deterministic response contracts; they are not
-production data APIs.
+These `GET` routes demonstrate deterministic response contracts; they are not production data APIs.
 
-| Endpoint | Status | Outcome |
-|---|---:|---|
-| `GET /api/barcodes/sample` | `200` | One QR result with text `bluetape4k-barcode-quickstart` |
-| `GET /api/barcodes/no-result` | `200` | Valid image, `count: 0`, empty `results` |
-| `GET /api/barcodes/malformed` | `400` | Sanitized `MALFORMED_INPUT` response |
+| Endpoint                      | Status | Outcome                                                 |
+|-------------------------------|-------:|---------------------------------------------------------|
+| `GET /api/barcodes/sample`    |  `200` | One QR result with text `bluetape4k-barcode-quickstart` |
+| `GET /api/barcodes/no-result` |  `200` | Valid image, `count: 0`, empty `results`                |
+| `GET /api/barcodes/malformed` |  `400` | Sanitized `MALFORMED_INPUT` response                    |
 
 ```bash
 curl http://localhost:8080/api/barcodes/sample
@@ -104,8 +93,7 @@ No barcode is a successful extraction with an empty result:
 
 ## Upload an Image
 
-Send a multipart `file` part to the extraction endpoint. The declared content
-type must be `image/png`, `image/jpeg`, or `image/webp`.
+Send a multipart `file` part to the extraction endpoint. The declared content type must be `image/png`, `image/jpeg`, or `image/webp`.
 
 ```bash
 curl -F \
@@ -120,9 +108,7 @@ curl -F 'file=@/path/to/image.webp;type=image/webp' \
   http://localhost:8080/api/barcodes/extract
 ```
 
-The response deliberately contains only `text`, provider-neutral `format`, and
-provider name. It excludes raw provider bytes, backend format labels, result
-points, regions, arbitrary metadata, source filenames, and stack traces.
+The response deliberately contains only `text`, provider-neutral `format`, and provider name. It excludes raw provider bytes, backend format labels, result points, regions, arbitrary metadata, source filenames, and stack traces.
 
 ## Limits and Error Contract
 
@@ -142,19 +128,17 @@ example:
     max-input-side: 8192
 ```
 
-`spring.servlet.multipart` rejects oversized multipart requests at the web
-boundary. The example then checks the actual byte array again and probes image
-dimensions before creating an `ImmutableImage` or invoking the provider.
+`spring.servlet.multipart` rejects oversized multipart requests at the web boundary. The example then checks the actual byte array again and probes image dimensions before creating an `ImmutableImage` or invoking the provider.
 
-| Status | Error | Meaning |
-|---:|---|---|
-| `400` | `empty_input` | Missing or empty multipart file |
-| `400` | `malformed_input` | Bytes cannot be decoded as an image |
-| `400` | `unsupported_format` | Barcode format is not supported |
-| `413` | `payload_too_large` | Compressed bytes, side length, or pixel count exceeds a limit |
-| `415` | `unsupported_media_type` | Missing or disallowed declared content type |
-| `503` | `provider_unavailable` | Barcode provider is unavailable |
-| `500` | provider failure reason | Extraction failed without exposing provider details |
+| Status | Error                    | Meaning                                                       |
+|-------:|--------------------------|---------------------------------------------------------------|
+|  `400` | `empty_input`            | Missing or empty multipart file                               |
+|  `400` | `malformed_input`        | Bytes cannot be decoded as an image                           |
+|  `400` | `unsupported_format`     | Barcode format is not supported                               |
+|  `413` | `payload_too_large`      | Compressed bytes, side length, or pixel count exceeds a limit |
+|  `415` | `unsupported_media_type` | Missing or disallowed declared content type                   |
+|  `503` | `provider_unavailable`   | Barcode provider is unavailable                               |
+|  `500` | provider failure reason  | Extraction failed without exposing provider details           |
 
 Example malformed response:
 
@@ -166,24 +150,13 @@ Example malformed response:
 }
 ```
 
-The content-type allowlist is only an early request guard. The service still
-decodes and probes the actual bytes. A production service should additionally
-set request timeouts and concurrency limits, authenticate callers, rate-limit
-uploads, define a request-log policy that keeps raw inputs out of logs, scan
-uploads for malware, and monitor rejection rates and provider latency.
-Coroutine cancellation is propagated at suspension boundaries, but it does
-not preempt an in-flight synchronous image probe, decode, or ZXing call.
+The content-type allowlist is only an early request guard. The service still decodes and probes the actual bytes. A production service should additionally set request timeouts and concurrency limits, authenticate callers, rate-limit uploads, define a request-log policy that keeps raw inputs out of logs, scan uploads for malware, and monitor rejection rates and provider latency. Coroutine cancellation is propagated at suspension boundaries, but it does not preempt an in-flight synchronous image probe, decode, or ZXing call.
 
 ## Dependencies
 
-The example depends on `bluetape4k-images-barcode-zxing`, which supplies the
-provider implementation while exposing `bluetape4k-images-barcode-api` result
-contracts. Spring Web handles multipart MVC requests, and coroutine support
-keeps blocking reads and CPU-bound extraction off the request coroutine.
+The example depends on `bluetape4k-images-barcode-zxing`, which supplies the provider implementation while exposing `bluetape4k-images-barcode-api` result contracts. Spring Web handles multipart MVC requests, and coroutine support keeps blocking reads and CPU-bound extraction off the request coroutine.
 
-The bundled HTTP success fixture verifies QR Code extraction. The ZXing provider
-module separately verifies QR Code and Code 128, while the provider-neutral API
-keeps decoder-specific types out of this example's response contract.
+The bundled HTTP success fixture verifies QR Code extraction. The ZXing provider module separately verifies QR Code and Code 128, while the provider-neutral API keeps decoder-specific types out of this example's response contract.
 
 ## Test
 
@@ -191,7 +164,4 @@ keeps decoder-specific types out of this example's response contract.
 ./gradlew :spring-boot-barcode-api:test
 ```
 
-The tests cover the three deterministic endpoints, PNG/JPEG/WebP uploads,
-bounded success JSON, empty results, malformed bytes, missing parts,
-unsupported media types, encoded size, decoded side length, decoded pixel
-count, cancellation propagation, and sanitized exception mapping.
+The tests cover the three deterministic endpoints, PNG/JPEG/WebP uploads, bounded success JSON, empty results, malformed bytes, missing parts, unsupported media types, encoded size, decoded side length, decoded pixel count, cancellation propagation, and sanitized exception mapping.

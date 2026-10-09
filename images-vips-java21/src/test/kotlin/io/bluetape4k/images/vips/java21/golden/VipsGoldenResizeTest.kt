@@ -17,9 +17,9 @@ import org.junit.jupiter.api.condition.JRE
  * 갱신 모드는 Java25 FFM 테스트에서만 허용합니다.
  * Java21 JNI test task는 Gradle fail-fast guard로 canonical fixture 덮어쓰기를 거부합니다.
  */
-class VipsGoldenResizeTest : AbstractJVipsTest() {
+class VipsGoldenResizeTest: AbstractJVipsTest() {
 
-    companion object : KLogging()
+    companion object: KLogging()
 
     // ─── 비교 테스트 ───────────────────────────────────────────────────────────
 

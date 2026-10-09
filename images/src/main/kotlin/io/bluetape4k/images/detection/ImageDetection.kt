@@ -7,13 +7,15 @@ import io.bluetape4k.images.moderation.SensitivePoint
 import io.bluetape4k.images.moderation.SensitiveRasterMask
 import io.bluetape4k.images.moderation.SensitiveRegion
 import io.bluetape4k.images.moderation.SensitiveRegionGeometry
+import io.bluetape4k.support.requireGe
+import io.bluetape4k.support.requireGt
+import io.bluetape4k.support.requireInRange
 import io.bluetape4k.support.requireNotBlank
-import io.bluetape4k.support.requirePositiveNumber
-import java.io.Serializable
-import kotlin.math.roundToInt
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.io.Serializable
+import kotlin.math.roundToInt
 
 /**
  * sensitive-content region과 공유하는 detector용 coordinate space alias입니다.
@@ -109,7 +111,7 @@ data class DetectorIdentity private constructor(
     val version: String?,
     val backend: String?,
     val metadata: Map<String, String>,
-) : Serializable {
+): Serializable {
 
     companion object {
         private const val serialVersionUID: Long = -5782049832109058371L
@@ -143,20 +145,13 @@ data class DetectionBoundingBox private constructor(
     val y: Int,
     val width: Int,
     val height: Int,
-) : Serializable {
-
-    init {
-        require(x >= 0) { "x must be >= 0, but was $x" }
-        require(y >= 0) { "y must be >= 0, but was $y" }
-        width.requirePositiveNumber("width")
-        height.requirePositiveNumber("height")
-    }
+): Serializable {
 
     /** 이 box가 [imageDimensions] 안에 들어가는지 확인합니다. */
     fun requireWithin(imageDimensions: ImageDimensions): DetectionBoundingBox {
         require(x + width <= imageDimensions.width && y + height <= imageDimensions.height) {
             "bounding box is outside imageBounds=${imageDimensions.width}x${imageDimensions.height}: " +
-                "x=$x, y=$y, width=$width, height=$height"
+                    "x=$x, y=$y, width=$width, height=$height"
         }
         return this
     }
@@ -164,8 +159,14 @@ data class DetectionBoundingBox private constructor(
     companion object {
         private const val serialVersionUID: Long = 6131382378645623427L
 
-        operator fun invoke(x: Int, y: Int, width: Int, height: Int): DetectionBoundingBox =
-            DetectionBoundingBox(x, y, width, height)
+        operator fun invoke(x: Int, y: Int, width: Int, height: Int): DetectionBoundingBox {
+            x.requireGe(0, "x")
+            y.requireGe(0, "y")
+            width.requireGt(0, "width")
+            height.requireGt(0, "height")
+
+            return DetectionBoundingBox(x, y, width, height)
+        }
     }
 }
 
@@ -200,20 +201,7 @@ data class DetectionResult private constructor(
     val rawBackendLabel: String?,
     val classIndex: Int?,
     val metadata: Map<String, String>,
-) : Serializable {
-
-    init {
-        label.requireNotBlank("label")
-        rawBackendLabel.requireNotBlankIfPresent("rawBackendLabel")
-        classIndex?.let {
-            require(it >= 0) { "classIndex must be >= 0, but was $it" }
-        }
-        confidence.requireFiniteProbability("confidence")
-        require(confidence in CONFIDENCE_MIN..CONFIDENCE_MAX) {
-            "confidence must be in 0.0..1.0, but was $confidence"
-        }
-        metadata.requireValidStringMetadata("metadata")
-    }
+): Serializable {
 
     /** 선택 region이 [imageDimensions]에서 유효한지 확인합니다. */
     fun requireWithin(imageDimensions: ImageDimensions): DetectionResult {
@@ -233,8 +221,15 @@ data class DetectionResult private constructor(
             rawBackendLabel: String? = null,
             classIndex: Int? = null,
             metadata: Map<String, String> = emptyMap(),
-        ): DetectionResult =
-            DetectionResult(
+        ): DetectionResult {
+            label.requireNotBlank("label")
+            rawBackendLabel.requireNotBlankIfPresent("rawBackendLabel")
+            classIndex?.requireGe(0, "classIndex")
+            confidence.requireFiniteProbability("confidence")
+            confidence.requireInRange(CONFIDENCE_MIN, CONFIDENCE_MAX, "confidence")
+            metadata.requireValidStringMetadata("metadata")
+
+            return DetectionResult(
                 label = label,
                 category = category,
                 confidence = confidence,
@@ -244,6 +239,7 @@ data class DetectionResult private constructor(
                 classIndex = classIndex,
                 metadata = metadata,
             )
+        }
     }
 }
 
@@ -261,21 +257,13 @@ data class DetectionOptions private constructor(
     val minimumConfidence: Double,
     val categories: Set<DetectionCategory>,
     val labels: Set<String>,
-) : Serializable {
-
-    init {
-        minimumConfidence.requireFiniteProbability("minimumConfidence")
-        require(minimumConfidence in CONFIDENCE_MIN..CONFIDENCE_MAX) {
-            "minimumConfidence must be in 0.0..1.0, but was $minimumConfidence"
-        }
-        labels.forEach { it.requireNotBlank("labels") }
-    }
+): Serializable {
 
     /** [result]가 이 option set을 만족하면 `true`를 반환합니다. */
     fun accepts(result: DetectionResult): Boolean =
         result.confidence >= minimumConfidence &&
-            (categories.isEmpty() || result.category in categories) &&
-            (labels.isEmpty() || result.label in labels || result.rawBackendLabel in labels)
+                (categories.isEmpty() || result.category in categories) &&
+                (labels.isEmpty() || result.label in labels || result.rawBackendLabel in labels)
 
     /** 이 option set에 따라 [results]를 필터링합니다. */
     fun filter(results: Iterable<DetectionResult>): List<DetectionResult> =
@@ -288,8 +276,13 @@ data class DetectionOptions private constructor(
             minimumConfidence: Double = CONFIDENCE_MIN,
             categories: Set<DetectionCategory> = emptySet(),
             labels: Set<String> = emptySet(),
-        ): DetectionOptions =
-            DetectionOptions(minimumConfidence, categories, labels)
+        ): DetectionOptions {
+            minimumConfidence.requireFiniteProbability("minimumConfidence")
+            minimumConfidence.requireInRange(CONFIDENCE_MIN, CONFIDENCE_MAX, "confidence")
+            labels.forEach { it.requireNotBlank("labels") }
+
+            return DetectionOptions(minimumConfidence, categories, labels)
+        }
     }
 }
 
@@ -378,9 +371,7 @@ private fun Double.requireFiniteProbability(name: String) {
 }
 
 private fun String?.requireNotBlankIfPresent(name: String) {
-    if (this != null) {
-        requireNotBlank(name)
-    }
+    this?.requireNotBlank(name)
 }
 
 private fun Map<String, String>.requireValidStringMetadata(name: String) {

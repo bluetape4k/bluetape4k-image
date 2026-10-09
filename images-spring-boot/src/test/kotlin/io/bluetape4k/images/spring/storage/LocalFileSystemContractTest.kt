@@ -1,34 +1,43 @@
 package io.bluetape4k.images.spring.storage
 
 import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.shouldBeEmpty
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeInstanceOf
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldContain
+import io.bluetape4k.assertions.shouldContentEqual
+import io.bluetape4k.coroutines.flow.extensions.log
 import io.bluetape4k.images.spring.ImageObjectKey
 import io.bluetape4k.images.spring.ImageStorageException
 import io.bluetape4k.images.spring.UploadOptions
+import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.support.toUtf8Bytes
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
+import org.testcontainers.utility.Base58
 import java.io.IOException
 import java.net.URI
 import java.nio.file.FileSystems
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.attribute.PosixFilePermission
-import java.util.UUID
+import java.util.*
 import kotlin.io.path.deleteIfExists
 
 class LocalFileSystemContractTest {
 
+    companion object: KLoggingChannel()
+
     @TempDir
-    lateinit var tempDir: Path
+    private lateinit var tempDir: Path
 
     private val options = UploadOptions()
-    private val sampleBytes = "new-image".toByteArray()
+    private val sampleBytes = "new-image".toUtf8Bytes()
 
     @Test
     fun `default provider probe reports descriptor and replace capabilities`() {
@@ -36,13 +45,14 @@ class LocalFileSystemContractTest {
 
         println(
             "Local filesystem capability: provider=${capabilities.providerScheme}, " +
-                "stream=${capabilities.directoryStreamType.substringAfterLast('.')}, " +
-                "secure=${capabilities.supportsSecureDirectoryStream}, " +
-                "atomicReplace=${capabilities.supportsAtomicExistingTargetReplace}, " +
-                "posix=${capabilities.supportsPosixAttributes}",
+                    "stream=${capabilities.directoryStreamType.substringAfterLast('.')}, " +
+                    "secure=${capabilities.supportsSecureDirectoryStream}, " +
+                    "atomicReplace=${capabilities.supportsAtomicExistingTargetReplace}, " +
+                    "posix=${capabilities.supportsPosixAttributes}",
         )
         capabilities.providerScheme.isNotBlank().shouldBeTrue()
         capabilities.directoryStreamType.isNotBlank().shouldBeTrue()
+
         if (capabilities.supportsSecureDirectoryStream) {
             capabilities.supportsAtomicExistingTargetReplace.shouldBeTrue()
         } else {
@@ -62,22 +72,24 @@ class LocalFileSystemContractTest {
         val rootKey = ImageObjectKey.of("uploads", "root.jpg")
         val nestedKey = ImageObjectKey.of("nested/gallery", "photo.jpg")
         val missingParentKey = ImageObjectKey.of("not-provisioned/path", "photo.jpg")
+
         Files.createDirectories(tempDir.resolve(rootKey.prefix))
         Files.createDirectories(tempDir.resolve(nestedKey.prefix))
 
-        storage.upload(rootKey, "old-image".toByteArray(), options)
+        storage.upload(rootKey, "old-image".toUtf8Bytes(), options)
         storage.upload(rootKey, sampleBytes, options)
         storage.upload(nestedKey, sampleBytes, options)
 
-        storage.download(rootKey).contentEquals(sampleBytes).shouldBeTrue()
-        storage.download(nestedKey).contentEquals(sampleBytes).shouldBeTrue()
+        storage.download(rootKey) shouldContentEqual sampleBytes
+        storage.download(nestedKey) shouldContentEqual sampleBytes
 
         val missingParent = assertFailsWith<ImageStorageException.ValidationException> {
             storage.upload(missingParentKey, sampleBytes, options)
         }
-        missingParent.message.orEmpty().contains("must be provisioned").shouldBeTrue()
+        missingParent.message shouldContain "must be provisioned"
+
         Files.exists(tempDir.resolve(missingParentKey.fullKey)).shouldBeFalse()
-        temporaryUploadFiles(tempDir).isEmpty().shouldBeTrue()
+        temporaryUploadFiles(tempDir).shouldBeEmpty()
     }
 
     @Test
@@ -91,16 +103,17 @@ class LocalFileSystemContractTest {
         val storage = LocalImageStorage(tempDir, maxSizeBytes = 1_000_000)
         val key = ImageObjectKey.of("uploads", "failed-source.jpg")
         Files.createDirectories(tempDir.resolve(key.prefix))
-        val original = "preserved-image".toByteArray()
+
+        val original = "preserved-image".toUtf8Bytes()
         storage.upload(key, original, options)
 
-        val sourceDirectory = Files.createDirectory(tempDir.resolve("source-${UUID.randomUUID()}"))
+        val sourceDirectory = Files.createDirectory(tempDir.resolve("source-${Base58.randomString(8)}"))
         assertFailsWith<ImageStorageException.TransientException> {
             storage.upload(key, sourceDirectory, options)
         }
 
-        storage.download(key).contentEquals(original).shouldBeTrue()
-        temporaryUploadFiles(tempDir).isEmpty().shouldBeTrue()
+        storage.download(key) shouldContentEqual original
+        temporaryUploadFiles(tempDir).shouldBeEmpty()
     }
 
     @Test
@@ -115,8 +128,10 @@ class LocalFileSystemContractTest {
 
         val outside = Files.createTempDirectory("local-storage-contract-outside")
         val movedParent = tempDir.resolve("uploads-moved")
+
         Files.move(parent, movedParent)
         Files.createSymbolicLink(parent, outside)
+
         try {
             assertFailsWith<ImageStorageException.ValidationException> {
                 storage.upload(key, sampleBytes, options)
@@ -136,12 +151,15 @@ class LocalFileSystemContractTest {
 
         val anchoredRoot = tempDir.resolve("anchored-root")
         val outside = tempDir.resolve("outside-root")
+
         Files.createDirectories(anchoredRoot)
         Files.createDirectories(outside)
+
         val storage = LocalImageStorage(anchoredRoot, maxSizeBytes = 1024)
         val movedRoot = tempDir.resolve("anchored-root-moved")
         Files.move(anchoredRoot, movedRoot)
         Files.createSymbolicLink(anchoredRoot, outside)
+
         try {
             assertFailsWith<ImageStorageException.ValidationException> {
                 storage.upload(ImageObjectKey.of("uploads", "escaped.jpg"), sampleBytes, options)
@@ -161,6 +179,7 @@ class LocalFileSystemContractTest {
         val parent = tempDir.resolve("restricted")
         Files.createDirectories(parent)
         val originalPermissions = Files.getPosixFilePermissions(parent)
+
         try {
             val readOnly = originalPermissions - setOf(
                 PosixFilePermission.OWNER_WRITE,
@@ -186,15 +205,18 @@ class LocalFileSystemContractTest {
         val prefix = ImageObjectKey.of("cancellation", "images")
         val key = ImageObjectKey.of("cancellation/images", "first.jpg")
         Files.createDirectories(tempDir.resolve(key.prefix))
+
         val storage = LocalImageStorage(tempDir, maxSizeBytes = 1024)
         storage.upload(key, sampleBytes, options)
-        val cancellation = CancellationException("contract collector stopped")
 
+        val cancellation = CancellationException("contract collector stopped")
         val thrown = assertFailsWith<CancellationException> {
-            storage.list(prefix).collect { throw cancellation }
+            storage.list(prefix)
+                .log("File")
+                .collect { throw cancellation }
         }
 
-        thrown::class shouldBeEqualTo cancellation::class
+        thrown shouldBeInstanceOf cancellation::class
         thrown.message shouldBeEqualTo cancellation.message
     }
 
@@ -215,6 +237,7 @@ class LocalFileSystemContractTest {
             val prefix = "zipfs-${UUID.randomUUID()}"
             val key = ImageObjectKey.of(prefix, "zipfs.jpg")
             Files.createDirectories(root.resolve(key.prefix))
+
             val failure = assertFailsWith<ImageStorageException.ValidationException> {
                 storage.upload(key, sampleBytes, options)
             }
@@ -227,7 +250,7 @@ class LocalFileSystemContractTest {
         Files.walk(root).use { paths ->
             paths.filter { path ->
                 path.fileName?.toString()?.startsWith(".") == true &&
-                    path.fileName.toString().endsWith(".upload")
+                        path.fileName.toString().endsWith(".upload")
             }.toList()
         }
 

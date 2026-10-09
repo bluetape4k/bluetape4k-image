@@ -1,3 +1,6 @@
+import org.jetbrains.kotlin.gradle.dsl.jvm.JvmTargetValidationMode
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 // vips-ffm is compiled for Java 25 (class file major 69);
 // atomicfu transformer runs on the build JVM (Java 21) and cannot load Java 25 classes.
 atomicfu {
@@ -22,8 +25,8 @@ tasks.withType<JavaCompile>().configureEach {
     options.release.set(25)
 }
 
-tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
-    jvmTargetValidationMode.set(org.jetbrains.kotlin.gradle.dsl.jvm.JvmTargetValidationMode.WARNING)
+tasks.withType<KotlinCompile>().configureEach {
+    jvmTargetValidationMode.set(JvmTargetValidationMode.WARNING)
 }
 
 tasks.withType<Test>().configureEach {
@@ -47,18 +50,24 @@ tasks.withType<Test>().configureEach {
 
 dependencies {
     api(project(":bluetape4k-images-vips-api"))
+
+    api(bt4k.bluetape4k.io)
     testImplementation(bt4k.bluetape4k.junit5)
     testImplementation(bt4k.bluetape4k.virtualthread.jdk25)
     testImplementation(testFixtures(project(":bluetape4k-images-vips-api")))
 
     // vips-ffm FFM bindings (JDK 23+; system libvips required on all platforms)
     // D8: binding types are internal — use api() only if consumers need VipsImage directly
-    implementation(bt4k.vips.ffm)
+    api(bt4k.vips.ffm)
 
     // BoundedInputStream for input size limits
-    implementation(bt4k.commons.io)
+    api(bt4k.commons.io)
+
+    // Serializer
+    testImplementation(bt4k.fory.kotlin)
 
     // Coroutines
+    implementation(bt4k.bluetape4k.coroutines)
     implementation(libs.kotlinx.coroutines.core)
     testImplementation(libs.kotlinx.coroutines.test)
 }

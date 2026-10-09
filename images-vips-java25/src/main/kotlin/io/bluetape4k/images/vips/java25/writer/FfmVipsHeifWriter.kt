@@ -4,10 +4,12 @@ import app.photofox.vipsffm.VImage
 import app.photofox.vipsffm.VipsError
 import app.photofox.vipsffm.VipsOption
 import app.photofox.vipsffm.enums.VipsForeignHeifCompression
-import io.bluetape4k.images.vips.VipsIncubatingApi
 import io.bluetape4k.images.vips.VipsEncodeException
 import io.bluetape4k.images.vips.VipsEncodeOptions
 import io.bluetape4k.images.vips.VipsImageFormat
+import io.bluetape4k.images.vips.VipsImageFormat.AVIF
+import io.bluetape4k.images.vips.VipsImageFormat.HEIC
+import io.bluetape4k.images.vips.VipsIncubatingApi
 
 /**
  * AVIF와 HEIC용 vips-ffm HEIF-family encoder입니다.
@@ -17,8 +19,8 @@ internal object FfmVipsHeifWriter {
 
     fun writeToBytes(image: VImage, format: VipsImageFormat, options: VipsEncodeOptions): ByteArray {
         val compression = when (format) {
-            VipsImageFormat.AVIF -> VipsForeignHeifCompression.FOREIGN_HEIF_COMPRESSION_AV1
-            VipsImageFormat.HEIC -> VipsForeignHeifCompression.FOREIGN_HEIF_COMPRESSION_HEVC
+            AVIF -> VipsForeignHeifCompression.FOREIGN_HEIF_COMPRESSION_AV1
+            HEIC -> VipsForeignHeifCompression.FOREIGN_HEIF_COMPRESSION_HEVC
             else -> throw VipsEncodeException("Unsupported HEIF-family format for encoding: $format")
         }
 

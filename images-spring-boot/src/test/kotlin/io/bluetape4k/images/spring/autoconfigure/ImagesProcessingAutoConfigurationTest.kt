@@ -1,13 +1,21 @@
 package io.bluetape4k.images.spring.autoconfigure
 
+import io.bluetape4k.assertions.shouldBeEmpty
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeTrue
-import org.assertj.core.api.Assertions.assertThat
+import io.bluetape4k.assertions.shouldHaveSize
+import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import org.junit.jupiter.api.Test
+import org.springframework.beans.factory.getBean
+import org.springframework.beans.factory.getBeansOfType
 import org.springframework.boot.autoconfigure.AutoConfigurations
 import org.springframework.boot.test.context.runner.ApplicationContextRunner
 
 class ImagesProcessingAutoConfigurationTest {
+
+    companion object: KLogging()
 
     private val contextRunner = ApplicationContextRunner()
         .withConfiguration(AutoConfigurations.of(ImagesProcessingAutoConfiguration::class.java))
@@ -15,8 +23,10 @@ class ImagesProcessingAutoConfigurationTest {
     @Test
     fun `registers ImageProcessingProperties with defaults`() {
         contextRunner.run { ctx ->
-            assertThat(ctx).hasSingleBean(ImageProcessingProperties::class.java)
-            val props = ctx.getBean(ImageProcessingProperties::class.java)
+            ctx.getBeansOfType<ImageProcessingProperties>() shouldHaveSize 1
+            val props = ctx.getBean<ImageProcessingProperties>()
+
+            log.debug { "props=$props" }
             props.enabled.shouldBeTrue()
             props.defaultFormat shouldBeEqualTo "jpeg"
             props.defaultQuality shouldBeEqualTo 85
@@ -28,7 +38,7 @@ class ImagesProcessingAutoConfigurationTest {
         contextRunner
             .withPropertyValues("bluetape4k.images.processing.enabled=false")
             .run { ctx ->
-                assertThat(ctx).doesNotHaveBean(ImageProcessingProperties::class.java)
+                ctx.getBeansOfType<ImageProcessingProperties>().shouldBeEmpty()
             }
     }
 
@@ -37,8 +47,9 @@ class ImagesProcessingAutoConfigurationTest {
         contextRunner
             .withPropertyValues("bluetape4k.images.processing.default-quality=70")
             .run { ctx ->
-                assertThat(ctx).hasSingleBean(ImageProcessingProperties::class.java)
-                val props = ctx.getBean(ImageProcessingProperties::class.java)
+                ctx.getBeansOfType<ImageProcessingProperties>() shouldHaveSize 1
+                val props = ctx.getBean<ImageProcessingProperties>()
+                log.debug { "props=$props" }
                 props.defaultQuality shouldBeEqualTo 70
             }
     }
@@ -48,7 +59,8 @@ class ImagesProcessingAutoConfigurationTest {
         contextRunner
             .withPropertyValues("bluetape4k.images.processing.default-format=png")
             .run { ctx ->
-                val props = ctx.getBean(ImageProcessingProperties::class.java)
+                val props = ctx.getBean<ImageProcessingProperties>()
+                log.debug { "props=$props" }
                 props.defaultFormat shouldBeEqualTo "png"
             }
     }
@@ -58,7 +70,8 @@ class ImagesProcessingAutoConfigurationTest {
         contextRunner
             .withPropertyValues("bluetape4k.images.processing.default-quality=0")
             .run { ctx ->
-                assertThat(ctx).hasFailed()
+                log.debug { "ctx=$ctx" }
+                ctx.startupFailure.shouldNotBeNull()
             }
     }
 }

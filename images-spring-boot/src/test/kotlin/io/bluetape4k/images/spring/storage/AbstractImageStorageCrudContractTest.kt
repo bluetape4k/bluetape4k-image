@@ -4,9 +4,12 @@ import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldContentEqual
 import io.bluetape4k.images.spring.ImageObjectKey
 import io.bluetape4k.images.spring.ImageStorageException
 import io.bluetape4k.images.spring.UploadOptions
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -19,6 +22,8 @@ import org.junit.jupiter.api.TestInstance
  */
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
 abstract class AbstractImageStorageCrudContractTest {
+
+    companion object: KLogging()
 
     protected abstract val storage: ImageStorage
 
@@ -34,10 +39,12 @@ abstract class AbstractImageStorageCrudContractTest {
 
         val uploaded = storage.upload(key, bytes, options)
 
+        log.debug { "uploaded=$uploaded" }
         uploaded.key shouldBeEqualTo key
         uploaded.sizeBytes shouldBeEqualTo bytes.size.toLong()
         uploaded.contentType shouldBeEqualTo options.contentType
-        storage.download(key).contentEquals(bytes).shouldBeTrue()
+
+        storage.download(key) shouldContentEqual bytes
     }
 
     @Test
@@ -45,12 +52,12 @@ abstract class AbstractImageStorageCrudContractTest {
         val key = contractKey("overwrite.jpg")
         val original = "original".toByteArray()
         val replacement = "replacement".toByteArray()
+
         prepareUpload(key)
         storage.upload(key, original, options)
-
         storage.upload(key, replacement, options)
 
-        storage.download(key).contentEquals(replacement).shouldBeTrue()
+        storage.download(key) shouldContentEqual replacement
     }
 
     @Test

@@ -1,7 +1,7 @@
 package io.bluetape4k.images.benchmark
 
-import com.sksamuel.scrimage.filter.GrayscaleFilter
 import com.sksamuel.scrimage.ImmutableImage
+import com.sksamuel.scrimage.filter.GrayscaleFilter
 import io.bluetape4k.images.ocr.OcrOptions
 import io.bluetape4k.images.ocr.extractText
 import kotlinx.benchmark.Benchmark

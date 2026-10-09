@@ -3,6 +3,10 @@ plugins {
     alias(bt4k.plugins.kotlin.serialization)
 }
 
+application {
+    mainClass.set("io.bluetape4k.images.examples.ktor.KtorImageApiApplicationKt")
+}
+
 dependencies {
     implementation(project(":bluetape4k-images"))
     implementation(project(":bluetape4k-images-ktor"))
@@ -13,8 +17,4 @@ dependencies {
 
     testImplementation(bt4k.bluetape4k.junit5)
     testImplementation(bt4k.bluetape4k.ktor.testing)
-}
-
-application {
-    mainClass.set("io.bluetape4k.images.examples.ktor.KtorImageApiApplicationKt")
 }

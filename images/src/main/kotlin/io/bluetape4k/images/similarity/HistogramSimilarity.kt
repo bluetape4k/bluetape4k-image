@@ -1,6 +1,10 @@
 package io.bluetape4k.images.similarity
 
 import com.sksamuel.scrimage.ImmutableImage
+import io.bluetape4k.support.requireInRange
+import java.io.Serializable
+import kotlin.math.absoluteValue
+import kotlin.math.exp
 
 /**
  * 히스토그램 색공간 선택.
@@ -8,7 +12,10 @@ import com.sksamuel.scrimage.ImmutableImage
  * - [RGB]: 일반적인 사진/그림 비교에 적합. 채널 간 독립.
  * - [HSV]: 조명 변화에 더 강건. 색상(H)/채도(S)/명도(V) 분리 비교.
  */
-enum class ColorSpace { RGB, HSV }
+enum class ColorSpace {
+    RGB,
+    HSV
+}
 
 /**
  * 이미지의 정규화된 색상 히스토그램을 생성합니다.
@@ -43,9 +50,13 @@ internal fun buildHistogram(
     }
 
     // 채널별 정규화 (sum → 1.0). zero-histogram이면 그대로 유지.
-    for (ch in 0 until channelCount) {
+    repeat(channelCount) { ch ->
         val sum = hist[ch].sum()
-        if (sum > 0.0) for (b in 0 until binsPerChannel) hist[ch][b] /= sum
+        if (sum > 0.0) {
+            repeat(binsPerChannel) { b ->
+                hist[ch][b] /= sum
+            }
+        }
     }
     return hist
 }
@@ -79,7 +90,7 @@ internal fun buildHistogram(
  * a.histogramSimilarityTo(b, HistogramSimilarity.earthMover(ColorSpace.HSV, bins = 64))
  * ```
  */
-sealed interface HistogramSimilarity {
+sealed interface HistogramSimilarity: Serializable {
 
     /**
      * 두 이미지의 히스토그램 기반 유사도를 측정합니다.
@@ -91,7 +102,7 @@ sealed interface HistogramSimilarity {
     /**
      * Chi-Square 거리 기반 유사도.
      *
- * 계산식: `d = sum((p-q)² / (p+q+ε))` → `similarity = exp(-d/2)`
+     * 계산식: `d = sum((p-q)² / (p+q+ε))` → `similarity = exp(-d/2)`
      *
      * 분포 차이에 민감하여 작은 색상 변화도 잘 잡아냅니다.
      *
@@ -103,7 +114,7 @@ sealed interface HistogramSimilarity {
         val binsPerChannel: Int = 32,
     ): HistogramSimilarity {
         init {
-            require(binsPerChannel in 2..256) { "binsPerChannel 범위: 2..256, 입력: $binsPerChannel" }
+            binsPerChannel.requireInRange(2, 256, "binsPerChannel")
         }
 
         override fun measure(a: ImmutableImage, b: ImmutableImage): Double {
@@ -112,14 +123,18 @@ sealed interface HistogramSimilarity {
             if (ha.isZero() && hb.isZero()) return 1.0
             var d = 0.0
             val eps = 1e-10
-            for (ch in ha.indices) {
-                for (bin in 0 until binsPerChannel) {
+            ha.indices.forEach { ch ->
+                repeat(binsPerChannel) { bin ->
                     val p = ha[ch][bin]
                     val q = hb[ch][bin]
                     d += (p - q) * (p - q) / (p + q + eps)
                 }
             }
-            return kotlin.math.exp(-d / 2.0)
+            return exp(-d / 2.0)
+        }
+
+        companion object {
+            private const val serialVersionUID = 1L
         }
     }
 
@@ -137,7 +152,7 @@ sealed interface HistogramSimilarity {
         val binsPerChannel: Int = 32,
     ): HistogramSimilarity {
         init {
-            require(binsPerChannel in 2..256) { "binsPerChannel 범위: 2..256, 입력: $binsPerChannel" }
+            binsPerChannel.requireInRange(2, 256, "binsPerChannel")
         }
 
         override fun measure(a: ImmutableImage, b: ImmutableImage): Double {
@@ -145,19 +160,23 @@ sealed interface HistogramSimilarity {
             val hb = buildHistogram(b, colorSpace, binsPerChannel)
             if (ha.isZero() && hb.isZero()) return 1.0
             var coeff = 0.0
-            for (ch in ha.indices) {
-                for (bin in 0 until binsPerChannel) {
+            ha.indices.forEach { ch ->
+                repeat(binsPerChannel) { bin ->
                     coeff += kotlin.math.sqrt(ha[ch][bin] * hb[ch][bin])
                 }
             }
             return coeff / ha.size  // 채널 수로 나눠 [0,1] 유지
+        }
+
+        companion object {
+            private const val serialVersionUID = 1L
         }
     }
 
     /**
      * 1D Earth Mover's Distance (CDF 차이의 합) 기반 유사도.
      *
- * 계산식: `similarity = 1 - emd/dMax`, `dMax = channels * (binsPerChannel - 1)`.
+     * 계산식: `similarity = 1 - emd/dMax`, `dMax = channels * (binsPerChannel - 1)`.
      *
      * 순서에 민감 — H 채널 wrap-around 미지원. RGB 또는 HSV의 S/V 채널 사용을 권장.
      *
@@ -169,7 +188,7 @@ sealed interface HistogramSimilarity {
         val binsPerChannel: Int = 32,
     ): HistogramSimilarity {
         init {
-            require(binsPerChannel in 2..256) { "binsPerChannel 범위: 2..256, 입력: $binsPerChannel" }
+            binsPerChannel.requireInRange(2, 256, "binsPerChannel")
         }
 
         override fun measure(a: ImmutableImage, b: ImmutableImage): Double {
@@ -177,11 +196,11 @@ sealed interface HistogramSimilarity {
             val hb = buildHistogram(b, colorSpace, binsPerChannel)
             if (ha.isZero() && hb.isZero()) return 1.0
             var emd = 0.0
-            for (ch in ha.indices) {
+            ha.indices.forEach { ch ->
                 var flow = 0.0
-                for (bin in 0 until binsPerChannel) {
+                repeat(binsPerChannel) { bin ->
                     flow += ha[ch][bin] - hb[ch][bin]
-                    emd += kotlin.math.abs(flow)
+                    emd += flow.absoluteValue
                 }
             }
             val dMax = ha.size.toDouble() * (binsPerChannel - 1)
@@ -201,6 +220,8 @@ sealed interface HistogramSimilarity {
         /** Earth Mover's Distance 측정 전략 단축 생성자. */
         fun earthMover(colorSpace: ColorSpace = ColorSpace.RGB, bins: Int = 32): HistogramSimilarity =
             EarthMover(colorSpace, bins)
+
+        private const val serialVersionUID = 1L
     }
 }
 

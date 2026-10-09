@@ -26,7 +26,7 @@ import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
 
 /** 네트워크 없이 [S3ImageStorage]의 공통 계약을 실행하기 위한 stateful test fixture입니다. */
-internal class StatefulS3Operations : S3Operations {
+internal class StatefulS3Operations: S3Operations {
 
     private data class StoredObject(
         val bytes: ByteArray,
@@ -118,7 +118,7 @@ internal class StatefulS3Operations : S3Operations {
             every { resource.getInputStream() } answers {
                 val bytes = load(key)
                 activeInputStreams.incrementAndGet()
-                object : ByteArrayInputStream(bytes) {
+                object: ByteArrayInputStream(bytes) {
                     private val closed = AtomicBoolean()
 
                     override fun close() {

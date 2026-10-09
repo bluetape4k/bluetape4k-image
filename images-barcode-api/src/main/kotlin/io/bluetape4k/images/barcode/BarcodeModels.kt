@@ -1,69 +1,14 @@
 package io.bluetape4k.images.barcode
 
+import io.bluetape4k.ToStringBuilder
+import io.bluetape4k.support.hashOf
+import io.bluetape4k.support.requireGe
+import io.bluetape4k.support.requireGt
+import io.bluetape4k.support.requireInRange
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.requireNotEmpty
 import java.io.Serializable
-import java.util.Collections
-
-/**
- * bluetape4k barcode provider가 이해하는 안정적인 barcode symbology입니다.
- *
- * ## 동작/계약
- * provider는 backend-specific format name을 이 enum으로 매핑하고, 필요하면 원본 backend
- * format을 [BarcodeResult.rawBackendFormat]에 보존해야 합니다. 알 수 없거나 provider
- * 전용 format은 [UNKNOWN]을 사용합니다.
- */
-enum class BarcodeFormat {
-    /** QR Code 2차원 barcode입니다. */
-    QR_CODE,
-
-    /** Code 128 1차원 barcode입니다. */
-    CODE_128,
-
-    /** Code 39 1차원 barcode입니다. */
-    CODE_39,
-
-    /** EAN-13 retail barcode입니다. */
-    EAN_13,
-
-    /** EAN-8 retail barcode입니다. */
-    EAN_8,
-
-    /** UPC-A retail barcode입니다. */
-    UPC_A,
-
-    /** UPC-E retail barcode입니다. */
-    UPC_E,
-
-    /** Data Matrix 2차원 barcode입니다. */
-    DATA_MATRIX,
-
-    /** Aztec 2차원 barcode입니다. */
-    AZTEC,
-
-    /** PDF417 stacked barcode입니다. */
-    PDF_417,
-
-    /** Codabar 1차원 barcode입니다. */
-    CODABAR,
-
-    /** Interleaved 2 of 5 1차원 barcode입니다. */
-    ITF,
-
-    /** backend-specific 또는 알 수 없는 format입니다. */
-    UNKNOWN,
-}
-
-/**
- * barcode localization data에 사용하는 coordinate system입니다.
- */
-enum class BarcodeCoordinateSpace {
-    /** 원본 이미지 coordinate space의 pixel coordinate입니다. */
-    PIXEL,
-
-    /** 두 축이 모두 `0.0..1.0` 범위인 normalized coordinate입니다. */
-    NORMALIZED,
-}
+import java.util.*
 
 /**
  * 모든 barcode result에 복사되는 provider identity입니다.
@@ -80,16 +25,17 @@ enum class BarcodeCoordinateSpace {
 @ConsistentCopyVisibility
 data class BarcodeProviderIdentity private constructor(
     val name: String,
-    val version: String? = null,
-    val backend: String? = null,
-    val metadata: Map<String, String> = emptyMap(),
+    val version: String?,
+    val backend: String?,
+    val metadata: Map<String, String>,
 ): Serializable {
 
-    init {
-        name.requireNotBlank("name")
-        version?.requireNotBlank("version")
-        backend?.requireNotBlank("backend")
-        metadata.requireStringMetadata("metadata")
+    override fun toString(): String {
+        return ToStringBuilder(this)
+            .add("name", name)
+            .add("version", version)
+            .add("backend", backend)
+            .toString()
     }
 
     companion object {
@@ -100,8 +46,14 @@ data class BarcodeProviderIdentity private constructor(
             version: String? = null,
             backend: String? = null,
             metadata: Map<String, String> = emptyMap(),
-        ): BarcodeProviderIdentity =
-            BarcodeProviderIdentity(name, version, backend, metadata.immutableMapSnapshot())
+        ): BarcodeProviderIdentity {
+            name.requireNotBlank("name")
+            version?.requireNotBlank("version")
+            backend?.requireNotBlank("backend")
+            metadata.requireStringMetadata("metadata")
+
+            return BarcodeProviderIdentity(name, version, backend, metadata.immutableMapSnapshot())
+        }
     }
 }
 
@@ -118,16 +70,11 @@ data class BarcodePoint private constructor(
     val y: Double,
 ): Serializable {
 
-    init {
-        x.requireFinite("x")
-        y.requireFinite("y")
-    }
-
     internal fun requireValidFor(coordinateSpace: BarcodeCoordinateSpace) {
         when (coordinateSpace) {
             BarcodeCoordinateSpace.PIXEL -> {
-                require(x >= 0.0) { "pixel x must be >= 0, but was $x" }
-                require(y >= 0.0) { "pixel y must be >= 0, but was $y" }
+                x.requireGe(0.0, "pixel x")
+                y.requireGe(0.0, "pixel y")
             }
 
             BarcodeCoordinateSpace.NORMALIZED -> {
@@ -140,8 +87,12 @@ data class BarcodePoint private constructor(
     companion object {
         private const val serialVersionUID: Long = 4524615516973404144L
 
-        operator fun invoke(x: Double, y: Double): BarcodePoint =
-            BarcodePoint(x, y)
+        operator fun invoke(x: Double, y: Double): BarcodePoint {
+            x.requireFinite("x")
+            y.requireFinite("y")
+
+            return BarcodePoint(x, y)
+        }
     }
 }
 
@@ -208,16 +159,8 @@ data class BarcodeBoundingBox private constructor(
 data class BarcodeRegion private constructor(
     val points: List<BarcodePoint>,
     val coordinateSpace: BarcodeCoordinateSpace,
-    val boundingBox: BarcodeBoundingBox? = null,
+    val boundingBox: BarcodeBoundingBox?,
 ): Serializable {
-
-    init {
-        points.requireNotEmpty("points")
-        points.forEach { it.requireValidFor(coordinateSpace) }
-        require(boundingBox == null || boundingBox.coordinateSpace == coordinateSpace) {
-            "boundingBox coordinateSpace must match region coordinateSpace"
-        }
-    }
 
     companion object {
         private const val serialVersionUID: Long = -910069449498651984L
@@ -226,8 +169,15 @@ data class BarcodeRegion private constructor(
             points: List<BarcodePoint>,
             coordinateSpace: BarcodeCoordinateSpace,
             boundingBox: BarcodeBoundingBox? = null,
-        ): BarcodeRegion =
-            BarcodeRegion(points.immutableListSnapshot(), coordinateSpace, boundingBox)
+        ): BarcodeRegion {
+            points.requireNotEmpty("points")
+            points.forEach { it.requireValidFor(coordinateSpace) }
+            require(boundingBox == null || boundingBox.coordinateSpace == coordinateSpace) {
+                "boundingBox coordinateSpace must match region coordinateSpace"
+            }
+
+            return BarcodeRegion(points.immutableListSnapshot(), coordinateSpace, boundingBox)
+        }
     }
 }
 
@@ -245,24 +195,19 @@ data class BarcodeRegion private constructor(
  */
 @ConsistentCopyVisibility
 data class BarcodeOptions private constructor(
-    val formats: Set<BarcodeFormat> = emptySet(),
-    val tryHarder: Boolean = false,
-    val includeRawBytes: Boolean = false,
-    val minimumConfidence: Double? = null,
-    val metadata: Map<String, String> = emptyMap(),
+    val formats: Set<BarcodeFormat>,
+    val tryHarder: Boolean,
+    val includeRawBytes: Boolean,
+    val minimumConfidence: Double?,
+    val metadata: Map<String, String>,
 ): Serializable {
-
-    init {
-        minimumConfidence?.requireProbability("minimumConfidence")
-        metadata.requireStringMetadata("metadata")
-    }
 
     /**
      * [result]가 이 format 및 confidence filter와 match되면 `true`를 반환합니다.
      */
     fun accepts(result: BarcodeResult): Boolean =
         (formats.isEmpty() || result.format in formats) &&
-            (minimumConfidence == null || result.confidence == null || result.confidence >= minimumConfidence)
+                (minimumConfidence == null || result.confidence == null || result.confidence >= minimumConfidence)
 
     /**
      * provider order를 보존하면서 [results]에 [accepts]를 적용합니다.
@@ -273,20 +218,26 @@ data class BarcodeOptions private constructor(
     companion object {
         private const val serialVersionUID: Long = 5859961292253423227L
 
+        val Default = invoke()
+
         operator fun invoke(
             formats: Set<BarcodeFormat> = emptySet(),
             tryHarder: Boolean = false,
             includeRawBytes: Boolean = false,
             minimumConfidence: Double? = null,
             metadata: Map<String, String> = emptyMap(),
-        ): BarcodeOptions =
-            BarcodeOptions(
+        ): BarcodeOptions {
+            minimumConfidence?.requireProbability("minimumConfidence")
+            metadata.requireStringMetadata("metadata")
+
+            return BarcodeOptions(
                 formats.immutableSetSnapshot(),
                 tryHarder,
                 includeRawBytes,
                 minimumConfidence,
                 metadata.immutableMapSnapshot(),
             )
+        }
     }
 }
 
@@ -305,12 +256,12 @@ class BarcodeResult private constructor(
     val text: String,
     val format: BarcodeFormat,
     val provider: BarcodeProviderIdentity,
-    val region: BarcodeRegion? = null,
-    val confidence: Double? = null,
-    val quality: Double? = null,
-    rawBytes: ByteArray? = null,
-    rawBackendFormat: String? = null,
-    metadata: Map<String, String> = emptyMap(),
+    val region: BarcodeRegion?,
+    val confidence: Double?,
+    val quality: Double?,
+    rawBytes: ByteArray?,
+    val rawBackendFormat: String?,
+    val metadata: Map<String, String>,
 ): Serializable {
 
     var rawBytes: ByteArray? = rawBytes?.copyOf()
@@ -318,49 +269,6 @@ class BarcodeResult private constructor(
         private set(value) {
             field = value?.copyOf()
         }
-    val rawBackendFormat: String? = rawBackendFormat
-    val metadata: Map<String, String> = metadata.immutableMapSnapshot()
-
-    init {
-        text.requireNotBlank("text")
-        confidence?.requireProbability("confidence")
-        quality?.requireProbability("quality")
-        require(rawBytes == null || rawBytes.isNotEmpty()) { "rawBytes must not be empty when present" }
-        rawBackendFormat?.requireNotBlank("rawBackendFormat")
-        metadata.requireStringMetadata("metadata")
-    }
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) {
-            return true
-        }
-        if (other !is BarcodeResult) {
-            return false
-        }
-
-        return text == other.text &&
-            format == other.format &&
-            provider == other.provider &&
-            region == other.region &&
-            confidence == other.confidence &&
-            quality == other.quality &&
-            rawBytes.contentEqualsNullable(other.rawBytes) &&
-            rawBackendFormat == other.rawBackendFormat &&
-            metadata == other.metadata
-    }
-
-    override fun hashCode(): Int {
-        var result = text.hashCode()
-        result = 31 * result + format.hashCode()
-        result = 31 * result + provider.hashCode()
-        result = 31 * result + (region?.hashCode() ?: 0)
-        result = 31 * result + (confidence?.hashCode() ?: 0)
-        result = 31 * result + (quality?.hashCode() ?: 0)
-        result = 31 * result + (rawBytes?.contentHashCode() ?: 0)
-        result = 31 * result + (rawBackendFormat?.hashCode() ?: 0)
-        result = 31 * result + metadata.hashCode()
-        return result
-    }
 
     operator fun component1(): String = text
 
@@ -380,17 +288,55 @@ class BarcodeResult private constructor(
 
     operator fun component9(): Map<String, String> = metadata
 
+    override fun equals(other: Any?): Boolean {
+        if (this === other) {
+            return true
+        }
+        if (other !is BarcodeResult) {
+            return false
+        }
+
+        return text == other.text &&
+                format == other.format &&
+                provider == other.provider &&
+                region == other.region &&
+                confidence == other.confidence &&
+                quality == other.quality &&
+                rawBytes.contentEqualsNullable(other.rawBytes) &&
+                rawBackendFormat == other.rawBackendFormat &&
+                metadata == other.metadata
+    }
+
+    override fun hashCode(): Int {
+        return hashOf(
+            text,
+            format,
+            provider,
+            region,
+            confidence,
+            quality,
+            rawBytes.contentHashCode(),
+            rawBackendFormat,
+            metadata
+        )
+    }
+
     /**
      * 로그에 안전한 요약을 반환합니다. barcode text, raw bytes, provider/결과 metadata
      * 값은 민감할 수 있으므로 길이 또는 entry 수만 표시합니다.
      */
     override fun toString(): String =
-        "BarcodeResult(textLength=${text.length}, format=$format, " +
-            "provider=${provider.name}, providerVersion=${provider.version}, " +
-            "providerBackend=${provider.backend}, providerMetadataEntries=${provider.metadata.size}, " +
-            "region=$region, confidence=$confidence, quality=$quality, " +
-            "rawBytes=${rawBytes?.let { "length=${it.size}" } ?: "absent"}, " +
-            "rawBackendFormat=$rawBackendFormat, metadataEntries=${metadata.size})"
+        ToStringBuilder(this)
+            .add("textLength", text.length)
+            .add("format", format)
+            .add("provider", provider)
+            .add("region", region)
+            .add("confidence", confidence)
+            .add("quality", quality)
+            .add("rawBytes", rawBytes?.let { "length=${it.size}" } ?: "absent")
+            .add("rawBackendFormat", rawBackendFormat)
+            .add("metadataEntries", metadata.size)
+            .toString()
 
     companion object {
         private const val serialVersionUID: Long = 8448839205622304997L
@@ -405,8 +351,26 @@ class BarcodeResult private constructor(
             rawBytes: ByteArray? = null,
             rawBackendFormat: String? = null,
             metadata: Map<String, String> = emptyMap(),
-        ): BarcodeResult =
-            BarcodeResult(text, format, provider, region, confidence, quality, rawBytes, rawBackendFormat, metadata)
+        ): BarcodeResult {
+            text.requireNotBlank("text")
+            confidence?.requireProbability("confidence")
+            quality?.requireProbability("quality")
+            require(rawBytes == null || rawBytes.isNotEmpty()) { "rawBytes must not be empty when present" }
+            rawBackendFormat?.requireNotBlank("rawBackendFormat")
+            metadata.requireStringMetadata("metadata")
+
+            return BarcodeResult(
+                text,
+                format,
+                provider,
+                region,
+                confidence,
+                quality,
+                rawBytes,
+                rawBackendFormat,
+                metadata.immutableMapSnapshot()
+            )
+        }
     }
 }
 
@@ -428,20 +392,16 @@ private fun Double.requireFinite(name: String) {
 
 private fun Double.requirePositiveFinite(name: String) {
     requireFinite(name)
-    require(this > 0.0) { "$name must be > 0.0, but was $this" }
+    requireGt(0.0, name)
 }
 
 private fun Double.requireNormalized(name: String) {
-    require(this in NORMALIZED_MIN..NORMALIZED_MAX) {
-        "normalized $name must be in 0.0..1.0, but was $this"
-    }
+    requireInRange(NORMALIZED_MIN, NORMALIZED_MAX, name)
 }
 
 private fun Double.requireProbability(name: String) {
     requireFinite(name)
-    require(this in NORMALIZED_MIN..NORMALIZED_MAX) {
-        "$name must be in 0.0..1.0, but was $this"
-    }
+    requireInRange(NORMALIZED_MIN, NORMALIZED_MAX, name)
 }
 
 private fun Map<String, String>.requireStringMetadata(name: String) {
@@ -449,9 +409,8 @@ private fun Map<String, String>.requireStringMetadata(name: String) {
     values.forEach { it.requireNotBlank("$name value") }
 }
 
-private fun ByteArray?.contentEqualsNullable(other: ByteArray?): Boolean =
-    when {
-        this === other -> true
-        this == null || other == null -> false
-        else -> contentEquals(other)
-    }
+private fun ByteArray?.contentEqualsNullable(other: ByteArray?): Boolean = when {
+    this === other -> true
+    this == null || other == null -> false
+    else -> contentEquals(other)
+}

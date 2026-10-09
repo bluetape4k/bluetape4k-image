@@ -1,12 +1,12 @@
 package io.bluetape4k.images.vips.java21.writer
 
-import com.criteo.vips.VipsImage as NativeVipsImage
 import io.bluetape4k.assertions.shouldBeGreaterThan
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.images.vips.VipsEncodeOptions
 import io.bluetape4k.images.vips.java21.AbstractJVipsTest
 import io.bluetape4k.images.vips.testfixtures.VipsTestFixtures
 import org.junit.jupiter.api.Test
+import com.criteo.vips.VipsImage as NativeVipsImage
 
 /**
  * JVips writer object [JVipsJpegWriter], [JVipsPngWriter], [JVipsWebpWriter]의 unit test입니다.
@@ -15,7 +15,7 @@ import org.junit.jupiter.api.Test
  * fixture는 trusted input이므로 `vipsImageOf` safety guard를 우회하기 위해 native
  * `com.criteo.vips.VipsImage`를 직접 생성합니다.
  */
-class JVipsWriterTest : AbstractJVipsTest() {
+class JVipsWriterTest: AbstractJVipsTest() {
 
     companion object {
         private val JPEG_MAGIC = byteArrayOf(0xFF.toByte(), 0xD8.toByte(), 0xFF.toByte())

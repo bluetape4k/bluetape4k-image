@@ -2,11 +2,15 @@ package io.bluetape4k.images.ocr
 
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldContain
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty
 
 @EnabledIfSystemProperty(named = "ocr.enabled", matches = "true")
 class TesseractNativeOcrTest {
+
+    companion object: KLogging()
 
     @Test
     fun `native Tesseract extracts English text from generated image`() {
@@ -19,6 +23,7 @@ class TesseractNativeOcrTest {
             ),
         )
 
+        log.debug { "text=$text" }
         text.uppercase() shouldContain "BLUETAPE"
         text.uppercase() shouldContain "OCR"
         text.uppercase() shouldContain "123"
@@ -36,6 +41,7 @@ class TesseractNativeOcrTest {
                 text
             }
 
+        log.debug { "output=$output" }
         output shouldContain "eng"
         output shouldContain "kor"
         output shouldContain "jpn"

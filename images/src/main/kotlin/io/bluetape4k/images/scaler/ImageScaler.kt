@@ -77,7 +77,7 @@ fun BufferedImage.scale(xScale: Double, yScale: Double): BufferedImage {
     val w = (this.width * xScale).toInt()
     val h = (this.height * yScale).toInt()
 
-    return bufferedImageOf(w, h).also { scaled ->
-        scaled.drawRenderedImage(this@scale, transform)
+    return bufferedImageOf(w, h).apply {
+        drawRenderedImage(this@scale, transform)
     }
 }

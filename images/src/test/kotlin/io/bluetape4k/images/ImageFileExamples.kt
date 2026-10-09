@@ -1,11 +1,12 @@
 package io.bluetape4k.images
 
+import io.bluetape4k.assertions.shouldBeEmpty
+import io.bluetape4k.assertions.shouldBeGreaterThan
+import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.junit5.tempfolder.TempFolder
 import io.bluetape4k.junit5.tempfolder.TempFolderTest
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
-import io.bluetape4k.assertions.shouldBeGreaterThan
-import io.bluetape4k.assertions.shouldBeTrue
 import org.junit.jupiter.api.Test
 import java.awt.Image
 import java.awt.image.BufferedImage
@@ -42,6 +43,10 @@ class ImageFileExamples: AbstractImageTest() {
             val scaledImage = ImageIO.read(input).getScaledInstance(100, 100, Image.SCALE_SMOOTH)
 
             scaled.drawImage(scaledImage, 0, 0)
+            scaled.propertyNames.shouldBeEmpty()
+//            scaled.propertyNames?.forEach {
+//                log.debug { "property name=$it, value=${scaled.getProperty(it)}" }
+//            }
 
             val file = tempFolder.createFile()
             ImageIO.write(scaled, "jpg", file).shouldBeTrue()

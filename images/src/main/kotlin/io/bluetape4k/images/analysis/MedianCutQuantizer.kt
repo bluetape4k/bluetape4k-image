@@ -1,6 +1,8 @@
 package io.bluetape4k.images.analysis
 
 import com.sksamuel.scrimage.ImmutableImage
+import io.bluetape4k.support.requirePositiveNumber
+
 /**
  * Median Cut quantization 알고리즘으로 이미지의 대표 색상을 추출한다.
  *
@@ -29,6 +31,7 @@ internal object MedianCutQuantizer {
         quality: Int = 10,
         ignoreWhite: Boolean = false,
     ): List<DominantColor> {
+        count.requirePositiveNumber("count")
         val pixels = collectPixels(image, quality, ignoreWhite)
         if (pixels.isEmpty()) return emptyList()
 
@@ -90,14 +93,17 @@ internal object MedianCutQuantizer {
 
     private fun colorIndex(r: Int, g: Int, b: Int): Int =
         ((r shr RIGHT_SHIFT) shl (2 * SIGNAL_BITS)) or
-            ((g shr RIGHT_SHIFT) shl SIGNAL_BITS) or
-            (b shr RIGHT_SHIFT)
+                ((g shr RIGHT_SHIFT) shl SIGNAL_BITS) or
+                (b shr RIGHT_SHIFT)
 
     /** 히스토그램 전체를 포괄하는 초기 박스를 생성한다. */
     private fun buildInitialBox(histogram: IntArray): ColorBox {
-        var rMin = 32; var rMax = 0
-        var gMin = 32; var gMax = 0
-        var bMin = 32; var bMax = 0
+        var rMin = 32
+        var rMax = 0
+        var gMin = 32
+        var gMax = 0
+        var bMin = 32
+        var bMax = 0
         var count = 0
 
         for (i in 0 until HIST_SIZE) {
@@ -127,7 +133,11 @@ internal object MedianCutQuantizer {
         }
     }
 
-    private enum class Axis { R, G, B }
+    private enum class Axis {
+        R,
+        G,
+        B
+    }
 
     private fun splitAlongAxis(box: ColorBox, histogram: IntArray, axis: Axis): Pair<ColorBox, ColorBox> {
         val lookAheadSum = IntArray(32)
@@ -139,21 +149,21 @@ internal object MedianCutQuantizer {
             Axis.B -> box.bMin to box.bMax
         }
 
-        for (val_ in start..end) {
-            val dimSum = countInSlice(box, histogram, axis, val_)
+        for (value in start..end) {
+            val dimSum = countInSlice(box, histogram, axis, value)
             sum += dimSum
-            lookAheadSum[val_] = sum
+            lookAheadSum[value] = sum
         }
 
         val total = sum
         val half = total / 2
 
         var splitAt = start
-        var cumSum = 0
-        for (val_ in start..end) {
-            cumSum = lookAheadSum[val_]
+        var cumSum: Int
+        for (value in start..end) {
+            cumSum = lookAheadSum[value]
             if (cumSum >= half) {
-                splitAt = val_
+                splitAt = value
                 break
             }
         }
@@ -178,15 +188,21 @@ internal object MedianCutQuantizer {
         )
     }
 
-    private fun countInSlice(box: ColorBox, histogram: IntArray, axis: Axis, val_: Int): Int {
+    private fun countInSlice(box: ColorBox, histogram: IntArray, axis: Axis, value: Int): Int {
         var count = 0
         when (axis) {
-            Axis.R -> for (g in box.gMin..box.gMax) for (b in box.bMin..box.bMax)
-                count += histogram[colorIndex(val_ shl RIGHT_SHIFT, g shl RIGHT_SHIFT, b shl RIGHT_SHIFT)]
-            Axis.G -> for (r in box.rMin..box.rMax) for (b in box.bMin..box.bMax)
-                count += histogram[colorIndex(r shl RIGHT_SHIFT, val_ shl RIGHT_SHIFT, b shl RIGHT_SHIFT)]
-            Axis.B -> for (r in box.rMin..box.rMax) for (g in box.gMin..box.gMax)
-                count += histogram[colorIndex(r shl RIGHT_SHIFT, g shl RIGHT_SHIFT, val_ shl RIGHT_SHIFT)]
+            Axis.R ->
+                for (g in box.gMin..box.gMax)
+                    for (b in box.bMin..box.bMax)
+                        count += histogram[colorIndex(value shl RIGHT_SHIFT, g shl RIGHT_SHIFT, b shl RIGHT_SHIFT)]
+            Axis.G ->
+                for (r in box.rMin..box.rMax)
+                    for (b in box.bMin..box.bMax)
+                        count += histogram[colorIndex(r shl RIGHT_SHIFT, value shl RIGHT_SHIFT, b shl RIGHT_SHIFT)]
+            Axis.B ->
+                for (r in box.rMin..box.rMax)
+                    for (g in box.gMin..box.gMax)
+                        count += histogram[colorIndex(r shl RIGHT_SHIFT, g shl RIGHT_SHIFT, value shl RIGHT_SHIFT)]
         }
         return count
     }
@@ -202,7 +218,11 @@ internal object MedianCutQuantizer {
 
     /** 박스 내 평균 색상을 계산한다. */
     private fun averageColor(box: ColorBox, histogram: IntArray): DominantColor {
-        var rSum = 0L; var gSum = 0L; var bSum = 0L; var total = 0
+        var rSum = 0L
+        var gSum = 0L
+        var bSum = 0L
+        var total = 0
+
         for (r in box.rMin..box.rMax) {
             for (g in box.gMin..box.gMax) {
                 for (b in box.bMin..box.bMax) {
@@ -213,7 +233,9 @@ internal object MedianCutQuantizer {
                         bSum += hval.toLong() * (b * MULT + MULT / 2)
                         total += hval
                     }
-        }}}
+                }
+            }
+        }
         return if (total == 0) {
             // 박스에 픽셀이 없는 경우 (단색 이미지 분할 시 rMin > rMax 가능) — coerceIn 으로 방어
             DominantColor(
@@ -239,6 +261,7 @@ internal object MedianCutQuantizer {
         val bMin: Int, val bMax: Int,
         val count: Int,
     ) {
-        val volume: Int get() = (rMax - rMin + 1) * (gMax - gMin + 1) * (bMax - bMin + 1)
+        val volume: Int
+            get() = (rMax - rMin + 1) * (gMax - gMin + 1) * (bMax - bMin + 1)
     }
 }

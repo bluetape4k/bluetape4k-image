@@ -17,7 +17,7 @@ class MetricImageStorageWithMetadata(
     delegate: ImageStorage,
     registry: MeterRegistry,
     private val metadataDelegate: ImageObjectMetadataReader,
-) : MetricImageStorage(delegate, registry), ImageObjectMetadataReader {
+): MetricImageStorage(delegate, registry), ImageObjectMetadataReader {
 
     override suspend fun readMetadata(key: ImageObjectKey): ImageObjectMetadata =
         metadataDelegate.readMetadata(key)

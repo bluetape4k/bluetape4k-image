@@ -2,26 +2,33 @@ package io.bluetape4k.images.batch
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldBeNullOrEmpty
+import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeGreaterThan
+import io.bluetape4k.assertions.shouldBeNull
 import io.bluetape4k.assertions.shouldBeTrue
-import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.assertions.shouldHaveSize
 import io.bluetape4k.images.AbstractImageTest
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import java.nio.file.Path
 
-class ImageBatchModelsTest : AbstractImageTest() {
+class ImageBatchModelsTest: AbstractImageTest() {
+
+    companion object: KLogging()
 
     // ── ImageBatchFailureStage 검증 ─────────────────────────────────────────
 
     @Test
     fun `ImageBatchFailureStage has all expected values`() {
         val stages = ImageBatchFailureStage.entries
+
         stages.any { it == ImageBatchFailureStage.VALIDATION }.shouldBeTrue()
         stages.any { it == ImageBatchFailureStage.LOAD }.shouldBeTrue()
         stages.any { it == ImageBatchFailureStage.TRANSFORM }.shouldBeTrue()
         stages.any { it == ImageBatchFailureStage.WRITE }.shouldBeTrue()
-        stages.size shouldBeEqualTo 4
+        stages shouldHaveSize 4
     }
 
     // ── ImageBatchException 검증 ───────────────────────────────────────────
@@ -37,9 +44,9 @@ class ImageBatchModelsTest : AbstractImageTest() {
 
         ex.source shouldBeEqualTo path
         ex.stage shouldBeEqualTo ImageBatchFailureStage.LOAD
-        ex.output shouldBeEqualTo null
+        ex.output.shouldBeNull()
         ex.message shouldBeEqualTo "could not read file"
-        ex.cause shouldBeEqualTo null
+        ex.cause.shouldBeNull()
     }
 
     @Test
@@ -88,7 +95,7 @@ class ImageBatchModelsTest : AbstractImageTest() {
             stage = ImageBatchFailureStage.LOAD,
             cause = RuntimeException("missing"),
         )
-        failure.output shouldBeEqualTo null
+        failure.output.shouldBeNull()
     }
 
     // ── ImageProcessingOptions 검증 ────────────────────────────────────────
@@ -97,10 +104,11 @@ class ImageBatchModelsTest : AbstractImageTest() {
     fun `ImageProcessingOptions default values are set correctly`() {
         val opts = ImageProcessingOptions()
 
+        log.debug { "Image processing options=$opts" }
         opts.parallelism shouldBeEqualTo defaultImageBatchParallelism()
         opts.maxPixels shouldBeEqualTo DEFAULT_MAX_PIXELS
         opts.maxInFlightPixels shouldBeEqualTo DEFAULT_MAX_IN_FLIGHT_PIXELS
-        opts.skipFailures shouldBeEqualTo false
+        opts.skipFailures.shouldBeFalse()
     }
 
     @Test
@@ -137,8 +145,8 @@ class ImageBatchModelsTest : AbstractImageTest() {
 
         opts.maxPixels shouldBeEqualTo LARGE_JOB_MAX_PIXELS
         opts.maxInFlightPixels shouldBeEqualTo LARGE_JOB_MAX_IN_FLIGHT_PIXELS
-        (opts.maxPixels > DEFAULT_MAX_PIXELS).shouldBeTrue()
-        (opts.maxInFlightPixels > DEFAULT_MAX_IN_FLIGHT_PIXELS).shouldBeTrue()
+        opts.maxPixels shouldBeGreaterThan DEFAULT_MAX_PIXELS
+        opts.maxInFlightPixels shouldBeGreaterThan DEFAULT_MAX_IN_FLIGHT_PIXELS
         opts.parallelism shouldBeEqualTo 2
     }
 
@@ -156,7 +164,7 @@ class ImageBatchModelsTest : AbstractImageTest() {
         )
         opts.onFailure(failure)
 
-        recorded.size shouldBeEqualTo 1
-        recorded.first().stage shouldBeEqualTo ImageBatchFailureStage.LOAD
+        recorded shouldHaveSize 1
+        recorded.single().stage shouldBeEqualTo ImageBatchFailureStage.LOAD
     }
 }

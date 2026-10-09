@@ -7,13 +7,15 @@ import io.bluetape4k.images.ocr.OcrException
 import io.bluetape4k.images.ocr.OcrOptions
 import io.bluetape4k.images.ocr.TesseractOcrEngine
 import io.bluetape4k.images.ocr.suspendExtractText
-import io.bluetape4k.logging.KotlinLogging
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.warn
 import io.bluetape4k.support.requireNotBlank
+import io.bluetape4k.support.requireNotEmpty
 import io.bluetape4k.support.requirePositiveNumber
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.content.PartData
+import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.install
@@ -29,7 +31,6 @@ import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import io.ktor.utils.io.ByteReadChannel
 import io.ktor.utils.io.readRemaining
-import io.ktor.serialization.kotlinx.json.json
 import kotlinx.io.readByteArray
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -38,7 +39,7 @@ import java.io.IOException
 private const val INVALID_IMAGE_PAYLOAD_MESSAGE = "Invalid image payload."
 private const val OCR_UNAVAILABLE_MESSAGE = "OCR runtime is unavailable."
 
-private val log = KotlinLogging.logger {}
+private object AppLogger: KLogging()
 
 /**
  * local-only Ktor OCR API quickstart를 실행합니다.
@@ -103,7 +104,7 @@ data class KtorOcrApiConfig(
     val maxInputSide: Int = 8_192,
     val defaultLanguages: String = OcrOptions.DEFAULT_LANGUAGE,
     val tessdataPath: String? = null,
-) : java.io.Serializable {
+): java.io.Serializable {
 
     init {
         routePath.requireNotBlank("routePath")
@@ -133,7 +134,6 @@ class KtorOcrService(
     private val tessdataPath: String?,
     private val decodeLimits: ImageDecodeLimits = ImageDecodeLimits.ExternalInput,
 ) {
-
     suspend fun recognize(uploadBytes: ByteArray, languages: List<String>): OcrTextResponse {
         val text = immutableExternalImageOf(uploadBytes, decodeLimits).suspendExtractText(
             options = OcrOptions(
@@ -159,7 +159,7 @@ data class OcrTextResponse(
     val text: String,
     val languages: List<String>,
     val characterCount: Int,
-) : java.io.Serializable {
+): java.io.Serializable {
 
     companion object {
         private const val serialVersionUID: Long = 1L
@@ -175,14 +175,15 @@ data class OcrApiErrorResponse(
     val message: String,
     val status: Int,
     val path: String,
-) : java.io.Serializable {
+): java.io.Serializable {
 
     companion object {
         private const val serialVersionUID: Long = 1L
     }
 }
 
-private data class OcrUpload(
+@JvmInline
+private value class OcrUpload(
     val bytes: ByteArray,
 )
 
@@ -196,19 +197,13 @@ private suspend fun ApplicationCall.receiveOcrUpload(config: KtorOcrApiConfig): 
             if (part.name == config.multipartFieldName) {
                 val contentType = part.contentType?.withoutParameters()?.toString()?.lowercase().orEmpty()
                 contentType.requireNotBlank("contentType")
-                require(contentType in ALLOWED_CONTENT_TYPES) {
-                    "Unsupported image content type: $contentType"
-                }
+                require(contentType in ALLOWED_CONTENT_TYPES) { "Unsupported image content type: $contentType" }
 
                 val bytes = when (part) {
                     is PartData.FileItem -> part.provider().readUploadBytes(config)
                     is PartData.BinaryChannelItem -> part.provider().readUploadBytes(config)
-                    is PartData.BinaryItem -> throw IllegalArgumentException(
-                        "Multipart field '${config.multipartFieldName}' must be a streamed file upload."
-                    )
-                    is PartData.FormItem -> throw IllegalArgumentException(
-                        "Multipart field '${config.multipartFieldName}' must be a file."
-                    )
+                    is PartData.BinaryItem -> throw IllegalArgumentException("Multipart field '${config.multipartFieldName}' must be a streamed file upload.")
+                    is PartData.FormItem -> throw IllegalArgumentException("Multipart field '${config.multipartFieldName}' must be a file.")
                 }
                 require(bytes.size <= config.maxInputBytes) {
                     "OCR upload exceeds maxInputBytes=${config.maxInputBytes}."
@@ -235,8 +230,10 @@ private suspend fun ApplicationCall.receiveOcrUpload(config: KtorOcrApiConfig): 
     throw IllegalArgumentException(detail)
 }
 
-private suspend fun ByteReadChannel.readUploadBytes(config: KtorOcrApiConfig): ByteArray =
-    readRemaining(config.maxInputBytes.coerceAtMost(Long.MAX_VALUE - 1L) + 1L).readByteArray()
+private suspend fun ByteReadChannel.readUploadBytes(config: KtorOcrApiConfig): ByteArray {
+    val max = config.maxInputBytes.coerceAtMost(Long.MAX_VALUE - 1L) + 1L
+    return readRemaining(max).readByteArray()
+}
 
 private fun KtorOcrApiConfig.toDecodeLimits(): ImageDecodeLimits =
     ImageDecodeLimits(
@@ -246,15 +243,14 @@ private fun KtorOcrApiConfig.toDecodeLimits(): ImageDecodeLimits =
     )
 
 private fun parseLanguages(value: String): List<String> {
-    val languages = value.split(LANGUAGE_SEPARATOR)
+    val languages = value
+        .split(LANGUAGE_SEPARATOR)
         .map { language ->
             val normalized = language.trim()
             normalized.requireNotBlank("language")
             normalized
         }
-    require(languages.isNotEmpty()) {
-        "languages must not be empty"
-    }
+    languages.requireNotEmpty("languages")
     return languages
 }
 
@@ -268,18 +264,14 @@ private suspend fun ApplicationCall.respondOcrRoute(block: suspend () -> Unit) {
             message = e.message ?: "Invalid OCR request.",
         )
     } catch (e: IOException) {
-        log.warn(e) {
-            "Ktor OCR request failed. reason=io_failure path=${request.local.uri}"
-        }
+        AppLogger.log.warn(e) { "Ktor OCR request failed. reason=io_failure path=${request.local.uri}" }
         respondOcrApiError(
             status = HttpStatusCode.BadRequest,
             error = "bad_request",
             message = INVALID_IMAGE_PAYLOAD_MESSAGE,
         )
     } catch (e: OcrException) {
-        log.warn(e) {
-            "Ktor OCR request failed. reason=ocr_runtime_failure path=${request.local.uri}"
-        }
+        AppLogger.log.warn(e) { "Ktor OCR request failed. reason=ocr_runtime_failure path=${request.local.uri}" }
         respondOcrApiError(
             status = HttpStatusCode.ServiceUnavailable,
             error = "ocr_unavailable",

@@ -197,12 +197,12 @@ object VipsTransformReceiptValidator {
 
     private fun hasSingleTrailingLf(bytes: ByteArray): Boolean =
         bytes.isNotEmpty() && bytes.last() == '\n'.code.toByte() &&
-            (bytes.size == 1 || bytes[bytes.lastIndex - 1] !in setOf(
-                '\n'.code.toByte(),
-                '\r'.code.toByte(),
-                ' '.code.toByte(),
-                '\t'.code.toByte(),
-            ))
+                (bytes.size == 1 || bytes[bytes.lastIndex - 1] !in setOf(
+                    '\n'.code.toByte(),
+                    '\r'.code.toByte(),
+                    ' '.code.toByte(),
+                    '\t'.code.toByte(),
+                ))
 }
 
 fun vipsTransformNotMeasuredSha256(): String =

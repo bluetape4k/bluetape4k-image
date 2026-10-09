@@ -13,7 +13,7 @@ data class ImageDecodeLimits(
     val maxEncodedBytes: Long = DEFAULT_MAX_ENCODED_BYTES,
     val maxDecodedPixels: Long = DEFAULT_MAX_DECODED_PIXELS,
     val maxDecodedSide: Int = DEFAULT_MAX_DECODED_SIDE,
-) : Serializable {
+): Serializable {
 
     init {
         maxEncodedBytes.requirePositiveNumber("maxEncodedBytes")

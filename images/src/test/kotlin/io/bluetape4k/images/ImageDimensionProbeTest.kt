@@ -5,19 +5,24 @@ import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeInstanceOf
 import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import org.junit.jupiter.api.Test
 import java.awt.Color
 import java.awt.image.BufferedImage
 import java.io.ByteArrayOutputStream
-import javax.imageio.ImageIO
 import javax.imageio.IIOException
+import javax.imageio.ImageIO
 
 class ImageDimensionProbeTest {
+
+    companion object: KLogging()
 
     @Test
     fun `probeImageDimensions reads dimensions from encoded bytes without full decode`() {
         val dimensions = probeImageDimensions(pngBytes(width = 120, height = 80))
 
+        log.debug { "dimensions=$dimensions" }
         dimensions.shouldNotBeNull()
         dimensions.width shouldBeEqualTo 120
         dimensions.height shouldBeEqualTo 80
@@ -28,14 +33,16 @@ class ImageDimensionProbeTest {
     fun `probeImageDimensionsDetailed reports successful header probe`() {
         val result = probeImageDimensionsDetailed(pngBytes(width = 120, height = 80))
 
+        log.debug { "result=$result" }
         val success = result.shouldBeInstanceOf<ImageDimensionProbeResult.Success>()
         success.dimensions shouldBeEqualTo ImageDimensions(width = 120, height = 80)
     }
 
     @Test
     fun `probeImageDimensionsDetailed distinguishes unavailable and malformed input`() {
-        probeImageDimensionsDetailed(ByteArray(32) { 0x7F.toByte() }) shouldBeEqualTo
-            ImageDimensionProbeResult.Unavailable
+        probeImageDimensionsDetailed(
+            ByteArray(32) { 0x7F.toByte() }
+        ) shouldBeEqualTo ImageDimensionProbeResult.Unavailable
 
         val truncatedPng = byteArrayOf(
             0x89.toByte(),
@@ -47,8 +54,10 @@ class ImageDimensionProbeTest {
             0x1A,
             0x0A,
         )
+
         val malformed = probeImageDimensionsDetailed(truncatedPng)
             .shouldBeInstanceOf<ImageDimensionProbeResult.Malformed>()
+
         malformed.cause.shouldBeInstanceOf<IIOException>()
     }
 
@@ -86,9 +95,9 @@ class ImageDimensionProbeTest {
             graphics.dispose()
         }
 
-        return ByteArrayOutputStream().use { output ->
-            ImageIO.write(image, "png", output)
-            output.toByteArray()
+        return ByteArrayOutputStream().use { bos ->
+            ImageIO.write(image, "png", bos)
+            bos.toByteArray()
         }
     }
 }

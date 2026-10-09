@@ -1,5 +1,3 @@
-import org.gradle.api.tasks.compile.JavaCompile
-import org.gradle.api.tasks.testing.Test
 import org.gradle.jvm.tasks.Jar
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
@@ -43,7 +41,7 @@ tasks.named<Test>("test") {
     doFirst {
         if (System.getProperty("bluetape4k.images.golden.update", "false").toBoolean()) {
             throw org.gradle.api.GradleException(
-                "Java21 JNI golden tests are read-only; regenerate canonical fixtures only with the Java25 FFM tests.",
+                "Java25 JNI golden tests are read-only; regenerate canonical fixtures only with the Java25 FFM tests.",
             )
         }
     }
@@ -102,9 +100,9 @@ tasks.register<Test>("consumerTest") {
         val forbiddenOutputs = classpath.files.filter { file ->
             val path = file.invariantSeparatorsPath
             path.contains("/testFixtures") ||
-                path.contains("/classes/kotlin/test") ||
-                path.contains("/classes/java/test") ||
-                path.contains("/test-classes")
+                    path.contains("/classes/kotlin/test") ||
+                    path.contains("/classes/java/test") ||
+                    path.contains("/test-classes")
         }
         require(forbiddenOutputs.isEmpty()) {
             "consumerTest must not include test or testFixtures output: $forbiddenOutputs"
@@ -129,37 +127,38 @@ tasks.register<Test>("consumerTest") {
 val maxProductionClassFileMajor = 69
 
 private fun classFileMajor(bytes: ByteArray): Int {
-    require(bytes.size >= 8 &&
-        bytes[0] == 0xCA.toByte() &&
-        bytes[1] == 0xFE.toByte() &&
-        bytes[2] == 0xBA.toByte() &&
-        bytes[3] == 0xBE.toByte()
+    require(
+        bytes.size >= 8 &&
+                bytes[0] == 0xCA.toByte() &&
+                bytes[1] == 0xFE.toByte() &&
+                bytes[2] == 0xBA.toByte() &&
+                bytes[3] == 0xBE.toByte()
     ) { "invalid class file header" }
     return ((bytes[6].toInt() and 0xFF) shl 8) or (bytes[7].toInt() and 0xFF)
 }
 
 val vipsApiProject = project(":bluetape4k-images-vips-api")
 val vipsApiJar = vipsApiProject.tasks.named<Jar>("jar")
-val vipsJava21Jar = tasks.named<Jar>("jar")
+val vipsJava25Jar = tasks.named<Jar>("jar")
 
-tasks.register("verifyVipsJava21Bytecode") {
-    description = "Verifies Java 25 production bytecode for the API and legacy java21 module."
+tasks.register("verifyVipsJava25Bytecode") {
+    description = "Verifies Java 25 production bytecode for the API and legacy java25 module."
     group = "verification"
-    dependsOn(vipsApiJar, vipsJava21Jar)
+    dependsOn(vipsApiJar, vipsJava25Jar)
     doLast {
         val productionDirectories = listOf(
             "bluetape4k-images-vips-api/classes-kotlin" to
-                vipsApiProject.layout.buildDirectory.dir("classes/kotlin/main").get().asFile,
+                    vipsApiProject.layout.buildDirectory.dir("classes/kotlin/main").get().asFile,
             "bluetape4k-images-vips-api/classes-java" to
-                vipsApiProject.layout.buildDirectory.dir("classes/java/main").get().asFile,
-            "bluetape4k-images-vips-java21/classes-kotlin" to
-                layout.buildDirectory.dir("classes/kotlin/main").get().asFile,
-            "bluetape4k-images-vips-java21/classes-java" to
-                layout.buildDirectory.dir("classes/java/main").get().asFile,
+                    vipsApiProject.layout.buildDirectory.dir("classes/java/main").get().asFile,
+            "bluetape4k-images-vips-java25/classes-kotlin" to
+                    layout.buildDirectory.dir("classes/kotlin/main").get().asFile,
+            "bluetape4k-images-vips-java25/classes-java" to
+                    layout.buildDirectory.dir("classes/java/main").get().asFile,
         )
         val productionJars = listOf(
             "bluetape4k-images-vips-api/jar" to vipsApiJar.get().archiveFile.get().asFile,
-            "bluetape4k-images-vips-java21/jar" to vipsJava21Jar.get().archiveFile.get().asFile,
+            "bluetape4k-images-vips-java25/jar" to vipsJava25Jar.get().archiveFile.get().asFile,
         )
         val violations = mutableListOf<String>()
         var inspected = 0
@@ -214,8 +213,11 @@ dependencies {
 
     // BoundedInputStream for input size limits
     implementation(bt4k.commons.io)
+    implementation(bt4k.bluetape4k.io)
+    implementation(bt4k.fory.kotlin)
 
     // Coroutines
+    implementation(bt4k.bluetape4k.coroutines)
     implementation(libs.kotlinx.coroutines.core)
     testImplementation(libs.kotlinx.coroutines.test)
 }

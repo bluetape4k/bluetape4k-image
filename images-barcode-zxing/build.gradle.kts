@@ -2,6 +2,10 @@ tasks.withType<Test>().configureEach {
     systemProperty("java.awt.headless", "true")
 }
 
+configurations {
+    testImplementation.get().extendsFrom(compileOnly.get(), runtimeOnly.get())
+}
+
 dependencies {
     api(project(":bluetape4k-images-barcode-api"))
 

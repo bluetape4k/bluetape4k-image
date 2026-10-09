@@ -1,7 +1,9 @@
 package io.bluetape4k.images.vips.java25.golden
 
+import io.bluetape4k.assertions.shouldNotBeEmpty
 import io.bluetape4k.images.vips.VipsEncodeOptions
-import io.bluetape4k.images.vips.VipsImageFormat
+import io.bluetape4k.images.vips.VipsImageFormat.JPEG
+import io.bluetape4k.images.vips.VipsImageFormat.WEBP
 import io.bluetape4k.images.vips.java25.AbstractFfmVipsTest
 import io.bluetape4k.images.vips.java25.ffmVipsImageOf
 import io.bluetape4k.images.vips.testfixtures.VipsGoldenAssert
@@ -18,9 +20,9 @@ import org.junit.jupiter.api.condition.JRE
  * 갱신 모드 실행은 `-Dbluetape4k.images.golden.update=true`로 활성화하며,
  * java25가 골든 이미지의 마스터 소스이므로 갱신 메서드는 항상 @EnabledForJreRange(min = JRE.JAVA_25)로 보호합니다.
  */
-class VipsGoldenFilterTest : AbstractFfmVipsTest() {
+class VipsGoldenFilterTest: AbstractFfmVipsTest() {
 
-    companion object : KLogging() {
+    companion object: KLogging() {
         /** CI와 macOS에서 확인된 libvips/native codec 버전별 손실 thumbnail 출력 편차를 제한하는 경계입니다. */
         private const val THUMBNAIL_JPEG_TOLERANCE = 6
     }
@@ -35,7 +37,9 @@ class VipsGoldenFilterTest : AbstractFfmVipsTest() {
     fun `PNG 원본을 JPEG 인코딩한 결과가 골든 이미지와 일치한다`() {
         val bytes = VipsTestFixtures.loadFixture(VipsTestFixtures.SAMPLE_PNG)
         ffmVipsImageOf(bytes).use { img ->
-            val resultBytes = img.toBytes(VipsImageFormat.JPEG, VipsEncodeOptions.Default)
+            val resultBytes = img.toBytes(JPEG, VipsEncodeOptions.Default)
+            resultBytes.shouldNotBeEmpty()
+            
             VipsGoldenAssert.assertSimilarToGolden(resultBytes, "vips-encode-jpeg")
         }
     }
@@ -48,7 +52,9 @@ class VipsGoldenFilterTest : AbstractFfmVipsTest() {
         val bytes = VipsTestFixtures.loadFixture(VipsTestFixtures.SAMPLE_JPEG)
         ffmVipsImageOf(bytes).use { img ->
             img.thumbnail(128).use { thumb ->
-                val resultBytes = thumb.toBytes(VipsImageFormat.JPEG, VipsEncodeOptions.Default)
+                val resultBytes = thumb.toBytes(JPEG, VipsEncodeOptions.Default)
+                resultBytes.shouldNotBeEmpty()
+
                 VipsGoldenAssert.assertSimilarToGolden(
                     resultBytes,
                     "vips-thumbnail-jpeg",
@@ -66,7 +72,9 @@ class VipsGoldenFilterTest : AbstractFfmVipsTest() {
         val bytes = VipsTestFixtures.loadFixture(VipsTestFixtures.SAMPLE_JPEG)
         ffmVipsImageOf(bytes).use { img ->
             img.resize(320, 240).use { resized ->
-                val resultBytes = resized.toBytes(VipsImageFormat.WEBP, VipsEncodeOptions.Default)
+                val resultBytes = resized.toBytes(WEBP, VipsEncodeOptions.Default)
+                resultBytes.shouldNotBeEmpty()
+
                 VipsGoldenAssert.assertSimilarToGolden(resultBytes, "vips-resize-webp")
             }
         }
@@ -79,7 +87,9 @@ class VipsGoldenFilterTest : AbstractFfmVipsTest() {
     fun `골든 이미지 갱신 - encode jpeg`() {
         val bytes = VipsTestFixtures.loadFixture(VipsTestFixtures.SAMPLE_PNG)
         ffmVipsImageOf(bytes).use { img ->
-            val resultBytes = img.toBytes(VipsImageFormat.JPEG, VipsEncodeOptions.Default)
+            val resultBytes = img.toBytes(JPEG, VipsEncodeOptions.Default)
+            resultBytes.shouldNotBeEmpty()
+            
             VipsGoldenAssert.assertSimilarToGolden(resultBytes, "vips-encode-jpeg")
         }
     }
@@ -90,7 +100,9 @@ class VipsGoldenFilterTest : AbstractFfmVipsTest() {
         val bytes = VipsTestFixtures.loadFixture(VipsTestFixtures.SAMPLE_JPEG)
         ffmVipsImageOf(bytes).use { img ->
             img.thumbnail(128).use { thumb ->
-                val resultBytes = thumb.toBytes(VipsImageFormat.JPEG, VipsEncodeOptions.Default)
+                val resultBytes = thumb.toBytes(JPEG, VipsEncodeOptions.Default)
+                resultBytes.shouldNotBeEmpty()
+                
                 VipsGoldenAssert.assertSimilarToGolden(
                     resultBytes,
                     "vips-thumbnail-jpeg",
@@ -106,7 +118,9 @@ class VipsGoldenFilterTest : AbstractFfmVipsTest() {
         val bytes = VipsTestFixtures.loadFixture(VipsTestFixtures.SAMPLE_JPEG)
         ffmVipsImageOf(bytes).use { img ->
             img.resize(320, 240).use { resized ->
-                val resultBytes = resized.toBytes(VipsImageFormat.WEBP, VipsEncodeOptions.Default)
+                val resultBytes = resized.toBytes(WEBP, VipsEncodeOptions.Default)
+                resultBytes.shouldNotBeEmpty()
+                
                 VipsGoldenAssert.assertSimilarToGolden(resultBytes, "vips-resize-webp")
             }
         }

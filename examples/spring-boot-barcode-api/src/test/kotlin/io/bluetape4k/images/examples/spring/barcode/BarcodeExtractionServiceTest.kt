@@ -3,9 +3,12 @@ package io.bluetape4k.images.examples.spring.barcode
 import com.sksamuel.scrimage.nio.JpegWriter
 import com.sksamuel.scrimage.webp.WebpWriter
 import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.shouldBeEmpty
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeSameInstanceAs
 import io.bluetape4k.images.ImageDimensions
+import io.bluetape4k.images.analysis.ImageMetadataReadOptions
+import io.bluetape4k.images.analysis.readImageMetadataReport
 import io.bluetape4k.images.barcode.BarcodeException
 import io.bluetape4k.images.barcode.BarcodeFailureReason
 import io.bluetape4k.images.barcode.BarcodeFormat
@@ -13,8 +16,8 @@ import io.bluetape4k.images.barcode.BarcodeReader
 import io.bluetape4k.images.barcode.zxing.ZxingBarcodeReader
 import io.bluetape4k.images.immutableImageOf
 import io.bluetape4k.images.probeImageDimensions
-import io.bluetape4k.images.analysis.ImageMetadataReadOptions
-import io.bluetape4k.images.analysis.readImageMetadataReport
+import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.logging.debug
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.test.runTest
@@ -33,12 +36,15 @@ import java.util.concurrent.atomic.AtomicReference
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class BarcodeExtractionServiceTest {
 
+    companion object: KLoggingChannel()
+
     private val fixtures = BarcodeExampleFixtures()
 
     @Test
     fun `extracts the QR fixture into a bounded provider neutral response`() = runTest {
         val response = service().extract(fixtures.bytes(BarcodeExampleFixture.SAMPLE))
 
+        log.debug { "response=$response" }
         response.count shouldBeEqualTo 1
         response.results.single() shouldBeEqualTo BarcodeResultResponse(
             text = "bluetape4k-barcode-quickstart",
@@ -51,8 +57,9 @@ class BarcodeExtractionServiceTest {
     fun `returns an empty response when a valid image has no barcode`() = runTest {
         val response = service().extract(fixtures.bytes(BarcodeExampleFixture.NO_RESULT))
 
+        log.debug { "response=$response" }
         response.count shouldBeEqualTo 0
-        response.results shouldBeEqualTo emptyList()
+        response.results.shouldBeEmpty()
     }
 
     @Test
@@ -65,6 +72,8 @@ class BarcodeExtractionServiceTest {
 
         uploads.forEach { (contentType, bytes) ->
             val response = service().extract(multipart(contentType, bytes))
+
+            log.debug { "response=$response" }
             response.count shouldBeEqualTo 1
             response.results.single().format shouldBeEqualTo BarcodeFormat.QR_CODE
         }
@@ -75,8 +84,11 @@ class BarcodeExtractionServiceTest {
         val webp = immutableImageOf(fixtures.bytes(BarcodeExampleFixture.SAMPLE))
             .forWriter(WebpWriter.DEFAULT)
             .bytes()
-        val response = service(dimensionProbe = { null }).extract(multipart("image/webp", webp))
 
+        val response = service(dimensionProbe = { null })
+            .extract(multipart("image/webp", webp))
+
+        log.debug { "response=$response" }
         response.count shouldBeEqualTo 1
     }
 
@@ -85,6 +97,7 @@ class BarcodeExtractionServiceTest {
         val empty = assertFailsWith<BarcodeRequestException> {
             service().extract(multipart("image/png", ByteArray(0)))
         }
+        log.debug { "empty=$empty" }
         empty.status shouldBeEqualTo HttpStatus.BAD_REQUEST
         empty.error shouldBeEqualTo "empty_input"
 
@@ -115,6 +128,7 @@ class BarcodeExtractionServiceTest {
                 )
             )
         }
+        log.debug { "reported=$reported" }
         reported.status shouldBeEqualTo HttpStatus.CONTENT_TOO_LARGE
 
         val actual = assertFailsWith<BarcodeRequestException> {
@@ -126,6 +140,7 @@ class BarcodeExtractionServiceTest {
                 )
             )
         }
+        log.debug { "actual=$actual" }
         actual.status shouldBeEqualTo HttpStatus.CONTENT_TOO_LARGE
         readerCalls.get() shouldBeEqualTo 0
     }
@@ -145,6 +160,7 @@ class BarcodeExtractionServiceTest {
                 properties = BarcodeExampleProperties(maxInputSide = 100),
             ).extract(bytes)
         }
+        log.debug { "sideError=$sideError" }
         sideError.status shouldBeEqualTo HttpStatus.CONTENT_TOO_LARGE
 
         val pixelError = assertFailsWith<BarcodeRequestException> {
@@ -153,6 +169,7 @@ class BarcodeExtractionServiceTest {
                 properties = BarcodeExampleProperties(maxInputPixels = 40_000),
             ).extract(bytes)
         }
+        log.debug { "pixelError=$pixelError" }
         pixelError.status shouldBeEqualTo HttpStatus.CONTENT_TOO_LARGE
         readerCalls.get() shouldBeEqualTo 0
     }
@@ -177,6 +194,7 @@ class BarcodeExtractionServiceTest {
             ).extract(webp)
         }
 
+        log.debug { "error=$error" }
         error.reason shouldBeEqualTo BarcodeFailureReason.MALFORMED_INPUT
         readerCalls.get() shouldBeEqualTo 0
     }
@@ -210,6 +228,7 @@ class BarcodeExtractionServiceTest {
             val actual = assertFailsWith<BarcodeException> {
                 service(reader).extract(fixtures.bytes(BarcodeExampleFixture.SAMPLE))
             }
+            log.debug { "actual=$actual" }
             actual shouldBeSameInstanceAs expected
         }
     }
@@ -222,6 +241,7 @@ class BarcodeExtractionServiceTest {
         val actual = assertFailsWith<CancellationException> {
             service(reader).extract(fixtures.bytes(BarcodeExampleFixture.SAMPLE))
         }
+        log.debug() { "actual=$actual" }
         actual.message shouldBeEqualTo expected.message
     }
 
@@ -289,7 +309,7 @@ class BarcodeExtractionServiceTest {
         private val content: ByteArray,
         private val reportedSize: Long = content.size.toLong(),
         private val onRead: () -> Unit = {},
-    ) : MultipartFile {
+    ): MultipartFile {
         override fun getName(): String = "file"
         override fun getOriginalFilename(): String = "upload"
         override fun getContentType(): String? = contentType

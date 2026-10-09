@@ -2,9 +2,12 @@ package io.bluetape4k.images.ocr
 
 import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.logging.KLogging
 import org.junit.jupiter.api.Test
 
 class TesseractContainerReusePolicyTest {
+
+    companion object: KLogging()
 
     @Test
     fun `container reuse is disabled unless explicitly requested`() {

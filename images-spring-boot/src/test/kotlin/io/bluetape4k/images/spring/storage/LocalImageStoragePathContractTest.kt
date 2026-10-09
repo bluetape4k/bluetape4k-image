@@ -2,10 +2,15 @@ package io.bluetape4k.images.spring.storage
 
 import io.bluetape4k.images.spring.ImageObjectKey
 import io.bluetape4k.images.spring.UploadOptions
+import io.bluetape4k.logging.coroutines.KLoggingChannel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.nio.file.Files
 import java.nio.file.Path
 
-class LocalImageStoragePathContractTest : AbstractImageStoragePathContractTest() {
+class LocalImageStoragePathContractTest: AbstractImageStoragePathContractTest() {
+
+    companion object: KLoggingChannel()
 
     private val root: Path by lazy { contractDir.resolve("local-storage") }
 
@@ -14,7 +19,9 @@ class LocalImageStoragePathContractTest : AbstractImageStoragePathContractTest()
     }
 
     override suspend fun prepareUpload(key: ImageObjectKey) {
-        Files.createDirectories(root.resolve(key.fullKey).parent)
+        withContext(Dispatchers.IO) {
+            Files.createDirectories(root.resolve(key.fullKey).parent)
+        }
     }
 
     override suspend fun seedStoredObject(key: ImageObjectKey, bytes: ByteArray) {
@@ -32,7 +39,7 @@ class LocalImageStoragePathContractTest : AbstractImageStoragePathContractTest()
             Files.walk(root).use { paths ->
                 paths.filter { path ->
                     path.fileName.toString().contains(".upload") ||
-                        path.fileName.toString().contains(".download")
+                            path.fileName.toString().contains(".download")
                 }.toList()
             }
         }

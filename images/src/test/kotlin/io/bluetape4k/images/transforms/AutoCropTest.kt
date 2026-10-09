@@ -1,21 +1,24 @@
 package io.bluetape4k.images.transforms
 
 import com.sksamuel.scrimage.ImmutableImage
-import io.bluetape4k.images.AbstractImageTest
-import io.bluetape4k.images.immutableImageOf
-import io.bluetape4k.logging.coroutines.KLoggingChannel
-import kotlinx.coroutines.test.runTest
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeGreaterOrEqualTo
+import io.bluetape4k.assertions.shouldBeInRange
 import io.bluetape4k.assertions.shouldBeLessThan
+import io.bluetape4k.images.AbstractImageTest
+import io.bluetape4k.images.immutableImageOf
+import io.bluetape4k.images.useGraphics
+import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.logging.debug
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import java.awt.Color
 import java.awt.image.BufferedImage
 
-class AutoCropTest : AbstractImageTest() {
+class AutoCropTest: AbstractImageTest() {
 
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     /**
      * 흰 배경 위에 지정한 색상의 사각형이 그려진 테스트용 이미지를 생성합니다.
@@ -23,18 +26,14 @@ class AutoCropTest : AbstractImageTest() {
     private fun createWhitePaddedImage(
         totalW: Int = 100, totalH: Int = 100,
         rectX: Int = 10, rectY: Int = 10, rectW: Int = 80, rectH: Int = 80,
-        bgColor: Color = Color.WHITE,
-        fgColor: Color = Color.RED,
+        bgColor: Color = Color.WHITE, fgColor: Color = Color.RED,
     ): ImmutableImage {
         val buf = BufferedImage(totalW, totalH, BufferedImage.TYPE_INT_ARGB)
-        val g = buf.createGraphics()
-        try {
+        buf.useGraphics { g ->
             g.color = bgColor
             g.fillRect(0, 0, totalW, totalH)
             g.color = fgColor
             g.fillRect(rectX, rectY, rectW, rectH)
-        } finally {
-            g.dispose()
         }
         return ImmutableImage.wrapAwt(buf)
     }
@@ -44,10 +43,12 @@ class AutoCropTest : AbstractImageTest() {
         val image = createWhitePaddedImage(100, 100, 10, 10, 80, 80)
         val result = image.autoCrop(tolerance = 0, backgroundColor = Color.WHITE)
 
-        result.width shouldBeGreaterOrEqualTo 78
-        result.width shouldBeLessThan 100
-        result.height shouldBeGreaterOrEqualTo 78
-        result.height shouldBeLessThan 100
+//        result.width shouldBeGreaterOrEqualTo 78
+//        result.width shouldBeLessThan 100
+//        result.height shouldBeGreaterOrEqualTo 78
+//        result.height shouldBeLessThan 100
+        result.width shouldBeInRange 78..99
+        result.height shouldBeInRange 78..99
     }
 
     @Test
@@ -73,12 +74,9 @@ class AutoCropTest : AbstractImageTest() {
     @Test
     fun `solid color image returns original dimensions (silent fallback)`() {
         val buf = BufferedImage(50, 50, BufferedImage.TYPE_INT_ARGB)
-        val g = buf.createGraphics()
-        try {
+        buf.useGraphics { g ->
             g.color = Color.WHITE
             g.fillRect(0, 0, 50, 50)
-        } finally {
-            g.dispose()
         }
         val solid = ImmutableImage.wrapAwt(buf)
         val result = solid.autoCrop(tolerance = 0, backgroundColor = Color.WHITE)
@@ -91,15 +89,13 @@ class AutoCropTest : AbstractImageTest() {
     fun `tolerance zero vs high tolerance`() {
         // 이미지: 거의-흰색(245,245,245) 배경 위에 빨간 사각형
         val buf = BufferedImage(100, 100, BufferedImage.TYPE_INT_ARGB)
-        val g = buf.createGraphics()
-        try {
+        buf.useGraphics { g ->
             g.color = Color(245, 245, 245)  // near-white, not pure white
             g.fillRect(0, 0, 100, 100)
             g.color = Color.RED
             g.fillRect(20, 20, 60, 60)
-        } finally {
-            g.dispose()
         }
+
         val image = ImmutableImage.wrapAwt(buf)
 
         // 순수 white background에서 tolerance=0이면 near-white는 제거되지 않습니다.
@@ -116,6 +112,7 @@ class AutoCropTest : AbstractImageTest() {
         val image = immutableImageOf(getImage(LANDSCAPE_JPG))
         val result = image.autoCrop(tolerance = 0)
 
+        log.debug { "result=$result" }
         result.width shouldBeEqualTo image.width
         result.height shouldBeEqualTo image.height
     }

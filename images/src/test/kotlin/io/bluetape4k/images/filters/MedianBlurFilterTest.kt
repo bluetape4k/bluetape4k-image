@@ -1,14 +1,16 @@
 package io.bluetape4k.images.filters
 
 import com.sksamuel.scrimage.ImmutableImage
-import io.bluetape4k.logging.coroutines.KLoggingChannel
-import java.awt.Color
-import java.awt.image.BufferedImage
-import java.util.Random
-import kotlin.math.abs
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeLessThan
+import io.bluetape4k.images.useGraphics
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import org.junit.jupiter.api.Test
+import java.awt.Color
+import java.awt.image.BufferedImage
+import java.util.*
+import kotlin.math.abs
+import kotlin.math.absoluteValue
 
 class MedianBlurFilterTest: AbstractFilterTest() {
 
@@ -20,8 +22,7 @@ class MedianBlurFilterTest: AbstractFilterTest() {
      */
     private fun createColoredImage(width: Int = 256, height: Int = 256): ImmutableImage {
         val buffered = BufferedImage(width, height, BufferedImage.TYPE_INT_RGB)
-        val g = buffered.createGraphics()
-        try {
+        buffered.useGraphics { g ->
             val colors = listOf(
                 Color.RED, Color.GREEN, Color.BLUE, Color.YELLOW,
                 Color.CYAN, Color.MAGENTA, Color.ORANGE, Color.PINK,
@@ -34,8 +35,6 @@ class MedianBlurFilterTest: AbstractFilterTest() {
                     g.fillRect(col * (width / 4), row * (height / 4), width / 4, height / 4)
                 }
             }
-        } finally {
-            g.dispose()
         }
         return ImmutableImage.fromAwt(buffered)
     }
@@ -122,9 +121,9 @@ class MedianBlurFilterTest: AbstractFilterTest() {
         val replicateRgb = resultReplicate.awt().getRGB(cx, cy)
         val reflectRgb = resultReflect.awt().getRGB(cx, cy)
 
-        val dr = abs(((replicateRgb shr 16) and 0xFF) - ((reflectRgb shr 16) and 0xFF))
-        val dg = abs(((replicateRgb shr 8) and 0xFF) - ((reflectRgb shr 8) and 0xFF))
-        val db = abs((replicateRgb and 0xFF) - (reflectRgb and 0xFF))
+        val dr = (((replicateRgb shr 16) and 0xFF) - ((reflectRgb shr 16) and 0xFF)).absoluteValue
+        val dg = (((replicateRgb shr 8) and 0xFF) - ((reflectRgb shr 8) and 0xFF)).absoluteValue
+        val db = ((replicateRgb and 0xFF) - (reflectRgb and 0xFF)).absoluteValue
 
         dr shouldBeLessThan 1
         dg shouldBeLessThan 1

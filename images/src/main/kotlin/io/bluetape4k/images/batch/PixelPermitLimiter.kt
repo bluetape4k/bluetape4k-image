@@ -5,6 +5,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import java.util.concurrent.ConcurrentLinkedDeque
 
 /**
  * 동시에 처리 중인 이미지의 픽셀 총량을 제한하는 가중 세마포어입니다.
@@ -17,7 +18,7 @@ internal class PixelPermitLimiter(
 ) {
     private val mutex = Mutex()
     private var availablePixels = maxPixels
-    private val waiters = ArrayDeque<CompletableDeferred<Unit>>()
+    private val waiters = ConcurrentLinkedDeque<CompletableDeferred<Unit>>()
 
     init {
         maxPixels.requirePositiveNumber("maxPixels")

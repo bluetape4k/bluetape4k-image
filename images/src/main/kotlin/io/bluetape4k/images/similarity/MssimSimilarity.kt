@@ -1,6 +1,7 @@
 package io.bluetape4k.images.similarity
 
 import com.sksamuel.scrimage.ImmutableImage
+import io.bluetape4k.support.requireGt
 
 /**
  * MSSIM(Mean SSIM) 기본 윈도우 한 변 크기.
@@ -67,9 +68,10 @@ fun ImmutableImage.mssimTo(
     require(minOf(width, height) >= windowSize) {
         "이미지 크기(${width}x${height})가 windowSize($windowSize)보다 작습니다"
     }
-    require(sigma > 0.0) { "sigma는 양수여야 합니다: $sigma" }
+    sigma.requireGt(0.0) { "sigma는 양수여야 합니다: $sigma" }
 
     val kernel1d = gaussianKernel1d(windowSize, sigma)
+
     // 2D 가우시안 커널 (외적, separable kernel)
     val kernel2d = Array(windowSize) { i ->
         DoubleArray(windowSize) { j -> kernel1d[i] * kernel1d[j] }

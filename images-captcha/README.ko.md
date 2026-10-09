@@ -43,8 +43,7 @@ val challenge = generator.generate()
 val pngBytes = challenge.image.forWriter(PngWriter.MaxCompression).bytes()
 ```
 
-`CaptchaVerificationService`로 정답 메타데이터를 저장하고 첫 검증 시도에서 challenge를
-소비할 수 있습니다.
+`CaptchaVerificationService`로 정답 메타데이터를 저장하고 첫 검증 시도에서 challenge를 소비할 수 있습니다.
 
 ```kotlin
 import io.bluetape4k.images.captcha.CaptchaChallengeId
@@ -74,32 +73,25 @@ CAPTCHA 검증은 생성된 이미지 바이트와 애플리케이션 소유 메
 5. 어떤 검증 결과가 나오더라도 해당 challenge id는 종료된 것으로 취급합니다.
 
 `CaptchaVerificationService.verify`는 만료 여부나 정답 비교 전에
-`CaptchaChallengeStore.consume`을 호출합니다. Store 구현은 `consume`을 atomic 하게 만들어야
-하며, 성공, 오답, 만료 결과 모두 저장된 메타데이터를 제거해야 합니다. 이 one-shot contract는
-같은 challenge id에 대한 replay와 반복 추측을 막기 위한 경계입니다.
+`CaptchaChallengeStore.consume`을 호출합니다. Store 구현은 `consume`을 atomic 하게 만들어야 하며, 성공, 오답, 만료 결과 모두 저장된 메타데이터를 제거해야 합니다. 이 one-shot contract는 같은 challenge id에 대한 replay와 반복 추측을 막기 위한 경계입니다.
 
-`InMemoryCaptchaChallengeStore`는 테스트, 데모, single-node 애플리케이션에 적합합니다.
-여러 애플리케이션 인스턴스가 challenge 메타데이터를 공유해야 한다면 Redis, database,
-session storage 용 `CaptchaChallengeStore` 구현을 제공하세요. 운영 store는
-`IssuedCaptchaChallenge`의 `expiresAt` 값을 보존하고, 그 시점 이상 유지되는 backend TTL을
-적용하며, 사용자가 답을 제출하지 않아도 오래된 레코드를 정리해야 합니다.
+`InMemoryCaptchaChallengeStore`는 테스트, 데모, single-node 애플리케이션에 적합합니다. 여러 애플리케이션 인스턴스가 challenge 메타데이터를 공유해야 한다면 Redis, database, session storage 용 `CaptchaChallengeStore` 구현을 제공하세요. 운영 store는
+`IssuedCaptchaChallenge`의 `expiresAt` 값을 보존하고, 그 시점 이상 유지되는 backend TTL을 적용하며, 사용자가 답을 제출하지 않아도 오래된 레코드를 정리해야 합니다.
 
 `ImmutableImage`를 안정적인 Java serialization payload로 취급하지 않으므로
-`CaptchaChallenge` 자체가 아니라 인코딩된 이미지 바이트와 `IssuedCaptchaChallenge` 형태의
-메타데이터를 저장하세요. Rate limiting 정책, id 생성, tenant scoping, issue/verify route의
-abuse control은 여전히 애플리케이션 책임입니다.
+`CaptchaChallenge` 자체가 아니라 인코딩된 이미지 바이트와 `IssuedCaptchaChallenge` 형태의 메타데이터를 저장하세요. Rate limiting 정책, id 생성, tenant scoping, issue/verify route의 abuse control은 여전히 애플리케이션 책임입니다.
 
 ## 옵션
 
-| 옵션 | 기본값 | 설명 |
-| --- | --- | --- |
-| `length` | `6` | 호출별 override 지원, 유효 범위는 `1..32` |
-| `charSet` | `I`, `O`, `0`, `1`을 제외한 대문자와 숫자 | 출력 가능한 non-whitespace BMP 문자만 허용 |
-| `imageSize` | `200 x 80` | 가로/세로 `1..2000` bounded |
-| `fontSize` | `36` | 양수 Java2D font size |
-| `noise` | `CaptchaNoise.Medium` | `None`, `Low`, `Medium`, `High`, bounded `Custom` |
-| `distortion` | `CaptchaDistortion.None` | 선택적 bounded horizontal wave distortion |
-| `expiresAfter` | `5.minutes` | advisory timestamp 전용 |
+| 옵션           | 기본값                                    | 설명                                              |
+|----------------|-------------------------------------------|---------------------------------------------------|
+| `length`       | `6`                                       | 호출별 override 지원, 유효 범위는 `1..32`         |
+| `charSet`      | `I`, `O`, `0`, `1`을 제외한 대문자와 숫자 | 출력 가능한 non-whitespace BMP 문자만 허용        |
+| `imageSize`    | `200 x 80`                                | 가로/세로 `1..2000` bounded                       |
+| `fontSize`     | `36`                                      | 양수 Java2D font size                             |
+| `noise`        | `CaptchaNoise.Medium`                     | `None`, `Low`, `Medium`, `High`, bounded `Custom` |
+| `distortion`   | `CaptchaDistortion.None`                  | 선택적 bounded horizontal wave distortion         |
+| `expiresAfter` | `5.minutes`                               | advisory timestamp 전용                           |
 
 ## Coroutine Entry
 
@@ -107,5 +99,4 @@ abuse control은 여전히 애플리케이션 책임입니다.
 val challenge = generator.generateSuspend()
 ```
 
-`generateSuspend`는 CPU-bound Java2D 렌더링 시작 전 cancellation을 확인합니다.
-Java2D drawing은 non-suspending 작업이므로 렌더링 중간 cancellation은 보장하지 않습니다.
+`generateSuspend`는 CPU-bound Java2D 렌더링 시작 전 cancellation을 확인합니다. Java2D drawing은 non-suspending 작업이므로 렌더링 중간 cancellation은 보장하지 않습니다.

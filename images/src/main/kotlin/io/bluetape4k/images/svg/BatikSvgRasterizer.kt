@@ -18,7 +18,7 @@ import org.apache.batik.util.ParsedURL
 import org.xml.sax.XMLReader
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
-import java.util.Locale
+import java.util.*
 import javax.xml.parsers.SAXParserFactory
 
 /**
@@ -43,35 +43,34 @@ import javax.xml.parsers.SAXParserFactory
  * @see SuspendSvgRasterizer
  * @see SvgRasterizeOptions
  */
-class BatikSvgRasterizer : SuspendSvgRasterizer {
+class BatikSvgRasterizer: SuspendSvgRasterizer {
 
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     override suspend fun rasterize(
         input: InputStream,
         options: SvgRasterizeOptions,
-    ): ImmutableImage = withTimeout(options.timeoutMillis) {
-        runInterruptible(Dispatchers.IO) {
-            rasterizeBlocking(input, options)
+    ): ImmutableImage =
+        withTimeout(timeMillis = options.timeoutMillis) {
+            runInterruptible(Dispatchers.IO) {
+                rasterizeBlocking(input, options)
+            }
         }
-    }
 
     private fun rasterizeBlocking(input: InputStream, options: SvgRasterizeOptions): ImmutableImage {
         val transcoder = buildTranscoder(options)
-        val bos = ByteArrayOutputStream()
         val xmlReader = buildSecureXmlReader()
-
         val transcoderInput = TranscoderInput().apply {
             setXMLReader(xmlReader)
-            setInputStream(input)
+            inputStream = input
         }
-        val transcoderOutput = TranscoderOutput(bos)
+        ByteArrayOutputStream().use { bos ->
+            val transcoderOutput = TranscoderOutput(bos)
+            transcoder.transcode(transcoderInput, transcoderOutput)
 
-        transcoder.transcode(transcoderInput, transcoderOutput)
-
-        log.debug { "SVG 래스터화 완료: ${bos.size()} bytes" }
-
-        return ImmutableImage.loader().fromBytes(bos.toByteArray())
+            log.debug { "SVG 래스터화 완료: ${bos.size()} bytes" }
+            return ImmutableImage.loader().fromBytes(bos.toByteArray())
+        }
     }
 
     private fun buildTranscoder(options: SvgRasterizeOptions): PNGTranscoder {
@@ -93,6 +92,7 @@ class BatikSvgRasterizer : SuspendSvgRasterizer {
             }
             transcoder.addTranscodingHint(SVGAbstractTranscoder.KEY_HEIGHT, h.toFloat())
         }
+
         transcoder.addTranscodingHint(SVGAbstractTranscoder.KEY_PIXEL_UNIT_TO_MILLIMETER, 25.4f / options.dpi)
 
         // XXE/SSRF 방어: 외부 리소스 접근 금지 (기본값)
@@ -121,7 +121,7 @@ class BatikSvgRasterizer : SuspendSvgRasterizer {
      */
     private class SchemeAwarePngTranscoder(
         private val options: SvgRasterizeOptions,
-    ) : PNGTranscoder() {
+    ): PNGTranscoder() {
 
         private val allowedSchemes = options.allowedSchemes
             .asSequence()
@@ -129,7 +129,7 @@ class BatikSvgRasterizer : SuspendSvgRasterizer {
             .toSet()
 
         override fun createUserAgent(): UserAgent =
-            object : SVGAbstractTranscoderUserAgent() {
+            object: SVGAbstractTranscoderUserAgent() {
                 override fun getExternalResourceSecurity(
                     resourceURL: ParsedURL?,
                     docURL: ParsedURL?,

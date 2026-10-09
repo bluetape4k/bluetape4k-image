@@ -1,17 +1,18 @@
 package io.bluetape4k.images.similarity
 
 import com.sksamuel.scrimage.ImmutableImage
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeGreaterThan
+import io.bluetape4k.assertions.shouldBeInRange
+import io.bluetape4k.assertions.shouldBeLessThan
 import io.bluetape4k.images.AbstractImageTest
 import io.bluetape4k.images.coroutines.SuspendJpegWriter
 import io.bluetape4k.images.immutableImageOf
 import io.bluetape4k.images.suspendBytes
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.logging.debug
 import io.bluetape4k.utils.Resourcex
-import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldBeGreaterThan
-import io.bluetape4k.assertions.shouldBeInRange
-import io.bluetape4k.assertions.shouldBeLessThan
 import org.junit.jupiter.api.Test
 import java.awt.Color
 
@@ -49,9 +50,7 @@ class ImageSimilarityTest: AbstractImageTest() {
         val ssim = a.ssimTo(roundTripped)
         val phashDistance = a.phashDistanceTo(roundTripped)
 
-        log.debug(
-            "jpeg round-trip: avg=$avgDelta, max=$maxDelta, psnr=$psnr, ssim=$ssim, phashDistance=$phashDistance"
-        )
+        log.debug { "jpeg round-trip: avg=$avgDelta, max=$maxDelta, psnr=$psnr, ssim=$ssim, phashDistance=$phashDistance" }
 
         avgDelta shouldBeLessThan 5.0
         maxDelta shouldBeLessThan 64
@@ -70,9 +69,7 @@ class ImageSimilarityTest: AbstractImageTest() {
         val ssim = homer.ssimTo(labor)
         val phashDistance = homer.phashDistanceTo(labor)
 
-        log.debug(
-            "different images: avg=$avgDelta, psnr=$psnr, ssim=$ssim, phashDistance=$phashDistance"
-        )
+        log.debug { "different images: avg=$avgDelta, psnr=$psnr, ssim=$ssim, phashDistance=$phashDistance" }
 
         avgDelta shouldBeGreaterThan 10.0
         psnr shouldBeLessThan 30.0
@@ -86,7 +83,7 @@ class ImageSimilarityTest: AbstractImageTest() {
         val halfSize = original.scaleTo(original.width / 2, original.height / 2)
 
         val distance = HashDistance.hamming(original.phash(), halfSize.phash())
-        log.debug("half-scale phash distance: $distance")
+        log.debug { "half-scale phash distance: $distance" }
 
         distance shouldBeLessThan 10
     }
@@ -103,7 +100,7 @@ class ImageSimilarityTest: AbstractImageTest() {
 
         val phashDistance = original.phashDistanceTo(brighter)
         val ssim = original.ssimTo(brighter)
-        log.debug("brightness +20: phashDistance=$phashDistance, ssim=$ssim")
+        log.debug { "brightness +20: phashDistance=$phashDistance, ssim=$ssim" }
 
         phashDistance shouldBeLessThan 10
         ssim shouldBeGreaterThan 0.8

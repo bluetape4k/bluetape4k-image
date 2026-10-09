@@ -80,89 +80,50 @@ bluetape4k:
 #### 로컬 (기본값)
 
 추가 의존성 없음. `local.root-dir` 아래에 파일 저장.
-`ImageObjectKey`가 `..` 경로 세그먼트를 거부하여 경로 탐색 공격 방지.
-업로드 중에는 로컬 parent directory를 생성하지 않습니다. 고정된 상대 경로를
-`local.bootstrap-prefixes`에 설정하거나 `LocalImageStorage` 생성 전에 직접 준비하세요.
-준비되지 않은 parent는 파일·directory를 만들지 않고 `ValidationException`으로 종료합니다.
+`ImageObjectKey`가 `..` 경로 세그먼트를 거부하여 경로 탐색 공격 방지. 업로드 중에는 로컬 parent directory를 생성하지 않습니다. 고정된 상대 경로를
+`local.bootstrap-prefixes`에 설정하거나 `LocalImageStorage` 생성 전에 직접 준비하세요. 준비되지 않은 parent는 파일·directory를 만들지 않고 `ValidationException`으로 종료합니다.
 
-runtime write는 `SecureDirectoryStream`을 제공하고 descriptor-relative `move`로
-기존 target을 atomic replace할 수 있는 filesystem provider에서만 지원합니다. 업로드는
-bytes를 staging한 뒤 가능한 경우 channel을 force하고, staging이 완료된 후에만 target을
-교체합니다. 쓰기나 취소가 실패하면 partial stage를 삭제하며 안전하지 않은 path 기반
-move로 fallback하지 않습니다. 이 capability가 없는 provider(예: JDK ZipFS)는 storage
-계약을 조용히 약화하지 않고 `ImageStorageException`으로 fail closed합니다.
-`LocalFileSystemContractTest` matrix는 provider probe, root/nested replace, symbolic link,
-permission, missing parent, cancellation 결과를 기록하며, provider나 process가 POSIX
-권한을 강제할 수 없으면 해당 검사를 N/A로 보고합니다.
+runtime write는 `SecureDirectoryStream`을 제공하고 descriptor-relative `move`로 기존 target을 atomic replace할 수 있는 filesystem provider에서만 지원합니다. 업로드는 bytes를 staging한 뒤 가능한 경우 channel을 force하고, staging이 완료된 후에만 target을 교체합니다. 쓰기나 취소가 실패하면 partial stage를 삭제하며 안전하지 않은 path 기반 move로 fallback하지 않습니다. 이 capability가 없는 provider (예: JDK ZipFS)는 storage 계약을 조용히 약화하지 않고 `ImageStorageException`으로 fail closed합니다.
+`LocalFileSystemContractTest` matrix는 provider probe, root/nested replace, symbolic link, permission, missing parent, cancellation 결과를 기록하며, provider나 process가 POSIX 권한을 강제할 수 없으면 해당 검사를 N/A로 보고합니다.
 
 #### S3
 
 `bluetape4k-aws-spring-boot` 의존성과 해당 모듈이 제공하는 `S3Operations`
 빈이 필요합니다. byte/object CRUD에는 이 `S3Operations` capability만 필요합니다.
-`backend=s3`로 설정했는데 `S3Operations` 빈이 없으면 로컬 파일시스템으로 조용히
-대체하지 않고 시작 단계에서 실패합니다. 애플리케이션이 S3 저장소 구현을
-의도적으로 대체하려면 별도의 `ImageStorage` 빈을 제공하세요.
+`backend=s3`로 설정했는데 `S3Operations` 빈이 없으면 로컬 파일시스템으로 조용히 대체하지 않고 시작 단계에서 실패합니다. 애플리케이션이 S3 저장소 구현을 의도적으로 대체하려면 별도의 `ImageStorage` 빈을 제공하세요.
 
 `Path` 업로드는 먼저 크기를 제한하며 읽어 임시 복사본을 만든 뒤 선택적인
-`S3TransferOperations` 파일 전송 capability가 있을 때 이를 사용합니다. 이 capability는
-모듈의 transfer-neutral `S3PathTransferOperations` adapter로 연결되므로 transfer class나
-bean이 없어도 byte/object CRUD는 계속 사용할 수 있습니다. capability가 없으면 source
-전체를 `ByteArray`로 적재하지 않고 fail closed합니다. `Path` 다운로드는 S3 resource를
-통해 스트리밍한 뒤 destination 파일을 atomic replace합니다.
+`S3TransferOperations` 파일 전송 capability가 있을 때 이를 사용합니다. 이 capability는 모듈의 transfer-neutral `S3PathTransferOperations` adapter로 연결되므로 transfer class나 bean이 없어도 byte/object CRUD는 계속 사용할 수 있습니다. capability가 없으면 source 전체를 `ByteArray`로 적재하지 않고 fail closed합니다. `Path` 다운로드는 S3 resource를 통해 스트리밍한 뒤 destination 파일을 atomic replace합니다.
 
 #### 공통 저장소 계약 matrix
 
-아래 동작은 Local과 S3에서 같은 provider-neutral contract test로 검증합니다.
-filesystem capability와 AWS SDK interaction 세부 사항은 provider별 전용 테스트에 남깁니다.
+아래 동작은 Local과 S3에서 같은 provider-neutral contract test로 검증합니다. filesystem capability와 AWS SDK interaction 세부 사항은 provider별 전용 테스트에 남깁니다.
 
-| 계약 | Local fixture | S3 fixture | CI 범위 |
-| --- | --- | --- | --- |
-| 기본 CRUD와 overwrite | 실제 임시 filesystem | stateful in-memory operations | module test |
-| `Path` 원자성과 destination 보존 | descriptor-relative staging | 전송용 임시 복사본과 resource stream | module test |
-| cold listing과 cancellation cleanup | secure directory 순회 | 관찰 가능한 Flow collector | module test |
-| filesystem capability matrix | Linux/macOS provider | N/A | Linux/macOS matrix |
+| 계약                                | Local fixture               | S3 fixture                           | CI 범위            |
+|-------------------------------------|-----------------------------|--------------------------------------|--------------------|
+| 기본 CRUD와 overwrite               | 실제 임시 filesystem        | stateful in-memory operations        | module test        |
+| `Path` 원자성과 destination 보존    | descriptor-relative staging | 전송용 임시 복사본과 resource stream | module test        |
+| cold listing과 cancellation cleanup | secure directory 순회       | 관찰 가능한 Flow collector           | module test        |
+| filesystem capability matrix        | Linux/macOS provider        | N/A                                  | Linux/macOS matrix |
 
-listing의 IO producer와 collector 사이에는 rendezvous 경계를 둡니다. collector가 취소되면
-진행 중인 항목 하나까지 남을 수 있지만 나머지 결과 전체를 materialize하지 않습니다.
-`CancellationException`은 `ImageStorageException`으로 변환하지 않으며, dispatcher
-경계에서는 object identity가 아니라 type과 message를 보존합니다.
+listing의 IO producer와 collector 사이에는 rendezvous 경계를 둡니다. collector가 취소되면 진행 중인 항목 하나까지 남을 수 있지만 나머지 결과 전체를 materialize하지 않습니다.
+`CancellationException`은 `ImageStorageException`으로 변환하지 않으며, dispatcher 경계에서는 object identity가 아니라 type과 message를 보존합니다.
 
 ### 객체 메타데이터 capability
 
-기존 `ImageStorage` 메서드 집합은 그대로 유지합니다. 메타데이터를 지원하는
-provider는 선택적인 `ImageObjectMetadataReader` capability를 추가로 구현합니다.
+기존 `ImageStorage` 메서드 집합은 그대로 유지합니다. 메타데이터를 지원하는 provider는 선택적인 `ImageObjectMetadataReader` capability를 추가로 구현합니다.
 
 ```kotlin
 val metadata = (storage as? ImageObjectMetadataReader)?.readMetadata(key)
 ```
 
 `ImageObjectMetadata`는 provider-neutral 모델이며 `sizeBytes`, nullable한
-`contentType`/`lastModified`, opaque한 nullable `etag`를 담습니다. ETag의 따옴표와
-backend token은 그대로 보존하므로 MD5나 content hash로 해석하거나 정규화하지
-마세요. `lastModified` 정밀도는 backend/filesystem이 제공하는 값에 따르며 sub-second
-정밀도를 보장하지 않습니다. 로컬 저장소는 파일 attribute만 읽으므로 ETag과 content
-type은 `null`입니다.
-Micrometer decorator는 capability를 지원하는 provider에서만 이를 보존하고,
-지원하지 않는 custom storage에는 capability를 광고하지 않습니다.
+`contentType`/`lastModified`, opaque한 nullable `etag`를 담습니다. ETag의 따옴표와 backend token은 그대로 보존하므로 MD5나 content hash로 해석하거나 정규화하지 마세요. `lastModified` 정밀도는 backend/filesystem이 제공하는 값에 따르며 sub-second 정밀도를 보장하지 않습니다. 로컬 저장소는 파일 attribute만 읽으므로 ETag과 content type은 `null`입니다. Micrometer decorator는 capability를 지원하는 provider에서만 이를 보존하고, 지원하지 않는 custom storage에는 capability를 광고하지 않습니다.
 
-S3 메타데이터는 body를 열지 않고 단일 `S3Operations.headObject` 응답으로
-조회합니다. byte-array 다운로드는 기존 `S3Operations.resource` 스트림과
-`bluetape4k-io.readAllBytes(maxBytes)`를 재사용하여 전체 본문을 먼저 적재하지 않습니다.
-상한 초과 판정에는 최대 한 byte를 추가로 읽으며, 성공·실패 모두 스트림을 닫습니다.
-상한은 `min(maxSizeBytes, Int.MAX_VALUE)`이고 결과 조립 중에는 실제 본문 크기의
-약 두 배 메모리가 일시적으로 필요하므로 운영 환경의 메모리에 맞게 제한을 설정해야 합니다.
-blocking read의 timeout은 S3 client에서 설정해야 합니다.
-호출 작업을 취소해도 진행 중인 blocking read는 SDK timeout까지 남을 수 있지만,
-읽기가 끝난 뒤에는 취소된 호출자에게 결과를 반환하지 않습니다. S3 operation 계측은
-`download` 대신 `resource` 생성만 측정하므로 전체 다운로드 지연은 이미지 저장소 계측을 사용하세요.
-byte-array와 `Path` 다운로드 모두 같은 HEAD size를 먼저 확인한 뒤
-실제 스트림 byte 수를 HEAD 응답의 크기와 비교하고 결과를 노출합니다. HEAD 실패나 object
-교체로 인한 크기 불일치는 fail closed하며 `listPage` 또는 resource size fallback은
-사용하지 않습니다. 정렬된 `bluetape4k-aws-spring-boot` artifact에는 upstream
-PR [#516](https://github.com/bluetape4k/bluetape4k-aws/pull/516)의 `headObject`
-계약(`24c8039006220de654c732f722f3c7beb9b5b74f`)이 포함되어야 하며, consumer는
-개별 artifact 버전을 따로 맞추지 말고 `bluetape4k-dependencies` catalog을
-사용해야 합니다.
+S3 메타데이터는 body를 열지 않고 단일 `S3Operations.headObject` 응답으로 조회합니다. byte-array 다운로드는 기존 `S3Operations.resource` 스트림과
+`bluetape4k-io.readAllBytes(maxBytes)`를 재사용하여 전체 본문을 먼저 적재하지 않습니다. 상한 초과 판정에는 최대 한 byte를 추가로 읽으며, 성공·실패 모두 스트림을 닫습니다. 상한은 `min(maxSizeBytes, Int.MAX_VALUE)`이고 결과 조립 중에는 실제 본문 크기의 약 두 배 메모리가 일시적으로 필요하므로 운영 환경의 메모리에 맞게 제한을 설정해야 합니다. blocking read의 timeout은 S3 client에서 설정해야 합니다. 호출 작업을 취소해도 진행 중인 blocking read는 SDK timeout까지 남을 수 있지만, 읽기가 끝난 뒤에는 취소된 호출자에게 결과를 반환하지 않습니다. S3 operation 계측은
+`download` 대신 `resource` 생성만 측정하므로 전체 다운로드 지연은 이미지 저장소 계측을 사용하세요. byte-array와 `Path` 다운로드 모두 같은 HEAD size를 먼저 확인한 뒤 실제 스트림 byte 수를 HEAD 응답의 크기와 비교하고 결과를 노출합니다. HEAD 실패나 object 교체로 인한 크기 불일치는 fail closed하며 `listPage` 또는 resource size fallback은 사용하지 않습니다. 정렬된 `bluetape4k-aws-spring-boot` artifact에는 upstream PR [#516](https://github.com/bluetape4k/bluetape4k-aws/pull/516)의 `headObject`
+계약 (`24c8039006220de654c732f722f3c7beb9b5b74f`)이 포함되어야 하며, consumer는 개별 artifact 버전을 따로 맞추지 말고 `bluetape4k-dependencies` catalog을 사용해야 합니다.
 
 ```yaml
 bluetape4k.images.storage:
@@ -182,9 +143,7 @@ bluetape4k.images.cdn:
 ```
 
 signer는 `bluetape4k.images.storage.bucket`과 `key-prefix`를 읽습니다.
-`bluetape4k.images.storage.enabled=false`로 `ImageStorage` 자동 구성을 끈 상태에서도
-CDN 서명만 사용할 수 있습니다. 이 경우 signer에 필요한 storage properties는 계속 bind되며
-storage bean은 등록되지 않습니다.
+`bluetape4k.images.storage.enabled=false`로 `ImageStorage` 자동 구성을 끈 상태에서도 CDN 서명만 사용할 수 있습니다. 이 경우 signer에 필요한 storage properties는 계속 bind되며 storage bean은 등록되지 않습니다.
 
 #### CloudFront 서명 URL
 
@@ -202,17 +161,12 @@ bluetape4k.images.cdn:
 
 ### 0.5.0 직렬화 경계
 
-`LocalImageStorage`, `S3ImageStorage`, URL signer, `CdnProperties`는 runtime 설정과
-collaborator를 보유하는 객체이므로 Java 직렬화 상태가 아닙니다. `ObjectOutputStream`
-graph에 넣지 말고 Spring 설정으로 startup 시 다시 생성하세요. CloudFront private-key
-PEM과 path property는 Jackson wire view에서 제외하고 `toString()`과 Actuator 진단에서도
-마스킹합니다. 기존 runtime 직렬화 사용은 애플리케이션 상태의 별도 저장 방식으로 전환해야 하며,
-남아 있는 직렬화 시도는 `NotSerializableException`으로 실패합니다.
+`LocalImageStorage`, `S3ImageStorage`, URL signer, `CdnProperties`는 runtime 설정과 collaborator를 보유하는 객체이므로 Java 직렬화 상태가 아닙니다. `ObjectOutputStream`
+graph에 넣지 말고 Spring 설정으로 startup 시 다시 생성하세요. CloudFront private-key PEM과 path property는 Jackson wire view에서 제외하고 `toString()`과 Actuator 진단에서도 마스킹합니다. 기존 runtime 직렬화 사용은 애플리케이션 상태의 별도 저장 방식으로 전환해야 하며, 남아 있는 직렬화 시도는 `NotSerializableException`으로 실패합니다.
 
 ### 헬스 체크
 
-`ImageStorageHealthIndicator`가 `storage.exists()` 호출로 접근성을 확인합니다.
-Spring Boot 4 `spring-boot-health` 모듈의 `ReactiveHealthIndicator`로 통합됩니다.
+`ImageStorageHealthIndicator`가 `storage.exists()` 호출로 접근성을 확인합니다. Spring Boot 4 `spring-boot-health` 모듈의 `ReactiveHealthIndicator`로 통합됩니다.
 
 ```
 GET /actuator/health
@@ -229,22 +183,22 @@ GET /actuator/health
 `MeterRegistry` 빈이 있으면 `BeanPostProcessor`가 모든 `ImageStorage` 빈을
 `MetricImageStorage`(또는 capability를 보존하는 metadata 변형)로 래핑합니다.
 
-| 메트릭 | 타입 | 설명 |
-|--------|------|------|
-| `images.storage.upload.duration` | Timer | 업로드 지연 시간 |
-| `images.storage.upload.errors` | Counter | 업로드 오류 횟수 |
-| `images.storage.download.duration` | Timer | 다운로드 지연 시간 |
-| `images.storage.download.errors` | Counter | 다운로드 오류 횟수 |
+| 메트릭                             | 타입    | 설명               |
+|------------------------------------|---------|--------------------|
+| `images.storage.upload.duration`   | Timer   | 업로드 지연 시간   |
+| `images.storage.upload.errors`     | Counter | 업로드 오류 횟수   |
+| `images.storage.download.duration` | Timer   | 다운로드 지연 시간 |
+| `images.storage.download.errors`   | Counter | 다운로드 오류 횟수 |
 
 ## 자동 구성 순서
 
-| 클래스 | 이후에 실행 |
-|--------|-------------|
-| `ImagesProcessingAutoConfiguration` | — |
-| `ImagesStorageAutoConfiguration` | `S3AutoConfiguration`, `ImagesProcessingAutoConfiguration` |
-| `ImagesCdnAutoConfiguration` | `ImagesStorageAutoConfiguration` |
-| `ImagesHealthAutoConfiguration` | `ImagesStorageAutoConfiguration` |
-| `ImagesMetricsAutoConfiguration` | `ImagesStorageAutoConfiguration` |
+| 클래스                              | 이후에 실행                                                |
+|-------------------------------------|------------------------------------------------------------|
+| `ImagesProcessingAutoConfiguration` | —                                                          |
+| `ImagesStorageAutoConfiguration`    | `S3AutoConfiguration`, `ImagesProcessingAutoConfiguration` |
+| `ImagesCdnAutoConfiguration`        | `ImagesStorageAutoConfiguration`                           |
+| `ImagesHealthAutoConfiguration`     | `ImagesStorageAutoConfiguration`                           |
+| `ImagesMetricsAutoConfiguration`    | `ImagesStorageAutoConfiguration`                           |
 
 ## 예외 계층
 

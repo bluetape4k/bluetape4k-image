@@ -22,7 +22,8 @@ internal interface FfmVipsNativeRuntime {
  * 호출자는 backend default를 사용해야 하며, `FfmVipsRuntime`이 non-default 요청을
  * native 초기화 전에 명시적으로 거부합니다.
  */
-internal object DefaultFfmVipsNativeRuntime : FfmVipsNativeRuntime {
+internal object DefaultFfmVipsNativeRuntime: FfmVipsNativeRuntime {
+
     override fun nativeInit(concurrency: Int) {
         Vips.init()
     }

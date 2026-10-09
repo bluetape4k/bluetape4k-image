@@ -1,10 +1,13 @@
 package io.bluetape4k.images.coroutines
 
 import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldNotBeBlank
+import io.bluetape4k.logging.KLogging
 import org.junit.jupiter.api.Test
 
 class TiffCompressionTest {
+
+    companion object: KLogging()
 
     @Test
     fun `TiffCompression has five entries`() {
@@ -39,7 +42,7 @@ class TiffCompressionTest {
     @Test
     fun `all TiffCompression ioNames are non-blank`() {
         TiffCompression.entries.forEach { compression ->
-            compression.ioName.isNotBlank().shouldBeTrue()
+            compression.ioName.shouldNotBeBlank()
         }
     }
 }

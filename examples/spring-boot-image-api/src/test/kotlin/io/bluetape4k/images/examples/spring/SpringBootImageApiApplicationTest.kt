@@ -3,8 +3,13 @@ package io.bluetape4k.images.examples.spring
 import com.jayway.jsonpath.JsonPath
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeGreaterThan
-import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldContain
+import io.bluetape4k.assertions.shouldContentEqual
+import io.bluetape4k.assertions.shouldNotBeEmpty
+import io.bluetape4k.images.useGraphics
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -14,6 +19,7 @@ import org.springframework.mock.web.MockMultipartFile
 import org.springframework.test.context.TestPropertySource
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.MvcResult
+import org.springframework.test.web.servlet.ResultActions
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart
@@ -36,14 +42,18 @@ import javax.imageio.ImageIO
 class SpringBootImageApiApplicationTest(
     @param:Autowired private val mockMvc: MockMvc,
 ) {
+    private companion object: KLogging() {
+        val PNG_SIGNATURE = byteArrayOf(0x89.toByte(), 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A)
+    }
 
     @Test
     fun `uploads image stores original and thumbnail and exposes local read urls`() {
-        val uploadResult = mockMvc.perform(
-            multipart("/api/images")
-                .file(jpegFile())
-                .param("maxSide", "160")
-        )
+        val uploadResult = mockMvc
+            .perform(
+                multipart("/api/images")
+                    .file(jpegFile())
+                    .param("maxSide", "160")
+            )
             .andExpect(request().asyncStarted())
             .andReturn()
             .dispatch()
@@ -51,6 +61,8 @@ class SpringBootImageApiApplicationTest(
             .andReturn()
 
         val response = uploadResult.response.contentAsString
+        log.debug { "response=$response" }
+        
         val originalKey = response.readJsonPath<String>("$.original.key")
         val thumbnailKey = response.readJsonPath<String>("$.thumbnail.key")
         val originalUrl = response.readJsonPath<String>("$.original.url")
@@ -60,17 +72,19 @@ class SpringBootImageApiApplicationTest(
         thumbnailKey.startsWith("thumbnails/").shouldBeTrue()
         originalUrl shouldBeEqualTo "/api/images/$originalKey"
         thumbnailUrl shouldBeEqualTo "/api/images/$thumbnailKey"
-        response.readJsonPath<Int>("$.originalBytes").shouldBeGreaterThan(0)
-        response.readJsonPath<Int>("$.thumbnailBytes").shouldBeGreaterThan(0)
+        response.readJsonPath<Int>("$.originalBytes") shouldBeGreaterThan 0
+        response.readJsonPath<Int>("$.thumbnailBytes") shouldBeGreaterThan 0
 
-        val original = mockMvc.perform(get(originalUrl))
+        val original = mockMvc
+            .perform(get(originalUrl))
             .andExpect(request().asyncStarted())
             .andReturn()
             .dispatch()
             .andExpect(status().isOk)
             .andReturn()
+
         original.response.contentType shouldBeEqualTo MediaType.IMAGE_JPEG_VALUE
-        original.response.contentAsByteArray.size shouldBeGreaterThan 8
+        original.response.contentAsByteArray.shouldNotBeEmpty()
 
         val thumbnail = mockMvc.perform(get(thumbnailUrl))
             .andExpect(request().asyncStarted())
@@ -78,10 +92,10 @@ class SpringBootImageApiApplicationTest(
             .dispatch()
             .andExpect(status().isOk)
             .andReturn()
+
         thumbnail.response.contentType shouldBeEqualTo MediaType.IMAGE_PNG_VALUE
-        thumbnail.response.contentAsByteArray.copyOfRange(0, PNG_SIGNATURE.size)
-            .contentEquals(PNG_SIGNATURE)
-            .shouldBeTrue()
+        thumbnail.response.contentAsByteArray
+            .copyOfRange(0, PNG_SIGNATURE.size) shouldContentEqual PNG_SIGNATURE
     }
 
     @Test
@@ -93,7 +107,8 @@ class SpringBootImageApiApplicationTest(
             "not an image".toByteArray(),
         )
 
-        val result = mockMvc.perform(multipart("/api/images").file(textFile))
+        val result = mockMvc
+            .perform(multipart("/api/images").file(textFile))
             .andExpect(request().asyncStarted())
             .andReturn()
             .dispatch()
@@ -101,8 +116,9 @@ class SpringBootImageApiApplicationTest(
             .andReturn()
 
         val error = result.response.contentAsString
+        log.debug { "error=$error" }
         error.readJsonPath<String>("$.error") shouldBeEqualTo "bad_request"
-        error.readJsonPath<String>("$.message").contains("Unsupported image content type").shouldBeTrue()
+        error.readJsonPath<String>("$.message") shouldContain "Unsupported image content type"
     }
 
     @Test
@@ -122,6 +138,7 @@ class SpringBootImageApiApplicationTest(
             .andReturn()
 
         val error = result.response.contentAsString
+        log.debug { "error=$error" }
         error.readJsonPath<String>("$.error") shouldBeEqualTo "bad_request"
         error.readJsonPath<String>("$.message") shouldContain "decodedPixels"
     }
@@ -135,7 +152,8 @@ class SpringBootImageApiApplicationTest(
             "not an encoded image".toByteArray(),
         )
 
-        val result = mockMvc.perform(multipart("/api/images").file(malformedImage))
+        val result = mockMvc
+            .perform(multipart("/api/images").file(malformedImage))
             .andExpect(request().asyncStarted())
             .andReturn()
             .dispatch()
@@ -143,6 +161,7 @@ class SpringBootImageApiApplicationTest(
             .andReturn()
 
         val error = result.response.contentAsString
+        log.debug { "error=$error" }
         error.readJsonPath<String>("$.error") shouldBeEqualTo "bad_request"
         error.readJsonPath<String>("$.message") shouldContain "dimensions could not be determined"
     }
@@ -156,7 +175,8 @@ class SpringBootImageApiApplicationTest(
             pngHeaderBytes(width = 10, height = 10),
         )
 
-        val result = mockMvc.perform(multipart("/api/images").file(malformedImage))
+        val result = mockMvc
+            .perform(multipart("/api/images").file(malformedImage))
             .andExpect(request().asyncStarted())
             .andReturn()
             .dispatch()
@@ -164,6 +184,7 @@ class SpringBootImageApiApplicationTest(
             .andReturn()
 
         val error = result.response.contentAsString
+        log.debug { "error=$error" }
         error.readJsonPath<String>("$.error") shouldBeEqualTo "bad_request"
         error.readJsonPath<String>("$.message") shouldContain "could not be decoded"
     }
@@ -171,7 +192,7 @@ class SpringBootImageApiApplicationTest(
     private inline fun <reified T> String.readJsonPath(path: String): T =
         JsonPath.read(this, path)
 
-    private fun MvcResult.dispatch(): org.springframework.test.web.servlet.ResultActions =
+    private fun MvcResult.dispatch(): ResultActions =
         mockMvc.perform(asyncDispatch(this))
 
     private fun jpegFile(): MockMultipartFile =
@@ -184,35 +205,34 @@ class SpringBootImageApiApplicationTest(
 
     private fun sampleJpegBytes(): ByteArray {
         val image = BufferedImage(320, 240, BufferedImage.TYPE_INT_RGB)
-        val graphics = image.createGraphics()
-        try {
+        image.useGraphics { graphics ->
             graphics.color = Color(35, 96, 146)
             graphics.fillRect(0, 0, image.width, image.height)
             graphics.color = Color.WHITE
             graphics.fillOval(80, 40, 160, 120)
-        } finally {
-            graphics.dispose()
         }
 
-        val output = ByteArrayOutputStream()
-        ImageIO.write(image, "jpg", output)
-        return output.toByteArray()
+        return ByteArrayOutputStream().use { output ->
+            ImageIO.write(image, "jpg", output)
+            output.toByteArray()
+        }
     }
 
     private fun pngHeaderBytes(width: Int, height: Int): ByteArray {
-        val output = ByteArrayOutputStream()
-        output.write(PNG_SIGNATURE)
-        output.writePngChunk(
-            type = "IHDR",
-            data = ByteArray(13).also { data ->
-                data.writeInt(0, width)
-                data.writeInt(4, height)
-                data[8] = 8
-                data[9] = 2
-            }
-        )
-        output.writePngChunk(type = "IEND", data = ByteArray(0))
-        return output.toByteArray()
+        return ByteArrayOutputStream().use { output ->
+            output.write(PNG_SIGNATURE)
+            output.writePngChunk(
+                type = "IHDR",
+                data = ByteArray(13).also { data ->
+                    data.writeInt(0, width)
+                    data.writeInt(4, height)
+                    data[8] = 8
+                    data[9] = 2
+                }
+            )
+            output.writePngChunk(type = "IEND", data = ByteArray(0))
+            output.toByteArray()
+        }
     }
 
     private fun ByteArray.writeInt(offset: Int, value: Int) {
@@ -239,18 +259,5 @@ class SpringBootImageApiApplicationTest(
         write((value ushr 16) and 0xFF)
         write((value ushr 8) and 0xFF)
         write(value and 0xFF)
-    }
-
-    private companion object {
-        val PNG_SIGNATURE = byteArrayOf(
-            0x89.toByte(),
-            0x50,
-            0x4E,
-            0x47,
-            0x0D,
-            0x0A,
-            0x1A,
-            0x0A,
-        )
     }
 }

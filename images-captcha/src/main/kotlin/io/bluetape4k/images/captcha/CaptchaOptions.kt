@@ -1,12 +1,15 @@
 package io.bluetape4k.images.captcha
 
+import io.bluetape4k.ToStringBuilder
+import io.bluetape4k.support.hashOf
+import io.bluetape4k.support.requireGt
 import io.bluetape4k.support.requireInRange
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.requireNotEmpty
-import io.bluetape4k.support.requirePositiveNumber
+import org.jetbrains.annotations.UnmodifiableView
 import java.awt.Color
 import java.io.Serializable
-import java.util.Collections
+import java.util.*
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 
@@ -16,30 +19,21 @@ import kotlin.time.Duration.Companion.minutes
  * 기본값은 uppercase character만 사용하고 모호한 `I`, `O`, `0`, `1`을 제외해
  * 사용자 입력 실수를 줄입니다.
  */
-@Suppress("TooManyFunctions")
 class CaptchaOptions(
-    length: Int = DEFAULT_LENGTH,
-    charSet: String = DEFAULT_CHAR_SET,
-    imageSize: CaptchaImageSize = CaptchaImageSize(),
-    fontSize: Int = DEFAULT_FONT_SIZE,
-    noise: CaptchaNoise = CaptchaNoise.Medium,
-    distortion: CaptchaDistortion = CaptchaDistortion.None,
-    backgroundColor: Color = Color.WHITE,
+    val length: Int = DEFAULT_LENGTH,
+    val charSet: String = DEFAULT_CHAR_SET,
+    val imageSize: CaptchaImageSize = CaptchaImageSize(),
+    val fontSize: Int = DEFAULT_FONT_SIZE,
+    val noise: CaptchaNoise = CaptchaNoise.Medium,
+    val distortion: CaptchaDistortion = CaptchaDistortion.None,
+    val backgroundColor: Color = Color.WHITE,
     textColors: List<Color> = listOf(Color.DARK_GRAY),
-    expiresAfter: Duration = DEFAULT_EXPIRES_AFTER,
+    val expiresAfter: Duration = DEFAULT_EXPIRES_AFTER,
     fonts: List<CaptchaFont> = CaptchaFont.defaults(),
 ): Serializable {
 
-    val length: Int = length
-    val charSet: String = charSet
-    val imageSize: CaptchaImageSize = imageSize
-    val fontSize: Int = fontSize
-    val noise: CaptchaNoise = noise
-    val distortion: CaptchaDistortion = distortion
-    val backgroundColor: Color = backgroundColor
-    val textColors: List<Color> = Collections.unmodifiableList(textColors.toList())
-    val expiresAfter: Duration = expiresAfter
-    val fonts: List<CaptchaFont> = Collections.unmodifiableList(fonts.toList())
+    val textColors: @UnmodifiableView List<Color> = Collections.unmodifiableList(textColors.toList())
+    val fonts: @UnmodifiableView List<CaptchaFont> = Collections.unmodifiableList(fonts.toList())
 
     init {
         validateLength(length)
@@ -50,7 +44,7 @@ class CaptchaOptions(
         require(textColors.any { it.isVisible() && !it.hasSameRgb(backgroundColor) }) {
             "textColors must include a visible color different from backgroundColor"
         }
-        require(expiresAfter > Duration.ZERO) { "expiresAfter must be greater than zero" }
+        expiresAfter.requireGt(Duration.ZERO, "expiresAfter")
         fonts.requireNotEmpty("fonts")
     }
 
@@ -91,38 +85,48 @@ class CaptchaOptions(
 
     override fun equals(other: Any?): Boolean =
         this === other || (other is CaptchaOptions &&
-            length == other.length &&
-            charSet == other.charSet &&
-            imageSize == other.imageSize &&
-            fontSize == other.fontSize &&
-            noise == other.noise &&
-            distortion == other.distortion &&
-            backgroundColor == other.backgroundColor &&
-            textColors == other.textColors &&
-            expiresAfter == other.expiresAfter &&
-            fonts == other.fonts)
+                length == other.length &&
+                charSet == other.charSet &&
+                imageSize == other.imageSize &&
+                fontSize == other.fontSize &&
+                noise == other.noise &&
+                distortion == other.distortion &&
+                backgroundColor == other.backgroundColor &&
+                textColors == other.textColors &&
+                expiresAfter == other.expiresAfter &&
+                fonts == other.fonts)
 
     override fun hashCode(): Int {
-        var result = length
-        result = 31 * result + charSet.hashCode()
-        result = 31 * result + imageSize.hashCode()
-        result = 31 * result + fontSize
-        result = 31 * result + noise.hashCode()
-        result = 31 * result + distortion.hashCode()
-        result = 31 * result + backgroundColor.hashCode()
-        result = 31 * result + textColors.hashCode()
-        result = 31 * result + expiresAfter.hashCode()
-        result = 31 * result + fonts.hashCode()
-        return result
+        return hashOf(
+            length,
+            charSet,
+            imageSize,
+            fontSize,
+            noise,
+            distortion,
+            backgroundColor,
+            textColors,
+            expiresAfter,
+            fonts,
+            noise
+        )
     }
 
     override fun toString(): String =
-        "CaptchaOptions(length=$length, charSet=$charSet, imageSize=$imageSize, " +
-            "fontSize=$fontSize, noise=$noise, distortion=$distortion, " +
-            "backgroundColor=$backgroundColor, textColors=$textColors, " +
-            "expiresAfter=$expiresAfter, fonts=$fonts)"
+        ToStringBuilder(this)
+            .add("length", length)
+            .add("charSet", charSet)
+            .add("imageSize", imageSize)
+            .add("fontSize", fontSize)
+            .add("noise", noise)
+            .add("distortion", distortion)
+            .add("backgroundColor", backgroundColor)
+            .add("textColors", textColors)
+            .add("expiresAfter", expiresAfter)
+            .add("fonts", fonts)
+            .toString()
 
-    private fun readResolve(): Any = copy()
+    // private fun readResolve(): Any = copy()
 
     companion object {
         private const val serialVersionUID: Long = -5633101925229847169L

@@ -16,128 +16,98 @@
 
 ![Resize latency benchmark chart](../../docs/images/readme-charts/images-benchmark-resize-latency-chart-01.png)
 
-| Natural photo | scrimage (ms/op) | vips Java 25 FFM (ms/op) | Speedup |
-|---------------|-----------------|---------------------------|---------|
-| `cafe` | 114.885 ± 3.207 | 0.257 ± 0.083 | **446×** |
-| `landscape` | 115.641 ± 2.242 | 0.244 ± 0.028 | **473×** |
+| Natural photo | scrimage (ms/op) | vips Java 25 FFM (ms/op) | Speedup  |
+|---------------|------------------|--------------------------|----------|
+| `cafe`        | 114.885 ± 3.207  | 0.257 ± 0.083            | **446×** |
+| `landscape`   | 115.641 ± 2.242  | 0.244 ± 0.028            | **473×** |
 
 ### Encode (natural 4K photo)
 
 ![Encode latency benchmark chart](../../docs/images/readme-charts/images-benchmark-encode-latency-chart-01.png)
 
-| Format | Natural photo | scrimage (ms/op) | vips Java 25 FFM (ms/op) | Speedup |
-|--------|---------------|-----------------|---------------------------|---------|
-| JPEG | `cafe` | 137.947 ± 2.417 | 58.351 ± 23.828 | **2.4×** |
-| JPEG | `landscape` | 144.961 ± 5.511 | 46.749 ± 6.066 | **3.1×** |
-| PNG | `cafe` | 884.105 ± 156.993 | 585.288 ± 186.247 | **1.5×** |
-| PNG | `landscape` | 989.370 ± 346.605 | 546.388 ± 25.444 | **1.8×** |
+| Format | Natural photo | scrimage (ms/op)  | vips Java 25 FFM (ms/op) | Speedup  |
+|--------|---------------|-------------------|--------------------------|----------|
+| JPEG   | `cafe`        | 137.947 ± 2.417   | 58.351 ± 23.828          | **2.4×** |
+| JPEG   | `landscape`   | 144.961 ± 5.511   | 46.749 ± 6.066           | **3.1×** |
+| PNG    | `cafe`        | 884.105 ± 156.993 | 585.288 ± 186.247        | **1.5×** |
+| PNG    | `landscape`   | 989.370 ± 346.605 | 546.388 ± 25.444         | **1.8×** |
 
 > These are natural-photo snapshots on one macOS Java 25 FFM host. They are not a cross-host or Java 21 JNI ranking.
 
 ### Vips Backend Comparison
 
-`VipsBackendBenchmark` and `VipsBackendEncodeBenchmark` compare the legacy-named
-JVips JNI backend and the FFM backend on JDK 25 with stable benchmark names
-across both runs.
+`VipsBackendBenchmark` and `VipsBackendEncodeBenchmark` compare the legacy-named JVips JNI backend and the FFM backend on JDK 25 with stable benchmark names across both runs.
 
 ![Vips backend comparison benchmark chart](../../docs/images/readme-charts/images-benchmark-vips-backend-comparison-chart-01.png)
 
-| Benchmark | Workload |
-|-----------|----------|
-| `vips_resize` | 4K JPEG resize to `1920x1080` and `1280x720` |
-| `vips_thumbnail` | 4K JPEG thumbnail at matching max dimensions |
-| `vips_crop` | 4K JPEG top-left crop to matching dimensions |
-| `vips_encodeJpeg` | 4K JPEG decode and JPEG encode |
+| Benchmark         | Workload                                     |
+|-------------------|----------------------------------------------|
+| `vips_resize`     | 4K JPEG resize to `1920x1080` and `1280x720` |
+| `vips_thumbnail`  | 4K JPEG thumbnail at matching max dimensions |
+| `vips_crop`       | 4K JPEG top-left crop to matching dimensions |
+| `vips_encodeJpeg` | 4K JPEG decode and JPEG encode               |
 
-See [`docs/vips-backend-comparison.md`](docs/vips-backend-comparison.md) for
-the side-by-side run commands, raw JSON reporting shape, and local validation
-notes.
+See [`docs/vips-backend-comparison.md`](docs/vips-backend-comparison.md) for the side-by-side run commands, raw JSON reporting shape, and local validation notes.
 
 ### Codec Runtime Matrix (PNG, WebP, AVIF, HEIC)
 
-The 2026-07-13 codec run uses `cafe.jpg` as a `1920x1080` web-photo fixture
-and `homer.jpg` as a `512x512` profile fixture. Java 25 FFM/libvips 8.18.4
-measured all 16 direction cells. Java 21 JNI is `N/A` on this macOS arm64 host
-because the JNI binary architecture could not be established; it is not ranked
-against Java 25.
+The 2026-07-13 codec run uses `cafe.jpg` as a `1920x1080` web-photo fixture and `homer.jpg` as a `512x512` profile fixture. Java 25 FFM/libvips 8.18.4 measured all 16 direction cells. Java 21 JNI is `N/A` on this macOS arm64 host because the JNI binary architecture could not be established; it is not ranked against Java 25.
 
 ![Codec runtime matrix latency chart](../../docs/images/readme-charts/images-benchmark-codec-runtime-latency-chart-01.png)
 
-| Scenario | PNG encode / decode | WebP encode / decode | AVIF encode / decode | HEIC encode / decode |
-|----------|---------------------|-----------------------|-----------------------|-----------------------|
-| profile | 5.945 / 2.156 ms | 10.415 / 2.605 ms | 51.134 / 4.339 ms | 60.350 / 7.681 ms |
-| web-photo | 80.132 / 18.825 ms | 106.405 / 20.020 ms | 511.268 / 38.751 ms | 339.555 / 73.038 ms |
+| Scenario  | PNG encode / decode | WebP encode / decode | AVIF encode / decode | HEIC encode / decode |
+|-----------|---------------------|----------------------|----------------------|----------------------|
+| profile   | 5.945 / 2.156 ms    | 10.415 / 2.605 ms    | 51.134 / 4.339 ms    | 60.350 / 7.681 ms    |
+| web-photo | 80.132 / 18.825 ms  | 106.405 / 20.020 ms  | 511.268 / 38.751 ms  | 339.555 / 73.038 ms  |
 
 ![Codec encode output size chart](../../docs/images/readme-charts/images-benchmark-codec-output-size-chart-01.png)
 
 Status legend: `MEASURED` means accepted latency and allocation evidence;
 `N/A` means the runtime could not be evaluated on this host; `UNSUPPORTED`
-means an available runtime lacks a codec/direction; `SKIPPED` means an eligible
-cell was intentionally not run. Encode is JPEG to the named codec; decode is
-the named codec to JPEG. Managed-heap allocation excludes native libvips
-memory, and output size is not a visual-quality ranking. See the
-[`codec runtime matrix report`](docs/codec-runtime-matrix-2026-07-13.md) and
-the [immutable raw evidence](docs/raw/issue-208-20260713-macos-arm64-09/).
+means an available runtime lacks a codec/direction; `SKIPPED` means an eligible cell was intentionally not run. Encode is JPEG to the named codec; decode is the named codec to JPEG. Managed-heap allocation excludes native libvips memory, and output size is not a visual-quality ranking. See the
+[`codec runtime matrix report`](docs/codec-runtime-matrix-2026-07-13.md) and the [immutable raw evidence](docs/raw/issue-208-20260713-macos-arm64-09/).
 
 ### ZXing Barcode Extraction
 
-This Java 25 snapshot measures ZXing extraction from immutable images that were
-loaded and decoded during JMH trial setup. Latency is `AverageTime ms/op`
-(lower is better); throughput is a separate observed `ops/s` run (higher is
-better), not a reciprocal conversion.
+This Java 25 snapshot measures ZXing extraction from immutable images that were loaded and decoded during JMH trial setup. Latency is `AverageTime ms/op`
+(lower is better); throughput is a separate observed `ops/s` run (higher is better), not a reciprocal conversion.
 
-| Scenario | Latency (ms/op) | Throughput (ops/s) | Expected result |
-|----------|-----------------|--------------------|-----------------|
-| QR | 0.174126 ± 0.001086 | 5702.142 ± 37.446 | One QR result |
-| Code 128 | 0.112914 ± 0.000715 | 8839.015 ± 135.003 | One Code 128 result |
-| No result | 0.271397 ± 0.009099 | 3690.012 ± 32.832 | Empty list |
+| Scenario  | Latency (ms/op)     | Throughput (ops/s) | Expected result     |
+|-----------|---------------------|--------------------|---------------------|
+| QR        | 0.174126 ± 0.001086 | 5702.142 ± 37.446  | One QR result       |
+| Code 128  | 0.112914 ± 0.000715 | 8839.015 ± 135.003 | One Code 128 result |
+| No result | 0.271397 ± 0.009099 | 3690.012 ± 32.832  | Empty list          |
 
-These values are a local Apple M5 snapshot for one provider and three pinned
-PNG fixtures, not a provider or cross-host ranking. See the
+These values are a local Apple M5 snapshot for one provider and three pinned PNG fixtures, not a provider or cross-host ranking. See the
 [`detailed report`](docs/barcode-extraction-2026-07-14.md) and
 [`immutable raw evidence`](docs/raw/issue-272-20260714-macos-arm64-01/).
 
 ### Tesseract OCR Extraction
 
 This Java 25/macOS snapshot measures the public Tess4J-backed
-`ImmutableImage.extractText` path against clean, noisy, rotated, and
-multilingual hash-pinned PNG documents. It includes per-call native engine
-setup; fixture loading, decoding, and expected-token validation stay in trial
-setup. Latency is `AverageTime ms/op` (lower is better) and throughput is a
-separate observed `ops/s` run (higher is better).
+`ImmutableImage.extractText` path against clean, noisy, rotated, and multilingual hash-pinned PNG documents. It includes per-call native engine setup; fixture loading, decoding, and expected-token validation stay in trial setup. Latency is `AverageTime ms/op` (lower is better) and throughput is a separate observed `ops/s` run (higher is better).
 
-| Scenario | Direct latency | Preprocess + extract | Direct throughput | Preprocess + extract |
-|----------|----------------|----------------------|-------------------|----------------------|
-| clean text | 217.921 ms/op | 194.128 ms/op | 4.607 ops/s | 5.111 ops/s |
-| noisy scan | 367.810 ms/op | 282.790 ms/op | 2.727 ops/s | 3.418 ops/s |
-| rotated document | 168.593 ms/op | 186.895 ms/op | 5.875 ops/s | 5.189 ops/s |
-| multilingual | 370.003 ms/op | 394.922 ms/op | 2.704 ops/s | 2.518 ops/s |
+| Scenario         | Direct latency | Preprocess + extract | Direct throughput | Preprocess + extract |
+|------------------|----------------|----------------------|-------------------|----------------------|
+| clean text       | 217.921 ms/op  | 194.128 ms/op        | 4.607 ops/s       | 5.111 ops/s          |
+| noisy scan       | 367.810 ms/op  | 282.790 ms/op        | 2.727 ops/s       | 3.418 ops/s          |
+| rotated document | 168.593 ms/op  | 186.895 ms/op        | 5.875 ops/s       | 5.189 ops/s          |
+| multilingual     | 370.003 ms/op  | 394.922 ms/op        | 2.704 ops/s       | 2.518 ops/s          |
 
 ![Tesseract OCR extraction benchmark chart](../../docs/images/readme-charts/images-benchmark-ocr-extraction-chart-01.png)
 
 #### Current OCR corpus v2 task
 
 The benchmark task now consumes the verified `bench/ocr-v2/manifest.json` through
-`fixtureId` and has no v1 fixture fallback. The manifest contains 24
-benchmarkable positive fixtures across eight positive scenario classes (three
-fixtures each) and three separate malformed-input negative receipts; the table
-and chart above remain the historical v1 snapshot.
+`fixtureId` and has no v1 fixture fallback. The manifest contains 24 benchmarkable positive fixtures across eight positive scenario classes (three fixtures each) and three separate malformed-input negative receipts; the table and chart above remain the historical v1 snapshot.
 
-| Fixture | Direct latency | Preprocess + extract | Direct throughput | Preprocess + extract |
-|---------|----------------|----------------------|-------------------|----------------------|
-| `clean-text-v2-001` | 223.134 ± 6.445 ms/op | 207.461 ± 28.548 ms/op | 4.512 ± 0.272 ops/s | 4.985 ± 0.572 ops/s |
+| Fixture             | Direct latency        | Preprocess + extract   | Direct throughput   | Preprocess + extract |
+|---------------------|-----------------------|------------------------|---------------------|----------------------|
+| `clean-text-v2-001` | 223.134 ± 6.445 ms/op | 207.461 ± 28.548 ms/op | 4.512 ± 0.272 ops/s | 4.985 ± 0.572 ops/s  |
 
-This is a Tesseract baseline-only receipt on one macOS arm64 Java 25 host, not a
-cross-host ranking or an adoption decision. The immutable v2 reports and run
-manifest are in [`issue-565 corpus receipt`](docs/raw/issue-565-20260824-macos-arm64-java25-v2-corpus/).
-The corpus is now expanded for the follow-up metric and run-receipt trains;
-CER/WER scoring and cold/warm/RSS evidence remain separate benchmark outputs.
+This is a Tesseract baseline-only receipt on one macOS arm64 Java 25 host, not a cross-host ranking or an adoption decision. The immutable v2 reports and run manifest are in [`issue-565 corpus receipt`](docs/raw/issue-565-20260824-macos-arm64-java25-v2-corpus/). The corpus is now expanded for the follow-up metric and run-receipt trains; CER/WER scoring and cold/warm/RSS evidence remain separate benchmark outputs.
 
-Train-3의 host-native 실행은 다음 명령으로 재현한다. 이 task는 각 fixture의
-cold/warm latency, 관측 throughput, process RSS, 출력 hash와 host/JVM/Tesseract
-envelope를 기록하며, throughput을 latency 역수로 계산하지 않는다. warm은
-engine wrapper 재사용이며 public `TesseractOcrEngine`의 fresh Tess4J client
-계약을 바꾸지 않는다.
+Train-3의 host-native 실행은 다음 명령으로 재현한다. 이 task는 각 fixture의 cold/warm latency, 관측 throughput, process RSS, 출력 hash와 host/JVM/Tesseract envelope를 기록하며, throughput을 latency 역수로 계산하지 않는다. warm은 engine wrapper 재사용이며 public `TesseractOcrEngine`의 fresh Tess4J client 계약을 바꾸지 않는다.
 
 ```bash
 ./gradlew :bluetape4k-images-benchmark:runOcrCorpusProtocol \
@@ -147,29 +117,17 @@ engine wrapper 재사용이며 public `TesseractOcrEngine`의 fresh Tess4J clien
 ./gradlew :bluetape4k-images-benchmark:validateOcrProtocolReceipt --console=plain
 ```
 
-The committed full-corpus receipt contains 24 rows (21 `TEXT`, 3 `EMPTY`) and its
-embedded CER/WER summary. It is one macOS arm64 Java 25 observation, not a
-cross-host ranking or production SLO; see the [`v2 protocol receipt`](docs/raw/issue-565-20260824-macos-arm64-java25-v2-protocol/).
+The committed full-corpus receipt contains 24 rows (21 `TEXT`, 3 `EMPTY`) and its embedded CER/WER summary. It is one macOS arm64 Java 25 observation, not a cross-host ranking or production SLO; see the [`v2 protocol receipt`](docs/raw/issue-565-20260824-macos-arm64-java25-v2-protocol/).
 
 The synthetic additions are reproducible with
-`ruby benchmark/images-benchmark/tools/generate_ocr_v2_fixtures.rb` using the
-pinned ImageMagick/font receipt. The historical `clean-text-v2-001` baseline is
-retained verbatim, so the generator receipt remains `PENDING` until that legacy
-fixture is replayable byte-for-byte.
+`ruby benchmark/images-benchmark/tools/generate_ocr_v2_fixtures.rb` using the pinned ImageMagick/font receipt. The historical `clean-text-v2-001` baseline is retained verbatim, so the generator receipt remains `PENDING` until that legacy fixture is replayable byte-for-byte.
 
 Trial setup performs one recognition through both `extractText` and
 `preprocessAndExtract` and rejects a result that violates the fixture's declared
-`TEXT`/`EMPTY` outcome. The receipt also pins the `eng.traineddata` model path,
-resolved path, byte count, and SHA-256 in
-[`model-provenance.json`](docs/raw/issue-563-20260824-macos-arm64-java25-v2-baseline/model-provenance.json).
-Run `./gradlew :bluetape4k-images-benchmark:validateOcrBenchmarkReceipt` to
-verify the manifest, raw report EOF normalization, report hashes, and model
-provenance hash before using the snapshot.
+`TEXT`/`EMPTY` outcome. The receipt also pins the `eng.traineddata` model path, resolved path, byte count, and SHA-256 in
+[`model-provenance.json`](docs/raw/issue-563-20260824-macos-arm64-java25-v2-baseline/model-provenance.json). Run `./gradlew :bluetape4k-images-benchmark:validateOcrBenchmarkReceipt` to verify the manifest, raw report EOF normalization, report hashes, and model provenance hash before using the snapshot.
 
-The GC profiler reports `1,417,421 B/op` managed allocation for direct clean
-text extraction; it excludes Tesseract native/model memory. Host prerequisites
-are explicit (`tesseract`, tessdata, and fixture languages), so the OCR tasks
-do not run in the default CI lane. See the
+The GC profiler reports `1,417,421 B/op` managed allocation for direct clean text extraction; it excludes Tesseract native/model memory. Host prerequisites are explicit (`tesseract`, tessdata, and fixture languages), so the OCR tasks do not run in the default CI lane. See the
 [`detailed report`](docs/ocr-extraction-benchmark.md) and
 [`immutable raw evidence`](docs/raw/issue-203-20260726-macos-java25/).
 
@@ -177,13 +135,13 @@ do not run in the default CI lane. See the
 
 The `0.4.0` benchmark lanes are independently filterable:
 
-| Issue | Configuration | Scope |
-|------:|---------------|-------|
-| #203 | `ocrLatency`, `ocrThroughput` | Tesseract extraction, preprocessing, multilingual traineddata, GC addendum |
-| #204 | `storageLocal`, `storageS3` | `ImageStorage` upload/download/list and max-size guards |
-| #205 | `ktorRoute`, `ktorRouteConcurrency` | single and concurrent multipart thumbnail routes, mixed traffic, oversize rejection |
-| #206 | `batchPipeline` | thumbnail fan-out, sequential versus bounded coroutine batches |
-| #207 | `algorithmicHotPaths` | crop, tiling, dominant colors, SVG rasterization, similarity |
+| Issue | Configuration                       | Scope                                                                               |
+|------:|-------------------------------------|-------------------------------------------------------------------------------------|
+|  #203 | `ocrLatency`, `ocrThroughput`       | Tesseract extraction, preprocessing, multilingual traineddata, GC addendum          |
+|  #204 | `storageLocal`, `storageS3`         | `ImageStorage` upload/download/list and max-size guards                             |
+|  #205 | `ktorRoute`, `ktorRouteConcurrency` | single and concurrent multipart thumbnail routes, mixed traffic, oversize rejection |
+|  #206 | `batchPipeline`                     | thumbnail fan-out, sequential versus bounded coroutine batches                      |
+|  #207 | `algorithmicHotPaths`               | crop, tiling, dominant colors, SVG rasterization, similarity                        |
 
 Run the local OCR, storage, Ktor route, batch, and algorithmic lanes with:
 
@@ -203,72 +161,47 @@ The S3 lane is an opt-in in-memory adapter benchmark and requires
 [`OCR extraction`](docs/ocr-extraction-benchmark.md),
 [`Ktor thumbnail route`](docs/ktor-thumbnail-route-benchmark.md),
 [`batch and thumbnail`](docs/batch-thumbnail-benchmark.md), and
-[`algorithmic hot paths`](docs/algorithmic-hot-paths-2026-07.md) for fixture,
-object-count, cleanup, and interpretation details.
+[`algorithmic hot paths`](docs/algorithmic-hot-paths-2026-07.md) for fixture, object-count, cleanup, and interpretation details.
 
 ![Storage backend benchmark chart](../../docs/images/readme-charts/images-benchmark-storage-backend-chart-01.png)
 
-The storage chart uses a log scale because the adapter rows span sub-millisecond
-to multi-format filesystem costs. The in-memory S3 adapter is faster for byte
-and list operations because it removes network and durable-filesystem effects;
-the chart must not be read as a production S3 throughput claim. The over-limit
-guard is intentionally near-zero for both backends because rejection happens
-before payload persistence.
+The storage chart uses a log scale because the adapter rows span sub-millisecond to multi-format filesystem costs. The in-memory S3 adapter is faster for byte and list operations because it removes network and durable-filesystem effects; the chart must not be read as a production S3 throughput claim. The over-limit guard is intentionally near-zero for both backends because rejection happens before payload persistence.
 
 ![Ktor multipart thumbnail route benchmark chart](../../docs/images/readme-charts/images-benchmark-ktor-thumbnail-route-chart-01.png)
 
-The Ktor test host adds about `2.3-3.9 ms/op` over direct decode, resize, and
-PNG encoding for accepted inputs on this host. Image work therefore dominates
-the `16.9-102.6 ms/op` full-route latency as dimensions grow. Multipart parsing
-alone stays below `0.4 ms/op`, and a one-byte-over-limit upload fails before
-decode at about `0.35 ms/op`. These are in-process route costs without sockets,
-TLS, proxies, or network IO.
+The Ktor test host adds about `2.3-3.9 ms/op` over direct decode, resize, and PNG encoding for accepted inputs on this host. Image work therefore dominates the `16.9-102.6 ms/op` full-route latency as dimensions grow. Multipart parsing alone stays below `0.4 ms/op`, and a one-byte-over-limit upload fails before decode at about `0.35 ms/op`. These are in-process route costs without sockets, TLS, proxies, or network IO.
 
 ![Ktor accepted-route concurrency chart](../../docs/images/readme-charts/images-benchmark-ktor-concurrency-chart-01.png)
 
 The closed-loop concurrency run peaks at 10 requests for both accepted fixtures:
-about `157.4 derived req/s` for `medium` and `58.8 derived req/s` for `photo4k`.
-At 30, throughput falls to `128.7` and `52.2 derived req/s`, while p95 batch
-completion grows to `290.8` and `687.9 ms`. Thus 30 is a useful saturation
-probe, not a default capacity target. Expected-rejection and 90/10 mixed batches
-show the same 10-to-30 degradation. These in-process derived rates are not
-open-loop production throughput.
+about `157.4 derived req/s` for `medium` and `58.8 derived req/s` for `photo4k`. At 30, throughput falls to `128.7` and `52.2 derived req/s`, while p95 batch completion grows to `290.8` and `687.9 ms`. Thus 30 is a useful saturation probe, not a default capacity target. Expected-rejection and 90/10 mixed batches show the same 10-to-30 degradation. These in-process derived rates are not open-loop production throughput.
 
 ![Batch and thumbnail scaling benchmark chart](../../docs/images/readme-charts/images-benchmark-batch-pipeline-chart-01.png)
 
-The batch chart shows the main scaling decision: Scrimage sequential work grows
-from about `78` to `616 ms/op` between one and eight inputs, while bounded
-concurrency stays near `92 ms/op` at eight. The libvips thumbnail-only rows
-scale roughly linearly from `33` to `261-269 ms/op`; they are a different
-pipeline boundary from Scrimage's resize-plus-JPEG rows and should not be
-treated as a direct backend ranking.
+The batch chart shows the main scaling decision: Scrimage sequential work grows from about `78` to `616 ms/op` between one and eight inputs, while bounded concurrency stays near `92 ms/op` at eight. The libvips thumbnail-only rows scale roughly linearly from `33` to `261-269 ms/op`; they are a different pipeline boundary from Scrimage's resize-plus-JPEG rows and should not be treated as a direct backend ranking.
 
 ![Algorithmic hot paths benchmark chart](../../docs/images/readme-charts/images-benchmark-algorithmic-hot-paths-chart-01.png)
 
-The algorithmic chart uses a log scale to keep document and photo fixtures
-visible together. Photo `dominantColors` and `histogramSimilarity` are the
-largest measured hot paths at roughly `140` and `158 ms/op`, while document
-fixtures stay below `10 ms/op` for those operations. This is fixture-sensitive
-evidence for prioritizing photo analysis work, not a cross-host guarantee.
+The algorithmic chart uses a log scale to keep document and photo fixtures visible together. Photo `dominantColors` and `histogramSimilarity` are the largest measured hot paths at roughly `140` and `158 ms/op`, while document fixtures stay below `10 ms/op` for those operations. This is fixture-sensitive evidence for prioritizing photo analysis work, not a cross-host guarantee.
 
 ### Filter (scrimage only, 1240×1754 document image)
 
 ![Filter latency benchmark chart](../../docs/images/readme-charts/images-benchmark-filter-latency-chart-01.png)
 
 | Filter    | macOS (ms/op) | CI Linux java25 (ms/op) | CI Linux java21 (ms/op) |
-|-----------|--------------|------------------------|------------------------|
-| Sepia     | 14.51 ± 8.45 | 60.83 ± 0.42 | 60.70 ± 0.59 |
-| Grayscale | 6.26 ± 0.12  | 99.72 ± 23.9 | 97.05 ± 12.6 |
-| Blur      | 27.76 ± 0.15 | 73.64 ± 1.28 | 84.81 ± 6.31 |
+|-----------|---------------|-------------------------|-------------------------|
+| Sepia     | 14.51 ± 8.45  | 60.83 ± 0.42            | 60.70 ± 0.59            |
+| Grayscale | 6.26 ± 0.12   | 99.72 ± 23.9            | 97.05 ± 12.6            |
+| Blur      | 27.76 ± 0.15  | 73.64 ± 1.28            | 84.81 ± 6.31            |
 
 ### Pipeline Allocation (scrimage chained operations)
 
 ![Image pipeline allocation benchmark chart](../../docs/images/readme-charts/images-benchmark-pipeline-allocation-chart-01.png)
 
-| Benchmark | Pipeline | AverageTime | Allocation |
-|-----------|----------|-------------|------------|
-| `scrimage_photoPreviewJpeg` | resize `landscape.jpg` to `1280x720`, grayscale, JPEG encode | 113.82 ms/op | 50.75 MB/op |
-| `scrimage_documentPreviewPng` | resize `homer.png` to `640x905`, blur, sepia, PNG encode | 57.86 ms/op | 60.89 MB/op |
+| Benchmark                     | Pipeline                                                     | AverageTime  | Allocation  |
+|-------------------------------|--------------------------------------------------------------|--------------|-------------|
+| `scrimage_photoPreviewJpeg`   | resize `landscape.jpg` to `1280x720`, grayscale, JPEG encode | 113.82 ms/op | 50.75 MB/op |
+| `scrimage_documentPreviewPng` | resize `homer.png` to `640x905`, blur, sepia, PNG encode     | 57.86 ms/op  | 60.89 MB/op |
 
 See [`docs/pipeline-allocation-2026-05-29.md`](docs/pipeline-allocation-2026-05-29.md)
 and the raw `kotlinx-benchmark` JSON
@@ -278,15 +211,13 @@ and the raw `kotlinx-benchmark` JSON
 
 ![Image IO boundary benchmark chart](../../docs/images/readme-charts/images-benchmark-io-boundary-chart-01.png)
 
-| Workload | Fastest baseline | Okio boundary | Suspended file channel |
-|----------|------------------|---------------|------------------------|
-| `homer.jpg` load | `ByteArray` 7.70 ms/op | `Source` 8.23 ms/op | `SuspendedSource` 10.81 ms/op |
-| `landscape.jpg` load | `Path` 152.22 ms/op | N/A | `SuspendedSource` 216.62 ms/op |
-| `homer.jpg` JPEG write | `ByteArray` 6.90 ms/op | `Sink` 7.40 ms/op | `SuspendedSink` 14.03 ms/op |
+| Workload               | Fastest baseline       | Okio boundary       | Suspended file channel         |
+|------------------------|------------------------|---------------------|--------------------------------|
+| `homer.jpg` load       | `ByteArray` 7.70 ms/op | `Source` 8.23 ms/op | `SuspendedSource` 10.81 ms/op  |
+| `landscape.jpg` load   | `Path` 152.22 ms/op    | N/A                 | `SuspendedSource` 216.62 ms/op |
+| `homer.jpg` JPEG write | `ByteArray` 6.90 ms/op | `Sink` 7.40 ms/op   | `SuspendedSink` 14.03 ms/op    |
 
-The suspended file-channel overloads are useful coroutine IO boundaries, but
-they are not a latency win for Scrimage load/write because Scrimage still
-bridges through blocking streams. See
+The suspended file-channel overloads are useful coroutine IO boundaries, but they are not a latency win for Scrimage load/write because Scrimage still bridges through blocking streams. See
 [`docs/io-boundary-baseline-2026-05-29.md`](docs/io-boundary-baseline-2026-05-29.md)
 and the raw `kotlinx-benchmark` JSON
 [`docs/raw/benchmark-io-boundary-2026-05-29-macos-java25.json`](docs/raw/benchmark-io-boundary-2026-05-29-macos-java25.json).
@@ -295,18 +226,14 @@ and the raw `kotlinx-benchmark` JSON
 
 ![Concurrent image file IO throughput chart](../../docs/images/readme-charts/images-benchmark-file-io-throughput-chart-01.png)
 
-| Workload | Path | Okio | Suspended file channel |
-|----------|------|------|------------------------|
-| `cafe.jpg` 6,400-path concurrent read | 16,904 files/s | 2,513 files/s | 74 files/s |
-| `landscape.jpg` 6,400-path concurrent read | 15,981 files/s | 2,072 files/s | 70 files/s |
-| `cafe.jpg` 256-file concurrent write | 1,507 files/s | 767 files/s | 147 files/s |
-| `landscape.jpg` 256-file concurrent write | 1,280 files/s | 778 files/s | 154 files/s |
+| Workload                                   | Path           | Okio          | Suspended file channel |
+|--------------------------------------------|----------------|---------------|------------------------|
+| `cafe.jpg` 6,400-path concurrent read      | 16,904 files/s | 2,513 files/s | 74 files/s             |
+| `landscape.jpg` 6,400-path concurrent read | 15,981 files/s | 2,072 files/s | 70 files/s             |
+| `cafe.jpg` 256-file concurrent write       | 1,507 files/s  | 767 files/s   | 147 files/s            |
+| `landscape.jpg` 256-file concurrent write  | 1,280 files/s  | 778 files/s   | 154 files/s            |
 
-This compressed-file IO benchmark intentionally excludes Scrimage decode/encode.
-It uses `cafe.jpg` and `landscape.jpg`, streams bytes through a fixed buffer,
-and creates 6,400 read paths with hard links to avoid huge setup copies. The
-local Java 25 result does not support treating suspended file channels as a
-throughput optimization. See
+This compressed-file IO benchmark intentionally excludes Scrimage decode/encode. It uses `cafe.jpg` and `landscape.jpg`, streams bytes through a fixed buffer, and creates 6,400 read paths with hard links to avoid huge setup copies. The local Java 25 result does not support treating suspended file channels as a throughput optimization. See
 [`docs/file-io-throughput-2026-05-29.md`](docs/file-io-throughput-2026-05-29.md)
 and the raw `kotlinx-benchmark` JSON
 [`docs/raw/benchmark-file-io-throughput-2026-05-29-macos-java25.json`](docs/raw/benchmark-file-io-throughput-2026-05-29-macos-java25.json).
@@ -315,43 +242,33 @@ and the raw `kotlinx-benchmark` JSON
 
 ![Large streaming pipeline benchmark chart](../../docs/images/readme-charts/images-benchmark-large-streaming-chart-01.png)
 
-| Boundary | `large-photo` | `ocr-document` | Recommendation |
-|----------|---------------|----------------|----------------|
-| Scrimage `Path` | 187.44 ms/op | 114.77 ms/op | Color-preserving blocking path |
-| Scrimage Okio `Source`/`Sink` | 183.37 ms/op | 115.41 ms/op | Lifecycle/integration boundary, not a latency promise |
-| Scrimage suspended source/sink | 215.61 ms/op | 136.77 ms/op | Coroutine boundary with bridge overhead |
-| vips `Path` | 27.34 ms/op | 16.76 ms/op | Local-file API boundary; still buffers within the 50 MiB guard |
-| vips `InputStream`/`OutputStream` | 25.76 ms/op | 16.61 ms/op | Caller-owned stream boundary; also buffers within the 50 MiB guard |
+| Boundary                          | `large-photo` | `ocr-document` | Recommendation                                                     |
+|-----------------------------------|---------------|----------------|--------------------------------------------------------------------|
+| Scrimage `Path`                   | 187.44 ms/op  | 114.77 ms/op   | Color-preserving blocking path                                     |
+| Scrimage Okio `Source`/`Sink`     | 183.37 ms/op  | 115.41 ms/op   | Lifecycle/integration boundary, not a latency promise              |
+| Scrimage suspended source/sink    | 215.61 ms/op  | 136.77 ms/op   | Coroutine boundary with bridge overhead                            |
+| vips `Path`                       | 27.34 ms/op   | 16.76 ms/op    | Local-file API boundary; still buffers within the 50 MiB guard     |
+| vips `InputStream`/`OutputStream` | 25.76 ms/op   | 16.61 ms/op    | Caller-owned stream boundary; also buffers within the 50 MiB guard |
 
-`ImageLargeStreamingBenchmark` generates deterministic large fixtures during
-JMH setup instead of committing huge binary assets. The local Java 25 row
-supports positioning Okio/suspended APIs as memory/lifecycle boundaries rather
-than latency or throughput optimizations for Scrimage. For large-file
-performance, choose the vips input boundary from the caller's existing
-resource and lifecycle rather than treating this short snapshot as a universal
-ranking. Every current vips input overload, including `Path`, validates and
-buffers the compressed input within the 50 MiB guard; neither boundary is a
-streaming-memory or guard-bypass choice. See
+`ImageLargeStreamingBenchmark` generates deterministic large fixtures during JMH setup instead of committing huge binary assets. The local Java 25 row supports positioning Okio/suspended APIs as memory/lifecycle boundaries rather than latency or throughput optimizations for Scrimage. For large-file performance, choose the vips input boundary from the caller's existing resource and lifecycle rather than treating this short snapshot as a universal ranking. Every current vips input overload, including `Path`, validates and buffers the compressed input within the 50 MiB guard; neither boundary is a streaming-memory or guard-bypass choice. See
 [`docs/large-streaming-2026-07-10.md`](docs/large-streaming-2026-07-10.md)
 and the raw `kotlinx-benchmark` JSON
-[`docs/raw/benchmark-large-streaming-2026-07-10-macos-java25.json`](docs/raw/benchmark-large-streaming-2026-07-10-macos-java25.json).
-The JMH GC-profiler addendum
+[`docs/raw/benchmark-large-streaming-2026-07-10-macos-java25.json`](docs/raw/benchmark-large-streaming-2026-07-10-macos-java25.json). The JMH GC-profiler addendum
 [`docs/raw/benchmark-large-streaming-jmh-gc-2026-07-10-macos-java25.json`](docs/raw/benchmark-large-streaming-jmh-gc-2026-07-10-macos-java25.json)
-reports managed-heap allocation for the same 16 rows; native libvips memory is
-not inferred from those Java allocation numbers.
+reports managed-heap allocation for the same 16 rows; native libvips memory is not inferred from those Java allocation numbers.
 
 ### Memory Profile (kotlinx-benchmark + GC addendum)
 
 ![Image workload memory profile chart](../../docs/images/readme-charts/images-benchmark-memory-profile-chart-01.png)
 
-| Workload | AverageTime | Allocation |
-|----------|-------------|------------|
-| `scrimage_encodeJpeg` | 146.09 ms/op | 96.34 MB/op |
+| Workload                     | AverageTime  | Allocation  |
+|------------------------------|--------------|-------------|
+| `scrimage_encodeJpeg`        | 146.09 ms/op | 96.34 MB/op |
 | `scrimage_scaleTo` 1920x1080 | 115.34 ms/op | 24.04 MB/op |
-| `vips_encodeJpeg` | 44.16 ms/op | 0.26 MB/op |
-| `vips_resize` 1920x1080 | 0.246 ms/op | 4.14 KB/op |
-| `vips_crop` 1920x1080 | 0.085 ms/op | 4.63 KB/op |
-| `vips_thumbnail` 1920x1080 | 0.266 ms/op | 3.95 KB/op |
+| `vips_encodeJpeg`            | 44.16 ms/op  | 0.26 MB/op  |
+| `vips_resize` 1920x1080      | 0.246 ms/op  | 4.14 KB/op  |
+| `vips_crop` 1920x1080        | 0.085 ms/op  | 4.63 KB/op  |
+| `vips_thumbnail` 1920x1080   | 0.266 ms/op  | 3.95 KB/op  |
 
 See [`docs/memory-profile-2026-05-29.md`](docs/memory-profile-2026-05-29.md)
 and the raw `kotlinx-benchmark` JSON
@@ -398,54 +315,46 @@ JAVA25=$(/usr/libexec/java_home -v 25)
 
 **macOS prerequisites**: `brew install vips`
 
-`VipsBenchmarkState` auto-detects macOS and sets Homebrew library paths
-(`vipsffm.libpath.*.override`) so libvips is found even with SIP stripping `DYLD_LIBRARY_PATH`.
+`VipsBenchmarkState` auto-detects macOS and sets Homebrew library paths (`vipsffm.libpath.*.override`) so libvips is found even with SIP stripping `DYLD_LIBRARY_PATH`.
 
 ### Regenerating Reports and Charts
 
-Use the Gradle `kotlinx-benchmark` tasks as the primary execution surface. The
-benchmark target is named `benchmark`, so Gradle exposes these tasks:
+Use the Gradle `kotlinx-benchmark` tasks as the primary execution surface. The benchmark target is named `benchmark`, so Gradle exposes these tasks:
 
-| Task | Purpose |
-|------|---------|
-| `benchmarkBenchmark` | Run the full benchmark target and write JMH reports |
-| `benchmarkBenchmarkJar` | Build the JMH jar for focused/debug runs |
-| `benchmarkBenchmarkGenerate` | Generate JMH sources |
-| `benchmarkBenchmarkCompile` | Compile generated JMH sources |
+| Task                         | Purpose                                             |
+|------------------------------|-----------------------------------------------------|
+| `benchmarkBenchmark`         | Run the full benchmark target and write JMH reports |
+| `benchmarkBenchmarkJar`      | Build the JMH jar for focused/debug runs            |
+| `benchmarkBenchmarkGenerate` | Generate JMH sources                                |
+| `benchmarkBenchmarkCompile`  | Compile generated JMH sources                       |
 
 Fresh report workflow:
 
 1. Install native prerequisites for vips rows.
-   - macOS: `brew install vips`
-   - Linux: install `libvips-tools` and `libvips-dev`
-2. Run one backend at a time. Do not run the JVips JNI and FFM backend
-   processes in parallel on the same host.
+    - macOS: `brew install vips`
+    - Linux: install `libvips-tools` and `libvips-dev`
+2. Run one backend at a time. Do not run the JVips JNI and FFM backend processes in parallel on the same host.
 3. Copy the generated JMH JSON from
    `benchmark/images-benchmark/build/reports/benchmarks/<target>/<timestamp>/benchmark.json`
-   to `benchmark/images-benchmark/docs/raw/` with an environment-specific filename such
-   as `benchmark-results-YYYY-MM-DD-macos-java25.json`.
-4. Update the matching Markdown report under `benchmark/images-benchmark/docs/` with the
-   measured command, host/JVM/libvips conditions, raw JSON link, and result
-   tables. Every latency table states its JMH mode and unit.
-5. Update the benchmark chart SVG sources under `docs/images/readme-charts/`,
-   then render the matching PNG files. README files embed PNGs only; keep SVG
-   sources beside them for review and regeneration.
+   to `benchmark/images-benchmark/docs/raw/` with an environment-specific filename such as `benchmark-results-YYYY-MM-DD-macos-java25.json`.
+4. Update the matching Markdown report under `benchmark/images-benchmark/docs/` with the measured command, host/JVM/libvips conditions, raw JSON link, and result tables. Every latency table states its JMH mode and unit.
+5. Update the benchmark chart SVG sources under `docs/images/readme-charts/`, then render the matching PNG files. README files embed PNGs only; keep SVG sources beside them for review and regeneration.
 
 Chart assets currently referenced by this module:
 
-| Chart | SVG source | README PNG |
-|-------|------------|------------|
-| Resize latency | `../../docs/images/readme-charts/images-benchmark-resize-latency-chart-01.svg` | `../../docs/images/readme-charts/images-benchmark-resize-latency-chart-01.png` |
-| Encode latency | `../../docs/images/readme-charts/images-benchmark-encode-latency-chart-01.svg` | `../../docs/images/readme-charts/images-benchmark-encode-latency-chart-01.png` |
-| Filter latency | `../../docs/images/readme-charts/images-benchmark-filter-latency-chart-01.svg` | `../../docs/images/readme-charts/images-benchmark-filter-latency-chart-01.png` |
-| Vips backend comparison | `../../docs/images/readme-charts/images-benchmark-vips-backend-comparison-chart-01.svg` | `../../docs/images/readme-charts/images-benchmark-vips-backend-comparison-chart-01.png` |
-| Large streaming pipeline | `../../docs/images/readme-charts/images-benchmark-large-streaming-chart-01.svg` | `../../docs/images/readme-charts/images-benchmark-large-streaming-chart-01.png` |
-| Storage backend | `../../docs/images/readme-charts/images-benchmark-storage-backend-chart-01.svg` | `../../docs/images/readme-charts/images-benchmark-storage-backend-chart-01.png` |
-| Ktor multipart thumbnail route | `../../docs/images/readme-charts/images-benchmark-ktor-thumbnail-route-chart-01.svg` | `../../docs/images/readme-charts/images-benchmark-ktor-thumbnail-route-chart-01.png` |
-| Ktor accepted-route concurrency | `../../docs/images/readme-charts/images-benchmark-ktor-concurrency-chart-01.svg` | `../../docs/images/readme-charts/images-benchmark-ktor-concurrency-chart-01.png` |
-| Tesseract OCR extraction | `../../docs/images/readme-charts/images-benchmark-ocr-extraction-chart-01.svg` | `../../docs/images/readme-charts/images-benchmark-ocr-extraction-chart-01.png` |
-| Batch and thumbnail scaling | `../../docs/images/readme-charts/images-benchmark-batch-pipeline-chart-01.svg` | `../../docs/images/readme-charts/images-benchmark-batch-pipeline-chart-01.png` |
-| Algorithmic hot paths | `../../docs/images/readme-charts/images-benchmark-algorithmic-hot-paths-chart-01.svg` | `../../docs/images/readme-charts/images-benchmark-algorithmic-hot-paths-chart-01.png` |
+| Chart                           | SVG source                                                                              | README PNG                                                                              |
+|---------------------------------|-----------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------|
+| Resize latency                  | `../../docs/images/readme-charts/images-benchmark-resize-latency-chart-01.svg`          | `../../docs/images/readme-charts/images-benchmark-resize-latency-chart-01.png`          |
+| Encode latency                  | `../../docs/images/readme-charts/images-benchmark-encode-latency-chart-01.svg`          | `../../docs/images/readme-charts/images-benchmark-encode-latency-chart-01.png`          |
+| Filter latency                  | `../../docs/images/readme-charts/images-benchmark-filter-latency-chart-01.svg`          | `../../docs/images/readme-charts/images-benchmark-filter-latency-chart-01.png`          |
+| Vips backend comparison         | `../../docs/images/readme-charts/images-benchmark-vips-backend-comparison-chart-01.svg` | `../../docs/images/readme-charts/images-benchmark-vips-backend-comparison-chart-01.png` |
+| Large streaming pipeline        | `../../docs/images/readme-charts/images-benchmark-large-streaming-chart-01.svg`         | `../../docs/images/readme-charts/images-benchmark-large-streaming-chart-01.png`         |
+| Storage backend                 | `../../docs/images/readme-charts/images-benchmark-storage-backend-chart-01.svg`         | `../../docs/images/readme-charts/images-benchmark-storage-backend-chart-01.png`         |
+| Ktor multipart thumbnail route  | `../../docs/images/readme-charts/images-benchmark-ktor-thumbnail-route-chart-01.svg`    | `../../docs/images/readme-charts/images-benchmark-ktor-thumbnail-route-chart-01.png`    |
+| Ktor accepted-route concurrency | `../../docs/images/readme-charts/images-benchmark-ktor-concurrency-chart-01.svg`        | `../../docs/images/readme-charts/images-benchmark-ktor-concurrency-chart-01.png`        |
+| Tesseract OCR extraction        | `../../docs/images/readme-charts/images-benchmark-ocr-extraction-chart-01.svg`          | `../../docs/images/readme-charts/images-benchmark-ocr-extraction-chart-01.png`          |
+| Batch and thumbnail scaling     | `../../docs/images/readme-charts/images-benchmark-batch-pipeline-chart-01.svg`          | `../../docs/images/readme-charts/images-benchmark-batch-pipeline-chart-01.png`          |
+| Algorithmic hot paths           | `../../docs/images/readme-charts/images-benchmark-algorithmic-hot-paths-chart-01.svg`   | `../../docs/images/readme-charts/images-benchmark-algorithmic-hot-paths-chart-01.png`   |
 
 Render and validate chart updates:
 
@@ -464,9 +373,7 @@ identify docs/images/readme-charts/*.png
   -Pvips.impl=java25 --dry-run --console=plain
 ```
 
-When only one environment row was rerun, label the refreshed row explicitly and
-preserve older CI rows as historical data. Do not imply Linux CI or Java 21 JNI
-numbers are current unless those rows were rerun on a compatible host.
+When only one environment row was rerun, label the refreshed row explicitly and preserve older CI rows as historical data. Do not imply Linux CI or Java 21 JNI numbers are current unless those rows were rerun on a compatible host.
 
 ---
 
@@ -476,8 +383,8 @@ numbers are current unless those rows were rerun on a compatible host.
 
 Resizes the natural `landscape.jpg` fixture (4032×3024) to multiple target resolutions.
 
-| Parameter    | Values |
-|--------------|--------|
+| Parameter    | Values                  |
+|--------------|-------------------------|
 | `resolution` | `1920x1080`, `1280x720` |
 
 ```kotlin
@@ -519,49 +426,39 @@ fun vips_encodeJpeg(state: VipsBenchmarkState, bh: Blackhole) {
 
 Applies scrimage filters to a 1240×1754 document image.
 
-| Benchmark          | Filter          |
-|--------------------|-----------------|
-| `scrimage_blur`    | `BlurFilter`    |
+| Benchmark            | Filter            |
+|----------------------|-------------------|
+| `scrimage_blur`      | `BlurFilter`      |
 | `scrimage_grayscale` | `GrayscaleFilter` |
-| `scrimage_sepia`   | `SepiaFilter`   |
+| `scrimage_sepia`     | `SepiaFilter`     |
 
 ### `ImagePipelineBenchmark`
 
-Measures chained high-level scrimage operation paths through `kotlinx-benchmark`.
-Allocation rows in the report use a separate JVM GC-profiler addendum because
-the `kotlinx-benchmark` Gradle DSL does not expose profiler arguments.
+Measures chained high-level scrimage operation paths through `kotlinx-benchmark`. Allocation rows in the report use a separate JVM GC-profiler addendum because the `kotlinx-benchmark` Gradle DSL does not expose profiler arguments.
 
-| Benchmark | Workload |
-|-----------|----------|
-| `scrimage_photoPreviewJpeg` | 4K photo resize -> grayscale -> JPEG encode |
+| Benchmark                     | Workload                                       |
+|-------------------------------|------------------------------------------------|
+| `scrimage_photoPreviewJpeg`   | 4K photo resize -> grayscale -> JPEG encode    |
 | `scrimage_documentPreviewPng` | document resize -> blur -> sepia -> PNG encode |
 
 ### `VipsTransformBenchmark` (Issue #582)
 
-Measures derived-image ownership for a chained transform and a fan-out transform
-using scrimage, the Java 21 JVips backend, and the Java 25 FFM backend. Every
-derived `VipsImage` is consumed and closed in the same scope; the benchmark does
-not change the ownership contract or retain native handles across operations.
+Measures derived-image ownership for a chained transform and a fan-out transform using scrimage, the Java 21 JVips backend, and the Java 25 FFM backend. Every derived `VipsImage` is consumed and closed in the same scope; the benchmark does not change the ownership contract or retain native handles across operations.
 
-The benchmark pins the image sizes (`1280x720`, `640x480`), chain length (`3`),
-fan-out (`4`), and JMH cold/warm protocol. Run one backend lane with:
+The benchmark pins the image sizes (`1280x720`, `640x480`), chain length (`3`), fan-out (`4`), and JMH cold/warm protocol. Run one backend lane with:
 
 ```bash
 ./gradlew :bluetape4k-images-benchmark:benchmarkVipsTransformBenchmark -Pvips.impl=java25
 ./gradlew :bluetape4k-images-benchmark:benchmarkVipsTransformBenchmark -Pvips.impl=java21
 ```
 
-The committed receipt is a contract receipt with `N/A` native RSS/allocation
-rows until a host-native run records those metrics. It must be validated before
-the module check completes:
+The committed receipt is a contract receipt with `N/A` native RSS/allocation rows until a host-native run records those metrics. It must be validated before the module check completes:
 
 ```bash
 ./gradlew :bluetape4k-images-benchmark:validateVipsTransformReceipt
 ```
 
-`N/A` is not a performance result: native-resource measurements, output hashes,
-and latency/throughput must be recorded by a follow-up macOS/Linux native run
-before comparing backends. The raw receipt is
+`N/A` is not a performance result: native-resource measurements, output hashes, and latency/throughput must be recorded by a follow-up macOS/Linux native run before comparing backends. The raw receipt is
 [`transform-receipt.json`](docs/raw/issue-582-20260825-macos-arm64-java25-transform/transform-receipt.json).
 
 ### `ImageIoBoundaryBenchmark`
@@ -569,43 +466,39 @@ before comparing backends. The raw receipt is
 Compares baseline load/write entry points with Okio and
 `bluetape4k-okio` suspended file-channel boundaries.
 
-| Benchmark group | Boundaries |
-|-----------------|------------|
-| `load_homer_*` | `ByteArray`, `InputStream`, `Path`, Okio `Source`, `SuspendedSource` |
-| `load_landscape_*` | `Path`, `SuspendedSource` |
-| `write_homer_*` | `ByteArray`, `OutputStream`, `Path`, Okio `Sink`, `SuspendedSink` |
+| Benchmark group    | Boundaries                                                           |
+|--------------------|----------------------------------------------------------------------|
+| `load_homer_*`     | `ByteArray`, `InputStream`, `Path`, Okio `Source`, `SuspendedSource` |
+| `load_landscape_*` | `Path`, `SuspendedSource`                                            |
+| `write_homer_*`    | `ByteArray`, `OutputStream`, `Path`, Okio `Sink`, `SuspendedSink`    |
 
 ### `ImageFileIoThroughputBenchmark`
 
 Measures compressed image file IO throughput with `cafe.jpg` and
-`landscape.jpg`. Reads use 6,400 hard-linked paths per scenario. Writes use 256
-real output files per scenario. It excludes Scrimage decode/encode to isolate
-the file boundary.
+`landscape.jpg`. Reads use 6,400 hard-linked paths per scenario. Writes use 256 real output files per scenario. It excludes Scrimage decode/encode to isolate the file boundary.
 
-| Benchmark group | Boundaries |
-|-----------------|------------|
-| `read_*_concurrent` | `Path`, Okio `Source`, `SuspendedSource` |
-| `write_*_concurrent` | `Path`, Okio `Sink`, `SuspendedSink` |
+| Benchmark group      | Boundaries                               |
+|----------------------|------------------------------------------|
+| `read_*_concurrent`  | `Path`, Okio `Source`, `SuspendedSource` |
+| `write_*_concurrent` | `Path`, Okio `Sink`, `SuspendedSink`     |
 
 ### `ImageLargeStreamingBenchmark`
 
-Measures complete large-image load-transform-write pipelines. Fixtures are
-generated during JMH setup to avoid committing large binary files.
+Measures complete large-image load-transform-write pipelines. Fixtures are generated during JMH setup to avoid committing large binary files.
 
-| Scenario | Generated dimensions | Transform |
-|----------|----------------------|-----------|
-| `large-photo` | 4032x3024 | resize to 1920x1440, JPEG encode |
-| `ocr-document` | 2480x3508 | resize to 1240x1754, JPEG encode |
+| Scenario       | Generated dimensions | Transform                        |
+|----------------|----------------------|----------------------------------|
+| `large-photo`  | 4032x3024            | resize to 1920x1440, JPEG encode |
+| `ocr-document` | 2480x3508            | resize to 1240x1754, JPEG encode |
 
-| Benchmark group | Boundaries |
-|-----------------|------------|
+| Benchmark group       | Boundaries                                                                                          |
+|-----------------------|-----------------------------------------------------------------------------------------------------|
 | `scrimage_*_pipeline` | `ByteArray`, `Path`, `InputStream`/`OutputStream`, Okio `Source`/`Sink`, suspended file source/sink |
-| `vips_*_pipeline` | `ByteArray`, `Path`, `InputStream`/`OutputStream` with the required Java 25 FFM backend |
+| `vips_*_pipeline`     | `ByteArray`, `Path`, `InputStream`/`OutputStream` with the required Java 25 FFM backend             |
 
 ### `VipsBenchmarkState`
 
-JMH `@State(Scope.Thread)` — initializes the vips runtime once per trial via reflection
-(supports both `FfmVipsRuntime` and the legacy-named `JVipsRuntime` on JDK 25).
+JMH `@State(Scope.Thread)` — initializes the vips runtime once per trial via reflection (supports both `FfmVipsRuntime` and the legacy-named `JVipsRuntime` on JDK 25).
 
 ```kotlin
 @Setup(Level.Trial)

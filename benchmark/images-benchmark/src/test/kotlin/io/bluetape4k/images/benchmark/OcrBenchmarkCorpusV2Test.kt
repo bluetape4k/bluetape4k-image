@@ -3,22 +3,26 @@ package io.bluetape4k.images.benchmark
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldContain
+import io.bluetape4k.assertions.shouldHaveSize
 import org.junit.jupiter.api.Test
 import java.security.MessageDigest
 
 class OcrBenchmarkCorpusV2Test {
+
     @Test
     fun `v2 manifest covers the full scenario and language floors`() {
         val manifest = OcrBenchmarkCorpusV2.loadManifest()
 
-        manifest.fixtures.size.shouldBeEqualTo(24)
-        manifest.negatives.size.shouldBeEqualTo(3)
+        manifest.fixtures shouldHaveSize 24
+        manifest.negatives shouldHaveSize 3
 
         OcrBenchmarkCorpusScenario.entries
             .filterNot { scenario -> scenario == OcrBenchmarkCorpusScenario.MALFORMED }
             .forEach { scenario ->
-                manifest.fixtures.count { fixture -> fixture.scenario == scenario }
-                    .shouldBeEqualTo(3)
+                manifest.fixtures
+                    .count { fixture ->
+                        fixture.scenario == scenario
+                    } shouldBeEqualTo 3
             }
 
         val languageCounts =
@@ -26,9 +30,10 @@ class OcrBenchmarkCorpusV2Test {
                 .flatMap(OcrBenchmarkCorpusFixtureEntry::languages)
                 .groupingBy { it }
                 .eachCount()
-        languageCounts["eng"].shouldBeEqualTo(24)
-        languageCounts["kor"].shouldBeEqualTo(20)
-        languageCounts["jpn"].shouldBeEqualTo(20)
+
+        languageCounts["eng"] shouldBeEqualTo 24
+        languageCounts["kor"] shouldBeEqualTo 20
+        languageCounts["jpn"] shouldBeEqualTo 20
     }
 
     @Test
@@ -36,20 +41,19 @@ class OcrBenchmarkCorpusV2Test {
         val manifest = OcrBenchmarkCorpusV2.loadManifest()
         val fixture = OcrBenchmarkCorpusV2.loadFixture("clean-text-v2-001")
 
-        manifest.generator.replayStatus.shouldBeEqualTo(OcrBenchmarkGeneratorReplayStatus.PENDING)
+        manifest.generator.replayStatus shouldBeEqualTo OcrBenchmarkGeneratorReplayStatus.PENDING
+
         fixture.entry.scenario.shouldBeEqualTo(OcrBenchmarkCorpusScenario.CLEAN)
         fixture.entry.expectedOutcome.shouldBeEqualTo(OcrBenchmarkExpectedOutcome.TEXT)
-        fixture.entry.provenance.font.name
-            .shouldBeEqualTo("Arial Unicode MS")
+        fixture.entry.provenance.font.name.shouldBeEqualTo("Arial Unicode MS")
         fixture.image.width.shouldBeEqualTo(1600)
         fixture.image.height.shouldBeEqualTo(1000)
         fixture.normalizedText.shouldContain("BLUETAPE OCR BENCHMARK")
         fixture.boxes.size.shouldBeEqualTo(6)
+
         fixture.boxes
             .map(OcrBenchmarkCorpusBox::order)
-            .distinct()
-            .size
-            .shouldBeEqualTo(6)
+            .distinct() shouldHaveSize 6
     }
 
     @Test
@@ -61,7 +65,7 @@ class OcrBenchmarkCorpusV2Test {
         val error = assertFailsWith<IllegalArgumentException> {
             fixture.verifyOutput("  \n")
         }
-        error.message.orEmpty().shouldContain("TEXT")
+        error.message shouldContain "TEXT"
     }
 
     @Test
@@ -76,12 +80,13 @@ class OcrBenchmarkCorpusV2Test {
     fun `negative decode receipt rejects a valid image payload`() {
         val manifest = canonicalManifest()
         val validImage = resource("bench/ocr/clean-text.png")
-        val invalidNegative =
-            manifest
-                .replace(
-                    "89333cb8edf527776b033f457dcb8f66bfc49047803334364bfb1ab9acb284ab",
-                    sha256(validImage)
-                ).replace("\"bytes\": 13", "\"bytes\": 155280")
+        val invalidNegative = manifest
+            .replace(
+                "89333cb8edf527776b033f457dcb8f66bfc49047803334364bfb1ab9acb284ab",
+                sha256(validImage)
+            )
+            .replace("\"bytes\": 13", "\"bytes\": 155280")
+
         assertFailsWith<IllegalStateException> {
             OcrBenchmarkCorpusV2.loadNegativeForTest(
                 invalidNegative.toByteArray(),
@@ -95,27 +100,25 @@ class OcrBenchmarkCorpusV2Test {
     fun `v2 loader rejects traversal and wrong image hash`() {
         val manifest = canonicalManifest()
         val resources = canonicalResources()
-        val traversal =
-            manifest.replace(
-                "bench/ocr/clean-text.png",
-                "../secret.png"
-            )
+        val traversal = manifest.replace(
+            "bench/ocr/clean-text.png",
+            "../secret.png"
+        )
 
-        val traversalError =
-            assertFailsWith<IllegalArgumentException> {
-                OcrBenchmarkCorpusV2.loadFixtureForTest(
-                    traversal.toByteArray(),
-                    "clean-text-v2-001",
-                    resources + ("../secret.png" to resources.getValue("bench/ocr/clean-text.png"))
-                )
-            }
-        traversalError.message.orEmpty().shouldContain("normalized and relative")
-
-        val wrongHash =
-            manifest.replace(
-                "f036a0ec994554fa6c214fe883603bea79c399c934b4674d84f77737ea0322b8",
-                "0".repeat(64)
+        val traversalError = assertFailsWith<IllegalArgumentException> {
+            OcrBenchmarkCorpusV2.loadFixtureForTest(
+                traversal.toByteArray(),
+                "clean-text-v2-001",
+                resources + ("../secret.png" to resources.getValue("bench/ocr/clean-text.png"))
             )
+        }
+        traversalError.message shouldContain "normalized and relative"
+
+        val wrongHash = manifest.replace(
+            "f036a0ec994554fa6c214fe883603bea79c399c934b4674d84f77737ea0322b8",
+            "0".repeat(64)
+        )
+
         assertFailsWith<IllegalArgumentException> {
             OcrBenchmarkCorpusV2.loadFixtureForTest(
                 wrongHash.toByteArray(),
@@ -129,20 +132,21 @@ class OcrBenchmarkCorpusV2Test {
     fun `v2 loader rejects unknown outcome and negative traversal`() {
         val manifest = canonicalManifest()
         val unknownOutcome = manifest.replace("\"TEXT\"", "\"UNKNOWN\"")
+
         assertFailsWith<IllegalArgumentException> {
             OcrBenchmarkCorpusV2.decodeManifest(unknownOutcome.toByteArray())
         }
 
         val malformedAsFixture = manifest.replace("\"scenario\": \"clean\"", "\"scenario\": \"malformed\"")
+
         assertFailsWith<IllegalArgumentException> {
             OcrBenchmarkCorpusV2.decodeManifest(malformedAsFixture.toByteArray())
         }
 
-        val negativeTraversal =
-            manifest.replace(
-                "bench/ocr-v2/malformed-001.bin",
-                "bench/ocr-v2/../malformed.bin"
-            )
+        val negativeTraversal = manifest.replace(
+            "bench/ocr-v2/malformed-001.bin",
+            "bench/ocr-v2/../malformed.bin"
+        )
         assertFailsWith<IllegalArgumentException> {
             OcrBenchmarkCorpusV2.loadNegativeForTest(
                 negativeTraversal.toByteArray(),
@@ -158,12 +162,13 @@ class OcrBenchmarkCorpusV2Test {
         val resources = canonicalResources()
         val boxesPath = "bench/ocr-v2/clean-text-001.boxes.json"
         val originalHash = "4faafcbbfc2ada2dfe73c7957dbbcec165d53a307fb64c8757ed4b112f827931"
-        val invalidBoxes =
-            resources
-                .getValue(boxesPath)
-                .decodeToString()
-                .replace("\"order\":5", "\"order\":0")
-                .toByteArray()
+
+        val invalidBoxes = resources
+            .getValue(boxesPath)
+            .decodeToString()
+            .replace("\"order\":5", "\"order\":0")
+            .toByteArray()
+
         val invalidManifest = manifest.replace(originalHash, sha256(invalidBoxes))
 
         assertFailsWith<IllegalArgumentException> {
@@ -181,12 +186,13 @@ class OcrBenchmarkCorpusV2Test {
         val resources = canonicalResources()
         val boxesPath = "bench/ocr-v2/clean-text-001.boxes.json"
         val originalHash = "4faafcbbfc2ada2dfe73c7957dbbcec165d53a307fb64c8757ed4b112f827931"
-        val invalidBoxes =
-            resources
+
+        val invalidBoxes = resources
                 .getValue(boxesPath)
                 .decodeToString()
                 .replace("\"order\":5", "\"order\":6")
                 .toByteArray()
+
         val invalidManifest = manifest.replace(originalHash, sha256(invalidBoxes))
 
         assertFailsWith<IllegalArgumentException> {

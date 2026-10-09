@@ -1,15 +1,17 @@
 package io.bluetape4k.images.fonts
 
-import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldNotBeEmpty
 import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.images.IIORegistryUtils
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import org.junit.jupiter.api.Test
 import java.awt.Font
 
 class FontSupportTest {
 
-    companion object: KLoggingChannel()
+    companion object: KLogging()
 
     @Test
     fun `기본 폰트를 생성한다`() {
@@ -64,29 +66,29 @@ class FontSupportTest {
 
     @Test
     fun `IIORegistryUtils - getImageReaderSpis 목록을 반환한다`() {
-        val spis = io.bluetape4k.images.IIORegistryUtils.getImageReaderSpis()
-        spis.shouldNotBeNull()
-        spis.isNotEmpty().shouldBeTrue()
+        val spis = IIORegistryUtils.getImageReaderSpis()
+        log.debug { "spis=$spis" }
+        spis.shouldNotBeEmpty()
     }
 
     @Test
     fun `IIORegistryUtils - getImageWriterSpis 목록을 반환한다`() {
-        val spis = io.bluetape4k.images.IIORegistryUtils.getImageWriterSpis()
-        spis.shouldNotBeNull()
-        spis.isNotEmpty().shouldBeTrue()
+        val spis = IIORegistryUtils.getImageWriterSpis()
+        log.debug { "spis=$spis" }
+        spis.shouldNotBeEmpty()
     }
 
     @Test
     fun `IIORegistryUtils - getReadImageFormatNames 를 직접 호출한다`() {
-        val names = io.bluetape4k.images.IIORegistryUtils.getReadImageFormatNames()
-        names.shouldNotBeNull()
-        names.isNotEmpty().shouldBeTrue()
+        val names = IIORegistryUtils.getReadImageFormatNames()
+        log.debug { "names=$names" }
+        names.shouldNotBeEmpty()
     }
 
     @Test
     fun `IIORegistryUtils - getWriteImageFormatNames 를 직접 호출한다`() {
-        val names = io.bluetape4k.images.IIORegistryUtils.getWriteImageFormatNames()
-        names.shouldNotBeNull()
-        names.isNotEmpty().shouldBeTrue()
+        val names = IIORegistryUtils.getWriteImageFormatNames()
+        log.debug { "names=$names" }
+        names.shouldNotBeEmpty()
     }
 }

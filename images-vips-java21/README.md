@@ -46,9 +46,7 @@ apk add vips
 ```
 
 JVips bundles the native `.so` files it loads directly, including a Linux `libtiff.so`
-compatibility library. The runtime preloads that bundled library before libvips, so Ubuntu
-24.04 does not need a separate `libtiff5` package. The system package is still required for
-the other shared libraries used by the bundled libvips build.
+compatibility library. The runtime preloads that bundled library before libvips, so Ubuntu 24.04 does not need a separate `libtiff5` package. The system package is still required for the other shared libraries used by the bundled libvips build.
 
 ### Gradle Dependency
 
@@ -76,7 +74,8 @@ dependencies {
 - **Security by Default**: Format allowlist (JPEG/PNG/WebP/AVIF/HEIC), 50 MB input limit, maxPixels validation
 - **Immutable Operations**: All image operations return new instances (no in-place mutation)
 - **Coroutine Support**: Async variants wrap blocking JNI calls with `Dispatchers.IO`
-- **Multiple Output Formats**: JPEG (lossy), PNG (lossless), WebP (lossy by default; lossless with `VipsEncodeOptions(lossless = true)`), capability-gated AVIF
+- **Multiple Output
+  Formats**: JPEG (lossy), PNG (lossless), WebP (lossy by default; lossless with `VipsEncodeOptions(lossless = true)`), capability-gated AVIF
 - **Virtual Thread Safe**: Uses `AtomicReference<State>` CAS instead of `@Synchronized` blocks
 
 ## Usage Examples
@@ -234,10 +233,7 @@ suspend fun loadFromSuspendedSource() {
 }
 ```
 
-For local large files, `Path` remains the preferred JVips entry point. Use
-Okio sources when the service already receives image bytes through a stream,
-pipe, or `bluetape4k-okio` suspended boundary. Non-Path loads are still subject
-to the 50 MB compressed input guard.
+For local large files, `Path` remains the preferred JVips entry point. Use Okio sources when the service already receives image bytes through a stream, pipe, or `bluetape4k-okio` suspended boundary. Non-Path loads are still subject to the 50 MB compressed input guard.
 
 ### Image Crop and Output
 
@@ -263,31 +259,28 @@ fun cropAndExportBytes(imagePath: String): ByteArray {
 All public `vipsImageOf*` functions enforce security checks in order:
 
 1. **Format Allowlist**: JPEG, PNG, WebP, AVIF, and HEIC headers are accepted
-   - JPEG: magic bytes `FF D8 FF`
-   - PNG: magic bytes `89 50 4E 47`
-   - WebP: RIFF header with `WEBP` marker at offset 8
-   - AVIF/HEIC: ISO BMFF `ftyp` brand (`avif`, `avis`, `heic`, `heix`, `hevc`, `hevx`, `mif1`, `msf1`)
+    - JPEG: magic bytes `FF D8 FF`
+    - PNG: magic bytes `89 50 4E 47`
+    - WebP: RIFF header with `WEBP` marker at offset 8
+    - AVIF/HEIC: ISO BMFF `ftyp` brand (`avif`, `avis`, `heic`, `heix`, `hevc`, `hevx`, `mif1`, `msf1`)
 
 2. **Input Size Limit**: Maximum 50 MB per input stream
 
-3. **Max Pixels Validation**: `width × height × bands` must not exceed the configured threshold (default: 150 million pixels)
+3. **Max Pixels
+   Validation**: `width × height × bands` must not exceed the configured threshold (default: 150 million pixels)
 
 Unsupported formats or violations raise `VipsDecodeException` with descriptive error messages.
 
-AVIF encoding requires a libvips/JVips build with libheif and an AV1 encoder such as libaom.
-HEIC encoding is not exposed by the JVips binding; use the Java 25 FFM backend when HEIC output is required.
+AVIF encoding requires a libvips/JVips build with libheif and an AV1 encoder such as libaom. HEIC encoding is not exposed by the JVips binding; use the Java 25 FFM backend when HEIC output is required.
 
 ### AVIF / HEIC Capability Matrix
 
-| Format | Decode | Encode | Native dependency |
-|--------|--------|--------|-------------------|
-| AVIF | Capability-gated | Capability-gated | libvips with libheif and an AV1 encoder such as libaom |
-| HEIC | Capability-gated | N/A | libvips with libheif for decode; JVips does not expose HEIC encode |
+| Format | Decode           | Encode           | Native dependency                                                  |
+|--------|------------------|------------------|--------------------------------------------------------------------|
+| AVIF   | Capability-gated | Capability-gated | libvips with libheif and an AV1 encoder such as libaom             |
+| HEIC   | Capability-gated | N/A              | libvips with libheif for decode; JVips does not expose HEIC encode |
 
-The JVips backend allowlists AVIF/HEIC ISO BMFF brands before decoding.
-Unsupported bytes fail before libvips is called. Valid AVIF/HEIC containers still
-depend on the host libvips codec set; missing native support is reported as a
-sanitized `VipsDecodeException` or `VipsEncodeException`.
+The JVips backend allowlists AVIF/HEIC ISO BMFF brands before decoding. Unsupported bytes fail before libvips is called. Valid AVIF/HEIC containers still depend on the host libvips codec set; missing native support is reported as a sanitized `VipsDecodeException` or `VipsEncodeException`.
 
 Inspect codec status before enabling AVIF/HEIC routes:
 
@@ -304,9 +297,7 @@ val heic = report.codec(VipsImageFormat.HEIC)
 }
 ```
 
-JVips cannot inspect native libvips operations directly, so AVIF/HEIC decode and
-AVIF encode report `UNKNOWN`; use `JVipsRuntime.smokeTestCodec(...)` with
-caller-provided samples on the deployment host. HEIC encode reports
+JVips cannot inspect native libvips operations directly, so AVIF/HEIC decode and AVIF encode report `UNKNOWN`; use `JVipsRuntime.smokeTestCodec(...)` with caller-provided samples on the deployment host. HEIC encode reports
 `UNAVAILABLE` because the JVips binding does not expose it.
 
 ## Concurrency & Thread Safety
@@ -345,12 +336,12 @@ Compares vips operation results against golden images stored in `images-vips-api
 
 5 invariants × 3 formats (JPEG/PNG/WebP) verified via `@ParameterizedTest`.
 
-| Invariant | Description |
-|-----------|-------------|
-| Dimensions preserved | Resize output matches requested width/height |
-| Output is non-empty | Encoded bytes are always produced |
-| Format round-trip | Decode → encode → decode yields same dimensions |
-| Crop bounds | Cropped region never exceeds original bounds |
+| Invariant                 | Description                                             |
+|---------------------------|---------------------------------------------------------|
+| Dimensions preserved      | Resize output matches requested width/height            |
+| Output is non-empty       | Encoded bytes are always produced                       |
+| Format round-trip         | Decode → encode → decode yields same dimensions         |
+| Crop bounds               | Cropped region never exceeds original bounds            |
 | Thumbnail proportionality | Thumbnail longest side fits the requested max dimension |
 
 ## Troubleshooting
@@ -358,11 +349,13 @@ Compares vips operation results against golden images stored in `images-vips-api
 ### "UnsatisfiedLinkError: Can't load library: libvips"
 
 **macOS**: Install system libvips
+
 ```bash
 brew install vips
 ```
 
 **Linux**: Install the libvips-tools package for the remaining shared libraries (JVips bundles native libs)
+
 ```bash
 sudo apt-get install libvips-tools
 ```
@@ -370,6 +363,7 @@ sudo apt-get install libvips-tools
 ### "Image exceeds maximum pixel count"
 
 The `maxPixels` threshold (default 150 million) was exceeded. Either:
+
 - Resize input before processing
 - Increase `maxPixels` in `JVipsRuntime.init()`
 
@@ -377,7 +371,8 @@ The `maxPixels` threshold (default 150 million) was exceeded. Either:
 
 `JVipsRuntime.shutdown()` is irreversible. The process must be restarted to re-initialize.
 
-**Do not use `@PreDestroy` hooks** with Spring Boot devtools — it causes restart-induced exceptions. Use `Runtime.addShutdownHook()` instead.
+**Do not use `@PreDestroy`
+hooks** with Spring Boot devtools — it causes restart-induced exceptions. Use `Runtime.addShutdownHook()` instead.
 
 ## See Also
 

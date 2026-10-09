@@ -3,9 +3,9 @@ package io.bluetape4k.images.barcode
 import com.sksamuel.scrimage.ImmutableImage
 import io.bluetape4k.images.immutableExternalImageOf
 import kotlinx.coroutines.CancellationException
+import okio.Source
 import java.io.InputStream
 import java.nio.file.Path
-import okio.Source
 
 /**
  * 인코딩 이미지 [bytes]에서 barcode를 읽습니다.

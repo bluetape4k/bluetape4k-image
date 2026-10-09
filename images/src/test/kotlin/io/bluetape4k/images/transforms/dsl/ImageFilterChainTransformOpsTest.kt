@@ -5,25 +5,29 @@ import ch.qos.logback.classic.Logger
 import ch.qos.logback.classic.spi.ILoggingEvent
 import ch.qos.logback.core.read.ListAppender
 import com.sksamuel.scrimage.ImmutableImage
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeGreaterThan
+import io.bluetape4k.assertions.shouldBeLessThan
+import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldNotBeEmpty
+import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.images.AbstractImageTest
 import io.bluetape4k.images.filters.dsl.applyFilters
 import io.bluetape4k.images.filters.dsl.suspendApplyFilters
 import io.bluetape4k.images.transforms.AspectRatio
 import io.bluetape4k.images.transforms.ImagePoint
-import io.bluetape4k.logging.coroutines.KLoggingChannel
-import kotlinx.coroutines.test.runTest
-import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldBeGreaterThan
-import io.bluetape4k.assertions.shouldBeLessThan
-import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.images.useGraphics
+import io.bluetape4k.junit5.coroutines.runSuspendIO
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import org.junit.jupiter.api.Test
 import org.slf4j.LoggerFactory
 import java.awt.Color
 import java.awt.image.BufferedImage
 
-class ImageFilterChainTransformOpsTest : AbstractImageTest() {
+class ImageFilterChainTransformOpsTest: AbstractImageTest() {
 
-    companion object : KLoggingChannel()
+    companion object: KLogging()
 
     private fun createSolidImage(w: Int = 100, h: Int = 100, color: Color = Color.BLUE): ImmutableImage {
         val buf = BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB)
@@ -38,18 +42,19 @@ class ImageFilterChainTransformOpsTest : AbstractImageTest() {
     }
 
     private fun createWhitePaddedImage(
-        totalW: Int = 100, totalH: Int = 100,
-        rectX: Int = 10, rectY: Int = 10, rectW: Int = 80, rectH: Int = 80,
+        totalW: Int = 100,
+        totalH: Int = 100,
+        rectX: Int = 10,
+        rectY: Int = 10,
+        rectW: Int = 80,
+        rectH: Int = 80,
     ): ImmutableImage {
         val buf = BufferedImage(totalW, totalH, BufferedImage.TYPE_INT_ARGB)
-        val g = buf.createGraphics()
-        try {
+        buf.useGraphics { g ->
             g.color = Color.WHITE
             g.fillRect(0, 0, totalW, totalH)
             g.color = Color.RED
             g.fillRect(rectX, rectY, rectW, rectH)
-        } finally {
-            g.dispose()
         }
         return ImmutableImage.wrapAwt(buf)
     }
@@ -60,6 +65,8 @@ class ImageFilterChainTransformOpsTest : AbstractImageTest() {
         val result = image.applyFilters {
             autoCrop(tolerance = 0, backgroundColor = Color.WHITE)
         }
+
+        log.debug { "result=$result" }
         result.shouldNotBeNull()
         result.width shouldBeLessThan 100
         result.height shouldBeLessThan 100
@@ -72,6 +79,8 @@ class ImageFilterChainTransformOpsTest : AbstractImageTest() {
         val result = image.applyFilters {
             smartCrop(ratio)
         }
+
+        log.debug { "result=$result" }
         result.shouldNotBeNull()
         result.width shouldBeGreaterThan 0
         result.height shouldBeGreaterThan 0
@@ -83,6 +92,8 @@ class ImageFilterChainTransformOpsTest : AbstractImageTest() {
         val result = image.applyFilters {
             rotateDegrees(45.0)
         }
+
+        log.debug { "result=$result" }
         result.shouldNotBeNull()
         result.width shouldBeGreaterThan 0
     }
@@ -93,6 +104,8 @@ class ImageFilterChainTransformOpsTest : AbstractImageTest() {
         val result = image.applyFilters {
             rotateLeft()
         }
+
+        log.debug { "result=$result" }
         result.shouldNotBeNull()
         result.width shouldBeEqualTo 60
         result.height shouldBeEqualTo 80
@@ -104,6 +117,8 @@ class ImageFilterChainTransformOpsTest : AbstractImageTest() {
         val result = image.applyFilters {
             rotateRight()
         }
+
+        log.debug { "result=$result" }
         result.shouldNotBeNull()
         result.width shouldBeEqualTo 60
         result.height shouldBeEqualTo 80
@@ -115,6 +130,8 @@ class ImageFilterChainTransformOpsTest : AbstractImageTest() {
         val result = image.applyFilters {
             flipHorizontal()
         }
+
+        log.debug { "result=$result" }
         result.shouldNotBeNull()
         result.width shouldBeEqualTo 80
         result.height shouldBeEqualTo 60
@@ -126,6 +143,8 @@ class ImageFilterChainTransformOpsTest : AbstractImageTest() {
         val result = image.applyFilters {
             flipVertical()
         }
+
+        log.debug { "result=$result" }
         result.shouldNotBeNull()
         result.width shouldBeEqualTo 80
         result.height shouldBeEqualTo 60
@@ -145,6 +164,8 @@ class ImageFilterChainTransformOpsTest : AbstractImageTest() {
         val result = image.applyFilters {
             perspectiveTransform(src, dst, 80, 80)
         }
+
+        log.debug { "result=$result" }
         result.shouldNotBeNull()
         result.width shouldBeEqualTo 80
         result.height shouldBeEqualTo 80
@@ -156,6 +177,8 @@ class ImageFilterChainTransformOpsTest : AbstractImageTest() {
         val result = image.applyFilters {
             clahe(tileSize = 8, clipLimit = 2.0)
         }
+
+        log.debug { "result=$result" }
         result.shouldNotBeNull()
         result.width shouldBeEqualTo 100
         result.height shouldBeEqualTo 100
@@ -170,17 +193,21 @@ class ImageFilterChainTransformOpsTest : AbstractImageTest() {
             flipHorizontal()
             clahe()
         }
+
+        log.debug { "result=$result" }
         result.shouldNotBeNull()
         result.width shouldBeGreaterThan 0
         result.height shouldBeGreaterThan 0
     }
 
     @Test
-    fun `suspendApplyFilters DSL executes on coroutine dispatcher`() = runTest {
+    fun `suspendApplyFilters DSL executes on coroutine dispatcher`() = runSuspendIO {
         val image = createSolidImage(80, 60)
         val result = image.suspendApplyFilters {
             rotateDegrees(90.0)
         }
+
+        log.debug { "result=$result" }
         result.shouldNotBeNull()
         result.width shouldBeGreaterThan 0
     }
@@ -190,9 +217,10 @@ class ImageFilterChainTransformOpsTest : AbstractImageTest() {
         // logback ListAppender로 warn 로그 캡처
         // KLoggerNameResolver는 "Kt$..."를 substringBefore("Kt$")로 잘라 "Kt" suffix를 남기지 않습니다.
         val logger = LoggerFactory.getLogger(
-            "io.bluetape4k.images.transforms.dsl.ImageFilterChainTransformOps"
+            "io.bluetape4k.images.transforms.dsl.ImageFilterChainLogger"
         ) as Logger
         logger.level = Level.WARN
+
         val listAppender = ListAppender<ILoggingEvent>()
         listAppender.start()
         logger.addAppender(listAppender)
@@ -211,9 +239,9 @@ class ImageFilterChainTransformOpsTest : AbstractImageTest() {
         }
 
         val warnLogs = listAppender.list.filter { it.level == Level.WARN }
-        warnLogs.shouldNotBeNull()
-        warnLogs.size shouldBeGreaterThan 0
+        warnLogs.shouldNotBeEmpty()
+
         val hasAutoCropWarn = warnLogs.any { it.formattedMessage.contains("[autoCrop]") }
-        hasAutoCropWarn shouldBeEqualTo true
+        hasAutoCropWarn.shouldBeTrue()
     }
 }

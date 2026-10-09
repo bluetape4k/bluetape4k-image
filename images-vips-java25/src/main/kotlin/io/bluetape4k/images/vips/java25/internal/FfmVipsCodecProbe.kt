@@ -9,13 +9,13 @@ import java.lang.foreign.Arena
  */
 internal sealed interface FfmVipsCodecProbeResult {
     /** native operation을 확인했고 사용할 수 있습니다. */
-    data object Available : FfmVipsCodecProbeResult
+    data object Available: FfmVipsCodecProbeResult
 
     /** native operation을 확인했지만 libvips에 등록되어 있지 않습니다. */
-    data object Unavailable : FfmVipsCodecProbeResult
+    data object Unavailable: FfmVipsCodecProbeResult
 
     /** native operation 탐색 자체가 실패해 support 상태를 판단할 수 없습니다. */
-    data class Failed(val diagnostic: String) : FfmVipsCodecProbeResult
+    data class Failed(val diagnostic: String): FfmVipsCodecProbeResult
 
     companion object {
         const val SAFE_FAILURE_REASON =
@@ -51,7 +51,7 @@ internal fun classifyFfmVipsCodecProbe(operationLookup: () -> Boolean): FfmVipsC
 /**
  * `vips_type_find`를 기반으로 하는 기본 vips-ffm codec probe입니다.
  */
-internal object DefaultFfmVipsCodecProbe : FfmVipsCodecProbe {
+internal object DefaultFfmVipsCodecProbe: FfmVipsCodecProbe {
     override fun libvipsVersion(): String? = try {
         VipsHelper.version_string().trim().takeIf(String::isNotEmpty)
     } catch (_: Exception) {

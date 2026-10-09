@@ -3,19 +3,23 @@ package io.bluetape4k.images.filters.dsl
 import com.sksamuel.scrimage.ImmutableImage
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldNotBe
 import io.bluetape4k.images.filters.AbstractFilterTest
+import io.bluetape4k.images.useGraphics
+import io.bluetape4k.logging.KLogging
 import org.junit.jupiter.api.Test
 import java.awt.image.BufferedImage
 
-class ImageFilterChainEffectOpsTest : AbstractFilterTest() {
+class ImageFilterChainEffectOpsTest: AbstractFilterTest() {
+
+    companion object: KLogging()
 
     private fun sampleImage(): ImmutableImage {
         val buf = BufferedImage(64, 64, BufferedImage.TYPE_INT_RGB)
-        val g = buf.createGraphics()
-        g.color = java.awt.Color.MAGENTA
-        g.fillRect(0, 0, 64, 64)
-        g.dispose()
+        buf.useGraphics { g ->
+            g.color = java.awt.Color.MAGENTA
+            g.fillRect(0, 0, 64, 64)
+        }
         return ImmutableImage.fromAwt(buf)
     }
 
@@ -110,7 +114,7 @@ class ImageFilterChainEffectOpsTest : AbstractFilterTest() {
     fun `applyFilters with pixelate produces different image`() {
         val image = sampleImage()
         val result = image.applyFilters { pixelate(16) }
-        (result !== image).shouldBeTrue()
+        result shouldNotBe image
         result.width shouldBeEqualTo image.width
     }
 }

@@ -41,6 +41,7 @@ internal fun dct2d(input: Array<DoubleArray>, n: Int): Array<DoubleArray> {
     val cosTable = Array(n) { k -> DoubleArray(n) { i -> cos(PI * (i + 0.5) * k / n) } }
     val temp = Array(n) { DoubleArray(n) }
     val out = Array(n) { DoubleArray(n) }
+
     for (i in 0 until n) {
         for (k in 0 until n) {
             var s = 0.0
@@ -120,6 +121,11 @@ internal fun hsvComponents(p: Pixel): Triple<Float, Float, Float> {
 internal fun ImmutableImage.scaleToMaxSide(maxSide: Int): ImmutableImage {
     val longSide = maxOf(width, height)
     if (longSide <= maxSide) return this
+
     val scale = maxSide.toDouble() / longSide
-    return scaleTo((width * scale).toInt().coerceAtLeast(1), (height * scale).toInt().coerceAtLeast(1), HASH_SCALE_METHOD)
+    return scaleTo(
+        (width * scale).toInt().coerceAtLeast(1),
+        (height * scale).toInt().coerceAtLeast(1),
+        HASH_SCALE_METHOD
+    )
 }

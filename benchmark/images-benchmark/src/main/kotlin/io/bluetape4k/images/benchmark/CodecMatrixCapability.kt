@@ -30,7 +30,7 @@ internal interface CodecMatrixCodecOps {
     fun open(bytes: ByteArray): CodecMatrixCodecHandle
 }
 
-internal interface CodecMatrixCodecHandle : AutoCloseable {
+internal interface CodecMatrixCodecHandle: AutoCloseable {
     val width: Int
     val height: Int
 

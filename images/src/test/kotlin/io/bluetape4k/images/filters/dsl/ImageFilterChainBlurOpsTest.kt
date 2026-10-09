@@ -3,19 +3,23 @@ package io.bluetape4k.images.filters.dsl
 import com.sksamuel.scrimage.ImmutableImage
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldNotBe
 import io.bluetape4k.images.filters.AbstractFilterTest
+import io.bluetape4k.images.useGraphics
+import io.bluetape4k.logging.KLogging
 import org.junit.jupiter.api.Test
 import java.awt.image.BufferedImage
 
-class ImageFilterChainBlurOpsTest : AbstractFilterTest() {
+class ImageFilterChainBlurOpsTest: AbstractFilterTest() {
+
+    companion object: KLogging()
 
     private fun sampleImage(): ImmutableImage {
         val buf = BufferedImage(64, 64, BufferedImage.TYPE_INT_RGB)
-        val g = buf.createGraphics()
-        g.color = java.awt.Color.ORANGE
-        g.fillRect(0, 0, 64, 64)
-        g.dispose()
+        buf.useGraphics { g ->
+            g.color = java.awt.Color.ORANGE
+            g.fillRect(0, 0, 64, 64)
+        }
         return ImmutableImage.fromAwt(buf)
     }
 
@@ -74,10 +78,11 @@ class ImageFilterChainBlurOpsTest : AbstractFilterTest() {
     fun `gaussianBlur applied via applyFilters produces visually different image`() {
         val image = sampleImage()
         val result = image.applyFilters { gaussianBlur(5) }
+
         // 단색 이미지에 강한 blur를 적용하면 edge 근처 pixel 값이 바뀝니다.
         // 가장 단순한 assertion은 result가 같은 object가 아니고 크기가 같다는 점입니다.
         result.width shouldBeEqualTo image.width
         result.height shouldBeEqualTo image.height
-        (result !== image).shouldBeTrue()
+        result shouldNotBe image
     }
 }

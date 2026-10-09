@@ -4,11 +4,16 @@ import com.fasterxml.jackson.annotation.JsonIgnore
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeSameInstanceAs
 import io.bluetape4k.assertions.shouldContain
+import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.assertions.shouldNotContain
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import org.junit.jupiter.api.Test
 import org.springframework.boot.actuate.endpoint.SanitizableData
 
 class CdnPropertySanitizingFunctionTest {
+
+    companion object: KLogging()
 
     private val sanitizer = CdnPropertySanitizingFunction()
 
@@ -19,19 +24,23 @@ class CdnPropertySanitizingFunctionTest {
             privateKeyPath = "/run/secrets/cloudfront-private-key.pem",
         )
 
-        value.toString() shouldNotContain "secret"
-        value.toString() shouldNotContain "/run/secrets/cloudfront-private-key.pem"
-        value.toString() shouldContain "[REDACTED]"
+        with(value.toString()) {
+            log.debug { "value=$this" }
+            this shouldNotContain "secret"
+            this shouldNotContain "/run/secrets/cloudfront-private-key.pem"
+            this shouldContain "[REDACTED]"
+        }
     }
 
     @Test
     fun `cloudfront private key getters are excluded from Jackson views`() {
-        val pemIgnored = CdnProperties.CloudFront::class.java.getMethod("getPrivateKeyPem")
-            .getAnnotation(JsonIgnore::class.java) != null
-        val pathIgnored = CdnProperties.CloudFront::class.java.getMethod("getPrivateKeyPath")
-            .getAnnotation(JsonIgnore::class.java) != null
-        pemIgnored shouldBeEqualTo true
-        pathIgnored shouldBeEqualTo true
+        CdnProperties.CloudFront::class.java.getMethod("getPrivateKeyPem")
+            .getAnnotation(JsonIgnore::class.java)
+            .shouldNotBeNull()
+
+        CdnProperties.CloudFront::class.java.getMethod("getPrivateKeyPath")
+            .getAnnotation(JsonIgnore::class.java)
+            .shouldNotBeNull()
     }
 
     @Test
@@ -41,7 +50,10 @@ class CdnPropertySanitizingFunctionTest {
             "bluetape4k.images.cdn.cloudfront.private-key-pem",
             "fixture-private-key",
         )
+        log.debug { "data=${data.value}" }
+
         val result = sanitizer.apply(data)
+        log.debug { "result=${result.value}" }
         result.value shouldBeEqualTo SanitizableData.SANITIZED_VALUE
     }
 
@@ -52,7 +64,10 @@ class CdnPropertySanitizingFunctionTest {
             "bluetape4k.images.cdn.cloudfront.private-key-path",
             "/etc/ssl/private.pem",
         )
+        log.debug { "data=${data.value}" }
+
         val result = sanitizer.apply(data)
+        log.debug { "result=${result.value}" }
         result.value shouldBeEqualTo SanitizableData.SANITIZED_VALUE
     }
 
@@ -63,7 +78,10 @@ class CdnPropertySanitizingFunctionTest {
             "bluetape4k.images.cdn.cloudfront.privateKey",
             "some-private-key",
         )
+        log.debug { "data=${data.value}" }
+
         val result = sanitizer.apply(data)
+        log.debug { "result=${result.value}" }
         result.value shouldBeEqualTo SanitizableData.SANITIZED_VALUE
     }
 
@@ -74,7 +92,10 @@ class CdnPropertySanitizingFunctionTest {
             "bluetape4k.images.cdn.cloudfront.key-pair-id",
             "APKABC123",
         )
+        log.debug { "data=${data.value}" }
+
         val result = sanitizer.apply(data)
+        log.debug { "result=${result.value}" }
         result.value shouldBeEqualTo "APKABC123"
     }
 
@@ -85,7 +106,10 @@ class CdnPropertySanitizingFunctionTest {
             "bluetape4k.images.cdn.cloudfront.distribution-domain",
             "d1234.cloudfront.net",
         )
+        log.debug { "data=${data.value}" }
+
         val result = sanitizer.apply(data)
+        log.debug { "result=${result.value}" }
         result.value shouldBeEqualTo "d1234.cloudfront.net"
     }
 
@@ -96,7 +120,10 @@ class CdnPropertySanitizingFunctionTest {
             "some.prefix.private-key-pem.suffix",
             "secret",
         )
+        log.debug { "data=${data.value}" }
+
         val result = sanitizer.apply(data)
+        log.debug { "result=${result.value}" }
         result.value shouldBeEqualTo SanitizableData.SANITIZED_VALUE
     }
 
@@ -104,13 +131,17 @@ class CdnPropertySanitizingFunctionTest {
     fun `returns same data instance when key is not sensitive`() {
         val data = SanitizableData(null, "bluetape4k.images.cdn.enabled", "true")
         val result = sanitizer.apply(data)
+        log.debug { "result=${result.value}" }
         result shouldBeSameInstanceAs data
     }
 
     @Test
     fun `redacts null value for sensitive key`() {
         val data = SanitizableData(null, "bluetape4k.images.cdn.cloudfront.private-key-pem", null)
+        log.debug { "data=${data.value}" }
+
         val result = sanitizer.apply(data)
+        log.debug { "result=${result.value}" }
         result.value shouldBeEqualTo SanitizableData.SANITIZED_VALUE
     }
 }

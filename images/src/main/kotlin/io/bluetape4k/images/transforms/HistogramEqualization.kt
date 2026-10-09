@@ -10,12 +10,12 @@ import io.bluetape4k.images.transforms.internal.greenComponent
 import io.bluetape4k.images.transforms.internal.redComponent
 import io.bluetape4k.images.transforms.internal.setArgbPixels
 import io.bluetape4k.images.transforms.internal.toIntArgb
-import io.bluetape4k.logging.KotlinLogging
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-private val log = KotlinLogging.logger {}
+private object HistogramEqualizationLogger: KLogging()
 
 /**
  * CLAHE (Contrast Limited Adaptive Histogram Equalization) 를 적용한 새 [ImmutableImage] 를 반환합니다.
@@ -64,7 +64,9 @@ fun ImmutableImage.clahe(tileSize: Int = 8, clipLimit: Double = 2.0): ImmutableI
 
     // 3단계: tile fallback. globalEqualize(tileSize=max)가 1×1 grid를 만들도록 maxOf(w,h)로 제한합니다.
     val effectiveTileSize = if (tileSize >= maxOf(w, h)) {
-        log.debug { "clahe tile fallback: tile=$tileSize >= max(w=$w, h=$h), collapsing to single tile" }
+        HistogramEqualizationLogger.log.debug {
+            "clahe tile fallback: tile=$tileSize >= max(w=$w, h=$h), collapsing to single tile"
+        }
         maxOf(w, h)
     } else {
         tileSize
@@ -138,9 +140,9 @@ fun ImmutableImage.clahe(tileSize: Int = 8, clipLimit: Double = 2.0): ImmutableI
             val v01 = tileLuts[ty1][tx0][yVal]
             val v11 = tileLuts[ty1][tx1][yVal]
             val yNew = ((1 - wx) * (1 - wy) * v00
-                + wx * (1 - wy) * v10
-                + (1 - wx) * wy * v01
-                + wx * wy * v11).toInt().coerceIn(0, 255)
+                    + wx * (1 - wy) * v10
+                    + (1 - wx) * wy * v01
+                    + wx * wy * v11).toInt().coerceIn(0, 255)
             yPlane[py * w + px] = yNew
         }
     }
@@ -187,6 +189,7 @@ fun ImmutableImage.globalEqualize(): ImmutableImage =
 suspend fun ImmutableImage.suspendClahe(
     tileSize: Int = 8,
     clipLimit: Double = 2.0,
-): ImmutableImage = withContext(Dispatchers.Default) {
-    clahe(tileSize, clipLimit)
-}
+): ImmutableImage =
+    withContext(Dispatchers.Default) {
+        clahe(tileSize, clipLimit)
+    }

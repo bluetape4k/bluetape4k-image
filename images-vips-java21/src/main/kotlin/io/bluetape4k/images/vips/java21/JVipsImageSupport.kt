@@ -1,18 +1,21 @@
 package io.bluetape4k.images.vips.java21
 
-import com.criteo.vips.VipsImage
 import com.criteo.vips.VipsException
-import io.bluetape4k.images.vips.VipsIncubatingApi
+import com.criteo.vips.VipsImage
 import io.bluetape4k.images.vips.VipsDecodeException
 import io.bluetape4k.images.vips.VipsImageFormat
-import io.bluetape4k.images.vips.VipsImage as VipsImageApi
+import io.bluetape4k.images.vips.VipsImageFormat.AVIF
+import io.bluetape4k.images.vips.VipsImageFormat.HEIC
+import io.bluetape4k.images.vips.VipsImageFormat.JPEG
+import io.bluetape4k.images.vips.VipsImageFormat.PNG
+import io.bluetape4k.images.vips.VipsImageFormat.WEBP
+import io.bluetape4k.images.vips.VipsIncubatingApi
 import io.bluetape4k.images.vips.VipsLimits
 import io.bluetape4k.images.vips.java21.internal.NativeHandle
 import io.bluetape4k.okio.buffered
 import io.bluetape4k.okio.coroutines.BufferedSuspendedSource
 import io.bluetape4k.okio.coroutines.SuspendedSource
 import io.bluetape4k.okio.coroutines.asBlocking
-import io.bluetape4k.okio.coroutines.buffered as bufferedSuspended
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -22,17 +25,19 @@ import org.apache.commons.io.input.BoundedInputStream
 import java.io.File
 import java.io.InputStream
 import java.nio.file.Path
+import io.bluetape4k.images.vips.VipsImage as VipsImageApi
+import io.bluetape4k.okio.coroutines.buffered as bufferedSuspended
 
-private val MAX_INPUT_BYTES = VipsLimits.MAX_INPUT_BYTES
+const val MAX_INPUT_BYTES = VipsLimits.MAX_INPUT_BYTES
 
 // magic byte 허용 목록: JPEG FF D8 FF, PNG 89 50 4E 47, WebP 52 49 46 46 .. 57 45 42 50, HEIF-family .... ftyp brand
-private val JPEG_MAGIC = byteArrayOf(0xFF.toByte(), 0xD8.toByte(), 0xFF.toByte())
-private val PNG_MAGIC = byteArrayOf(0x89.toByte(), 0x50.toByte(), 0x4E.toByte(), 0x47.toByte())
-private val WEBP_RIFF = byteArrayOf(0x52.toByte(), 0x49.toByte(), 0x46.toByte(), 0x46.toByte())
-private val WEBP_MARKER = byteArrayOf(0x57.toByte(), 0x45.toByte(), 0x42.toByte(), 0x50.toByte())
-private val FTYP_MARKER = byteArrayOf(0x66, 0x74, 0x79, 0x70)
-private val AVIF_BRANDS = setOf("avif", "avis")
-private val HEIF_BRANDS = setOf("heic", "heix", "hevc", "hevx", "mif1", "msf1")
+val JPEG_MAGIC = byteArrayOf(0xFF.toByte(), 0xD8.toByte(), 0xFF.toByte())
+val PNG_MAGIC = byteArrayOf(0x89.toByte(), 0x50.toByte(), 0x4E.toByte(), 0x47.toByte())
+val WEBP_RIFF = byteArrayOf(0x52.toByte(), 0x49.toByte(), 0x46.toByte(), 0x46.toByte())
+val WEBP_MARKER = byteArrayOf(0x57.toByte(), 0x45.toByte(), 0x42.toByte(), 0x50.toByte())
+val FTYP_MARKER = byteArrayOf(0x66, 0x74, 0x79, 0x70)
+val AVIF_BRANDS = setOf("avif", "avis")
+val HEIF_BRANDS = setOf("heic", "heix", "hevc", "hevx", "mif1", "msf1")
 
 /**
  * 바이트 배열에서 [VipsImageApi]를 생성합니다.
@@ -190,7 +195,6 @@ private fun readBounded(stream: InputStream): ByteArray {
 private fun readPathBytesBounded(path: Path): ByteArray =
     path.toFile().inputStream().use(::readBounded)
 
-@OptIn(VipsIncubatingApi::class)
 private fun checkFormatAllowlist(bytes: ByteArray) {
     if (bytes.detectAllowedFormat() != null) return
     throw VipsDecodeException("Unsupported image format — only JPEG, PNG, WebP, AVIF, and HEIC are allowed")
@@ -198,13 +202,13 @@ private fun checkFormatAllowlist(bytes: ByteArray) {
 
 @OptIn(VipsIncubatingApi::class)
 private fun ByteArray.detectAllowedFormat(): VipsImageFormat? {
-    if (startsWith(JPEG_MAGIC)) return VipsImageFormat.JPEG
-    if (startsWith(PNG_MAGIC)) return VipsImageFormat.PNG
-    if (startsWith(WEBP_RIFF) && size >= 12 && regionMatches(8, WEBP_MARKER)) return VipsImageFormat.WEBP
+    if (startsWith(JPEG_MAGIC)) return JPEG
+    if (startsWith(PNG_MAGIC)) return PNG
+    if (startsWith(WEBP_RIFF) && size >= 12 && regionMatches(8, WEBP_MARKER)) return WEBP
     if (size >= 12 && regionMatches(4, FTYP_MARKER)) {
         return when (String(this, 8, 4, Charsets.US_ASCII)) {
-            in AVIF_BRANDS -> VipsImageFormat.AVIF
-            in HEIF_BRANDS -> VipsImageFormat.HEIC
+            in AVIF_BRANDS -> AVIF
+            in HEIF_BRANDS -> HEIC
             else -> null
         }
     }
@@ -274,10 +278,9 @@ internal fun checkPixelLimit(
     onLimitExceeded: () -> Unit,
 ) {
     val pixelCount = width.toLong() * height.toLong() * bands.toLong()
-    if (pixelCount < 0 || pixelCount > maxPixels) {
+    if (pixelCount !in 0..maxPixels) {
         val message =
-            "Image exceeds maximum pixel count: $pixelCount > $maxPixels " +
-                "(width=$width, height=$height, bands=$bands)"
+            "Image exceeds maximum pixel count: $pixelCount > $maxPixels (width=$width, height=$height, bands=$bands)"
         onLimitExceeded()
         throw VipsDecodeException(message)
     }

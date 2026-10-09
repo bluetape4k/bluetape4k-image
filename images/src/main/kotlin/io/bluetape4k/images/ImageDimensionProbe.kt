@@ -5,8 +5,9 @@ import kotlinx.coroutines.CancellationException
 import java.io.ByteArrayInputStream
 import java.io.Serializable
 import java.nio.file.Path
-import javax.imageio.ImageIO
 import javax.imageio.IIOException
+import javax.imageio.ImageIO
+import javax.imageio.ImageReader
 import javax.imageio.stream.ImageInputStream
 
 /**
@@ -25,7 +26,7 @@ import javax.imageio.stream.ImageInputStream
 data class ImageDimensions(
     val width: Int,
     val height: Int,
-) : Serializable {
+): Serializable {
 
     init {
         width.requirePositiveNumber("width")
@@ -75,16 +76,16 @@ data class ImageDimensions(
  */
 sealed interface ImageDimensionProbeResult {
     /** 헤더에서 유효한 크기를 읽은 결과입니다. */
-    data class Success(val dimensions: ImageDimensions) : ImageDimensionProbeResult
+    data class Success(val dimensions: ImageDimensions): ImageDimensionProbeResult
 
     /** 지원되는 ImageIO reader를 찾지 못한 결과입니다. */
-    data object Unavailable : ImageDimensionProbeResult
+    data object Unavailable: ImageDimensionProbeResult
 
     /** reader가 인코딩 입력을 형식 오류로 거부한 결과입니다. */
-    data class Malformed(val cause: Throwable) : ImageDimensionProbeResult
+    data class Malformed(val cause: Throwable): ImageDimensionProbeResult
 
     /** 입력 형식 외의 내부 probe 실패입니다. */
-    data class Failure(val cause: Throwable) : ImageDimensionProbeResult
+    data class Failure(val cause: Throwable): ImageDimensionProbeResult
 }
 
 /**
@@ -151,7 +152,7 @@ private fun probeImageDimensions(input: ImageInputStream): ImageDimensions? {
         return null
     }
 
-    val reader = readers.next()
+    val reader: ImageReader = readers.next()
     try {
         input.seek(0)
         reader.input = input

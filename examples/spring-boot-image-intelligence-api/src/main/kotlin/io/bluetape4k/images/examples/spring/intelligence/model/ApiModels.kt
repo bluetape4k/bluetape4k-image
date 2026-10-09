@@ -17,7 +17,7 @@ internal data class QualifiedImageResponse(
     val mediaType: String,
     val width: Int,
     val height: Int,
-) : Serializable {
+): Serializable {
     private companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -26,7 +26,7 @@ internal data class QualifiedImageResponse(
 internal data class OcrResponse(
     val text: String,
     val pageCount: Int,
-) : Serializable {
+): Serializable {
     private companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -37,7 +37,7 @@ internal data class DetectionResponse(
     val category: DetectionCategory,
     val confidence: Double,
     val detector: String,
-) : Serializable {
+): Serializable {
     private companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -47,7 +47,7 @@ internal data class BarcodeResponse(
     val text: String,
     val format: BarcodeFormat,
     val provider: String,
-) : Serializable {
+): Serializable {
     private companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -59,7 +59,7 @@ internal data class OcrAnalysisResponse(
     val elapsedMillis: Long,
     val result: OcrResponse? = null,
     val reasonCode: String? = null,
-) : Serializable {
+): Serializable {
     private companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -71,7 +71,7 @@ internal data class DetectionAnalysisResponse(
     val elapsedMillis: Long,
     val regions: List<DetectionResponse> = emptyList(),
     val reasonCode: String? = null,
-) : Serializable {
+): Serializable {
     private companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -83,7 +83,7 @@ internal data class BarcodeAnalysisResponse(
     val elapsedMillis: Long,
     val items: List<BarcodeResponse> = emptyList(),
     val reasonCode: String? = null,
-) : Serializable {
+): Serializable {
     private companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -98,7 +98,7 @@ internal data class ImageIntelligenceResponse(
     val ocr: OcrAnalysisResponse,
     val detection: DetectionAnalysisResponse,
     val barcodes: BarcodeAnalysisResponse,
-) : Serializable {
+): Serializable {
     private companion object {
         private const val serialVersionUID: Long = 1L
     }

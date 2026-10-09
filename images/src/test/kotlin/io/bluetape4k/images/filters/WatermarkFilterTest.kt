@@ -1,6 +1,8 @@
 package io.bluetape4k.images.filters
 
 import com.sksamuel.scrimage.ImmutableImage
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeLessOrEqualTo
 import io.bluetape4k.images.coroutines.SuspendJpegWriter
 import io.bluetape4k.images.fonts.fontOf
 import io.bluetape4k.images.forSuspendWriter
@@ -8,8 +10,7 @@ import io.bluetape4k.images.immutableImageOf
 import io.bluetape4k.images.suspendBytes
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.coroutines.KLoggingChannel
-import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldBeLessOrEqualTo
+import io.bluetape4k.logging.debug
 import org.junit.jupiter.api.Test
 import java.awt.Color
 import kotlin.math.abs
@@ -93,7 +94,7 @@ class WatermarkFilterTest: AbstractFilterTest() {
 
         var totalChannelDelta = 0L
         var maxChannelDelta = 0
-        for (i in actualPixels.indices) {
+        actualPixels.indices.forEach { i ->
             val a = actualPixels[i]
             val e = expectedPixels[i]
             val dr = abs(a.red() - e.red())
@@ -105,7 +106,7 @@ class WatermarkFilterTest: AbstractFilterTest() {
         }
         val avgChannelDelta = totalChannelDelta.toDouble() / (actualPixels.size * 3)
 
-        log.debug("[$resultFilename] avg delta=$avgChannelDelta, max delta=$maxChannelDelta")
+        log.debug { "[$resultFilename] avg delta=$avgChannelDelta, max delta=$maxChannelDelta" }
 
         avgChannelDelta shouldBeLessOrEqualTo AVG_PIXEL_DELTA_TOLERANCE
         maxChannelDelta shouldBeLessOrEqualTo MAX_PIXEL_DELTA_TOLERANCE

@@ -1,6 +1,9 @@
 package io.bluetape4k.images.moderation
 
 import io.bluetape4k.images.ImageDimensions
+import io.bluetape4k.support.requireFinite
+import io.bluetape4k.support.requireGe
+import io.bluetape4k.support.requireInRange
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.requirePositiveNumber
 import java.io.Serializable
@@ -83,24 +86,20 @@ data class SensitivePoint(
 ): Serializable {
 
     init {
-        x.requireFiniteCoordinate("x")
-        y.requireFiniteCoordinate("y")
+        x.requireFinite("x")
+        y.requireFinite("y")
     }
 
     internal fun requireValidFor(coordinateSpace: SensitiveCoordinateSpace) {
         when (coordinateSpace) {
             SensitiveCoordinateSpace.PIXEL -> {
-                require(x >= 0.0) { "pixel x must be >= 0, but was $x" }
-                require(y >= 0.0) { "pixel y must be >= 0, but was $y" }
+                x.requireGe(0.0, "x")
+                y.requireGe(0.0, "y")
             }
 
             SensitiveCoordinateSpace.NORMALIZED -> {
-                require(x in NORMALIZED_MIN..NORMALIZED_MAX) {
-                    "normalized x must be in 0.0..1.0, but was $x"
-                }
-                require(y in NORMALIZED_MIN..NORMALIZED_MAX) {
-                    "normalized y must be in 0.0..1.0, but was $y"
-                }
+                x.requireInRange(NORMALIZED_MIN, NORMALIZED_MAX, "Normalized x")
+                y.requireInRange(NORMALIZED_MIN, NORMALIZED_MAX, "Normalized y")
             }
         }
     }
@@ -134,9 +133,9 @@ data class SensitiveRasterMask(
     init {
         width.requirePositiveNumber("width")
         height.requirePositiveNumber("height")
-        reference.requireNotBlankIfPresent("reference")
-        mediaType.requireNotBlankIfPresent("mediaType")
-        checksum.requireNotBlankIfPresent("checksum")
+        reference?.requireNotBlank("reference")
+        mediaType?.requireNotBlank("mediaType")
+        checksum?.requireNotBlank("checksum")
     }
 
     companion object {
@@ -172,24 +171,22 @@ sealed interface SensitiveRegionGeometry: Serializable {
     ): SensitiveRegionGeometry {
 
         init {
-            x.requireFiniteCoordinate("x")
-            y.requireFiniteCoordinate("y")
-            width.requirePositiveFiniteCoordinate("width")
-            height.requirePositiveFiniteCoordinate("height")
+            x.requireFinite("x")
+            y.requireFinite("y")
+            width.requireFinite("width")
+            width.requirePositiveNumber("width")
+            height.requireFinite("height")
+            height.requirePositiveNumber("height")
 
             when (coordinateSpace) {
                 SensitiveCoordinateSpace.PIXEL -> {
-                    require(x >= 0.0) { "pixel x must be >= 0, but was $x" }
-                    require(y >= 0.0) { "pixel y must be >= 0, but was $y" }
+                    x.requireGe(0.0, "x")
+                    y.requireGe(0.0, "y")
                 }
 
                 SensitiveCoordinateSpace.NORMALIZED -> {
-                    require(x in NORMALIZED_MIN..NORMALIZED_MAX) {
-                        "normalized x must be in 0.0..1.0, but was $x"
-                    }
-                    require(y in NORMALIZED_MIN..NORMALIZED_MAX) {
-                        "normalized y must be in 0.0..1.0, but was $y"
-                    }
+                    x.requireInRange(NORMALIZED_MIN, NORMALIZED_MAX, "Normalized x")
+                    y.requireInRange(NORMALIZED_MIN, NORMALIZED_MAX, "Normalized y")
                     require(x + width <= NORMALIZED_MAX && y + height <= NORMALIZED_MAX) {
                         "normalized rectangle must fit in 0.0..1.0, but was x=$x, y=$y, width=$width, height=$height"
                     }
@@ -201,7 +198,7 @@ sealed interface SensitiveRegionGeometry: Serializable {
             if (coordinateSpace == SensitiveCoordinateSpace.PIXEL) {
                 require(x + width <= imageDimensions.width.toDouble() && y + height <= imageDimensions.height.toDouble()) {
                     "rectangle is outside imageBounds=${imageDimensions.width}x${imageDimensions.height}: " +
-                        "x=$x, y=$y, width=$width, height=$height"
+                            "x=$x, y=$y, width=$width, height=$height"
                 }
             }
             return this
@@ -223,7 +220,7 @@ sealed interface SensitiveRegionGeometry: Serializable {
     ): SensitiveRegionGeometry {
 
         init {
-            require(points.size >= MIN_POLYGON_POINTS) {
+            points.size.requireGe(MIN_POLYGON_POINTS) {
                 "polygon must contain at least $MIN_POLYGON_POINTS points, including the closing point"
             }
             points.forEach { it.requireValidFor(coordinateSpace) }
@@ -254,7 +251,7 @@ sealed interface SensitiveRegionGeometry: Serializable {
     ): SensitiveRegionGeometry {
 
         init {
-            require(points.size >= MIN_POLYLINE_POINTS) { "polyline must contain at least two points" }
+            points.size.requireGe(MIN_POLYLINE_POINTS) { "polyline must contain at least two points" }
             points.forEach { it.requireValidFor(coordinateSpace) }
             require(points.first() != points.last()) { "polyline must remain open; use Polygon for closed areas" }
         }
@@ -281,7 +278,7 @@ sealed interface SensitiveRegionGeometry: Serializable {
         override fun requireWithin(imageDimensions: ImageDimensions): SensitiveRegionGeometry {
             require(mask.width <= imageDimensions.width && mask.height <= imageDimensions.height) {
                 "mask is outside imageBounds=${imageDimensions.width}x${imageDimensions.height}: " +
-                    "mask=${mask.width}x${mask.height}"
+                        "mask=${mask.width}x${mask.height}"
             }
             return this
         }
@@ -305,7 +302,7 @@ data class SensitiveRegion(
 ): Serializable {
 
     init {
-        id.requireNotBlankIfPresent("id")
+        id?.requireNotBlank("id")
         metadata.requireValidMetadata("metadata")
     }
 
@@ -349,11 +346,9 @@ data class SensitiveContentDetection(
         label.requireNotBlank("label")
         sourceBackend.requireNotBlank("sourceBackend")
         rawBackendLabel.requireNotBlank("rawBackendLabel")
-        policyReason.requireNotBlankIfPresent("policyReason")
-        confidence.requireFiniteCoordinate("confidence")
-        require(confidence in CONFIDENCE_MIN..CONFIDENCE_MAX) {
-            "confidence must be in 0.0..1.0, but was $confidence"
-        }
+        policyReason?.requireNotBlank("policyReason")
+        confidence.requireFinite("confidence")
+        confidence.requireInRange(CONFIDENCE_MIN, CONFIDENCE_MAX, "confidence")
         metadata.requireValidMetadata("metadata")
     }
 
@@ -369,20 +364,6 @@ private const val CONFIDENCE_MAX = 1.0
 private const val MIN_POLYGON_POINTS = 4
 private const val MIN_POLYLINE_POINTS = 2
 
-private fun Double.requireFiniteCoordinate(name: String) {
-    require(isFinite()) { "$name must be finite, but was $this" }
-}
-
-private fun Double.requirePositiveFiniteCoordinate(name: String) {
-    requireFiniteCoordinate(name)
-    require(this > 0.0) { "$name must be > 0, but was $this" }
-}
-
-private fun String?.requireNotBlankIfPresent(name: String) {
-    if (this != null) {
-        requireNotBlank(name)
-    }
-}
 
 private fun Map<String, String>.requireValidMetadata(name: String) {
     forEach { (key, value) ->

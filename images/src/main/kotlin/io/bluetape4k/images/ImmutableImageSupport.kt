@@ -12,7 +12,6 @@ import io.bluetape4k.okio.coroutines.BufferedSuspendedSource
 import io.bluetape4k.okio.coroutines.SuspendedSink
 import io.bluetape4k.okio.coroutines.SuspendedSource
 import io.bluetape4k.okio.coroutines.asBlocking
-import io.bluetape4k.okio.coroutines.buffered as bufferedSuspended
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -26,6 +25,7 @@ import java.io.File
 import java.io.InputStream
 import java.nio.file.Files
 import java.nio.file.Path
+import io.bluetape4k.okio.coroutines.buffered as bufferedSuspended
 
 @PublishedApi
 internal const val IMAGE_BUFFER_SIZE: Int = 128 * 1024
@@ -486,12 +486,12 @@ suspend inline fun ImmutableImage.suspendBytes(writer: SuspendImageWriter): Byte
  * @return 저장된 파일의 크기
  */
 suspend fun ImmutableImage.suspendWrite(writer: SuspendImageWriter, destPath: Path): Long {
-    withContext(Dispatchers.IO) {
+    return withContext(Dispatchers.IO) {
         Files.newOutputStream(destPath).use { out ->
             writer.suspendWrite(this@suspendWrite, this@suspendWrite.metadata, out)
         }
+        Files.size(destPath)
     }
-    return Files.size(destPath)
 }
 
 /**
@@ -612,21 +612,21 @@ private fun ImmutableImage.requireWithinDecodeLimits(
 }
 
 private fun InputStream.readBoundedImageBytes(limits: ImageDecodeLimits): ByteArray {
-    val output = ByteArrayOutputStream(
-        limits.maxEncodedBytes.coerceAtMost(IMAGE_BUFFER_SIZE.toLong()).toInt()
-    )
-    val buffer = ByteArray(IMAGE_BUFFER_SIZE)
-    var total = 0L
-    while (true) {
-        val read = read(buffer)
-        if (read < 0) break
-        total += read.toLong()
-        require(total <= limits.maxEncodedBytes) {
-            "Image input encodedBytes=$total exceeds maxEncodedBytes=${limits.maxEncodedBytes}."
+    val size = limits.maxEncodedBytes.coerceAtMost(IMAGE_BUFFER_SIZE.toLong()).toInt()
+    ByteArrayOutputStream(size).use { bos ->
+        val buffer = ByteArray(IMAGE_BUFFER_SIZE)
+        var total = 0L
+        while (true) {
+            val read = read(buffer)
+            if (read < 0) break
+            total += read.toLong()
+            require(total <= limits.maxEncodedBytes) {
+                "Image input encodedBytes=$total exceeds maxEncodedBytes=${limits.maxEncodedBytes}."
+            }
+            bos.write(buffer, 0, read)
         }
-        output.write(buffer, 0, read)
+        return bos.toByteArray()
     }
-    return output.toByteArray()
 }
 
 
@@ -650,11 +650,8 @@ inline fun ImmutableImage.withGraphics(
     action: (graphics: Graphics2D) -> Unit,
 ): ImmutableImage {
     val copy = this.copy()
-    val graphics: Graphics2D = copy.awt().createGraphics()
-    try {
-        action(graphics)
-    } finally {
-        graphics.dispose()
+    copy.awt().useGraphics { g ->
+        action(g)
     }
     return copy
 }

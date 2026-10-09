@@ -339,7 +339,7 @@ internal object OcrBenchmarkMetricReceiptValidator {
         }
         require(
             row.predictionSha256 == null && row.characterEdits == null && row.referenceCharacters == null &&
-                row.cer == null && row.wordEdits == null && row.referenceWords == null && row.wer == null
+                    row.cer == null && row.wordEdits == null && row.referenceWords == null && row.wer == null
         ) {
             "EMPTY metric row must not contain CER/WER values: $fixtureId"
         }

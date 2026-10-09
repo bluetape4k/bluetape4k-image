@@ -2,17 +2,21 @@ package io.bluetape4k.images.ocr
 
 import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.images.immutableImageOf
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.condition.EnabledIfSystemProperty
 import java.awt.Color
 import java.awt.Font
 import java.awt.RenderingHints
 import java.awt.image.BufferedImage
 import java.nio.file.Files
 import javax.imageio.ImageIO
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.condition.EnabledIfSystemProperty
 
 @EnabledIfSystemProperty(named = "ocr.enabled", matches = "true")
 class OcrQuickstartExampleTest {
+
+    companion object: KLogging()
 
     @Test
     fun `extracts text from a local image file`() {
@@ -29,6 +33,8 @@ class OcrQuickstartExampleTest {
         )
 
         val normalized = text.uppercase()
+
+        log.debug { "normalized: $normalized" }
         normalized shouldContain "BLUETAPE"
         normalized shouldContain "OCR"
         normalized shouldContain "123"

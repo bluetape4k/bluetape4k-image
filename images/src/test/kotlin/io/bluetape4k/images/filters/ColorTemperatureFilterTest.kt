@@ -1,15 +1,16 @@
 package io.bluetape4k.images.filters
 
 import com.sksamuel.scrimage.ImmutableImage
-import io.bluetape4k.logging.coroutines.KLoggingChannel
-import java.awt.image.BufferedImage
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeGreaterOrEqualTo
+import io.bluetape4k.images.useGraphics
+import io.bluetape4k.logging.KLogging
 import org.junit.jupiter.api.Test
+import java.awt.image.BufferedImage
 
-class ColorTemperatureFilterTest : AbstractFilterTest() {
+class ColorTemperatureFilterTest: AbstractFilterTest() {
 
-    companion object : KLoggingChannel()
+    companion object: KLogging()
 
     /**
      * 결정론적 컬러 타일 이미지(256×256)를 생성합니다.
@@ -17,8 +18,7 @@ class ColorTemperatureFilterTest : AbstractFilterTest() {
      */
     private fun createTestImage(): ImmutableImage {
         val buffered = BufferedImage(256, 256, BufferedImage.TYPE_INT_RGB)
-        val g = buffered.createGraphics()
-        try {
+        buffered.useGraphics { g ->
             val colors = listOf(
                 java.awt.Color.RED, java.awt.Color.GREEN, java.awt.Color.BLUE, java.awt.Color.YELLOW,
                 java.awt.Color.CYAN, java.awt.Color.MAGENTA, java.awt.Color.ORANGE, java.awt.Color.PINK,
@@ -31,8 +31,6 @@ class ColorTemperatureFilterTest : AbstractFilterTest() {
                     g.fillRect(col * 64, row * 64, 64, 64)
                 }
             }
-        } finally {
-            g.dispose()
         }
         return ImmutableImage.fromAwt(buffered)
     }

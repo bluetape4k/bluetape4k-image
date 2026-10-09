@@ -18,7 +18,7 @@ import org.junit.jupiter.api.Test
  */
 class GoldenFilterTest {
 
-    companion object : KLoggingChannel() {
+    companion object: KLoggingChannel() {
         private const val HOMER_JPG = "/images/homer.jpg"
         private const val TOLERANCE = 5
     }

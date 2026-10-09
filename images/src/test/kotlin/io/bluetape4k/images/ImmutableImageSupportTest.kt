@@ -1,6 +1,13 @@
 package io.bluetape4k.images
 
 import com.sksamuel.scrimage.webp.WebpWriter
+import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeGreaterThan
+import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldNotBeEqualTo
+import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.images.coroutines.SuspendJpegWriter
 import io.bluetape4k.images.coroutines.SuspendPngWriter
 import io.bluetape4k.junit5.coroutines.runSuspendIO
@@ -11,15 +18,6 @@ import io.bluetape4k.okio.asSource
 import io.bluetape4k.okio.buffered
 import io.bluetape4k.okio.coroutines.asSuspendedSink
 import io.bluetape4k.okio.coroutines.asSuspendedSource
-import io.bluetape4k.okio.coroutines.buffered as bufferedSuspended
-import kotlinx.coroutines.test.runTest
-import io.bluetape4k.assertions.assertFailsWith
-import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldBeGreaterThan
-import io.bluetape4k.assertions.shouldBeFalse
-import io.bluetape4k.assertions.shouldNotBeEqualTo
-import io.bluetape4k.assertions.shouldNotBeNull
-import io.bluetape4k.assertions.shouldBeTrue
 import okio.Buffer
 import okio.Sink
 import okio.Source
@@ -37,6 +35,7 @@ import java.nio.file.StandardOpenOption.CREATE
 import java.nio.file.StandardOpenOption.READ
 import java.nio.file.StandardOpenOption.TRUNCATE_EXISTING
 import java.nio.file.StandardOpenOption.WRITE
+import io.bluetape4k.okio.coroutines.buffered as bufferedSuspended
 
 @TempFolderTest
 class ImmutableImageSupportTest: AbstractImageTest() {
@@ -47,28 +46,32 @@ class ImmutableImageSupportTest: AbstractImageTest() {
 
     @ParameterizedTest(name = "load write coroutines: {0}.jpg")
     @MethodSource("getImageFileNames")
-    fun `load and write jpg image async`(filename: String, tempFolder: TempFolder) = runTest {
-        val image =
-            suspendLoadImage(Path.of("${BASE_PATH}/$filename.jpg"))
+    fun `load and write jpg image async`(filename: String, tempFolder: TempFolder) = runSuspendIO {
+        val image = suspendLoadImage(Path.of("${BASE_PATH}/$filename.jpg"))
 
         if (useTempFile) {
-            image.forSuspendWriter(SuspendJpegWriter.Default).write(tempFolder.createFile().toPath())
+            image
+                .forSuspendWriter(SuspendJpegWriter.Default)
+                .write(tempFolder.createFile().toPath())
         } else {
-            image.forSuspendWriter(SuspendJpegWriter.Default)
+            image
+                .forSuspendWriter(SuspendJpegWriter.Default)
                 .write(Path.of("${BASE_PATH}/${filename}_async.jpg"))
         }
     }
 
     @ParameterizedTest(name = "load write coroutines: {0}.png")
     @MethodSource("getImageFileNames")
-    fun `load and write png image async`(filename: String, tempFolder: TempFolder) = runTest {
-        val image =
-            suspendLoadImage(Path.of("${BASE_PATH}/$filename.png"))
+    fun `load and write png image async`(filename: String, tempFolder: TempFolder) = runSuspendIO {
+        val image = suspendLoadImage(Path.of("${BASE_PATH}/$filename.png"))
 
         if (useTempFile) {
-            image.forSuspendWriter(SuspendPngWriter.MaxCompression).write(tempFolder.createFile().toPath())
+            image
+                .forSuspendWriter(SuspendPngWriter.MaxCompression)
+                .write(tempFolder.createFile().toPath())
         } else {
-            image.forSuspendWriter(SuspendPngWriter.MaxCompression)
+            image
+                .forSuspendWriter(SuspendPngWriter.MaxCompression)
                 .write(Path.of("${BASE_PATH}/${filename}_async.png"))
         }
     }
@@ -85,6 +88,7 @@ class ImmutableImageSupportTest: AbstractImageTest() {
 
         // 원본은 흰색 유지
         original.awt().getRGB(0, 0) shouldBeEqualTo originalRgb
+
         // 반환된 복사본은 빨간색
         result.awt().getRGB(0, 0) shouldNotBeEqualTo originalRgb
     }
@@ -92,11 +96,11 @@ class ImmutableImageSupportTest: AbstractImageTest() {
     @Test
     fun `withGraphics는 수신 객체와 다른 인스턴스를 반환한다`() {
         val original = immutableImageOf(whiteTestImage(10, 10))
-
         val result = original.withGraphics { }
 
         result.shouldNotBeNull()
         result.width shouldBeEqualTo original.width
+
         // 별도 복사본이므로 픽셀 버퍼가 독립적
         result.awt() shouldNotBeEqualTo original.awt()
     }
@@ -106,7 +110,9 @@ class ImmutableImageSupportTest: AbstractImageTest() {
         val original = immutableImageOf(whiteTestImage(10, 10))
 
         assertFailsWith<RuntimeException> {
-            original.withGraphics { throw RuntimeException("test error") }
+            original.withGraphics {
+                throw RuntimeException("test error")
+            }
         }
 
         // 예외 발생 후에도 원본 이미지가 정상 사용 가능 (Graphics2D dispose됨)
@@ -116,12 +122,13 @@ class ImmutableImageSupportTest: AbstractImageTest() {
 
     @Test
     fun `load image from Okio BufferedSource`() {
-        Path.of("$BASE_PATH/homer.jpg").toFile().inputStream().asSource().buffered().use { source ->
-            val image = immutableImageOf(source)
+        Path.of("$BASE_PATH/homer.jpg").toFile()
+            .inputStream().asSource().buffered().use { source ->
+                val image = immutableImageOf(source)
 
-            image.width shouldBeGreaterThan 0
-            image.height shouldBeGreaterThan 0
-        }
+                image.width shouldBeGreaterThan 0
+                image.height shouldBeGreaterThan 0
+            }
     }
 
     @Test
@@ -137,15 +144,12 @@ class ImmutableImageSupportTest: AbstractImageTest() {
 
     @Test
     fun `load large generated image from BufferedSource keeps caller ownership`() {
-        val source = TrackingSource(whiteTestImage(1024, 768))
-        val bufferedSource = source.buffered()
+        TrackingSource(whiteTestImage(1024, 768)).buffered().use { source ->
+            val image = immutableImageOf(source)
 
-        val image = immutableImageOf(bufferedSource)
-
-        image.width shouldBeEqualTo 1024
-        image.height shouldBeEqualTo 768
-        source.closed shouldBeEqualTo false
-        bufferedSource.close()
+            image.width shouldBeEqualTo 1024
+            image.height shouldBeEqualTo 768
+        }
     }
 
     @Test
@@ -211,6 +215,8 @@ class ImmutableImageSupportTest: AbstractImageTest() {
         image.width shouldBeEqualTo 16
         image.height shouldBeEqualTo 16
         stream.closed.shouldBeFalse()
+
+        stream.close()
     }
 
     @Test
@@ -223,7 +229,9 @@ class ImmutableImageSupportTest: AbstractImageTest() {
         image.width shouldBeEqualTo 16
         image.height shouldBeEqualTo 16
         source.closed.shouldBeFalse()
+
         bufferedSource.close()
+        source.close()
     }
 
     @Test
@@ -235,6 +243,8 @@ class ImmutableImageSupportTest: AbstractImageTest() {
         image.width shouldBeEqualTo 16
         image.height shouldBeEqualTo 16
         source.closed.shouldBeTrue()
+
+        source.close()
     }
 
     @Test
@@ -282,10 +292,11 @@ class ImmutableImageSupportTest: AbstractImageTest() {
     }
 
     @Test
-    fun `suspend load image from Okio Source`() = runTest {
-        val image = Path.of("$BASE_PATH/homer.jpg").toFile().inputStream().asSource().use { source ->
-            suspendLoadImage(source)
-        }
+    fun `suspend load image from Okio Source`() = runSuspendIO {
+        val image = Path.of("$BASE_PATH/homer.jpg")
+            .toFile().inputStream().asSource().use { source ->
+                suspendLoadImage(source)
+            }
 
         image.width shouldBeGreaterThan 0
         image.height shouldBeGreaterThan 0
@@ -321,7 +332,7 @@ class ImmutableImageSupportTest: AbstractImageTest() {
     }
 
     @Test
-    fun `suspendWrite writes to Okio BufferedSink`() = runTest {
+    fun `suspendWrite writes to Okio BufferedSink`() = runSuspendIO {
         val image = immutableImageOf(Path.of("$BASE_PATH/homer.jpg"))
         val buffer = Buffer()
 
@@ -331,7 +342,7 @@ class ImmutableImageSupportTest: AbstractImageTest() {
     }
 
     @Test
-    fun `suspendWrite to Okio Sink closes owned sink`() = runTest {
+    fun `suspendWrite to Okio Sink closes owned sink`() = runSuspendIO {
         val image = immutableImageOf(whiteTestImage(512, 512))
         val sink = TrackingSink()
 

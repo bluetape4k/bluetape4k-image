@@ -1,5 +1,12 @@
 package io.bluetape4k.images.benchmark
 
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.double
+import kotlinx.serialization.json.int
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import java.io.Serializable
 import java.nio.channels.FileChannel
 import java.nio.file.AtomicMoveNotSupportedException
@@ -11,16 +18,7 @@ import java.nio.file.SimpleFileVisitor
 import java.nio.file.StandardCopyOption
 import java.nio.file.StandardOpenOption
 import java.nio.file.attribute.BasicFileAttributes
-import java.util.UUID
-import kotlinx.serialization.json.JsonArray
-import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.double
-import kotlinx.serialization.json.int
-import kotlinx.serialization.json.jsonArray
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
+import java.util.*
 
 internal data class CodecMatrixFinalizeArguments(
     val runId: CodecMatrixRunId,
@@ -107,7 +105,10 @@ internal fun finalizeCodecMatrixEvidence(
     val lockChannel = try {
         FileChannel.open(lockPath, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE)
     } catch (e: Exception) {
-        throw IllegalArgumentException("codec matrix run is already finalized or being finalized: ${request.runId.value}", e)
+        throw IllegalArgumentException(
+            "codec matrix run is already finalized or being finalized: ${request.runId.value}",
+            e
+        )
     }
     try {
         lockChannel.lock().use {
@@ -252,7 +253,7 @@ private fun mergeBackendPreflights(
 
             CodecMatrixCellStatus.N_A,
             CodecMatrixCellStatus.ERROR,
-            -> {
+                -> {
                 require(existing.isEmpty()) { "terminal preflight must not have backend eligibility evidence" }
                 referenceCells.values.map { reference ->
                     CodecMatrixCell(
@@ -448,7 +449,7 @@ private fun validateJmhProtocol(row: JsonObject) {
 }
 
 private fun sanitizeJmhRow(row: JsonObject, metric: JmhMetric): JsonObject {
-    val fields = linkedMapOf<String, JsonElement>(
+    val fields = linkedMapOf(
         "benchmark" to requireNotNull(row["benchmark"]),
         "params" to requireNotNull(row["params"]),
         "mode" to requireNotNull(row["mode"]),
@@ -462,9 +463,11 @@ private fun sanitizeJmhRow(row: JsonObject, metric: JmhMetric): JsonObject {
     )
     if (metric == JmhMetric.ALLOCATION) {
         fields["secondaryMetrics"] = JsonObject(
-            mapOf("gc.alloc.rate.norm" to sanitizedMetric(
-                row.requiredObject("secondaryMetrics").requiredObject("gc.alloc.rate.norm"),
-            )),
+            mapOf(
+                "gc.alloc.rate.norm" to sanitizedMetric(
+                    row.requiredObject("secondaryMetrics").requiredObject("gc.alloc.rate.norm"),
+                )
+            ),
         )
     }
     return JsonObject(fields)
@@ -687,7 +690,7 @@ private fun moveDirectoryAtomically(
 private fun validateStagedTree(root: Path) {
     Files.walkFileTree(
         root,
-        object : SimpleFileVisitor<Path>() {
+        object: SimpleFileVisitor<Path>() {
             override fun preVisitDirectory(directory: Path, attributes: BasicFileAttributes): FileVisitResult {
                 require(!Files.isSymbolicLink(directory) && attributes.isDirectory) {
                     "staging tree contains a non-directory entry: $directory"
@@ -744,7 +747,7 @@ private fun deleteOwnedTree(path: Path) {
     if (!Files.exists(path, LinkOption.NOFOLLOW_LINKS)) return
     Files.walkFileTree(
         path,
-        object : SimpleFileVisitor<Path>() {
+        object: SimpleFileVisitor<Path>() {
             override fun visitFile(file: Path, attributes: BasicFileAttributes): FileVisitResult {
                 Files.deleteIfExists(file)
                 return FileVisitResult.CONTINUE

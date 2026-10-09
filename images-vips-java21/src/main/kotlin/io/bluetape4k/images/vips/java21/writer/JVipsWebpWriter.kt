@@ -1,9 +1,9 @@
 package io.bluetape4k.images.vips.java21.writer
 
+import com.criteo.vips.VipsException
 import com.criteo.vips.VipsImage
 import io.bluetape4k.images.vips.VipsEncodeException
 import io.bluetape4k.images.vips.VipsEncodeOptions
-import com.criteo.vips.VipsException
 
 /**
  * JVips WebP 인코더.

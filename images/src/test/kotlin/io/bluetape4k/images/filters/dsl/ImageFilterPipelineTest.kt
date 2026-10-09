@@ -5,14 +5,15 @@ import com.sksamuel.scrimage.filter.BrightnessFilter
 import com.sksamuel.scrimage.filter.ContrastFilter
 import com.sksamuel.scrimage.filter.SepiaFilter
 import io.bluetape4k.images.filters.AbstractFilterTest
-import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.images.useGraphics
+import io.bluetape4k.logging.KLogging
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.awt.image.BufferedImage
 
-class ImageFilterPipelineTest : AbstractFilterTest() {
+class ImageFilterPipelineTest: AbstractFilterTest() {
 
-    companion object : KLoggingChannel()
+    companion object: KLogging()
 
     private lateinit var image: ImmutableImage
 
@@ -23,14 +24,11 @@ class ImageFilterPipelineTest : AbstractFilterTest() {
 
     private fun createTestImage(): ImmutableImage {
         val buffered = BufferedImage(64, 64, BufferedImage.TYPE_INT_RGB)
-        val g = buffered.createGraphics()
-        try {
+        buffered.useGraphics { g ->
             g.color = java.awt.Color.RED; g.fillRect(0, 0, 32, 32)
             g.color = java.awt.Color.GREEN; g.fillRect(32, 0, 32, 32)
             g.color = java.awt.Color.BLUE; g.fillRect(0, 32, 32, 32)
             g.color = java.awt.Color.YELLOW; g.fillRect(32, 32, 32, 32)
-        } finally {
-            g.dispose()
         }
         return ImmutableImage.fromAwt(buffered)
     }

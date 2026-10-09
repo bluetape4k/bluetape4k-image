@@ -26,9 +26,9 @@ import reactor.core.publisher.Mono
 class ImageStorageHealthIndicator(
     private val storage: ImageStorage,
     private val probeKey: String,
-) : ReactiveHealthIndicator {
+): ReactiveHealthIndicator {
 
-    companion object : KLogging() {
+    companion object: KLogging() {
 
         /** synthetic health-probe key에 사용하는 prefix segment입니다. */
         private const val HEALTH_PREFIX: String = "_health"

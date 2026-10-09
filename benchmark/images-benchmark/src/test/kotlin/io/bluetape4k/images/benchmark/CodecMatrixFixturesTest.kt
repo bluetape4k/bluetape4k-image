@@ -2,11 +2,13 @@ package io.bluetape4k.images.benchmark
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
-import java.nio.file.Files
-import java.nio.file.Path
+import io.bluetape4k.assertions.shouldBeGreaterThan
+import io.bluetape4k.assertions.shouldBeTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
+import java.nio.file.Files
+import java.nio.file.Path
 
 class CodecMatrixFixturesTest {
 
@@ -19,8 +21,15 @@ class CodecMatrixFixturesTest {
     fun copyCanonicalSources() {
         tempDir = tempDir.toRealPath()
         generatedSources = Files.createDirectories(tempDir.resolve("generated"))
-        Files.copy(repositoryRoot().resolve("benchmark/images-benchmark/src/main/resources/bench/cafe.jpg"), generatedSources.resolve("cafe.jpg"))
-        Files.copy(repositoryRoot().resolve("images/src/test/resources/images/homer.jpg"), generatedSources.resolve("homer.jpg"))
+
+        Files.copy(
+            repositoryRoot().resolve("benchmark/images-benchmark/src/main/resources/bench/cafe.jpg"),
+            generatedSources.resolve("cafe.jpg")
+        )
+        Files.copy(
+            repositoryRoot().resolve("images/src/test/resources/images/homer.jpg"),
+            generatedSources.resolve("homer.jpg")
+        )
     }
 
     @Test
@@ -28,9 +37,12 @@ class CodecMatrixFixturesTest {
         val first = prepare("fixture-a-0001", tempDir.resolve("run-a"))
         val second = prepare("fixture-b-0001", tempDir.resolve("run-b"))
 
-        first.fixtures.map { fixture -> fixture.inputs.map(CodecMatrixInput::sha256) }
+        first.fixtures
+            .map { fixture -> fixture.inputs.map(CodecMatrixInput::sha256) }
             .shouldBeEqualTo(second.fixtures.map { fixture -> fixture.inputs.map(CodecMatrixInput::sha256) })
-        first.fixtures.map { fixture -> fixture.derived.sha256 }
+
+        first.fixtures
+            .map { fixture -> fixture.derived.sha256 }
             .shouldBeEqualTo(second.fixtures.map { fixture -> fixture.derived.sha256 })
     }
 
@@ -61,11 +73,12 @@ class CodecMatrixFixturesTest {
         manifest.fixtures.forEach { fixture ->
             fixture.inputs.map(CodecMatrixInput::format)
                 .shouldBeEqualTo(listOf(CodecMatrixFormat.JPEG, CodecMatrixFormat.PNG, CodecMatrixFormat.WEBP))
+
             fixture.inputs.forEach { input ->
                 input.dimensions.shouldBeEqualTo(fixture.derived.dimensions)
-                check(input.byteCount > 0)
-                input.magic.valid.shouldBeEqualTo(true)
-                check(Files.isRegularFile(tempDir.resolve("run").resolve(input.path.value)))
+                input.byteCount shouldBeGreaterThan 0
+                input.magic.valid.shouldBeTrue()
+                Files.isRegularFile(tempDir.resolve("run").resolve(input.path.value)).shouldBeTrue()
             }
         }
     }
@@ -95,10 +108,11 @@ class CodecMatrixFixturesTest {
         val first = prepare("fixture-existing-0001", runDirectory)
         prepare("fixture-existing-0001", runDirectory).shouldBeEqualTo(first)
         val manifestPath = runDirectory.resolve("fixtures/manifest.json")
+
         CodecMatrixJson.readFixture(
             manifestPath,
             CodecMatrixJson.sha256(Files.readAllBytes(manifestPath)),
-        ).shouldBeEqualTo(first)
+        ) shouldBeEqualTo first
 
         val input = first.fixtures.first().inputs.first()
         Files.write(runDirectory.resolve(input.path.value), byteArrayOf(1, 2, 3))
@@ -115,8 +129,8 @@ class CodecMatrixFixturesTest {
 
         val manifest = prepare("fixture-gradle-output-0001", runDirectory)
 
-        Files.isRegularFile(runDirectory.resolve("fixtures/manifest.json")).shouldBeEqualTo(true)
-        manifest.fixtures.size.shouldBeEqualTo(CodecMatrixScenario.entries.size)
+        Files.isRegularFile(runDirectory.resolve("fixtures/manifest.json")).shouldBeTrue()
+        manifest.fixtures.size shouldBeEqualTo CodecMatrixScenario.entries.size
     }
 
     @Test
@@ -177,11 +191,13 @@ class CodecMatrixFixturesTest {
     @Test
     fun `CLI accepts only run id and derives paths from repository root`() {
         val runId = CodecMatrixRunId("fixture-cli-0001")
-        parseCodecMatrixFixtureRunId(arrayOf("--run-id", runId.value)).shouldBeEqualTo(runId)
+        parseCodecMatrixFixtureRunId(arrayOf("--run-id", runId.value)) shouldBeEqualTo runId
+
         codecMatrixFixturePaths(repositoryRoot(), runId, CodecMatrixBackend.JAVA21)
             .backendPreflight
             .endsWith("codec-matrix/${runId.value}/preflight-java21.json")
-            .shouldBeEqualTo(true)
+            .shouldBeTrue()
+
         assertFailsWith<IllegalArgumentException> {
             parseCodecMatrixFixtureRunId(arrayOf("--source-root", "/tmp", "--run-id", "fixture-cli-0001"))
         }

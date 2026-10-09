@@ -1,19 +1,20 @@
 package io.bluetape4k.images.transforms
 
 import com.sksamuel.scrimage.ImmutableImage
-import io.bluetape4k.images.AbstractImageTest
-import io.bluetape4k.images.immutableImageOf
-import io.bluetape4k.logging.coroutines.KLoggingChannel
-import kotlinx.coroutines.test.runTest
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeGreaterThan
 import io.bluetape4k.assertions.shouldBeInRange
+import io.bluetape4k.images.AbstractImageTest
+import io.bluetape4k.images.immutableImageOf
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import java.awt.Color
 
-class RotationTest : AbstractImageTest() {
+class RotationTest: AbstractImageTest() {
 
-    companion object : KLoggingChannel()
+    companion object: KLogging()
 
     private fun loadCafeImage(): ImmutableImage = immutableImageOf(getImage(CAFE_JPG))
 
@@ -104,6 +105,8 @@ class RotationTest : AbstractImageTest() {
         val dr = kotlin.math.abs(((origRgb ushr 16) and 0xFF) - ((twiceRgb ushr 16) and 0xFF))
         val dg = kotlin.math.abs(((origRgb ushr 8) and 0xFF) - ((twiceRgb ushr 8) and 0xFF))
         val db = kotlin.math.abs((origRgb and 0xFF) - (twiceRgb and 0xFF))
+
+        log.debug { "dr=$dr, dg=$dg, db=$db, twice=$twice" }
 
         dr shouldBeInRange 0..5
         dg shouldBeInRange 0..5

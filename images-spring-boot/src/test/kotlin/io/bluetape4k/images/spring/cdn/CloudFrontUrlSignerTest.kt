@@ -1,21 +1,25 @@
 package io.bluetape4k.images.spring.cdn
 
 import io.bluetape4k.assertions.assertFailsWith
-import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeNull
 import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldNotContain
 import io.bluetape4k.images.spring.ImageStorageException
 import io.bluetape4k.images.spring.autoconfigure.CdnProperties
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import org.junit.jupiter.api.Test
 
 class CloudFrontUrlSignerTest {
+
+    companion object: KLogging()
 
     @Test
     fun `constructor rejects missing private key source as caller validation`() {
         val error = assertFailsWith<IllegalArgumentException> {
             CloudFrontUrlSigner(baseProperties())
         }
-
+        log.debug { "error message: ${error.message}" }
         error.message shouldContain "must be provided"
     }
 
@@ -29,7 +33,7 @@ class CloudFrontUrlSignerTest {
                 )
             )
         }
-
+        log.debug { "error message: ${error.message}" }
         error.message shouldContain "not both"
     }
 
@@ -40,8 +44,9 @@ class CloudFrontUrlSignerTest {
             CloudFrontUrlSigner(baseProperties(privateKeyPath = path))
         }
 
+        log.debug { "error message: ${error.message}" }
         error.message shouldNotContain path
-        error.cause shouldBeEqualTo null
+        error.cause.shouldBeNull()
     }
 
     private fun baseProperties(
@@ -54,5 +59,4 @@ class CloudFrontUrlSignerTest {
             privateKeyPem = privateKeyPem,
             privateKeyPath = privateKeyPath,
         )
-
 }

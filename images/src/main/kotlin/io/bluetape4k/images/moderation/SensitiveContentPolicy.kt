@@ -1,5 +1,9 @@
 package io.bluetape4k.images.moderation
 
+import io.bluetape4k.support.requireFinite
+import io.bluetape4k.support.requireGe
+import io.bluetape4k.support.requireGt
+import io.bluetape4k.support.requireInRange
 import io.bluetape4k.support.requireNotBlank
 import java.io.Serializable
 
@@ -63,13 +67,13 @@ data class SensitiveTreatmentParameters(
 ): Serializable {
 
     init {
-        mosaicBlockSize?.requirePositive("mosaicBlockSize")
-        blurRadius?.requirePositiveFinite("blurRadius")
-        blurSigma?.requirePositiveFinite("blurSigma")
+        mosaicBlockSize?.requireGt(0, "mosaicBlockSize")
+        blurRadius?.requireFinite("blurRadius")?.requireGt(0.0, "blurRadius")
+        blurSigma?.requireFinite("blurSigma")?.requireGt(0.0, "blurSigma")
         maskOpacity?.requireFiniteProbability("maskOpacity")
-        maskStyle.requireNotBlankIfPresent("maskStyle")
-        reviewPriority?.requireNonNegative("reviewPriority")
-        rejectReason.requireNotBlankIfPresent("rejectReason")
+        maskStyle?.requireNotBlank("maskStyle")
+        reviewPriority?.requireGe(0, "reviewPriority")
+        rejectReason?.requireNotBlank("rejectReason")
         metadata.requireValidPolicyMetadata("metadata")
     }
 
@@ -106,8 +110,8 @@ data class SensitiveModerationRule(
      */
     fun matches(detection: SensitiveContentDetection): Boolean =
         (categories.isEmpty() || detection.category in categories) &&
-            detection.severity >= minimumSeverity &&
-            detection.confidence >= minimumConfidence
+                detection.severity >= minimumSeverity &&
+                detection.confidence >= minimumConfidence
 
     companion object {
         private const val serialVersionUID: Long = -8978805960184835272L
@@ -129,7 +133,7 @@ data class SensitiveModerationDecision(
 
     init {
         reason.requireNotBlank("reason")
-        matchedRuleId.requireNotBlankIfPresent("matchedRuleId")
+        matchedRuleId?.requireNotBlank("matchedRuleId")
     }
 
     companion object {
@@ -275,28 +279,9 @@ private fun SensitiveModerationDecision.workflowStates(): List<SensitiveModerati
         }
     }
 
-private fun Int.requirePositive(name: String) {
-    require(this > 0) { "$name must be > 0, but was $this" }
-}
-
-private fun Int.requireNonNegative(name: String) {
-    require(this >= 0) { "$name must be >= 0, but was $this" }
-}
-
-private fun Double.requirePositiveFinite(name: String) {
-    require(isFinite()) { "$name must be finite, but was $this" }
-    require(this > 0.0) { "$name must be > 0, but was $this" }
-}
-
 private fun Double.requireFiniteProbability(name: String) {
-    require(isFinite()) { "$name must be finite, but was $this" }
-    require(this in 0.0..1.0) { "$name must be in 0.0..1.0, but was $this" }
-}
-
-private fun String?.requireNotBlankIfPresent(name: String) {
-    if (this != null) {
-        requireNotBlank(name)
-    }
+    this.requireFinite(name)
+    this.requireInRange(0.0, 1.0, name)
 }
 
 private fun Map<String, String>.requireValidPolicyMetadata(name: String) {

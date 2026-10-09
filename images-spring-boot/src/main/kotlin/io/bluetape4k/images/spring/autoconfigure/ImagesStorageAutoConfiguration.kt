@@ -6,14 +6,15 @@ import io.bluetape4k.images.spring.storage.LocalImageStorage
 import io.bluetape4k.images.spring.storage.s3.S3ImageStorage
 import io.bluetape4k.images.spring.storage.s3.S3PathTransferOperations
 import io.bluetape4k.images.spring.storage.s3.S3TransferOperationsAdapter
+import io.bluetape4k.support.checkNotNull
 import io.bluetape4k.support.requireNotBlank
+import org.springframework.beans.factory.ObjectProvider
 import org.springframework.boot.autoconfigure.AutoConfiguration
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.context.properties.EnableConfigurationProperties
-import org.springframework.beans.factory.ObjectProvider
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import java.nio.file.Path
@@ -92,14 +93,14 @@ class ImagesStorageAutoConfiguration {
         private fun requireHeadObjectSupport(operations: S3Operations) {
             val implementationMethod = operations.javaClass.methods.firstOrNull { method ->
                 method.name == "headObject" &&
-                    method.parameterCount == 3 &&
-                    method.parameterTypes[0] == String::class.java &&
-                    method.parameterTypes[1] == String::class.java &&
-                    method.declaringClass != S3Operations::class.java
+                        method.parameterCount == 3 &&
+                        method.parameterTypes[0] == String::class.java &&
+                        method.parameterTypes[1] == String::class.java &&
+                        method.declaringClass != S3Operations::class.java
             }
-            check(implementationMethod != null) {
+            implementationMethod.checkNotNull {
                 "bluetape4k.images.storage.backend=s3 requires an S3Operations implementation " +
-                    "with headObject support. Upgrade bluetape4k-aws-spring-boot before creating S3ImageStorage."
+                        "with headObject support. Upgrade bluetape4k-aws-spring-boot before creating S3ImageStorage."
             }
         }
     }
@@ -168,10 +169,10 @@ class ImagesStorageAutoConfiguration {
         @Bean
         @ConditionalOnMissingBean(ImageStorage::class)
         fun missingS3OperationsImageStorage(): ImageStorage =
-            throw IllegalStateException(
+            error(
                 "bluetape4k.images.storage.backend=s3 requires an " +
-                    "io.bluetape4k.aws.spring.s3.S3Operations bean. " +
-                    "Add bluetape4k-aws-spring-boot S3 auto-configuration or provide an ImageStorage bean.",
+                        "io.bluetape4k.aws.spring.s3.S3Operations bean. " +
+                        "Add bluetape4k-aws-spring-boot S3 auto-configuration or provide an ImageStorage bean.",
             )
     }
 

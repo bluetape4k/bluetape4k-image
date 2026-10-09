@@ -1,16 +1,23 @@
 package io.bluetape4k.images.spring.autoconfigure
 
+import io.bluetape4k.assertions.shouldBeEmpty
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeSameInstanceAs
+import io.bluetape4k.assertions.shouldHaveSize
 import io.bluetape4k.images.spring.health.ImageStorageHealthIndicator
 import io.bluetape4k.images.spring.storage.ImageStorage
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.mockk.mockk
-import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.springframework.beans.factory.getBean
+import org.springframework.beans.factory.getBeansOfType
 import org.springframework.boot.autoconfigure.AutoConfigurations
 import org.springframework.boot.test.context.runner.ApplicationContextRunner
 
 class ImagesHealthAutoConfigurationTest {
+
+    companion object: KLogging()
 
     private val contextRunner = ApplicationContextRunner()
         .withConfiguration(
@@ -24,7 +31,7 @@ class ImagesHealthAutoConfigurationTest {
     @Test
     fun `registers ImageStorageHealthIndicator when ImageStorage bean present`() {
         contextRunner.run { ctx ->
-            assertThat(ctx).hasSingleBean(ImageStorageHealthIndicator::class.java)
+            ctx.getBeansOfType<ImageStorageHealthIndicator>() shouldHaveSize 1
         }
     }
 
@@ -35,7 +42,7 @@ class ImagesHealthAutoConfigurationTest {
         contextRunner
             .withPropertyValues("bluetape4k.images.storage.enabled=false")
             .run { ctx ->
-                assertThat(ctx).doesNotHaveBean(ImageStorageHealthIndicator::class.java)
+                ctx.getBeansOfType<ImageStorageHealthIndicator>().shouldBeEmpty()
             }
     }
 
@@ -44,7 +51,7 @@ class ImagesHealthAutoConfigurationTest {
         contextRunner
             .withPropertyValues("bluetape4k.images.health.enabled=false")
             .run { ctx ->
-                assertThat(ctx).doesNotHaveBean(ImageStorageHealthIndicator::class.java)
+                ctx.getBeansOfType<ImageStorageHealthIndicator>().shouldBeEmpty()
             }
     }
 
@@ -64,8 +71,8 @@ class ImagesHealthAutoConfigurationTest {
                 { customIndicator },
             )
             .run { ctx ->
-                assertThat(ctx).hasSingleBean(ImageStorageHealthIndicator::class.java)
-                ctx.getBean(ImageStorageHealthIndicator::class.java) shouldBeSameInstanceAs customIndicator
+                ctx.getBeansOfType<ImageStorageHealthIndicator>() shouldHaveSize 1
+                ctx.getBean<ImageStorageHealthIndicator>() shouldBeSameInstanceAs customIndicator
             }
     }
 
@@ -74,8 +81,10 @@ class ImagesHealthAutoConfigurationTest {
         contextRunner
             .withPropertyValues("bluetape4k.images.storage.health-probe-key=.my-probe")
             .run { ctx ->
-                assertThat(ctx).hasSingleBean(ImageStorageHealthIndicator::class.java)
-                val props = ctx.getBean(ImageStorageProperties::class.java)
+                ctx.getBeansOfType<ImageStorageHealthIndicator>() shouldHaveSize 1
+
+                val props = ctx.getBean<ImageStorageProperties>()
+                log.debug { "props=$props" }
                 props.healthProbeKey shouldBeEqualTo ".my-probe"
             }
     }

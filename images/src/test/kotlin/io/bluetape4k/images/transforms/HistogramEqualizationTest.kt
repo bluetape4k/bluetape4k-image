@@ -1,27 +1,26 @@
 package io.bluetape4k.images.transforms
 
 import com.sksamuel.scrimage.ImmutableImage
-import io.bluetape4k.logging.coroutines.KLoggingChannel
-import java.awt.Color
-import java.awt.image.BufferedImage
-import kotlinx.coroutines.test.runTest
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeGreaterThan
+import io.bluetape4k.images.useGraphics
+import io.bluetape4k.junit5.coroutines.runSuspendIO
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import org.junit.jupiter.api.Test
+import java.awt.Color
+import java.awt.image.BufferedImage
 
 class HistogramEqualizationTest {
 
-    companion object : KLoggingChannel()
+    companion object: KLogging()
 
     private fun createUniformImage(w: Int, h: Int, r: Int, g: Int, b: Int): ImmutableImage {
         val buf = BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB)
-        val g2 = buf.createGraphics()
-        try {
+        buf.useGraphics { g2 ->
             g2.color = Color(r, g, b)
             g2.fillRect(0, 0, w, h)
-        } finally {
-            g2.dispose()
         }
         return ImmutableImage.wrapAwt(buf)
     }
@@ -119,11 +118,12 @@ class HistogramEqualizationTest {
     }
 
     @Test
-    fun `suspendClahe matches clahe dimensions`() = runTest {
+    fun `suspendClahe matches clahe dimensions`() = runSuspendIO {
         val gradient = createGradientImage(256, 64)
         val resultSync = gradient.clahe(tileSize = 8, clipLimit = 2.0)
         val resultSuspend = gradient.suspendClahe(tileSize = 8, clipLimit = 2.0)
 
+        log.debug { "resultSuspend=$resultSuspend" }
         resultSuspend.width shouldBeEqualTo resultSync.width
         resultSuspend.height shouldBeEqualTo resultSync.height
     }
@@ -134,6 +134,7 @@ class HistogramEqualizationTest {
         val image = createGradientImage(200, 100)
         val result = image.globalEqualize()
 
+        log.debug { "result=$result" }
         result.width shouldBeEqualTo 200
         result.height shouldBeEqualTo 100
         // 단일 타일이므로 중앙과 가장자리에서 동일한 LUT가 적용됨 — 결과 이미지 크기만 검증

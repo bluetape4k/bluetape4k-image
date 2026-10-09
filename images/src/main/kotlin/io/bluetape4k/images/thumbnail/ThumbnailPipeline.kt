@@ -1,9 +1,10 @@
 package io.bluetape4k.images.thumbnail
 
 import com.sksamuel.scrimage.ImmutableImage
+import io.bluetape4k.ToStringBuilder
 import io.bluetape4k.coroutines.flow.extensions.mapParallel
-import io.bluetape4k.images.batch.ImageBatchFailureStage
 import io.bluetape4k.images.batch.ImageBatchException
+import io.bluetape4k.images.batch.ImageBatchFailureStage
 import io.bluetape4k.images.batch.ImageProcessingOptions
 import io.bluetape4k.images.batch.PixelPermitLimiter
 import io.bluetape4k.images.batch.probeImagePixelCount
@@ -13,6 +14,7 @@ import io.bluetape4k.images.immutableImageOf
 import io.bluetape4k.images.transforms.smartCropTo
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.warn
+import io.bluetape4k.support.requireNotNull
 import io.bluetape4k.support.requirePositiveNumber
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
@@ -91,6 +93,7 @@ class ThumbnailPipeline private constructor(
     private val skipFailures: Boolean,
     private val onFailure: suspend (ThumbnailResult) -> Unit,
 ) {
+
     /**
      * 입력 이미지 경로 스트림을 썸네일 결과 스트림으로 처리합니다.
      *
@@ -135,7 +138,9 @@ class ThumbnailPipeline private constructor(
         val seenOutputs = ConcurrentHashMap.newKeySet<Path>()
 
         return sourceImages
-            .flatMapConcat { source -> sizes.asFlow().map { size -> source to size } }
+            .flatMapConcat { source ->
+                sizes.asFlow().map { size -> source to size }
+            }
             .mapParallel(parallelism) { (source, size) ->
                 processOne(source, size, limiter, seenOutputs)
             }
@@ -217,7 +222,7 @@ class ThumbnailPipeline private constructor(
         return Math.addExact(inputPixels, outputPixels).also { combinedPixels ->
             require(combinedPixels <= maxInFlightPixels) {
                 "입력과 출력 픽셀 합이 동시 처리 한도를 초과했습니다. " +
-                    "pixels=$combinedPixels, maxInFlightPixels=$maxInFlightPixels"
+                        "pixels=$combinedPixels, maxInFlightPixels=$maxInFlightPixels"
             }
         }
     }
@@ -228,7 +233,7 @@ class ThumbnailPipeline private constructor(
         actualPixels.requireWithinMaxPixels(source)
         require(actualPixels <= reservedPixels) {
             "디코딩한 이미지가 예약한 입력 픽셀 수를 초과했습니다. " +
-                "pixels=$actualPixels, reservedPixels=$reservedPixels"
+                    "pixels=$actualPixels, reservedPixels=$reservedPixels"
         }
     }
 
@@ -306,6 +311,22 @@ class ThumbnailPipeline private constructor(
             "썸네일 출력 경로가 outputDirectory를 벗어날 수 없습니다. outputDirectory=$outputDirectory, outputName=$outputName"
         }
         return output
+    }
+
+    override fun toString(): String {
+        return ToStringBuilder(this)
+            .add("outputDirectory", outputDirectory)
+            .add("sizes", sizes)
+            .add("crop", crop)
+            .add("format", format)
+            .add("outputName", outputName)
+            .add("ioDispatcher", ioDispatcher)
+            .add("transformDispatcher", transformDispatcher)
+            .add("parallelism", parallelism)
+            .add("maxPixels", maxPixels)
+            .add("maxInFlightPixels", maxInFlightPixels)
+            .add("skipFailures", skipFailures)
+            .toString()
     }
 
     /**
@@ -425,9 +446,9 @@ class ThumbnailPipeline private constructor(
          * @throws IllegalArgumentException [outputDirectory]가 설정되지 않은 경우
          */
         fun build(): ThumbnailPipeline {
-            val directory = requireNotNull(outputDirectory) { "outputDirectory를 지정해야 합니다." }
+            val directory = outputDirectory.requireNotNull("outputDirectory")
             val thumbnailSizes = sizes.toList().ifEmpty { listOf(DEFAULT_THUMBNAIL_SIZE) }
-            options.parallelism.requirePositiveNumber("parallelism")
+            options.parallelism.requirePositiveNumber("options.parallelism")
 
             return ThumbnailPipeline(
                 outputDirectory = directory,

@@ -7,12 +7,12 @@ import io.bluetape4k.assertions.fail
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.logging.warn
+import org.junit.jupiter.api.Assumptions
+import org.opentest4j.TestAbortedException
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import kotlin.math.abs
-import org.junit.jupiter.api.Assumptions
-import org.opentest4j.TestAbortedException
 
 /**
  * scrimage [ImmutableImage] 연산 결과를 골든 이미지와 비교하는 테스트 유틸리티.
@@ -48,7 +48,7 @@ import org.opentest4j.TestAbortedException
  * }
  * ```
  */
-object GoldenImageAssert : KLogging() {
+object GoldenImageAssert: KLogging() {
 
     private val UPDATE_MODE =
         System.getProperty("bluetape4k.images.golden.update", "false").toBoolean()
@@ -131,7 +131,7 @@ object GoldenImageAssert : KLogging() {
             saveDiff(key, actual)
             fail(
                 "골든 이미지와 크기 불일치: actual=(${actual.width}x${actual.height}) " +
-                    "expected=(${expected.width}x${expected.height}) key=$key"
+                        "expected=(${expected.width}x${expected.height}) key=$key"
             )
         }
 
@@ -150,9 +150,9 @@ object GoldenImageAssert : KLogging() {
                 saveDiff(key, actual)
                 fail(
                     "픽셀 ($x, $y) 에서 허용 오차($tolerance) 초과: " +
-                        "actual=(${a.red()},${a.green()},${a.blue()}) " +
-                        "expected=(${e.red()},${e.green()},${e.blue()}) " +
-                        "delta=(dr=$dr, dg=$dg, db=$db) key=$key"
+                            "actual=(${a.red()},${a.green()},${a.blue()}) " +
+                            "expected=(${e.red()},${e.green()},${e.blue()}) " +
+                            "delta=(dr=$dr, dg=$dg, db=$db) key=$key"
                 )
             }
         }

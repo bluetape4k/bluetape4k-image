@@ -6,21 +6,23 @@ import com.sksamuel.scrimage.filter.SepiaFilter
 import com.sksamuel.scrimage.nio.ImmutableImageLoader
 import com.sksamuel.scrimage.nio.JpegWriter
 import com.sksamuel.scrimage.nio.PngWriter
-import io.bluetape4k.images.immutableImageOf
-import io.bluetape4k.logging.coroutines.KLoggingChannel
-import io.bluetape4k.utils.Resourcex
-import java.awt.Color
-import java.awt.image.BufferedImage
-import java.util.Random
-import java.util.stream.Stream
-import kotlin.math.abs
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeGreaterThan
 import io.bluetape4k.assertions.shouldBeLessOrEqualTo
+import io.bluetape4k.assertions.shouldNotBeEmpty
+import io.bluetape4k.images.immutableImageOf
+import io.bluetape4k.images.useGraphics
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.utils.Resourcex
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
+import java.awt.Color
+import java.awt.image.BufferedImage
+import java.util.*
+import java.util.stream.Stream
+import kotlin.math.abs
 
 /**
  * 결정론적 입력으로 이미지 처리 불변식 10개를 검증하는 PBT 스타일 테스트.
@@ -37,30 +39,30 @@ import org.junit.jupiter.params.provider.MethodSource
  */
 class ImagePropertyTest {
 
-    companion object : KLoggingChannel() {
+    companion object: KLogging() {
 
         private const val HOMER_JPG = "/images/homer.jpg"
 
         private fun solidImage(w: Int, h: Int, color: Color): ImmutableImage {
             val buf = BufferedImage(w, h, BufferedImage.TYPE_INT_RGB)
-            val g = buf.createGraphics()
-            g.color = color
-            g.fillRect(0, 0, w, h)
-            g.dispose()
+            buf.useGraphics { g ->
+                g.color = color
+                g.fillRect(0, 0, w, h)
+            }
             return ImmutableImage.fromAwt(buf)
         }
 
         private fun checkerboardImage(size: Int, checkSize: Int): ImmutableImage {
             val buf = BufferedImage(size, size, BufferedImage.TYPE_INT_RGB)
-            val g = buf.createGraphics()
-            for (y in 0 until size step checkSize) {
-                for (x in 0 until size step checkSize) {
-                    val isWhite = ((x / checkSize) + (y / checkSize)) % 2 == 0
-                    g.color = if (isWhite) Color.WHITE else Color.BLACK
-                    g.fillRect(x, y, checkSize, checkSize)
+            buf.useGraphics { g ->
+                for (y in 0 until size step checkSize) {
+                    for (x in 0 until size step checkSize) {
+                        val isWhite = ((x / checkSize) + (y / checkSize)) % 2 == 0
+                        g.color = if (isWhite) Color.WHITE else Color.BLACK
+                        g.fillRect(x, y, checkSize, checkSize)
+                    }
                 }
             }
-            g.dispose()
             return ImmutableImage.fromAwt(buf)
         }
 
@@ -170,6 +172,7 @@ class ImagePropertyTest {
         val targetH = 100
         val resized = image.scaleTo(targetW, targetH)
         val bytes = resized.forWriter(JpegWriter(80, false)).bytes()
+
         val decoded = ImmutableImageLoader.create().fromBytes(bytes)
         decoded.width shouldBeEqualTo targetW
         decoded.height shouldBeEqualTo targetH
@@ -182,7 +185,7 @@ class ImagePropertyTest {
     @MethodSource("imageInputs")
     fun `PngWriter MaxCompression 인코딩 후 바이트 길이가 0보다 크다`(label: String, image: ImmutableImage) {
         val bytes = image.forWriter(PngWriter.MaxCompression).bytes()
-        bytes.size shouldBeGreaterThan 0
+        bytes.shouldNotBeEmpty()
     }
 
     /**
@@ -281,8 +284,10 @@ class ImagePropertyTest {
         val w = maxOf(image.width, 8)
         val h = maxOf(image.height, 8)
         val blank = ImmutableImage.create(w, h)
+
         val bytes = blank.forWriter(JpegWriter(80, false)).bytes()
-        bytes.size shouldBeGreaterThan 0
+        bytes.shouldNotBeEmpty()
+
         val reloaded = ImmutableImageLoader.create().fromBytes(bytes)
         reloaded.width shouldBeEqualTo w
         reloaded.height shouldBeEqualTo h
@@ -311,6 +316,6 @@ class ImagePropertyTest {
 
         // PNG 인코딩이 정상적으로 가능해야 함
         val filteredBytes = filtered.forWriter(PngWriter.MaxCompression).bytes()
-        filteredBytes.size shouldBeGreaterThan 0
+        filteredBytes.shouldNotBeEmpty()
     }
 }

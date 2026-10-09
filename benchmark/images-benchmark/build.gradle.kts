@@ -1,18 +1,13 @@
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
+import org.gradle.jvm.tasks.Jar
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 import java.security.MessageDigest
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.jar.JarFile
-import org.gradle.api.tasks.JavaExec
-import org.gradle.api.tasks.Sync
-import org.gradle.api.tasks.testing.Test
-import org.gradle.jvm.tasks.Jar
-import org.gradle.jvm.toolchain.JavaLanguageVersion
-import org.gradle.jvm.toolchain.JavaToolchainService
 
 plugins {
     kotlin("plugin.allopen")           // allOpen 필수
@@ -54,7 +49,7 @@ val ocrBenchmarkManifestFile = repositoryDirectory.file(
 ).asFile
 val ocrBenchmarkSourceFile = repositoryDirectory.file(
     "benchmark/images-benchmark/src/benchmark/kotlin/io/bluetape4k/images/benchmark/" +
-        "TesseractOcrExtractionBenchmark.kt",
+            "TesseractOcrExtractionBenchmark.kt",
 ).asFile
 val ocrBenchmarkReceiptDirectory = repositoryDirectory.file(
     "benchmark/images-benchmark/docs/raw/issue-565-20260824-macos-arm64-java25-v2-corpus",
@@ -220,7 +215,7 @@ fun expectedOcrBenchmarkFixtureIds(): Set<String> {
     val parameterIds = expectedOcrBenchmarkParamFixtureIds()
     require(parameterIds == fixtureIds) {
         "OCR benchmark fixture IDs and JMH parameters must match exactly: " +
-            "manifest=$fixtureIds parameters=$parameterIds"
+                "manifest=$fixtureIds parameters=$parameterIds"
     }
     return fixtureIds
 }
@@ -265,12 +260,14 @@ fun validateOcrRawReport(report: File, expectedSha256: String? = null) {
     require(bytes.isNotEmpty() && bytes.last() == '\n'.code.toByte()) {
         "OCR raw report must end with exactly one LF: $report"
     }
-    require(bytes.size == 1 || bytes[bytes.lastIndex - 1] !in setOf(
-        '\n'.code.toByte(),
-        '\r'.code.toByte(),
-        ' '.code.toByte(),
-        '\t'.code.toByte(),
-    )) {
+    require(
+        bytes.size == 1 || bytes[bytes.lastIndex - 1] !in setOf(
+            '\n'.code.toByte(),
+            '\r'.code.toByte(),
+            ' '.code.toByte(),
+            '\t'.code.toByte(),
+        )
+    ) {
         "OCR raw report has trailing whitespace before EOF: $report"
     }
     expectedSha256?.let { expected ->
@@ -356,8 +353,8 @@ fun validateOcrBenchmarkReceipt(receiptDirectory: File = ocrBenchmarkReceiptDire
                 emptyList()
             } else {
                 (fixture["languages"] as? List<*>)
-                ?.map { language -> language as? String ?: error("OCR language must be a string") }
-                ?: emptyList()
+                    ?.map { language -> language as? String ?: error("OCR language must be a string") }
+                    ?: emptyList()
             }
         }
         ?.toSet()
@@ -1030,12 +1027,12 @@ dependencyManagement {
 dependencies {
     // core
     implementation(bt4k.bluetape4k.core)
-    implementation(bt4k.bluetape4k.logging)
     implementation(bt4k.kotlinx.serialization.json)
     // Issue #544 provider comparison receipt는 Jackson 3을 사용하며 기존 중앙 BOM을 재사용한다.
     implementation(platform("tools.jackson:jackson-bom:${bt4k.versions.jackson3.get()}"))
     implementation("tools.jackson.core:jackson-databind")
     implementation("tools.jackson.module:jackson-module-kotlin")
+    implementation(bt4k.bluetape4k.jackson3)
     testImplementation(bt4k.bluetape4k.junit5)
     testImplementation(gradleTestKit())
     testImplementation(project(":bluetape4k-images-barcode-zxing"))
@@ -1174,7 +1171,12 @@ tasks.register<JavaExec>("finalizeCodecMatrixEvidence") {
         stagingDirectory.mkdirs()
         val preflightFiles = requireNotNull(codecMatrixRunDirectory().listFiles())
             .filter { file -> file.isFile && file.name.matches(Regex("preflight-java(?:21|25)\\.json")) }
-        require(preflightFiles.map { file -> file.name }.toSet() == setOf("preflight-java21.json", "preflight-java25.json")) {
+        require(
+            preflightFiles.map { file -> file.name }.toSet() == setOf(
+                "preflight-java21.json",
+                "preflight-java25.json"
+            )
+        ) {
             "finalization requires legacy java21 and java25 backend preflight evidence"
         }
         preflightFiles.forEach { preflight ->
@@ -1330,11 +1332,11 @@ tasks.register("finalizeBarcodeBenchmarkEvidence") {
                 "runId" to runId,
                 "commands" to listOf(
                     "./gradlew :bluetape4k-images-benchmark:benchmarkBarcodeLatencyBenchmark " +
-                        "-Pbarcode.benchmark.runId=$runId --console=plain",
+                            "-Pbarcode.benchmark.runId=$runId --console=plain",
                     "./gradlew :bluetape4k-images-benchmark:benchmarkBarcodeThroughputBenchmark " +
-                        "-Pbarcode.benchmark.runId=$runId --console=plain",
+                            "-Pbarcode.benchmark.runId=$runId --console=plain",
                     "./gradlew :bluetape4k-images-benchmark:finalizeBarcodeBenchmarkEvidence " +
-                        "-Pbarcode.benchmark.runId=$runId -Pbarcode.benchmark.cpu=<host-cpu> --console=plain",
+                            "-Pbarcode.benchmark.runId=$runId -Pbarcode.benchmark.cpu=<host-cpu> --console=plain",
                 ),
                 "environment" to linkedMapOf(
                     "osName" to System.getProperty("os.name"),

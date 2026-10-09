@@ -20,9 +20,10 @@ import java.nio.file.Path
 suspend fun VipsImage.suspendToBytes(
     format: VipsImageFormat = VipsImageFormat.JPEG,
     options: VipsEncodeOptions = VipsEncodeOptions.Default,
-): ByteArray = withContext(Dispatchers.IO) {
-    toBytes(format, options)
-}
+): ByteArray =
+    withContext(Dispatchers.IO) {
+        toBytes(format, options)
+    }
 
 /**
  * [VipsImage.writeTo] (Path 오버로드)의 코루틴 suspend 래퍼.
@@ -39,8 +40,10 @@ suspend fun VipsImage.suspendWriteTo(
     path: Path,
     format: VipsImageFormat = VipsImageFormat.JPEG,
     options: VipsEncodeOptions = VipsEncodeOptions.Default,
-): Unit = withContext(Dispatchers.IO) {
-    writeTo(path, format, options)
+) {
+    withContext(Dispatchers.IO) {
+        writeTo(path, format, options)
+    }
 }
 
 /**
@@ -56,6 +59,8 @@ suspend fun VipsImage.suspendWriteTo(
     out: OutputStream,
     format: VipsImageFormat,
     options: VipsEncodeOptions = VipsEncodeOptions.Default,
-): Unit = withContext(Dispatchers.IO) {
-    writeTo(out, format, options)
+) {
+    withContext(Dispatchers.IO) {
+        writeTo(out, format, options)
+    }
 }

@@ -75,7 +75,7 @@ object OcrProviderComparisonValidateMain {
         }
         println(
             "Validated OCR provider comparison receipt: ${receipt.providers.size} providers, " +
-                "${receipt.comparison?.comparedFixtureCount ?: 0} fixtures",
+                    "${receipt.comparison?.comparedFixtureCount ?: 0} fixtures",
         )
     }
 
@@ -92,10 +92,10 @@ object OcrProviderComparisonValidateMain {
 
     private fun hasSingleTrailingLf(bytes: ByteArray): Boolean =
         bytes.isNotEmpty() && bytes.last() == '\n'.code.toByte() &&
-            (bytes.size == 1 || bytes[bytes.lastIndex - 1] !in setOf(
-                '\n'.code.toByte(),
-                '\r'.code.toByte(),
-                ' '.code.toByte(),
-                '\t'.code.toByte(),
-            ))
+                (bytes.size == 1 || bytes[bytes.lastIndex - 1] !in setOf(
+                    '\n'.code.toByte(),
+                    '\r'.code.toByte(),
+                    ' '.code.toByte(),
+                    '\t'.code.toByte(),
+                ))
 }

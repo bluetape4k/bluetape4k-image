@@ -1,11 +1,12 @@
 package io.bluetape4k.images
 
-import io.bluetape4k.images.avif.AvifEncodeOptions
-import io.bluetape4k.images.heic.HeicReadOptions
-import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.images.avif.AvifEncodeOptions
+import io.bluetape4k.images.heic.HeicReadOptions
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import org.junit.jupiter.api.Test
 
 /**
@@ -16,11 +17,13 @@ import org.junit.jupiter.api.Test
  */
 class IncubatingImageApiTest {
 
-    companion object : KLoggingChannel()
+    companion object: KLogging()
 
     @Test
     fun `AvifEncodeOptions 기본값 검증`() {
         val opts = AvifEncodeOptions.Default
+
+        log.debug { "opts=$opts" }
         opts.quality shouldBeEqualTo 0.85f
         opts.lossless.shouldBeFalse()
     }
@@ -28,6 +31,8 @@ class IncubatingImageApiTest {
     @Test
     fun `AvifEncodeOptions 사용자 정의 값`() {
         val opts = AvifEncodeOptions(quality = 0.9f, lossless = true)
+
+        log.debug { "opts=$opts" }
         opts.quality shouldBeEqualTo 0.9f
         opts.lossless.shouldBeTrue()
     }
@@ -35,6 +40,8 @@ class IncubatingImageApiTest {
     @Test
     fun `AvifEncodeOptions copy 가능`() {
         val opts = AvifEncodeOptions.Default.copy(quality = 0.5f)
+
+        log.debug { "opts=$opts" }
         opts.quality shouldBeEqualTo 0.5f
         opts.lossless.shouldBeFalse()
     }
@@ -42,6 +49,8 @@ class IncubatingImageApiTest {
     @Test
     fun `HeicReadOptions 기본값 검증`() {
         val opts = HeicReadOptions.Default
+
+        log.debug { "opts=$opts" }
         opts.pageIndex shouldBeEqualTo 0
         opts.applyOrientation.shouldBeTrue()
     }
@@ -49,6 +58,8 @@ class IncubatingImageApiTest {
     @Test
     fun `HeicReadOptions 사용자 정의 값`() {
         val opts = HeicReadOptions(pageIndex = 2, applyOrientation = false)
+
+        log.debug { "opts=$opts" }
         opts.pageIndex shouldBeEqualTo 2
         opts.applyOrientation.shouldBeFalse()
     }

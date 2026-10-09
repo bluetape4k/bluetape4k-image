@@ -2,7 +2,8 @@
 
 English | [한국어](./README.ko.md)
 
-A library for loading, converting, resizing, splitting, and applying filters to images in formats such as JPG, PNG, GIF, WebP, and **TIFF/SVG** (Issue #134). Built on the [Scrimage](https://github.com/sksamuel/scrimage) library with asynchronous image processing via Coroutines. AVIF and HEIC are incubating interfaces; libvips support is exposed by `images-vips-api` and backed at runtime by the JDK 25 JVips JNI backend (published under the legacy `images-vips-java21` name) or the JDK 25 FFM backend (`images-vips-java25`).
+A library for loading, converting, resizing, splitting, and applying filters to images in formats such as JPG, PNG, GIF, WebP, and
+**TIFF/SVG** (Issue #134). Built on the [Scrimage](https://github.com/sksamuel/scrimage) library with asynchronous image processing via Coroutines. AVIF and HEIC are incubating interfaces; libvips support is exposed by `images-vips-api` and backed at runtime by the JDK 25 JVips JNI backend (published under the legacy `images-vips-java21` name) or the JDK 25 FFM backend (`images-vips-java25`).
 
 ## Architecture
 
@@ -28,16 +29,16 @@ A library for loading, converting, resizing, splitting, and applying filters to 
 
 ### Supported Image Formats
 
-| Format | Writer/Reader                    | Notes                                                         |
-|--------|----------------------------------|---------------------------------------------------------------|
-| PNG    | `SuspendPngWriter`               | Lossless, transparency                                        |
-| GIF    | `SuspendGifWriter`               | Animation support                                             |
-| JPG    | `SuspendJpegWriter`              | Fast, lossy                                                   |
-| WEBP   | `SuspendWebpWriter`              | Best compression, modern                                      |
-| TIFF   | `SuspendTiffWriter` / `SuspendTiffMultiPageWriter` | Multi-page, multiple compression modes (DEFLATE/LZW/NONE/JPEG) |
-| SVG    | `BatikSvgRasterizer`             | Rasterize to PNG/JPEG; XXE/SSRF-safe by default               |
-| AVIF   | `AvifWriter` *(incubating)*      | Interface only; use a libvips runtime backend when native support is available |
-| HEIC   | `HeicReader` *(incubating)*      | Interface only; use a libvips runtime backend when native support is available |
+| Format | Writer/Reader                                      | Notes                                                                          |
+|--------|----------------------------------------------------|--------------------------------------------------------------------------------|
+| PNG    | `SuspendPngWriter`                                 | Lossless, transparency                                                         |
+| GIF    | `SuspendGifWriter`                                 | Animation support                                                              |
+| JPG    | `SuspendJpegWriter`                                | Fast, lossy                                                                    |
+| WEBP   | `SuspendWebpWriter`                                | Best compression, modern                                                       |
+| TIFF   | `SuspendTiffWriter` / `SuspendTiffMultiPageWriter` | Multi-page, multiple compression modes (DEFLATE/LZW/NONE/JPEG)                 |
+| SVG    | `BatikSvgRasterizer`                               | Rasterize to PNG/JPEG; XXE/SSRF-safe by default                                |
+| AVIF   | `AvifWriter` *(incubating)*                        | Interface only; use a libvips runtime backend when native support is available |
+| HEIC   | `HeicReader` *(incubating)*                        | Interface only; use a libvips runtime backend when native support is available |
 
 - **Dynamic generation**: JPG is fastest (for real-time processing)
 - **Static files**: WebP is most efficient (saves storage)
@@ -46,62 +47,62 @@ A library for loading, converting, resizing, splitting, and applying filters to 
 
 ### Key Files
 
-| File                                           | Description                              |
-|------------------------------------------------|------------------------------------------|
-| `ImmutableImageSupport.kt`                     | Create, save, and draw on ImmutableImage |
-| `BufferedImageSupport.kt`                      | Create, save, and draw on BufferedImage  |
-| `ImageFormat.kt`                               | Supported image format enum              |
-| `WriteContextExtensions.kt`                    | Write context extensions                 |
-| `IIORegistryUtils.kt`                          | ImageIO registry utilities               |
-| `batch/ImageBatchFlow.kt`                      | Coroutine Flow batch image processing    |
-| `batch/ImageProcessingDsl.kt`                  | Batch transform DSL with named defaults  |
-| `thumbnail/ThumbnailPipeline.kt`               | Multi-size thumbnail pipeline            |
-| `tiles/TileProcessor.kt`                       | Tile split/merge and parallel tile processing |
-| `scaler/ImageScaler.kt`                        | Image resizing                           |
-| `splitter/ImageSplitter.kt`                    | Image splitting                          |
-| `filters/WatermarkFilterSupport.kt`            | Watermark filter                         |
-| `filters/CaptionFilterSupport.kt`              | Caption filter                           |
-| `filters/PaddingSupport.kt`                    | Padding filter                           |
-| `filters/WatermarkFilterType.kt`               | Watermark type (COVER/STAMP)             |
+| File                                           | Description                                                                   |
+|------------------------------------------------|-------------------------------------------------------------------------------|
+| `ImmutableImageSupport.kt`                     | Create, save, and draw on ImmutableImage                                      |
+| `BufferedImageSupport.kt`                      | Create, save, and draw on BufferedImage                                       |
+| `ImageFormat.kt`                               | Supported image format enum                                                   |
+| `WriteContextExtensions.kt`                    | Write context extensions                                                      |
+| `IIORegistryUtils.kt`                          | ImageIO registry utilities                                                    |
+| `batch/ImageBatchFlow.kt`                      | Coroutine Flow batch image processing                                         |
+| `batch/ImageProcessingDsl.kt`                  | Batch transform DSL with named defaults                                       |
+| `thumbnail/ThumbnailPipeline.kt`               | Multi-size thumbnail pipeline                                                 |
+| `tiles/TileProcessor.kt`                       | Tile split/merge and parallel tile processing                                 |
+| `scaler/ImageScaler.kt`                        | Image resizing                                                                |
+| `splitter/ImageSplitter.kt`                    | Image splitting                                                               |
+| `filters/WatermarkFilterSupport.kt`            | Watermark filter                                                              |
+| `filters/CaptionFilterSupport.kt`              | Caption filter                                                                |
+| `filters/PaddingSupport.kt`                    | Padding filter                                                                |
+| `filters/WatermarkFilterType.kt`               | Watermark type (COVER/STAMP)                                                  |
 | `analysis/DominantColor.kt`                    | Dominant color extraction (MedianCut) — `dominantColor()`, `dominantColors()` |
-| `analysis/BlurDetector.kt`                     | Blur detection via Laplacian variance — `blurScore()`, `isBlurry()` |
-| `analysis/ExifData.kt`                         | EXIF metadata parsing — `readExif()`, GPS PII removal |
-| `analysis/ImageMetadataReport.kt`              | Privacy-aware metadata report — EXIF/XMP/IPTC/ICC/dimensions/HDR hints |
-| `moderation/SensitiveContentModels.kt`         | Backend-neutral sensitive-content detection result models |
-| `moderation/SensitiveContentPolicy.kt`         | Renderer-neutral moderation policy and treatment decisions |
-| `privacy/PrivacyDerivativePipeline.kt`         | Public-safe derivative images with metadata stripping, sizing, and redaction |
-| `similarity/ImageSimilarity.kt`                | Core similarity: pixel Δ, MSE, PSNR, global SSIM, pHash |
-| `similarity/MssimSimilarity.kt`                | MSSIM — sliding-window Gaussian SSIM                    |
-| `similarity/HashSimilarity.kt`                 | aHash/dHash/wHash/phashOf (64/256/1024bit), HashDistance |
-| `similarity/HistogramSimilarity.kt`            | Color histogram: ChiSquare, Bhattacharyya, EarthMover   |
-| `similarity/KeypointSimilarity.kt`             | Block-Mean descriptor, bestRotationSimilarityTo         |
-| `similarity/SimilarityScaleUtils.kt`           | prepareForSimilarity — downscale before MSSIM           |
-| `fonts/FontSupport.kt`                         | Font utilities                           |
-| `filters/dsl/ImageFilterChain.kt`              | Filter/color correction DSL (`applyFilters`, `suspendApplyFilters`) |
-| `filters/dsl/ImageFilterChainDsl.kt`           | DSL member functions (40+ filters)       |
-| `filters/SaturationAdjustFilter.kt`            | HSV saturation adjustment filter        |
-| `filters/HueAdjustFilter.kt`                   | HSV hue rotation filter                  |
-| `filters/ColorTemperatureFilter.kt`            | Kelvin color temperature filter          |
-| `filters/MedianBlurFilter.kt`                  | Median blur noise reduction filter       |
-| `filters/RoundedCornerFilter.kt`               | Rounded corner alpha mask filter         |
-| `filters/ColorSpaceConverter.kt`               | RGB/HSV/YCbCr/Kelvin color space conversion |
-| `coroutines/SuspendImageWriter.kt`             | Async image writer interface             |
-| `coroutines/SuspendMultiPageImageWriter.kt`    | Async multi-page writer interface        |
-| `coroutines/SuspendJpegWriter.kt`              | Async JPEG writer                        |
-| `coroutines/SuspendPngWriter.kt`               | Async PNG writer                         |
-| `coroutines/SuspendGifWriter.kt`               | Async GIF writer                         |
-| `coroutines/SuspendWebpWriter.kt`              | Async WebP writer                        |
-| `coroutines/SuspendTiffWriter.kt`              | Async TIFF writer (single-page, TwelveMonkeys) |
-| `coroutines/SuspendTiffMultiPageWriter.kt`     | Async TIFF multi-page writer             |
-| `coroutines/TiffCompression.kt`                | TIFF compression modes (DEFLATE/LZW/NONE/PACKBITS/JPEG) |
-| `coroutines/animated/SuspendGif2WebpWriter.kt` | GIF → WebP conversion writer             |
-| `coroutines/animated/AnimatedGifExtensions.kt` | AnimatedGif extensions                   |
-| `svg/SuspendSvgRasterizer.kt`                  | SVG rasterizer interface                 |
-| `svg/BatikSvgRasterizer.kt`                    | SVG rasterizer (Apache Batik, XXE-safe)  |
-| `svg/SvgRasterizeOptions.kt`                   | SVG rasterization options                |
-| `avif/AvifWriter.kt`                           | AVIF writer interface *(incubating)*     |
-| `heic/HeicReader.kt`                           | HEIC reader interface *(incubating)*     |
-| `IncubatingImageApi.kt`                        | `@RequiresOptIn` marker for incubating APIs |
+| `analysis/BlurDetector.kt`                     | Blur detection via Laplacian variance — `blurScore()`, `isBlurry()`           |
+| `analysis/ExifData.kt`                         | EXIF metadata parsing — `readExif()`, GPS PII removal                         |
+| `analysis/ImageMetadataReport.kt`              | Privacy-aware metadata report — EXIF/XMP/IPTC/ICC/dimensions/HDR hints        |
+| `moderation/SensitiveContentModels.kt`         | Backend-neutral sensitive-content detection result models                     |
+| `moderation/SensitiveContentPolicy.kt`         | Renderer-neutral moderation policy and treatment decisions                    |
+| `privacy/PrivacyDerivativePipeline.kt`         | Public-safe derivative images with metadata stripping, sizing, and redaction  |
+| `similarity/ImageSimilarity.kt`                | Core similarity: pixel Δ, MSE, PSNR, global SSIM, pHash                       |
+| `similarity/MssimSimilarity.kt`                | MSSIM — sliding-window Gaussian SSIM                                          |
+| `similarity/HashSimilarity.kt`                 | aHash/dHash/wHash/phashOf (64/256/1024bit), HashDistance                      |
+| `similarity/HistogramSimilarity.kt`            | Color histogram: ChiSquare, Bhattacharyya, EarthMover                         |
+| `similarity/KeypointSimilarity.kt`             | Block-Mean descriptor, bestRotationSimilarityTo                               |
+| `similarity/SimilarityScaleUtils.kt`           | prepareForSimilarity — downscale before MSSIM                                 |
+| `fonts/FontSupport.kt`                         | Font utilities                                                                |
+| `filters/dsl/ImageFilterChain.kt`              | Filter/color correction DSL (`applyFilters`, `suspendApplyFilters`)           |
+| `filters/dsl/ImageFilterChainDsl.kt`           | DSL member functions (40+ filters)                                            |
+| `filters/SaturationAdjustFilter.kt`            | HSV saturation adjustment filter                                              |
+| `filters/HueAdjustFilter.kt`                   | HSV hue rotation filter                                                       |
+| `filters/ColorTemperatureFilter.kt`            | Kelvin color temperature filter                                               |
+| `filters/MedianBlurFilter.kt`                  | Median blur noise reduction filter                                            |
+| `filters/RoundedCornerFilter.kt`               | Rounded corner alpha mask filter                                              |
+| `filters/ColorSpaceConverter.kt`               | RGB/HSV/YCbCr/Kelvin color space conversion                                   |
+| `coroutines/SuspendImageWriter.kt`             | Async image writer interface                                                  |
+| `coroutines/SuspendMultiPageImageWriter.kt`    | Async multi-page writer interface                                             |
+| `coroutines/SuspendJpegWriter.kt`              | Async JPEG writer                                                             |
+| `coroutines/SuspendPngWriter.kt`               | Async PNG writer                                                              |
+| `coroutines/SuspendGifWriter.kt`               | Async GIF writer                                                              |
+| `coroutines/SuspendWebpWriter.kt`              | Async WebP writer                                                             |
+| `coroutines/SuspendTiffWriter.kt`              | Async TIFF writer (single-page, TwelveMonkeys)                                |
+| `coroutines/SuspendTiffMultiPageWriter.kt`     | Async TIFF multi-page writer                                                  |
+| `coroutines/TiffCompression.kt`                | TIFF compression modes (DEFLATE/LZW/NONE/PACKBITS/JPEG)                       |
+| `coroutines/animated/SuspendGif2WebpWriter.kt` | GIF → WebP conversion writer                                                  |
+| `coroutines/animated/AnimatedGifExtensions.kt` | AnimatedGif extensions                                                        |
+| `svg/SuspendSvgRasterizer.kt`                  | SVG rasterizer interface                                                      |
+| `svg/BatikSvgRasterizer.kt`                    | SVG rasterizer (Apache Batik, XXE-safe)                                       |
+| `svg/SvgRasterizeOptions.kt`                   | SVG rasterization options                                                     |
+| `avif/AvifWriter.kt`                           | AVIF writer interface *(incubating)*                                          |
+| `heic/HeicReader.kt`                           | HEIC reader interface *(incubating)*                                          |
+| `IncubatingImageApi.kt`                        | `@RequiresOptIn` marker for incubating APIs                                   |
 
 ## Usage Examples
 
@@ -141,10 +142,7 @@ val channel = AsynchronousFileChannel.open(Paths.get("image.jpg"), READ)
 val image = suspendLoadImage(channel.asSuspendedSource())
 ```
 
-`BufferedSource` inputs are caller-owned and are not closed by load helpers.
-Pass a raw `Source` when the helper should buffer and close the source. Scrimage
-still decodes into JVM image memory; Okio improves stream ownership and
-integration rather than removing the decoded pixel allocation.
+`BufferedSource` inputs are caller-owned and are not closed by load helpers. Pass a raw `Source` when the helper should buffer and close the source. Scrimage still decodes into JVM image memory; Okio improves stream ownership and integration rather than removing the decoded pixel allocation.
 
 ### Loading and Saving BufferedImage
 
@@ -204,14 +202,11 @@ val webpBytes = image.suspendBytes(SuspendWebpWriter.Default)
 ```
 
 `BufferedSink` outputs are caller-owned and are flushed, not closed. Pass a raw
-`Sink` or `SuspendedSink` when the helper should own and close the output
-boundary. Prefer `SuspendedSource`/`SuspendedSink` from `bluetape4k-okio` for
-asynchronous file channels and service pipelines that already run in coroutines.
+`Sink` or `SuspendedSink` when the helper should own and close the output boundary. Prefer `SuspendedSource`/`SuspendedSink` from `bluetape4k-okio` for asynchronous file channels and service pipelines that already run in coroutines.
 
 ### Batch Image Processing (Issue #135)
 
-`ImageBatchFlow` provides a Coroutine Flow pipeline for applying uniform transforms to a large set of
-images with concurrency control and per-pixel memory limits.
+`ImageBatchFlow` provides a Coroutine Flow pipeline for applying uniform transforms to a large set of images with concurrency control and per-pixel memory limits.
 
 ```kotlin
 import io.bluetape4k.images.batch.*
@@ -257,9 +252,7 @@ val largeOptions = ImageProcessingOptions.largeJobs(
 
 ### Thumbnail Pipeline
 
-`ThumbnailPipeline` generates multiple thumbnail sizes for each source image in a single pass.
-Use `ThumbnailPipeline.builder()` to configure sizes, crop strategy, format, and error handling, then
-call `process(Flow<Path>)` to start streaming results.
+`ThumbnailPipeline` generates multiple thumbnail sizes for each source image in a single pass. Use `ThumbnailPipeline.builder()` to configure sizes, crop strategy, format, and error handling, then call `process(Flow<Path>)` to start streaming results.
 
 ```kotlin
 import io.bluetape4k.images.batch.ImageProcessingOptions
@@ -273,8 +266,8 @@ import java.nio.file.Path
 val pipeline = ThumbnailPipeline.builder()
     .outputDirectory(Path.of("output/thumbs"))
     .size(width = 1280, height = 720, suffix = "hd")
-    .size(width = 640,  height = 360, suffix = "md")
-    .size(width = 320,  height = 180, suffix = "sm")
+    .size(width = 640, height = 360, suffix = "md")
+    .size(width = 320, height = 180, suffix = "sm")
     .format(ThumbnailFormat(SuspendJpegWriter.Default.withCompression(85), "jpg"))
     .crop(ThumbnailCrop.Smart())                // saliency-based crop
     .options(ImageProcessingOptions(parallelism = 4, skipFailures = true))
@@ -297,14 +290,9 @@ pipeline
     }
 ```
 
-The pipeline checks both input and requested output against `maxPixels` before resizing.
-Each in-flight task reserves the sum of its input and output pixels until writing finishes;
-requests exceeding `maxInFlightPixels` fail at `VALIDATION`. This budget does not include
-encoder/crop scratch memory or result images retained by consumers. Keep source files unchanged
-during processing; decoded input larger than its reservation is rejected before transformation.
+The pipeline checks both input and requested output against `maxPixels` before resizing. Each in-flight task reserves the sum of its input and output pixels until writing finishes; requests exceeding `maxInFlightPixels` fail at `VALIDATION`. This budget does not include encoder/crop scratch memory or result images retained by consumers. Keep source files unchanged during processing; decoded input larger than its reservation is rejected before transformation.
 
-Each `build()` snapshots the configured sizes. Reusing the builder does not alter existing
-pipelines, but concurrent modification of the builder itself is not supported.
+Each `build()` snapshots the configured sizes. Reusing the builder does not alter existing pipelines, but concurrent modification of the builder itself is not supported.
 
 `ThumbnailCrop` variants:
 
@@ -313,13 +301,9 @@ pipelines, but concurrent modification of the builder itself is not supported.
 
 ### Tile Processing
 
-`TileProcessor` splits large images into a grid of tiles, applies parallel transforms to each tile,
-and reassembles them into a single output image. Useful for applying localised filters to images that
-are too large to process as a whole.
+`TileProcessor` splits large images into a grid of tiles, applies parallel transforms to each tile, and reassembles them into a single output image. Useful for applying localised filters to images that are too large to process as a whole.
 
-Tile dimensions may reach `Int.MAX_VALUE` when splitting a small image. Before allocating
-the merged image, the processor rejects negative coordinates, out-of-bounds tiles, and
-declared dimensions that do not match the actual tile image.
+Tile dimensions may reach `Int.MAX_VALUE` when splitting a small image. Before allocating the merged image, the processor rejects negative coordinates, out-of-bounds tiles, and declared dimensions that do not match the actual tile image.
 
 ```kotlin
 import com.sksamuel.scrimage.ImmutableImage
@@ -569,13 +553,13 @@ a.phash()                      // 64-bit Long
 a.phashDistanceTo(b)           // Hamming distance 0 ~ 64 (≤ 5 near-identical, ≤ 10 similar)
 ```
 
-| Metric               | Use case                                  | Identical |
-|----------------------|-------------------------------------------|-----------|
-| `pixelAvgDeltaTo`    | Byte-level regression testing (tolerance) | 0.0       |
-| `pixelMaxDeltaTo`    | Single-pixel outlier detection            | 0         |
-| `psnrTo`             | JPEG/WebP compression quality             | +∞        |
-| `ssimTo`             | Global perceptual similarity              | 1.0       |
-| `phashDistanceTo`    | Duplicate / crop / resize detection       | 0         |
+| Metric            | Use case                                  | Identical |
+|-------------------|-------------------------------------------|-----------|
+| `pixelAvgDeltaTo` | Byte-level regression testing (tolerance) | 0.0       |
+| `pixelMaxDeltaTo` | Single-pixel outlier detection            | 0         |
+| `psnrTo`          | JPEG/WebP compression quality             | +∞        |
+| `ssimTo`          | Global perceptual similarity              | 1.0       |
+| `phashDistanceTo` | Duplicate / crop / resize detection       | 0         |
 
 ### MSSIM (Multi-Scale SSIM)
 
@@ -621,12 +605,12 @@ val p1024 = b.phashOf(PHashSize.BITS_1024)            // LongArray(16)
 val dist = HashDistance.hamming(a.phashOf(PHashSize.BITS_256), b.phashOf(PHashSize.BITS_256))
 ```
 
-| Hash  | Algorithm              | Strength                        |
-|-------|------------------------|---------------------------------|
-| aHash | Average intensity      | Fast, simple                    |
-| dHash | Adjacent gradient      | Robust to mild brightness shift |
-| wHash | Haar DWT LL subband    | Faster than pHash, similar accuracy |
-| pHash | DCT low-frequency      | Most robust to JPEG / resize    |
+| Hash  | Algorithm           | Strength                            |
+|-------|---------------------|-------------------------------------|
+| aHash | Average intensity   | Fast, simple                        |
+| dHash | Adjacent gradient   | Robust to mild brightness shift     |
+| wHash | Haar DWT LL subband | Faster than pHash, similar accuracy |
+| pHash | DCT low-frequency   | Most robust to JPEG / resize        |
 
 ### Color Histogram Similarity
 
@@ -762,13 +746,13 @@ val result3 = image.applyFilters {
 
 ### New Filters (5 types)
 
-| Filter | DSL Function | Description |
-|--------|-------------|-------------|
-| `SaturationAdjustFilter` | `saturation(factor)` | HSV saturation multiplier (1.0=original, 0=grayscale) |
-| `HueAdjustFilter` | `hue(deltaDegrees)` | HSV hue rotation in degrees |
-| `ColorTemperatureFilter` | `colorTemperature(kelvin)` | Kelvin color temperature adjustment (1000–40000 K) |
-| `RoundedCornerFilter` | `roundedCorners(radius)` | Rounded corners with alpha mask |
-| `MedianBlurFilter` | `medianBlur(radius, boundary)` | Median blur noise reduction (`MedianBoundaryMode`: REPLICATE/REFLECT) |
+| Filter                   | DSL Function                   | Description                                                           |
+|--------------------------|--------------------------------|-----------------------------------------------------------------------|
+| `SaturationAdjustFilter` | `saturation(factor)`           | HSV saturation multiplier (1.0=original, 0=grayscale)                 |
+| `HueAdjustFilter`        | `hue(deltaDegrees)`            | HSV hue rotation in degrees                                           |
+| `ColorTemperatureFilter` | `colorTemperature(kelvin)`     | Kelvin color temperature adjustment (1000–40000 K)                    |
+| `RoundedCornerFilter`    | `roundedCorners(radius)`       | Rounded corners with alpha mask                                       |
+| `MedianBlurFilter`       | `medianBlur(radius, boundary)` | Median blur noise reduction (`MedianBoundaryMode`: REPLICATE/REFLECT) |
 
 ### `ColorSpaceConverter`
 
@@ -837,7 +821,7 @@ val rotated = image.rotateDegrees(45.0)
 val rotatedRed = image.rotateDegrees(30.0, background = Color.RED)
 
 // 90-degree multiples (native scrimage, lossless)
-val cw90  = image.rotateRight()
+val cw90 = image.rotateRight()
 val ccw90 = image.rotateLeft()
 
 // Flip
@@ -1006,13 +990,13 @@ Use `readImageMetadataReportStrict` when metadata absence is part of an enforcem
 
 #### Key Files
 
-| File                                     | Description                                      |
-|------------------------------------------|--------------------------------------------------|
-| `analysis/DominantColor.kt`             | `DominantColor` data class + `DominantColorExtractor` sealed interface |
-| `analysis/MedianCutQuantizer.kt`        | Median Cut quantization engine (5-bit/channel)  |
-| `analysis/BlurDetector.kt`              | `BlurScore` + Laplacian variance computation     |
-| `analysis/ExifData.kt`                  | `ExifData` model + `readExif()` entry points     |
-| `analysis/ImageMetadataReport.kt`       | Public-safe metadata report + bounded internal diagnostics |
+| File                              | Description                                                            |
+|-----------------------------------|------------------------------------------------------------------------|
+| `analysis/DominantColor.kt`       | `DominantColor` data class + `DominantColorExtractor` sealed interface |
+| `analysis/MedianCutQuantizer.kt`  | Median Cut quantization engine (5-bit/channel)                         |
+| `analysis/BlurDetector.kt`        | `BlurScore` + Laplacian variance computation                           |
+| `analysis/ExifData.kt`            | `ExifData` model + `readExif()` entry points                           |
+| `analysis/ImageMetadataReport.kt` | Public-safe metadata report + bounded internal diagnostics             |
 
 ### Sensitive Content Moderation Policy
 
@@ -1060,12 +1044,12 @@ val report = policy.evaluate(listOf(detection))
 
 Geometry variants:
 
-| Geometry | Use case |
-|---|---|
-| `Rectangle` | Axis-aligned boxes in pixel or normalized coordinates |
-| `Polygon` | Closed areas; the first point must be repeated as the last point |
-| `Polyline` | Open paths or contours |
-| `RasterMask` | External mask references or raster mask metadata |
+| Geometry     | Use case                                                         |
+|--------------|------------------------------------------------------------------|
+| `Rectangle`  | Axis-aligned boxes in pixel or normalized coordinates            |
+| `Polygon`    | Closed areas; the first point must be repeated as the last point |
+| `Polyline`   | Open paths or contours                                           |
+| `RasterMask` | External mask references or raster mask metadata                 |
 
 Validation rules:
 
@@ -1134,8 +1118,7 @@ val results = sourcePaths.processPrivacyDerivatives(
 
 ### Privacy Snapshot Serialization (0.5.0)
 
-Privacy runtime objects are intentionally not Java-serializable. Persist or transfer only
-the concrete snapshot DTOs, and use the Jackson 3 codec explicitly:
+Privacy runtime objects are intentionally not Java-serializable. Persist or transfer only the concrete snapshot DTOs, and use the Jackson 3 codec explicitly:
 
 ```kotlin
 val snapshot = derivative.toPayload(sourceId = "upload-42")
@@ -1144,12 +1127,9 @@ val restored = PrivacyDerivativeJackson.decodePayload(json)
 check(restored.bytes.contentEquals(snapshot.bytes))
 ```
 
-The JSON contract is a typed `schemaVersion=1` envelope. The fixed codec rejects unknown
-fields, unsupported versions, trailing documents, unsafe source identifiers, and inputs above
+The JSON contract is a typed `schemaVersion=1` envelope. The fixed codec rejects unknown fields, unsupported versions, trailing documents, unsafe source identifiers, and inputs above
 `PrivacyDerivativeJsonLimits`; streaming decode does not close the caller's `InputStream`.
-`PrivacyDerivativeFormat`, `PrivacyDerivativeResult`, batch results, and Spring storage/CDN
-runtime collaborators no longer advertise `Serializable` in 0.5.0. Existing Java serialization
-of those runtime objects must be migrated to snapshots; it fails with `NotSerializableException`
+`PrivacyDerivativeFormat`, `PrivacyDerivativeResult`, batch results, and Spring storage/CDN runtime collaborators no longer advertise `Serializable` in 0.5.0. Existing Java serialization of those runtime objects must be migrated to snapshots; it fails with `NotSerializableException`
 instead of producing a partial object graph.
 
 ## Testing & Quality
@@ -1166,18 +1146,18 @@ Pixel-level regression testing via [`GoldenImageAssert`](src/test/kotlin/io/blue
 
 [`ImagePropertyTest`](src/test/kotlin/io/bluetape4k/images/property/ImagePropertyTest.kt) verifies 10 invariants across 6 deterministic image inputs (320×240, 640×480, 1280×720, 3840×2160 solid/gradient/noise).
 
-| # | Invariant | Description |
-|---|-----------|-------------|
-| 1 | scaleTo dimensions | `scaleTo(w, h)` output is exactly `w×h` |
-| 2 | fit bounds | `fit(w, h)` output is within `w×h` |
-| 3 | grayscale R==G==B | Every pixel has R, G, B equal after grayscale |
-| 4 | resize round-trip | decode→encode→decode yields same dimensions |
-| 5 | PNG bytes > 0 | PNG encoding always produces non-empty bytes |
-| 6 | sepia ≠ grayscale | sepia and grayscale produce distinct results |
-| 7 | scaleTo idempotent | `scaleTo` twice with same target is identical |
-| 8 | resize shrinks bytes | Downscaled JPEG ≤ original JPEG in bytes |
-| 9 | solid JPEG round-trip | Solid-color JPEG survives encode→decode |
-| 10 | filter preserves size | `filter()` keeps original width and height |
+| #  | Invariant             | Description                                   |
+|----|-----------------------|-----------------------------------------------|
+| 1  | scaleTo dimensions    | `scaleTo(w, h)` output is exactly `w×h`       |
+| 2  | fit bounds            | `fit(w, h)` output is within `w×h`            |
+| 3  | grayscale R==G==B     | Every pixel has R, G, B equal after grayscale |
+| 4  | resize round-trip     | decode→encode→decode yields same dimensions   |
+| 5  | PNG bytes > 0         | PNG encoding always produces non-empty bytes  |
+| 6  | sepia ≠ grayscale     | sepia and grayscale produce distinct results  |
+| 7  | scaleTo idempotent    | `scaleTo` twice with same target is identical |
+| 8  | resize shrinks bytes  | Downscaled JPEG ≤ original JPEG in bytes      |
+| 9  | solid JPEG round-trip | Solid-color JPEG survives encode→decode       |
+| 10 | filter preserves size | `filter()` keeps original width and height    |
 
 ```bash
 # Run PBT + golden tests

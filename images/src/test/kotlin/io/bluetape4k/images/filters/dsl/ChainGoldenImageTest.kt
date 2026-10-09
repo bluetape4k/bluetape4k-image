@@ -2,7 +2,7 @@ package io.bluetape4k.images.filters.dsl
 
 import com.sksamuel.scrimage.ImmutableImage
 import io.bluetape4k.images.filters.AbstractFilterTest
-import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.logging.KLogging
 import org.junit.jupiter.api.Test
 import java.awt.image.BufferedImage
 
@@ -14,9 +14,9 @@ import java.awt.image.BufferedImage
  *
  * 골든 이미지 재생성: [GoldenImageGeneratorTest] 참조.
  */
-class ChainGoldenImageTest : AbstractFilterTest() {
+class ChainGoldenImageTest: AbstractFilterTest() {
 
-    companion object : KLoggingChannel()
+    companion object: KLogging()
 
     /** 256×256 컬러 타일 테스트 이미지 (GoldenImageGeneratorTest와 동일) */
     private fun createTestImage(): ImmutableImage {

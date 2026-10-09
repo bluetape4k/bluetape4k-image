@@ -2,32 +2,42 @@ package io.bluetape4k.images.privacy
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeInstanceOf
+import io.bluetape4k.assertions.shouldBeNull
+import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldHaveSize
-import io.bluetape4k.assertions.shouldNotContain
 import io.bluetape4k.assertions.shouldNotBeNull
-import kotlinx.coroutines.test.runTest
+import io.bluetape4k.assertions.shouldNotContain
+import io.bluetape4k.concurrent.await
+import io.bluetape4k.concurrent.get
+import io.bluetape4k.io.lookup
+import io.bluetape4k.io.serializer.BinarySerializers
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
+import io.bluetape4k.support.toUtf8Bytes
 import org.junit.jupiter.api.Test
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.IOException
-import java.io.ObjectInputStream
-import java.io.ObjectOutputStream
 import java.io.OutputStream
 import java.io.Serializable
-import java.nio.charset.StandardCharsets
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
 import kotlin.time.Duration.Companion.seconds
 
 class PrivacyDerivativeSerializationTest {
+
+    companion object: KLogging()
 
     @Test
     fun `payload uses versioned envelope and round trips through Jackson 3`() {
         val payload = payload()
 
         val json = PrivacyDerivativeJackson.encodePayload(payload)
+
+        log.debug { "json=$json" }
         json shouldContain "\"schemaVersion\":1"
         json shouldContain "\"kind\":\"payload\""
         json shouldNotContain "ImmutableImage"
@@ -40,40 +50,43 @@ class PrivacyDerivativeSerializationTest {
     fun `typed codec rejects unknown schema and kind mismatch`() {
         val payload = payload()
 
-        val unsupported = PrivacyDerivativeJackson.encodePayload(payload)
+        val unsupported = PrivacyDerivativeJackson
+            .encodePayload(payload)
             .replace("\"schemaVersion\":1", "\"schemaVersion\":99")
+
         val unsupportedError = assertFailsWith<PrivacyDerivativeCodecException> {
             PrivacyDerivativeJackson.decodePayload(unsupported)
         }
         unsupportedError.reason shouldBeEqualTo PrivacyDerivativeCodecReason.UNSUPPORTED_SCHEMA_VERSION
 
-        val mismatch = PrivacyDerivativeJackson.encodePayload(payload)
+        val mismatch = PrivacyDerivativeJackson
+            .encodePayload(payload)
             .replace("\"kind\":\"payload\"", "\"kind\":\"report\"")
+
         val mismatchError = assertFailsWith<PrivacyDerivativeCodecException> {
             PrivacyDerivativeJackson.decodePayload(mismatch)
         }
         mismatchError.reason shouldBeEqualTo PrivacyDerivativeCodecReason.TYPE_MISMATCH
     }
 
+    @Suppress("DEPRECATION")
     @Test
     fun `payload copies bytes and collections across Java serialization`() {
         val bytes = byteArrayOf(1, 2, 3)
         val payload = payload(bytes)
         bytes[0] = 9
 
-        val serialized = ByteArrayOutputStream().also { output ->
-            ObjectOutputStream(output).use { it.writeObject(payload) }
-        }.toByteArray()
-        val roundTrip = ObjectInputStream(ByteArrayInputStream(serialized)).use {
-            it.readObject() as PrivacyDerivativePayload
-        }
+        val serialized = BinarySerializers.Jdk.serialize(payload)
+        val roundTrip = BinarySerializers.Jdk.deserialize<PrivacyDerivativePayload>(serialized).shouldNotBeNull()
 
         roundTrip.bytes.contentEquals(byteArrayOf(1, 2, 3)) shouldBeEqualTo true
         roundTrip shouldBeEqualTo payload
         roundTrip.report.appliedActions shouldHaveSize 1
+
         assertFailsWith<UnsupportedOperationException> {
             @Suppress("UNCHECKED_CAST")
-            (roundTrip.report.appliedActions as MutableList<PrivacyWireDerivativeActionId>)
+            roundTrip.report
+                .appliedActions.shouldBeInstanceOf<MutableList<PrivacyWireDerivativeActionId>>()
                 .add(PrivacyWireDerivativeActionId.REDACT)
         }
     }
@@ -81,19 +94,19 @@ class PrivacyDerivativeSerializationTest {
     @Test
     fun `snapshot classes expose an explicit serialVersionUID`() {
         listOf(
-            PrivacyThumbnailSizeSnapshot::class.java,
-            PrivacyRedactionSnapshot::class.java,
-            PrivacyDerivativeOptionsSnapshot::class.java,
-            PrivacyImageDimensionsSnapshot::class.java,
-            PrivacyAppliedRedactionSnapshot::class.java,
-            PrivacyMetadataVerificationSnapshot::class.java,
-            PrivacyDerivativeFailureSnapshot::class.java,
-            PrivacyDerivativeReportSnapshot::class.java,
-            PrivacyDerivativePayload::class.java,
-            PrivacyDerivativeBatchSnapshot::class.java,
-        ).forEach { type ->
-            Serializable::class.java.isAssignableFrom(type) shouldBeEqualTo true
-            type.getDeclaredField("serialVersionUID").getLong(null) shouldBeEqualTo 1L
+            PrivacyThumbnailSizeSnapshot::class,
+            PrivacyRedactionSnapshot::class,
+            PrivacyDerivativeOptionsSnapshot::class,
+            PrivacyImageDimensionsSnapshot::class,
+            PrivacyAppliedRedactionSnapshot::class,
+            PrivacyMetadataVerificationSnapshot::class,
+            PrivacyDerivativeFailureSnapshot::class,
+            PrivacyDerivativeReportSnapshot::class,
+            PrivacyDerivativePayload::class,
+            PrivacyDerivativeBatchSnapshot::class,
+        ).forEach { clazz ->
+            Serializable::class.java.isAssignableFrom(clazz.java).shouldBeTrue()
+            clazz.lookup().serialVersionUID shouldBeEqualTo 1L
         }
     }
 
@@ -110,6 +123,7 @@ class PrivacyDerivativeSerializationTest {
 
         PrivacyDerivativeJackson.decodeOptions(PrivacyDerivativeJackson.encodeOptions(snapshot))
             .toOptions().outputFormat shouldBeEqualTo PrivacyDerivativeFormat.Jpeg
+
         PrivacyDerivativeJackson.decodeOptions(PrivacyDerivativeJackson.encodeOptionsBytes(snapshot))
             .toOptions().outputFormat shouldBeEqualTo PrivacyDerivativeFormat.Jpeg
     }
@@ -123,6 +137,7 @@ class PrivacyDerivativeSerializationTest {
         val batchJson = PrivacyDerivativeJackson.encodeBatch(batch)
         PrivacyDerivativeJackson.decodeBatch(batchJson) shouldBeEqualTo batch
         PrivacyDerivativeJackson.decodeBatch(PrivacyDerivativeJackson.encodeBatchBytes(batch)) shouldBeEqualTo batch
+
         assertFailsWith<IllegalArgumentException> {
             PrivacyDerivativeBatchSnapshot("fixture.png", null, null)
         }
@@ -143,6 +158,8 @@ class PrivacyDerivativeSerializationTest {
             elapsedMillis = report.elapsedMillis,
             metadataVerification = report.metadataVerification,
         )
+        log.debug { "expanded=$expanded" }
+
         assertFailsWith<PrivacyDerivativeCodecException> {
             PrivacyDerivativeJackson.decodeReport(
                 PrivacyDerivativeJackson.encodeReport(expanded),
@@ -155,21 +172,25 @@ class PrivacyDerivativeSerializationTest {
     fun `codec rejects unknown fields, malformed JSON, and oversized payload`() {
         val json = PrivacyDerivativeJackson.encodePayload(payload())
         val unknown = json.replace("\"kind\":\"payload\"", "\"kind\":\"payload\",\"extra\":true")
-        assertFailsWith<PrivacyDerivativeCodecException> { PrivacyDerivativeJackson.decodePayload(unknown) }
-            .reason shouldBeEqualTo PrivacyDerivativeCodecReason.UNKNOWN_FIELD
+
         assertFailsWith<PrivacyDerivativeCodecException> {
-            PrivacyDerivativeJackson.decodePayload(ByteArrayInputStream(unknown.toByteArray(StandardCharsets.UTF_8)))
+            PrivacyDerivativeJackson.decodePayload(unknown)
+        }.reason shouldBeEqualTo PrivacyDerivativeCodecReason.UNKNOWN_FIELD
+
+        assertFailsWith<PrivacyDerivativeCodecException> {
+            PrivacyDerivativeJackson.decodePayload(ByteArrayInputStream(unknown.toUtf8Bytes()))
         }.reason shouldBeEqualTo PrivacyDerivativeCodecReason.UNKNOWN_FIELD
 
         val unknownEnum = json.replace("\"ENCODED\"", "\"FUTURE_ACTION\"")
-        assertFailsWith<PrivacyDerivativeCodecException> { PrivacyDerivativeJackson.decodePayload(unknownEnum) }
-            .reason shouldBeEqualTo PrivacyDerivativeCodecReason.INVALID_VALUE
+        assertFailsWith<PrivacyDerivativeCodecException> {
+            PrivacyDerivativeJackson.decodePayload(unknownEnum)
+        }.reason shouldBeEqualTo PrivacyDerivativeCodecReason.INVALID_VALUE
 
         val malformed = assertFailsWith<PrivacyDerivativeCodecException> {
             PrivacyDerivativeJackson.decodePayload("{")
         }
         malformed.reason shouldBeEqualTo PrivacyDerivativeCodecReason.MALFORMED_JSON
-        malformed.cause shouldBeEqualTo null
+        malformed.cause.shouldBeNull()
         malformed.message shouldNotContain "PrivacyDerivative"
 
         val limits = PrivacyDerivativeJsonLimits(maxPayloadBytes = 2)
@@ -184,12 +205,12 @@ class PrivacyDerivativeSerializationTest {
         val output = RecordingOutputStream()
 
         PrivacyDerivativeJackson.encodePayloadTo(payload, output)
-        output.closed shouldBeEqualTo false
+
+        output.closed.shouldBeFalse()
         output.flushCount shouldBeEqualTo 0
 
-        val trailing = ByteArrayInputStream(
-            output.toByteArray() + "{}".toByteArray(StandardCharsets.UTF_8),
-        )
+        val trailing = ByteArrayInputStream(output.toByteArray() + "{}".toUtf8Bytes())
+
         val error = assertFailsWith<PrivacyDerivativeCodecException> {
             PrivacyDerivativeJackson.decodePayload(trailing)
         }
@@ -199,10 +220,11 @@ class PrivacyDerivativeSerializationTest {
     @Test
     fun `streaming codec enforces document limit before materializing a byte array`() {
         val json = PrivacyDerivativeJackson.encodePayload(payload())
+
         val error = assertFailsWith<PrivacyDerivativeCodecException> {
             PrivacyDerivativeJackson.decodePayload(
-                ByteArrayInputStream(json.toByteArray(StandardCharsets.UTF_8)),
-                PrivacyDerivativeJsonLimits(maxJsonBytes = json.toByteArray(StandardCharsets.UTF_8).size - 1),
+                ByteArrayInputStream(json.toUtf8Bytes()),
+                PrivacyDerivativeJsonLimits(maxJsonBytes = json.toUtf8Bytes().size - 1),
             )
         }
         error.reason shouldBeEqualTo PrivacyDerivativeCodecReason.LIMIT_EXCEEDED
@@ -226,21 +248,24 @@ class PrivacyDerivativeSerializationTest {
         val pool = Executors.newFixedThreadPool(16)
         val ready = CountDownLatch(16)
         val start = CountDownLatch(1)
+
+        val expectedPayload = payload()
         try {
-            val futures = (0 until 16).map {
+            val futures = List(16) {
                 pool.submit {
                     ready.countDown()
-                    start.await(5, TimeUnit.SECONDS)
+                    start.await(5.seconds)
+
                     repeat(100) {
                         PrivacyDerivativeJackson.decodePayload(
-                            PrivacyDerivativeJackson.encodePayload(payload()),
-                        ) shouldBeEqualTo payload()
+                            PrivacyDerivativeJackson.encodePayload(expectedPayload),
+                        ) shouldBeEqualTo expectedPayload
                     }
                 }
             }
-            ready.await(5, TimeUnit.SECONDS) shouldBeEqualTo true
+            ready.await(5.seconds).shouldBeTrue()
             start.countDown()
-            futures.forEach { it.get(30, TimeUnit.SECONDS) }
+            futures.forEach { it.get(30.seconds) }
         } finally {
             pool.shutdownNow()
         }
@@ -279,7 +304,7 @@ class PrivacyDerivativeSerializationTest {
             ),
         )
 
-    private class RecordingOutputStream : OutputStream() {
+    private class RecordingOutputStream: OutputStream() {
         private val delegate = ByteArrayOutputStream()
         var closed: Boolean = false
             private set
@@ -301,13 +326,13 @@ class PrivacyDerivativeSerializationTest {
         fun toByteArray(): ByteArray = delegate.toByteArray()
     }
 
-    private class FailingInputStream : ByteArrayInputStream(byteArrayOf('{'.code.toByte())) {
+    private class FailingInputStream: ByteArrayInputStream(byteArrayOf('{'.code.toByte())) {
         override fun read(buffer: ByteArray, offset: Int, length: Int): Int = throw IOException("fixture")
 
         override fun read(): Int = throw IOException("fixture")
     }
 
-    private class FailingOutputStream : OutputStream() {
+    private class FailingOutputStream: OutputStream() {
         override fun write(b: Int) = throw IOException("fixture")
     }
 }

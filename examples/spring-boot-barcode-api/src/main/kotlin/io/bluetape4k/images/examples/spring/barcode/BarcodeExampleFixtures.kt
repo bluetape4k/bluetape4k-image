@@ -1,5 +1,7 @@
 package io.bluetape4k.images.examples.spring.barcode
 
+import io.bluetape4k.support.requireNotNull
+
 internal enum class BarcodeExampleFixture(val resource: String) {
     SAMPLE("barcodes/qr.png"),
     NO_RESULT("barcodes/no-result.png"),
@@ -11,9 +13,9 @@ internal class BarcodeExampleFixtures internal constructor(
 ) {
     private val resources: Map<BarcodeExampleFixture, ByteArray> =
         BarcodeExampleFixture.entries.associateWith { fixture ->
-            requireNotNull(resourceLoader(fixture.resource)) {
-                "Required barcode example fixture is missing: ${fixture.resource}"
-            }.copyOf()
+            resourceLoader(fixture.resource)
+                .requireNotNull { "Required barcode example fixture is missing: ${fixture.resource}" }
+                .copyOf()
         }
 
     fun bytes(fixture: BarcodeExampleFixture): ByteArray =

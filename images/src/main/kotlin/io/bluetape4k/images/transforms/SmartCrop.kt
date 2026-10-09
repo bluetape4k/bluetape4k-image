@@ -6,14 +6,14 @@ import io.bluetape4k.images.transforms.internal.getArgbPixels
 import io.bluetape4k.images.transforms.internal.greenComponent
 import io.bluetape4k.images.transforms.internal.redComponent
 import io.bluetape4k.images.transforms.internal.toIntArgb
-import io.bluetape4k.logging.KotlinLogging
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
-private val log = KotlinLogging.logger {}
+private object SmartCropLogger: KLogging()
 
 /**
  * 다운샘플링 시 가장 긴 변의 목표 픽셀 수.
@@ -53,6 +53,8 @@ data class AspectRatio(val width: Int, val height: Int) {
 
         /** 4:3 표준 비율. */
         val STANDARD = AspectRatio(4, 3)
+
+        private const val serialVersionUID = 1L
     }
 }
 
@@ -71,7 +73,7 @@ sealed interface SaliencyStrategy {
      * - 얼굴/객체 인식이 아니라 텍스처/엣지가 풍부한 영역을 선호.
      * - 단색 배경 위에 텍스트가 있는 이미지처럼 엣지가 또렷한 콘텐츠에 효과적.
      */
-    data object SobelEnergy : SaliencyStrategy
+    data object SobelEnergy: SaliencyStrategy
 }
 
 /**
@@ -80,7 +82,7 @@ sealed interface SaliencyStrategy {
  * privacy redaction처럼 crop 결과와 함께 원본 좌표를 변환해야 하는 호출자는 이
  * window의 원점을 사용해 crop-local 좌표로 옮겨야 합니다.
  */
-internal class SmartCropBounds(
+internal data class SmartCropBounds(
     val x: Int,
     val y: Int,
     val width: Int,
@@ -90,7 +92,7 @@ internal class SmartCropBounds(
 /**
  * smart crop 결과 이미지와 원본 좌표계의 crop window를 함께 보관합니다.
  */
-internal class SmartCropResult(
+internal data class SmartCropResult(
     val image: ImmutableImage,
     val crop: SmartCropBounds,
 )
@@ -194,9 +196,9 @@ internal fun ImmutableImage.smartCropWithBounds(
     for (y in 0..maxY) {
         for (x in 0..maxX) {
             val sum = integ[(y + winH) * iw + (x + winW)] -
-                integ[y * iw + (x + winW)] -
-                integ[(y + winH) * iw + x] +
-                integ[y * iw + x]
+                    integ[y * iw + (x + winW)] -
+                    integ[(y + winH) * iw + x] +
+                    integ[y * iw + x]
             if (sum > bestSum) {
                 bestSum = sum
                 bestX = x
@@ -222,9 +224,9 @@ internal fun ImmutableImage.smartCropWithBounds(
         restoredH = (winH / dsScale).toInt().coerceIn(1, origH - restoredY)
     }
 
-    log.debug {
+    SmartCropLogger.log.debug {
         "smartCrop: orig=${origW}x${origH}, ds=${dsW}x${dsH} (scale=$dsScale), " +
-            "win=${winW}x${winH} at ds($bestX,$bestY) -> orig(${restoredX},${restoredY}) ${restoredW}x${restoredH}"
+                "win=${winW}x${winH} at ds($bestX,$bestY) -> orig(${restoredX},${restoredY}) ${restoredW}x${restoredH}"
     }
 
     return SmartCropResult(
@@ -280,7 +282,8 @@ fun ImmutableImage.smartCropTo(
     width: Int,
     height: Int,
     strategy: SaliencyStrategy = SaliencyStrategy.SobelEnergy,
-): ImmutableImage = smartCropToWithBounds(width, height, strategy).image
+): ImmutableImage =
+    smartCropToWithBounds(width, height, strategy).image
 
 /**
  * 코루틴 환경에서 [smartCrop] 을 실행합니다.
@@ -302,7 +305,10 @@ fun ImmutableImage.smartCropTo(
 suspend fun ImmutableImage.suspendSmartCrop(
     aspectRatio: AspectRatio,
     strategy: SaliencyStrategy = SaliencyStrategy.SobelEnergy,
-): ImmutableImage = withContext(Dispatchers.Default) { smartCrop(aspectRatio, strategy) }
+): ImmutableImage =
+    withContext(Dispatchers.Default) {
+        smartCrop(aspectRatio, strategy)
+    }
 
 /**
  * Sobel 엣지 magnitude (L1 norm) 맵을 계산합니다.

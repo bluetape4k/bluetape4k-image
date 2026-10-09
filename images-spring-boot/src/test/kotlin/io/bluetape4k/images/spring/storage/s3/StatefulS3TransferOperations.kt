@@ -1,12 +1,17 @@
 package io.bluetape4k.images.spring.storage.s3
 
+import io.bluetape4k.logging.coroutines.KLoggingChannel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.nio.file.Files
 import java.nio.file.Path
 
 /** [StatefulS3Operations]와 같은 object state를 사용하는 Path upload fixture입니다. */
 internal class StatefulS3TransferOperations(
     private val operations: StatefulS3Operations,
-) : S3PathTransferOperations {
+): S3PathTransferOperations {
+
+    companion object: KLoggingChannel()
 
     override suspend fun uploadFile(
         bucket: String,
@@ -14,7 +19,7 @@ internal class StatefulS3TransferOperations(
         source: Path,
         contentType: String?,
     ): String? {
-        val bytes = Files.readAllBytes(source)
+        val bytes = withContext(Dispatchers.IO) { Files.readAllBytes(source) }
         operations.store(key, bytes, contentType)
         return "fixture-${bytes.contentHashCode()}"
     }

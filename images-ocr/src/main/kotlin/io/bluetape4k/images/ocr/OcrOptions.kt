@@ -1,12 +1,16 @@
 package io.bluetape4k.images.ocr
 
+import io.bluetape4k.ToStringBuilder
+import io.bluetape4k.support.hashOf
+import io.bluetape4k.support.requireGe
+import io.bluetape4k.support.requireGt
+import io.bluetape4k.support.requireInRange
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.requireNotEmpty
-import io.bluetape4k.support.requirePositiveNumber
+import net.sourceforge.tess4j.ITessAPI
 import java.awt.Rectangle
 import java.io.Serializable
-import java.util.Collections
-import net.sourceforge.tess4j.ITessAPI
+import java.util.*
 
 /**
  * Tesseract 기반 OCR recognition option입니다.
@@ -24,27 +28,21 @@ import net.sourceforge.tess4j.ITessAPI
  * val options = OcrOptions(languages = listOf("eng", "kor"))
  * ```
  */
-@Suppress("TooManyFunctions")
 class OcrOptions(
     languages: List<String> = listOf(DEFAULT_LANGUAGE),
-    tessdataPath: String? = null,
-    engineMode: TesseractEngineMode = TesseractEngineMode.DEFAULT,
-    pageSegmentationMode: TesseractPageSegmentationMode = TesseractPageSegmentationMode.AUTO,
+    val tessdataPath: String? = null,
+    val engineMode: TesseractEngineMode = TesseractEngineMode.DEFAULT,
+    val pageSegmentationMode: TesseractPageSegmentationMode = TesseractPageSegmentationMode.AUTO,
     variables: Map<String, String> = emptyMap(),
     configs: List<String> = emptyList(),
-    trimText: Boolean = true,
-    structuredDetail: OcrStructuredDetail = OcrStructuredDetail.PLAIN_TEXT,
+    val trimText: Boolean = true,
+    val structuredDetail: OcrStructuredDetail = OcrStructuredDetail.PLAIN_TEXT,
     regions: List<OcrRegion> = emptyList(),
 ): Serializable {
 
     val languages: List<String> = Collections.unmodifiableList(languages.toList())
-    val tessdataPath: String? = tessdataPath
-    val engineMode: TesseractEngineMode = engineMode
-    val pageSegmentationMode: TesseractPageSegmentationMode = pageSegmentationMode
     val variables: Map<String, String> = Collections.unmodifiableMap(variables.toMap())
     val configs: List<String> = Collections.unmodifiableList(configs.toList())
-    val trimText: Boolean = trimText
-    val structuredDetail: OcrStructuredDetail = structuredDetail
     val regions: List<OcrRegion> = Collections.unmodifiableList(regions.toList())
 
     init {
@@ -93,36 +91,37 @@ class OcrOptions(
         regions,
     )
 
-    override fun equals(other: Any?): Boolean =
-        this === other || (other is OcrOptions &&
-            languages == other.languages &&
-            tessdataPath == other.tessdataPath &&
-            engineMode == other.engineMode &&
-            pageSegmentationMode == other.pageSegmentationMode &&
-            variables == other.variables &&
-            configs == other.configs &&
-            trimText == other.trimText &&
-            structuredDetail == other.structuredDetail &&
-            regions == other.regions)
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other == null) return false
 
-    override fun hashCode(): Int {
-        var result = languages.hashCode()
-        result = 31 * result + (tessdataPath?.hashCode() ?: 0)
-        result = 31 * result + engineMode.hashCode()
-        result = 31 * result + pageSegmentationMode.hashCode()
-        result = 31 * result + variables.hashCode()
-        result = 31 * result + configs.hashCode()
-        result = 31 * result + trimText.hashCode()
-        result = 31 * result + structuredDetail.hashCode()
-        result = 31 * result + regions.hashCode()
-        return result
+        return other is OcrOptions &&
+                languages == other.languages &&
+                tessdataPath == other.tessdataPath &&
+                engineMode == other.engineMode &&
+                pageSegmentationMode == other.pageSegmentationMode &&
+                variables == other.variables &&
+                configs == other.configs &&
+                trimText == other.trimText &&
+                structuredDetail == other.structuredDetail &&
+                regions == other.regions
     }
 
+    override fun hashCode(): Int =
+        hashOf(languages, tessdataPath, engineMode, pageSegmentationMode, variables, configs, trimText)
+
     override fun toString(): String =
-        "OcrOptions(languages=$languages, tessdataPath=$tessdataPath, " +
-            "engineMode=$engineMode, pageSegmentationMode=$pageSegmentationMode, " +
-            "variables=$variables, configs=$configs, trimText=$trimText, " +
-            "structuredDetail=$structuredDetail, regions=$regions)"
+        ToStringBuilder(this)
+            .add("languages", languages)
+            .add("tessdataPath", tessdataPath)
+            .add("engineMode", engineMode)
+            .add("pageSegmentationMode", pageSegmentationMode)
+            .add("variables", variables)
+            .add("configs", configs)
+            .add("trimText", trimText)
+            .add("structuredDetail", structuredDetail)
+            .add("regions", regions)
+            .toString()
 
     private fun readResolve(): Any = copy()
 
@@ -163,13 +162,6 @@ data class OcrBoundingBox private constructor(
     val height: Int,
 ): Serializable {
 
-    init {
-        require(x >= 0) { "x must be >= 0, but was $x" }
-        require(y >= 0) { "y must be >= 0, but was $y" }
-        width.requirePositiveNumber("width")
-        height.requirePositiveNumber("height")
-    }
-
     /** Tess4J region API에 넘길 AWT rectangle로 이 box를 변환합니다. */
     fun toAwtRectangle(): Rectangle =
         Rectangle(x, y, width, height)
@@ -186,8 +178,14 @@ data class OcrBoundingBox private constructor(
             y: Int,
             width: Int,
             height: Int,
-        ): OcrBoundingBox =
-            OcrBoundingBox(x, y, width, height)
+        ): OcrBoundingBox {
+            x.requireGe(0, "x")
+            y.requireGe(0, "y")
+            width.requireGt(0, "width")
+            height.requireGt(0, "height")
+
+            return OcrBoundingBox(x, y, width, height)
+        }
 
         fun from(rectangle: Rectangle?): OcrBoundingBox? =
             rectangle
@@ -216,18 +214,16 @@ data class OcrRegion private constructor(
     val id: String?,
 ): Serializable {
 
-    init {
-        id?.requireNotBlank("id")
-    }
-
     companion object {
         private const val serialVersionUID: Long = 3158388464829739136L
 
         operator fun invoke(
             boundingBox: OcrBoundingBox,
             id: String? = null,
-        ): OcrRegion =
-            OcrRegion(boundingBox, id)
+        ): OcrRegion {
+            id?.requireNotBlank("id")
+            return OcrRegion(boundingBox, id)
+        }
     }
 }
 
@@ -285,8 +281,8 @@ data class OcrPage(
 ): Serializable {
 
     init {
-        pageIndex.requireNonNegative("pageIndex")
-        confidence?.requireConfidence("confidence")
+        pageIndex.requireGe(0, "pageIndex")
+        confidence?.requireInRange(CONFIDENCE_MIN, CONFIDENCE_MAX, "confidence")
     }
 
     companion object {
@@ -306,8 +302,8 @@ data class OcrTextBlock(
 ): Serializable {
 
     init {
-        pageIndex.requireNonNegative("pageIndex")
-        confidence?.requireConfidence("confidence")
+        pageIndex.requireGe(0, "pageIndex")
+        confidence?.requireInRange(CONFIDENCE_MIN, CONFIDENCE_MAX, "confidence")
     }
 
     companion object {
@@ -327,8 +323,8 @@ data class OcrTextLine(
 ): Serializable {
 
     init {
-        pageIndex.requireNonNegative("pageIndex")
-        confidence?.requireConfidence("confidence")
+        pageIndex.requireGe(0, "pageIndex")
+        confidence?.requireInRange(CONFIDENCE_MIN, CONFIDENCE_MAX, "confidence")
     }
 
     companion object {
@@ -348,8 +344,10 @@ data class OcrWord(
 ): Serializable {
 
     init {
-        pageIndex.requireNonNegative("pageIndex")
-        confidence?.requireConfidence("confidence")
+//        pageIndex.requireNonNegative("pageIndex")
+//        confidence?.requireConfidence("confidence")
+        pageIndex.requireGe(0, "pageIndex")
+        confidence?.requireInRange(CONFIDENCE_MIN, CONFIDENCE_MAX, "confidence")
     }
 
     companion object {
@@ -391,14 +389,14 @@ enum class TesseractPageSegmentationMode(
     RAW_LINE(ITessAPI.TessPageSegMode.PSM_RAW_LINE),
 }
 
-internal fun Int.requireNonNegative(name: String) {
-    require(this >= 0) { "$name must be >= 0, but was $this" }
-}
-
-internal fun Double.requireConfidence(name: String) {
-    require(isFinite()) { "$name must be finite, but was $this" }
-    require(this in CONFIDENCE_MIN..CONFIDENCE_MAX) { "$name must be in 0.0..100.0, but was $this" }
-}
+//internal fun Int.requireNonNegative(name: String) {
+//    require(this >= 0) { "$name must be >= 0, but was $this" }
+//}
+//
+//internal fun Double.requireConfidence(name: String) {
+//    require(isFinite()) { "$name must be finite, but was $this" }
+//    require(this in CONFIDENCE_MIN..CONFIDENCE_MAX) { "$name must be in 0.0..100.0, but was $this" }
+//}
 
 private const val CONFIDENCE_MIN = 0.0
 private const val CONFIDENCE_MAX = 100.0

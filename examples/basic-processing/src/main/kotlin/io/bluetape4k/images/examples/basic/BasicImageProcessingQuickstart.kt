@@ -7,7 +7,9 @@ import io.bluetape4k.images.suspendLoadImage
 import io.bluetape4k.images.suspendWrite
 import io.bluetape4k.images.transforms.smartCropTo
 import io.bluetape4k.images.withGraphics
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import java.awt.Color
 import java.awt.Font
 import java.nio.file.Files
@@ -33,7 +35,9 @@ object BasicImageProcessingQuickstart {
     suspend fun generate(
         outputDirectory: Path = Path("build/tmp/basic-processing"),
     ): List<GeneratedImage> {
-        Files.createDirectories(outputDirectory)
+        withContext(Dispatchers.IO) {
+            Files.createDirectories(outputDirectory)
+        }
 
         val cafe = suspendLoadImage(resourcePath(CAFE_IMAGE))
         val landscape = suspendLoadImage(resourcePath(LANDSCAPE_IMAGE))

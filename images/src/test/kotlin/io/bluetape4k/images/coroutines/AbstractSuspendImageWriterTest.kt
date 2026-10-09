@@ -37,19 +37,19 @@ abstract class AbstractSuspendImageWriterTest: AbstractImageTest() {
     @ParameterizedTest
     @MethodSource("getImageFileNames")
     fun `use async image writer`(filename: String, tempFolder: TempFolder) = runSuspendIO {
-        measureTimeMillis {
+        val elapsedMillis = measureTimeMillis {
             val image = suspendImmutableImageOf(Path.of("$BASE_PATH/$filename.jpg"))
-
             val bytes = image.forSuspendWriter(writer).bytes()
+
             if (useTempFolder) {
                 val dest = tempFolder.createFile("${filename}_compressed.$imageFormat")
                 dest.toPath().writeSuspending(bytes)
             } else {
                 Path.of("$BASE_PATH/${filename}_compressed.$imageFormat").writeAsync(bytes).await()
             }
-        }.apply {
-            log.info { "Compressed $filename.$imageFormat in $this ms" }
         }
+
+        log.info { "Compressed $filename.$imageFormat in $elapsedMillis ms" }
     }
 
     @ParameterizedTest

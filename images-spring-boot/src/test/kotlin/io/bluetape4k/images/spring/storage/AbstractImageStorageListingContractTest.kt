@@ -2,11 +2,14 @@ package io.bluetape4k.images.spring.storage
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeInstanceOf
 import io.bluetape4k.assertions.shouldBeLessOrEqualTo
+import io.bluetape4k.assertions.shouldHaveSize
 import io.bluetape4k.images.spring.ImageObjectKey
 import io.bluetape4k.images.spring.UploadOptions
+import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.logging.debug
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
@@ -16,6 +19,8 @@ import org.junit.jupiter.api.TestInstance
 /** [ImageStorage.list] 구현체가 공유하는 cold Flow와 cancellation 계약입니다. */
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
 abstract class AbstractImageStorageListingContractTest {
+
+    companion object: KLoggingChannel()
 
     protected abstract val storage: ImageStorage
 
@@ -45,14 +50,15 @@ abstract class AbstractImageStorageListingContractTest {
 
         val listing = storage.list(prefix)
         listInvocationCount()?.shouldBeEqualTo(0)
+
         prepareAndUpload(late)
         prepareAndUpload(outside)
         prepareAndUpload(siblingPrefix)
 
         val listed = listing.toList()
+        log.debug { "listed=$listed" }
 
-        listed.map(ImageObjectKey::fullKey).sorted() shouldBeEqualTo
-            listOf(first.fullKey, late.fullKey).sorted()
+        listed.map(ImageObjectKey::fullKey).sorted() shouldBeEqualTo listOf(first.fullKey, late.fullKey).sorted()
         listInvocationCount()?.shouldBeEqualTo(1)
         listEmissionCount()?.shouldBeEqualTo(2)
         listEnumerationCount()?.shouldBeEqualTo(2)
@@ -70,7 +76,8 @@ abstract class AbstractImageStorageListingContractTest {
 
         val listed = storage.list(prefix).take(1).toList()
 
-        listed.size shouldBeEqualTo 1
+        log.debug { "listed=$listed" }
+        listed shouldHaveSize 1
         listEmissionCount()?.shouldBeLessOrEqualTo(2)
         listEnumerationCount()?.shouldBeLessOrEqualTo(2)
         assertNoOpenListResources()
@@ -88,7 +95,7 @@ abstract class AbstractImageStorageListingContractTest {
             storage.list(prefix).collect { throw cancellation }
         }
 
-        thrown::class shouldBeEqualTo cancellation::class
+        thrown shouldBeInstanceOf cancellation::class
         thrown.message shouldBeEqualTo cancellation.message
         listEmissionCount()?.shouldBeEqualTo(1)
         assertNoOpenListResources()

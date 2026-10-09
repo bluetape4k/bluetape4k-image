@@ -1,14 +1,15 @@
 package io.bluetape4k.images.scaler
 
+import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeGreaterThan
+import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.images.AbstractImageTest
 import io.bluetape4k.images.ImageFormat
 import io.bluetape4k.images.write
 import io.bluetape4k.junit5.tempfolder.TempFolder
 import io.bluetape4k.junit5.tempfolder.TempFolderTest
-import io.bluetape4k.logging.coroutines.KLoggingChannel
-import io.bluetape4k.assertions.assertFailsWith
-import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldBeGreaterThan
+import io.bluetape4k.logging.KLogging
 import org.junit.jupiter.api.Test
 import java.awt.image.BufferedImage
 import javax.imageio.ImageIO
@@ -16,7 +17,7 @@ import javax.imageio.ImageIO
 @TempFolderTest
 class ImageScalerTest: AbstractImageTest() {
 
-    companion object: KLoggingChannel()
+    companion object: KLogging()
 
     private val needManualView = false
 
@@ -36,7 +37,7 @@ class ImageScalerTest: AbstractImageTest() {
             scaled.height shouldBeGreaterThan 0
 
             scaled.writeJpg("$BASE_PATH/cafe_ratio.jpg")
-            scaled.write(ImageFormat.JPG, tempFolder.createFile())
+            scaled.write(ImageFormat.JPG, tempFolder.createFile()).shouldBeTrue()
         }
     }
 
@@ -50,7 +51,7 @@ class ImageScalerTest: AbstractImageTest() {
             scaled.height shouldBeEqualTo 100
 
             scaled.writeJpg("$BASE_PATH/cafe_fixed.jpg")
-            scaled.write(ImageFormat.JPG, tempFolder.createFile())
+            scaled.write(ImageFormat.JPG, tempFolder.createFile()).shouldBeTrue()
         }
     }
 
@@ -67,7 +68,7 @@ class ImageScalerTest: AbstractImageTest() {
             }
 
             scaled.writeJpg("$BASE_PATH/cafe_proportional.jpg")
-            scaled.write(ImageFormat.JPG, tempFolder.createFile())
+            scaled.write(ImageFormat.JPG, tempFolder.createFile()).shouldBeTrue()
         }
     }
 
@@ -93,7 +94,7 @@ class ImageScalerTest: AbstractImageTest() {
 
             scaled.width shouldBeEqualTo image.width * 2
             scaled.height shouldBeEqualTo image.height * 2
-            scaled.write(ImageFormat.JPG, tempFolder.createFile())
+            scaled.write(ImageFormat.JPG, tempFolder.createFile()).shouldBeTrue()
         }
     }
 }

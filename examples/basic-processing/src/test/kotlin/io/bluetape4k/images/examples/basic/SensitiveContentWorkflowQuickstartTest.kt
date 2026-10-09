@@ -3,22 +3,26 @@ package io.bluetape4k.images.examples.basic
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeGreaterThan
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.images.moderation.SensitiveTreatmentAction
 import io.bluetape4k.images.privacy.PrivacyDerivativeAction
 import io.bluetape4k.junit5.coroutines.runSuspendIO
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
+import org.junit.jupiter.api.Test
 import java.nio.file.Files
 import javax.imageio.ImageIO
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
 
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class SensitiveContentWorkflowQuickstartTest {
+
+    companion object: KLogging()
 
     @Test
     fun `generates deterministic moderation workflow example`() = runSuspendIO {
         val outputDirectory = Files.createTempDirectory("sensitive-workflow-example-")
 
         val result = SensitiveContentWorkflowQuickstart.generate(outputDirectory)
+        log.debug { "result=$result" }
 
         Files.exists(result.previewOutput).shouldBeTrue()
         Files.exists(result.reportOutput).shouldBeTrue()
@@ -26,6 +30,7 @@ class SensitiveContentWorkflowQuickstartTest {
         Files.size(result.reportOutput) shouldBeGreaterThan 0L
 
         val decoded = ImageIO.read(result.previewOutput.toFile())
+        log.debug { "decoded=$decoded" }
         decoded.width shouldBeEqualTo 640
         decoded.height shouldBeEqualTo 480
 
@@ -47,12 +52,13 @@ class SensitiveContentWorkflowQuickstartTest {
             SensitiveWorkflowRegionKind.RASTER_MASK,
         )
         result.actionPlans.count { it.renderableInCoreDerivative } shouldBeEqualTo 2
-        result.preview.report.appliedActions.toSet().contains(PrivacyDerivativeAction.REDACTED).shouldBeTrue()
+        result.preview.report.appliedActions shouldContain PrivacyDerivativeAction.REDACTED
         result.preview.report.redactions.size shouldBeEqualTo 2
 
         val reportText = Files.readString(result.reportOutput)
-        reportText.contains("deterministic fake output").shouldBeTrue()
-        reportText.contains("false-positive").shouldBeTrue()
-        reportText.contains("coreDerivative=false").shouldBeTrue()
+        log.debug { "reportText=$reportText" }
+        reportText shouldContain "deterministic fake output"
+        reportText shouldContain "false-positive"
+        reportText shouldContain "coreDerivative=false"
     }
 }

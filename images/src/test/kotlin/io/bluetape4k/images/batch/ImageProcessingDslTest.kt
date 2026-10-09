@@ -3,16 +3,18 @@ package io.bluetape4k.images.batch
 import com.sksamuel.scrimage.ImmutableImage
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldBeGreaterThan
 import io.bluetape4k.assertions.shouldBeNull
 import io.bluetape4k.assertions.shouldNotBeNull
-import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.images.AbstractImageTest
 import io.bluetape4k.images.coroutines.SuspendJpegWriter
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import org.junit.jupiter.api.Test
 import java.awt.image.BufferedImage
 
-class ImageProcessingDslTest : AbstractImageTest() {
+class ImageProcessingDslTest: AbstractImageTest() {
+
+    companion object: KLogging()
 
     private fun sampleImage(width: Int = 200, height: Int = 150): ImmutableImage {
         val buf = BufferedImage(width, height, BufferedImage.TYPE_INT_RGB)
@@ -29,6 +31,7 @@ class ImageProcessingDslTest : AbstractImageTest() {
         val image = sampleImage()
 
         val result = dsl.apply(image)
+        log.debug { "result=$result" }
 
         // transform이 없으므로 result는 original dimension과 같아야 합니다.
         result.width shouldBeEqualTo image.width
@@ -43,6 +46,7 @@ class ImageProcessingDslTest : AbstractImageTest() {
 
         val result = dsl.apply(sampleImage(200, 150))
 
+        log.debug { "result=$result" }
         result.width shouldBeEqualTo 100
         result.height shouldBeEqualTo 75
     }
@@ -51,7 +55,7 @@ class ImageProcessingDslTest : AbstractImageTest() {
     fun `resize with positive values does not throw`() {
         val dsl = ImageProcessingDsl()
         dsl.resize(50, 50)
-        dsl.selectedWriter() shouldBeEqualTo null  // no writer chosen yet
+        dsl.selectedWriter().shouldBeNull()  // no writer chosen yet
     }
 
     @Test
@@ -128,6 +132,7 @@ class ImageProcessingDslTest : AbstractImageTest() {
 
         val result = dsl.apply(sampleImage(200, 150))
 
+        log.debug { "result=$result" }
         result.width shouldBeEqualTo 100
         result.height shouldBeEqualTo 100
         dsl.selectedWriter().shouldNotBeNull()
@@ -137,8 +142,10 @@ class ImageProcessingDslTest : AbstractImageTest() {
     fun `gaussianBlur accepts positive radius`() {
         val dsl = ImageProcessingDsl()
         dsl.gaussianBlur(radius = 3)
+
         // 예외가 발생하지 않아야 하며 apply는 result를 생성해야 합니다.
         val result = dsl.apply(sampleImage())
+        log.debug { "result=$result" }
         result.shouldNotBeNull()
     }
 

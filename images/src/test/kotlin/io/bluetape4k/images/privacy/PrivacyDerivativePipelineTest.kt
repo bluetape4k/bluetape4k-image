@@ -4,12 +4,15 @@ import com.sksamuel.scrimage.AwtImage
 import com.sksamuel.scrimage.ImmutableImage
 import com.sksamuel.scrimage.metadata.ImageMetadata
 import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.shouldBeEmpty
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeGreaterThan
 import io.bluetape4k.assertions.shouldBeInstanceOf
+import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldHaveSize
 import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.coroutines.flow.extensions.log
 import io.bluetape4k.images.analysis.ExifData
 import io.bluetape4k.images.analysis.ImageMetadataReadOptions
 import io.bluetape4k.images.analysis.ImageMetadataReadResult
@@ -22,6 +25,9 @@ import io.bluetape4k.images.moderation.SensitiveRegion
 import io.bluetape4k.images.moderation.SensitiveRegionGeometry
 import io.bluetape4k.images.thumbnail.ThumbnailCrop
 import io.bluetape4k.images.thumbnail.ThumbnailSize
+import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.logging.debug
+import io.bluetape4k.support.requireNotEmpty
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
@@ -38,6 +44,8 @@ import kotlin.time.Duration.Companion.seconds
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class PrivacyDerivativePipelineTest {
 
+    companion object: KLoggingChannel()
+
     @Test
     fun `suspendPrivacyDerivative strips location metadata and reports derivative actions`() =
         runTest(timeout = 30.seconds) {
@@ -49,6 +57,7 @@ class PrivacyDerivativePipelineTest {
                     cameraMake = "UnitCam",
                 ),
             )
+            log.debug { "result=$result" }
 
             result.bytes.size shouldBeGreaterThan 0
             result.report.sourceDimensions shouldBeEqualTo PrivacyImageDimensions(width = 120, height = 80)
@@ -63,35 +72,36 @@ class PrivacyDerivativePipelineTest {
             result.report.metadataVerification.sourcePresent shouldContain PrivacyMetadataCategory.GPS
             result.report.metadataVerification.sourcePresent shouldContain PrivacyMetadataCategory.EXIF
             result.report.metadataVerification.remaining shouldHaveSize 0
-            result.report.metadataVerification.verified shouldBeEqualTo true
+            result.report.metadataVerification.verified.shouldBeTrue()
         }
 
     @Test
-    fun `snapshot restored options can rerun the privacy pipeline`() =
-        runTest(timeout = 30.seconds) {
-            val restoredOptions = PrivacyDerivativeJackson.decodeOptions(
+    fun `snapshot restored options can rerun the privacy pipeline`() = runTest(timeout = 30.seconds) {
+        val restoredOptions = PrivacyDerivativeJackson
+            .decodeOptions(
                 PrivacyDerivativeJackson.encodeOptions(PrivacyDerivativeOptions().toSnapshot()),
-            ).toOptions()
+            )
+            .toOptions()
+        log.debug { "restoredOptions=$restoredOptions" }
 
-            val result = testImage().suspendPrivacyDerivative(restoredOptions)
-
-            result.bytes.size shouldBeGreaterThan 0
-            result.report.failures shouldHaveSize 0
-        }
+        val result = testImage().suspendPrivacyDerivative(restoredOptions)
+        log.debug { "result=$result" }
+        result.bytes.size shouldBeGreaterThan 0
+        result.report.failures shouldHaveSize 0
+    }
 
     @Test
-    fun `suspendPrivacyDerivative normalizes exif orientation`() =
-        runTest(timeout = 30.seconds) {
-            val result = testImage(width = 120, height = 80).suspendPrivacyDerivative(
-                sourceExif = ExifData(orientation = 6),
-            )
-
-            result.image.width shouldBeEqualTo 80
-            result.image.height shouldBeEqualTo 120
-            result.report.sourceDimensions shouldBeEqualTo PrivacyImageDimensions(width = 120, height = 80)
-            result.report.outputDimensions shouldBeEqualTo PrivacyImageDimensions(width = 80, height = 120)
-            result.report.appliedActions shouldContain PrivacyDerivativeAction.ORIENTATION_NORMALIZED
-        }
+    fun `suspendPrivacyDerivative normalizes exif orientation`() = runTest(timeout = 30.seconds) {
+        val result = testImage(width = 120, height = 80).suspendPrivacyDerivative(
+            sourceExif = ExifData(orientation = 6),
+        )
+        log.debug { "result=$result" }
+        result.image.width shouldBeEqualTo 80
+        result.image.height shouldBeEqualTo 120
+        result.report.sourceDimensions shouldBeEqualTo PrivacyImageDimensions(width = 120, height = 80)
+        result.report.outputDimensions shouldBeEqualTo PrivacyImageDimensions(width = 80, height = 120)
+        result.report.appliedActions shouldContain PrivacyDerivativeAction.ORIENTATION_NORMALIZED
+    }
 
     @Test
     fun `suspendPrivacyDerivative maps redactions through every exif orientation and resize`() =
@@ -117,6 +127,8 @@ class PrivacyDerivativePipelineTest {
                     markerHeight = 2,
                     markerColor = Color.GREEN,
                 )
+                val expected = expectedOrientationRedaction(orientation)
+
                 val result = source.suspendPrivacyDerivative(
                     options = PrivacyDerivativeOptions(
                         thumbnailSize = ThumbnailSize(width = 30, height = 30, suffix = "orientation-$orientation"),
@@ -125,8 +137,8 @@ class PrivacyDerivativePipelineTest {
                     ),
                     sourceExif = ExifData(orientation = orientation),
                 )
+                log.debug { "result=$result" }
 
-                val expected = expectedOrientationRedaction(orientation)
                 result.report.redactions.single() shouldBeEqualTo expected
                 paintedBounds(result.image, Color.RED) shouldBeEqualTo PaintedBounds(
                     x = expected.x,
@@ -141,22 +153,24 @@ class PrivacyDerivativePipelineTest {
     @Test
     fun `suspendPrivacyDerivative expands fractional normalized bounds during resize`() =
         runTest(timeout = 30.seconds) {
-            val result = testImage(width = 100, height = 100, color = Color.WHITE).suspendPrivacyDerivative(
-                options = PrivacyDerivativeOptions(
-                    thumbnailSize = ThumbnailSize(width = 10, height = 10, suffix = "fractional"),
-                    outputFormat = PrivacyDerivativeFormat.Png,
-                    redactions = listOf(
-                        normalizedRedaction(
-                            x = 0.15,
-                            y = 0.15,
-                            width = 0.20,
-                            height = 0.20,
-                            id = "fractional",
-                            color = Color.RED,
+            val result = testImage(width = 100, height = 100, color = Color.WHITE)
+                .suspendPrivacyDerivative(
+                    options = PrivacyDerivativeOptions(
+                        thumbnailSize = ThumbnailSize(width = 10, height = 10, suffix = "fractional"),
+                        outputFormat = PrivacyDerivativeFormat.Png,
+                        redactions = listOf(
+                            normalizedRedaction(
+                                x = 0.15,
+                                y = 0.15,
+                                width = 0.20,
+                                height = 0.20,
+                                id = "fractional",
+                                color = Color.RED,
+                            ),
                         ),
                     ),
-                ),
-            )
+                )
+            log.debug { "result=$result" }
 
             result.report.redactions.single() shouldBeEqualTo AppliedPrivacyRedaction(
                 regionId = "fractional",
@@ -196,6 +210,7 @@ class PrivacyDerivativePipelineTest {
                 ),
                 sourceExif = ExifData(orientation = 6),
             )
+            log.debug { "result=$result" }
 
             result.report.redactions.single() shouldBeEqualTo AppliedPrivacyRedaction(
                 regionId = "normalized-orientation",
@@ -205,7 +220,12 @@ class PrivacyDerivativePipelineTest {
                 width = 16,
                 height = 18,
             )
-            paintedBounds(result.image, Color.RED) shouldBeEqualTo PaintedBounds(x = 56, y = 90, width = 16, height = 18)
+            paintedBounds(result.image, Color.RED) shouldBeEqualTo PaintedBounds(
+                x = 56,
+                y = 90,
+                width = 16,
+                height = 18
+            )
             countPixels(result.image, Color.GREEN) shouldBeEqualTo 0
         }
 
@@ -237,6 +257,7 @@ class PrivacyDerivativePipelineTest {
                 ),
                 sourceExif = ExifData(orientation = 6),
             )
+            log.debug { "result=$result" }
 
             result.image.width shouldBeEqualTo 10
             result.image.height shouldBeEqualTo 6
@@ -288,6 +309,7 @@ class PrivacyDerivativePipelineTest {
                     redactions = listOf(clipped, inside, outside),
                 ),
             )
+            log.debug { "result=$result" }
 
             result.report.redactions shouldHaveSize 2
             result.report.redactions.single { it.regionId == "clipped" } shouldBeEqualTo AppliedPrivacyRedaction(
@@ -312,59 +334,61 @@ class PrivacyDerivativePipelineTest {
         }
 
     @Test
-    fun `suspendPrivacyDerivative rejects images over max pixel budget`() =
-        runTest(timeout = 30.seconds) {
-            val error = assertFailsWith<IllegalArgumentException> {
-                testImage(width = 64, height = 64).suspendPrivacyDerivative(
+    fun `suspendPrivacyDerivative rejects images over max pixel budget`() = runTest(timeout = 30.seconds) {
+        val error = assertFailsWith<IllegalArgumentException> {
+            testImage(width = 64, height = 64)
+                .suspendPrivacyDerivative(
                     options = PrivacyDerivativeOptions(maxPixels = 1024),
                 )
-            }
-
-            error.message.shouldNotBeNull()
-            error.message shouldContain "maxInputPixels"
         }
 
+        error.message.shouldNotBeNull()
+        error.message shouldContain "maxInputPixels"
+    }
+
     @Test
-    fun `suspendPrivacyDerivative creates thumbnail sized derivative`() =
-        runTest(timeout = 30.seconds) {
-            val result = testImage(width = 160, height = 90).suspendPrivacyDerivative(
+    fun `suspendPrivacyDerivative creates thumbnail sized derivative`() = runTest(timeout = 30.seconds) {
+        val result = testImage(width = 160, height = 90)
+            .suspendPrivacyDerivative(
                 options = PrivacyDerivativeOptions(
                     thumbnailSize = ThumbnailSize(width = 40, height = 30, suffix = "public"),
                 ),
             )
 
-            result.image.width shouldBeEqualTo 40
-            result.image.height shouldBeEqualTo 30
-            result.report.outputDimensions shouldBeEqualTo PrivacyImageDimensions(width = 40, height = 30)
-            result.report.appliedActions shouldContain PrivacyDerivativeAction.RESIZED
-        }
+        log.debug { "result=$result" }
+        result.image.width shouldBeEqualTo 40
+        result.image.height shouldBeEqualTo 30
+        result.report.outputDimensions shouldBeEqualTo PrivacyImageDimensions(width = 40, height = 30)
+        result.report.appliedActions shouldContain PrivacyDerivativeAction.RESIZED
+    }
 
     @Test
-    fun `suspendPrivacyDerivative applies rectangle redaction`() =
-        runTest(timeout = 30.seconds) {
-            val redaction = PrivacyRedaction(
-                region = SensitiveRegion(
-                    geometry = SensitiveRegionGeometry.Rectangle(
-                        x = 0.25,
-                        y = 0.25,
-                        width = 0.50,
-                        height = 0.50,
-                        coordinateSpace = SensitiveCoordinateSpace.NORMALIZED,
-                    ),
-                    id = "face-1",
+    fun `suspendPrivacyDerivative applies rectangle redaction`() = runTest(timeout = 30.seconds) {
+        val redaction = PrivacyRedaction(
+            region = SensitiveRegion(
+                geometry = SensitiveRegionGeometry.Rectangle(
+                    x = 0.25,
+                    y = 0.25,
+                    width = 0.50,
+                    height = 0.50,
+                    coordinateSpace = SensitiveCoordinateSpace.NORMALIZED,
                 ),
-                maskColorArgb = Color.BLACK.rgb,
-            )
+                id = "face-1",
+            ),
+            maskColorArgb = Color.BLACK.rgb,
+        )
 
-            val result = testImage(width = 100, height = 100, color = Color.WHITE).suspendPrivacyDerivative(
+        val result = testImage(width = 100, height = 100, color = Color.WHITE)
+            .suspendPrivacyDerivative(
                 options = PrivacyDerivativeOptions(redactions = listOf(redaction)),
             )
+        log.debug { "result=$result" }
 
-            Color(result.image.awt().getRGB(50, 50)) shouldBeEqualTo Color.BLACK
-            Color(result.image.awt().getRGB(5, 5)) shouldBeEqualTo Color.WHITE
-            result.report.redactions shouldHaveSize 1
-            result.report.appliedActions shouldContain PrivacyDerivativeAction.REDACTED
-        }
+        Color(result.image.awt().getRGB(50, 50)) shouldBeEqualTo Color.BLACK
+        Color(result.image.awt().getRGB(5, 5)) shouldBeEqualTo Color.WHITE
+        result.report.redactions shouldHaveSize 1
+        result.report.appliedActions shouldContain PrivacyDerivativeAction.REDACTED
+    }
 
     @Test
     fun `suspendPrivacyDerivative fails closed when encoded output cannot be verified`() =
@@ -382,7 +406,7 @@ class PrivacyDerivativePipelineTest {
 
             error.message.shouldNotBeNull()
             error.message shouldContain "metadata verification"
-            error.remainingCategories shouldHaveSize 0
+            error.remainingCategories.shouldBeEmpty()
         }
 
     @Test
@@ -422,26 +446,28 @@ class PrivacyDerivativePipelineTest {
                 )
                 .toList()
                 .single()
+            log.debug { "result=$result" }
 
-            result shouldBeInstanceOf PrivacyDerivativeBatchResult.Failure::class
-            (result as PrivacyDerivativeBatchResult.Failure).stage shouldBeEqualTo PrivacyDerivativeFailureStage.VERIFY
+            result.shouldBeInstanceOf<PrivacyDerivativeBatchResult.Failure>()
+            result.stage shouldBeEqualTo PrivacyDerivativeFailureStage.VERIFY
         }
 
     @Test
     fun `suspendPrivacyDerivative verifies metadata-bearing JPEG fixture for JPEG and PNG outputs`() =
         runTest(timeout = 30.seconds) {
-            val sourceBytes = requireNotNull(
-                javaClass.getResourceAsStream("/images/filters/debop.jpg"),
-            ).use { it.readBytes() }
+            val sourceBytes = javaClass.getResourceAsStream("/images/filters/debop.jpg")
+                .shouldNotBeNull().use { it.readBytes() }
+
             val sourceReport = readImageMetadataReportStrict(
                 sourceBytes,
                 ImageMetadataReadOptions(stripSensitiveMetadata = false),
             ).shouldBeInstanceOf<ImageMetadataReadResult.Success>().report
 
-            sourceReport.containsXmp shouldBeEqualTo true
-            sourceReport.containsIptc shouldBeEqualTo true
-            sourceReport.containsIccProfile shouldBeEqualTo true
-            sourceReport.exif.hasGps shouldBeEqualTo true
+            log.debug { "sourceReport=$sourceReport" }
+            sourceReport.containsXmp.shouldBeTrue()
+            sourceReport.containsIptc.shouldBeTrue()
+            sourceReport.containsIccProfile.shouldBeTrue()
+            sourceReport.exif.hasGps.shouldBeTrue()
             sourceReport.exif.cameraMake.shouldNotBeNull()
 
             listOf(PrivacyDerivativeFormat.Jpeg, PrivacyDerivativeFormat.Png).forEach { format ->
@@ -450,14 +476,14 @@ class PrivacyDerivativePipelineTest {
                     sourceExif = sourceReport.exif,
                     sourceMetadata = sourceReport,
                 )
-
+                log.debug { "result=$result" }
                 result.report.metadataVerification.sourcePresent shouldContain PrivacyMetadataCategory.GPS
                 result.report.metadataVerification.sourcePresent shouldContain PrivacyMetadataCategory.EXIF
                 result.report.metadataVerification.sourcePresent shouldContain PrivacyMetadataCategory.XMP
                 result.report.metadataVerification.sourcePresent shouldContain PrivacyMetadataCategory.IPTC
                 result.report.metadataVerification.sourcePresent shouldContain PrivacyMetadataCategory.ICC
-                result.report.metadataVerification.remaining shouldHaveSize 0
-                result.report.metadataVerification.verified shouldBeEqualTo true
+                result.report.metadataVerification.remaining.shouldBeEmpty()
+                result.report.metadataVerification.verified.shouldBeTrue()
             }
         }
 
@@ -484,7 +510,7 @@ class PrivacyDerivativePipelineTest {
                     sourceMetadata = sourceReport,
                 )
             }
-
+            log.debug { "error=${error.message}" }
             error.remainingCategories shouldContain PrivacyMetadataCategory.GPS
             error.remainingCategories shouldContain PrivacyMetadataCategory.EXIF
             error.remainingCategories shouldContain PrivacyMetadataCategory.XMP
@@ -508,9 +534,12 @@ class PrivacyDerivativePipelineTest {
                     ),
                     onFailure = { failures += it },
                 )
+                .log("Result")
                 .toList()
 
-            results.single() shouldBeInstanceOf PrivacyDerivativeBatchResult.Failure::class
+            log.debug { "result=${results.single()}" }
+
+            results.single().shouldBeInstanceOf<PrivacyDerivativeBatchResult.Failure>()
             failures.single().stage shouldBeEqualTo PrivacyDerivativeFailureStage.LOAD
         }
 
@@ -529,7 +558,8 @@ class PrivacyDerivativePipelineTest {
                 )
                 .toList()
 
-            val success = results.single() as PrivacyDerivativeBatchResult.Success
+            val success = results.single().shouldBeInstanceOf<PrivacyDerivativeBatchResult.Success>()
+            log.debug { "success=$success" }
             success.source shouldBeEqualTo source
             success.result.bytes.size shouldBeGreaterThan 0
             success.result.report.outputDimensions shouldBeEqualTo PrivacyImageDimensions(width = 20, height = 20)
@@ -663,11 +693,13 @@ class PrivacyDerivativePipelineTest {
                 if (image.awt().getRGB(x, y) == color.rgb) x to y else null
             }
         }
-        require(pixels.isNotEmpty()) { "Expected ${color.rgb} pixels in ${image.width}x${image.height} image" }
+        pixels.requireNotEmpty { "Expected ${color.rgb} pixels in ${image.width}x${image.height} image" }
+
         val xs = pixels.map { it.first }
         val ys = pixels.map { it.second }
         val minX = xs.min()
         val minY = ys.min()
+
         return PaintedBounds(
             x = minX,
             y = minY,
@@ -686,13 +718,13 @@ class PrivacyDerivativePipelineTest {
         val y: Int,
         val width: Int,
         val height: Int,
-    ) : Serializable {
+    ): Serializable {
         companion object {
             private const val serialVersionUID: Long = 1L
         }
     }
 
-    private object MalformedImageWriter : SuspendImageWriter {
+    private object MalformedImageWriter: SuspendImageWriter {
         override fun write(image: AwtImage, metadata: ImageMetadata, out: OutputStream) {
             out.write(byteArrayOf(0x00, 0x01, 0x02))
         }
@@ -700,7 +732,7 @@ class PrivacyDerivativePipelineTest {
 
     private class PreservingImageWriter(
         private val bytes: ByteArray,
-    ) : SuspendImageWriter {
+    ): SuspendImageWriter {
         override fun write(image: AwtImage, metadata: ImageMetadata, out: OutputStream) {
             out.write(bytes)
         }
