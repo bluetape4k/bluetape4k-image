@@ -6,9 +6,12 @@ import io.bluetape4k.assertions.shouldBeLessOrEqualTo
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.images.immutableImageOf
 import io.bluetape4k.images.ktor.CaptchaIssueResponse
+import io.bluetape4k.images.useGraphics
 import io.bluetape4k.ktor.core.ApiErrorResponse
 import io.bluetape4k.ktor.testing.bluetape4kJsonClient
 import io.bluetape4k.ktor.testing.shouldHaveStatus
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.ktor.client.call.body
 import io.ktor.client.request.forms.MultiPartFormDataContent
 import io.ktor.client.request.forms.append
@@ -25,7 +28,7 @@ import org.junit.jupiter.api.Test
 import java.awt.Color
 import java.awt.image.BufferedImage
 import java.io.ByteArrayOutputStream
-import java.util.Base64
+import java.util.*
 import javax.imageio.ImageIO
 
 class KtorImageApiApplicationTest {
@@ -54,6 +57,7 @@ class KtorImageApiApplicationTest {
         val body = response.body<CaptchaIssueResponse>()
         body.id.length shouldBeGreaterThan 0
         body.contentType shouldBeEqualTo ContentType.Image.PNG.toString()
+
         val imageBytes = Base64.getDecoder().decode(body.imageBase64)
         imageBytes.copyOfRange(0, PNG_SIGNATURE.size)
             .contentEquals(PNG_SIGNATURE)
@@ -73,7 +77,9 @@ class KtorImageApiApplicationTest {
 
         response shouldHaveStatus HttpStatusCode.OK
         response.contentType()?.withoutParameters() shouldBeEqualTo ContentType.Image.PNG
+
         val thumbnail = immutableImageOf(response.bodyAsBytes())
+        log.debug { "thumbnail: $thumbnail" }
         thumbnail.width shouldBeLessOrEqualTo 40
         thumbnail.height shouldBeLessOrEqualTo 40
     }
@@ -96,6 +102,7 @@ class KtorImageApiApplicationTest {
         }
 
         response shouldHaveStatus HttpStatusCode.BadRequest
+
         val body = response.body<ApiErrorResponse>()
         body.error shouldBeEqualTo "bad_request"
         body.status shouldBeEqualTo HttpStatusCode.BadRequest.value
@@ -112,14 +119,12 @@ class KtorImageApiApplicationTest {
 
     private fun pngBytes(width: Int, height: Int): ByteArray {
         val image = BufferedImage(width, height, BufferedImage.TYPE_INT_RGB)
-        val graphics = image.createGraphics()
-        try {
+
+        image.useGraphics { graphics ->
             graphics.color = Color(31, 110, 185)
             graphics.fillRect(0, 0, width, height)
             graphics.color = Color.WHITE
             graphics.fillOval(width / 4, height / 4, width / 2, height / 2)
-        } finally {
-            graphics.dispose()
         }
 
         return ByteArrayOutputStream().use { output ->
@@ -128,7 +133,7 @@ class KtorImageApiApplicationTest {
         }
     }
 
-    private companion object {
+    private companion object: KLogging() {
         val PNG_SIGNATURE = byteArrayOf(
             0x89.toByte(),
             0x50,
