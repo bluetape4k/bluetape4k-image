@@ -90,6 +90,8 @@ data class SensitivePoint(
         y.requireFinite("y")
     }
 
+    private fun readResolve(): Any = copy()
+
     internal fun requireValidFor(coordinateSpace: SensitiveCoordinateSpace) {
         when (coordinateSpace) {
             SensitiveCoordinateSpace.PIXEL -> {
@@ -137,6 +139,8 @@ data class SensitiveRasterMask(
         mediaType?.requireNotBlank("mediaType")
         checksum?.requireNotBlank("checksum")
     }
+
+    private fun readResolve(): Any = copy()
 
     companion object {
         private const val serialVersionUID: Long = -236527269489076380L
@@ -194,6 +198,8 @@ sealed interface SensitiveRegionGeometry: Serializable {
             }
         }
 
+        private fun readResolve(): Any = copy()
+
         override fun requireWithin(imageDimensions: ImageDimensions): SensitiveRegionGeometry {
             if (coordinateSpace == SensitiveCoordinateSpace.PIXEL) {
                 require(x + width <= imageDimensions.width.toDouble() && y + height <= imageDimensions.height.toDouble()) {
@@ -227,6 +233,8 @@ sealed interface SensitiveRegionGeometry: Serializable {
             require(points.first() == points.last()) { "polygon must be closed by repeating the first point" }
         }
 
+        private fun readResolve(): Any = copy()
+
         override fun requireWithin(imageDimensions: ImageDimensions): SensitiveRegionGeometry {
             if (coordinateSpace == SensitiveCoordinateSpace.PIXEL) {
                 points.forEach { it.requireWithin(imageDimensions) }
@@ -256,6 +264,8 @@ sealed interface SensitiveRegionGeometry: Serializable {
             require(points.first() != points.last()) { "polyline must remain open; use Polygon for closed areas" }
         }
 
+        private fun readResolve(): Any = copy()
+
         override fun requireWithin(imageDimensions: ImageDimensions): SensitiveRegionGeometry {
             if (coordinateSpace == SensitiveCoordinateSpace.PIXEL) {
                 points.forEach { it.requireWithin(imageDimensions) }
@@ -274,6 +284,8 @@ sealed interface SensitiveRegionGeometry: Serializable {
     data class RasterMask(
         val mask: SensitiveRasterMask,
     ): SensitiveRegionGeometry {
+
+        private fun readResolve(): Any = copy()
 
         override fun requireWithin(imageDimensions: ImageDimensions): SensitiveRegionGeometry {
             require(mask.width <= imageDimensions.width && mask.height <= imageDimensions.height) {
@@ -305,6 +317,8 @@ data class SensitiveRegion(
         id?.requireNotBlank("id")
         metadata.requireValidMetadata("metadata")
     }
+
+    private fun readResolve(): Any = copy()
 
     companion object {
         private const val serialVersionUID: Long = -667440231052868506L
@@ -351,6 +365,8 @@ data class SensitiveContentDetection(
         confidence.requireInRange(CONFIDENCE_MIN, CONFIDENCE_MAX, "confidence")
         metadata.requireValidMetadata("metadata")
     }
+
+    private fun readResolve(): Any = copy()
 
     companion object {
         private const val serialVersionUID: Long = 466956545308614167L

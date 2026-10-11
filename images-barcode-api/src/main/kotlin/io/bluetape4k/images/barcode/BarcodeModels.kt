@@ -30,6 +30,9 @@ data class BarcodeProviderIdentity private constructor(
     val metadata: Map<String, String>,
 ): Serializable {
 
+    private fun readResolve(): Any =
+        BarcodeProviderIdentity.invoke(name, version, backend, metadata)
+
     override fun toString(): String {
         return ToStringBuilder(this)
             .add("name", name)
@@ -69,6 +72,8 @@ data class BarcodePoint private constructor(
     val x: Double,
     val y: Double,
 ): Serializable {
+
+    private fun readResolve(): Any = BarcodePoint.invoke(x, y)
 
     internal fun requireValidFor(coordinateSpace: BarcodeCoordinateSpace) {
         when (coordinateSpace) {
@@ -111,6 +116,9 @@ data class BarcodeBoundingBox private constructor(
     val height: Double,
     val coordinateSpace: BarcodeCoordinateSpace,
 ): Serializable {
+
+    private fun readResolve(): Any =
+        BarcodeBoundingBox.invoke(x, y, width, height, coordinateSpace)
 
     init {
         x.requireFinite("x")
@@ -162,6 +170,9 @@ data class BarcodeRegion private constructor(
     val boundingBox: BarcodeBoundingBox?,
 ): Serializable {
 
+    private fun readResolve(): Any =
+        BarcodeRegion.invoke(points, coordinateSpace, boundingBox)
+
     companion object {
         private const val serialVersionUID: Long = -910069449498651984L
 
@@ -201,6 +212,9 @@ data class BarcodeOptions private constructor(
     val minimumConfidence: Double?,
     val metadata: Map<String, String>,
 ): Serializable {
+
+    private fun readResolve(): Any =
+        BarcodeOptions.invoke(formats, tryHarder, includeRawBytes, minimumConfidence, metadata)
 
     /**
      * [result]가 이 format 및 confidence filter와 match되면 `true`를 반환합니다.
@@ -261,6 +275,19 @@ class BarcodeResult private constructor(
     val rawBackendFormat: String?,
     val metadata: Map<String, String>,
 ): Serializable {
+
+    private fun readResolve(): Any =
+        BarcodeResult.invoke(
+            text = text,
+            format = format,
+            provider = provider,
+            region = region,
+            confidence = confidence,
+            quality = quality,
+            rawBytes = rawBytes,
+            rawBackendFormat = rawBackendFormat,
+            metadata = metadata,
+        )
 
     var rawBytes: ByteArray? = rawBytes?.copyOf()
         get() = field?.copyOf()

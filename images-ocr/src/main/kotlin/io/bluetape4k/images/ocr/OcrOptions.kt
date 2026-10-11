@@ -171,6 +171,8 @@ data class OcrBoundingBox private constructor(
     val height: Int,
 ): Serializable {
 
+    private fun readResolve(): Any = OcrBoundingBox.invoke(x, y, width, height)
+
     /** Tess4J region API에 넘길 AWT rectangle로 이 box를 변환합니다. */
     fun toAwtRectangle(): Rectangle =
         Rectangle(x, y, width, height)
@@ -223,6 +225,8 @@ data class OcrRegion private constructor(
     val id: String?,
 ): Serializable {
 
+    private fun readResolve(): Any = OcrRegion.invoke(boundingBox, id)
+
     companion object {
         private const val serialVersionUID: Long = 3158388464829739136L
 
@@ -246,6 +250,8 @@ data class OcrResult(
     val text: String,
     val options: OcrOptions,
 ): Serializable {
+    private fun readResolve(): Any = copy()
+
     companion object {
         private const val serialVersionUID: Long = 4084561701396397733L
     }
@@ -273,6 +279,8 @@ data class OcrStructuredResult(
         pages.requireNotEmpty("pages")
     }
 
+    private fun readResolve(): Any = copy()
+
     companion object {
         private const val serialVersionUID: Long = 6856357658866475452L
     }
@@ -293,6 +301,8 @@ data class OcrPage(
         pageIndex.requireGe(0, "pageIndex")
         confidence?.requireInRange(CONFIDENCE_MIN, CONFIDENCE_MAX, "confidence")
     }
+
+    private fun readResolve(): Any = copy()
 
     companion object {
         private const val serialVersionUID: Long = -7671084136414993225L
@@ -315,6 +325,8 @@ data class OcrTextBlock(
         confidence?.requireInRange(CONFIDENCE_MIN, CONFIDENCE_MAX, "confidence")
     }
 
+    private fun readResolve(): Any = copy()
+
     companion object {
         private const val serialVersionUID: Long = -7691293991597434082L
     }
@@ -335,6 +347,8 @@ data class OcrTextLine(
         pageIndex.requireGe(0, "pageIndex")
         confidence?.requireInRange(CONFIDENCE_MIN, CONFIDENCE_MAX, "confidence")
     }
+
+    private fun readResolve(): Any = copy()
 
     companion object {
         private const val serialVersionUID: Long = 7334580711811413156L
@@ -358,6 +372,8 @@ data class OcrWord(
         pageIndex.requireGe(0, "pageIndex")
         confidence?.requireInRange(CONFIDENCE_MIN, CONFIDENCE_MAX, "confidence")
     }
+
+    private fun readResolve(): Any = copy()
 
     companion object {
         private const val serialVersionUID: Long = 1134024054627217479L

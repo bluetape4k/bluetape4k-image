@@ -6,6 +6,7 @@ import io.bluetape4k.assertions.shouldBeEmpty
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldHaveSize
+import io.bluetape4k.io.serializer.BinarySerializers
 import io.bluetape4k.images.ImageDimensions
 import io.bluetape4k.images.useGraphics
 import io.bluetape4k.logging.KLogging
@@ -19,6 +20,7 @@ import kotlinx.coroutines.withContext
 import org.junit.jupiter.api.Test
 import java.awt.Color
 import java.awt.image.BufferedImage
+import java.io.Serializable
 import java.util.concurrent.atomic.AtomicInteger
 
 class ImageDetectionTest {
@@ -148,6 +150,23 @@ class ImageDetectionTest {
     }
 
     @Test
+    fun `Java deserialization revalidates detector model invariants`() {
+        assertInvalidSerializedField(detector, "name", " ")
+        assertInvalidSerializedField(DetectionBoundingBox(x = 0, y = 0, width = 1, height = 1), "width", 0)
+        assertInvalidSerializedField(
+            DetectionResult(
+                label = "face",
+                category = DetectionCategory.FACE,
+                confidence = 0.9,
+                detector = detector,
+            ),
+            "confidence",
+            Double.NaN,
+        )
+        assertInvalidSerializedField(DetectionOptions(minimumConfidence = 0.5), "minimumConfidence", Double.NaN)
+    }
+
+    @Test
     fun `detectRegions rejects selected region outside image bounds`() {
         val result = DetectionResult(
             label = "face",
@@ -223,6 +242,18 @@ class ImageDetectionTest {
         }
 
         return ImmutableImage.wrapAwt(image)
+    }
+
+    private fun assertInvalidSerializedField(instance: Any, fieldName: String, replacement: Any?) {
+        instance.javaClass.getDeclaredField(fieldName).apply {
+            isAccessible = true
+            set(instance, replacement)
+        }
+
+        val bytes = BinarySerializers.Jdk.serialize(instance as Serializable)
+        assertFailsWith<Exception> {
+            BinarySerializers.Jdk.deserialize<Any>(bytes)
+        }
     }
 
     private class StaticImageDetector(

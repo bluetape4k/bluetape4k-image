@@ -298,7 +298,7 @@ class JVipsImageTest: AbstractJVipsTest() {
     private fun assertOptionalHeifFamilyEncoding(result: Result<ByteArray>, format: VipsImageFormat) {
         result.onSuccess { output ->
             output.shouldNotBeEmpty()
-            output.regionMatches(4, FTYP_MARKER).shouldBeTrue()
+            output.regionMatches(4, "ftyp".encodeToByteArray()).shouldBeTrue()
             when (format) {
                 AVIF -> {
                     val brand = String(output, 8, 4, Charsets.US_ASCII)

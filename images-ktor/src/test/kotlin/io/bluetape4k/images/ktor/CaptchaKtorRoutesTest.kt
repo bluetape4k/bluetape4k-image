@@ -12,8 +12,6 @@ import io.bluetape4k.ktor.core.Bluetape4kKtorCoreConfig
 import io.bluetape4k.ktor.testing.bluetape4kJsonClient
 import io.bluetape4k.ktor.testing.installBluetape4kKtorCoreForTest
 import io.bluetape4k.ktor.testing.shouldHaveStatus
-import io.bluetape4k.logging.coroutines.KLoggingChannel
-import io.bluetape4k.logging.debug
 import io.ktor.client.call.body
 import io.ktor.client.request.get
 import io.ktor.client.request.post
@@ -29,7 +27,7 @@ import java.util.*
 
 class CaptchaKtorRoutesTest {
 
-    private companion object: KLoggingChannel() {
+    private companion object {
         val testCoreConfig = Bluetape4kKtorCoreConfig(installHealthRoutes = false)
 
         val PNG_SIGNATURE = byteArrayOf(
@@ -54,11 +52,9 @@ class CaptchaKtorRoutesTest {
         val client = bluetape4kJsonClient()
 
         val response = client.get("/captcha")
-        log.debug { "response=$response" }
         response shouldHaveStatus HttpStatusCode.OK
 
         val body = response.body<CaptchaIssueResponse>()
-        log.debug { "body=$body" }
         body.id shouldBeEqualTo "captcha-1"
         body.contentType shouldBeEqualTo "image/png"
         body.expiresAt.isNotBlank().shouldBeTrue()
@@ -84,11 +80,9 @@ class CaptchaKtorRoutesTest {
             contentType(ContentType.Application.Json)
             setBody(CaptchaVerifyRequest(challenge.text))
         }
-        log.debug { "response=$response" }
         response shouldHaveStatus HttpStatusCode.OK
 
         val body = response.body<CaptchaVerifyResponse>()
-        log.debug { "body=$body" }
         body.id shouldBeEqualTo issued.id.value
         body.status shouldBeEqualTo CaptchaVerificationStatus.SUCCESS
         body.verified.shouldBeTrue()
@@ -109,7 +103,6 @@ class CaptchaKtorRoutesTest {
 
         val response = client.get("/ready")
 
-        log.debug { "response=$response" }
         response shouldHaveStatus HttpStatusCode.OK
     }
 

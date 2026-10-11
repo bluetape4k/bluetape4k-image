@@ -472,7 +472,7 @@ class FfmVipsImageTest: AbstractFfmVipsTest() {
     private fun assertOptionalHeifFamilyEncoding(result: Result<ByteArray>, format: VipsImageFormat) {
         result.onSuccess { output ->
             output.size shouldBeGreaterThan 0
-            output.regionMatches(4, FTYP_MARKER).shouldBeTrue()
+            output.regionMatches(4, "ftyp".encodeToByteArray()).shouldBeTrue()
             val brand = String(output, 8, 4, Charsets.US_ASCII)
             when (format) {
                 AVIF -> (brand == "avif" || brand == "avis").shouldBeTrue()

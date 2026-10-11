@@ -113,6 +113,9 @@ data class DetectorIdentity private constructor(
     val metadata: Map<String, String>,
 ): Serializable {
 
+    private fun readResolve(): Any =
+        DetectorIdentity.invoke(name, version, backend, metadata)
+
     companion object {
         private const val serialVersionUID: Long = -5782049832109058371L
 
@@ -146,6 +149,8 @@ data class DetectionBoundingBox private constructor(
     val width: Int,
     val height: Int,
 ): Serializable {
+
+    private fun readResolve(): Any = DetectionBoundingBox.invoke(x, y, width, height)
 
     /** 이 box가 [imageDimensions] 안에 들어가는지 확인합니다. */
     fun requireWithin(imageDimensions: ImageDimensions): DetectionBoundingBox {
@@ -203,6 +208,9 @@ data class DetectionResult private constructor(
     val metadata: Map<String, String>,
 ): Serializable {
 
+    private fun readResolve(): Any =
+        DetectionResult.invoke(label, category, confidence, detector, region, rawBackendLabel, classIndex, metadata)
+
     /** 선택 region이 [imageDimensions]에서 유효한지 확인합니다. */
     fun requireWithin(imageDimensions: ImageDimensions): DetectionResult {
         region?.geometry?.requireWithin(imageDimensions)
@@ -258,6 +266,8 @@ data class DetectionOptions private constructor(
     val categories: Set<DetectionCategory>,
     val labels: Set<String>,
 ): Serializable {
+
+    private fun readResolve(): Any = DetectionOptions.invoke(minimumConfidence, categories, labels)
 
     /** [result]가 이 option set을 만족하면 `true`를 반환합니다. */
     fun accepts(result: DetectionResult): Boolean =

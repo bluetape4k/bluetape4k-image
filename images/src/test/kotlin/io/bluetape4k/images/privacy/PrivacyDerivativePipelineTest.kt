@@ -47,6 +47,23 @@ class PrivacyDerivativePipelineTest {
     companion object: KLoggingChannel()
 
     @Test
+    fun `privacy derivative result snapshots bytes across input and getter mutations`() = runTest {
+        val generated = testImage().suspendPrivacyDerivative()
+        val source = generated.bytes.copyOf()
+        val expected = source.copyOf()
+        val result = PrivacyDerivativeResult(generated.image, source, generated.report)
+        val initialHash = result.hashCode()
+        val results = hashSetOf(result)
+
+        source.fill(0)
+        result.bytes.fill(0)
+
+        result.bytes.contentEquals(expected).shouldBeTrue()
+        result.hashCode() shouldBeEqualTo initialHash
+        results shouldContain result
+    }
+
+    @Test
     fun `suspendPrivacyDerivative strips location metadata and reports derivative actions`() =
         runTest(timeout = 30.seconds) {
             val result = testImage().suspendPrivacyDerivative(
