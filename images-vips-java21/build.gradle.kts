@@ -41,7 +41,7 @@ tasks.named<Test>("test") {
     doFirst {
         if (System.getProperty("bluetape4k.images.golden.update", "false").toBoolean()) {
             throw org.gradle.api.GradleException(
-                "Java25 JNI golden tests are read-only; regenerate canonical fixtures only with the Java25 FFM tests.",
+                "Java21 JNI golden tests are read-only; regenerate canonical fixtures only with the Java25 FFM tests.",
             )
         }
     }
@@ -139,26 +139,26 @@ private fun classFileMajor(bytes: ByteArray): Int {
 
 val vipsApiProject = project(":bluetape4k-images-vips-api")
 val vipsApiJar = vipsApiProject.tasks.named<Jar>("jar")
-val vipsJava25Jar = tasks.named<Jar>("jar")
+val vipsJava21Jar = tasks.named<Jar>("jar")
 
-tasks.register("verifyVipsJava25Bytecode") {
-    description = "Verifies Java 25 production bytecode for the API and legacy java25 module."
+tasks.register("verifyVipsJava21Bytecode") {
+    description = "Verifies Java 25 production bytecode for the API and legacy java21 module."
     group = "verification"
-    dependsOn(vipsApiJar, vipsJava25Jar)
+    dependsOn(vipsApiJar, vipsJava21Jar)
     doLast {
         val productionDirectories = listOf(
             "bluetape4k-images-vips-api/classes-kotlin" to
                     vipsApiProject.layout.buildDirectory.dir("classes/kotlin/main").get().asFile,
             "bluetape4k-images-vips-api/classes-java" to
                     vipsApiProject.layout.buildDirectory.dir("classes/java/main").get().asFile,
-            "bluetape4k-images-vips-java25/classes-kotlin" to
+            "bluetape4k-images-vips-java21/classes-kotlin" to
                     layout.buildDirectory.dir("classes/kotlin/main").get().asFile,
-            "bluetape4k-images-vips-java25/classes-java" to
+            "bluetape4k-images-vips-java21/classes-java" to
                     layout.buildDirectory.dir("classes/java/main").get().asFile,
         )
         val productionJars = listOf(
             "bluetape4k-images-vips-api/jar" to vipsApiJar.get().archiveFile.get().asFile,
-            "bluetape4k-images-vips-java25/jar" to vipsJava25Jar.get().archiveFile.get().asFile,
+            "bluetape4k-images-vips-java21/jar" to vipsJava21Jar.get().archiveFile.get().asFile,
         )
         val violations = mutableListOf<String>()
         var inspected = 0

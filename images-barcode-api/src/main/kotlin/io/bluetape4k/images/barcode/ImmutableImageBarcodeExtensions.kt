@@ -19,7 +19,7 @@ import kotlinx.coroutines.withContext
  */
 fun ImmutableImage.extractBarcodes(
     reader: BarcodeReader,
-    options: BarcodeOptions = BarcodeOptions.Default,
+    options: BarcodeOptions = BarcodeOptions(),
 ): List<BarcodeResult> =
     options.filter(reader.readBarcodes(this, options))
 
@@ -32,7 +32,7 @@ fun ImmutableImage.extractBarcodes(
  */
 suspend fun ImmutableImage.suspendExtractBarcodes(
     reader: BarcodeReader,
-    options: BarcodeOptions = BarcodeOptions.Default,
+    options: BarcodeOptions = BarcodeOptions(),
     dispatcher: CoroutineDispatcher = Dispatchers.Default,
 ): List<BarcodeResult> =
     withContext(dispatcher) {

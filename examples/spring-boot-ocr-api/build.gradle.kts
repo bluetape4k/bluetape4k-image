@@ -20,9 +20,9 @@ dependencies {
     // Coroutines
     implementation(bt4k.bluetape4k.coroutines)
     implementation(libs.kotlinx.coroutines.reactor)
-    implementation(libs.kotlinx.coroutines.test)
 
     testImplementation(libs.spring.boot.starter.test)
     testImplementation(libs.spring.boot.webmvc.test)
     testImplementation(bt4k.bluetape4k.junit5)
+    testImplementation(libs.kotlinx.coroutines.test)
 }

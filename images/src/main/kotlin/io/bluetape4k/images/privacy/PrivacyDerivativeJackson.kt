@@ -12,10 +12,10 @@ import tools.jackson.databind.DeserializationFeature
 import tools.jackson.databind.JsonNode
 import tools.jackson.databind.SerializationFeature
 import tools.jackson.databind.json.JsonMapper
+import tools.jackson.module.kotlin.kotlinModule
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
-import java.io.Serializable
 
 /**
  * privacy snapshot 전용 Jackson 3 codec입니다.
@@ -45,7 +45,7 @@ object PrivacyDerivativeJackson {
             .build()
 
         JsonMapper.builder(jsonFactory)
-            .findAndAddModules()
+            .addModule(kotlinModule())
             .enable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
             .enable(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES)
             .disable(SerializationFeature.FAIL_ON_EMPTY_BEANS)
@@ -652,9 +652,5 @@ object PrivacyDerivativeJackson {
         val schemaVersion: Int,
         val kind: String,
         val value: T,
-    ): Serializable {
-        companion object {
-            private const val serialVersionUID = 1L
-        }
-    }
+    )
 }

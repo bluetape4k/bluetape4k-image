@@ -2,7 +2,6 @@ package io.bluetape4k.images.similarity
 
 import com.sksamuel.scrimage.ImmutableImage
 import io.bluetape4k.support.requireInRange
-import java.io.Serializable
 import kotlin.math.absoluteValue
 import kotlin.math.exp
 
@@ -90,7 +89,7 @@ internal fun buildHistogram(
  * a.histogramSimilarityTo(b, HistogramSimilarity.earthMover(ColorSpace.HSV, bins = 64))
  * ```
  */
-sealed interface HistogramSimilarity: Serializable {
+sealed interface HistogramSimilarity {
 
     /**
      * 두 이미지의 히스토그램 기반 유사도를 측정합니다.
@@ -133,9 +132,6 @@ sealed interface HistogramSimilarity: Serializable {
             return exp(-d / 2.0)
         }
 
-        companion object {
-            private const val serialVersionUID = 1L
-        }
     }
 
     /**
@@ -168,9 +164,6 @@ sealed interface HistogramSimilarity: Serializable {
             return coeff / ha.size  // 채널 수로 나눠 [0,1] 유지
         }
 
-        companion object {
-            private const val serialVersionUID = 1L
-        }
     }
 
     /**
@@ -221,7 +214,6 @@ sealed interface HistogramSimilarity: Serializable {
         fun earthMover(colorSpace: ColorSpace = ColorSpace.RGB, bins: Int = 32): HistogramSimilarity =
             EarthMover(colorSpace, bins)
 
-        private const val serialVersionUID = 1L
     }
 }
 

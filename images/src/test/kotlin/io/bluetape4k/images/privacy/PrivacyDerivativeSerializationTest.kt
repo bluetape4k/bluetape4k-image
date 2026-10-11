@@ -91,6 +91,100 @@ class PrivacyDerivativeSerializationTest {
         }
     }
 
+    @Suppress("DEPRECATION")
+    @Test
+    fun `Java deserialization revalidates privacy snapshot invariants`() {
+        assertInvalidSerializedField(PrivacyThumbnailSizeSnapshot(1, 1, "thumb"), "width", 0)
+        assertInvalidSerializedField(
+            PrivacyRedactionSnapshot(
+                regionId = "region",
+                coordinateSpace = PrivacyWireCoordinateSpaceId.NORMALIZED,
+                x = 0.0,
+                y = 0.0,
+                width = 1.0,
+                height = 1.0,
+                mode = PrivacyWireRedactionModeId.SOLID,
+                maskColorArgb = 0,
+                maskOpacity = 1.0,
+            ),
+            "maskOpacity",
+            Double.NaN,
+        )
+        assertInvalidSerializedField(
+            optionsSnapshot(),
+            "maxPixels",
+            0L,
+        )
+        assertInvalidSerializedField(PrivacyImageDimensionsSnapshot(1, 1), "height", 0)
+        assertInvalidSerializedField(
+            PrivacyAppliedRedactionSnapshot("region", 0.0, 0.0, 1.0, 1.0),
+            "width",
+            0.0,
+        )
+        assertInvalidSerializedField(
+            PrivacyDerivativeFailureSnapshot(PrivacyWireFailureStageId.WRITE, PrivacyDerivativeFailureCode.WRITE),
+            "stage",
+            null,
+        )
+        assertInvalidSerializedField(
+            PrivacyMetadataVerificationSnapshot(emptySet(), emptySet(), emptySet(), verified = true),
+            "storedRequested",
+            null,
+        )
+        assertInvalidSerializedField(payload(), "report", null)
+    }
+
+    @Suppress("DEPRECATION")
+    @Test
+    fun `Java deserialization restores immutable snapshot collections`() {
+        val options = optionsSnapshot()
+        replaceField(options, "storedRedactions", mutableListOf(redactionSnapshot()))
+        val restoredOptions: PrivacyDerivativeOptionsSnapshot = deserialize(serialize(options))
+
+        assertFailsWith<UnsupportedOperationException> {
+            @Suppress("UNCHECKED_CAST")
+            (restoredOptions.redactions as MutableList<PrivacyRedactionSnapshot>).clear()
+        }
+
+        val metadata = PrivacyMetadataVerificationSnapshot(emptySet(), emptySet(), emptySet(), verified = true)
+        replaceField(metadata, "storedRequested", mutableSetOf(PrivacyWireMetadataCategoryId.GPS))
+        val restoredMetadata: PrivacyMetadataVerificationSnapshot = deserialize(serialize(metadata))
+
+        assertFailsWith<UnsupportedOperationException> {
+            @Suppress("UNCHECKED_CAST")
+            (restoredMetadata.requested as MutableSet<PrivacyWireMetadataCategoryId>)
+                .add(PrivacyWireMetadataCategoryId.EXIF)
+        }
+    }
+
+    @Test
+    fun `runtime processing holders are not Java serializable`() {
+        listOf(
+            io.bluetape4k.images.analysis.BlurScore::class.java,
+            io.bluetape4k.images.analysis.DominantColor::class.java,
+            io.bluetape4k.images.avif.AvifEncodeOptions::class.java,
+            io.bluetape4k.images.batch.ImageProcessingOptions::class.java,
+            io.bluetape4k.images.heic.HeicReadOptions::class.java,
+            PrivacyRedaction::class.java,
+            PrivacyDerivativeFailure::class.java,
+            AppliedPrivacyRedaction::class.java,
+            PrivacyDerivativeReport::class.java,
+            PrivacyMetadataVerification::class.java,
+            io.bluetape4k.images.privacy.PrivacyDerivativeFormat::class.java,
+            io.bluetape4k.images.privacy.PrivacyDerivativeOptions::class.java,
+            io.bluetape4k.images.privacy.PrivacyDerivativeResult::class.java,
+            io.bluetape4k.images.privacy.PrivacyDerivativeBatchResult::class.java,
+            io.bluetape4k.images.similarity.HistogramSimilarity::class.java,
+            io.bluetape4k.images.thumbnail.ThumbnailSize::class.java,
+            io.bluetape4k.images.thumbnail.ThumbnailFormat::class.java,
+            io.bluetape4k.images.thumbnail.ThumbnailResult::class.java,
+            io.bluetape4k.images.tiles.TileSize::class.java,
+            io.bluetape4k.images.tiles.ImageTile::class.java,
+        ).forEach { clazz ->
+            Serializable::class.java.isAssignableFrom(clazz).shouldBeFalse()
+        }
+    }
+
     @Test
     fun `snapshot classes expose an explicit serialVersionUID`() {
         listOf(
@@ -303,6 +397,51 @@ class PrivacyDerivativeSerializationTest {
                 ),
             ),
         )
+
+    private fun optionsSnapshot(): PrivacyDerivativeOptionsSnapshot =
+        PrivacyDerivativeOptionsSnapshot(
+            stripMetadata = true,
+            removeGps = true,
+            normalizeOrientation = true,
+            maxPixels = 100,
+            maxSide = null,
+            thumbnailSize = null,
+            thumbnailCrop = PrivacyThumbnailCropId.FIT,
+            outputFormat = PrivacyDerivativeFormatId.JPEG,
+            redactions = emptyList(),
+        )
+
+    private fun redactionSnapshot(): PrivacyRedactionSnapshot =
+        PrivacyRedactionSnapshot(
+            regionId = "region",
+            coordinateSpace = PrivacyWireCoordinateSpaceId.NORMALIZED,
+            x = 0.0,
+            y = 0.0,
+            width = 1.0,
+            height = 1.0,
+            mode = PrivacyWireRedactionModeId.SOLID,
+            maskColorArgb = 0,
+            maskOpacity = 1.0,
+        )
+
+    private fun assertInvalidSerializedField(instance: Any, fieldName: String, replacement: Any?) {
+        replaceField(instance, fieldName, replacement)
+        assertFailsWith<Exception> {
+            deserialize(serialize(instance as Serializable))
+        }
+    }
+
+    private fun replaceField(instance: Any, fieldName: String, replacement: Any?) {
+        instance.javaClass.getDeclaredField(fieldName).apply {
+            isAccessible = true
+            set(instance, replacement)
+        }
+    }
+
+    private fun serialize(value: Serializable): ByteArray = BinarySerializers.Jdk.serialize(value)
+
+    private inline fun <reified T: Any> deserialize(bytes: ByteArray): T =
+        BinarySerializers.Jdk.deserialize<T>(bytes).shouldNotBeNull()
 
     private class RecordingOutputStream: OutputStream() {
         private val delegate = ByteArrayOutputStream()

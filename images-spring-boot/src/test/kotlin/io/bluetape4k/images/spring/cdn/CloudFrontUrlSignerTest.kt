@@ -9,6 +9,8 @@ import io.bluetape4k.images.spring.autoconfigure.CdnProperties
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import org.junit.jupiter.api.Test
+import java.security.KeyPairGenerator
+import java.util.Base64
 
 class CloudFrontUrlSignerTest {
 
@@ -47,6 +49,19 @@ class CloudFrontUrlSignerTest {
         log.debug { "error message: ${error.message}" }
         error.message shouldNotContain path
         error.cause.shouldBeNull()
+    }
+
+    @Test
+    fun `accepts standard Base64 PKCS8 private key`() {
+        val keyPairGenerator = KeyPairGenerator.getInstance("RSA")
+        keyPairGenerator.initialize(2048)
+        val encodedKey = (1..10)
+            .map { Base64.getEncoder().encodeToString(keyPairGenerator.generateKeyPair().private.encoded) }
+            .firstOrNull { '+' in it || '/' in it }
+            ?: error("Generated PKCS8 fixture did not contain standard Base64 characters")
+        val pem = "-----BEGIN PRIVATE KEY-----\n$encodedKey\n-----END PRIVATE KEY-----"
+
+        CloudFrontUrlSigner(baseProperties(privateKeyPem = pem))
     }
 
     private fun baseProperties(

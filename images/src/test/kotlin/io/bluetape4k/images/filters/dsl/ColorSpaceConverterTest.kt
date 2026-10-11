@@ -18,10 +18,11 @@ class ColorSpaceConverterTest {
      */
     @Test
     fun `rgbToHsv and hsvToRgb roundtrip`() {
+        val random = Random(42)
         repeat(1000) {
-            val r = Random.nextInt(256)
-            val g = Random.nextInt(256)
-            val b = Random.nextInt(256)
+            val r = random.nextInt(256)
+            val g = random.nextInt(256)
+            val b = random.nextInt(256)
             val (h, s, v) = ColorSpaceConverter.rgbToHsv(r, g, b)
             val (r2, g2, b2) = ColorSpaceConverter.hsvToRgb(h, s, v)
 
@@ -37,10 +38,11 @@ class ColorSpaceConverterTest {
      */
     @Test
     fun `rgbToYCbCr and yCbCrToRgb roundtrip`() {
+        val random = Random(42)
         repeat(1000) {
-            val r = Random.nextInt(256)
-            val g = Random.nextInt(256)
-            val b = Random.nextInt(256)
+            val r = random.nextInt(256)
+            val g = random.nextInt(256)
+            val b = random.nextInt(256)
             val (y, cb, cr) = ColorSpaceConverter.rgbToYCbCr(r, g, b)
             val (r2, g2, b2) = ColorSpaceConverter.yCbCrToRgb(y, cb, cr)
             abs(r - r2) shouldBeLessOrEqualTo 3

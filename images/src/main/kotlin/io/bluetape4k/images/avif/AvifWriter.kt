@@ -4,7 +4,6 @@ import com.sksamuel.scrimage.ImmutableImage
 import io.bluetape4k.images.IncubatingImageApi
 import io.bluetape4k.support.requireInRange
 import java.io.OutputStream
-import java.io.Serializable
 
 /**
  * AVIF 인코딩 옵션입니다.
@@ -23,7 +22,7 @@ import java.io.Serializable
 data class AvifEncodeOptions(
     val quality: Float = 0.85f,
     val lossless: Boolean = false,
-): Serializable {
+) {
     init {
         quality.requireInRange(0.0f, 1.0f, "quality")
     }
@@ -32,7 +31,6 @@ data class AvifEncodeOptions(
         @JvmStatic
         val Default = AvifEncodeOptions()
 
-        private const val serialVersionUID = 1L
     }
 }
 

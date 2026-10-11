@@ -8,7 +8,6 @@ import io.bluetape4k.support.requireInRange
 import io.bluetape4k.support.requirePositiveNumber
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import java.io.Serializable
 
 private object DominantColorLog: KLogging()
 
@@ -27,7 +26,7 @@ data class DominantColor(
     val g: Int,
     val b: Int,
     val population: Int,
-): Serializable {
+) {
     init {
         r.requireInRange(0, 255) { "r은 0..255 범위여야 합니다. 입력: $r" }
         g.requireInRange(0, 255) { "g는 0..255 범위여야 합니다. 입력: $g" }
@@ -53,7 +52,6 @@ data class DominantColor(
                 population = population,
             )
 
-        private const val serialVersionUID: Long = 1L
     }
 }
 

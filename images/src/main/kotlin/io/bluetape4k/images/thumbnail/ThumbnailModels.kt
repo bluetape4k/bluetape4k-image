@@ -7,7 +7,6 @@ import io.bluetape4k.images.coroutines.SuspendJpegWriter
 import io.bluetape4k.images.transforms.SaliencyStrategy
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.requirePositiveNumber
-import java.io.Serializable
 import java.nio.file.Path
 
 /**
@@ -17,15 +16,11 @@ data class ThumbnailSize(
     val width: Int,
     val height: Int,
     val suffix: String = "${width}x$height",
-): Serializable {
+) {
     init {
         width.requirePositiveNumber("width")
         height.requirePositiveNumber("height")
         suffix.requireNotBlank("suffix")
-    }
-
-    companion object {
-        private const val serialVersionUID = 1L
     }
 }
 
@@ -52,7 +47,7 @@ sealed interface ThumbnailCrop {
 data class ThumbnailFormat(
     val writer: SuspendImageWriter,
     val extension: String,
-): Serializable {
+) {
     val normalizedExtension: String = extension.trim().removePrefix(".").lowercase()
 
     init {
@@ -62,7 +57,6 @@ data class ThumbnailFormat(
     }
 
     companion object {
-        private const val serialVersionUID = 1L
         private const val PATH_SEPARATOR = '/'
         private const val WINDOWS_PATH_SEPARATOR = '\\'
 
@@ -123,7 +117,7 @@ data class ThumbnailResult(
     val size: ThumbnailSize,
     val status: ThumbnailStatus,
     val image: ImmutableImage? = null,
-): Serializable {
+) {
     /**
      * 실패 시점의 처리 단계입니다.
      */
@@ -136,7 +130,4 @@ data class ThumbnailResult(
     val cause: Throwable?
         get() = (status as? ThumbnailStatus.Failure)?.cause
 
-    companion object {
-        private const val serialVersionUID = 1L
-    }
 }

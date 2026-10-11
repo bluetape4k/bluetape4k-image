@@ -108,7 +108,6 @@ class CaptchaOptions(
             textColors,
             expiresAfter,
             fonts,
-            noise
         )
     }
 
@@ -126,7 +125,7 @@ class CaptchaOptions(
             .add("fonts", fonts)
             .toString()
 
-    // private fun readResolve(): Any = copy()
+    private fun readResolve(): Any = copy()
 
     companion object {
         private const val serialVersionUID: Long = -5633101925229847169L

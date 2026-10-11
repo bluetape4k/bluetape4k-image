@@ -19,7 +19,7 @@ tasks.named<Test>("test") {
 
 dependencies {
     // OCR 라이브리러
-    api(bt4k.tess4j)
+    implementation(bt4k.tess4j)
 
     api(project(":bluetape4k-images"))
 

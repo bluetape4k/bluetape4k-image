@@ -107,8 +107,17 @@ class OcrOptions(
                 regions == other.regions
     }
 
-    override fun hashCode(): Int =
-        hashOf(languages, tessdataPath, engineMode, pageSegmentationMode, variables, configs, trimText)
+    override fun hashCode(): Int = hashOf(
+        languages,
+        tessdataPath,
+        engineMode,
+        pageSegmentationMode,
+        variables,
+        configs,
+        trimText,
+        structuredDetail,
+        regions,
+    )
 
     override fun toString(): String =
         ToStringBuilder(this)

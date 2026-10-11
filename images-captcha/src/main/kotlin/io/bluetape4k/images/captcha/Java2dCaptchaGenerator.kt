@@ -25,7 +25,6 @@ import kotlin.time.toJavaDuration
  * rendering은 native library나 font asset을 bundle하지 않고 JVM logical font, bounded
  * noise, optional wave distortion을 사용합니다.
  */
-@PublishedApi
 internal class Java2dCaptchaGenerator(
     override val options: CaptchaOptions = CaptchaOptions(),
     private val clock: Clock = Clock.systemUTC(),

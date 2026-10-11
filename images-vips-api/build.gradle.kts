@@ -1,68 +1,74 @@
 import groovy.util.Node
+import org.gradle.api.tasks.compile.JavaCompile
+import org.gradle.api.tasks.testing.Test
+import org.gradle.api.publish.PublishingExtension
+import org.gradle.api.publish.maven.MavenPublication
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
+import org.gradle.kotlin.dsl.configure
 
 plugins {
     `java-test-fixtures`
 }
-//
-//// The API is consumed by the JVips JNI implementation (whose legacy artifact
-//// name contains java21) and the Java 25 FFM implementation. Keep the shared
-//// contract on the repository-wide Java 25 bytecode level.
-//java {
-//    toolchain {
-//        languageVersion.set(JavaLanguageVersion.of(25))
-//    }
-//}
-//
-//kotlin {
-//    jvmToolchain(25)
-//    compilerOptions {
-//        jvmTarget.set(JvmTarget.JVM_25)
-//    }
-//}
-//
-//tasks.withType<JavaCompile>().configureEach {
-//    options.release.set(25)
-//}
-//
-//// Test fixtures compare against the regular images module, which targets JDK
-//// 25. Keep the published API/native contract on the repository JDK 25 baseline
-//// while compiling this internal verification-only source set at that level.
-//tasks.named<JavaCompile>("compileTestFixturesJava") {
-//    javaCompiler.set(javaToolchains.compilerFor {
-//        languageVersion.set(JavaLanguageVersion.of(25))
-//    })
-//    options.release.set(25)
-//}
-//
-//tasks.named<KotlinJvmCompile>("compileTestFixturesKotlin") {
-//    kotlinJavaToolchain.toolchain.use(javaToolchains.launcherFor {
-//        languageVersion.set(JavaLanguageVersion.of(25))
-//    })
-//    compilerOptions.jvmTarget.set(JvmTarget.JVM_25)
-//}
-//
-//// The test fixtures consume the regular images module, whose bytecode target
-//// The shared API and its verification fixtures use the same Java 25 bytecode
-//// level, so Gradle selects one consistent variant for all consumers.
-//tasks.named<Test>("test") {
-//    javaLauncher.set(javaToolchains.launcherFor {
-//        languageVersion.set(JavaLanguageVersion.of(25))
-//    })
-//}
-//
-//tasks.named<JavaCompile>("compileTestJava") {
-//    javaCompiler.set(javaToolchains.compilerFor {
-//        languageVersion.set(JavaLanguageVersion.of(25))
-//    })
-//    options.release.set(25)
-//}
-//
-//tasks.named<KotlinJvmCompile>("compileTestKotlin") {
-//    kotlinJavaToolchain.toolchain.use(javaToolchains.launcherFor {
-//        languageVersion.set(JavaLanguageVersion.of(25))
-//    })
-//    compilerOptions.jvmTarget.set(JvmTarget.JVM_25)
-//}
+
+// The API is consumed by the JVips JNI implementation (whose legacy artifact
+// name contains java21) and the Java 25 FFM implementation. Keep the shared
+// contract on the repository-wide Java 25 bytecode level.
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(25))
+    }
+}
+
+kotlin {
+    jvmToolchain(25)
+    compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_25)
+    }
+}
+
+tasks.withType<JavaCompile>().configureEach {
+    options.release.set(25)
+}
+
+// Test fixtures compare against the regular images module, which targets JDK
+// 25. Keep the published API/native contract on the repository JDK 25 baseline
+// while compiling this internal verification-only source set at that level.
+tasks.named<JavaCompile>("compileTestFixturesJava") {
+    javaCompiler.set(javaToolchains.compilerFor {
+        languageVersion.set(JavaLanguageVersion.of(25))
+    })
+    options.release.set(25)
+}
+
+tasks.named<KotlinJvmCompile>("compileTestFixturesKotlin") {
+    kotlinJavaToolchain.toolchain.use(javaToolchains.launcherFor {
+        languageVersion.set(JavaLanguageVersion.of(25))
+    })
+    compilerOptions.jvmTarget.set(JvmTarget.JVM_25)
+}
+
+// Test fixtures and the shared API use the repository's Java 25 bytecode
+// target, so Gradle selects one consistent variant for all consumers.
+tasks.named<Test>("test") {
+    javaLauncher.set(javaToolchains.launcherFor {
+        languageVersion.set(JavaLanguageVersion.of(25))
+    })
+}
+
+tasks.named<JavaCompile>("compileTestJava") {
+    javaCompiler.set(javaToolchains.compilerFor {
+        languageVersion.set(JavaLanguageVersion.of(25))
+    })
+    options.release.set(25)
+}
+
+tasks.named<KotlinJvmCompile>("compileTestKotlin") {
+    kotlinJavaToolchain.toolchain.use(javaToolchains.launcherFor {
+        languageVersion.set(JavaLanguageVersion.of(25))
+    })
+    compilerOptions.jvmTarget.set(JvmTarget.JVM_25)
+}
 
 configurations {
     testImplementation.get().extendsFrom(compileOnly.get(), runtimeOnly.get())
@@ -101,7 +107,7 @@ dependencies {
 
     // Coroutines
     api(bt4k.bluetape4k.coroutines)
-    api(libs.kotlinx.coroutines.core)
+    implementation(libs.kotlinx.coroutines.core)
     testImplementation(libs.kotlinx.coroutines.test)
 
     // Test Fixtures — VipsGoldenAssert needs scrimage pixel comparison + JUnit5

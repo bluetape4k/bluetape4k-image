@@ -1,7 +1,6 @@
 package io.bluetape4k.images.thumbnail
 
 import com.sksamuel.scrimage.ImmutableImage
-import io.bluetape4k.ToStringBuilder
 import io.bluetape4k.coroutines.flow.extensions.mapParallel
 import io.bluetape4k.images.batch.ImageBatchException
 import io.bluetape4k.images.batch.ImageBatchFailureStage
@@ -313,21 +312,6 @@ class ThumbnailPipeline private constructor(
         return output
     }
 
-    override fun toString(): String {
-        return ToStringBuilder(this)
-            .add("outputDirectory", outputDirectory)
-            .add("sizes", sizes)
-            .add("crop", crop)
-            .add("format", format)
-            .add("outputName", outputName)
-            .add("ioDispatcher", ioDispatcher)
-            .add("transformDispatcher", transformDispatcher)
-            .add("parallelism", parallelism)
-            .add("maxPixels", maxPixels)
-            .add("maxInFlightPixels", maxInFlightPixels)
-            .add("skipFailures", skipFailures)
-            .toString()
-    }
 
     /**
      * [ThumbnailPipeline] 빌더입니다.

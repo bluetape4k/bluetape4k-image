@@ -14,6 +14,7 @@ dependencies {
     implementation(libs.ktor.server.core)
     implementation(libs.ktor.server.netty)
     implementation(libs.ktor.serialization.kotlinx.json)
+    runtimeOnly(bt4k.logback)
 
     testImplementation(bt4k.bluetape4k.junit5)
     testImplementation(libs.ktor.client.content.negotiation)

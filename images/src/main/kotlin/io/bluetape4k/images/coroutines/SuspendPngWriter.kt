@@ -1,7 +1,6 @@
 package io.bluetape4k.images.coroutines
 
 import com.sksamuel.scrimage.nio.PngWriter
-import io.bluetape4k.ToStringBuilder
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 
 /**
@@ -17,7 +16,7 @@ import io.bluetape4k.logging.coroutines.KLoggingChannel
  * @param compressionLevel 압축 레벨 (0: 무압축, 9: 최대 압축, 기본값 9)
  */
 class SuspendPngWriter(
-    val compressionLevel: Int = 9,
+    compressionLevel: Int = 9,
 ): PngWriter(compressionLevel), SuspendImageWriter {
 
     companion object: KLoggingChannel() {
@@ -62,9 +61,4 @@ class SuspendPngWriter(
         return MinCompression
     }
 
-    override fun toString(): String {
-        return ToStringBuilder(this)
-            .add("compressionLevel", compressionLevel)
-            .toString()
-    }
 }
