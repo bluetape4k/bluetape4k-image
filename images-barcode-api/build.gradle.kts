@@ -12,7 +12,7 @@ dependencies {
 
     // Coroutines
     compileOnly(bt4k.bluetape4k.coroutines)
-    compileOnly(libs.kotlinx.coroutines.core)
+    api(libs.kotlinx.coroutines.core)
     testImplementation(libs.kotlinx.coroutines.test)
 
     testImplementation(bt4k.bluetape4k.junit5)

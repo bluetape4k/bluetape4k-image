@@ -51,17 +51,17 @@ tasks.withType<Test>().configureEach {
 dependencies {
     api(project(":bluetape4k-images-vips-api"))
 
-    api(bt4k.bluetape4k.io)
+    implementation(bt4k.bluetape4k.io)
     testImplementation(bt4k.bluetape4k.junit5)
     testImplementation(bt4k.bluetape4k.virtualthread.jdk25)
     testImplementation(testFixtures(project(":bluetape4k-images-vips-api")))
 
     // vips-ffm FFM bindings (JDK 23+; system libvips required on all platforms)
     // D8: binding types are internal — use api() only if consumers need VipsImage directly
-    api(bt4k.vips.ffm)
+    implementation(bt4k.vips.ffm)
 
     // BoundedInputStream for input size limits
-    api(bt4k.commons.io)
+    implementation(bt4k.commons.io)
 
     // Serializer
     testImplementation(bt4k.fory.kotlin)

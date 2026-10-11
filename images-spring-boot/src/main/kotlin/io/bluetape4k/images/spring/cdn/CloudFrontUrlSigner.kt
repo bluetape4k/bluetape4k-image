@@ -1,6 +1,5 @@
 package io.bluetape4k.images.spring.cdn
 
-import io.bluetape4k.codec.decodeBase64ByteArray
 import io.bluetape4k.images.spring.ImageObjectKey
 import io.bluetape4k.images.spring.ImageStorageException
 import io.bluetape4k.images.spring.autoconfigure.CdnProperties
@@ -25,7 +24,8 @@ import java.security.PrivateKey
 import java.security.spec.PKCS8EncodedKeySpec
 import java.time.Duration
 import java.time.Instant
-import java.util.*
+import java.util.Arrays
+import java.util.Base64
 
 /**
  * [CdnReadSigner]만 구현하는 CloudFront signed-URL generator입니다.
@@ -200,8 +200,7 @@ class CloudFrontUrlSigner(properties: CdnProperties.CloudFront): CdnReadSigner {
             .replace("\n", "")
             .replace(" ", "")
 
-        // val der = Base64.getDecoder().decode(base64Body)
-        val der = base64Body.decodeBase64ByteArray()
+        val der = Base64.getDecoder().decode(base64Body)
         try {
             val spec = PKCS8EncodedKeySpec(der)
             return KeyFactory.getInstance("RSA").generatePrivate(spec)

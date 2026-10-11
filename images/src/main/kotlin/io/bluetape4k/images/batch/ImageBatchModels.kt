@@ -4,7 +4,6 @@ import com.sksamuel.scrimage.ImmutableImage
 import io.bluetape4k.images.coroutines.SuspendImageWriter
 import io.bluetape4k.support.requirePositiveNumber
 import kotlinx.coroutines.Dispatchers
-import java.io.Serializable
 import java.nio.file.Path
 import kotlin.coroutines.CoroutineContext
 
@@ -111,7 +110,7 @@ data class ImageProcessingOptions(
     val maxInFlightPixels: Long = DEFAULT_MAX_IN_FLIGHT_PIXELS,
     val skipFailures: Boolean = false,
     val onFailure: suspend (ImageBatchResult.Failure) -> Unit = {},
-): Serializable {
+) {
     init {
         parallelism.requirePositiveNumber("parallelism")
         maxPixels.requirePositiveNumber("maxPixels")
@@ -119,8 +118,6 @@ data class ImageProcessingOptions(
     }
 
     companion object {
-        private const val serialVersionUID = 1L
-
         /**
          * 큰 이미지/대용량 배치를 위한 옵션을 생성합니다.
          *

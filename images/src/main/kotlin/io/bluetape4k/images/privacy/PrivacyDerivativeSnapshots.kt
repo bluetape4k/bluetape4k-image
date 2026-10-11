@@ -95,7 +95,12 @@ data class PrivacyThumbnailSizeSnapshot(
         suffix.requireNotBlank("suffix")
     }
 
-    companion object {
+    private fun readObject(input: java.io.ObjectInputStream) {
+        input.defaultReadObject()
+        require(width > 0 && height > 0 && suffix.isNotBlank()) { "Invalid thumbnail snapshot" }
+    }
+
+    private companion object {
         private const val serialVersionUID: Long = 1L
     }
 }
@@ -130,7 +135,25 @@ data class PrivacyRedactionSnapshot(
         }
     }
 
-    companion object {
+    private fun readObject(input: java.io.ObjectInputStream) {
+        input.defaultReadObject()
+        regionId.requireSafePrivacySourceId("regionId")
+        require(coordinateSpace != null && mode != null) { "Invalid redaction snapshot" }
+        require(x.isFinite() && y.isFinite() && width.isFinite() && height.isFinite()) {
+            "Invalid redaction coordinates"
+        }
+        require(width > 0.0 && height > 0.0) { "Invalid redaction dimensions" }
+        require(maskOpacity.isFinite() && maskOpacity in 0.0..1.0) { "Invalid redaction snapshot" }
+        if (coordinateSpace == PrivacyWireCoordinateSpaceId.NORMALIZED) {
+            require(x >= 0.0 && y >= 0.0 && x + width <= 1.0 && y + height <= 1.0) {
+                "Invalid normalized redaction"
+            }
+        } else {
+            require(x >= 0.0 && y >= 0.0) { "Invalid pixel redaction" }
+        }
+    }
+
+    private companion object {
         private const val serialVersionUID: Long = 1L
     }
 }
@@ -157,6 +180,18 @@ class PrivacyDerivativeOptionsSnapshot(
         maxSide?.requireGt(0, "maxSide")
     }
 
+    private fun readObject(input: java.io.ObjectInputStream) {
+        input.defaultReadObject()
+        require(thumbnailSize == null || (thumbnailSize.width > 0 && thumbnailSize.height > 0)) {
+            "Invalid thumbnail size"
+        }
+        require(thumbnailCrop != null && outputFormat != null) { "Invalid options snapshot" }
+        require(maxPixels > 0 && (maxSide == null || maxSide > 0)) { "Invalid options snapshot" }
+        storedRedactions.requireNotNull("storedRedactions")
+        storedRedactions.size.requireLe(PRIVACY_DERIVATIVE_DEFAULT_MAX_REDACTIONS, "storedRedactions.size")
+        storedRedactions = immutableList(storedRedactions)
+    }
+
     override fun equals(other: Any?): Boolean =
         other is PrivacyDerivativeOptionsSnapshot &&
                 stripMetadata == other.stripMetadata &&
@@ -174,7 +209,7 @@ class PrivacyDerivativeOptionsSnapshot(
         thumbnailCrop, outputFormat, redactions,
     )
 
-    companion object {
+    private companion object {
         private const val serialVersionUID: Long = 1L
     }
 }
@@ -188,7 +223,12 @@ data class PrivacyImageDimensionsSnapshot(
         require(width > 0 && height > 0) { "image dimensions must be positive" }
     }
 
-    companion object {
+    private fun readObject(input: java.io.ObjectInputStream) {
+        input.defaultReadObject()
+        require(width > 0 && height > 0) { "Invalid image dimensions snapshot" }
+    }
+
+    private companion object {
         private const val serialVersionUID: Long = 1L
     }
 }
@@ -208,6 +248,17 @@ data class PrivacyAppliedRedactionSnapshot(
         }
         require(x >= 0.0 && y >= 0.0 && width > 0.0 && height > 0.0) {
             "applied redaction bounds are invalid"
+        }
+    }
+
+    private fun readObject(input: java.io.ObjectInputStream) {
+        input.defaultReadObject()
+        regionId.requireSafePrivacySourceId("regionId")
+        require(x.isFinite() && y.isFinite() && width.isFinite() && height.isFinite()) {
+            "Invalid applied redaction coordinates"
+        }
+        require(x >= 0.0 && y >= 0.0 && width > 0.0 && height > 0.0) {
+            "Invalid applied redaction bounds"
         }
     }
 
@@ -248,7 +299,15 @@ class PrivacyMetadataVerificationSnapshot(
 
     private fun readObject(input: java.io.ObjectInputStream) {
         input.defaultReadObject()
-
+        storedRequested.requireNotNull("storedRequested")
+        storedSourcePresent.requireNotNull("storedSourcePresent")
+        storedRemaining.requireNotNull("storedRemaining")
+        storedRequested.size.requireLe(PRIVACY_DERIVATIVE_DEFAULT_MAX_METADATA_ENTRIES, "storedRequested.size")
+        storedSourcePresent.size.requireLe(PRIVACY_DERIVATIVE_DEFAULT_MAX_METADATA_ENTRIES, "storedSourcePresent.size")
+        storedRemaining.size.requireLe(PRIVACY_DERIVATIVE_DEFAULT_MAX_METADATA_ENTRIES, "storedRemaining.size")
+        storedRequested = immutableEnumSet(storedRequested)
+        storedSourcePresent = immutableEnumSet(storedSourcePresent)
+        storedRemaining = immutableEnumSet(storedRemaining)
     }
 
     override fun equals(other: Any?): Boolean =
@@ -270,7 +329,12 @@ data class PrivacyDerivativeFailureSnapshot(
     val stage: PrivacyWireFailureStageId,
     val code: PrivacyDerivativeFailureCode,
 ): Serializable {
-    companion object {
+    private fun readObject(input: java.io.ObjectInputStream) {
+        input.defaultReadObject()
+        require(stage != null && code != null) { "Invalid derivative failure snapshot" }
+    }
+
+    private companion object {
         private const val serialVersionUID: Long = 1L
     }
 }
@@ -379,7 +443,7 @@ class PrivacyDerivativePayload(
     val report: PrivacyDerivativeReportSnapshot,
 ): Serializable {
 
-    private val storedBytes: ByteArray = encodedBytes.copyOf()
+    private var storedBytes: ByteArray = encodedBytes.copyOf()
 
     init {
         storedBytes.requireNotNull("storedBytes")
@@ -403,10 +467,17 @@ class PrivacyDerivativePayload(
     override fun hashCode(): Int = hashOf(storedBytes.contentHashCode(), report)
 
     override fun toString(): String =
-        ToStringBuilder(this)
-            .add("bytes", storedBytes.size)
-            .add("report", report)
-            .toString()
+        "PrivacyDerivativePayload(bytes=${storedBytes.size}, report=$report)"
+
+    private fun readObject(input: java.io.ObjectInputStream) {
+        input.defaultReadObject()
+        storedBytes.requireNotNull("storedBytes")
+        report.requireNotNull("report")
+        storedBytes.size.requireLe(PRIVACY_DERIVATIVE_DEFAULT_MAX_PAYLOAD_BYTES) {
+            "encoded payload exceeds the supported Java serialization limit"
+        }
+        storedBytes = storedBytes.copyOf()
+    }
 
     private companion object {
         private const val serialVersionUID: Long = 1L

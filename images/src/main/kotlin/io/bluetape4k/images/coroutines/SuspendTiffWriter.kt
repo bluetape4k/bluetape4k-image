@@ -3,7 +3,6 @@ package io.bluetape4k.images.coroutines
 import com.sksamuel.scrimage.AwtImage
 import com.sksamuel.scrimage.metadata.ImageMetadata
 import com.sksamuel.scrimage.nio.ImageWriter
-import io.bluetape4k.ToStringBuilder
 import io.bluetape4k.images.IIORegistryUtils
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.warn
@@ -131,10 +130,4 @@ class SuspendTiffWriter(
         }
     }
 
-    override fun toString(): String {
-        return ToStringBuilder(this)
-            .add("compression", compression)
-            .add("quality", quality)
-            .toString()
-    }
 }

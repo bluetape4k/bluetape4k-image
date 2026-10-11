@@ -1,7 +1,6 @@
 package io.bluetape4k.images.privacy
 
 import io.bluetape4k.support.requireInRange
-import java.io.Serializable
 
 /**
  * privacy snapshot JSON decode에 적용하는 caller-side 제한입니다.
@@ -22,7 +21,7 @@ data class PrivacyDerivativeJsonLimits(
     val maxPixels: Long = DEFAULT_MAX_PIXELS,
     val maxSide: Int = DEFAULT_MAX_SIDE,
     val maxThumbnailSide: Int = DEFAULT_MAX_THUMBNAIL_SIDE,
-): Serializable {
+) {
     init {
 
         maxJsonBytes.requireInRange(1, DEFAULT_MAX_JSON_BYTES, "maxJsonBytes")
@@ -53,6 +52,5 @@ data class PrivacyDerivativeJsonLimits(
         const val DEFAULT_MAX_SIDE: Int = 65_536
         const val DEFAULT_MAX_THUMBNAIL_SIDE: Int = 16_384
 
-        private const val serialVersionUID = 1L
     }
 }

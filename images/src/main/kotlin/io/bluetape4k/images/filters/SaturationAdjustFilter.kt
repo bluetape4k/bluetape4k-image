@@ -2,9 +2,8 @@ package io.bluetape4k.images.filters
 
 import com.sksamuel.scrimage.ImmutableImage
 import com.sksamuel.scrimage.filter.Filter
-import io.bluetape4k.ToStringBuilder
 import io.bluetape4k.images.filters.dsl.ColorSpaceConverter
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.support.requireGe
 
 /**
@@ -23,7 +22,7 @@ class SaturationAdjustFilter(private val factor: Float): Filter {
         factor.requireGe(0f, "factor")
     }
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     override fun apply(image: ImmutableImage) {
         val raster = image.awt().raster
@@ -52,11 +51,6 @@ class SaturationAdjustFilter(private val factor: Float): Filter {
         }
     }
 
-    override fun toString(): String {
-        return ToStringBuilder(this)
-            .add("factor", factor)
-            .toString()
-    }
 }
 
 /**

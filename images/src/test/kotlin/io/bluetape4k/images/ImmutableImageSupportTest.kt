@@ -144,11 +144,13 @@ class ImmutableImageSupportTest: AbstractImageTest() {
 
     @Test
     fun `load large generated image from BufferedSource keeps caller ownership`() {
-        TrackingSource(whiteTestImage(1024, 768)).buffered().use { source ->
+        val trackedSource = TrackingSource(whiteTestImage(1024, 768))
+        trackedSource.buffered().use { source ->
             val image = immutableImageOf(source)
 
             image.width shouldBeEqualTo 1024
             image.height shouldBeEqualTo 768
+            trackedSource.closed shouldBeEqualTo false
         }
     }
 

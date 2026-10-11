@@ -1,7 +1,6 @@
 package io.bluetape4k.images.coroutines
 
 import com.sksamuel.scrimage.ImmutableImage
-import io.bluetape4k.ToStringBuilder
 import io.bluetape4k.images.IIORegistryUtils
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.warn
@@ -68,7 +67,7 @@ class SuspendTiffMultiPageWriter(
      * @throws java.io.IOException TIFF 쓰기 실패 시
      * @throws IllegalStateException TwelveMonkeys TIFF writer를 찾을 수 없는 경우
      */
-    override suspend fun suspendWrite(images: Collection<ImmutableImage>, out: OutputStream) {
+    override suspend fun suspendWrite(images: List<ImmutableImage>, out: OutputStream) {
         require(images.isNotEmpty()) { "images 리스트가 비어 있습니다." }
         require(images.size <= maxPages) { "페이지 수(${images.size})가 maxPages($maxPages)를 초과합니다." }
 
@@ -84,7 +83,7 @@ class SuspendTiffMultiPageWriter(
         }
     }
 
-    private fun writeBlocking(images: Collection<ImmutableImage>, out: OutputStream) {
+    private fun writeBlocking(images: List<ImmutableImage>, out: OutputStream) {
         val firstImage = images.first()
         val type = ImageTypeSpecifier.createFromBufferedImageType(firstImage.awt().type)
         val writers = ImageIO.getImageWriters(type, "tiff")
@@ -131,11 +130,4 @@ class SuspendTiffMultiPageWriter(
         buffer.writeTo(out)
     }
 
-    override fun toString(): String {
-        return ToStringBuilder(this)
-            .add("compression", compression)
-            .add("maxPages", maxPages)
-            .add("maxPixelsPerPage", maxPixelsPerPage)
-            .toString()
-    }
 }

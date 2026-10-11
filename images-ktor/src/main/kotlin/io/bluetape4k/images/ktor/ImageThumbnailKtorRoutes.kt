@@ -30,7 +30,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.io.readByteArray
 import java.io.IOException
-import java.io.Serializable
 
 private const val DEFAULT_IMAGE_ROUTE = "/images"
 private const val DEFAULT_IMAGE_FIELD = "file"
@@ -52,7 +51,7 @@ private object ImageThumbnailKtorRoutes: KLogging()
  * persistence, S3, CDN URL, native libvips가 필요한 application은 이 route 밖에서
  * 해당 concern을 조합해야 합니다.
  */
-data class ImageThumbnailKtorRoutesConfig(
+class ImageThumbnailKtorRoutesConfig(
     val routePath: String = DEFAULT_IMAGE_ROUTE,
     val multipartFieldName: String = DEFAULT_IMAGE_FIELD,
     val maxInputBytes: Long = DEFAULT_MAX_INPUT_BYTES.toLong(),
@@ -62,7 +61,7 @@ data class ImageThumbnailKtorRoutesConfig(
     val maxAllowedSide: Int = DEFAULT_MAX_THUMBNAIL_SIDE,
     val writer: ImageWriter = PngWriter.MaxCompression,
     val responseContentType: ContentType = ContentType.Image.PNG,
-): Serializable {
+) {
     init {
         routePath.requireNotBlank("routePath")
         multipartFieldName.requireNotBlank("multipartFieldName")
@@ -76,9 +75,6 @@ data class ImageThumbnailKtorRoutesConfig(
         }
     }
 
-    companion object {
-        private const val serialVersionUID = 1L
-    }
 }
 
 /**

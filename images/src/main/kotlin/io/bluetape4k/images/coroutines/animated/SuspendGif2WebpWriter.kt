@@ -1,7 +1,6 @@
 package io.bluetape4k.images.coroutines.animated
 
 import com.sksamuel.scrimage.webp.Gif2WebpWriter
-import io.bluetape4k.ToStringBuilder
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.support.requireInRange
 
@@ -57,11 +56,4 @@ class SuspendGif2WebpWriter(
         return SuspendGif2WebpWriter(q, m, lossy)
     }
 
-    override fun toString(): String {
-        return ToStringBuilder(this)
-            .add("q", q)
-            .add("m", m)
-            .add("lossy", lossy)
-            .toString()
-    }
 }

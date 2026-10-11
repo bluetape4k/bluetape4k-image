@@ -2,9 +2,8 @@ package io.bluetape4k.images.filters
 
 import com.sksamuel.scrimage.ImmutableImage
 import com.sksamuel.scrimage.filter.Filter
-import io.bluetape4k.ToStringBuilder
 import io.bluetape4k.images.filters.dsl.ColorSpaceConverter
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 
 /**
  * HSV 색공간에서 색조(Hue)를 회전시키는 [Filter].
@@ -16,7 +15,7 @@ import io.bluetape4k.logging.KLogging
  */
 class HueAdjustFilter(private val deltaDegrees: Float): Filter {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     override fun apply(image: ImmutableImage) {
         val raster = image.awt().raster
@@ -40,11 +39,6 @@ class HueAdjustFilter(private val deltaDegrees: Float): Filter {
         }
     }
 
-    override fun toString(): String {
-        return ToStringBuilder(this)
-            .add("deltaDegrees", deltaDegrees)
-            .toString()
-    }
 }
 
 /**

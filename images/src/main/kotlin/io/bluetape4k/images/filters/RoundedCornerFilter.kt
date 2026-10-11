@@ -2,8 +2,7 @@ package io.bluetape4k.images.filters
 
 import com.sksamuel.scrimage.ImmutableImage
 import com.sksamuel.scrimage.filter.Filter
-import io.bluetape4k.ToStringBuilder
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.support.requireGe
 import java.awt.image.BufferedImage
 import kotlin.math.sqrt
@@ -22,7 +21,7 @@ class RoundedCornerFilter(private val radius: Int): Filter {
         radius.requireGe(0, "radius")
     }
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     override fun apply(image: ImmutableImage) {
         if (radius == 0) return
@@ -55,11 +54,6 @@ class RoundedCornerFilter(private val radius: Int): Filter {
         image.setRGB(x, y, newArgb)
     }
 
-    override fun toString(): String {
-        return ToStringBuilder(this)
-            .add("radius", radius)
-            .toString()
-    }
 }
 
 /**
