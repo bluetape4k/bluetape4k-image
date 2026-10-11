@@ -14,8 +14,6 @@ import io.bluetape4k.concurrent.await
 import io.bluetape4k.concurrent.get
 import io.bluetape4k.io.lookup
 import io.bluetape4k.io.serializer.BinarySerializers
-import io.bluetape4k.logging.KLogging
-import io.bluetape4k.logging.debug
 import io.bluetape4k.support.toUtf8Bytes
 import org.junit.jupiter.api.Test
 import java.io.ByteArrayInputStream
@@ -29,15 +27,12 @@ import kotlin.time.Duration.Companion.seconds
 
 class PrivacyDerivativeSerializationTest {
 
-    companion object: KLogging()
-
     @Test
     fun `payload uses versioned envelope and round trips through Jackson 3`() {
         val payload = payload()
 
         val json = PrivacyDerivativeJackson.encodePayload(payload)
 
-        log.debug { "json=$json" }
         json shouldContain "\"schemaVersion\":1"
         json shouldContain "\"kind\":\"payload\""
         json shouldNotContain "ImmutableImage"
@@ -252,8 +247,6 @@ class PrivacyDerivativeSerializationTest {
             elapsedMillis = report.elapsedMillis,
             metadataVerification = report.metadataVerification,
         )
-        log.debug { "expanded=$expanded" }
-
         assertFailsWith<PrivacyDerivativeCodecException> {
             PrivacyDerivativeJackson.decodeReport(
                 PrivacyDerivativeJackson.encodeReport(expanded),

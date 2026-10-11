@@ -167,6 +167,28 @@ class BarcodeModelsTest {
     }
 
     @Test
+    fun `Java deserialization revalidates barcode model invariants`() {
+        assertInvalidSerializedField(BarcodeProviderIdentity(name = "valid"), "name", " ")
+        assertInvalidSerializedField(BarcodePoint(x = 1.0, y = 2.0), "x", Double.NaN)
+        assertInvalidSerializedField(
+            BarcodeBoundingBox(x = 0.0, y = 0.0, width = 1.0, height = 1.0),
+            "width",
+            0.0,
+        )
+        assertInvalidSerializedField(
+            BarcodeRegion(points = listOf(BarcodePoint(1.0, 2.0)), coordinateSpace = BarcodeCoordinateSpace.PIXEL),
+            "points",
+            emptyList<BarcodePoint>(),
+        )
+        assertInvalidSerializedField(BarcodeOptions(minimumConfidence = 0.5), "minimumConfidence", 1.1)
+        assertInvalidSerializedField(
+            BarcodeResult(text = "valid", format = BarcodeFormat.QR_CODE, provider = BarcodeProviderIdentity("fake")),
+            "text",
+            " ",
+        )
+    }
+
+    @Test
     fun `result toString redacts payload and metadata values`() {
         val result = BarcodeResult(
             text = "secret-token-123",
@@ -267,5 +289,17 @@ class BarcodeModelsTest {
     private fun <T: Any> roundTrip(value: Any): T? {
         val bytes = BinarySerializers.Jdk.serialize(value)
         return BinarySerializers.Jdk.deserialize(bytes)
+    }
+
+    private fun assertInvalidSerializedField(instance: Any, fieldName: String, replacement: Any?) {
+        instance.javaClass.getDeclaredField(fieldName).apply {
+            isAccessible = true
+            set(instance, replacement)
+        }
+
+        val bytes = BinarySerializers.Jdk.serialize(instance as java.io.Serializable)
+        assertFailsWith<Exception> {
+            BinarySerializers.Jdk.deserialize<Any>(bytes)
+        }
     }
 }

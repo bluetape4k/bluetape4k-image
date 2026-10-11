@@ -4,10 +4,12 @@ import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.io.serializer.BinarySerializers
 import io.bluetape4k.images.ImageDimensions
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import org.junit.jupiter.api.Test
+import java.io.Serializable
 
 class SensitiveContentModelsTest {
 
@@ -189,5 +191,72 @@ class SensitiveContentModelsTest {
         }
 
         error.message shouldContain "metadata"
+    }
+
+    @Test
+    fun `Java deserialization revalidates sensitive content model invariants`() {
+        assertInvalidSerializedField(SensitivePoint(1.0, 2.0), "x", Double.NaN)
+        assertInvalidSerializedField(SensitiveRasterMask(1, 1), "width", 0)
+        assertInvalidSerializedField(
+            SensitiveRegionGeometry.Rectangle(0.1, 0.1, 0.2, 0.2, SensitiveCoordinateSpace.NORMALIZED),
+            "width",
+            0.0,
+        )
+        assertInvalidSerializedField(
+            SensitiveRegionGeometry.Polygon(
+                points = listOf(
+                    SensitivePoint(0.1, 0.1),
+                    SensitivePoint(0.8, 0.1),
+                    SensitivePoint(0.8, 0.8),
+                    SensitivePoint(0.1, 0.1),
+                ),
+                coordinateSpace = SensitiveCoordinateSpace.NORMALIZED,
+            ),
+            "points",
+            emptyList<SensitivePoint>(),
+        )
+        assertInvalidSerializedField(
+            SensitiveRegionGeometry.Polyline(
+                listOf(SensitivePoint(0.1, 0.1), SensitivePoint(0.8, 0.8)),
+                SensitiveCoordinateSpace.NORMALIZED,
+            ),
+            "points",
+            emptyList<SensitivePoint>(),
+        )
+        assertInvalidSerializedField(
+            SensitiveRegionGeometry.RasterMask(SensitiveRasterMask(1, 1)),
+            "mask",
+            null,
+        )
+        assertInvalidSerializedField(
+            SensitiveRegion(SensitiveRegionGeometry.Rectangle(0.1, 0.1, 0.2, 0.2, SensitiveCoordinateSpace.NORMALIZED)),
+            "id",
+            " ",
+        )
+        assertInvalidSerializedField(
+            SensitiveContentDetection(
+                label = "violence",
+                category = SensitiveContentCategory.VIOLENCE,
+                severity = SensitiveContentSeverity.MEDIUM,
+                confidence = 0.5,
+                sourceBackend = "unit-detector",
+                rawBackendLabel = "weapon_score",
+            ),
+            "confidence",
+            Double.NaN,
+        )
+    }
+
+    private fun assertInvalidSerializedField(instance: Any, fieldName: String, replacement: Any?) {
+        instance.javaClass.getDeclaredField(fieldName).apply {
+            isAccessible = true
+            set(instance, replacement)
+        }
+
+        assertFailsWith<Exception> {
+            BinarySerializers.Jdk.deserialize<Any>(
+                BinarySerializers.Jdk.serialize(instance as Serializable),
+            )
+        }
     }
 }

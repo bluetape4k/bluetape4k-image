@@ -258,27 +258,44 @@ class PrivacyDerivativeVerificationException(
 /**
  * 성공한 privacy derivative payload입니다.
  */
-data class PrivacyDerivativeResult(
+class PrivacyDerivativeResult(
     val image: ImmutableImage,
-    val bytes: ByteArray,
+    bytes: ByteArray,
     val report: PrivacyDerivativeReport,
 ) {
+    private val storedBytes = bytes.copyOf()
+
+    val bytes: ByteArray
+        get() = storedBytes.copyOf()
+
+    operator fun component1(): ImmutableImage = image
+
+    operator fun component2(): ByteArray = bytes
+
+    operator fun component3(): PrivacyDerivativeReport = report
+
+    fun copy(
+        image: ImmutableImage = this.image,
+        bytes: ByteArray = this.bytes,
+        report: PrivacyDerivativeReport = this.report,
+    ): PrivacyDerivativeResult = PrivacyDerivativeResult(image, bytes, report)
+
     override fun equals(other: Any?): Boolean {
         if (other == null) return false
         if (other === this) return true
 
         return other is PrivacyDerivativeResult &&
                 image == other.image &&
-                bytes.contentEquals(other.bytes) &&
+                storedBytes.contentEquals(other.storedBytes) &&
                 report == other.report
     }
 
-    override fun hashCode(): Int = hashOf(image, bytes.contentHashCode(), report)
+    override fun hashCode(): Int = hashOf(image, storedBytes.contentHashCode(), report)
 
     override fun toString(): String {
         return ToStringBuilder(this)
             .add("image", image)
-            .add("bytes", bytes.size)
+            .add("bytes", storedBytes.size)
             .add("report", report)
             .toString()
     }

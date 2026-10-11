@@ -4,9 +4,11 @@ import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldHaveSize
+import io.bluetape4k.io.serializer.BinarySerializers
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import org.junit.jupiter.api.Test
+import java.io.Serializable
 
 class SensitiveContentPolicyTest {
 
@@ -224,6 +226,51 @@ class SensitiveContentPolicyTest {
         error.message shouldContain "maskOpacity"
     }
 
+    @Test
+    fun `Java deserialization revalidates moderation model invariants`() {
+        assertInvalidSerializedField(SensitiveTreatmentParameters(blurRadius = 1.0), "blurRadius", 0.0)
+        assertInvalidSerializedField(
+            SensitiveModerationPolicy(rules = emptyList()),
+            "fallbackRule",
+            null,
+        )
+        assertInvalidSerializedField(
+            SensitiveModerationRule(
+                id = "valid-rule",
+                action = SensitiveTreatmentAction.BLUR,
+                level = SensitiveTreatmentLevel.MEDIUM,
+                reason = "valid reason",
+            ),
+            "id",
+            " ",
+        )
+        assertInvalidSerializedField(
+            SensitiveModerationDecision(
+                detection = detection(SensitiveContentCategory.VIOLENCE, SensitiveContentSeverity.MEDIUM, 0.5),
+                workflowState = SensitiveModerationWorkflowState.ACTION_SELECTED,
+                action = SensitiveTreatmentAction.BLUR,
+                level = SensitiveTreatmentLevel.MEDIUM,
+                parameters = SensitiveTreatmentParameters(),
+                reason = "valid reason",
+                matchedRuleId = null,
+            ),
+            "reason",
+            " ",
+        )
+        assertInvalidSerializedField(
+            SensitiveModerationReport(
+                decisions = emptyList(),
+                workflowStates = listOf(SensitiveModerationWorkflowState.POLICY_EVALUATED),
+                selectedAction = SensitiveTreatmentAction.ALLOW,
+                selectedLevel = SensitiveTreatmentLevel.LOW,
+                selectedParameters = SensitiveTreatmentParameters(),
+                reason = "valid reason",
+            ),
+            "workflowStates",
+            emptyList<SensitiveModerationWorkflowState>(),
+        )
+    }
+
     private fun detection(
         category: SensitiveContentCategory,
         severity: SensitiveContentSeverity,
@@ -252,4 +299,17 @@ class SensitiveContentPolicyTest {
                 )
             },
         )
+
+    private fun assertInvalidSerializedField(instance: Any, fieldName: String, replacement: Any?) {
+        instance.javaClass.getDeclaredField(fieldName).apply {
+            isAccessible = true
+            set(instance, replacement)
+        }
+
+        assertFailsWith<Exception> {
+            BinarySerializers.Jdk.deserialize<Any>(
+                BinarySerializers.Jdk.serialize(instance as Serializable),
+            )
+        }
+    }
 }

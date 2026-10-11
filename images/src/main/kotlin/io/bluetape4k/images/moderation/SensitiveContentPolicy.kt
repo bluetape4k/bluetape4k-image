@@ -77,6 +77,8 @@ data class SensitiveTreatmentParameters(
         metadata.requireValidPolicyMetadata("metadata")
     }
 
+    private fun readResolve(): Any = copy()
+
     companion object {
         private const val serialVersionUID: Long = 2478670818038138570L
     }
@@ -104,6 +106,8 @@ data class SensitiveModerationRule(
         reason.requireNotBlank("reason")
         minimumConfidence.requireFiniteProbability("minimumConfidence")
     }
+
+    private fun readResolve(): Any = copy()
 
     /**
      * 이 rule이 [detection]에 적용되면 `true`를 반환합니다.
@@ -136,6 +140,8 @@ data class SensitiveModerationDecision(
         matchedRuleId?.requireNotBlank("matchedRuleId")
     }
 
+    private fun readResolve(): Any = copy()
+
     companion object {
         private const val serialVersionUID: Long = 8309861929051965644L
     }
@@ -158,6 +164,8 @@ data class SensitiveModerationReport(
         require(workflowStates.isNotEmpty()) { "workflowStates must not be empty" }
     }
 
+    private fun readResolve(): Any = copy()
+
     companion object {
         private const val serialVersionUID: Long = -5813981965963547276L
     }
@@ -177,6 +185,7 @@ data class SensitiveModerationPolicy(
     val rules: List<SensitiveModerationRule>,
     val fallbackRule: SensitiveModerationRule = failClosedFallbackRule(),
 ): Serializable {
+    private fun readResolve(): Any = copy()
 
     /**
      * [detections]를 평가하고 감사 가능한 moderation report를 반환합니다.

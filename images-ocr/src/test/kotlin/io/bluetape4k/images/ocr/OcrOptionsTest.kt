@@ -203,10 +203,40 @@ class OcrOptionsTest {
         restored.options.languageExpression shouldBeEqualTo "eng+kor"
     }
 
+    @Test
+    fun `Java deserialization revalidates OCR model invariants`() {
+        val options = OcrOptions()
+        val box = OcrBoundingBox(x = 0, y = 0, width = 10, height = 10)
+
+        assertInvalidSerializedField(box, "width", 0)
+        assertInvalidSerializedField(OcrRegion(box, id = "valid"), "id", " ")
+        assertInvalidSerializedField(OcrResult(text = "text", options = options), "text", null)
+        assertInvalidSerializedField(
+            OcrStructuredResult("text", options, pages = listOf(OcrPage(0, "text"))),
+            "pages",
+            emptyList<OcrPage>(),
+        )
+        assertInvalidSerializedField(OcrPage(pageIndex = 0, text = "page"), "pageIndex", -1)
+        assertInvalidSerializedField(OcrTextBlock(pageIndex = 0, text = "block"), "confidence", 101.0)
+        assertInvalidSerializedField(OcrTextLine(pageIndex = 0, text = "line"), "confidence", Double.NaN)
+        assertInvalidSerializedField(OcrWord(pageIndex = 0, text = "word"), "pageIndex", -1)
+    }
+
     @Suppress("UNCHECKED_CAST")
     private fun <T:Any> roundTrip(value: T): T? {
         val serializer = JdkBinarySerializer(objectInputFilter = null)
         val bytes = serializer.serialize(value)
         return serializer.deserialize(bytes)
+    }
+
+    private fun assertInvalidSerializedField(instance: Any, fieldName: String, replacement: Any?) {
+        instance.javaClass.getDeclaredField(fieldName).apply {
+            isAccessible = true
+            set(instance, replacement)
+        }
+
+        assertFailsWith<Exception> {
+            roundTrip<Any>(instance)
+        }
     }
 }
