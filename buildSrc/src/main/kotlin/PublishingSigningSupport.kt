@@ -2,9 +2,15 @@ import io.bluetape4k.gradle.NormalizedSigningKeyId
 import io.bluetape4k.gradle.normalizeSigningKeyId
 import io.bluetape4k.gradle.resolveSigningKey
 import io.bluetape4k.gradle.resolveSigningKeyId
+import groovy.util.Node
+import groovy.xml.XmlParser
+import groovy.xml.XmlUtil
+import org.gradle.api.GradleException
 import org.gradle.api.Project
 import org.gradle.api.publish.PublishingExtension
+import org.gradle.api.publish.maven.tasks.GenerateMavenPom
 import org.gradle.kotlin.dsl.configure
+import org.gradle.kotlin.dsl.withType
 import org.gradle.plugins.signing.SigningExtension
 
 /**
@@ -65,6 +71,17 @@ fun Project.resolveSigningConfig(): SigningConfig {
  * - 로컬: `signingUseGpgCmd=true` 또는 gpg-cmd 설정으로 서명
  */
 fun Project.configurePublishingSigning(publicationName: String) {
+    tasks.withType<GenerateMavenPom>().configureEach {
+        doLast("normalizePublishedMavenPom") {
+            val pomFile = destination
+            if (pomFile.isFile) {
+                val pom = XmlParser(false, false).parse(pomFile)
+                normalizeMavenDependencies(pom)
+                pomFile.writeText(XmlUtil.serialize(pom))
+            }
+        }
+    }
+
     val config = resolveSigningConfig()
     extensions.configure<SigningExtension> {
         when {
@@ -88,5 +105,90 @@ fun Project.configurePublishingSigning(publicationName: String) {
                 // 서명 키 없음 — 로컬 개발 빌드에서는 서명 건너뜀
             }
         }
+    }
+}
+
+private data class ManagedDependencyKey(
+    val groupId: String,
+    val artifactId: String,
+    val type: String,
+    val classifier: String,
+) {
+    override fun toString(): String = listOf(groupId, artifactId, type, classifier)
+        .joinToString(":")
+}
+
+private fun Node.childText(name: String): String =
+    children()
+        .filterIsInstance<Node>()
+        .firstOrNull { it.name().toString() == name }
+        ?.value()
+        ?.toString()
+        ?.trim()
+        .orEmpty()
+
+private fun Node.managedDependencyKey(): ManagedDependencyKey = ManagedDependencyKey(
+    groupId = childText("groupId"),
+    artifactId = childText("artifactId"),
+    type = childText("type").ifBlank { "jar" },
+    classifier = childText("classifier"),
+)
+
+private fun Node.fingerprint(): String {
+    val attributes = attributes().toString()
+    val childrenFingerprint = children()
+        .filterIsInstance<Node>()
+        .map { it.fingerprint() }
+        .sorted()
+        .joinToString("|")
+    val value = if (children().filterIsInstance<Node>().isEmpty()) {
+        value()?.toString()?.trim().orEmpty()
+    } else {
+        ""
+    }
+    return "${name()}[$attributes]($value){$childrenFingerprint}"
+}
+
+/**
+ * Removes fully identical dependencies from a generated Maven POM.
+ *
+ * Gradle's dependency-management and platform publication paths can contribute the
+ * same direct or managed dependency more than once. Maven rejects duplicate keys, so
+ * identical nodes are collapsed while entries with different content fail loudly
+ * instead of silently changing the published dependency contract.
+ */
+fun normalizeMavenDependencies(pom: Node) {
+    val dependencyContainers = mutableListOf<Node>()
+    pom.children()
+        .filterIsInstance<Node>()
+        .forEach { projectChild ->
+            when (projectChild.name().toString()) {
+                "dependencies" -> dependencyContainers += projectChild
+                "dependencyManagement" -> {
+                    projectChild.children()
+                        .filterIsInstance<Node>()
+                        .filter { it.name().toString() == "dependencies" }
+                        .forEach(dependencyContainers::add)
+                }
+            }
+        }
+    dependencyContainers.forEach { dependencies ->
+        val firstByKey = linkedMapOf<ManagedDependencyKey, Node>()
+        val duplicates = mutableListOf<Node>()
+        dependencies.children()
+            .filterIsInstance<Node>()
+            .filter { it.name().toString() == "dependency" }
+            .forEach { dependency ->
+                val key = dependency.managedDependencyKey()
+                val first = firstByKey.putIfAbsent(key, dependency)
+                when {
+                    first == null -> Unit
+                    first.fingerprint() == dependency.fingerprint() -> duplicates += dependency
+                    else -> throw GradleException(
+                        "Conflicting Maven dependencies for $key",
+                    )
+                }
+            }
+        duplicates.forEach { dependencies.children().remove(it) }
     }
 }
