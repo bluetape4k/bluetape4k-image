@@ -40,6 +40,27 @@ A library for loading, converting, resizing, splitting, and applying filters to 
 | AVIF   | `AvifWriter` *(incubating)*                        | Interface only; use a libvips runtime backend when native support is available |
 | HEIC   | `HeicReader` *(incubating)*                        | Interface only; use a libvips runtime backend when native support is available |
 
+For PNG, JPEG, and WebP, prefer the format-specific helpers below. Use `hasPrefix` for other explicit prefixes that do not have a dedicated helper. These functions identify file headers only; a matching signature does not validate the remaining payload, establish upload safety, or guarantee successful decoding. For untrusted uploads, also enforce encoded-byte, decoded-dimension, and pixel limits, then validate the data with the actual decoder.
+
+```kotlin
+import io.bluetape4k.images.hasPrefix
+import io.bluetape4k.images.isJpeg
+import io.bluetape4k.images.isPng
+import io.bluetape4k.images.isWebp
+
+private fun detectMediaType(bytes: ByteArray): String? = when {
+    bytes.isPng() -> "image/png"
+    bytes.isJpeg() -> "image/jpeg"
+    bytes.isWebp() -> "image/webp"
+    else -> null
+}
+
+private val customPrefix = intArrayOf(0x42, 0x54, 0x34, 0x4B)
+private fun hasCustomPrefix(bytes: ByteArray): Boolean = bytes.hasPrefix(customPrefix)
+```
+
+This example classifies formats from their headers only; it does not replace upload validation. A matching signature alone says nothing about the remaining payload or whether a decoder will accept it.
+
 - **Dynamic generation**: JPG is fastest (for real-time processing)
 - **Static files**: WebP is most efficient (saves storage)
 - **Document imaging**: TIFF multi-page support for archival workflows
