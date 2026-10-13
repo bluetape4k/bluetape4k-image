@@ -386,7 +386,7 @@ private fun detectMediaType(bytes: ByteArray): String? =
 | PNG/JPEG/WebP 헤더만 있는 입력의 정확한 `image_not_decodable` 거부와 취소 전파 | Task 4 및 Task 6, 예제 회귀 테스트 |
 | KDoc과 두 언어 README의 동등 예제, 형식별 API 선택 기준 및 보안 한계 | Task 3, Task 5, Task 6; 헤더만 확인한다는 경고를 예제와 연결 |
 | 모듈·예제 테스트, ABI·정적 검사, 독립 리뷰 | Task 5–7 |
-| 한국어 commit, PR #698 연결, exact-head CI, merge hold | Task 8 |
+| 한국어 commit, Issue #698 및 PR #699 연결, exact-head CI, merge hold | Task 8 |
 
 ## 계획 리뷰 통합 상태
 
