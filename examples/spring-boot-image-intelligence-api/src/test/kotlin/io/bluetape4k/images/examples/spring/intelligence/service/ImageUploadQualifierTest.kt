@@ -257,6 +257,33 @@ class ImageUploadQualifierTest {
     }
 
     @Test
+    fun `rejects header-only PNG JPEG and WebP without decoding`() = runTest {
+        val decodeCalls = AtomicInteger()
+        val qualifier = qualifier(
+            decodeCalls = decodeCalls,
+            dimensionProbe = { null },
+            metadataDimensionProbe = { _, _ -> null },
+        )
+        val headerOnlyInputs = listOf(
+            "image/png" to byteArrayOf(0x89.toByte(), 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A),
+            "image/jpeg" to byteArrayOf(0xFF.toByte(), 0xD8.toByte(), 0xFF.toByte()),
+            "image/webp" to byteArrayOf(
+                0x52, 0x49, 0x46, 0x46, 0x00, 0x00, 0x00, 0x00, 0x57, 0x45, 0x42, 0x50,
+            ),
+        )
+
+        headerOnlyInputs.forEach { (contentType, bytes) ->
+            val error = assertFailsWith<InvalidImageUploadException> {
+                qualifier.qualify(multipart(contentType, bytes))
+            }
+
+            error.reasonCode shouldBeEqualTo "image_not_decodable"
+        }
+
+        decodeCalls.get() shouldBeEqualTo 0
+    }
+
+    @Test
     fun `rethrows cancellation from dimension probing`() = runTest {
         val expected = CancellationException("cancel-probe")
 

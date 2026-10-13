@@ -8,6 +8,9 @@ import io.bluetape4k.images.analysis.ImageMetadataReadOutcome
 import io.bluetape4k.images.analysis.readImageMetadataReportDetailed
 import io.bluetape4k.images.examples.spring.intelligence.config.ImageIntelligenceProperties
 import io.bluetape4k.images.immutableImageOf
+import io.bluetape4k.images.isJpeg
+import io.bluetape4k.images.isPng
+import io.bluetape4k.images.isWebp
 import io.bluetape4k.images.probeImageDimensionsDetailed
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.warn
@@ -227,26 +230,11 @@ internal class ImageUploadQualifier(
 
     private fun detectMediaType(bytes: ByteArray): String? =
         when {
-            bytes.hasPrefix(PNG_SIGNATURE) -> MediaType.IMAGE_PNG_VALUE
-            bytes.hasPrefix(JPEG_SIGNATURE) -> MediaType.IMAGE_JPEG_VALUE
+            bytes.isPng() -> MediaType.IMAGE_PNG_VALUE
+            bytes.isJpeg() -> MediaType.IMAGE_JPEG_VALUE
             bytes.isWebp() -> "image/webp"
             else -> null
         }
 
-    private fun ByteArray.hasPrefix(prefix: IntArray): Boolean =
-        size >= prefix.size &&
-                prefix.indices.all { index -> this[index].toInt() and 0xFF == prefix[index] }
-
-    private fun ByteArray.isWebp(): Boolean =
-        size >= WEBP_HEADER_SIZE &&
-                copyOfRange(0, 4).contentEquals(RIFF_SIGNATURE) &&
-                copyOfRange(8, 12).contentEquals(WEBP_SIGNATURE)
-
-    private companion object: KLogging() {
-        private val PNG_SIGNATURE: IntArray = intArrayOf(0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A)
-        private val JPEG_SIGNATURE: IntArray = intArrayOf(0xFF, 0xD8, 0xFF)
-        private val RIFF_SIGNATURE: ByteArray = byteArrayOf(0x52, 0x49, 0x46, 0x46)
-        private val WEBP_SIGNATURE: ByteArray = byteArrayOf(0x57, 0x45, 0x42, 0x50)
-        private const val WEBP_HEADER_SIZE: Int = 12
-    }
+    private companion object: KLogging()
 }
