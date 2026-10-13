@@ -284,6 +284,32 @@ class ImageUploadQualifierTest {
     }
 
     @Test
+    fun `classifies header-only WebP through default probes as undecodable`() = runTest {
+        val decodeCalls = AtomicInteger()
+        val error = assertFailsWith<InvalidImageUploadException> {
+            ImageUploadQualifier(
+                properties = ImageIntelligenceProperties(),
+                imageDecoder = {
+                    decodeCalls.incrementAndGet()
+                    error("decoder must not run")
+                },
+            ).qualify(
+                multipart(
+                    "image/webp",
+                    byteArrayOf(
+                        0x52, 0x49, 0x46, 0x46,
+                        0x00, 0x00, 0x00, 0x00,
+                        0x57, 0x45, 0x42, 0x50,
+                    ),
+                ),
+            )
+        }
+
+        error.reasonCode shouldBeEqualTo "image_not_decodable"
+        decodeCalls.get() shouldBeEqualTo 0
+    }
+
+    @Test
     fun `rethrows cancellation from dimension probing`() = runTest {
         val expected = CancellationException("cancel-probe")
 
