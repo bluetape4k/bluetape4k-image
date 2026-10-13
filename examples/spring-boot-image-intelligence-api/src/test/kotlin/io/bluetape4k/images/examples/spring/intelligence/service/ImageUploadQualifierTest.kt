@@ -20,6 +20,7 @@ import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.springframework.mock.web.MockMultipartFile
@@ -284,28 +285,31 @@ class ImageUploadQualifierTest {
     }
 
     @Test
-    fun `classifies header-only WebP through default probes as undecodable`() = runTest {
+    fun `classifies header-only formats through default probes as undecodable`() = runTest {
         val decodeCalls = AtomicInteger()
-        val error = assertFailsWith<InvalidImageUploadException> {
-            ImageUploadQualifier(
-                properties = ImageIntelligenceProperties(),
-                imageDecoder = {
-                    decodeCalls.incrementAndGet()
-                    error("decoder must not run")
-                },
-            ).qualify(
-                multipart(
-                    "image/webp",
-                    byteArrayOf(
-                        0x52, 0x49, 0x46, 0x46,
-                        0x00, 0x00, 0x00, 0x00,
-                        0x57, 0x45, 0x42, 0x50,
-                    ),
-                ),
-            )
+        val qualifier = ImageUploadQualifier(
+            properties = ImageIntelligenceProperties(),
+            imageDecoder = {
+                decodeCalls.incrementAndGet()
+                error("decoder must not run")
+            },
+        )
+        val headerOnlyInputs = listOf(
+            "image/png" to byteArrayOf(0x89.toByte(), 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A),
+            "image/jpeg" to byteArrayOf(0xFF.toByte(), 0xD8.toByte(), 0xFF.toByte()),
+            "image/webp" to byteArrayOf(
+                0x52, 0x49, 0x46, 0x46, 0x00, 0x00, 0x00, 0x00, 0x57, 0x45, 0x42, 0x50,
+            ),
+        )
+
+        headerOnlyInputs.forEach { (contentType, bytes) ->
+            val error = assertFailsWith<InvalidImageUploadException> {
+                qualifier.qualify(multipart(contentType, bytes))
+            }
+
+            assertEquals("image_not_decodable", error.reasonCode, contentType)
         }
 
-        error.reasonCode shouldBeEqualTo "image_not_decodable"
         decodeCalls.get() shouldBeEqualTo 0
     }
 

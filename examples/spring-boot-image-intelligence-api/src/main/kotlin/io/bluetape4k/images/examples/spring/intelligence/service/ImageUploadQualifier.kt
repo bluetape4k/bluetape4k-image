@@ -20,6 +20,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.springframework.http.MediaType
 import org.springframework.web.multipart.MultipartFile
+import java.io.EOFException
 import java.util.*
 
 internal val ALLOWED_IMAGE_CONTENT_TYPES: Set<String> = setOf(
@@ -93,7 +94,12 @@ internal class ImageUploadQualifier(
         ) {
             is ImageMetadataReadOutcome.Success -> result.report.dimensions
             is ImageMetadataReadOutcome.Malformed -> throw MalformedImageProbeException(result.cause)
-            is ImageMetadataReadOutcome.Failure -> throw result.cause
+            is ImageMetadataReadOutcome.Failure ->
+                when (val cause = result.cause) {
+                    // 이 reader는 byte array를 읽으므로 EOF는 입력이 잘린 경우입니다.
+                    is EOFException -> throw MalformedImageProbeException(cause)
+                    else -> throw cause
+                }
         }
     },
     private val imageDecoder: (ByteArray) -> ImmutableImage = ::immutableImageOf,

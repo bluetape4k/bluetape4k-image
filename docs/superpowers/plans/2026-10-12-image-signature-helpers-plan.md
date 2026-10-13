@@ -232,10 +232,10 @@ private fun detectMediaType(bytes: ByteArray): String? =
     }
 ```
 
-  - **Action:** PNG/JPEG/WebP 검사 순서를 유지하고 예제의 private `hasPrefix`, `isWebp`, 시그니처 배열 상수만 제거한다. 크기 제한, 차원·메타데이터 판독기, 디코더, 예외 처리는 수정하지 않는다.
+  - **Action:** PNG/JPEG/WebP 검사 순서를 유지하고 예제의 private `hasPrefix`, `isWebp`, 시그니처 배열 상수만 제거한다. 크기 제한, 차원·메타데이터 판독기, 디코더 동작과 취소 전파는 보존한다. 기본 byte-array metadata adapter가 반환한 `EOFException`만 잘린 입력으로 분류해 `MalformedImageProbeException`으로 전달하고, 다른 probe 실패는 기존 내부 실패 분류를 유지한다. 공용 metadata 결과 계약은 변경하지 않는다.
   - **Run:** 앞의 `ImageUploadQualifierTest` 명령을 다시 실행한다.
   - **Expected DoD:** 세 형식의 MIME 결과와 content type 불일치 거부를 확인한다. 선언된 크기 제한은 `getBytes()` 호출 전에 검사하고, 실제 바이트 크기는 차원 판독 전에 검사한다. 차원 판독 후 변의 길이 제한과 픽셀 수 제한을 각각 검사하고, 하나라도 초과하면 디코더를 호출하지 않는다. 모든 제한을 통과한 경우에만 실제 디코더를 호출한다. 이 순서와 거부는 `ImageUploadQualifierTest`에서 읽기·판독·디코딩 호출 횟수로 확인한다.
-  - **회귀 조건:** PNG/JPEG/WebP 헤더만 있는 입력은 각 시그니처 헬퍼가 `true`를 반환하더라도 업로드 판별기에서 정확히 `reasonCode == "image_not_decodable"`로 거부하고 `QualifiedImage`를 반환하지 않는다. 잘린 PNG 사례를 유지하고 JPEG/WebP의 헤더만 있는 사례를 추가해 디코더 호출이 없는지 확인한다. 기존 `rethrows cancellation from dimension probing` 및 `rethrows cancellation while reading upload bytes` 테스트도 유지해 취소 예외가 삼켜지지 않는지 확인한다.
+  - **회귀 조건:** PNG/JPEG/WebP 헤더만 있는 입력은 각 시그니처 헬퍼가 `true`를 반환하더라도 기본 probe 경로에서 정확히 `reasonCode == "image_not_decodable"`로 거부하고 디코더를 호출하지 않는다. 기존 probe 주입 경로도 세 형식 모두 같은 reason code로 거부하는지 확인한다. 실제 관찰한 JPEG `EOFException` 외의 probe 실패 분류는 기존 동작을 유지한다. 기존 `rethrows cancellation from dimension probing` 및 `rethrows cancellation while reading upload bytes` 테스트도 유지해 취소 예외가 삼켜지지 않는지 확인한다.
   - **Step DoD:** `PASS`는 타깃 예제 테스트 클래스 전체가 성공한 경우에만 기록한다.
 
 ### Task 5: ABI 기준과 양쪽 README 갱신
