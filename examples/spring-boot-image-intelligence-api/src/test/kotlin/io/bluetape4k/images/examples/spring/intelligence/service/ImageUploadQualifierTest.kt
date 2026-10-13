@@ -20,7 +20,6 @@ import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.test.runTest
-import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.springframework.mock.web.MockMultipartFile
@@ -307,7 +306,7 @@ class ImageUploadQualifierTest {
                 qualifier.qualify(multipart(contentType, bytes))
             }
 
-            assertEquals("image_not_decodable", error.reasonCode, contentType)
+            error.reasonCode shouldBeEqualTo "image_not_decodable"
         }
 
         decodeCalls.get() shouldBeEqualTo 0
