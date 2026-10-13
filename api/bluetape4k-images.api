@@ -20,6 +20,13 @@ public final class io/bluetape4k/images/BufferedImageSupportKt {
 	public static final fun write (Ljava/awt/image/BufferedImage;Lio/bluetape4k/images/ImageFormat;Ljavax/imageio/stream/ImageOutputStream;)Z
 }
 
+public final class io/bluetape4k/images/ByteArraySignatureExtensionsKt {
+	public static final fun hasPrefix ([B[I)Z
+	public static final fun isJpeg ([B)Z
+	public static final fun isPng ([B)Z
+	public static final fun isWebp ([B)Z
+}
+
 public final class io/bluetape4k/images/IIORegistryUtils {
 	public static final field INSTANCE Lio/bluetape4k/images/IIORegistryUtils;
 	public final fun getImageReaderFormatNames ()Ljava/util/Set;

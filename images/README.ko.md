@@ -40,6 +40,27 @@ JPG, PNG, GIF, WebP, **TIFF/SVG** (Issue #134) 등의 이미지를 로드, 변�
 | AVIF | `AvifWriter` *(incubating)*                        | 인터페이스만 제공, native 지원이 있을 때 libvips 런타임 백엔드 사용 |
 | HEIC | `HeicReader` *(incubating)*                        | 인터페이스만 제공, native 지원이 있을 때 libvips 런타임 백엔드 사용 |
 
+PNG, JPEG, WebP는 아래의 형식별 헬퍼를 먼저 사용하세요. 전용 헬퍼가 없는 다른 명시적 접두어를 확인할 때는 `hasPrefix`를 사용하면 됩니다. 이 함수들은 파일 헤더만 식별합니다. 시그니처가 일치해도 나머지 데이터의 유효성이나 안전성, 디코딩 성공 여부는 보장하지 않습니다. 외부 업로드를 처리할 때는 인코딩된 바이트 크기와 디코딩 후 크기·픽셀 수를 제한하고 실제 디코더로도 데이터를 검증해야 합니다.
+
+```kotlin
+import io.bluetape4k.images.hasPrefix
+import io.bluetape4k.images.isJpeg
+import io.bluetape4k.images.isPng
+import io.bluetape4k.images.isWebp
+
+private fun detectMediaType(bytes: ByteArray): String? = when {
+    bytes.isPng() -> "image/png"
+    bytes.isJpeg() -> "image/jpeg"
+    bytes.isWebp() -> "image/webp"
+    else -> null
+}
+
+private val customPrefix = intArrayOf(0x42, 0x54, 0x34, 0x4B)
+private fun hasCustomPrefix(bytes: ByteArray): Boolean = bytes.hasPrefix(customPrefix)
+```
+
+이 예제는 헤더로 이미지 형식만 판별하며 업로드 검증을 대신하지 않습니다. 시그니처 일치만으로 나머지 데이터의 상태나 디코더의 처리 가능 여부를 알 수 없습니다.
+
 - **동적 생성**: JPG가 가장 빠름 (실시간 처리용)
 - **정적 파일**: WebP가 가장 효율적 (저장 공간 절약)
 - **문서 이미징**: TIFF 다중 페이지로 아카이브 워크플로우 지원
