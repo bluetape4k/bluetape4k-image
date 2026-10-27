@@ -105,11 +105,15 @@ class PrivacyDerivativeSerializationTest {
             "maskOpacity",
             Double.NaN,
         )
+        assertInvalidSerializedField(redactionSnapshot(), "coordinateSpace", null)
+        assertInvalidSerializedField(redactionSnapshot(), "mode", null)
         assertInvalidSerializedField(
             optionsSnapshot(),
             "maxPixels",
             0L,
         )
+        assertInvalidSerializedField(optionsSnapshot(), "thumbnailCrop", null)
+        assertInvalidSerializedField(optionsSnapshot(), "outputFormat", null)
         assertInvalidSerializedField(PrivacyImageDimensionsSnapshot(1, 1), "height", 0)
         assertInvalidSerializedField(
             PrivacyAppliedRedactionSnapshot("region", 0.0, 0.0, 1.0, 1.0),
@@ -127,6 +131,31 @@ class PrivacyDerivativeSerializationTest {
             null,
         )
         assertInvalidSerializedField(payload(), "report", null)
+        assertInvalidSerializedField(
+            PrivacyDerivativeBatchSnapshot("fixture.png", payload(), null),
+            "sourceId",
+            "   ",
+        )
+        assertInvalidSerializedField(
+            PrivacyDerivativeBatchSnapshot("fixture.png", payload(), null),
+            "sourceId",
+            null,
+        )
+        assertInvalidSerializedField(
+            PrivacyDerivativeBatchSnapshot("fixture.png", payload(), null),
+            "sourceId",
+            "/private/source.png",
+        )
+        assertInvalidSerializedField(
+            PrivacyDerivativeBatchSnapshot("fixture.png", payload(), null),
+            "sourceId",
+            "fixture\n.png",
+        )
+        assertInvalidSerializedField(
+            PrivacyDerivativeBatchSnapshot("fixture.png", payload(), null),
+            "sourceId",
+            "..\\x",
+        )
     }
 
     @Suppress("DEPRECATION")
