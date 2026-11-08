@@ -91,7 +91,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
-      - uses: gradle/actions/wrapper-validation@v6.4.0
+      - uses: gradle/actions/wrapper-validation@v6.4.1
 
   changes:
     name: Detect changed modules
@@ -231,11 +231,11 @@ jobs:
       - uses: actions/setup-python@v7.1.0
         with:
           python-version: '3.12'
-      - uses: actions/setup-java@v6.1.0
+      - uses: actions/setup-java@v6.2.0
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.JAVA_DISTRIBUTION }}
-      - uses: gradle/actions/setup-gradle@v6.4.0
+      - uses: gradle/actions/setup-gradle@v6.4.1
         with:
           gradle-version: wrapper
           cache-read-only: ${{ github.event_name == 'pull_request' }}
@@ -272,11 +272,11 @@ jobs:
     needs: [validate-wrapper, catalog-governance]
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-java@v6.1.0
+      - uses: actions/setup-java@v6.2.0
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.JAVA_DISTRIBUTION }}
-      - uses: gradle/actions/setup-gradle@v6.4.0
+      - uses: gradle/actions/setup-gradle@v6.4.1
         with:
           gradle-version: wrapper
           cache-read-only: ${{ github.event_name == 'pull_request' }}
@@ -304,11 +304,11 @@ jobs:
     if: ${{ needs.changes.outputs['images'] == 'true' || needs.changes.outputs['build-logic'] == 'true' || github.event_name == 'workflow_dispatch' }}
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-java@v6.1.0
+      - uses: actions/setup-java@v6.2.0
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.JAVA_DISTRIBUTION }}
-      - uses: gradle/actions/setup-gradle@v6.4.0
+      - uses: gradle/actions/setup-gradle@v6.4.1
         with:
           gradle-version: wrapper
           cache-read-only: true
@@ -350,11 +350,11 @@ jobs:
     if: ${{ needs.changes.outputs['images-benchmark'] == 'true' || needs.changes.outputs['build-logic'] == 'true' || github.event_name == 'workflow_dispatch' }}
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-java@v6.1.0
+      - uses: actions/setup-java@v6.2.0
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.JAVA_DISTRIBUTION }}
-      - uses: gradle/actions/setup-gradle@v6.4.0
+      - uses: gradle/actions/setup-gradle@v6.4.1
         with:
           gradle-version: wrapper
           cache-read-only: true
@@ -409,11 +409,11 @@ jobs:
     if: ${{ needs.changes.outputs['images-captcha'] == 'true' || needs.changes.outputs['build-logic'] == 'true' || github.event_name == 'workflow_dispatch' }}
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-java@v6.1.0
+      - uses: actions/setup-java@v6.2.0
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.JAVA_DISTRIBUTION }}
-      - uses: gradle/actions/setup-gradle@v6.4.0
+      - uses: gradle/actions/setup-gradle@v6.4.1
         with:
           gradle-version: wrapper
           cache-read-only: true
@@ -459,11 +459,11 @@ jobs:
     if: ${{ needs.changes.outputs['images-spring-boot'] == 'true' || needs.changes.outputs['build-logic'] == 'true' || github.event_name == 'workflow_dispatch' }}
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-java@v6.1.0
+      - uses: actions/setup-java@v6.2.0
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.JAVA_DISTRIBUTION }}
-      - uses: gradle/actions/setup-gradle@v6.4.0
+      - uses: gradle/actions/setup-gradle@v6.4.1
         with:
           gradle-version: wrapper
           cache-read-only: true
@@ -513,11 +513,11 @@ jobs:
     if: ${{ needs.changes.outputs['images-spring-boot'] == 'true' || needs.changes.outputs['build-logic'] == 'true' || github.event_name == 'workflow_dispatch' }}
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-java@v6.1.0
+      - uses: actions/setup-java@v6.2.0
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.JAVA_DISTRIBUTION }}
-      - uses: gradle/actions/setup-gradle@v6.4.0
+      - uses: gradle/actions/setup-gradle@v6.4.1
         with:
           gradle-version: wrapper
           cache-read-only: true
@@ -544,11 +544,11 @@ jobs:
     if: ${{ needs.changes.outputs['images-barcode-api'] == 'true' || needs.changes.outputs['build-logic'] == 'true' || github.event_name == 'workflow_dispatch' }}
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-java@v6.1.0
+      - uses: actions/setup-java@v6.2.0
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.JAVA_DISTRIBUTION }}
-      - uses: gradle/actions/setup-gradle@v6.4.0
+      - uses: gradle/actions/setup-gradle@v6.4.1
         with:
           gradle-version: wrapper
           cache-read-only: true
@@ -594,11 +594,11 @@ jobs:
     if: ${{ needs.changes.outputs['images-barcode-zxing'] == 'true' || needs.changes.outputs['build-logic'] == 'true' || github.event_name == 'workflow_dispatch' }}
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-java@v6.1.0
+      - uses: actions/setup-java@v6.2.0
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.JAVA_DISTRIBUTION }}
-      - uses: gradle/actions/setup-gradle@v6.4.0
+      - uses: gradle/actions/setup-gradle@v6.4.1
         with:
           gradle-version: wrapper
           cache-read-only: true
@@ -644,11 +644,11 @@ jobs:
     if: ${{ needs.changes.outputs['images-ocr'] == 'true' || needs.changes.outputs['build-logic'] == 'true' || github.event_name == 'workflow_dispatch' }}
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-java@v6.1.0
+      - uses: actions/setup-java@v6.2.0
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.JAVA_DISTRIBUTION }}
-      - uses: gradle/actions/setup-gradle@v6.4.0
+      - uses: gradle/actions/setup-gradle@v6.4.1
         with:
           gradle-version: wrapper
           cache-read-only: true
@@ -697,11 +697,11 @@ jobs:
     if: ${{ needs.changes.outputs['images-ktor'] == 'true' || needs.changes.outputs['build-logic'] == 'true' || github.event_name == 'workflow_dispatch' }}
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-java@v6.1.0
+      - uses: actions/setup-java@v6.2.0
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.JAVA_DISTRIBUTION }}
-      - uses: gradle/actions/setup-gradle@v6.4.0
+      - uses: gradle/actions/setup-gradle@v6.4.1
         with:
           gradle-version: wrapper
           cache-read-only: true
@@ -747,13 +747,13 @@ jobs:
     if: ${{ needs.changes.outputs['images-vips-api'] == 'true' || needs.changes.outputs['build-logic'] == 'true' || github.event_name == 'workflow_dispatch' }}
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-java@v6.1.0
+      - uses: actions/setup-java@v6.2.0
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.JAVA_DISTRIBUTION }}
       - name: Install libvips
         run: sudo apt-get update && sudo apt-get install -y libvips-dev
-      - uses: gradle/actions/setup-gradle@v6.4.0
+      - uses: gradle/actions/setup-gradle@v6.4.1
         with:
           gradle-version: wrapper
           cache-read-only: true
@@ -829,14 +829,14 @@ jobs:
     if: ${{ needs.changes.outputs['images-vips-java21'] == 'true' || needs.changes.outputs['build-logic'] == 'true' || github.event_name == 'workflow_dispatch' }}
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-java@v6.1.0
+      - uses: actions/setup-java@v6.2.0
         with:
           # The module and Gradle/buildSrc use the repository baseline JDK 25.
           java-version: '25'
           distribution: ${{ env.JAVA_DISTRIBUTION }}
       - name: Install libvips
         run: sudo apt-get update && sudo apt-get install -y libvips-dev
-      - uses: gradle/actions/setup-gradle@v6.4.0
+      - uses: gradle/actions/setup-gradle@v6.4.1
         with:
           gradle-version: wrapper
           cache-read-only: true
@@ -877,13 +877,13 @@ jobs:
     if: ${{ needs.changes.outputs['images-vips-java25'] == 'true' || needs.changes.outputs['build-logic'] == 'true' || github.event_name == 'workflow_dispatch' }}
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-java@v6.1.0
+      - uses: actions/setup-java@v6.2.0
         with:
           java-version: '25'
           distribution: ${{ env.JAVA_DISTRIBUTION }}
       - name: Install libvips
         run: sudo apt-get update && sudo apt-get install -y libvips-dev
-      - uses: gradle/actions/setup-gradle@v6.4.0
+      - uses: gradle/actions/setup-gradle@v6.4.1
         with:
           gradle-version: wrapper
           cache-read-only: true
@@ -929,13 +929,13 @@ jobs:
     if: ${{ always() && (needs.changes.outputs['vips-verification'] == 'true' || needs.changes.outputs['build-logic'] == 'true' || github.event_name == 'workflow_dispatch') }}
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-java@v6.1.0
+      - uses: actions/setup-java@v6.2.0
         with:
           java-version: '25'
           distribution: ${{ env.JAVA_DISTRIBUTION }}
       - name: Install libvips
         run: sudo apt-get update && sudo apt-get install -y libvips-dev
-      - uses: gradle/actions/setup-gradle@v6.4.0
+      - uses: gradle/actions/setup-gradle@v6.4.1
         with:
           gradle-version: wrapper
           cache-read-only: true

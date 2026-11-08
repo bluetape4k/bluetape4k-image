@@ -68,7 +68,7 @@ jobs:
           test "$PADDLE_MODEL_DIGEST" = "sha256:d2f455ea0e0a34cfa8fac7bba38887cf136d62525e69cf9f433eac8009d9dd8f"
 
       - name: Set up Java 25 for receipt validation
-        uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad
+        uses: actions/setup-java@77dd5b2ce225ea11469928ac317850245a74ae78
         with:
           distribution: temurin
           java-version: '25'
