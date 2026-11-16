@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+import argparse
+import json
 import re
 import subprocess
 import xml.etree.ElementTree as ET
@@ -13,6 +15,8 @@ ROOT = Path(__file__).resolve().parents[2]
 DIAGRAM_DIR = ROOT / "docs" / "images" / "readme-diagrams"
 CHART_DIR = ROOT / "docs" / "images" / "readme-charts"
 SUMMARY = DIAGRAM_DIR / "validation-summary.txt"
+SAMPLE_MANIFEST = ROOT / "images" / "src" / "test" / "resources" / "detection" / "samples" / "metadata.json"
+SAMPLE_PREVIEW_DIR = ROOT / "docs" / "images" / "detection-samples"
 FINAL_EVIDENCE_TOKENS = ("Graphviz evidence", "-graphviz", ".plain", ".dot")
 LEGACY_STYLE_TOKENS = (
     "feDropShadow",
@@ -62,6 +66,54 @@ def validate_readme_links(lines: list[str]) -> None:
     if legacy_refs:
         raise AssertionError("README still references legacy assets:\n" + "\n".join(legacy_refs))
     lines.append(f"README links: missing=0 svgEmbeds=0 legacyRefs=0 files={len(readme_files())}")
+
+
+def validate_detection_sample_assets(lines: list[str]) -> None:
+    """Validate manifest-driven preview paths without decoding image bytes."""
+
+    if not SAMPLE_MANIFEST.is_file():
+        raise AssertionError(f"missing detection sample manifest: {SAMPLE_MANIFEST.relative_to(ROOT)}")
+    try:
+        samples = json.loads(SAMPLE_MANIFEST.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as error:
+        raise AssertionError(f"invalid detection sample manifest: {error}") from error
+    if not isinstance(samples, list) or not samples:
+        raise AssertionError("detection sample manifest must contain a non-empty array")
+
+    sample_ids: set[str] = set()
+    for sample in samples:
+        if not isinstance(sample, dict):
+            raise AssertionError("detection sample manifest entries must be objects")
+        sample_id = sample.get("id")
+        resource_path = sample.get("resourcePath")
+        if not isinstance(sample_id, str) or not sample_id:
+            raise AssertionError("detection sample manifest entry is missing id")
+        if sample_id in sample_ids:
+            raise AssertionError(f"duplicate detection sample id: {sample_id}")
+        sample_ids.add(sample_id)
+        if not isinstance(resource_path, str) or not resource_path:
+            raise AssertionError(f"detection sample {sample_id} is missing resourcePath")
+        resource = ROOT / "images" / "src" / "test" / "resources" / resource_path
+        if not resource.is_file():
+            raise AssertionError(f"missing detection sample resource: {resource.relative_to(ROOT)}")
+        preview = SAMPLE_PREVIEW_DIR / f"{sample_id}-detections.png"
+        if not preview.is_file():
+            raise AssertionError(f"missing detection sample preview: {preview.relative_to(ROOT)}")
+
+    contact_sheet = SAMPLE_PREVIEW_DIR / "sample-detection-results.png"
+    if not contact_sheet.is_file():
+        raise AssertionError(f"missing detection sample contact sheet: {contact_sheet.relative_to(ROOT)}")
+    generator = ROOT / "docs" / "scripts" / "generate-detection-sample-overlays.py"
+    if not generator.is_file():
+        raise AssertionError(f"missing detection sample generator: {generator.relative_to(ROOT)}")
+    readme_token = "docs/images/detection-samples/sample-detection-results.png"
+    for readme in (ROOT / "README.md", ROOT / "README.ko.md"):
+        if readme_token not in readme.read_text(encoding="utf-8"):
+            raise AssertionError(f"{readme.relative_to(ROOT)} is missing {readme_token}")
+    lines.append(
+        f"Detection sample assets: manifestSamples={len(samples)} previews={len(samples)} "
+        "contactSheet=pass resources=pass README=pass decode=delegated-to-Kotlin"
+    )
 
 
 def final_svgs() -> list[Path]:
@@ -379,13 +431,24 @@ def validate_legacy_removed(lines: list[str]) -> None:
 
 
 def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--detection-samples",
+        action="store_true",
+        help="validate manifest-driven detection sample paths without decoding images",
+    )
+    args = parser.parse_args()
     lines: list[str] = []
-    validate_readme_links(lines)
-    validate_svg_png(lines)
-    validate_graphviz_removed(lines)
-    validate_charts(lines)
-    validate_legacy_removed(lines)
-    SUMMARY.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    if args.detection_samples:
+        validate_readme_links(lines)
+        validate_detection_sample_assets(lines)
+    else:
+        validate_readme_links(lines)
+        validate_svg_png(lines)
+        validate_graphviz_removed(lines)
+        validate_charts(lines)
+        validate_legacy_removed(lines)
+        SUMMARY.write_text("\n".join(lines) + "\n", encoding="utf-8")
     print("\n".join(lines))
     return 0
 

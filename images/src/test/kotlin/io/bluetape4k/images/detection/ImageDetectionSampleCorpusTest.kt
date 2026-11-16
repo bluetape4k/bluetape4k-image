@@ -128,7 +128,7 @@ class ImageDetectionSampleCorpusTest {
     }
 
     @Test
-    fun `README preview assets show sample detections`() {
+    fun `README preview assets decode as images`() {
         val samples = loadSamples()
         val previewDir = repositoryRoot().resolve("docs/images/detection-samples")
 

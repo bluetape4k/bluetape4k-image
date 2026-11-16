@@ -23,8 +23,6 @@ on:
   push:
     branches: [develop, main]
     paths-ignore:
-      - '**.md'
-      - 'docs/**'
       - '.gitignore'
       - '.gitleaks.toml'
       - 'CHANGELOG.md'
@@ -32,8 +30,6 @@ on:
   pull_request:
     branches: [develop, main]
     paths-ignore:
-      - '**.md'
-      - 'docs/**'
       - '.gitignore'
       - '.gitleaks.toml'
       - 'CHANGELOG.md'
@@ -169,6 +165,20 @@ jobs:
               - '.github/workflows/paddleocr-producer.yml'
               - '.github/CODEOWNERS'
               - '.github/workflows/ci.yml'
+
+  docs-visual-assets:
+    name: Validate README visual assets
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+      - name: Validate static detection sample assets
+        run: |
+          python3 docs/scripts/validate-readme-visual-assets.py --detection-samples
+          python3 docs/scripts/test_validate_readme_visual_assets.py -v
 
   producer-contract:
     name: Test / PaddleOCR producer contract / Python ${{ matrix.python-version }}
@@ -1126,6 +1136,7 @@ jobs:
       - catalog-governance
       - gitleaks
       - changes
+      - docs-visual-assets
       - build
       - coverage-report
       - test-images
