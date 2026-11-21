@@ -24,7 +24,7 @@ import io.ktor.server.routing.Route
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 import io.ktor.utils.io.ByteReadChannel
-import io.ktor.utils.io.readRemaining
+import io.ktor.utils.io.readBuffer
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -170,7 +170,7 @@ private suspend fun ApplicationCall.receiveImageUpload(config: ImageThumbnailKto
 }
 
 private suspend fun ByteReadChannel.readImageBytes(config: ImageThumbnailKtorRoutesConfig): ByteArray =
-    readRemaining(config.maxInputBytes.coerceAtMost(Long.MAX_VALUE - 1L) + 1L).readByteArray()
+    readBuffer(config.maxInputBytes.coerceAtMost(Long.MAX_VALUE - 1L) + 1L).readByteArray()
 
 private fun ImageThumbnailKtorRoutesConfig.toDecodeLimits(): ImageDecodeLimits =
     ImageDecodeLimits(
