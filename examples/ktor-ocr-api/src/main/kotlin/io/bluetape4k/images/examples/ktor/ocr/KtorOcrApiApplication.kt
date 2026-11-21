@@ -30,7 +30,7 @@ import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import io.ktor.utils.io.ByteReadChannel
-import io.ktor.utils.io.readRemaining
+import io.ktor.utils.io.readBuffer
 import kotlinx.io.readByteArray
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -232,7 +232,7 @@ private suspend fun ApplicationCall.receiveOcrUpload(config: KtorOcrApiConfig): 
 
 private suspend fun ByteReadChannel.readUploadBytes(config: KtorOcrApiConfig): ByteArray {
     val max = config.maxInputBytes.coerceAtMost(Long.MAX_VALUE - 1L) + 1L
-    return readRemaining(max).readByteArray()
+    return readBuffer(max).readByteArray()
 }
 
 private fun KtorOcrApiConfig.toDecodeLimits(): ImageDecodeLimits =

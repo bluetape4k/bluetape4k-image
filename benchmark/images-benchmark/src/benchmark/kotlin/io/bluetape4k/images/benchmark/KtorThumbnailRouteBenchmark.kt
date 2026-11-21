@@ -23,7 +23,7 @@ import io.ktor.server.response.respondText
 import io.ktor.server.routing.post
 import io.ktor.server.routing.routing
 import io.ktor.server.testing.TestApplication
-import io.ktor.utils.io.readRemaining
+import io.ktor.utils.io.readBuffer
 import kotlinx.benchmark.Benchmark
 import kotlinx.benchmark.BenchmarkMode
 import kotlinx.benchmark.Blackhole
@@ -360,8 +360,8 @@ private fun thumbnailTestApplication(maxInputBytes: Long): TestApplication =
                         val part = multipart.readPart() ?: break
                         try {
                             receivedBytes += when (part) {
-                                is PartData.FileItem -> part.provider().readRemaining().readByteArray().size
-                                is PartData.BinaryChannelItem -> part.provider().readRemaining().readByteArray().size
+                                is PartData.FileItem -> part.provider().readBuffer().readByteArray().size
+                                is PartData.BinaryChannelItem -> part.provider().readBuffer().readByteArray().size
                                 else -> 0
                             }
                         } finally {
