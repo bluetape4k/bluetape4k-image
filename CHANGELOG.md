@@ -17,6 +17,15 @@
 
 - `1.0.0` 정식 배포 후 다음 minor 개발선을 `1.1.0-SNAPSHOT`으로 열었다.
 
+## [1.1.0] - 2026-11-21
+
+### 변경
+
+- Ktor deprecated stream API를 최신 `readBuffer` 경로로 전환하고 image
+  publication/CI evidence 계약을 정리했습니다.
+- AI/ML 및 PaddleOCR 연구 항목은 `Backlog`/`DEFERRED`로 유지하여 stable
+  runtime 범위에 포함하지 않았습니다.
+
 ## [1.0.0] - 2026-09-02
 
 ### 변경
