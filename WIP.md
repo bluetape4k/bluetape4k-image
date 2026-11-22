@@ -1,6 +1,6 @@
 # WIP - bluetape4k-image
 
-- 기준일: 2026-09-07 KST
+- 기준일: 2026-11-23 KST
 - 최신 안정 버전: `1.1.0`
 - 안정 tag commit: `82d2712fc9b18214f575df072a58793486e965f3`
 - 현재 개발선: `1.2.0-SNAPSHOT`
