@@ -1,14 +1,14 @@
 # WIP - bluetape4k-image
 
-- 기준일: 2026-09-07 KST
-- 최신 안정 버전: `1.0.0`
-- 안정 tag commit: `b38d4891b66dff8bc63db0018b5e41810d1da9bc`
-- 현재 개발선: `1.1.0-SNAPSHOT`
-- 현재 milestone: `1.1.0`
+- 기준일: 2026-11-23 KST
+- 최신 안정 버전: `1.1.0`
+- 안정 tag commit: `82d2712fc9b18214f575df072a58793486e965f3`
+- 현재 개발선: `1.2.0-SNAPSHOT`
+- 현재 milestone: `1.2.0`
 
 ## 현재 상태
 
-`1.0.0` artifact와 GitHub Release 배포를 완료했다. `develop`은 `1.1.0` minor 개발선을 사용한다. 공개 Image manual은 `1.0.0` tag source로 갱신한다.
+`1.1.0` artifact와 GitHub Release 배포를 완료했다. `develop`은 `1.2.0` minor 개발선을 사용한다. 공개 Image manual은 `1.1.0` tag source로 갱신한다.
 
 Issue #638 trusted producer 구현은 local/merge 검증과 external dispatch/visibility
 gate를 분리한다. PR에서는 credential-free contract만 검증하며, 실제 PRODUCE,
@@ -18,7 +18,7 @@ package visibility 전환, public evidence read-back은 별도의 승인과 exac
 
 ## 다음 개발선 규칙
 
-- `gradle.properties`는 `baseVersion=1.1.0`, 빈 `snapshotVersion`을 유지한다.
+- `gradle.properties`는 `baseVersion=1.2.0`, 빈 `snapshotVersion`을 유지한다.
 - SNAPSHOT workflow가 실행할 때만 `-PsnapshotVersion=-SNAPSHOT`을 주입한다.
 - OCR·native backend의 선택적 gate는 해당 변경 경로에서만 실행한다.
 - 중앙 catalog SHA는 `bluetape4k-dependencies`의 다음 개발선이 병합된 뒤 한 번만 갱신한다.

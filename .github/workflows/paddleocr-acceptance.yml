@@ -49,7 +49,15 @@ jobs:
             "$GITHUB_REPOSITORY" "$GITHUB_REF" "$GITHUB_SHA" "$EXPECTED_HEAD" \
             "$RUNNER_OS" "$RUNNER_ARCH" "$DOCKER_PLATFORM"
           test "$GITHUB_REPOSITORY" = "bluetape4k/bluetape4k-image"
-          test "$GITHUB_REF" = "refs/heads/develop"
+          if [[ "$GITHUB_REF" == "refs/heads/develop" ]]; then
+            :
+          elif [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" && "$GITHUB_REF" == refs/heads/chore/open-next-development-* ]]; then
+            :
+          else
+            printf 'acceptance requires develop or a manual next-development branch dispatch: %s (%s)\n' \
+              "$GITHUB_REF" "$GITHUB_EVENT_NAME" >&2
+            exit 1
+          fi
           test "$GITHUB_SHA" = "$EXPECTED_HEAD"
           test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
           test "$RUNNER_OS" = "Linux"
